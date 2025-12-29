@@ -2497,7 +2497,7 @@ ${fullBrandContext.slice(0, 45000)}`;
                 screenshot_url: result.screenshot_url,
                 images: result.images,
                 debug: result.debug,
-                clerk_user_id: clerkUserId || null,
+                clerk_user_id: clerkUserId || undefined,
                 updated_at: new Date().toISOString(),
             };
 

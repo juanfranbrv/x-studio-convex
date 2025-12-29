@@ -107,13 +107,13 @@ export async function getUserBrandKitById(brandKitId: string): Promise<{
             colors: data.colors || [],
             fonts: data.fonts || [],
             logo_url: data.logo_url || '',
-            logos: normalizeImages(data.logos),
+            logos: [], // logos field doesn't exist in schema, just images
             favicon_url: data.favicon_url || '',
             screenshot_url: data.screenshot_url || '',
             images: normalizeImages(data.images),
             text_assets: data.text_assets || undefined,
             debug: data.debug || undefined,
-            created_at: data.created_at || new Date().toISOString(), // Fallback if missing
+            created_at: data.updated_at || new Date().toISOString(), // Using updated_at as created_at doesn't exist
         };
 
         return { success: true, data: brandDNA };
@@ -160,13 +160,13 @@ export async function getUserBrandKit(clerkUserId: string): Promise<{
             colors: record.colors || [],
             fonts: record.fonts || [],
             logo_url: record.logo_url || '',
-            logos: normalizeImages(record.logos),
+            logos: [], // logos field doesn't exist in schema, just images
             favicon_url: record.favicon_url || '',
             screenshot_url: record.screenshot_url || '',
             images: normalizeImages(record.images),
             text_assets: record.text_assets || undefined,
             debug: record.debug || undefined,
-            created_at: record.created_at || new Date().toISOString(),
+            created_at: record.updated_at || new Date().toISOString(), // Using updated_at as created_at doesn't exist
         };
 
         return { success: true, data: brandDNA, exists: true };
