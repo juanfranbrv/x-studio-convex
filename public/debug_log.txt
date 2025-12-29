@@ -1,0 +1,940 @@
+[2025-12-27T18:03:58.794Z] Microlink error: {}
+[2025-12-27T18:04:05.468Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 54.273547147s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 54.273547147s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__7553146b._.js:2343:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-27T18:04:06.021Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:04:06.479Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:04:06.659Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:04:06.906Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:04:07.432Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:04:07.686Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:04:20.107Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:12:56.565Z] Microlink error: {}
+[2025-12-27T18:13:03.041Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 56.702809027s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 56.702809027s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__7553146b._.js:2343:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-27T18:13:03.685Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:13:04.059Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:13:04.221Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:13:04.417Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:13:04.620Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:13:04.852Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:13:07.151Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:15:15.173Z] Microlink error: {}
+[2025-12-27T18:15:21.764Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 37.976305853s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 37.976305853s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__7553146b._.js:2343:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-27T18:15:22.234Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:15:22.639Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:15:22.798Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:15:22.973Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:15:23.190Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:15:23.386Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:15:34.567Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:23:03.842Z] Microlink error: {}
+[2025-12-27T18:23:10.536Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 49.206817606s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 49.206817606s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__7553146b._.js:2343:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-27T18:23:11.303Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:23:12.074Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:23:12.337Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:23:12.654Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:23:12.897Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:23:13.292Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:23:21.049Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:30:41.984Z] Microlink error: {}
+[2025-12-27T18:30:48.612Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 11.125229347s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 11.125229347s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__7553146b._.js:2344:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-27T18:30:49.109Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:30:49.570Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:30:49.755Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:30:49.960Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:30:50.167Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:30:50.410Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:30:52.762Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:43:24.096Z] Microlink error: {}
+[2025-12-27T18:43:30.797Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 28.940168247s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-exp\nPlease retry in 28.940168247s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__7553146b._.js:2344:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-27T18:43:31.340Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:43:31.781Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:43:31.973Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:43:32.171Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:43:32.370Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:43:32.623Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:43:34.882Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:52:49.576Z] Microlink error: {}
+[2025-12-27T18:52:58.500Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio rural de alquiler completo en la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una casa rural de alquiler completo, sencilla y acogedora, ubicada en el tranquilo pueblo de Fuentes de Rubielos, en la impresionante sierra de Gúdar (Teruel). Diseñada para alojar cómodamente grupos grandes de 10 a 12 personas, ofrece una estancia de excepcional calidad con decoración cuidada y todas las comodidades, como chimenea y salón de juegos.",
+  "brand_values": [
+    "Convivencia",
+    "Calidad",
+    "Naturaleza",
+    "Carácter",
+    "Tradición"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Cercano",
+    "Sereno"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Cálido",
+    "Tradicional"
+  ],
+  "colors": [
+    "#3E4951",
+    "#FFF9F3",
+    "#004042",
+    "#7F7F02",
+    "#FF0100"
+  ],
+  "fonts": [
+    "Lora",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Reúne a los tuyos: Alquiler completo para 12 personas en la Sierra de Gúdar.",
+      "Escapada Perfecta: Barbacoa, billar y chimenea, tu casa rural ideal.",
+      "Descubre el encanto de Teruel: Alojamientos de calidad en Fuentes de Rubielos.",
+      "Rosella de Rubielos: Confort excepcional en un entorno natural único.",
+      "Aventura y Relax: Esquí, senderismo y turismo gastronómico a tu alcance."
+    ],
+    "visual_keywords": [
+      "Rustic stone cottage interior",
+      "Cozy Spanish mountain retreat",
+      "Large group accommodation fireplace",
+      "Traditional Teruel architecture",
+      "Warm, natural lighting, exposed beams"
+    ],
+    "ctas": [
+      "Consulta nuestras tarifas y disponibilidad",
+      "Reserva tu estancia para grupos (10-12 personas)",
+      "Contacta para más información o reservas"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa rural de estilo rural con capacidad para 10/12 personas, aunque se puede alquilar a partir de seis. Está ubicada en Fuentes de Rubielos, en la sierra de Gúdar (Teruel), a 962 metros de altitud. La edificación está construida con piedra del lugar y cuenta con calefacción central, chimenea, barbacoa, salón de juegos con billar, y tres baños completos. Las actividades cercanas incluyen esquí (Javalambre-Valdelinares), senderismo, BTT y turismo cultural/gastronómico en la comarca, con fácil acceso a pueblos como Rubielos de Mora y Albarracín. Ofrecen posibilidad de comidas y cenas. Contacto: 691 722 666 o info@roselladerubielos.com."
+  }
+}
+[2025-12-27T18:52:59.153Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:52:59.554Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:52:59.731Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:52:59.957Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:53:00.142Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:53:00.496Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:53:02.818Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:55:25.139Z] Microlink error: {}
+[2025-12-27T18:55:33.452Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio de calidad en la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una acogedora casa rural de alquiler completo ubicada en Fuentes de Rubielos, Teruel, diseñada para albergar grupos grandes de hasta 12 personas. Ofrece una estancia confortable y de excepcional calidad, combinando el encanto rústico con comodidades clave como chimenea y salón de juegos, ideal para disfrutar de la naturaleza y el turismo activo.",
+  "brand_values": [
+    "Calidad",
+    "Acogida",
+    "Naturaleza",
+    "Confort",
+    "Tradición"
+  ],
+  "tone_of_voice": [
+    "Cercano",
+    "Acogedor",
+    "Sereno"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Natural",
+    "Sencillo"
+  ],
+  "colors": [
+    "#3E4951",
+    "#004042",
+    "#7F7F02",
+    "#FFF9F3",
+    "#FF0100"
+  ],
+  "fonts": [
+    "EB Garamond",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Escapada rural de lujo para grupos grandes (10-12 personas).",
+      "Desconexión total en la Sierra de Gúdar. Tu casa de piedra con chimenea.",
+      "Aventura y Confort: Esquí, senderismo y billar, todo en un mismo lugar.",
+      "Alquila la casa completa en Teruel y crea momentos inolvidables con los tuyos.",
+      "Calidad excepcional y decoración cuidada en un entorno natural único."
+    ],
+    "visual_keywords": [
+      "Rústico elegante",
+      "Stone masonry",
+      "Mountain retreat",
+      "Cozy interior",
+      "Chimenea de piedra"
+    ],
+    "ctas": [
+      "Ver Tarifas y Disponibilidad",
+      "Contactar para Reservar",
+      "Explorar el Entorno Natural"
+    ],
+    "brand_context": "La casa rural Rosella de Rubielos se especializa en el alquiler completo para grupos de 10 a 12 personas, con la opción flexible de alquilar a partir de seis personas. Está construida con piedra del lugar, ofreciendo un estilo sencillo y acogedor en Fuentes de Rubielos (Teruel), dentro de la Sierra de Gúdar. Dispone de comodidades clave para el ocio, incluyendo calefacción central, chimenea ideal para la temporada de esquí, barbacoa exterior y un salón de juegos con billar. Su ubicación estratégica permite el acceso a actividades de turismo activo como esquí (Javalambre-Valdelinares), senderismo, BTT y rafting, además de facilitar visitas culturales a localidades históricas cercanas como Rubielos de Mora y Albarracín."
+  }
+}
+[2025-12-27T18:55:33.983Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:55:34.389Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:55:34.551Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:55:34.769Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:55:34.985Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:55:35.202Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T18:55:37.465Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T21:01:55.844Z] Microlink error: {}
+[2025-12-27T21:02:04.834Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio rural de alquiler completo con calidad excepcional.",
+  "business_overview": "Rosella de Rubielos es una acogedora casa rural de estilo tradicional, diseñada para estancias de grupos grandes (10-12 personas) que buscan una escapada de calidad en la sierra de Gúdar, Teruel. Ofrece un alojamiento completo y privado, ideal para familias y amigos que desean disfrutar de actividades en la naturaleza como el esquí y el senderismo. Su enfoque está en el confort y el carácter rural con una decoración cuidada.",
+  "brand_values": [
+    "Confort",
+    "Experiencia Grupal",
+    "Estilo Rural",
+    "Calidad Excepcional",
+    "Conexión con la Naturaleza"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Familiar",
+    "Sencillo"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "De Carácter",
+    "Natural"
+  ],
+  "colors": [
+    "#FFF9F3",
+    "#3E4951",
+    "#FF0100",
+    "#004042",
+    "#7F7F02"
+  ],
+  "fonts": [
+    "Lora",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Reúne a los tuyos: alojamiento completo para 10-12 personas.",
+      "Calidad excepcional en plena Sierra de Gúdar, Teruel.",
+      "Desconecta junto a la chimenea después de un día de esquí.",
+      "El encanto rural con decoración cuidada y todas las comodidades.",
+      "Salón de juegos, barbacoa y piscina cerca: La escapada perfecta."
+    ],
+    "visual_keywords": [
+      "Casa de piedra rústica",
+      "Interiores acogedores",
+      "Ambiente de montaña invernal",
+      "Lujo discreto",
+      "Texturas de madera y chimenea"
+    ],
+    "ctas": [
+      "Consultar Tarifas y Disponibilidad",
+      "Reservar Tu Estancia Completa",
+      "Ver Galería de Fotos"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa de alquiler íntegro situada en Fuentes de Rubielos, en la sierra de Gúdar (Teruel), a 962 metros de altitud. La capacidad estándar es de 10 a 12 personas, aunque se ofrece la posibilidad de alquiler a partir de seis. La construcción es de estilo rural con piedra del lugar y cuenta con calefacción central, una chimenea funcional y tres baños completos. Entre sus comodidades destacan un salón de juegos con billar, zona de barbacoa y la posibilidad de acceso a piscina pública. El alojamiento está estratégicamente ubicado para la práctica de senderismo, BTT, rafting y esquí, gracias a su proximidad a pistas como Javalambre y Valdelinares, y puntos de interés cultural como Rubielos de Mora y Albarracín. Se proporcionan dos números de contacto para reservas: 691 722 666 y 685 630 610."
+  }
+}
+[2025-12-27T21:02:05.608Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T21:02:06.026Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T21:02:06.193Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T21:02:06.417Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T21:02:06.623Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T21:02:06.862Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T21:02:09.201Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Bucket not found",
+  "status": 400,
+  "statusCode": "404"
+}
+[2025-12-27T21:12:31.041Z] Microlink error: {}
+[2025-12-27T21:12:40.254Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio rural de lujo y convivencia en la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una acogedora casa rural de estilo tradicional, construida con piedra del lugar y diseñada para albergar entre 10 y 12 personas en Fuentes de Rubielos. Ofrece una estancia de excepcional calidad en la Sierra de Gúdar, siendo el lugar ideal para compartir con los tuyos y disfrutar de la naturaleza y actividades de montaña.",
+  "brand_values": [
+    "Convivencia",
+    "Tradición",
+    "Calidad",
+    "Naturaleza",
+    "Comodidad"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Sencillo",
+    "Cercano"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Tradicional",
+    "Terrenal"
+  ],
+  "colors": [
+    "#3E4951",
+    "#FFF9F3",
+    "#004042",
+    "#7F7F02",
+    "#00BFBF"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Escapada Perfecta para 12: Rosella de Rubielos.",
+      "Desconecta en Teruel: Casa Rural con Chimenea y Billar.",
+      "Piedra y Carácter: La Tradición de la Sierra de Gúdar.",
+      "¿Esquí o Senderismo? Tu Base de Operaciones en Fuentes de Rubielos.",
+      "Alquiler Completo para Grupos Grandes y Familias."
+    ],
+    "visual_keywords": [
+      "Rustic Stone Architecture",
+      "Cozy Fireplace Interior",
+      "Mountain Retreat Vibe",
+      "Abuhardillada Bedrooms",
+      "Billiards and Shared Lounge"
+    ],
+    "ctas": [
+      "Ver Disponibilidad y Tarifas",
+      "Reserva tu Estancia Completa",
+      "Contacta y Pregúntanos"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa rural de alquiler completo ubicada en Fuentes de Rubielos, un tranquilo pueblo a 962 metros de altitud en la Sierra de Gúdar (Teruel). La propiedad está diseñada para alojar entre 10 y 12 personas, con posibilidad de alquiler a partir de seis, y está construida con piedra del lugar. Sus características clave incluyen calefacción central, chimenea, un amplio salón de juegos con billar, barbacoa exterior, tres baños completos y habitaciones temáticas (Azul, Columbia, Java, Verde, Morada) completamente equipadas. Su localización privilegiada ofrece acceso a actividades de aventura como esquí (Javalambre/Valdelinares), senderismo, BTT y rafting, además de turismo cultural en Rubielos de Mora y Teruel."
+  }
+}
+[2025-12-27T21:12:40.852Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "new row violates row-level security policy",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:12:41.295Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "new row violates row-level security policy",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:12:41.465Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "new row violates row-level security policy",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:12:41.677Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "new row violates row-level security policy",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:12:41.895Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "new row violates row-level security policy",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:12:42.189Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "new row violates row-level security policy",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:12:46.058Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "new row violates row-level security policy",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:15:14.267Z] Microlink error: {}
+[2025-12-27T21:15:22.730Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu retiro rural de calidad para compartir en grupo.",
+  "business_overview": "Rosella de Rubielos es una acogedora casa rural de estilo tradicional, construida con piedra del lugar y diseñada para el alquiler completo. Ofrece una estancia confortable y de excepcional calidad para grupos grandes de 10 a 12 personas, en el bello entorno natural de Fuentes de Rubielos (Teruel).",
+  "brand_values": [
+    "Confort",
+    "Hospitalidad",
+    "Tradición",
+    "Naturaleza",
+    "Compartir"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Cercano",
+    "Rural"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Auténtico",
+    "Cálido"
+  ],
+  "colors": [
+    "#3E4951",
+    "#FFF9F3",
+    "#004042",
+    "#7F7F02",
+    "#00BFBF"
+  ],
+  "fonts": [
+    "Lora",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "El refugio perfecto para 12 personas en la Sierra de Gúdar.",
+      "Desconexión y lujo rural: Salón de juegos, barbacoa y chimenea.",
+      "Tu casa completa con carácter, construida con piedra del lugar.",
+      "Ideal para esquiadores: Calidez garantizada tras la jornada.",
+      "Explora Teruel: Alojamiento base cerca de Rubielos y Albarracín."
+    ],
+    "visual_keywords": [
+      "Interior de piedra rústica",
+      "Chimenea acogedora",
+      "Ambientes abuhardillados",
+      "Comedor amplio y familiar",
+      "Paisaje de montaña nevado"
+    ],
+    "ctas": [
+      "Ver Disponibilidad y Tarifas",
+      "Reserva tu Estancia Completa",
+      "Contactar para Consultas"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa rural de alquiler completo ubicada en Fuentes de Rubielos, en la sierra de Gúdar (962m de altitud), diseñada específicamente para alojar grupos grandes, entre 10 y 12 personas. La estructura es de estilo rural tradicional, construida con piedra del lugar, y ofrece calefacción central y una chimenea para el invierno, ideal para después de una jornada de esquí. Entre sus comodidades destacan un amplio salón, zona de barbacoa, y un salón de juegos equipado con billar. Permite el acceso a rutas de senderismo, BTT, rafting y turismo cultural en localidades cercanas como Rubielos de Mora y Mora de Rubielos. Se ofrece posibilidad de alquiler a partir de seis personas y cuentan con dos números de contacto: 691 722 666 y 685 630 610."
+  }
+}
+[2025-12-27T21:15:23.281Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Invalid Compact JWS",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:15:23.695Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Invalid Compact JWS",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:15:23.848Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Invalid Compact JWS",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:15:24.034Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Invalid Compact JWS",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:15:24.250Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Invalid Compact JWS",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:15:24.470Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Invalid Compact JWS",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:15:27.720Z] Error uploading to Supabase: {
+  "name": "StorageApiError",
+  "message": "Invalid Compact JWS",
+  "status": 400,
+  "statusCode": "403"
+}
+[2025-12-27T21:17:05.136Z] Microlink error: {}
+[2025-12-27T21:17:14.172Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio rural de alquiler completo en la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una casa rural acogedora y de estilo tradicional en Fuentes de Rubielos, especializada en el alquiler completo para grupos grandes de 10 a 12 personas. Ofrecemos una estancia confortable y de calidad, combinando el encanto de la construcción con piedra local con comodidades modernas como chimenea, barbacoa y salón de juegos.",
+  "brand_values": [
+    "Convivencia",
+    "Calidad Excepcional",
+    "Tradición",
+    "Entorno Natural",
+    "Comodidad"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Cercano",
+    "Auténtico"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Cálido",
+    "Sencillo"
+  ],
+  "colors": [
+    "#3E4951",
+    "#004042",
+    "#FFF9F3",
+    "#7F7F02",
+    "#FF0100"
+  ],
+  "fonts": [
+    "Lora",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Reúne a los tuyos: Alquiler completo hasta 12 personas en Rubielos de Mora.",
+      "Desconecta en la Sierra de Gúdar: Rutas, esquí y barbacoa en tu casa rural.",
+      "La calidad del confort rural: Estancias excepcionales con decoración cuidada.",
+      "¿Días de esquí? Chimenea asegurada después de una jornada en la nieve.",
+      "Piedra, naturaleza y billar: El plan perfecto para una escapada en grupo."
+    ],
+    "visual_keywords": [
+      "Rural stone architecture",
+      "cozy Spanish retreat",
+      "mountain cabin interior",
+      "large group accommodation",
+      "traditional wood and stone"
+    ],
+    "ctas": [
+      "Ver Tarifas y Temporadas",
+      "Consultar Disponibilidad",
+      "Reserva tu Escapada"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa rural de alquiler íntegro ubicada en Fuentes de Rubielos (Teruel), dentro de la tranquila Sierra de Gúdar, a 962 metros de altitud. Está construida con piedra local y equipada con calefacción central. Está diseñada para alojar cómodamente entre 10 y 12 personas, aunque ofrece la posibilidad de alquiler a partir de seis. Dispone de un amplio salón, salón de juegos con billar, zona de barbacoa y tres baños completos que dan servicio a cinco habitaciones (azul, Columbia, Java, verde, morada). Su ubicación es estratégica para realizar actividades de aventura (senderismo, BTT, rafting) y turismo cultural en la comarca (Rubielos de Mora, Mora de Rubielos, Teruel) y es especialmente adecuada para la temporada de esquí debido a la cercanía de las pistas y la disponibilidad de chimenea."
+  }
+}
+[2025-12-28T12:54:58.681Z] Microlink error: {}
+[2025-12-28T12:55:08.857Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "Qualitat i Tradició. Autèntic oli valencià.",
+  "business_overview": "Oli Lagaiana produeix i ven oli d’oliva verge extra (AOVE) de primera collita, elaborat artesanalment amb olives de varietat Koroneiki mitjançant premsa en fred. Ubicat a Roca – Meliana, València, el negoci celebra el sabor autèntic del Mediterrani, oferint també visites guiades i packs de regal.",
+  "brand_values": [
+    "Tradició",
+    "Qualitat",
+    "Autenticitat",
+    "Patrimoni (SIPAM)",
+    "Artesania"
+  ],
+  "tone_of_voice": [
+    "Familiar",
+    "Orgullós",
+    "Artesanal"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Mediterrani",
+    "Natural"
+  ],
+  "colors": [
+    "#141827",
+    "#334AFF",
+    "#0044CC",
+    "#BF7F3F",
+    "#550300"
+  ],
+  "fonts": [
+    "Lora",
+    "Roboto"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "El Sabor Autèntic de València, directe a casa teva.",
+      "Oli Lagaiana: Qualitat Premium, Premsa en Fred Garantida.",
+      "Descobreix el tresor líquid de l'Horta Nord SIPAM.",
+      "Varietat Koroneiki: L'essència grega adaptada al Mediterrani valencià.",
+      "Regala l'Experiència: Packs exclusius amb copes de tast."
+    ],
+    "visual_keywords": [
+      "Mediterranean sunlight",
+      "Koroneiki olive grove",
+      "Cold press process",
+      "Rustic kitchen setting",
+      "Earthy tones and amber liquid"
+    ],
+    "ctas": [
+      "Comprar Oli Premium",
+      "Reserva la teva Visita Guiada",
+      "Descobreix els nostres Packs Regal"
+    ],
+    "brand_context": "Oli Lagaiana és un productor d'oli d'oliva verge extra valencià amb un fort èmfasi en la tradició i la qualitat artesanal. L'oli és de primera collita i s'obté mitjançant procediments mecànics i premsa en fred, utilitzant exclusivament la varietat d'oliva Koroneiki. Els seus camps estan ubicats a Roca – Meliana, a la comarca de l’Horta Nord, un territori protegit per la Generalitat Valenciana i reconegut per la FAO com a SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial). La proximitat a la mar Mediterrània (a escassos 1500 m) influeix en les característiques del producte. El negoci promou l'experiència oferint visites guiades, i utilitza plataformes d'e-commerce (WooCommerce) per a la venda directa, incloent opcions de packs de regal amb copes de tast."
+  }
+}
+[2025-12-28T14:18:22.916Z] Microlink error: {}
+[2025-12-28T14:18:33.173Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "El sabor autèntic del Mediterrani, directament de l'Horta Nord.",
+  "business_overview": "Oli Lagaiana es dedica a la producció i venda d'oli d'oliva verge extra (AOVE) de primera collita a València. Elaboren el seu oli amb olives 100% Koroneiki, utilitzant premsa en fred i mètodes artesanals per preservar totes les propietats. A més de la venda online, ofereixen visites guiades als seus camps situats a la zona protegida de Roca – Meliana.",
+  "brand_values": [
+    "Qualitat",
+    "Tradició",
+    "Artesania",
+    "Sostenibilitat",
+    "Autenticitat"
+  ],
+  "tone_of_voice": [
+    "Cercano",
+    "Apasionado",
+    "Educativo"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Natural",
+    "Terrenal"
+  ],
+  "colors": [
+    "#334AFF",
+    "#141827",
+    "#0044CC",
+    "#BF7F3F",
+    "#550300"
+  ],
+  "fonts": [
+    "EB Garamond",
+    "Roboto"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "El AOVE Valencià que transforma tu cuina.",
+      "Sabor Koroneiki: La varietat grega amb cor mediterrani.",
+      "De Roca (Meliana) a la teva taula: Autenticitat certificada.",
+      "Oli de Primera Collita: Premsa en fred, màxima qualitat.",
+      "Descobreix el Tresor Líquid de l'Horta Nord."
+    ],
+    "visual_keywords": [
+      "Olive grove",
+      "Traditional agriculture",
+      "Mediterranean sunlight",
+      "Cold press extraction",
+      "Rustic packaging"
+    ],
+    "ctas": [
+      "Comprar Oli AOVE",
+      "Reservar Visita Guiada",
+      "Descobreix el Pack Regal"
+    ],
+    "brand_context": "Oli Lagaiana elabora oli d'oliva verge extra de primera collita a Roca – Meliana, situat a la comarca de l’Horta Nord, València. Aquesta regió té un gran valor agrari i paisatgístic, reconegut per la Generalitat Valenciana i la FAO com a territori SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial). Utilitzen exclusivament la varietat d'oliva Koroneiki, una varietat grega molt adequada al clima local, amb els camps situats a només 1500m del Mediterrani. L'oli s'obté mitjançant premsa en fred i procediments exclusivament mecànics per garantir la màxima qualitat i beneficis per a la salut. L'empresa promou la connexió amb la terra oferint visites guiades."
+  }
+}

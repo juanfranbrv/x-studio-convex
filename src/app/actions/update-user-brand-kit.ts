@@ -1,0 +1,43 @@
+'use server';
+
+import { supabase } from '@/lib/supabase';
+import { BrandDNA } from '@/lib/brand-types';
+import { revalidatePath } from 'next/cache';
+
+export async function updateUserBrandKit(brandKitId: string, brandData: BrandDNA) {
+    try {
+        console.log(`💾 Guardando Brand Kit ID: ${brandKitId}`);
+
+        const { error } = await supabase
+            .from('brand_dna')
+            .update({
+                brand_name: brandData.brand_name,
+                tagline: brandData.tagline,
+                business_overview: brandData.business_overview,
+                brand_values: brandData.brand_values,
+                tone_of_voice: brandData.tone_of_voice,
+                visual_aesthetic: brandData.visual_aesthetic,
+                colors: brandData.colors,
+                fonts: brandData.fonts,
+                logo_url: brandData.logo_url,
+                logos: brandData.logos,
+                favicon_url: brandData.favicon_url,
+                screenshot_url: brandData.screenshot_url,
+                images: brandData.images,
+                text_assets: brandData.text_assets,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', brandKitId);
+
+        if (error) {
+            console.error('Error de Supabase al actualizar brand kit:', error);
+            throw error;
+        }
+
+        revalidatePath('/dashboard');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error inesperado al actualizar brand kit:', error);
+        return { success: false, error: error.message || 'Error desconocido' };
+    }
+}
