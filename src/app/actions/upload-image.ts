@@ -1,22 +1,8 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-// Utilizar Service Role Key para uploads seguros desde el servidor si está disponible, 
-// o Anon Key si las políticas RLS lo permiten.
-// Dado que es una action de servidor, lo ideal es usar credenciales con permisos.
-// Por consistencia con analyze-brand-dna, usaremos la misma configuración implícita 
-// o crearemos un cliente admin específico si es necesario.
-// IMPORTANTE: En analyze-brand-dna.ts se usa 'supabase' importado de lib/supabase que usa anon key.
-// Asumiremos que el bucket 'brand-assets' tiene políticas RLS correctas o públicas para escritura autenticada.
-// Para asegurar escritura, usaremos service role key si existe en variables de entorno, sino fallback a anon.
-
-// Usamos la anon key para uploads ya que el bucket 'brand-assets' tiene políticas públicas de INSERT/UPDATE.
-// Esto evita el error con la SERVICE_ROLE_KEY si no está configurada correctamente en .env.local.
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { api } from "../../../convex/_generated/api";
 
 export async function uploadBrandImage(formData: FormData) {
     try {
@@ -42,28 +28,39 @@ export async function uploadBrandImage(formData: FormData) {
             .webp({ quality: 85 })
             .toBuffer();
 
-        const fileName = `uploads/${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
+        // Convert Buffer to Blob for fetch
+        // Note: fetch in Node environment needs a standard Blob implementation.
+        // Node 18+ has native Blob.
+        const blob = new Blob([new Uint8Array(optimizedBuffer)], { type: 'image/webp' });
 
-        const { error: uploadError } = await supabase.storage
-            .from('brand-assets')
-            .upload(fileName, optimizedBuffer, {
-                contentType: 'image/webp',
-                upsert: true,
-            });
+        // 1. Get Upload URL
+        const uploadUrl = await fetchMutation(api.assets.generateUploadUrl, {});
 
-        if (uploadError) {
-            console.error('Supabase upload error:', uploadError);
-            return { success: false, error: 'Error al subir la imagen a Supabase.' };
+        // 2. Upload File
+        const result = await fetch(uploadUrl, {
+            method: "POST",
+            body: blob,
+            headers: { "Content-Type": "image/webp" },
+        });
+
+        if (!result.ok) {
+            throw new Error(`Upload failed: ${result.statusText}`);
         }
 
-        const { data: publicUrlData } = supabase.storage
-            .from('brand-assets')
-            .getPublicUrl(fileName);
+        const { storageId } = await result.json();
 
-        return { success: true, url: publicUrlData.publicUrl };
+        // 3. Get signed URL for the image
+        const url = await fetchQuery(api.assets.getImageUrl, { storageId });
 
-    } catch (error) {
+        if (!url) {
+            // Fallback if URL is null (shouldn't happen for valid storageId)
+            return { success: false, error: 'Error al obtener URL de la imagen.' };
+        }
+
+        return { success: true, url };
+
+    } catch (error: any) {
         console.error('Error en uploadBrandImage:', error);
-        return { success: false, error: 'Ocurrió un error inesperado al subir la imagen.' };
+        return { success: false, error: error.message || 'Ocurrió un error inesperado al subir la imagen.' };
     }
 }

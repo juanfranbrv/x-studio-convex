@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import type { BrandDNA } from './supabase'
+import type { BrandDNA } from './brand-types'
 
 // Initialize Gemini clients
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -12,15 +12,20 @@ export const imageModel = imageGenAI.getGenerativeModel({ model: 'gemini-3-pro-i
 // Brand-aware system prompt builder
 export function buildBrandSystemPrompt(brand: { name: string; brand_dna: BrandDNA }): string {
     const { name, brand_dna } = brand
-    const { colors, tone, fonts } = brand_dna
+    const { colors, tone_of_voice, fonts } = brand_dna
+
+    // Adapt legacy property access to new array structure
+    const tone = tone_of_voice?.join(', ') || 'Sin definir'
+    const headingFont = fonts?.[0] || 'Sin definir'
+    const bodyFont = fonts?.[1] || 'Sin definir'
 
     return `Eres un director creativo experto trabajando para la marca "${name}".
 
 DIRECTRICES DE MARCA OBLIGATORIAS:
-- Paleta de colores: ${colors.length > 0 ? colors.join(', ') : 'Sin definir'}
+- Paleta de colores: ${colors.map(c => c.color).join(', ') || 'Sin definir'}
 - Tono de comunicación: ${tone}
-- Tipografía principal: ${fonts.heading || 'Sin definir'}
-- Tipografía secundaria: ${fonts.body || 'Sin definir'}
+- Tipografía principal: ${headingFont}
+- Tipografía secundaria: ${bodyFont}
 
 REGLAS DE DISEÑO:
 1. Siempre incorpora sutilmente la identidad de marca
@@ -60,13 +65,15 @@ export async function generateBrandImage(
         platform?: 'instagram' | 'tiktok' | 'youtube' | 'linkedin'
     } = {}
 ): Promise<string> {
-    const { colors, tone } = brand.brand_dna
+    const { colors, tone_of_voice } = brand.brand_dna
+    const tone = tone_of_voice?.join(', ') || 'Sin definir'
+    const colorList = colors?.map(c => c.color).join(', ') || 'Sin definir'
 
     // Build enhanced prompt with brand context
     const enhancedPrompt = `
 Crear una imagen de marketing para la marca "${brand.name}".
 
-COLORES DE MARCA: ${colors.join(', ')}
+COLORES DE MARCA: ${colorList}
 TONO: ${tone}
 ${options.headline ? `TITULAR: "${options.headline}"` : ''}
 ${options.cta ? `CTA: "${options.cta}"` : ''}

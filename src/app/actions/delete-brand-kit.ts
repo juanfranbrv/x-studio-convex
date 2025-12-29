@@ -1,6 +1,8 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { fetchMutation } from 'convex/nextjs';
+import { api } from '../../../convex/_generated/api';
+import { Id } from '../../../convex/_generated/dataModel';
 
 /**
  * Elimina un Brand Kit por su ID
@@ -10,15 +12,7 @@ export async function deleteBrandKit(brandKitId: string): Promise<{
     error?: string;
 }> {
     try {
-        const { error } = await supabase
-            .from('brand_dna')
-            .delete()
-            .eq('id', brandKitId);
-
-        if (error) {
-            console.error('Error deleting brand kit:', error);
-            return { success: false, error: error.message };
-        }
+        await fetchMutation(api.brands.deleteBrandDNA, { id: brandKitId as Id<"brand_dna"> });
 
         return { success: true };
     } catch (err) {

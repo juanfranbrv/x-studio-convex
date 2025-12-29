@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { generateBrandImage } from '@/lib/gemini'
-import type { BrandDNA } from '@/lib/supabase'
+import type { BrandDNA } from '@/lib/brand-types'
 
 export async function POST(request: NextRequest) {
     try {

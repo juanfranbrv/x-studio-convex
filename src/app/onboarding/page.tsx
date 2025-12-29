@@ -17,6 +17,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { useTranslation } from 'react-i18next'
+import { useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 
 type Step = 1 | 2 | 3
 
@@ -69,11 +71,32 @@ export default function OnboardingPage() {
         )
     }
 
+    const upsertBrandDNA = useMutation(api.brands.upsertBrandDNA)
+
     const handleFinish = async () => {
         setIsSaving(true)
         try {
-            // TODO: Save brand to Supabase
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            // CONVEX MIGRATION: Save to brand_dna table
+            // We use upsertBrandDNA which maps to the table used by the dashboard
+            await upsertBrandDNA({
+                url: websiteUrl || `manual:${Date.now()}`, // Fallback if no URL
+                brand_name: brandName,
+                tagline: '',
+                business_overview: '',
+                brand_values: [],
+                tone_of_voice: [],
+                visual_aesthetic: [],
+                colors: selectedColors,
+                fonts: extractedData?.fonts ?
+                    [extractedData.fonts.heading || '', extractedData.fonts.body || ''].filter(Boolean)
+                    : [],
+                logo_url: extractedData?.logo,
+                // Ensure other required fields are present (even if empty) if schema requires them
+                // Schema has updated_at as required string.
+                updated_at: new Date().toISOString(),
+                clerk_user_id: user?.id
+            })
+
             router.push('/studio')
         } catch (error) {
             console.error('Save failed:', error)

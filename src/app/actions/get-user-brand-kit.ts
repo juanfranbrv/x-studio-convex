@@ -1,6 +1,8 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { fetchQuery } from 'convex/nextjs';
+import { api } from '../../../convex/_generated/api';
+import { Id } from '../../../convex/_generated/dataModel';
 import type { BrandDNA, BrandKitSummary } from '@/lib/brand-types';
 
 /**
@@ -50,18 +52,28 @@ export async function getAllUserBrandKits(clerkUserId: string): Promise<{
     error?: string;
 }> {
     try {
-        const { data, error } = await supabase
-            .from('brand_dna')
-            .select('id, brand_name, url, logo_url, favicon_url, screenshot_url, updated_at')
-            .eq('clerk_user_id', clerkUserId)
-            .order('updated_at', { ascending: false });
+        // CONVEX MIGRATION: fetchQuery
+        const brands = await fetchQuery(api.brands.getBrandDNAByClerkId, { clerk_user_id: clerkUserId });
 
-        if (error) {
-            console.error('Error fetching user brand kits:', error);
-            return { success: false, error: error.message };
-        }
+        // Client-side sort by updated_at desc since we can't easily index sort in Convex yet
+        const sortedBrands = (brands || []).sort((a: any, b: any) => {
+            const dateA = new Date(a.updated_at).getTime();
+            const dateB = new Date(b.updated_at).getTime();
+            return dateB - dateA;
+        });
 
-        return { success: true, data: data || [] };
+        // Map to summary
+        const summaryData: BrandKitSummary[] = sortedBrands.map((b: any) => ({
+            id: b._id,
+            brand_name: b.brand_name,
+            url: b.url,
+            logo_url: b.logo_url || null,
+            favicon_url: b.favicon_url || null,
+            screenshot_url: b.screenshot_url || null,
+            updated_at: b.updated_at
+        }));
+
+        return { success: true, data: summaryData };
     } catch (err) {
         console.error('Unexpected error in getAllUserBrandKits:', err);
         return { success: false, error: 'Error inesperado' };
@@ -77,30 +89,21 @@ export async function getUserBrandKitById(brandKitId: string): Promise<{
     error?: string;
 }> {
     try {
-        const { data, error } = await supabase
-            .from('brand_dna')
-            .select('*')
-            .eq('id', brandKitId)
-            .single();
-
-        if (error) {
-            console.error('Error fetching brand kit by ID:', error);
-            return { success: false, error: error.message };
-        }
+        const data = await fetchQuery(api.brands.getBrandDNAById, { id: brandKitId as Id<"brand_dna"> });
 
         if (!data) {
             return { success: false, error: 'Brand Kit no encontrado' };
         }
 
         const brandDNA: BrandDNA = {
-            id: data.id,
+            id: data._id,
             url: data.url || '',
             brand_name: data.brand_name || '',
             tagline: data.tagline || '',
             business_overview: data.business_overview || '',
             brand_values: data.brand_values || [],
             tone_of_voice: data.tone_of_voice || [],
-            visual_aesthetic: data.brand_aesthetic || [],
+            visual_aesthetic: data.visual_aesthetic || [],
             colors: data.colors || [],
             fonts: data.fonts || [],
             logo_url: data.logo_url || '',
@@ -110,7 +113,7 @@ export async function getUserBrandKitById(brandKitId: string): Promise<{
             images: normalizeImages(data.images),
             text_assets: data.text_assets || undefined,
             debug: data.debug || undefined,
-            created_at: data.created_at,
+            created_at: data.created_at || new Date().toISOString(), // Fallback if missing
         };
 
         return { success: true, data: brandDNA };
@@ -130,33 +133,30 @@ export async function getUserBrandKit(clerkUserId: string): Promise<{
     error?: string;
 }> {
     try {
-        const { data, error } = await supabase
-            .from('brand_dna')
-            .select('*')
-            .eq('clerk_user_id', clerkUserId)
-            .order('updated_at', { ascending: false })
-            .limit(1);
+        const brands = await fetchQuery(api.brands.getBrandDNAByClerkId, { clerk_user_id: clerkUserId });
 
-        if (error) {
-            console.error('Error fetching user brand kit:', error);
-            return { success: false, exists: false, error: error.message };
-        }
-
-        if (!data || data.length === 0) {
+        if (!brands || brands.length === 0) {
             return { success: true, exists: false };
         }
 
-        const record = data[0];
+        // Sort desc
+        brands.sort((a: any, b: any) => {
+            const dateA = new Date(a.updated_at).getTime();
+            const dateB = new Date(b.updated_at).getTime();
+            return dateB - dateA;
+        });
+
+        const record = brands[0];
 
         const brandDNA: BrandDNA = {
-            id: record.id,
+            id: record._id,
             url: record.url || '',
             brand_name: record.brand_name || '',
             tagline: record.tagline || '',
             business_overview: record.business_overview || '',
             brand_values: record.brand_values || [],
             tone_of_voice: record.tone_of_voice || [],
-            visual_aesthetic: record.brand_aesthetic || [],
+            visual_aesthetic: record.visual_aesthetic || [],
             colors: record.colors || [],
             fonts: record.fonts || [],
             logo_url: record.logo_url || '',
@@ -166,7 +166,7 @@ export async function getUserBrandKit(clerkUserId: string): Promise<{
             images: normalizeImages(record.images),
             text_assets: record.text_assets || undefined,
             debug: record.debug || undefined,
-            created_at: record.created_at,
+            created_at: record.created_at || new Date().toISOString(),
         };
 
         return { success: true, data: brandDNA, exists: true };

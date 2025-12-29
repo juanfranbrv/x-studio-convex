@@ -147,15 +147,17 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                             <Trash2 className="w-5 h-5" />
                             ¿Eliminar "{(brandToDelete as any)?.brand_name}"?
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-muted-foreground">
-                            Se perderán permanentemente todos los datos de este Brand Kit:
-                            <ul className="list-disc list-inside mt-2 space-y-1">
-                                <li>Colores y paletas</li>
-                                <li>Tipografías</li>
-                                <li>Assets visuales (logos, imágenes)</li>
-                                <li>Valores y tono de voz</li>
-                            </ul>
-                            <p className="mt-3 font-semibold">Esta acción no se puede deshacer.</p>
+                        <AlertDialogDescription asChild>
+                            <div className="text-muted-foreground">
+                                Se perderán permanentemente todos los datos de este Brand Kit:
+                                <ul className="list-disc list-inside mt-2 space-y-1">
+                                    <li>Colores y paletas</li>
+                                    <li>Tipografías</li>
+                                    <li>Assets visuales (logos, imágenes)</li>
+                                    <li>Valores y tono de voz</li>
+                                </ul>
+                                <p className="mt-3 font-semibold">Esta acción no se puede deshacer.</p>
+                            </div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

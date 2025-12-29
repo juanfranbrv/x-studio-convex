@@ -1,6 +1,8 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { fetchMutation } from 'convex/nextjs';
+import { api } from '../../../convex/_generated/api';
+import { Id } from '../../../convex/_generated/dataModel';
 import { BrandDNA } from '@/lib/brand-types';
 import { revalidatePath } from 'next/cache';
 
@@ -8,9 +10,9 @@ export async function updateUserBrandKit(brandKitId: string, brandData: BrandDNA
     try {
         console.log(`💾 Guardando Brand Kit ID: ${brandKitId}`);
 
-        const { error } = await supabase
-            .from('brand_dna')
-            .update({
+        await fetchMutation(api.brands.updateBrandDNADoc, {
+            id: brandKitId as Id<"brand_dna">,
+            updates: {
                 brand_name: brandData.brand_name,
                 tagline: brandData.tagline,
                 business_overview: brandData.business_overview,
@@ -26,13 +28,8 @@ export async function updateUserBrandKit(brandKitId: string, brandData: BrandDNA
                 images: brandData.images,
                 text_assets: brandData.text_assets,
                 updated_at: new Date().toISOString(),
-            })
-            .eq('id', brandKitId);
-
-        if (error) {
-            console.error('Error de Supabase al actualizar brand kit:', error);
-            throw error;
-        }
+            }
+        });
 
         revalidatePath('/dashboard');
         return { success: true };

@@ -938,3 +938,339 @@
     "brand_context": "Oli Lagaiana elabora oli d'oliva verge extra de primera collita a Roca – Meliana, situat a la comarca de l’Horta Nord, València. Aquesta regió té un gran valor agrari i paisatgístic, reconegut per la Generalitat Valenciana i la FAO com a territori SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial). Utilitzen exclusivament la varietat d'oliva Koroneiki, una varietat grega molt adequada al clima local, amb els camps situats a només 1500m del Mediterrani. L'oli s'obté mitjançant premsa en fred i procediments exclusivament mecànics per garantir la màxima qualitat i beneficis per a la salut. L'empresa promou la connexió amb la terra oferint visites guiades."
   }
 }
+[2025-12-29T22:17:10.855Z] Microlink error: {}
+[2025-12-29T22:17:20.501Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio de piedra con carácter en la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una acogedora casa rural de alquiler completo, diseñada para grupos de 10 a 12 personas, con posibilidad de reserva a partir de seis. Ofrece un ambiente rústico, con decoración cuidada, comodidades modernas y una ubicación inmejorable para disfrutar del entorno natural de Fuentes de Rubielos, Teruel.",
+  "brand_values": [
+    "Hospitalidad",
+    "Tradición",
+    "Conexión",
+    "Naturaleza",
+    "Comodidad"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Rústico",
+    "Cercano"
+  ],
+  "visual_aesthetic": [
+    "Rural",
+    "Piedra",
+    "Auténtico"
+  ],
+  "colors": [
+    "#3E4951",
+    "#FFF9F3",
+    "#7F7F02",
+    "#FF0100",
+    "#004042"
+  ],
+  "fonts": [
+    "Lora",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Escapada para 12: Encuentra el chalet rural perfecto en Teruel.",
+      "¿Nieve, billar y chimenea? La receta para tu fin de semana ideal.",
+      "Alquiler completo a partir de 6 personas: Reúne a los tuyos.",
+      "Descubre la paz de la Sierra de Gúdar, a 962 metros de altitud.",
+      "El encanto de la piedra: Una casa rural con decoración cuidada y alma."
+    ],
+    "visual_keywords": [
+      "rustic stone architecture",
+      "cozy fireplace interior",
+      "mountain landscape snowy",
+      "billiard room rustic charm",
+      "traditional Spanish village"
+    ],
+    "ctas": [
+      "Ver Tarifas y Disponibilidad",
+      "Solicitar Presupuesto para Grupos",
+      "Explora la Galería de Fotos"
+    ],
+    "brand_context": "Rosella de Rubielos opera como una casa rural de alquiler completo ubicada en Fuentes de Rubielos, dentro de la Sierra de Gúdar, a 962 metros. Está diseñada para alojar entre 10 y 12 personas, con un mínimo de alquiler establecido en seis huéspedes. La casa está construida con piedra del lugar, ofreciendo un estilo sencillo pero acogedor. Dispone de calefacción central, chimenea, sala de juegos con billar, barbacoa para asados y paellas, y tres baños completos. Adicionalmente, se ofrece la posibilidad de solicitar servicios de comidas y cenas, complementando la experiencia vacacional en un entorno de naturaleza y excursiones histórico-artísticas."
+  }
+}
+[2025-12-29T22:23:56.253Z] Microlink error: {}
+[2025-12-29T22:24:04.815Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio rural de alquiler completo en la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una casa de estilo rural, acogedora y con decoración cuidada, diseñada para el alquiler completo de grupos grandes (10-12 personas). Ofrece un espacio ideal para la convivencia en un entorno natural privilegiado, cerca de Rubielos de Mora y otras joyas de la Sierra de Gúdar.",
+  "brand_values": [
+    "Autenticidad",
+    "Convivencia",
+    "Confort",
+    "Entorno Natural",
+    "Tradición"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Sereno",
+    "Descriptivo"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Tradicional",
+    "Atemporal"
+  ],
+  "colors": [
+    "#3E4951",
+    "#FFF9F3",
+    "#004042",
+    "#FF0100",
+    "#7F7F02"
+  ],
+  "fonts": [
+    "Lora",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Escapada en grupo: Casa rural completa para 10-12 personas.",
+      "Desconecta en la Sierra de Gúdar: Naturaleza y tranquilidad.",
+      "Chimenea y calefacción central: El plan perfecto post-esquí.",
+      "Piedra local, decoración cuidada, confort total.",
+      "Tu base ideal para explorar Rubielos y Mora de Rubielos."
+    ],
+    "visual_keywords": [
+      "Rustic stone architecture",
+      "Cozy interior design",
+      "Mountain landscape views",
+      "Wood burning fireplace",
+      "Spanish rural charm"
+    ],
+    "ctas": [
+      "Ver disponibilidad y tarifas",
+      "Reserva tu estancia completa",
+      "Explora la Galería de Fotos"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa de alquiler completo de estilo rural, diseñada para alojar cómodamente entre 10 y 12 personas, con una opción de alquiler mínimo a partir de seis. La estructura está construida con piedra del lugar y cuenta con calefacción central, chimenea, y facilidades de ocio como sala de juegos con billar. Ofrece tres baños completos y cinco habitaciones temáticas (azul, Columbia, Java, verde, morada). Se encuentra ubicada en Fuentes de Rubielos, a 962 metros de altitud en la Sierra de Gúdar, posicionándola estratégicamente para el disfrute de actividades en la naturaleza y visitas culturales a la comarca, incluyendo Rubielos de Mora y Teruel. Dispone también de barbacoa exterior y ofrece la posibilidad de contratar comidas y cenas. Es un alojamiento clave para quienes buscan experiencias histórico-artísticas y gastronómicas en Teruel."
+  }
+}
+[2025-12-29T22:25:41.985Z] Microlink error: {}
+[2025-12-29T22:25:53.002Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio de piedra con alma en la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una casa rural de alquiler completo ubicada en Fuentes de Rubielos, diseñada para alojar cómodamente a grupos de 6 a 12 personas. Ofrece un alojamiento rústico y acogedor, con decoración cuidada y comodidades como chimenea y salón de juegos. Es el destino ideal para disfrutar de la naturaleza y el patrimonio histórico-artístico de la comarca de Gúdar-Javalambre.",
+  "brand_values": [
+    "Autenticidad",
+    "Convivencia",
+    "Hospitalidad",
+    "Naturaleza",
+    "Confort"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Cercano",
+    "Rural"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Tradicional",
+    "Orgánico"
+  ],
+  "colors": [
+    "#3E4951",
+    "#FFF9F3",
+    "#7F7F02",
+    "#004042",
+    "#FF0100"
+  ],
+  "fonts": [
+    "Lora",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Reúne a tu grupo: Alquiler completo para 12 personas en la Sierra de Gúdar.",
+      "Escapada de piedra y alma: Vive el auténtico carácter rural de Teruel.",
+      "Chimenea, billar y barbacoa: El plan perfecto para tu descanso, sea invierno o verano.",
+      "Desconecta a 962 metros: Un entorno de naturaleza virgen y excursiones históricas.",
+      "Tu casa rural exclusiva: Reserva Rosella de Rubielos desde solo seis personas."
+    ],
+    "visual_keywords": [
+      "Rural architecture stone texture",
+      "Cozy fireplace winter light",
+      "Rustic interior design spanish",
+      "Abuhardillada room natural light",
+      "Sierra de Gúdar mountain landscape"
+    ],
+    "ctas": [
+      "Ver Disponibilidad y Tarifas",
+      "Reservar Ahora",
+      "Planifica tu Escapada Rural"
+    ],
+    "brand_context": "Rosella de Rubielos opera como una casa rural de alquiler íntegro, especializada en el alojamiento de grupos, con una capacidad óptima de 10 a 12 plazas, y un mínimo de reserva para seis personas. La construcción es de piedra local con un estilo sencillo y acogedor, e incluye comodidades de alto valor para el cliente grupal como calefacción central, tres baños completos, cinco habitaciones temáticas (algunas abuhardilladas), un salón de juegos con billar y área de barbacoa. El negocio se beneficia de su ubicación en Fuentes de Rubielos, a 962 metros de altitud, proporcionando un excelente punto de partida para actividades de esquí en invierno y rutas histórico-gastronómicas en la comarca de Gúdar, con pueblos cercanos de gran personalidad como Rubielos de Mora y Mora de Rubielos. Además, ofrece la posibilidad de solicitar servicios de comidas y cenas bajo demanda."
+  }
+}
+[2025-12-29T22:30:07.372Z] Microlink error: {}
+[2025-12-29T22:30:16.176Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Sencillez y carácter en el corazón de la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una casa rural de alquiler completo con capacidad para 10 a 12 personas, ideal para grandes grupos o familias. Ofrece un ambiente acogedor de estilo rústico con todas las comodidades modernas, ubicada en el tranquilo entorno natural de Fuentes de Rubielos. Es el punto de partida perfecto para disfrutar de la naturaleza, el esquí y las excursiones histórico-artísticas de la zona de Gúdar.",
+  "brand_values": [
+    "Convivencia",
+    "Tradición",
+    "Naturaleza",
+    "Acogida",
+    "Comodidad"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Sencillo",
+    "Cercano"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Montañoso",
+    "Cuidado"
+  ],
+  "colors": [
+    "#FFF9F3",
+    "#3E4951",
+    "#7F7F02",
+    "#004042",
+    "#FF0100"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Alquiler completo en Rubielos de Mora: Escapada para 12 personas.",
+      "Tu refugio de montaña con chimenea: Perfecto para después del esquí.",
+      "Descubre el encanto de Teruel desde una casa construida con piedra del lugar.",
+      "Barbacoa, billar y naturaleza: Todo lo que necesitas para una convivencia inolvidable.",
+      "Rosella de Rubielos: La sencillez de lo rural con decoración cuidada."
+    ],
+    "visual_keywords": [
+      "Rustic stone architecture",
+      "Cozy interior wood beams",
+      "Mountain landscape views",
+      "Traditional Spanish villa",
+      "Fireplace setting convivial"
+    ],
+    "ctas": [
+      "Consulta nuestras tarifas y disponibilidad",
+      "Reserva tu escapada en grupo",
+      "Ver Galería de Fotos"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa de estilo rural que opera bajo la modalidad de alquiler completo, diseñada para alojar entre 10 y 12 personas, aceptando reservas mínimas a partir de seis huéspedes. La propiedad, ubicada en Fuentes de Rubielos, Sierra de Gúdar, a 962 metros de altitud, está equipada con calefacción central, una chimenea funcional, una sala de juegos con billar, y tres baños completos. Ofrece servicios adicionales como barbacoa y la posibilidad de comidas y cenas bajo petición, sirviendo como base ideal para actividades invernales y excursiones a pueblos cercanos de alto valor histórico-artístico como Rubielos y Mora de Rubielos."
+  }
+}
+[2025-12-29T22:45:25.477Z] Microlink error: {}
+[2025-12-29T22:45:34.062Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio rural con carácter en la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una casa rural de alquiler completo con estilo, diseñada para acoger cómodamente a grupos de 10 a 12 personas en un ambiente acogedor y con decoración cuidada. Ubicada en el tranquilo pueblo de Fuentes de Rubielos, en la sierra de Gúdar, ofrece una base ideal para disfrutar de la naturaleza, actividades de invierno y excursiones histórico-artísticas en Teruel.",
+  "brand_values": [
+    "Ruralidad",
+    "Convivencia",
+    "Carácter",
+    "Tranquilidad",
+    "Autenticidad"
+  ],
+  "tone_of_voice": [
+    "Sencillo",
+    "Acogedor",
+    "Cercano"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Tradicional",
+    "Sólido"
+  ],
+  "colors": [
+    "#FF0100",
+    "#0400FF",
+    "#3E4951",
+    "#004042",
+    "#FFF9F3"
+  ],
+  "fonts": [
+    "Lora",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Reúne a los tuyos: Alquiler completo para 10-12 personas en plena sierra.",
+      "Desconexión garantizada: Una casa con carácter, construida con piedra del lugar.",
+      "¿Planes de esquí? Disfruta del calor de nuestra chimenea al volver.",
+      "Salón de juegos y barbacoa: Todo lo que necesitas para tu escapada grupal.",
+      "Explora la Comarca del Gúdar: Cultura, historia y gastronomía desde tu base."
+    ],
+    "visual_keywords": [
+      "Rustic stone construction",
+      "Cozy interiors fireplace",
+      "Sierra de Gúdar snowy landscape",
+      "Traditional Spanish architecture",
+      "Game room billiard table"
+    ],
+    "ctas": [
+      "Consulta nuestras Tarifas",
+      "Reserva tu Estancia Completa",
+      "Ver Galería de Fotos"
+    ],
+    "brand_context": "Rosella de Rubielos opera como una casa rural de alquiler completo, orientada a grupos grandes de 10 a 12 huéspedes, con un mínimo de alquiler establecido en seis personas. La propiedad se distingue por su estilo rural con carácter, construida con piedra del lugar y equipada para el confort en alta montaña, incluyendo calefacción central, chimenea y tres baños completos. Dispone de comodidades clave como barbacoa y salón de juegos con billar. Ofrece la posibilidad de contratar servicios de comidas y cenas. Su localización en Fuentes de Rubielos, a 962 metros de altitud, permite un fácil acceso a Rubielos de Mora y otras atracciones históricas y naturales de la zona."
+  }
+}
+[2025-12-29T22:48:48.158Z] Microlink error: {}
+[2025-12-29T22:48:57.378Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio de piedra en la Sierra de Gúdar para grandes grupos.",
+  "business_overview": "Rosella de Rubielos es una casa rural de alquiler completo ubicada en Fuentes de Rubielos (Teruel), diseñada para alojar cómodamente entre 10 y 12 personas. Ofrece un entorno acogedor y con carácter, construido con piedra local, ideal para el descanso y el disfrute de la naturaleza en la Sierra de Gúdar.",
+  "brand_values": [
+    "Autenticidad",
+    "Hospitalidad",
+    "Comunidad",
+    "Tradición",
+    "Confort"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Familiar",
+    "Cercano"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Orgánico",
+    "Espacioso"
+  ],
+  "colors": [
+    "#3E4951",
+    "#FFF9F3",
+    "#7F7F02",
+    "#004042",
+    "#FF0100"
+  ],
+  "fonts": [
+    "Lora",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "La casa rural perfecta para tu reunión familiar de 12 personas.",
+      "Desconecta en la Sierra de Gúdar: Carácter y decoración cuidada.",
+      "Reúne a los tuyos: Alquiler completo con barbacoa y salón de juegos.",
+      "Calefacción central y chimenea: El plan ideal después de una jornada de esquí.",
+      "Construida con piedra del lugar, tu escapada auténtica en Teruel."
+    ],
+    "visual_keywords": [
+      "Rustic stone house",
+      "Spanish mountain retreat",
+      "Cozy communal living room",
+      "Billiard table game room",
+      "Fireplace ambiance Gúdar"
+    ],
+    "ctas": [
+      "Ver Tarifas y Disponibilidad",
+      "Reservar Estancia Completa",
+      "Descubre el Entorno Natural"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa rural de estilo sencillo y acogedor ubicada en el tranquilo pueblo de Fuentes de Rubielos, en la Sierra de Gúdar (962 metros de altitud). La propiedad se alquila de forma completa y está optimizada para grupos grandes de 10 a 12 personas, con un mínimo de seis. Sus características distintivas incluyen construcción con piedra local, calefacción central, chimenea, un salón de juegos con billar, y una barbacoa. Dispone de cinco habitaciones diferenciadas (azul, Columbia, Java, verde, morada) y tres baños completos. Además de la proximidad a zonas de esquí, la ubicación facilita excursiones a puntos históricos y naturales como Rubielos de Mora y Teruel, ofreciendo también la posibilidad de contratar servicios de comidas y cenas."
+  }
+}

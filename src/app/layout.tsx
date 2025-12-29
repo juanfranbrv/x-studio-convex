@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
-import { esES } from "@clerk/localizations";
+import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { BrandKitProvider } from "@/contexts/BrandKitContext";
 import { Toaster } from "@/components/ui/toaster";
@@ -24,11 +23,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider localization={esES}>
-      <html lang="es" suppressHydrationWarning>
-        <body
-          className={`${inter.variable} font-sans antialiased`}
-        >
+    <html lang="es" suppressHydrationWarning>
+      <body
+        className={`${inter.variable} font-sans antialiased`}
+      >
+        <ConvexClientProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
@@ -40,8 +39,8 @@ export default function RootLayout({
               <Toaster />
             </BrandKitProvider>
           </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </ConvexClientProvider>
+      </body>
+    </html>
   );
 }

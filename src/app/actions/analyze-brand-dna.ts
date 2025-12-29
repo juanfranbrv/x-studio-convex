@@ -5,7 +5,8 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { z } from 'zod';
 import sharp from 'sharp';
 import * as cheerio from 'cheerio';
-import { supabase } from '@/lib/supabase';
+import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { api } from "../../../convex/_generated/api";
 import { model } from '@/lib/ai';
 import fs from 'fs';
 import path from 'path';
@@ -1848,26 +1849,42 @@ async function processAndUploadImage(
 
         console.log(`✅ Conversión a WebP completada: ${webpBuffer.length} bytes`);
 
-        const fileName = `${prefix}/${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
+        // CONVEX MIGRATION: 1. Generate Upload URL
+        const uploadUrl = await fetchMutation(api.assets.generateUploadUrl, {});
 
-        const { error: uploadError } = await supabase.storage
-            .from('brand-assets')
-            .upload(fileName, webpBuffer, {
-                contentType: 'image/webp',
-                upsert: true,
-            });
+        // CONVEX MIGRATION: 2. Upload File via POST
+        const result = await fetch(uploadUrl, {
+            method: "POST",
+            body: new Blob([new Uint8Array(webpBuffer)], { type: 'image/webp' }),
+            headers: { "Content-Type": "image/webp" },
+        });
 
-        if (uploadError) {
-            logDebug('Error uploading to Supabase:', uploadError);
+        if (!result.ok) {
+            logDebug('Error uploading to Convex Storage:', result.statusText);
             return null;
         }
 
-        const { data: publicUrlData } = supabase.storage
-            .from('brand-assets')
-            .getPublicUrl(fileName);
+        const { storageId } = await result.json();
 
-        console.log(`🔗 [DEBUG] Public URL generated: ${publicUrlData.publicUrl}`);
-        return publicUrlData.publicUrl;
+        // CONVEX MIGRATION: 3. We return the storageId directly. 
+        // The calling code needs to handle this (it's not a public URL yet).
+        // For compatibility with the rest of the script which expects a URL string, 
+        // we can return a marker prefix or the storage ID itself.
+        // But wait, the script uses this URL for:
+        // 1. `extractVisualPalette` (needs to fetch it)
+        // 2. `galleryImages` (stored in DB)
+        // 3. `logoUrl`, `faviconUrl` (stored in DB)
+
+        // Note: The /_storage/ URL format is internal to Convex and NOT publicly accessible directly.
+        // However, we need a URL for downstream processing (extractVisualPalette, extractLogoColors).
+        // The backend query (getBrandDNAByClerkId) will detect this format and resolve it to a
+        // proper signed URL using ctx.storage.getUrl(storageId).
+        const convexUrl = `${process.env.NEXT_PUBLIC_CONVEX_URL}/_storage/${storageId}`;
+
+        console.log(`🔗 [DEBUG] Convex Storage ID: ${storageId}`);
+        console.log(`🔗 [DEBUG] Internal URL (for DB): ${convexUrl}`);
+        return convexUrl;
+
     } catch (error) {
         console.error('❌ [DEBUG] Error processing image:', error);
         return null;
@@ -1892,16 +1909,13 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         // Check if we already have complete data to avoid redundant analysis
         if (!forceRefresh) {
             try {
-                const { data: existingData } = await supabase
-                    .from('brand_dna')
-                    .select('*')
-                    .eq('url', url)
-                    .single();
+                // CONVEX MIGRATION: using fetchQuery
+                const existingData = await fetchQuery(api.brands.getBrandDNA, { url });
 
                 // Si ya tenemos datos Y tienen text_assets, podemos retornar temprano
                 if (existingData && existingData.text_assets) {
                     console.log('✅ Data found in DB with text_assets. Returning cached result.');
-                    return { success: true, data: existingData as BrandDNA };
+                    return { success: true, data: existingData as unknown as BrandDNA };
                 }
 
                 if (existingData) {
@@ -1918,15 +1932,10 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
 
         if (!forceRefresh) {
             try {
-                const { data: cachedData, error: cacheError } = await supabase
-                    .from('brand_dna')
-                    .select('debug')
-                    .eq('url', url)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .single();
+                // CONVEX MIGRATION: Reuse getBrandDNA query
+                const cachedData = await fetchQuery(api.brands.getBrandDNA, { url });
 
-                if (cachedData && !cacheError && cachedData.debug?.screenshot_url) {
+                if (cachedData && cachedData.debug?.screenshot_url) {
                     console.log('✅ Found cached screenshot! Will reuse it but re-analyze everything else.');
                     cachedScreenshotUrl = cachedData.debug.screenshot_url;
                 }
@@ -2352,10 +2361,10 @@ ${fullBrandContext.slice(0, 45000)}`;
             console.log(`📸 Screenshot URL type: ${typeof screenshotSourceUrl}`);
             console.log(`📸 Screenshot URL length: ${screenshotSourceUrl.length}`);
 
-            // Si el screenshotSourceUrl ya es una URL de Supabase (cache), no necesitamos volver a procesarlo/subirlo
-            if (screenshotSourceUrl.includes('.supabase.co/storage')) {
+            // Si el screenshotSourceUrl ya es una URL de Convex (cache), no necesitamos volver a procesarlo/subirlo
+            if (screenshotSourceUrl.includes('/api/storage/')) {
                 debugScreenshotUrl = screenshotSourceUrl;
-                console.log(`✅ Using already processed Supabase screenshot: ${debugScreenshotUrl}`);
+                console.log(`✅ Using already processed Convex screenshot: ${debugScreenshotUrl}`);
             } else {
                 console.log(`📸 Subiendo screenshot para debug info...`);
                 debugScreenshotUrl = (await processAndUploadImage(screenshotSourceUrl, 'screenshots', 1200)) || undefined;
@@ -2501,17 +2510,25 @@ ${fullBrandContext.slice(0, 45000)}`;
             });
 
             // Intentar guardar con debug info (requiere columna JSONB 'debug')
+            // CONVEX MIGRATION: using fetchMutation
+            // We need to cast types or ensure they match what Convex expects
+            // upsertBrandDNA expects specific fields
+
+            const resultId = await fetchMutation(api.brands.upsertBrandDNA, upsertPayload);
+            console.log('✅ [DEBUG] Convex Upsert Success. ID:', resultId);
+
+            /* Supabase Logic Removed
             const { data: dbData, error: dbError } = await supabase.from('brand_dna').upsert(upsertPayload, { onConflict: 'url' }).select();
 
             if (dbError) {
                 console.error('❌ [DEBUG] Supabase Upsert Error:', dbError);
                 // ... (rest of existing error handling remains same)
-            } else {
-                console.log('✅ [DEBUG] Brand DNA saved successfully to Supabase. DB ID:', dbData?.[0]?.id);
             }
+             */
         } catch (dbError) {
-            console.error('❌ [DEBUG] Unexpected DB error:', dbError);
+            console.error('❌ [DEBUG] Convex Upsert Error:', dbError);
         }
+
 
         console.log('🎉 [DEBUG] analyzeBrandDNA action finished successfully');
         return { success: true, data: result };
