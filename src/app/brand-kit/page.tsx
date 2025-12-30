@@ -6,6 +6,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { analyzeBrandDNA } from '@/app/actions/analyze-brand-dna';
 import { useBrandKit } from '@/contexts/BrandKitContext';
 import type { BrandDNA } from '@/lib/brand-types';
+import { fetchQuery } from 'convex/nextjs';
+import { api } from '../../../convex/_generated/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -80,6 +82,7 @@ function BrandKitPageContent() {
     const [error, setError] = useState('');
     const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
     const [progress, setProgress] = useState(0);
+    const [loadingScreenshot, setLoadingScreenshot] = useState<string | null>(null);
 
     // Multi-profile state
     const [showNewKitForm, setShowNewKitForm] = useState(false);
@@ -88,6 +91,7 @@ function BrandKitPageContent() {
     // Brand name editing
     const [isEditingBrandName, setIsEditingBrandName] = useState(false);
     const [brandNameEdit, setBrandNameEdit] = useState('');
+
 
     // Efecto para animar progreso y mensajes
     useEffect(() => {
@@ -110,6 +114,7 @@ function BrandKitPageContent() {
         }
         return () => clearInterval(interval);
     }, [loading]);
+
 
     // Handle initial state and query params
     useEffect(() => {
@@ -194,14 +199,23 @@ function BrandKitPageContent() {
 
         setLoading(true);
         setError('');
+        setLoadingScreenshot(null);
 
         try {
             const response = await analyzeBrandDNA(targetUrl, true, user.id);
 
             if (response.success && response.data) {
                 setShowNewKitForm(false);
-                // The activeBrandKit context should handle updating the current kit if its ID matches
-                // and reloadBrandKits is not needed here to avoid flickering.
+
+                // CRITICAL: Force reload to show updated data
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await reloadBrandKits();
+
+                // Re-set the active brand kit to force UI refresh
+                if (activeBrandKit?.id) {
+                    await setActiveBrandKit(activeBrandKit.id);
+                }
+
                 toast({
                     title: "✅ Brand Kit regenerado",
                     description: "El análisis se ha completado correctamente.",
@@ -214,6 +228,7 @@ function BrandKitPageContent() {
             setError('Ocurrió un error inesperado al regenerar.');
         } finally {
             setLoading(false);
+            setLoadingScreenshot(null);
         }
     };
 
@@ -223,36 +238,35 @@ function BrandKitPageContent() {
 
         setLoading(true);
         setError('');
+        setLoadingScreenshot(null);
 
         try {
             const response = await analyzeBrandDNA(url, true, user.id);
 
             if (response.success && response.data) {
-                console.log('[NEW BRAND KIT] Created successfully, reloading...', response.data.id);
+                console.log('[NEW BRAND KIT] ✅ Created successfully!', response.data.id);
+
+                // Hide form immediately
                 setShowNewKitForm(false);
 
-                // Esperar un momento para que Convex propague los datos
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // CRITICAL: Wait for Convex to propagate
+                console.log('[NEW BRAND KIT] ⏳ Waiting 2 seconds for Convex propagation...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
 
-                // Refrescar la lista global
-                await reloadBrandKits();
-                console.log('[NEW BRAND KIT] List reloaded, setting active...');
-
-                // Activar el nuevo brand kit
-                if (response.data.id) {
-                    await setActiveBrandKit(response.data.id);
-                    console.log('[NEW BRAND KIT] Active kit set:', response.data.id);
-                }
+                // FORCE NAVIGATION to the new brand kit using URL parameter
+                console.log('[NEW BRAND KIT] 🎯 Forcing navigation to new kit:', response.data.id);
+                const debugParam = searchParams.get('debug') === 'true' ? '&debug=true' : '';
+                window.location.href = `/brand-kit?id=${response.data.id}${debugParam}`;
 
                 toast({
                     title: "✅ Brand Kit creado",
-                    description: "El análisis se ha completado correctamente.",
+                    description: "Cargando resultados...",
                 });
             } else {
-                setError(response.error || 'No se pudo analizar la marca.');
+                setError(response.error || 'No se pudo crear el Brand Kit.');
             }
         } catch (err) {
-            console.error('Unexpected error during submit:', err);
+            console.error('❌ Unexpected error during submit:', err);
             setError('Ocurrió un error inesperado.');
         } finally {
             setLoading(false);
@@ -291,56 +305,82 @@ function BrandKitPageContent() {
 
                 {/* Si no tiene Brand Kits o está creando uno nuevo */}
                 {((brandKits.length === 0 || showNewKitForm) && !loading) && (
-                    <div className="max-w-2xl mx-auto text-center py-12 animate-in zoom-in-95 duration-500">
-                        <div className="bg-card rounded-xl p-8 mb-8 border border-border relative overflow-hidden shadow-xl">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10" />
-                            <Package className="w-16 h-16 text-primary opacity-50 mx-auto mb-4" />
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="max-w-3xl mx-auto text-center py-12"
+                    >
+                        <div className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm rounded-2xl p-10 mb-8 border border-border/50 relative overflow-hidden shadow-2xl">
+                            {/* Decorative elements */}
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl -z-10" />
+                            <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl -z-10" />
 
-                            <h2 className="text-2xl font-bold mb-2 text-foreground">
-                                {brandKits.length === 0 ? '¡Bienvenido a Brand Kit Extractor!' : 'Crear Nuevo Brand Kit'}
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                                className="mb-6"
+                            >
+                                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center shadow-lg">
+                                    <Sparkles className="w-10 h-10 text-primary-foreground" />
+                                </div>
+                            </motion.div>
+
+                            <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                                {brandKits.length === 0 ? '¡Bienvenido a X Studio!' : 'Crear Nuevo Brand Kit'}
                             </h2>
-                            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                            <p className="text-muted-foreground mb-8 max-w-lg mx-auto text-lg">
                                 {brandKits.length === 0
-                                    ? 'Aún no tienes un Brand Kit. Introduce la URL de tu marca para crear uno.'
-                                    : 'Introduce la URL de la nueva marca que quieres analizar.'}
+                                    ? 'Extrae el ADN visual de cualquier marca en segundos. Introduce una URL para comenzar.'
+                                    : 'Analiza una nueva marca y extrae automáticamente su identidad visual.'}
                             </p>
 
                             {/* URL Input */}
-                            <form onSubmit={handleSubmit} className="flex items-center gap-4 bg-background rounded-2xl border border-input p-4 shadow-sm w-full transition-all focus-within:ring-2 focus-within:ring-ring focus-within:shadow-lg hover:shadow-md">
-                                <Globe className="w-8 h-8 text-muted-foreground" />
-                                <Input
-                                    placeholder="ejemplo.com"
-                                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-xl h-12 placeholder:text-muted-foreground/50 font-semibold"
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    disabled={loading}
-                                />
-                                <Button
-                                    type="submit"
-                                    disabled={loading || !url}
-                                    className="btn-gradient rounded-xl px-6 h-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {loading ? (
-                                        <Loader2 className="w-6 h-6 animate-spin" />
-                                    ) : (
-                                        <>
-                                            Crear
-                                            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                                        </>
-                                    )}
-                                </Button>
+                            <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
+                                <div className="flex items-center gap-3 bg-background/80 backdrop-blur-sm rounded-2xl border-2 border-border/50 p-2 shadow-lg transition-all focus-within:border-primary/50 focus-within:shadow-xl hover:shadow-lg group">
+                                    <div className="pl-4">
+                                        <Globe className="w-6 h-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                    </div>
+                                    <Input
+                                        placeholder="ejemplo.com o https://ejemplo.com"
+                                        className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-lg h-14 placeholder:text-muted-foreground/40 font-medium"
+                                        value={url}
+                                        onChange={(e) => setUrl(e.target.value)}
+                                        disabled={loading}
+                                        autoFocus
+                                    />
+                                    <Button
+                                        type="submit"
+                                        disabled={loading || !url}
+                                        size="lg"
+                                        className="btn-gradient rounded-xl px-8 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mr-1"
+                                    >
+                                        {loading ? (
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                        ) : (
+                                            <>
+                                                <Sparkles className="w-5 h-5 mr-2" />
+                                                Analizar
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
                             </form>
 
                             {/* Cancel button when creating new (and has existing profiles) */}
                             {brandKits.length > 0 && showNewKitForm && (
                                 <Button
                                     variant="ghost"
-                                    className="mt-6 text-muted-foreground hover:text-foreground transition-colors"
+                                    size="lg"
+                                    className="mt-8 text-muted-foreground hover:text-foreground transition-colors"
                                     onClick={() => {
                                         setShowNewKitForm(false);
+                                        setUrl('');
                                     }}
                                 >
-                                    Cancelar y volver al kit actual
+                                    <X className="w-4 h-4 mr-2" />
+                                    Cancelar
                                 </Button>
                             )}
                         </div>
@@ -351,103 +391,216 @@ function BrandKitPageContent() {
                                 {error}
                             </div>
                         )}
-                    </div>
+                    </motion.div>
                 )}
 
-                {/* Premium Loading state */}
+                {/* TECH-FOCUSED Full-Screen Loading Animation */}
                 {loading && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xl animate-in fade-in duration-500">
-                        <div className="max-w-xl w-full mx-auto px-6 text-center">
-                            <div className="relative mb-12">
-                                {/* Large central ambient glow */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-background overflow-hidden"
+                    >
+                        {/* Animated Background Gradient Orbs - MUCH BRIGHTER */}
+                        <motion.div
+                            className="absolute w-[800px] h-[800px] rounded-full bg-gradient-to-br from-primary/50 via-accent/40 to-transparent blur-3xl"
+                            animate={{
+                                x: [-200, 200, -200],
+                                y: [-100, 100, -100],
+                                scale: [1, 1.3, 1],
+                            }}
+                            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                            style={{ top: '5%', left: '5%' }}
+                        />
+                        <motion.div
+                            className="absolute w-[700px] h-[700px] rounded-full bg-gradient-to-br from-accent/50 via-primary/40 to-transparent blur-3xl"
+                            animate={{
+                                x: [200, -200, 200],
+                                y: [100, -100, 100],
+                                scale: [1.3, 1, 1.3],
+                            }}
+                            transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
+                            style={{ bottom: '5%', right: '5%' }}
+                        />
+
+                        {/* Floating Particles Grid - MUCH BIGGER AND BRIGHTER */}
+                        <div className="absolute inset-0">
+                            {[...Array(30)].map((_, i) => (
                                 <motion.div
-                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[var(--accent)]/20 rounded-full blur-[80px]"
-                                    animate={{
-                                        scale: [1, 1.2, 1],
-                                        opacity: [0.3, 0.6, 0.3],
+                                    key={i}
+                                    className="absolute w-4 h-4 rounded-full shadow-lg"
+                                    style={{
+                                        left: `${(i % 6) * 20}%`,
+                                        top: `${Math.floor(i / 6) * 20}%`,
+                                        background: i % 2 === 0 ? 'var(--primary)' : 'var(--accent)',
+                                        boxShadow: i % 2 === 0 ? '0 0 20px var(--primary)' : '0 0 20px var(--accent)',
                                     }}
-                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                    animate={{
+                                        y: [0, -40, 0],
+                                        opacity: [0.4, 1, 0.4],
+                                        scale: [1, 2, 1],
+                                    }}
+                                    transition={{
+                                        duration: 2 + (i % 2),
+                                        repeat: Infinity,
+                                        delay: i * 0.08,
+                                        ease: "easeInOut"
+                                    }}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Animated Waves - MUCH BRIGHTER */}
+                        {[...Array(5)].map((_, i) => (
+                            <motion.div
+                                key={`wave-${i}`}
+                                className="absolute inset-x-0 h-1"
+                                style={{
+                                    top: `${20 + i * 15}%`,
+                                    background: `linear-gradient(90deg, transparent, var(--accent), transparent)`,
+                                    boxShadow: '0 0 20px var(--accent)',
+                                }}
+                                animate={{
+                                    opacity: [0, 0.8, 0],
+                                    scaleX: [0, 1, 0],
+                                }}
+                                transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    delay: i * 0.6,
+                                    ease: "easeInOut"
+                                }}
+                            />
+                        ))}
+
+                        {/* Vertical Scan Lines */}
+                        {[...Array(4)].map((_, i) => (
+                            <motion.div
+                                key={`vscan-${i}`}
+                                className="absolute inset-y-0 w-px"
+                                style={{
+                                    left: `${25 * (i + 1)}%`,
+                                    background: 'var(--primary)',
+                                    boxShadow: '0 0 10px var(--primary)',
+                                }}
+                                animate={{
+                                    opacity: [0.2, 0.6, 0.2],
+                                }}
+                                transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    delay: i * 0.5,
+                                }}
+                            />
+                        ))}
+
+                        {/* Central Content */}
+                        <div className="relative z-10 max-w-2xl w-full mx-auto px-6 text-center">
+                            {/* Main Progress Circle */}
+                            <div className="relative mb-16">
+                                {/* Outer rotating ring - BRIGHTER */}
+                                <motion.div
+                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full border-4 border-primary/40"
+                                    style={{ boxShadow: '0 0 30px var(--primary)' }}
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
                                 />
 
-                                {/* Spinning Ring */}
-                                <div className="relative mx-auto w-32 h-32">
+                                {/* Inner rotating ring (opposite direction) - BRIGHTER */}
+                                <motion.div
+                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-44 h-44 rounded-full border-4 border-accent/40"
+                                    style={{ boxShadow: '0 0 25px var(--accent)' }}
+                                    animate={{ rotate: -360 }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                                />
+
+                                {/* Progress SVG */}
+                                <div className="relative mx-auto w-36 h-36">
                                     <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                                        {/* Background track */}
                                         <circle
-                                            className="text-white/5 stroke-current"
-                                            strokeWidth="4"
+                                            className="text-muted/10 stroke-current"
+                                            strokeWidth="6"
                                             fill="transparent"
-                                            r="46"
+                                            r="44"
                                             cx="50"
                                             cy="50"
                                         />
-                                        {/* Progress bar */}
                                         <motion.circle
-                                            className="text-[var(--accent)] stroke-current"
-                                            strokeWidth="4"
+                                            className="text-primary stroke-current"
+                                            strokeWidth="6"
                                             strokeLinecap="round"
                                             fill="transparent"
-                                            r="46"
+                                            r="44"
                                             cx="50"
                                             cy="50"
-                                            initial={{ strokeDasharray: "289", strokeDashoffset: "289" }}
-                                            animate={{ strokeDashoffset: 289 - (progress / 100) * 289 }}
+                                            initial={{ strokeDasharray: "276", strokeDashoffset: "276" }}
+                                            animate={{ strokeDashoffset: 276 - (progress / 100) * 276 }}
                                             transition={{ duration: 0.5, ease: "easeOut" }}
-                                            style={{ filter: "drop-shadow(0 0 8px var(--accent))" }}
+                                            style={{ filter: "drop-shadow(0 0 12px var(--primary))" }}
                                         />
                                     </svg>
 
-                                    {/* Percentage text */}
+                                    {/* Percentage */}
                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                                         <motion.span
                                             key={Math.floor(progress / 10)}
-                                            initial={{ y: 5, opacity: 0 }}
+                                            initial={{ y: 10, opacity: 0 }}
                                             animate={{ y: 0, opacity: 1 }}
-                                            className="text-2xl font-bold tracking-tighter"
+                                            className="text-4xl font-bold bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent"
                                         >
                                             {Math.round(progress)}%
                                         </motion.span>
                                     </div>
                                 </div>
 
-                                {/* Floating particles/nodes */}
-                                {[...Array(6)].map((_, i) => (
+                                {/* Orbiting dots */}
+                                {[...Array(8)].map((_, i) => (
                                     <motion.div
-                                        key={i}
-                                        className="absolute w-1.5 h-1.5 rounded-full bg-[var(--accent)]"
-                                        animate={{
-                                            x: [
-                                                Math.cos(i * 60 * (Math.PI / 180)) * 80,
-                                                Math.cos(i * 60 * (Math.PI / 180)) * 60
-                                            ],
-                                            y: [
-                                                Math.sin(i * 60 * (Math.PI / 180)) * 80,
-                                                Math.sin(i * 60 * (Math.PI / 180)) * 60
-                                            ],
-                                            opacity: [0, 1, 0],
-                                            scale: [0, 1.5, 0]
-                                        }}
-                                        transition={{
-                                            duration: 2,
-                                            repeat: Infinity,
-                                            delay: i * 0.3,
-                                            ease: "circOut"
-                                        }}
+                                        key={`orbit-${i}`}
+                                        className="absolute w-3 h-3 rounded-full"
                                         style={{
+                                            background: i % 2 === 0 ? 'var(--primary)' : 'var(--accent)',
                                             left: '50%',
                                             top: '50%',
-                                            marginLeft: '-3px',
-                                            marginTop: '-3px'
+                                            marginLeft: '-6px',
+                                            marginTop: '-6px',
+                                        }}
+                                        animate={{
+                                            x: [
+                                                Math.cos(i * 45 * (Math.PI / 180)) * 100,
+                                                Math.cos((i * 45 + 360) * (Math.PI / 180)) * 100
+                                            ],
+                                            y: [
+                                                Math.sin(i * 45 * (Math.PI / 180)) * 100,
+                                                Math.sin((i * 45 + 360) * (Math.PI / 180)) * 100
+                                            ],
+                                            opacity: [0.3, 1, 0.3],
+                                            scale: [0.8, 1.2, 0.8],
+                                        }}
+                                        transition={{
+                                            duration: 4,
+                                            repeat: Infinity,
+                                            delay: i * 0.5,
+                                            ease: "linear"
                                         }}
                                     />
                                 ))}
                             </div>
 
-                            <div className="space-y-4">
+                            {/* Status Text */}
+                            <motion.div
+                                className="space-y-6"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                            >
                                 <motion.h3
-                                    className="text-2xl font-medium tracking-tight bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-transparent"
+                                    key={Math.floor(progress / 20)}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="text-3xl font-bold text-foreground"
                                 >
                                     {progress < 20 && "Analizando estructura del sitio..."}
                                     {progress >= 20 && progress < 40 && "Conectando con el motor visual..."}
@@ -457,52 +610,53 @@ function BrandKitPageContent() {
                                     {progress >= 95 && "Finalizando el Kit de Marca..."}
                                 </motion.h3>
 
-                                {/* Technical Log Overlay */}
-                                <div className="h-24 overflow-hidden relative max-w-sm mx-auto bg-black/5 rounded-lg border border-border/5 p-3 font-mono text-[10px] text-muted-foreground/40 text-left">
+                                {/* Technical Log */}
+                                <div className="max-w-lg mx-auto h-40 overflow-hidden relative">
                                     <motion.div
-                                        animate={{ y: [0, -120] }}
-                                        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                                        className="space-y-1"
+                                        animate={{ y: [0, -250] }}
+                                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                        className="space-y-2"
                                     >
-                                        {[...TECHNICAL_LOGS, ...TECHNICAL_LOGS].map((log, i) => (
-                                            <div key={i} className="truncate">
-                                                <span className="text-[var(--accent)]/50 mr-2 opacity-50">{">"}</span>
-                                                {log}
+                                        {[...TECHNICAL_LOGS, ...TECHNICAL_LOGS, ...TECHNICAL_LOGS].map((log, i) => (
+                                            <div key={i} className="flex items-center gap-2 text-muted-foreground/40 text-sm font-mono">
+                                                <span className="text-primary/40">▸</span>
+                                                <span className="truncate">{log}</span>
                                             </div>
                                         ))}
                                     </motion.div>
-                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/50 pointer-events-none" />
                                 </div>
 
-                                <div className="flex justify-center gap-1.5">
+                                {/* Animated dots */}
+                                <div className="flex justify-center gap-2">
                                     {[0, 1, 2].map((i) => (
                                         <motion.div
                                             key={i}
-                                            className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]"
-                                            animate={{ opacity: [0.2, 1, 0.2] }}
-                                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                                            className="w-2 h-2 rounded-full bg-primary"
+                                            animate={{
+                                                opacity: [0.3, 1, 0.3],
+                                                scale: [1, 1.3, 1]
+                                            }}
+                                            transition={{
+                                                duration: 1.5,
+                                                repeat: Infinity,
+                                                delay: i * 0.2
+                                            }}
                                         />
                                     ))}
                                 </div>
 
+                                {/* Engine info */}
                                 <motion.p
-                                    className="text-xs text-muted-foreground/40 max-w-sm mx-auto"
+                                    className="text-sm text-muted-foreground/40 font-medium"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.5 }}
+                                    transition={{ delay: 0.8 }}
                                 >
                                     FIRE-SC Engine v4.0 • Gemini 1.5 Flash • Headless-Chromium
                                 </motion.p>
-                            </div>
+                            </motion.div>
                         </div>
-
-                        {/* Animated scanning bar effect */}
-                        <motion.div
-                            className="absolute inset-0 pointer-events-none opacity-10 bg-gradient-to-b from-transparent via-[var(--accent)] to-transparent h-40"
-                            animate={{ top: ['-20%', '110%'] }}
-                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                        />
-                    </div>
+                    </motion.div>
                 )}
                 {/* Result State */}
                 {!loading && activeBrandKit && !showNewKitForm && (
@@ -559,7 +713,7 @@ function BrandKitPageContent() {
                     </AlertDialogContent>
                 </AlertDialog>
             </main>
-        </DashboardLayout>
+        </DashboardLayout >
     );
 }
 

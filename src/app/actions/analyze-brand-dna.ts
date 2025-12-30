@@ -23,6 +23,23 @@ function logDebug(message: string, data?: any) {
     }
 }
 
+// Wrapper para console.log que también escribe en archivo
+function logToFile(...args: any[]) {
+    const message = args.map(arg =>
+        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+    ).join(' ');
+    console.log(...args); // Output to terminal
+    try {
+        const timestamp = new Date().toISOString();
+        fs.appendFileSync(
+            path.join(process.cwd(), 'public', 'debug_log.txt'),
+            `[${timestamp}] ${message}\n`
+        );
+    } catch (e) {
+        // Silently fail if can't write to file
+    }
+}
+
 /**
  * Extrae colores dominantes de una imagen usando un sistema de cuadrícula
  * Es más robusto que el muestreo puntual porque cubre toda la imagen
@@ -1122,6 +1139,15 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
         }
 
         const $ = cheerio.load(html);
+        logToFile(`📄 HTML cargado. Longitud: ${html.length} caracteres.`);
+
+        // DEBUG: Guardar HTML para inspección
+        try {
+            fs.writeFileSync(path.join(process.cwd(), 'public', 'debug_html.html'), html);
+            logToFile(`💾 HTML guardado en public/debug_html.html para inspección`);
+        } catch (e) {
+            logToFile(`❌ Error guardando HTML: ${e}`);
+        }
 
         // === 6. SQUAD: DESIGN INTENT & META THEME ===
         const designColors: string[] = [];
@@ -1130,7 +1156,7 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
 
         // === FONT EXTRACTION (Robust) ===
         let detectedFonts: string[] = extractFontsFromContent(html);
-        console.log(`🔤 Fuentes iniciales extraídas: ${detectedFonts.length}`, detectedFonts);
+        logToFile(`🔤 Fuentes iniciales extraídas: ${detectedFonts.length}`, detectedFonts);
 
         // Meta theme-color
         const themeColor = $('meta[name="theme-color"]').attr('content');
@@ -1215,12 +1241,74 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
             faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
         }
 
-        console.log(`🔍 Favicon encontrado: ${faviconUrl} (${faviconCandidates.length} candidatos)`);
+        logToFile(`🔍 Favicon encontrado: ${faviconUrl} (${faviconCandidates.length} candidatos)`);
 
         // === EXTRACCIÓN DE CANDIDATOS DE LOGO (MEJORADA) ===
-        // Prioridad: 1) Imágenes con 'logo' en src/class, 2) Imágenes en header/nav, 3) OG Image
 
-        // 1. MÁXIMA PRIORIDAD: Imágenes con 'logo' en el src e Inline SVGs
+        // 1. JSON-LD EXTRACTION (Critical for CSR sites like Next.js)
+        $('script[type="application/ld+json"]').each((_, el) => {
+            try {
+                const jsonText = $(el).html();
+                if (!jsonText) return;
+                const data = JSON.parse(jsonText);
+
+                // Recursively find "logo" or "image" in JSON
+                const extractLogosFromJson = (obj: any) => {
+                    if (!obj || typeof obj !== 'object') return;
+
+                    if (obj.logo) {
+                        const logoUrl = typeof obj.logo === 'string' ? obj.logo : obj.logo.url;
+                        if (logoUrl) {
+                            try {
+                                logoCandidatesScored.push({
+                                    url: new URL(logoUrl, url).toString(),
+                                    score: 250, // High confidence from JSON-LD
+                                    type: 'url'
+                                });
+                                logToFile(`🎯 JSON-LD: Logo encontrado: ${logoUrl}`);
+                            } catch { }
+                        }
+                    }
+
+                    // Also check for "image" if it's an Organization or Brand
+                    if ((obj['@type'] === 'Organization' || obj['@type'] === 'Brand') && obj.image) {
+                        const imgUrl = typeof obj.image === 'string' ? obj.image : obj.image.url;
+                        if (imgUrl) {
+                            try {
+                                logoCandidatesScored.push({
+                                    url: new URL(imgUrl, url).toString(),
+                                    score: 180,
+                                    type: 'url'
+                                });
+                                logToFile(`🎯 JSON-LD: Imagen de marca encontrada: ${imgUrl}`);
+                            } catch { }
+                        }
+                    }
+
+                    Object.values(obj).forEach(val => {
+                        if (Array.isArray(val)) val.forEach(v => extractLogosFromJson(v));
+                        else if (typeof val === 'object') extractLogosFromJson(val);
+                    });
+                };
+
+                extractLogosFromJson(data);
+            } catch (e) { }
+        });
+
+        // 2. FAVICON ESCALATION (Especialmente si es SVG o tiene "logo")
+        if (faviconUrl) {
+            const lowFavicon = faviconUrl.toLowerCase();
+            if (lowFavicon.endsWith('.svg') || lowFavicon.includes('logo')) {
+                logoCandidatesScored.push({
+                    url: faviconUrl,
+                    score: 220, // Favicon SVG is very likely the logo
+                    type: 'url'
+                });
+                logToFile(`🎯 FAVICON ESCALATION: Favicon SVG tratado como logo candidato (220 puntos)`);
+            }
+        }
+
+        // 3. MÁXIMA PRIORIDAD: Imágenes con 'logo' en el src e Inline SVGs
         $('img, svg').each((_, el) => {
             const isSvg = el.tagName === 'svg';
             const src = $(el).attr('src') || '';
@@ -1270,6 +1358,43 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
             const inHeader = $(el).closest('header, nav, [class*="header"], [class*="nav"], #header, #nav, .navbar').length > 0;
             if (inHeader) score += 60;
 
+            // CRITICAL: Position-based scoring - Top-left corner boost
+            // Los logos casi siempre están en la esquina superior izquierda
+            if (inHeader) {
+                try {
+                    // Obtener posición del elemento relativa al header
+                    const headerEl = $(el).closest('header, nav, [class*="header"], [class*="nav"], #header, #nav, .navbar')[0];
+                    if (headerEl) {
+                        const imgRect = (el as any).getBoundingClientRect?.();
+                        const headerRect = (headerEl as any).getBoundingClientRect?.();
+
+                        if (imgRect && headerRect) {
+                            // Calcular posición relativa dentro del header
+                            const relativeLeft = imgRect.left - headerRect.left;
+                            const relativeTop = imgRect.top - headerRect.top;
+
+                            // BOOST MASIVO: Si está en los primeros 20% del ancho del header
+                            const leftPercentage = (relativeLeft / headerRect.width) * 100;
+                            if (leftPercentage < 20) {
+                                score += 120; // GRAN BOOST para posición izquierda
+                            }
+
+                            // BOOST ADICIONAL: Si está en los primeros 150px de altura
+                            if (relativeTop < 150 && relativeTop >= 0) {
+                                score += 80; // BOOST para posición superior
+                            }
+
+                            // COMBO BOOST: Esquina superior izquierda (zona típica de logos)
+                            if (leftPercentage < 20 && relativeTop < 150 && relativeTop >= 0) {
+                                score += 100; // BOOST EXTRA por estar en la zona perfecta
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Si falla getBoundingClientRect (entorno servidor), continuar sin error
+                }
+            }
+
             // Home link wrapping logo
             const isHomeLink = $(el).closest('a[href="/"], a[rel="home"], a[title*="Home"], a[aria-label*="Home"]').length > 0;
             if (isHomeLink) score += 90;
@@ -1277,11 +1402,27 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
             // SVG o PNG (formatos típicos de logos)
             if ((actualSrc && actualSrc.includes('.svg')) || isSvg) score += 40;
 
+            // CRITICAL: Path-based scoring - uploads vs plugins
+            if (actualSrc) {
+                const srcLower = actualSrc.toLowerCase();
+                // BOOST: Logos en carpetas de uploads (logos reales del usuario)
+                if (srcLower.includes('/uploads/') || srcLower.includes('/media/') || srcLower.includes('/assets/')) {
+                    score += 150; // GRAN BOOST para logos subidos por el usuario
+                }
+                // PENALTY: Logos en carpetas de plugins (casi nunca son el logo principal)
+                if (srcLower.includes('/plugins/') || srcLower.includes('/addons/') || srcLower.includes('/extensions/')) {
+                    score -= 100; // PENALIZACIÓN para logos de plugins
+                }
+            }
+
             // Excluir iconos pequeños (menos de 30px)
             if ((width > 0 && width < 30) || (height > 0 && height < 30)) score -= 100;
 
+            // AJUSTE: Umbral más bajo para SVGs en header (capturar logos sin keywords)
+            const minScore = (isSvg && inHeader) ? 20 : 60;
+
             // Solo añadir si tiene un score decente
-            if (score > 60) {
+            if (score > minScore) {
                 if (isSvg) {
                     const svgHtml = $.html(el);
                     // Solo si es un SVG razonable (no un icono de 10 bytes)
@@ -1304,6 +1445,63 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
             }
         });
 
+        // REFINED SELECTORS: Buscar en cualquier contenedor que huela a cabecera
+        const headerSelectors = 'header, nav, [class*="header"], [class*="nav"], #header, #nav, .navbar, .top-bar, .site-header';
+        const firstHeaderSvg = $(headerSelectors).find('svg').first();
+        const firstHeaderImg = $(headerSelectors).find('img').first();
+
+        logToFile(`🔍 Buscando primer SVG/IMG en header con selectores ampliados...`);
+        logToFile(`   - SVGs en header encontrados: ${$(headerSelectors).find('svg').length}`);
+        logToFile(`   - IMGs en header encontrados: ${$(headerSelectors).find('img').length}`);
+        logToFile(`   - firstHeaderSvg.length: ${firstHeaderSvg.length}`);
+
+        if (firstHeaderSvg.length > 0) {
+            const svgHtml = $.html(firstHeaderSvg);
+            logToFile(`🎯 CONSTANTE: Primer SVG en header detectado - Longitud: ${svgHtml.length} caracteres`);
+            if (svgHtml.length > 80) { // Umbral reducido
+                const existingIndex = logoCandidatesScored.findIndex(
+                    c => c.type === 'inline-svg' && c.content === svgHtml
+                );
+                if (existingIndex >= 0) {
+                    logoCandidatesScored[existingIndex].score += 300;
+                    logToFile(`🎯 BOOST: SVG existente en header potenciado (+300) - Score final: ${logoCandidatesScored[existingIndex].score}`);
+                } else {
+                    logoCandidatesScored.push({
+                        content: svgHtml,
+                        score: 350,
+                        type: 'inline-svg'
+                    });
+                    logToFile(`🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)`);
+                }
+            } else {
+                logToFile(`⚠️ SVG demasiado pequeño (${svgHtml.length} chars), ignorado`);
+            }
+        } else if (firstHeaderImg.length > 0) {
+            logToFile(`🎯 Primera IMG en header detectada`);
+            const imgSrc = firstHeaderImg.attr('src') || firstHeaderImg.attr('data-src') || firstHeaderImg.attr('data-lazy-src') || '';
+            if (imgSrc) {
+                try {
+                    const imgUrl = new URL(imgSrc, url).toString();
+                    const existingIndex = logoCandidatesScored.findIndex(
+                        c => c.type === 'url' && c.url === imgUrl
+                    );
+                    if (existingIndex >= 0) {
+                        logoCandidatesScored[existingIndex].score += 300;
+                        logToFile(`🎯 BOOST: IMG existente en header potenciada (+300)`);
+                    } else {
+                        logoCandidatesScored.push({
+                            url: imgUrl,
+                            score: 330,
+                            type: 'url'
+                        });
+                        logToFile(`🎯 NUEVA: Primera IMG en header añadida directamente (330 puntos)`);
+                    }
+                } catch { }
+            }
+        } else {
+            logToFile(`⚠️ No se encontró ningún SVG ni IMG en contenedores de cabecera`);
+        }
+
         // 1.1 NUEVO: Buscar logos en background-image de elementos HTML (Inline Styles)
         $('*[style*="background"]').each((_, el) => {
             const styleAttribute = $(el).attr('style') || '';
@@ -1322,6 +1520,15 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
 
                 const inHeader = $(el).closest('header, nav, [class*="header"], [class*="nav"], #header, #nav, .navbar').length > 0;
                 if (inHeader) score += 40;
+
+                // CRITICAL: Path-based scoring - uploads vs plugins
+                const bgUrlLower = bgUrl.toLowerCase();
+                if (bgUrlLower.includes('/uploads/') || bgUrlLower.includes('/media/') || bgUrlLower.includes('/assets/')) {
+                    score += 150; // GRAN BOOST para logos subidos por el usuario
+                }
+                if (bgUrlLower.includes('/plugins/') || bgUrlLower.includes('/addons/') || bgUrlLower.includes('/extensions/')) {
+                    score -= 100; // PENALIZACIÓN para logos de plugins
+                }
 
                 if (score > 60) {
                     try {
@@ -1381,7 +1588,15 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
             }
         }
 
-        console.log(`🖼️ Logo candidates encontrados: ${uniqueLogoCandidates.length} (Top score: ${uniqueLogoCandidates[0]?.score || 0})`);
+        logToFile(`🖼️ Logo candidates encontrados: ${uniqueLogoCandidates.length} (Top score: ${uniqueLogoCandidates[0]?.score || 0})`);
+        logToFile(`📋 CANDIDATOS A LOGO (scored):`);
+        uniqueLogoCandidates.slice(0, 5).forEach((c, i) => {
+            if (c.type === 'inline-svg') {
+                logToFile(`   ${i + 1}. SVG inline - Score: ${c.score} - Length: ${c.content?.length || 0} chars`);
+            } else {
+                logToFile(`   ${i + 1}. URL: ${c.url} - Score: ${c.score}`);
+            }
+        });
 
         // === EXTRACCIÓN DE IMÁGENES DEL SITIO (hasta 10) ===
         const imageCandidates: string[] = [];
@@ -2020,7 +2235,18 @@ async function processAndUploadImage(
  */
 export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false, clerkUserId?: string): Promise<AnalyzeBrandDNAResponse> {
     try {
-        console.log(`🧬 Iniciando análisis de Brand DNA: ${url}${forceRefresh ? ' (FORCE REFRESH)' : ''}${clerkUserId ? ` (User: ${clerkUserId})` : ''}`);
+        // Limpieza de consola y banner visual
+        console.clear();
+        console.log('\n');
+        console.log('═'.repeat(80));
+        console.log('🧬 BRAND DNA ANALYSIS - NEW SESSION');
+        console.log('═'.repeat(80));
+        console.log(`📍 URL: ${url}`);
+        console.log(`🔄 Force Refresh: ${forceRefresh ? 'YES' : 'NO'}`);
+        console.log(`👤 User ID: ${clerkUserId || 'Anonymous'}`);
+        console.log('═'.repeat(80));
+        console.log('\n');
+
 
         // Validación básica de URL
         if (!url.startsWith('http')) {
@@ -2257,10 +2483,12 @@ REGLAS IMPORTANTES:
 7. colors: DEBES usar SOLO colores de la lista COLORES DETECTADOS DEL CSS. Elige los 5 más representativos de la marca. NO inventes colores.
 8. fonts: Sugiere 2 Google Fonts que encajen (una Display/Serif, una Sans)
 9. text_assets:
-   - marketing_hooks: 5 frases tipo titular que capturen la propuesta de valor
-   - visual_keywords: 5 términos visuales descriptivos (ej: "luxurious", "minimalist", "dynamic")
-   - ctas: 3 variaciones de llamadas a la acción relevantes para su embudo
+   - marketing_hooks: 5 frases tipo titular que capturen la propuesta de valor (EN EL IDIOMA DEL CONTENIDO)
+   - visual_keywords: 5 términos visuales descriptivos (EN EL IDIOMA DEL CONTENIDO - ej: si es español: "lujoso", "minimalista", "dinámico"; si es inglés: "luxurious", "minimalist", "dynamic")
+   - ctas: 3 variaciones de llamadas a la acción relevantes para su embudo (EN EL IDIOMA DEL CONTENIDO)
    - brand_context: Un párrafo denso con detalles técnicos y operacionales del negocio extraídos del texto (mínimo 200 caracteres). Usa todo el contexto proporcionado para ser muy específico.
+
+IMPORTANTE: Detecta automáticamente el idioma del contenido y genera TODOS los text_assets en ese mismo idioma.
 
 Contenido del sitio web (Usa esto para los TEXT ASSETS):
 ${fullBrandContext.slice(0, 45000)}`;
