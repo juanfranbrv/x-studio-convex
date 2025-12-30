@@ -9,14 +9,20 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 import RestartAltIcon from '@mui/icons-material/RestartAlt'
+import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn'
 import { Button } from '@/components/ui/button'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
+import { Textarea } from '@/components/ui/textarea'
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
+import { ContextElement } from '@/app/studio/page'
+import { Layout, X, Image as ImageIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Generation {
     id: string
@@ -25,11 +31,15 @@ interface Generation {
 }
 
 interface CanvasPanelProps {
-    currentImage?: string | null
+    currentImage: string | null
     generations?: Generation[]
-    onSelectGeneration?: (generation: Generation) => void
+    onSelectGeneration?: (gen: Generation) => void
     onAnnotate?: () => void
     isAnnotating?: boolean
+    selectedContext?: ContextElement[]
+    onRemoveContext?: (id: string) => void
+    onAddContext?: (element: ContextElement) => void
+    draggedElement?: ContextElement | null
 }
 
 export function CanvasPanel({
@@ -38,13 +48,58 @@ export function CanvasPanel({
     onSelectGeneration,
     onAnnotate,
     isAnnotating = false,
+    selectedContext = [],
+    onRemoveContext,
+    onAddContext,
+    draggedElement,
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const [zoom, setZoom] = useState(100)
+    const [prompt, setPrompt] = useState('')
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
+    const [isDraggingOver, setIsDraggingOver] = useState(false);
 
     const handleZoomIn = () => setZoom((z) => Math.min(z + 25, 200))
     const handleZoomOut = () => setZoom((z) => Math.max(z - 25, 50))
     const handleResetZoom = () => setZoom(100)
+
+    const handleSelectTemplate = (template: Template) => {
+        onAddContext?.({
+            id: template.id,
+            type: 'template',
+            value: template.thumbnail,
+            label: template.name
+        });
+    }
+
+    const handleDragOver = (e: React.DragEvent) => {
+        if (e.dataTransfer.types.includes('application/x-studio-context')) {
+            e.preventDefault()
+            e.dataTransfer.dropEffect = 'copy'
+            setIsDraggingOver(true)
+        }
+    }
+
+    const handleDragLeave = () => {
+        setIsDraggingOver(false)
+    }
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDraggingOver(false)
+
+        try {
+            const data = e.dataTransfer.getData('application/x-studio-context')
+            if (data) {
+                const element = JSON.parse(data) as ContextElement
+                if (!selectedContext.some(c => c.id === element.id)) {
+                    onAddContext?.(element)
+                }
+            }
+        } catch (err) {
+            console.error('Failed to parse dropped context', err)
+        }
+    }
 
     return (
         <div className="flex-1 flex flex-col h-full bg-background">
@@ -130,37 +185,182 @@ export function CanvasPanel({
                 )}
             </div>
 
-            {/* Version History */}
-            {generations.length > 0 && (
-                <div className="border-t border-border p-4">
-                    <h3 className="text-sm font-medium mb-3">{t('canvas.versionHistory')}</h3>
+            {/* Footer Area: History & Prompt */}
+            <div className="border-t border-border bg-muted/20">
+                {/* Version History Row */}
+                <div className="px-4 py-2 border-b border-border/50">
                     <ScrollArea className="w-full">
-                        <div className="flex gap-3">
+                        <div className="flex gap-2 min-h-[70px] py-1">
                             {generations.map((gen) => (
                                 <button
                                     key={gen.id}
                                     onClick={() => onSelectGeneration?.(gen)}
-                                    className={`version-thumb flex-shrink-0 ${currentImage === gen.image_url ? 'active' : ''
+                                    className={`relative group flex-shrink-0 transition-all duration-200 ${currentImage === gen.image_url
+                                        ? 'ring-2 ring-primary ring-offset-1 scale-105'
+                                        : 'hover:scale-105 opacity-70 hover:opacity-100'
                                         }`}
                                 >
-                                    <img
-                                        src={gen.image_url}
-                                        alt={`Version ${gen.id}`}
-                                        className="w-20 h-20 rounded-lg object-cover"
-                                    />
-                                    <p className="text-[10px] text-muted-foreground mt-1 text-center">
-                                        {new Date(gen.created_at).toLocaleTimeString('es-ES', {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        })}
-                                    </p>
+                                    <div className="w-14 h-14 rounded-lg overflow-hidden shadow-sm bg-muted border border-border/50">
+                                        <img
+                                            src={gen.image_url}
+                                            alt={`Version ${gen.id}`}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
                                 </button>
+                            ))}
+
+                            {/* Empty slots placeholders */}
+                            {Array.from({ length: Math.max(0, 5 - generations.length) }).map((_, i) => (
+                                <div
+                                    key={`empty-${i}`}
+                                    className="w-14 h-14 rounded-lg border border-dashed border-border/30 bg-muted/5 flex-shrink-0"
+                                />
                             ))}
                         </div>
                         <ScrollBar orientation="horizontal" />
                     </ScrollArea>
                 </div>
-            )}
+
+                {/* Staging Area / Context Drawer */}
+                {selectedContext.length > 0 && (
+                    <div className="px-4 py-2 border-b border-border/30 bg-muted/10">
+                        <div className="flex flex-wrap gap-2">
+                            {selectedContext.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className={cn(
+                                        "flex items-center gap-2 bg-background border border-border/50 rounded-lg shadow-sm group animate-in fade-in slide-in-from-bottom-1 transition-all overflow-hidden",
+                                        (item.type === 'image' || item.type === 'logo') ? "p-0 pr-1.5" : "px-2 py-1"
+                                    )}
+                                >
+                                    {item.type === 'color' && (
+                                        <div className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: item.value }} />
+                                    )}
+                                    {item.type === 'template' && (
+                                        <Layout className="w-3.5 h-3.5 text-primary shrink-0" />
+                                    )}
+                                    {(item.type === 'logo' || item.type === 'image') && (
+                                        <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
+                                            <img
+                                                src={item.value}
+                                                className={cn(
+                                                    "w-full h-full",
+                                                    item.type === 'logo' ? "object-contain p-1" : "object-cover"
+                                                )}
+                                                alt={item.label}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {(item.type === 'color' || item.type === 'template') && (
+                                        <span className="text-[11px] font-medium max-w-[120px] truncate">
+                                            {item.label || item.value}
+                                        </span>
+                                    )}
+
+                                    <button
+                                        onClick={() => onRemoveContext?.(item.id)}
+                                        className="p-0.5 hover:bg-muted rounded text-muted-foreground hover:text-destructive transition-colors ml-auto"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            ))}
+
+                            {/* Preview Chip while dragging */}
+                            {isDraggingOver && draggedElement && !selectedContext.some(c => c.id === draggedElement.id) && (
+                                <div
+                                    className={cn(
+                                        "flex items-center gap-2 bg-primary/5 border border-primary/30 border-dashed rounded-lg shadow-sm animate-pulse overflow-hidden opacity-80",
+                                        (draggedElement.type === 'image' || draggedElement.type === 'logo') ? "p-0 pr-1.5" : "px-2 py-1"
+                                    )}
+                                >
+                                    {draggedElement.type === 'color' && (
+                                        <div className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: draggedElement.value }} />
+                                    )}
+                                    {draggedElement.type === 'template' && (
+                                        <Layout className="w-3.5 h-3.5 text-primary shrink-0" />
+                                    )}
+                                    {(draggedElement.type === 'logo' || draggedElement.type === 'image') && (
+                                        <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
+                                            <img
+                                                src={draggedElement.value}
+                                                className={cn(
+                                                    "w-full h-full",
+                                                    draggedElement.type === 'logo' ? "object-contain p-1" : "object-cover"
+                                                )}
+                                                alt="Preview"
+                                            />
+                                        </div>
+                                    )}
+                                    {(draggedElement.type === 'color' || draggedElement.type === 'template') && (
+                                        <span className="text-[11px] font-medium opacity-50">
+                                            {draggedElement.label}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Prompt Input Area */}
+                <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={cn(
+                        "p-3 bg-background/50 backdrop-blur-md transition-all duration-300 relative",
+                        isDraggingOver ? "bg-primary/10 ring-2 ring-primary ring-inset shadow-[0_0_20px_rgba(var(--primary),0.2)]" : ""
+                    )}
+                >
+                    {isDraggingOver && (
+                        <div className="absolute inset-x-0 -top-10 flex justify-center pointer-events-none animate-bounce">
+                            <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                                Suelta para añadir al contexto
+                            </div>
+                        </div>
+                    )}
+                    <div className="relative max-w-5xl mx-auto flex gap-2 items-end">
+                        <div className="relative flex-1">
+                            <Textarea
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                placeholder="Describe los cambios..."
+                                className="pr-12 min-h-[50px] max-h-[120px] py-3 resize-none bg-background/80 border-border/50 focus:border-primary/50 transition-all rounded-xl shadow-inner text-sm"
+                            />
+                            <div className="absolute right-3 bottom-3 flex items-center gap-2">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                    onClick={() => setIsTemplateModalOpen(true)}
+                                    title="Elegir Plantilla"
+                                >
+                                    <Layout className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <Button
+                            size="sm"
+                            className="h-10 px-4 btn-gradient rounded-xl font-semibold gap-2 shadow-lg glow-primary transition-transform active:scale-95 shrink-0 mb-1"
+                            disabled={!prompt.trim() && selectedContext.length === 0}
+                        >
+                            <span className="text-xs">Lanzar</span>
+                            <KeyboardReturnIcon style={{ fontSize: 16 }} />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            <TemplateSelectorModal
+                isOpen={isTemplateModalOpen}
+                onClose={() => setIsTemplateModalOpen(false)}
+                onSelect={handleSelectTemplate}
+                selectedTemplateId={selectedContext.find(c => c.type === 'template')?.id}
+            />
         </div>
     )
 }

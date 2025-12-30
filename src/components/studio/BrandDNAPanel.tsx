@@ -15,16 +15,26 @@ import { useTheme } from 'next-themes'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+import { ContextElement } from '@/app/studio/page'
+
 interface BrandDNAPanelProps {
     brandDNA: BrandDNA
     logoInclusion?: boolean
     onLogoInclusionChange?: (enabled: boolean) => void
+    onAddContext?: (element: ContextElement) => void
+    onRemoveContext?: (id: string) => void
+    onSetDraggedElement?: (element: ContextElement | null) => void
+    selectedContext?: ContextElement[]
 }
 
 export function BrandDNAPanel({
     brandDNA: initialData,
     logoInclusion = true,
     onLogoInclusionChange,
+    onAddContext,
+    onRemoveContext,
+    onSetDraggedElement,
+    selectedContext = [],
 }: BrandDNAPanelProps) {
     const { t } = useTranslation()
     const { updateActiveBrandKit } = useBrandKit()
@@ -109,9 +119,23 @@ export function BrandDNAPanel({
     }
 
     const handleToggleColorSelection = (index: number) => {
+        const colorObj = colors[index]
+        const isCurrentlySelected = selectedContext.some(c => c.id === `color-${index}`)
+
+        if (isCurrentlySelected) {
+            onRemoveContext?.(`color-${index}`)
+        } else {
+            onAddContext?.({
+                id: `color-${index}`,
+                type: 'color',
+                value: colorObj.color,
+                label: colorObj.role || colorObj.color
+            })
+        }
+
         updateData(prev => ({
             ...prev,
-            colors: prev.colors?.map((c, i) => i === index ? { ...c, selected: c.selected === false ? true : false } : c)
+            colors: prev.colors?.map((c, i) => i === index ? { ...c, selected: !c.selected } : c)
         }))
     }
 
@@ -121,17 +145,31 @@ export function BrandDNAPanel({
     }
 
     const handleToggleImageSelection = (idx: number) => {
+        const image = allImages[idx]
+        const isCurrentlySelected = selectedContext.some(c => c.id === `image-${idx}`)
+
+        if (isCurrentlySelected) {
+            onRemoveContext?.(`image-${idx}`)
+        } else {
+            onAddContext?.({
+                id: `image-${idx}`,
+                type: 'image',
+                value: image.url,
+                label: `Imagen ${idx + 1}`
+            })
+        }
+
         updateData(prev => {
             const newImages = [...(prev.images || [])]
             const current = newImages[idx]
 
             if (typeof current === 'string') {
-                newImages[idx] = { url: current, selected: false }
+                newImages[idx] = { url: current, selected: !isCurrentlySelected }
             } else if (current && typeof current === 'object') {
                 newImages[idx] = {
                     ...current,
                     url: (current as any).url || '',
-                    selected: !((current as any).selected !== false)
+                    selected: !isCurrentlySelected
                 }
             }
             return { ...prev, images: newImages }
@@ -146,17 +184,31 @@ export function BrandDNAPanel({
     }
 
     const handleToggleLogoSelection = (idx: number) => {
+        const logo = logos[idx]
+        const isCurrentlySelected = selectedContext.some(c => c.id === `logo-${idx}`)
+
+        if (isCurrentlySelected) {
+            onRemoveContext?.(`logo-${idx}`)
+        } else {
+            onAddContext?.({
+                id: `logo-${idx}`,
+                type: 'logo',
+                value: logo.url,
+                label: `Logo ${idx + 1}`
+            })
+        }
+
         updateData(prev => {
             const newLogos = [...(prev.logos || [])]
             // Deselect all others if we select this one
             newLogos.forEach((l, i) => {
                 if (i !== idx) l.selected = false
-                else l.selected = true
+                else l.selected = !l.selected
             })
             return {
                 ...prev,
                 logos: newLogos,
-                logo_url: newLogos[idx].url // Sync secondary logo_url
+                logo_url: newLogos.find(l => l.selected)?.url || ''
             }
         })
     }
@@ -275,54 +327,18 @@ export function BrandDNAPanel({
 
     const selectedImages = allImages.filter(img => img.selected !== false);
 
-    const ImageItem = ({ item, idx }: { item: any, idx: number }) => {
-        return (
-            <div
-                key={`img-${idx}`}
-                onClick={() => handleToggleImageSelection(idx)}
-                className={cn(
-                    "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer transparency-grid",
-                    item.selected !== false
-                        ? "border-primary shadow-sm"
-                        : "border-transparent opacity-60 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 hover:border-border"
-                )}
-            >
-                <img src={item.url} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={`Asset ${idx}`} />
+    const handleDragStart = (e: React.DragEvent, element: ContextElement) => {
+        const jsonData = JSON.stringify(element)
+        e.dataTransfer.setData('application/x-studio-context', jsonData)
+        // Fallback for standard drag handle support
+        e.dataTransfer.setData('text/plain', element.label || element.value)
+        e.dataTransfer.effectAllowed = 'copy'
+        onSetDraggedElement?.(element)
+    }
 
-                {/* Icon Overlays */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors z-10" />
-
-                {/* Selection Checkmark UI */}
-                <div className={cn(
-                    "absolute top-2 left-2 flex items-center justify-center transition-all duration-200 z-30",
-                    item.selected !== false
-                        ? (isDark
-                            ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] scale-110 opacity-100"
-                            : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)] scale-110 opacity-100")
-                        : "text-white/20 scale-90 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:scale-110"
-                )}>
-                    <Check className="w-4 h-4 stroke-[3px]" />
-                </div>
-
-                {/* Actions Row */}
-                <div className="absolute bottom-1 right-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setViewerImage(item.url); }}
-                        className="w-5 h-5 bg-white/90 text-black rounded-full flex items-center justify-center hover:scale-110 shadow-lg"
-                        title="Ver en grande"
-                    >
-                        <ZoomIn className="w-2.5 h-2.5" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
-                        className="w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center hover:scale-110 shadow-lg"
-                    >
-                        <X className="w-2.5 h-2.5" />
-                    </button>
-                </div>
-            </div>
-        );
-    };
+    const handleDragEnd = () => {
+        onSetDraggedElement?.(null)
+    }
 
     return (
         <div className="w-[340px] h-full bg-card border-r border-border flex flex-col gap-3 overflow-hidden relative">
@@ -374,6 +390,9 @@ export function BrandDNAPanel({
                             onAddColor={handleAddColor}
                             onReset={handleResetColors}
                             hideHeader={true}
+                            selectedColorIds={selectedContext.filter(c => c.type === 'color').map(c => c.id)}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
                         />
                     </div>
                 </div>
@@ -403,20 +422,33 @@ export function BrandDNAPanel({
                             {logos.map((logo, idx) => (
                                 <div
                                     key={`logo-${idx}`}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, {
+                                        id: `logo-${idx}`,
+                                        type: 'logo',
+                                        value: logo.url,
+                                        label: `Logo ${idx + 1}`
+                                    })}
+                                    onDragEnd={handleDragEnd}
                                     onClick={() => handleToggleLogoSelection(idx)}
                                     className={cn(
-                                        "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer flex items-center justify-center p-1.5",
-                                        logo.selected !== false
+                                        "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing flex items-center justify-center p-1.5",
+                                        selectedContext.some(c => c.id === `logo-${idx}`)
                                             ? "border-primary shadow-sm ring-1 ring-primary/20"
                                             : "border-transparent opacity-60 hover:opacity-100 hover:border-border"
                                     )}
                                 >
-                                    <img src={logo.url} className="max-h-full max-w-full object-contain transition-transform group-hover:scale-110" alt={`Logo ${idx}`} />
+                                    <img
+                                        src={logo.url}
+                                        draggable={false}
+                                        className="max-h-full max-w-full object-contain transition-transform group-hover:scale-110 pointer-events-none select-none"
+                                        alt={`Logo ${idx}`}
+                                    />
 
                                     {/* Selection Check */}
-                                    {logo.selected !== false && (
+                                    {selectedContext.some(c => c.id === `logo-${idx}`) && (
                                         <div className={cn(
-                                            "absolute top-1 left-1 z-20",
+                                            "absolute top-1 left-1 z-20 pointer-events-none",
                                             isDark ? "text-white drop-shadow-md" : "text-primary drop-shadow-sm"
                                         )}>
                                             <Check className="w-3 h-3 stroke-[4px]" />
@@ -479,7 +511,63 @@ export function BrandDNAPanel({
                                 <div className="grid grid-cols-3 gap-1.5 p-0.5 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
                                     {selectedImages.map((img, i) => {
                                         const originalIdx = (data.images || []).findIndex(orig => (orig as any).url === img.url || orig === img.url);
-                                        return <ImageItem key={`sel - ${i} `} item={img} idx={originalIdx} />
+                                        const item = img;
+                                        const idx = originalIdx;
+                                        const elementId = `image-${idx}`;
+                                        const isSelected = selectedContext.some(c => c.id === elementId);
+
+                                        return (
+                                            <div
+                                                key={`sel-${i}`}
+                                                draggable
+                                                onDragStart={(e) => handleDragStart(e, {
+                                                    id: elementId,
+                                                    type: 'image',
+                                                    value: item.url,
+                                                    label: `Imagen ${idx + 1}`
+                                                })}
+                                                onDragEnd={handleDragEnd}
+                                                onClick={() => handleToggleImageSelection(idx)}
+                                                className={cn(
+                                                    "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing transparency-grid",
+                                                    isSelected
+                                                        ? "border-primary shadow-sm"
+                                                        : "border-transparent opacity-60 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 hover:border-border"
+                                                )}
+                                            >
+                                                <img
+                                                    src={item.url}
+                                                    draggable={false}
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none select-none"
+                                                    alt={`Asset ${idx}`}
+                                                />
+                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors z-10 pointer-events-none" />
+                                                <div className={cn(
+                                                    "absolute top-2 left-2 flex items-center justify-center transition-all duration-200 z-30 pointer-events-none",
+                                                    isSelected
+                                                        ? (isDark
+                                                            ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] scale-110 opacity-100"
+                                                            : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)] scale-110 opacity-100")
+                                                        : "text-white/20 scale-90 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:scale-110"
+                                                )}>
+                                                    <Check className="w-4 h-4 stroke-[3px]" />
+                                                </div>
+                                                <div className="absolute bottom-1 right-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setViewerImage(item.url); }}
+                                                        className="w-5 h-5 bg-white/90 text-black rounded-full flex items-center justify-center hover:scale-110 shadow-lg"
+                                                    >
+                                                        <ZoomIn className="w-2.5 h-2.5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
+                                                        className="w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center hover:scale-110 shadow-lg"
+                                                    >
+                                                        <X className="w-2.5 h-2.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
                                     })}
                                     {selectedImages.length === 0 && (
                                         <div className="col-span-3 py-10 text-center border-2 border-dashed border-muted/50 rounded-lg">
@@ -499,9 +587,65 @@ export function BrandDNAPanel({
 
                             <TabsContent value="library" className="mt-0">
                                 <div className="grid grid-cols-3 gap-1.5 p-0.5 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
-                                    {allImages.map((img, i) => (
-                                        <ImageItem key={`lib - ${i} `} item={img} idx={i} />
-                                    ))}
+                                    {allImages.map((img, i) => {
+                                        const item = img;
+                                        const idx = i;
+                                        const elementId = `image-${idx}`;
+                                        const isSelected = selectedContext.some(c => c.id === elementId);
+
+                                        return (
+                                            <div
+                                                key={`lib-${i}`}
+                                                draggable
+                                                onDragStart={(e) => handleDragStart(e, {
+                                                    id: elementId,
+                                                    type: 'image',
+                                                    value: item.url,
+                                                    label: `Imagen ${idx + 1}`
+                                                })}
+                                                onDragEnd={handleDragEnd}
+                                                onClick={() => handleToggleImageSelection(idx)}
+                                                className={cn(
+                                                    "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing transparency-grid",
+                                                    isSelected
+                                                        ? "border-primary shadow-sm"
+                                                        : "border-transparent opacity-60 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 hover:border-border"
+                                                )}
+                                            >
+                                                <img
+                                                    src={item.url}
+                                                    draggable={false}
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none select-none"
+                                                    alt={`Asset ${idx}`}
+                                                />
+                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors z-10 pointer-events-none" />
+                                                <div className={cn(
+                                                    "absolute top-2 left-2 flex items-center justify-center transition-all duration-200 z-30 pointer-events-none",
+                                                    isSelected
+                                                        ? (isDark
+                                                            ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] scale-110 opacity-100"
+                                                            : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)] scale-110 opacity-100")
+                                                        : "text-white/20 scale-90 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:scale-110"
+                                                )}>
+                                                    <Check className="w-4 h-4 stroke-[3px]" />
+                                                </div>
+                                                <div className="absolute bottom-1 right-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setViewerImage(item.url); }}
+                                                        className="w-5 h-5 bg-white/90 text-black rounded-full flex items-center justify-center hover:scale-110 shadow-lg"
+                                                    >
+                                                        <ZoomIn className="w-2.5 h-2.5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
+                                                        className="w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center hover:scale-110 shadow-lg"
+                                                    >
+                                                        <X className="w-2.5 h-2.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                     {totalCount < 20 && (
                                         <label className="border border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center gap-0.5 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer aspect-square group">
                                             <Plus className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary/50" />

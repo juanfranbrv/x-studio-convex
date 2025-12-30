@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { type ContextElement } from "@/app/studio/page";
 import { cn } from '@/lib/utils';
 
 import { Palette, Info, RotateCcw, X, Pipette, Check, Plus } from 'lucide-react';
@@ -22,6 +23,9 @@ interface ColorPaletteProps {
     onAddColor: () => void;
     onReset: () => void;
     hideHeader?: boolean;
+    selectedColorIds?: string[];
+    onDragStart?: (e: React.DragEvent, element: ContextElement) => void;
+    onDragEnd?: () => void;
 }
 
 export function ColorPalette({
@@ -33,7 +37,10 @@ export function ColorPalette({
     onRemoveColor,
     onAddColor,
     onReset,
-    hideHeader = false
+    hideHeader = false,
+    selectedColorIds = [],
+    onDragStart,
+    onDragEnd
 }: ColorPaletteProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState<number | null>(null);
     const [localColor, setLocalColor] = useState<{ index: number, color: string } | null>(null);
@@ -156,12 +163,20 @@ export function ColorPalette({
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
                                                 <div
+                                                    draggable={onDragStart !== undefined}
+                                                    onDragStart={(e) => onDragStart?.(e, {
+                                                        id: `color-${idx}`,
+                                                        type: 'color',
+                                                        value: item.color,
+                                                        label: `Color ${idx + 1}`
+                                                    })}
+                                                    onDragEnd={onDragEnd}
                                                     className={cn(
-                                                        "aspect-square rounded-lg cursor-pointer transition-all duration-300",
+                                                        "aspect-square rounded-lg cursor-grab active:cursor-grabbing transition-all duration-300",
                                                         "hover:scale-105 hover:shadow-xl border-2 border-border",
                                                         "hover:border-primary relative overflow-hidden",
                                                         colorPickerOpen === idx ? 'border-primary ring-2 ring-primary/20' : '',
-                                                        item.selected !== false
+                                                        selectedColorIds.includes(`color-${idx}`)
                                                             ? "border-primary shadow-sm"
                                                             : "border-transparent opacity-60 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 hover:border-border"
                                                     )}
@@ -176,11 +191,11 @@ export function ColorPalette({
                                                             }}
                                                             className={cn(
                                                                 "absolute top-1.5 left-1.5 flex items-center justify-center transition-all duration-200 z-30",
-                                                                item.selected !== false
+                                                                selectedColorIds.includes(`color-${idx}`)
                                                                     ? `${getContrastColor(item.color)} drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] scale-110 opacity-100`
                                                                     : "text-white/20 scale-90 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:scale-110"
                                                             )}
-                                                            title={item.selected !== false ? "Deseleccionar para IA" : "Seleccionar para IA"}
+                                                            title={selectedColorIds.includes(`color-${idx}`) ? "Deseleccionar para IA" : "Seleccionar para IA"}
                                                         >
                                                             <Check className="w-4 h-4 stroke-[3.5px]" />
                                                         </button>

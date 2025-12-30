@@ -10,11 +10,29 @@ import { CampaignBriefPanel } from '@/components/studio/CampaignBriefPanel'
 import type { BrandDNA } from '@/lib/brand-types'
 import { Loader2, Plus } from 'lucide-react'
 
+interface Generation {
+    id: string
+    image_url: string
+    created_at: string
+}
+
+export type ContextType = 'color' | 'logo' | 'template' | 'image'
+
+export interface ContextElement {
+    id: string
+    type: ContextType
+    value: string
+    label?: string
+}
+
 export default function StudioPage() {
     const router = useRouter()
     const { activeBrandKit, brandKits, loading, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const [isGenerating, setIsGenerating] = useState(false)
     const [currentImage, setCurrentImage] = useState<string | null>(null)
+    const [generations, setGenerations] = useState<Generation[]>([])
+    const [selectedContext, setSelectedContext] = useState<ContextElement[]>([])
+    const [draggedElement, setDraggedElement] = useState<ContextElement | null>(null)
     const [isAnnotating, setIsAnnotating] = useState(false)
     const [logoInclusion, setLogoInclusion] = useState(true)
 
@@ -54,7 +72,13 @@ export default function StudioPage() {
 
             if (response.ok) {
                 const result = await response.json()
+                const newGeneration: Generation = {
+                    id: Math.random().toString(36).substring(7),
+                    image_url: result.imageUrl,
+                    created_at: new Date().toISOString()
+                }
                 setCurrentImage(result.imageUrl)
+                setGenerations(prev => [newGeneration, ...prev])
             }
         } catch (error) {
             console.error('Generation failed:', error)
@@ -87,6 +111,10 @@ export default function StudioPage() {
                         brandDNA={activeBrandKit}
                         logoInclusion={logoInclusion}
                         onLogoInclusionChange={setLogoInclusion}
+                        selectedContext={selectedContext}
+                        onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
+                        onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
+                        onSetDraggedElement={setDraggedElement}
                     />
 
                     {/* Center: Canvas */}
@@ -94,7 +122,12 @@ export default function StudioPage() {
                         currentImage={currentImage}
                         isAnnotating={isAnnotating}
                         onAnnotate={() => setIsAnnotating(!isAnnotating)}
-                        generations={[]}
+                        generations={generations}
+                        onSelectGeneration={(gen) => setCurrentImage(gen.image_url)}
+                        selectedContext={selectedContext}
+                        onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
+                        onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
+                        draggedElement={draggedElement}
                     />
 
                     {/* Right: Campaign Brief */}
