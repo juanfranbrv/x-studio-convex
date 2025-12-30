@@ -7,7 +7,7 @@ import sharp from 'sharp';
 import * as cheerio from 'cheerio';
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
-import { model } from '@/lib/ai';
+import { model, groqModel } from '@/lib/ai';
 import fs from 'fs';
 import path from 'path';
 import { clusterColors, deltaE, categorizeColorRole, getHarmonyBonus } from '@/lib/color-utils';
@@ -2507,26 +2507,42 @@ ${fullBrandContext.slice(0, 45000)}`;
             logDebug('✅ Gemini Response:', brandDNA);
         } catch (aiError: any) {
             console.error('❌ Gemini AI Error:', aiError.message);
-            logDebug('❌ Gemini AI Error:', { message: aiError.message, stack: aiError.stack });
+            logToFile(`⚠️ Gemini falló. Intentando con Groq (Llama 3.3)...`);
 
-            // Fallback en caso de error de AI
-            console.log('⚠️ Using fallback data due to AI error');
-            brandDNA = {
-                brand_name: new URL(url).hostname.split('.')[0] || "Brand Name",
-                tagline: "Experience excellence and innovation in every detail.",
-                business_overview: `Digital presence. Analysis focused on visual identity and color systems.`,
-                brand_values: ["Quality", "Innovation", "User-Centric", "Reliability", "Sustainability"],
-                tone_of_voice: ["Professional", "Confident", "Modern"],
-                visual_aesthetic: ["Clean", "Premium", "Corporate"],
-                colors: finalColors.slice(0, 5),
-                fonts: ["Inter", "System Sans-Serif"],
-                text_assets: {
-                    marketing_hooks: ["High Quality Service", "Trusted by Experts", "Innovative Solutions", "Customer Focused", "Market Leaders"],
-                    visual_keywords: ["Modern", "Professional", "Clean", "Dynamic", "Trustworthy"],
-                    ctas: ["Get Started", "Learn More", "Contact Us"],
-                    brand_context: `Business analysis for ${url}.`
-                }
-            };
+            try {
+                const { object } = await generateObject({
+                    model: groqModel,
+                    schema: BrandDNASchema,
+                    prompt: systemPrompt,
+                });
+                brandDNA = object;
+                console.log('✅ Groq generated Brand DNA successfully');
+            } catch (groqError: any) {
+                console.error('❌ Groq AI Error:', groqError.message);
+                logToFile(`❌ Fallo total de IA (Gemini y Groq). Usando heurística.`);
+
+                // Fallback HEURÍSTICO basado en el DOM
+                const $ = cheerio.load(htmlAssets.html || '');
+                const siteTitle = $('title').text() || $('meta[property="og:title"]').attr('content') || new URL(url).hostname;
+                const siteDesc = $('meta[name="description"]').attr('content') || $('meta[property="og:description"]').attr('content') || "Análisis centrado en identidad visual y sistemas de color.";
+
+                brandDNA = {
+                    brand_name: siteTitle.split('|')[0].split('-')[0].trim() || "Brand Name",
+                    tagline: siteDesc.slice(0, 100),
+                    business_overview: siteDesc,
+                    brand_values: ["Calidad", "Innovación", "Profesionalismo", "Confianza", "Modernidad"],
+                    tone_of_voice: ["Profesional", "Moderno", "Directo"],
+                    visual_aesthetic: ["Limpio", "Premium", "Funcional"],
+                    colors: finalColors.slice(0, 5),
+                    fonts: ["Inter", "System Sans-Serif"],
+                    text_assets: {
+                        marketing_hooks: [siteTitle, "Soluciones innovadoras", "Líderes en el sector"],
+                        visual_keywords: ["Moderno", "Profesional", "Limpio"],
+                        ctas: ["Comenzar ahora", "Saber más"],
+                        brand_context: `Extracción automática por fallo de IA para ${url}.`
+                    }
+                };
+            }
         }
 
         console.log('✅ Brand DNA ready');
