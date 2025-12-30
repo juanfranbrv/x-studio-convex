@@ -11,6 +11,7 @@ import { TypographySection } from './TypographySection';
 import { TechnicalAudit } from './TechnicalAudit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useBrandKit } from '@/contexts/BrandKitContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { uploadBrandImage } from '@/app/actions/upload-image';
 import { updateUserBrandKit } from '@/app/actions/update-user-brand-kit';
@@ -27,6 +28,7 @@ interface BrandDNABoardProps {
 
 export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate, onNewBrandKit, onSaveSuccess }: BrandDNABoardProps) {
     const { user } = useUser();
+    const { syncActiveBrandKit } = useBrandKit();
     const [data, setData] = useState<BrandDNA>(initialData);
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -41,17 +43,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
     const [isEditingBrandName, setIsEditingBrandName] = useState(false);
     const [brandNameEdit, setBrandNameEdit] = useState(initialData.brand_name);
 
-    // Auto-save logic
-    useEffect(() => {
-        if (hasUnsavedChanges && !isSaving) {
-            const timer = setTimeout(() => {
-                handleSave();
-            }, 3000); // 3 seconds debounce
-            return () => clearTimeout(timer);
-        }
-    }, [data, hasUnsavedChanges, isSaving]);
-
-    const handleSave = async () => {
+    const handleSave = async (isAuto = false) => {
         if (!user || !hasUnsavedChanges) return;
         if (!data.id) {
             console.error('❌ Cannot save: Brand Kit ID is missing.', data);
@@ -69,7 +61,11 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             if (result.success) {
                 setHasUnsavedChanges(false);
                 setLastSaved(new Date());
-                if (onSaveSuccess) onSaveSuccess();
+                // Importante: sincronizar con el contexto sin recargar todo
+                syncActiveBrandKit?.(data);
+
+                // Solo llamar a onSaveSuccess si NO es autoguardado para evitar re-refrescos silenciosos en la UI global
+                if (onSaveSuccess && !isAuto) onSaveSuccess();
             } else {
                 throw new Error(result.error || 'Error al guardar');
             }
@@ -84,6 +80,16 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             setIsSaving(false);
         }
     };
+
+    // Auto-save logic
+    useEffect(() => {
+        if (hasUnsavedChanges && !isSaving) {
+            const timer = setTimeout(() => {
+                handleSave(true); // Is auto-save
+            }, 10000); // 10 seconds debounce for auto-save
+            return () => clearTimeout(timer);
+        }
+    }, [data, hasUnsavedChanges, isSaving]);
 
     const updateData = useCallback((updater: (prev: BrandDNA) => BrandDNA) => {
         setData(prev => {
@@ -349,7 +355,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                             ) : (
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
                                     <CheckCircle className="w-4 h-4 mr-2" />
-                                    Sincronizado {lastSaved && `(hace ${Math.round((new Date().getTime() - lastSaved.getTime()) / 1000)}s)`}
+                                    Sincronizado
                                 </div>
                             )}
                         </div>
@@ -366,7 +372,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                         <Download className="w-4 h-4 mr-2" />
                         Exportar
                     </Button>
-                    <Button size="sm" onClick={handleSave} disabled={!hasUnsavedChanges || isSaving} className="gap-2 h-9">
+                    <Button size="sm" onClick={() => handleSave(false)} disabled={!hasUnsavedChanges || isSaving} className="gap-2 h-9">
                         {isSaving ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Guardar Ahora
                     </Button>
@@ -417,11 +423,18 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                 />
                 <BrandAssets
                     tagline={data.tagline || ''}
+                    business_overview={data.business_overview || ''}
                     values={data.brand_values || []}
                     aesthetic={data.visual_aesthetic || []}
                     tone={data.tone_of_voice || []}
                     onUpdateTagline={(val) => updateData(prev => ({ ...prev, tagline: val }))}
-                    onUpdateValue={(idx, val) => updateData(prev => ({ ...prev, brand_values: prev.brand_values?.map((v, i) => i === idx ? val : v) }))}
+                    onUpdateOverview={(val) => updateData(prev => ({ ...prev, business_overview: val }))}
+                    onUpdateValue={(index, val) => {
+                        updateData(prev => ({
+                            ...prev,
+                            brand_values: (prev.brand_values || []).map((v, i) => i === index ? val : v)
+                        }));
+                    }}
                     onAddValue={() => updateData(prev => ({ ...prev, brand_values: [...(prev.brand_values || []), 'Nuevo Valor'] }))}
                     onRemoveValue={(idx) => updateData(prev => ({ ...prev, brand_values: prev.brand_values?.filter((_, i) => i !== idx) }))}
                     onUpdateAesthetic={(idx, val) => updateData(prev => ({ ...prev, visual_aesthetic: prev.visual_aesthetic?.map((v, i) => i === idx ? val : v) }))}
@@ -436,7 +449,17 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             {/* Bottom Section: Text Assets & Gallery */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left: Text Assets */}
-                <TextAssetsSection data={data.text_assets} />
+                <TextAssetsSection
+                    data={data.text_assets}
+                    onChange={(newTextAssets) => {
+                        updateData(prev => ({
+                            ...prev,
+                            text_assets: newTextAssets,
+                            // Keep business_overview in sync with brand_context if updated
+                            business_overview: newTextAssets.brand_context || prev.business_overview
+                        }));
+                    }}
+                />
 
                 {/* Right: Gallery */}
                 <ImageGallery

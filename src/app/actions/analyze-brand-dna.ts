@@ -23,77 +23,14 @@ function logDebug(message: string, data?: any) {
     }
 }
 
-// Helper for Zonal Analysis
+/**
+ * Extrae colores dominantes de una imagen usando un sistema de cuadrícula
+ * Es más robusto que el muestreo puntual porque cubre toda la imagen
+ */
 async function extractVisualPalette(imageUrl: string): Promise<string[]> {
     try {
-        console.log(`🎨 Iniciando Análisis Zonal de Color para: ${imageUrl}`);
-        const response = await fetch(imageUrl);
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-
-        const image = sharp(buffer);
-        const metadata = await image.metadata();
-
-        if (!metadata.width || !metadata.height) return [];
-
-        const width = metadata.width;
-        const height = metadata.height;
-
-        // Zone A: Header (Top 0-150px)
-        const headerLimit = Math.min(150, height);
-        // Zone B: Footer (Bottom 20%)
-        const footerHeight = Math.floor(height * 0.2);
-        const footerStart = Math.max(0, height - footerHeight);
-
-        console.log(`📏 Zonas de Análisis: Header(0-${headerLimit}px), Footer(${footerStart}-${height}px)`);
-
-        const [headerBuffer, footerBuffer] = await Promise.all([
-            image.clone().extract({ left: 0, top: 0, width: width, height: headerLimit }).raw().toBuffer(),
-            image.clone().extract({ left: 0, top: footerStart, width: width, height: footerHeight }).raw().toBuffer()
-        ]);
-
-        const colorCounts = new Map<string, number>();
-
-        // Process buffer helper
-        const processBuffer = (buf: Buffer, weight: number) => {
-            for (let i = 0; i < buf.length; i += 3 * 10) { // Step 10 pixels for speed
-                const r = buf[i];
-                const g = buf[i + 1];
-                const b = buf[i + 2];
-
-                // Simple saturation check
-                const max = Math.max(r, g, b);
-                const min = Math.min(r, g, b);
-                const d = max - min;
-                const s = max === 0 ? 0 : d / max;
-
-                // Ignore low saturation (muddy gray/white/black mostly) unless it's pure B/W text
-                // But we want brand colors so let's be strict
-                if (s < 0.15 && max < 240 && min > 15) continue;
-
-                // Quantize to reduced palette (round to nearest 10)
-                const qr = Math.round(r / 10) * 10;
-                const qg = Math.round(g / 10) * 10;
-                const qb = Math.round(b / 10) * 10;
-
-                const hex = `#${((1 << 24) + (qr << 16) + (qg << 8) + qb).toString(16).slice(1).toUpperCase()}`;
-
-                colorCounts.set(hex, (colorCounts.get(hex) || 0) + weight);
-            }
-        };
-
-        processBuffer(headerBuffer, 2); // Header weight 2x
-        processBuffer(footerBuffer, 3); // Footer weight 3x (most reliable for brand)
-
-        // Sort by frequency
-        const sortedColors = Array.from(colorCounts.entries())
-            .sort((a, b) => b[1] - a[1])
-            .map(entry => entry[0])
-            .slice(0, 10);
-
-        console.log(`🎨 Colores extraídos (Visual):`, sortedColors);
-        return sortedColors;
-
+        console.log(`🎨 Extrayendo paleta visual (Grid) de: ${imageUrl.substring(0, 100)}...`);
+        return await extractColorsFromScreenshot(imageUrl);
     } catch (e) {
         console.error('Error en visual palette extraction:', e);
         return [];
@@ -143,8 +80,8 @@ async function extractLogoColors(logoUrl: string): Promise<string[]> {
             const b = rawBuffer[i + 2];
             const a = channels === 4 ? rawBuffer[i + 3] : 255;
 
-            // Skip transparent pixels
-            if (a < 128) continue;
+            // Skip transparent pixels (alpha < 50 for more sensitivity)
+            if (a < 50) continue;
 
             // Calculate lightness
             const max = Math.max(r, g, b);
@@ -391,8 +328,7 @@ function rgbToHex(r: number, g: number, b: number): string {
  * Filtra colores poco saturados (grises, blancos, negros)
  */
 function isColorful(hex: string): boolean {
-    if (!hex || hex.length !== 7) return false;
-
+    if (!hex || hex === 'transparent' || hex === 'null') return false;
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
@@ -401,12 +337,11 @@ function isColorful(hex: string): boolean {
     const min = Math.min(r, g, b);
     const delta = max - min;
 
-    // Filtrar blancos/negros puros y grises muy extremos
-    // Umbral bajo (5) para permitir colores sutiles de branding como beiges y olivas claros
-    if (max === 255 && min === 255) return false; // Blanco puro
-    if (max < 15) return false; // Negro casi puro
-    if (max > 240 && delta < 5) return false; // Blancos casi puros
-    if (delta < 5) return false; // Grises muy puros
+    // Aceptamos casi todo excepto blancos/negros puros y grises perfectos
+    // Antes delta < 15, ahora delta < 3 para ser mucho más permisivos con tonos sutiles
+    if (max > 252 && delta < 3) return false; // Blancos extremos
+    if (max < 8 && delta < 3) return false;   // Negros extremos
+    if (delta < 2) return false;              // Grises matemáticamente puros
 
     return true;
 }
@@ -417,24 +352,35 @@ function isColorful(hex: string): boolean {
  */
 async function extractColorsFromScreenshot(imageUrl: string): Promise<string[]> {
     try {
+        console.log(`[EXTRACT_COLORS] Starting extraction from: ${imageUrl.substring(0, 80)}...`);
         const response = await fetch(imageUrl, {
             signal: AbortSignal.timeout(10000),
             headers: { 'User-Agent': 'Mozilla/5.0' }
         });
 
-        if (!response.ok) return [];
+        if (!response.ok) {
+            console.error(`[EXTRACT_COLORS] Fetch failed with status: ${response.status}`);
+            return [];
+        }
+        console.log(`[EXTRACT_COLORS] Fetch successful, reading buffer...`);
 
         const buffer = Buffer.from(await response.arrayBuffer());
+        console.log(`[EXTRACT_COLORS] Buffer size: ${buffer.length} bytes`);
+
         const image = sharp(buffer);
         const metadata = await image.metadata();
 
-        if (!metadata.width || !metadata.height) return [];
+        if (!metadata.width || !metadata.height) {
+            console.error(`[EXTRACT_COLORS] Invalid metadata: ${JSON.stringify(metadata)}`);
+            return [];
+        }
 
         const colors: string[] = [];
         const w = metadata.width;
         const h = metadata.height;
 
         console.log(`📐 Screenshot: ${w}x${h}`);
+        console.log(`[EXTRACT_COLORS] Creating ${5 * 8} grid zones...`);
 
         // Sistema genérico de muestreo: cuadrícula 5x10 + zonas clave
         // Funciona para cualquier layout de sitio web
@@ -468,8 +414,15 @@ async function extractColorsFromScreenshot(imageUrl: string): Promise<string[]> 
             }
         }
 
+        console.log(`[EXTRACT_COLORS] Processing ${strategicZones.length} zones...`);
+        let processedZones = 0;
+        let skippedZones = 0;
+
         for (const zone of strategicZones) {
-            if (zone.width < 10 || zone.height < 10) continue;
+            if (zone.width < 10 || zone.height < 10) {
+                skippedZones++;
+                continue;
+            }
             try {
                 // Asegurar que la zona no exceda los límites de la imagen
                 const safeZone = {
@@ -479,30 +432,67 @@ async function extractColorsFromScreenshot(imageUrl: string): Promise<string[]> 
                     height: Math.min(zone.height, h - zone.top),
                 };
 
-                if (safeZone.width < 10 || safeZone.height < 10) continue;
+                if (safeZone.width < 10 || safeZone.height < 10) {
+                    skippedZones++;
+                    continue;
+                }
 
                 const regionBuffer = await sharp(buffer)
                     .extract(safeZone)
-                    .resize(1, 1, { fit: 'cover' }) // Promedio de la región
+                    .resize(Math.min(50, safeZone.width), Math.min(50, safeZone.height), { fit: 'cover' }) // Get sample pixels, not average
                     .raw()
                     .toBuffer();
 
                 if (regionBuffer.length >= 3) {
-                    const zoneColor = rgbToHex(regionBuffer[0], regionBuffer[1], regionBuffer[2]).toUpperCase();
-                    if (isColorful(zoneColor) && !colors.some(c => colorDistance(c, zoneColor) < 25)) {
-                        colors.push(zoneColor);
-                        console.log(`   🎯 ${zone.name}: ${zoneColor}`);
+                    // Extract multiple colors from this zone (top 3)
+                    const zoneColors = new Map<string, number>();
+                    const channelsPerPixel = 3;
+
+                    for (let i = 0; i < regionBuffer.length; i += channelsPerPixel) {
+                        if (i + 2 >= regionBuffer.length) break;
+                        const r = regionBuffer[i];
+                        const g = regionBuffer[i + 1];
+                        const b = regionBuffer[i + 2];
+
+                        // Calculate saturation to prioritize colorful pixels
+                        const max = Math.max(r, g, b);
+                        const min = Math.min(r, g, b);
+                        const saturation = max === 0 ? 0 : (max - min) / max;
+
+                        // Skip very desaturated colors (grays/whites) - prefer brand colors
+                        if (saturation < 0.15) continue;
+
+                        const hex = rgbToHex(r, g, b).toUpperCase();
+                        zoneColors.set(hex, (zoneColors.get(hex) || 0) + 1);
                     }
+
+                    // Get top 3 most frequent vibrant colors from this zone
+                    const topZoneColors = Array.from(zoneColors.entries())
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 3)
+                        .map(([hex]) => hex);
+
+                    // Add unique colors to global palette
+                    topZoneColors.forEach(zoneColor => {
+                        if (!colors.some(c => colorDistance(c, zoneColor) < 20)) {
+                            colors.push(zoneColor);
+                            if (colors.length <= 15) { // Log first 15 to see what we're getting
+                                console.log(`   🎯 ${zone.name}: ${zoneColor}`);
+                            }
+                        }
+                    });
                 }
+                processedZones++;
             } catch (e) {
-                console.error(`Error in zone ${zone.name}:`, e);
+                console.error(`[EXTRACT_COLORS] Error in zone ${zone.name}:`, e);
             }
         }
 
-        console.log(`✅ Colores estratégicos del screenshot: ${colors.length}`);
-        return colors.slice(0, 8);
+        console.log(`[EXTRACT_COLORS] Zones processed: ${processedZones}, skipped: ${skippedZones}`);
+        console.log(`   First 5: ${colors.slice(0, 5).join(', ')}`);
+        return colors.slice(0, 12); // Return top 12 colors
     } catch (error) {
-        console.error('Error extracting colors from screenshot:', error);
+        console.error('[EXTRACT_COLORS] Fatal error:', error);
         return [];
     }
 }
@@ -700,7 +690,7 @@ async ({ page }) => {
     const elements = document.querySelectorAll('*');
     elements.forEach(el => {
       const rect = el.getBoundingClientRect();
-      if (rect.width < 2 || rect.height < 2 || rect.top > vh || rect.bottom < 0) return;
+      if (rect.width < 2 || rect.height < 2 || rect.top > 3000 || rect.bottom < 0) return;
 
       const style = window.getComputedStyle(el);
       
@@ -716,10 +706,11 @@ async ({ page }) => {
         
         const visibleW = Math.min(rect.right, vw) - Math.max(rect.left, 0);
         const visibleH = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+        // Be more inclusive: if it's in the top 3000px, count it as visible for color purposes
         const area = Math.max(0, visibleW * visibleH);
-        if (area < 5) return;
+        if (area < 5 && rect.top > 3000) return;
 
-        const foldBonus = rect.top < 800 ? 1.4 : 1.0;
+        const foldBonus = rect.top < 1000 ? 1.5 : 1.0;
         const totalW = area * w * foldBonus;
 
         results[hex] = (results[hex] || 0) + totalW;
@@ -784,9 +775,24 @@ async ({ page }) => {
         });
     } catch(e) {}
 
+    // Logo Candidates
+    const logoCandidates = [];
+    document.querySelectorAll('img[src*="logo"], img[class*="logo"], img[id*="logo"], img[src*="brand"], [class*="logo"] img, [id*="logo"] img, header img').forEach(el => {
+      const src = el.src;
+      if (!src) return;
+      const rect = el.getBoundingClientRect();
+      let score = 50; 
+      if (src.toLowerCase().includes('logo')) score += 50;
+      if (el.className.toLowerCase().includes('logo') || el.id.toLowerCase().includes('logo')) score += 50;
+      if (rect.width > 30 && rect.height > 10) score += 30;
+      if (rect.top < 500) score += 40;
+      
+      logoCandidates.push({ url: src, score, type: 'url' });
+    });
+
     const finalFonts = [...new Set([...linkFonts, ...variableFonts, ...sortedComputedFonts])].slice(0, 5);
 
-    return { colors: sortedColors, fonts: finalFonts };
+    return { colors: sortedColors, fonts: finalFonts, logoCandidates: logoCandidates.sort((a,b) => b.score - a.score).slice(0, 5) };
   });
 }
 `;
@@ -794,7 +800,7 @@ async ({ page }) => {
 /**
  * Extrae metadatos visuales usando Microlink API con sistema de reintentos
  */
-async function fetchMicrolinkData(url: string, customFunction?: string): Promise<MicrolinkResponse['data']> {
+async function fetchMicrolinkData(url: string, customFunction?: string, forceRefresh: boolean = false): Promise<MicrolinkResponse['data']> {
     const maxRetries = 3; // Aumentado de 2 a 3
     let lastError: any;
 
@@ -806,6 +812,10 @@ async function fetchMicrolinkData(url: string, customFunction?: string): Promise
             microlinkUrl.searchParams.set('palette', 'true');
             microlinkUrl.searchParams.set('meta', 'true');
             microlinkUrl.searchParams.set('screenshot.fullPage', 'true');
+            // Bypass Microlink cache and force a new render
+            if (forceRefresh) {
+                microlinkUrl.searchParams.set('ttl', '0');
+            }
 
             // Incrementar tiempo de espera en cada reintento
             const waitFor = attempt === 0 ? '8000' : attempt === 1 ? '12000' : '20000';
@@ -816,7 +826,7 @@ async function fetchMicrolinkData(url: string, customFunction?: string): Promise
                 microlinkUrl.searchParams.set('function', customFunction);
             }
 
-            console.log(`📡 Microlink Intento ${attempt + 1}/${maxRetries + 1} (waitFor: ${waitFor}ms)...`);
+            console.log(`📡 Microlink Intento ${attempt}/${maxRetries}...`);
 
             const response = await fetch(microlinkUrl.toString(), {
                 signal: AbortSignal.timeout(attempt === 0 ? 60000 : 120000), // Timeout extendido
@@ -896,6 +906,7 @@ async function fetchApiFlashScreenshot(url: string): Promise<string | undefined>
         return apiFlashUrl.toString();
     } catch (e) {
         console.error('❌ Error en ApiFlash fallback:', e);
+        logDebug('ApiFlash fallback error:', e);
         return undefined;
     }
 }
@@ -928,11 +939,108 @@ async function fetchScreenshotLayerScreenshot(url: string): Promise<string | und
         return screenshotLayerUrl.toString();
     } catch (e) {
         console.error('❌ Error en ScreenshotLayer fallback:', e);
+        logDebug('ScreenshotLayer fallback error:', e);
         return undefined;
     }
 }
 
+/**
+ * Análisis Weighted Estático - Reemplazo de Microlink Weighted DOM
+ * Asigna pesos a colores y fuentes basándose en posición DOM, semantic classes e inline styles
+ */
+function analyzeStaticWeightedDOM(html: string, rootColors: Record<string, string>): {
+    weightedColors: Array<{ hex: string; weight: number }>;
+    weightedFonts: Array<{ font: string; weight: number }>;
+} {
+    const colorWeights: Record<string, number> = {};
+    const fontWeights: Record<string, number> = {};
 
+    const normalizeHex = (color: string): string | null => {
+        if (!color) return null;
+        if (color.startsWith('#')) {
+            const cleaned = color.toUpperCase().substring(0, 7);
+            return cleaned.length === 7 ? cleaned : null;
+        }
+        return null;
+    };
+
+    const extractInlineColors = (style: string): string[] => {
+        const hexRegex = /#([0-9A-Fa-f]{6})/g;
+        const colors: string[] = [];
+        let match;
+        while ((match = hexRegex.exec(style)) !== null) {
+            const normalized = normalizeHex(match[0]);
+            if (normalized) colors.push(normalized);
+        }
+        return colors;
+    };
+
+    // Match ALL style attributes (minified HTML safe)
+    const styleRegex = /style=["']([^"']+)["']/g;
+    const styleMatches = [...html.matchAll(styleRegex)];
+
+    styleMatches.forEach(match => {
+        const fullTag = html.substring(Math.max(0, match.index - 200), match.index! + 200).toLowerCase();
+        const styleContent = match[1];
+
+        let sectionBonus = 1.0;
+        if (fullTag.includes('header') || fullTag.includes('nav')) sectionBonus = 1.5;
+        else if (fullTag.includes('hero') || fullTag.includes('masthead')) sectionBonus = 2.0;
+        else if (fullTag.includes('footer')) sectionBonus = 0.7;
+
+        let semanticBonus = 1.0;
+        if (fullTag.includes('cta') || fullTag.includes('button') || fullTag.includes('btn')) semanticBonus = 1.8;
+        else if (fullTag.includes('primary') || fullTag.includes('brand')) semanticBonus = 1.5;
+        else if (fullTag.includes('accent')) semanticBonus = 1.3;
+
+        const inlineColors = extractInlineColors(styleContent);
+        inlineColors.forEach(color => {
+            colorWeights[color] = (colorWeights[color] || 0) + (100 * sectionBonus * semanticBonus);
+        });
+    });
+
+    // Find all headings (minified HTML safe)
+    const headingRegex = /<h([1-6])[^>]*>(.*?)<\/h\1>/gi;
+    const headingMatches = [...html.matchAll(headingRegex)];
+
+    headingMatches.forEach(match => {
+        const level = parseInt(match[1]);
+        const headingWeight = 100 / level;
+        const fullTag = match[0].toLowerCase();
+        const fontMatch = fullTag.match(/font-family:\s*['"]?([^'";,]+)/);
+        if (fontMatch) {
+            const font = fontMatch[1].trim();
+            fontWeights[font] = (fontWeights[font] || 0) + headingWeight;
+        }
+    });
+
+    // CSS Variables
+    Object.entries(rootColors).forEach(([varName, hex]) => {
+        const normalized = normalizeHex(hex);
+        if (!normalized) return;
+        let varWeight = 80;
+        if (varName.includes('primary') || varName.includes('brand')) varWeight *= 1.8;
+        else if (varName.includes('accent') || varName.includes('secondary')) varWeight *= 1.4;
+        colorWeights[normalized] = (colorWeights[normalized] || 0) + varWeight;
+    });
+
+    console.log(`🐛 [STATIC WEIGHTED] Style matches found: ${styleMatches.length}`);
+    console.log(`🐛 [STATIC WEIGHTED] Heading matches found: ${headingMatches.length}`);
+    console.log(`🐛 [STATIC WEIGHTED] Root colors processed: ${Object.keys(rootColors).length}`);
+    console.log(`🐛 [STATIC WEIGHTED] Color weights:`, Object.keys(colorWeights).length, colorWeights);
+
+    const sortedColors = Object.entries(colorWeights)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 15)
+        .map(([hex, weight]) => ({ hex, weight }));
+
+    const sortedFonts = Object.entries(fontWeights)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([font, weight]) => ({ font, weight }));
+
+    return { weightedColors: sortedColors, weightedFonts: sortedFonts };
+}
 
 interface LogoCandidate {
     url?: string;
@@ -944,7 +1052,7 @@ interface LogoCandidate {
 /**
  * Extrae el HTML de una URL y analiza CSS externos para colores + busca logos/favicons/imagenes
  */
-async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string): Promise<{
+async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, forceRefresh: boolean = false): Promise<{
     colors: string[];
     colorFrequency: Record<string, number>;
     logoCandidates: LogoCandidate[];
@@ -956,6 +1064,7 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string): Pr
     svgPalette: string[];
     designPalette: string[];
     fonts: string[];
+    html: string; // Added for weighted analysis
 }> {
     const hexRegex = /#([0-9A-Fa-f]{3}){1,2}\b/g;
     const rgbRegex = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*[\d.]+)?\s*\)/g;
@@ -967,16 +1076,17 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string): Pr
             console.log('📄 Usando HTML ya renderizado para la extracción...');
             html = providedHtml;
         } else {
-            console.log('📡 Fetching HTML directamente...');
+            console.log(`📡 Fetching HTML directamente (${forceRefresh ? 'NO-CACHE' : 'DEFAULT'})...`);
             const response = await fetch(url, {
                 signal: AbortSignal.timeout(8000),
+                cache: forceRefresh ? 'no-store' : 'default',
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 },
             });
 
             if (!response.ok) {
-                return { colors: [], colorFrequency: {}, logoCandidates: [], faviconUrl: null, imageCandidates: [], cssLinks: [], rootColors: {}, codePalette: [], svgPalette: [], designPalette: [], fonts: [] };
+                return { colors: [], colorFrequency: {}, logoCandidates: [], faviconUrl: null, imageCandidates: [], cssLinks: [], rootColors: {}, codePalette: [], svgPalette: [], designPalette: [], fonts: [], html: '' };
             }
             html = await response.text();
         }
@@ -1382,26 +1492,37 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string): Pr
         console.log(`✅ Colores inline HTML encontrados: ${priorityColors.length}`);
 
         // === 2. ALTA PRIORIDAD: Colores en SVG (fill, stroke) ===
-        // NUEVO: Separamos SVG colors en su propia paleta para análisis independiente
         const svgColors: string[] = [];
         $('[fill], [stroke]').slice(0, 100).each((_, el) => {
             const fill = $(el).attr('fill');
             const stroke = $(el).attr('stroke');
 
             [fill, stroke].forEach(color => {
-                if (color && color !== 'none' && color !== 'currentColor' && color !== 'inherit' && color.startsWith('#')) {
-                    let normalizedHex = color.toUpperCase();
+                if (!color || color === 'none' || color === 'currentColor' || color === 'inherit') return;
+
+                let normalizedHex: string | null = null;
+
+                // Handle HEX
+                if (color.startsWith('#')) {
+                    normalizedHex = color.toUpperCase();
                     if (normalizedHex.length === 4) {
                         normalizedHex = '#' + normalizedHex[1] + normalizedHex[1] + normalizedHex[2] + normalizedHex[2] + normalizedHex[3] + normalizedHex[3];
                     }
-                    if (isColorful(normalizedHex)) {
-                        // Add to both svgColors (for 4th palette) and priorityColors (for code palette)
-                        if (!svgColors.includes(normalizedHex)) {
-                            svgColors.push(normalizedHex);
-                        }
-                        if (!priorityColors.includes(normalizedHex)) {
-                            priorityColors.push(normalizedHex);
-                        }
+                }
+                // Handle RGB/RGBA
+                else if (color.startsWith('rgb')) {
+                    const rgbMatch = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+                    if (rgbMatch) {
+                        normalizedHex = rgbToHex(parseInt(rgbMatch[1]), parseInt(rgbMatch[2]), parseInt(rgbMatch[3])).toUpperCase();
+                    }
+                }
+
+                if (normalizedHex && isColorful(normalizedHex)) {
+                    if (!svgColors.includes(normalizedHex)) {
+                        svgColors.push(normalizedHex);
+                    }
+                    if (!priorityColors.includes(normalizedHex)) {
+                        priorityColors.push(normalizedHex);
                     }
                 }
             });
@@ -1511,10 +1632,9 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string): Pr
                             }
                             colorCandidates.unshift(normalizedHex);
                             rootColors[varName] = normalizedHex;
-                            console.log(`🎯 CSS Variable (externo): ${varName} = ${normalizedHex}`);
                         }
                     }
-                    console.log(`✅ CSS procesado: ${iterationCount} variables encontradas`);
+                    console.log(`✅ CSS procesado: ${Object.keys(rootColors).length} variables encontradas`);
 
                     // Extraer HEX
                     const hexMatches = cssContent.match(hexRegex);
@@ -1604,6 +1724,7 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string): Pr
             // Estas variables típicamente contienen los colores oficiales de la marca
             const cssVarRegex = /(--[\w-]+)\s*:\s*(#[0-9A-Fa-f]{3,6}|rgb[a]?\([^)]+\))/gi;
             let varMatch;
+            let varsFound = 0;
             while ((varMatch = cssVarRegex.exec(content)) !== null) {
                 const varName = varMatch[1];
                 const value = varMatch[2];
@@ -1615,7 +1736,6 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string): Pr
                     // Añadir al principio para darle prioridad
                     colorCandidates.unshift(normalizedHex);
                     rootColors[varName] = normalizedHex;
-                    console.log(`🎯 CSS Variable encontrada: ${varName} = ${normalizedHex}`);
                 }
             }
 
@@ -1740,7 +1860,8 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string): Pr
             codePalette,
             svgPalette: deduplicateSimilarColors(svgColors, 15).slice(0, 10),
             designPalette,
-            fonts: detectedFonts
+            fonts: detectedFonts,
+            html // Return HTML for weighted analysis
         };
 
     } catch (error) {
@@ -1756,7 +1877,8 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string): Pr
             codePalette: [],
             svgPalette: [],
             designPalette: [],
-            fonts: []
+            fonts: [],
+            html: '' // Error fallback
         };
     }
 }
@@ -1826,9 +1948,9 @@ async function processAndUploadImage(
         let MIN_HEIGHT = 200;
 
         if (prefix === 'screenshots') {
-            // Screenshots: MUY estricto para rechazar imágenes corruptas tipo "true"
-            MIN_WIDTH = 400;
-            MIN_HEIGHT = 400;
+            // Screenshots: Relaxed to allow partial or smaller screenshots for color analysis
+            MIN_WIDTH = 200;
+            MIN_HEIGHT = 200;
         } else if (prefix === 'logos' || prefix === 'favicons') {
             // Logos y favicons: Permisivos (muchos logos son pequeños)
             MIN_WIDTH = 32;
@@ -1866,24 +1988,20 @@ async function processAndUploadImage(
 
         const { storageId } = await result.json();
 
-        // CONVEX MIGRATION: 3. We return the storageId directly. 
-        // The calling code needs to handle this (it's not a public URL yet).
-        // For compatibility with the rest of the script which expects a URL string, 
-        // we can return a marker prefix or the storage ID itself.
-        // But wait, the script uses this URL for:
-        // 1. `extractVisualPalette` (needs to fetch it)
-        // 2. `galleryImages` (stored in DB)
-        // 3. `logoUrl`, `faviconUrl` (stored in DB)
-
-        // Note: The /_storage/ URL format is internal to Convex and NOT publicly accessible directly.
-        // However, we need a URL for downstream processing (extractVisualPalette, extractLogoColors).
-        // The backend query (getBrandDNAByClerkId) will detect this format and resolve it to a
-        // proper signed URL using ctx.storage.getUrl(storageId).
-        const convexUrl = `${process.env.NEXT_PUBLIC_CONVEX_URL}/_storage/${storageId}`;
-
+        // CONVEX MIGRATION: 3. Get public signed URL immediately
+        // The /_storage/ URLs are NOT publicly accessible, so we need to get the signed URL
+        // using ctx.storage.getUrl() via the getImageUrl query.
         console.log(`🔗 [DEBUG] Convex Storage ID: ${storageId}`);
-        console.log(`🔗 [DEBUG] Internal URL (for DB): ${convexUrl}`);
-        return convexUrl;
+
+        const publicUrl = await fetchQuery(api.assets.getImageUrl, { storageId });
+
+        if (!publicUrl) {
+            console.error(`❌ Failed to get public URL for storage ID: ${storageId}`);
+            return null;
+        }
+
+        console.log(`🔗 [DEBUG] Public signed URL: ${publicUrl.substring(0, 100)}...`);
+        return publicUrl;
 
     } catch (error) {
         console.error('❌ [DEBUG] Error processing image:', error);
@@ -1946,18 +2064,14 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
             console.log('⚡ Skipping cache due to forceRefresh=true');
         }
 
-        // 1. Fetch paralelo de todas las fuentes de datos
-        console.log('📡 Obteniendo datos de Jina, Microlink y analizando CSS...');
-        const [jinaContent, microlinkData, htmlAssets] = await Promise.all([
+        // 1. Fetch paralelo: Jina + HTML extraction (Microlink eliminado - daba 400/403)
+        console.log('📡 Obteniendo datos de Jina y analizando CSS...');
+        const [jinaContent, htmlAssets] = await Promise.all([
             fetchJinaContent(url).catch(err => {
                 logDebug('Jina error:', err);
                 return '';
             }),
-            fetchMicrolinkData(url, WEIGHTED_DOM_SCRIPT).catch(err => {
-                logDebug('Microlink error:', err);
-                return {} as MicrolinkResponse['data'];
-            }),
-            fetchHtmlAndExtractAssets(url).catch(err => {
+            fetchHtmlAndExtractAssets(url, undefined, forceRefresh).catch(err => {
                 logDebug('HTML assets error:', err);
                 return {
                     colors: [] as string[],
@@ -1969,26 +2083,19 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
                     rootColors: {} as Record<string, string>,
                     codePalette: [] as string[],
                     svgPalette: [] as string[],
-                    designPalette: [] as string[]
+                    designPalette: [] as string[],
+                    fonts: [] as string[],
+                    html: '' // Added for weighted analysis
                 };
             }),
         ]);
 
-        if (!jinaContent && !microlinkData.title) {
+        if (!jinaContent) {
             throw new Error('No se pudo obtener información de la URL');
         }
 
         // === CONSOLIDAR CANDIDATOS DE LOGO INICIALES ===
         const allLogoCandidatesScored: LogoCandidate[] = [...htmlAssets.logoCandidates];
-        if (microlinkData.logo?.url) {
-            if (!allLogoCandidatesScored.some(c => c.url === microlinkData.logo?.url)) {
-                allLogoCandidatesScored.push({
-                    url: microlinkData.logo.url,
-                    score: 10,
-                    type: 'url'
-                });
-            }
-        }
 
         // ========== EXTRACCIÓN DE COLORES MEJORADA ==========
         // Fuentes de colores en orden de prioridad:
@@ -1997,117 +2104,27 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         // 3. CSS variables de marca (--primary, --brand, etc.)
         // 4. CSS general filtrado (sin colores de frameworks)
 
-        console.log('🎨 === Extracción de colores estratégica del screenshot ===');
+        // Color extraction consolidated in weighted static analysis
         const allColors: string[] = [];
 
-        // FUENTE PRIMARIA: Screenshot con muestreo de zonas estratégicas (header, footer, botones)
-        // Este es el método más preciso porque muestrea directamente de elementos de UI
-        if (microlinkData.screenshot?.url) {
-            console.log(`📸 Analizando zonas estratégicas del screenshot...`);
-            const screenshotColors = await extractColorsFromScreenshot(microlinkData.screenshot.url);
-            screenshotColors.forEach((color: string) => {
-                if (!allColors.some(c => colorDistance(c, color) < 25)) {
+        // ANÁLISIS WEIGHTED: Usar análisis estático (Microlink weighted DOM desactivado - da 403)
+        console.log('🎯 Ejecutando análisis weighted estático...');
+        const staticWeighted = analyzeStaticWeightedDOM(htmlAssets.html, htmlAssets.rootColors);
+        let weightedFonts: string[] = staticWeighted.weightedFonts.map(f => f.font);
+        let weightedColors: string[] = staticWeighted.weightedColors.map(c => c.hex);
+        console.log(`✅ Weighted analysis: ${weightedColors.length} colores, ${weightedFonts.length} fuentes`);
+
+        // Aplicar Colores del Weighted DOM
+        if (weightedColors.length > 0) {
+            console.log(`🎨 Aplicando Colores del Weighted DOM (${weightedColors.length})`);
+            weightedColors.forEach((color: string) => {
+                if (!allColors.some(c => colorDistance(c, color) < 30)) {
                     allColors.push(color);
                 }
             });
-            console.log(`✅ Colores de UI extraídos: ${screenshotColors.join(', ')}`);
         }
 
-        // 3. Paleta de Microlink (complementa el análisis visual)
-        if (microlinkData.palette && microlinkData.palette.length > 0) {
-            console.log(`🎨 Paleta de Microlink: ${microlinkData.palette.length} colores`);
-            microlinkData.palette.forEach(color => {
-                if (color.startsWith('#') && color.length === 7) {
-                    const upperColor = color.toUpperCase();
-                    if (isColorful(upperColor) && !allColors.some(c => colorDistance(c, upperColor) < 40)) {
-                        allColors.push(upperColor);
-                    }
-                }
-            });
-        }
 
-        // AÑADIR FUENTE: Resultados del script Weighted DOM de Microlink
-        // AÑADIR FUENTE: Resultados del script Weighted DOM de Microlink
-        let weightedFonts: string[] = [];
-        if (microlinkData.function) {
-            const funcResults = microlinkData.function as any; // Cast to avoid TS issues with custom shape
-
-            // 0. Fuentes
-            if (funcResults.fonts && Array.isArray(funcResults.fonts) && funcResults.fonts.length > 0) {
-                console.log(`🔤 Fuentes detectadas (WEIGHTED DOM):`, funcResults.fonts);
-                weightedFonts = funcResults.fonts;
-            }
-        }
-
-        // Fallback/complement: Extract fonts from HTML (Google Fonts links, @font-face, etc.)
-        if (microlinkData.html && weightedFonts.length < 2) {
-            console.log('🔤 Complementando con extracción de fuentes del HTML...');
-            const htmlFonts = extractFontsFromHTML(microlinkData.html);
-            if (htmlFonts.length > 0) {
-                // Merge: DOM fonts first, then HTML fonts
-                const mergedFonts = [...weightedFonts];
-                htmlFonts.forEach(font => {
-                    if (!mergedFonts.some(f => f.toLowerCase() === font.toLowerCase())) {
-                        mergedFonts.push(font);
-                    }
-                });
-                weightedFonts = mergedFonts.slice(0, 5);
-                console.log(`🔤 Fuentes finales (DOM + HTML):`, weightedFonts);
-            }
-        }
-
-        // 1. Colores del Weighted DOM
-        // Handle both old array format and new object format
-        if (microlinkData.function) {
-            const funcResults = microlinkData.function as any;
-            const weightedColors = Array.isArray(funcResults) ? funcResults : (funcResults.colors || []);
-
-            if (weightedColors.length > 0) {
-                console.log(`🎨 Colores del Weighted DOM (${weightedColors.length})`);
-                weightedColors.forEach((color: string) => {
-                    if (!allColors.some(c => colorDistance(c, color) < 30)) {
-                        allColors.push(color);
-                    }
-                });
-            }
-
-            // 2. LOGOS del Weighted DOM
-            const logoCandidates = funcResults.logoCandidates || [];
-            if (logoCandidates.length > 0) {
-                console.log(`🖼️ Logos encontrados vía Weighted DOM: ${logoCandidates.length}`);
-                logoCandidates.forEach((logo: any) => {
-                    if (logo.url && !allLogoCandidatesScored.some(c => c.url === logo.url)) {
-                        allLogoCandidatesScored.push(logo);
-                        if (!htmlAssets.logoCandidates.some(c => c.url === logo.url)) {
-                            htmlAssets.logoCandidates.push(logo);
-                        }
-                    }
-                });
-            }
-        }
-
-        // AÑADIR FUENTE: Re-análisis con HTML renderizado de Microlink
-        if (microlinkData.html) {
-            console.log('🔄 Re-analizando con HTML renderizado de Microlink...');
-            const betterAssets = await fetchHtmlAndExtractAssets(url, microlinkData.html).catch(err => {
-                console.error('Error in re-analysis with Microlink HTML:', err);
-                return null;
-            });
-            if (betterAssets) {
-                // Incorporar candidatos de logo encontrados en el HTML renderizado (ej: inyectados por JS)
-                betterAssets.logoCandidates.forEach(logo => {
-                    if (logo.url && !allLogoCandidatesScored.some(c => c.url === logo.url)) {
-                        allLogoCandidatesScored.unshift(logo);
-                    }
-                });
-                // También incorporar colores de CSS si se detectaron más variaciones
-                betterAssets.colors.forEach(c => {
-                    if (!htmlAssets.colors.includes(c)) {
-                        (htmlAssets.colors as string[]).push(c);
-                    }
-                });
-            }
-        }
 
         // FUENTE DE ALTA PRIORIDAD: Color del LOGO
         if (htmlAssets.logoCandidates.length > 0) {
@@ -2171,7 +2188,7 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
 
         // 1.5 Descubrimiento y Scraping de páginas internas valiosas
         console.log('🔍 Buscando páginas internas valiosas para mayor contexto...');
-        const htmlContent = microlinkData.html || '';
+        const htmlContent = htmlAssets.html || '';
         const valuablePages = discoverValuablePages(htmlContent, url);
 
         let fullBrandContext = jinaContent;
@@ -2201,8 +2218,8 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
 
         const systemPrompt = `Eres un experto en Branding y Diseño Estratégico. Tu objetivo es destilar la esencia de un negocio a partir de su contenido web y datos visuales.
 
-Meta título: ${microlinkData.title || 'No disponible'}
-Meta descripción: ${microlinkData.description || 'No disponible'}
+Meta título: Analizado desde contenido de página
+Meta descripción: Extraída desde HTML\n
 
 FUENTES DETECTADAS (Prioridad): ${(assets.fonts || []).concat(weightedFonts).join(', ') || 'No detectadas'}
 
@@ -2246,12 +2263,12 @@ ${fullBrandContext.slice(0, 45000)}`;
             // Fallback en caso de error de AI
             console.log('⚠️ Using fallback data due to AI error');
             brandDNA = {
-                brand_name: microlinkData.title?.split('|')[0]?.split('-')[0]?.trim() || "Brand Name",
+                brand_name: new URL(url).hostname.split('.')[0] || "Brand Name",
                 tagline: "Experience excellence and innovation in every detail.",
-                business_overview: `Digital presence for ${microlinkData.title || url}. Analysis focused on visual identity and color systems.`,
+                business_overview: `Digital presence. Analysis focused on visual identity and color systems.`,
                 brand_values: ["Quality", "Innovation", "User-Centric", "Reliability", "Sustainability"],
                 tone_of_voice: ["Professional", "Confident", "Modern"],
-                brand_aesthetic: ["Clean", "Premium", "Corporate"],
+                visual_aesthetic: ["Clean", "Premium", "Corporate"],
                 colors: finalColors.slice(0, 5),
                 fonts: ["Inter", "System Sans-Serif"],
                 text_assets: {
@@ -2287,7 +2304,7 @@ ${fullBrandContext.slice(0, 45000)}`;
         console.log(`🔍 Probando ${allLogoCandidatesScored.length} candidatos de logo consolidado...`);
         for (const candidate of allLogoCandidatesScored.sort((a, b) => b.score - a.score).slice(0, 8)) {
             const source = candidate.type === 'inline-svg' ? candidate.content! : candidate.url!;
-            console.log(`   Probando: ${candidate.type === 'url' ? candidate.url?.substring(0, 60) : 'SVG Inlining'}...`);
+            console.log(`   Probando logo #${allLogoCandidatesScored.indexOf(candidate) + 1}...`);
 
             const processedLogo = await processAndUploadImage(source, 'logos', 512);
             if (processedLogo) {
@@ -2332,34 +2349,27 @@ ${fullBrandContext.slice(0, 45000)}`;
 
         // 2. Si no hay cache, intentar con ApiFlash (PRIMERA OPCIÓN - más confiable)
         if (!screenshotSourceUrl) {
-            console.log(`📸 Intentando generar screenshot con ApiFlash (opción principal)...`);
+            console.log(`📸 Generando screenshot con ApiFlash...`);
             screenshotSourceUrl = await fetchApiFlashScreenshot(url);
-        } else {
-            console.log(`♻️ Reusing cached screenshot source: ${screenshotSourceUrl}`);
         }
 
-        // 3. Fallback a Microlink si ApiFlash falló
+        // 3. Fallback a ScreenshotLayer
         if (!screenshotSourceUrl) {
-            console.warn(`⚠️ ApiFlash no devolvió screenshot. Intentando con Microlink (fallback #1)...`);
-            screenshotSourceUrl = microlinkData.screenshot?.url || undefined;
-        }
-
-        // 4. Fallback a ScreenshotLayer si Microlink también falló
-        if (!screenshotSourceUrl) {
-            console.warn(`⚠️ Microlink no devolvió screenshot. Intentando con ScreenshotLayer (fallback #2)...`);
+            console.warn(`⚠️ ApiFlash falló. Intentando con ScreenshotLayer...`);
             screenshotSourceUrl = await fetchScreenshotLayerScreenshot(url);
         }
 
-        // 5. Fallback final a Thum.io (muy confiable como última opción)
+        // 4. Fallback a Thum.io
         if (!screenshotSourceUrl) {
-            console.warn(`⚠️ Todos los servicios fallaron. Intentando con Thum.io (fallback final)...`);
+            console.warn(`⚠️ ScreenshotLayer falló. Intentando con Thum.io...`);
             screenshotSourceUrl = `https://image.thum.io/get/width/1440/noanimate/wait/5/fullpage/${url}`;
         }
 
+
+        // All screenshot options exhausted above
+
         if (screenshotSourceUrl) {
-            console.log(`📸 Screenshot URL from source: ${screenshotSourceUrl}`);
-            console.log(`📸 Screenshot URL type: ${typeof screenshotSourceUrl}`);
-            console.log(`📸 Screenshot URL length: ${screenshotSourceUrl.length}`);
+            console.log(`📸 Screenshot obtenido, procesando...`);
 
             // Si el screenshotSourceUrl ya es una URL de Convex (cache), no necesitamos volver a procesarlo/subirlo
             if (screenshotSourceUrl.includes('/api/storage/')) {
@@ -2377,8 +2387,11 @@ ${fullBrandContext.slice(0, 45000)}`;
             }
 
             if (debugScreenshotUrl) {
-                console.log(`🎨 Ejecutando Análisis Visual en captura...`);
+                console.log(`🎨 Ejecutando Análisis Visual en captura final...`);
                 visualPalette = await extractVisualPalette(debugScreenshotUrl); // Usar la URL final para análisis
+
+
+                // visualPalette is extracted directly from screenshot via extractVisualPalette
 
                 // También lo añadimos a la galería si hay espacio (y si no estaba ya)
                 if (galleryImages.length < 5 && !galleryImages.includes(debugScreenshotUrl)) {
@@ -2391,14 +2404,8 @@ ${fullBrandContext.slice(0, 45000)}`;
             console.warn(`❌ No screenshot could be fetched from Cache, Microlink OR ApiFlash for ${url}`);
         }
 
-        // Procesar imagen OG si existe y aún no tenemos 5
-        if (galleryImages.length < 5 && microlinkData.image?.url && microlinkData.image.url !== microlinkData.logo?.url) {
-            const processedOgImage = await processAndUploadImage(microlinkData.image.url, 'og-images', 1200);
-            if (processedOgImage) {
-                galleryImages.push(processedOgImage);
-                console.log(`✅ OG Image subida`);
-            }
-        }
+
+        // OG images already processed in imageCandidates
 
         if (debugScreenshotUrl) {
             galleryImages.push(debugScreenshotUrl);
@@ -2411,20 +2418,15 @@ ${fullBrandContext.slice(0, 45000)}`;
         // Weights (6 Sources): Design 40%, Weighted 20%, Visual 15%, Logo 15%, SVG 5%, Code 5%
         console.log(`🎯 Creando paleta consolidada final (6 fuentes)...`);
 
-        // Microlink can return the result directly or wrapped in an object
-        let weightedPalette = microlinkData.function || [];
-        if (weightedPalette && typeof weightedPalette === 'object' && !Array.isArray(weightedPalette) && (weightedPalette as any).value) {
-            weightedPalette = (weightedPalette as any).value;
-        }
-        if (!Array.isArray(weightedPalette)) {
-            weightedPalette = [];
-        }
+        // Consolidar paleta para el consenso final de 6 fuentes
+        // weightedPalette debe ser un array de strings (hex)
+        const finalWeightedPalette = weightedColors;
 
         const finalPalette = createFinalPalette(
             visualPalette,
             htmlAssets.codePalette,
             logoPalette,
-            weightedPalette,
+            finalWeightedPalette,
             htmlAssets.svgPalette,
             htmlAssets.designPalette
         );
@@ -2457,15 +2459,23 @@ ${fullBrandContext.slice(0, 45000)}`;
                 css_links: htmlAssets.cssLinks,
                 root_colors: htmlAssets.rootColors,
                 screenshot_url: debugScreenshotUrl,
-                visual_palette: visualPalette,
-                code_palette: htmlAssets.codePalette,
-                logo_palette: logoPalette,
-                weighted_palette: weightedPalette,
-                svg_palette: htmlAssets.svgPalette,
-                design_palette: htmlAssets.designPalette,
+                visual_palette: visualPalette.length > 0 ? visualPalette : ["#NO_VISUAL_DATA"],
+                code_palette: htmlAssets.codePalette.length > 0 ? htmlAssets.codePalette : ["#NO_CODE_PALETTE"],
+                logo_palette: logoPalette.length > 0 ? logoPalette : ["#NO_LOGO_DATA"],
+                weighted_palette: (() => {
+                    console.log(`🐛 [DEBUG] weightedColors antes de guardar:`, weightedColors);
+                    return weightedColors.length > 0 ? weightedColors : ["#NO_WEIGHTED_DATA"];
+                })(),
+                svg_palette: htmlAssets.svgPalette.length > 0 ? htmlAssets.svgPalette : ["#NO_SVG_DATA"],
+                design_palette: htmlAssets.designPalette.length > 0 ? htmlAssets.designPalette : ["#NO_DESIGN_DATA"],
                 logo_svg_content: logoSvgContent,
                 logo_candidates: allLogoCandidatesScored.sort((a, b) => b.score - a.score).slice(0, 10),
                 final_palette: finalPalette,
+                code_fonts: Array.from(new Set([...(htmlAssets.fonts || []), ...weightedFonts])),
+                // Raw data for deeper debugging
+                raw_weighted_total: weightedColors.length,
+                raw_visual_total: visualPalette.length,
+                raw_allColors_total: allColors.length,
             },
         };
 
@@ -2479,7 +2489,7 @@ ${fullBrandContext.slice(0, 45000)}`;
         console.groupEnd();
 
         // 5. Guardar en Supabase - Usamos UPSERT para actualizar registros existentes
-        console.log('💾 [DEBUG] Guardando en Supabase...');
+        console.log('💾 [DEBUG] Guardando en Convex...');
         try {
             const upsertPayload = {
                 url: result.url,
@@ -2519,7 +2529,7 @@ ${fullBrandContext.slice(0, 45000)}`;
 
             /* Supabase Logic Removed
             const { data: dbData, error: dbError } = await supabase.from('brand_dna').upsert(upsertPayload, { onConflict: 'url' }).select();
-
+    
             if (dbError) {
                 console.error('❌ [DEBUG] Supabase Upsert Error:', dbError);
                 // ... (rest of existing error handling remains same)

@@ -47,6 +47,7 @@ export default defineSchema({
     fonts: v.array(v.string()),
     text_assets: v.optional(v.any()), // JSON
     logo_url: v.optional(v.string()),
+    logos: v.optional(v.any()), // Array of logo objects
     favicon_url: v.optional(v.string()),
     screenshot_url: v.optional(v.string()),
     images: v.optional(v.any()), // Array of objects

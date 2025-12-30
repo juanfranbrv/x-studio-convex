@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 
-import { Terminal, Bug } from 'lucide-react';
+import { Terminal, Bug, X, TriangleAlert } from 'lucide-react';
 
 interface TechnicalAuditProps {
     data: any;
@@ -14,76 +14,101 @@ export function TechnicalAudit({ data }: TechnicalAuditProps) {
     if (!data) return null;
 
     return (
-        <Card className="mt-8 bg-black/80 border-slate-700 text-slate-300 font-mono text-xs">
-            <CardHeader className="border-b border-slate-700 pb-2">
-                <CardTitle className="flex items-center gap-2 text-slate-100 text-sm">
-                    <Terminal className="w-4 h-4" />
+        <Card className="mt-8 bg-black/80 border-slate-700 text-slate-300 font-mono text-sm shadow-2xl">
+            <CardHeader className="border-b border-slate-700 pb-3">
+                <CardTitle className="flex items-center gap-3 text-slate-100 text-base">
+                    <Terminal className="w-5 h-5 text-emerald-500" />
                     Auditoría Técnica del Extractor
                     <div className="flex gap-2 ml-auto">
-                        <Badge variant="outline" className="text-[10px] h-4 border-emerald-500/50 text-emerald-400 bg-emerald-500/5">
+                        <Badge variant="outline" className="text-xs h-5 border-emerald-500/50 text-emerald-400 bg-emerald-500/5">
                             AI-GEN v2.0
                         </Badge>
-                        <Badge variant="outline" className="text-[10px] h-4 border-blue-500/50 text-blue-400 bg-blue-500/5">
+                        <Badge variant="outline" className="text-xs h-5 border-blue-500/50 text-blue-400 bg-blue-500/5">
                             FIRE-SC-v4
                         </Badge>
                     </div>
                 </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4 space-y-6">
-                <div>
-                    <h4 className="text-slate-100 mb-2 flex items-center gap-2">
-                        <Bug className="w-3.5 h-3.5" />
-                        Fuentes de Color Extraídas (Consenso)
-                    </h4>
+            <CardContent className="pt-6 space-y-8">
+                {/* Paletas Técnicas */}
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                            Fuentes de Color Extraídas (Consenso Engine)
+                        </h4>
+                        <div className="flex gap-2">
+                            <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-400 border-blue-500/20">AI-GEN v2.4</Badge>
+                            <Badge variant="outline" className="text-[10px] bg-orange-500/10 text-orange-400 border-orange-500/20">FIRE-SC v4.2</Badge>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {[
-                            { id: 'design_palette', label: 'Design System' },
-                            { id: 'weighted_palette', label: 'Weighted DOM' },
-                            { id: 'visual_palette', label: 'AI Visual' },
-                            { id: 'logo_palette', label: 'Logo Colors' },
+                            { id: 'design_palette', label: 'Design System Intent' },
+                            { id: 'weighted_palette', label: 'Weighted DOM (JS)' },
+                            { id: 'visual_palette', label: 'AI Visual (Vision)' },
+                            { id: 'logo_palette', label: 'Logo Extraction' },
                             { id: 'svg_palette', label: 'SVG & Icons' },
-                            { id: 'code_palette', label: 'CSS / Root' }
-                        ].map((source) => (
-                            <div key={source.id} className="bg-slate-900/50 rounded p-3 border border-slate-800">
-                                <span className="text-slate-500 block mb-2 uppercase text-[9px] tracking-widest">{source.label}</span>
-                                <div className="flex flex-wrap gap-1">
-                                    {data.debug?.[source.id]?.length > 0 ? (
-                                        data.debug[source.id].slice(0, 12).map((c: any, i: number) => (
-                                            <div
-                                                key={i}
-                                                className="w-4 h-4 rounded-sm border border-slate-700"
-                                                style={{ backgroundColor: typeof c === 'string' ? c : c.hex }}
-                                                title={typeof c === 'string' ? c : `${c.hex} (w: ${c.weight})`}
-                                            />
-                                        ))
-                                    ) : (
-                                        <span className="text-[10px] text-slate-600 italic">Sin datos</span>
-                                    )}
+                            { id: 'code_palette', label: 'CSS / Root Variables' },
+                        ].map((source) => {
+                            const colors = data.debug?.[source.id] || [];
+                            const isEmpty = colors.length === 0 || (colors.length === 1 && colors[0].startsWith('#NO_'));
+
+                            return (
+                                <div key={source.id} className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex flex-col gap-3 group hover:border-slate-700 transition-colors">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-medium text-slate-300">{source.label}</span>
+                                        <Badge variant="secondary" className="text-[9px] bg-slate-800 text-slate-400 group-hover:bg-[var(--accent)] group-hover:text-black transition-colors">
+                                            {isEmpty ? 0 : colors.length} slots
+                                        </Badge>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 p-2 bg-black/30 rounded-lg min-h-[44px] items-center justify-center">
+                                        {!isEmpty ? (
+                                            colors.slice(0, 15).map((c: any, i: number) => {
+                                                const hex = typeof c === 'string' ? c : c.hex;
+                                                return (
+                                                    <div
+                                                        key={i}
+                                                        className="w-7 h-7 rounded-sm border border-white/10 shadow-sm"
+                                                        style={{ backgroundColor: hex }}
+                                                        title={hex}
+                                                    />
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-1 opacity-40">
+                                                <X className="w-4 h-4 text-red-500" />
+                                                <span className="text-[10px] italic text-slate-500">
+                                                    {colors[0]?.substring(1) || 'Sin datos'}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
-                        <h4 className="text-slate-100 mb-2">Candidatos a Logo (Scored)</h4>
-                        <ScrollArea className="h-[200px] bg-slate-900/50 rounded border border-slate-800 p-2">
-                            <div className="space-y-2">
+                        <h4 className="text-slate-100 mb-4 text-sm font-bold uppercase tracking-wider">Candidatos a Logo (Scored)</h4>
+                        <ScrollArea className="h-[280px] bg-slate-900/40 rounded-lg border border-slate-800 p-3">
+                            <div className="space-y-3">
                                 {data.debug?.logo_candidates?.map((logo: any, i: number) => (
-                                    <div key={i} className="flex items-center gap-3 p-2 bg-white/5 rounded border border-white/5">
-                                        <div className="w-10 h-10 transparency-grid bg-white/10 rounded flex items-center justify-center p-1">
+                                    <div key={i} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                        <div className="w-14 h-14 transparency-grid bg-white/5 rounded-md flex items-center justify-center p-1.5 overflow-hidden border border-slate-800">
                                             {logo.url ? (
                                                 <img src={logo.url} className="max-w-full max-h-full object-contain" alt={`Candidate ${i}`} />
                                             ) : (
-                                                <div className="text-[10px] text-slate-500">SVG</div>
+                                                <div className="text-[10px] text-slate-500 font-bold">SVG</div>
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="truncate text-[10px] text-slate-400">{logo.url || 'Inline SVG Content'}</p>
-                                            <div className="flex gap-2 mt-1">
-                                                <Badge variant="outline" className="text-[9px] border-slate-700 text-slate-400 capitalize">{logo.type || 'unknown'}</Badge>
-                                                <Badge variant="outline" className="text-[9px] border-emerald-900/50 text-emerald-400">Score: {logo.score?.toFixed(2)}</Badge>
+                                            <p className="truncate text-xs text-slate-400 mb-2 font-medium">{logo.url || 'Contenido SVG Inline'}</p>
+                                            <div className="flex gap-2">
+                                                <Badge variant="outline" className="text-[10px] px-2 py-0 border-slate-700 text-slate-400 capitalize bg-slate-800/50">{logo.type || 'unknown'}</Badge>
+                                                <Badge variant="outline" className="text-[10px] px-2 py-0 border-emerald-900/50 text-emerald-400 bg-emerald-500/5">Score: {logo.score?.toFixed(2)}</Badge>
                                             </div>
                                         </div>
                                     </div>
@@ -93,26 +118,40 @@ export function TechnicalAudit({ data }: TechnicalAuditProps) {
                     </div>
 
                     <div>
-                        <h4 className="text-slate-100 mb-2">Detección de Tipografía</h4>
-                        <div className="bg-slate-900/50 rounded border border-slate-800 p-3 space-y-4">
+                        <h4 className="text-slate-100 mb-4 text-sm font-bold uppercase tracking-wider">Análisis Técnico</h4>
+                        <div className="bg-slate-900/40 rounded-lg border border-slate-800 p-4 space-y-6 h-[280px] overflow-auto">
                             <div>
-                                <span className="text-slate-500 block uppercase text-[9px] mb-1">Fuentes en CSS:</span>
-                                <div className="flex flex-wrap gap-1">
-                                    {(data.debug?.code_fonts || []).map((f: string, i: number) => (
-                                        <Badge key={i} variant="outline" className="text-[10px] border-slate-700 text-slate-300">{f}</Badge>
-                                    ))}
+                                <span className="text-slate-500 block uppercase text-[10px] font-bold tracking-widest mb-2">Tipografías Detectadas:</span>
+                                <div className="flex flex-wrap gap-2">
+                                    {data.debug?.code_fonts?.length > 0 ? (
+                                        (data.debug.code_fonts).map((f: string, i: number) => (
+                                            <Badge key={i} variant="outline" className="text-xs px-2 py-0.5 border-slate-700 text-slate-200 bg-slate-800/50">{f}</Badge>
+                                        ))
+                                    ) : (
+                                        <span className="text-xs text-slate-600 italic">No se detectaron fuentes en el código.</span>
+                                    )}
                                 </div>
                             </div>
                             <div>
-                                <span className="text-slate-500 block uppercase text-[9px] mb-1">Assets CSS Detectados:</span>
-                                <div className="text-[10px] text-slate-400 max-h-24 overflow-y-auto">
+                                <span className="text-slate-500 block uppercase text-[10px] font-bold tracking-widest mb-2">Ficheros CSS Analizados:</span>
+                                <div className="space-y-2">
                                     {data.debug?.css_links?.length > 0 ? (
-                                        <ul className="list-disc pl-4 space-y-1">
+                                        <div className="grid gap-2">
                                             {data.debug.css_links.map((link: string, i: number) => (
-                                                <li key={i} className="truncate">{link}</li>
+                                                <div key={i} className="flex items-center gap-2 p-2 bg-blue-500/5 border border-blue-500/10 rounded group hover:bg-blue-500/10 transition-colors">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
+                                                    <span className="text-[11px] text-slate-400 truncate flex-1" title={link}>
+                                                        {link.split('/').pop()}
+                                                    </span>
+                                                    <span className="text-[9px] text-slate-600 hidden group-hover:block truncate max-w-[150px]">
+                                                        {link}
+                                                    </span>
+                                                </div>
                                             ))}
-                                        </ul>
-                                    ) : "No se detectaron archivos CSS externos."}
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs text-slate-600 italic">No se detectaron archivos CSS externos.</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -123,12 +162,12 @@ export function TechnicalAudit({ data }: TechnicalAuditProps) {
             <style jsx>{`
                 .transparency-grid {
                     background-image: 
-                        linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%),
-                        linear-gradient(-45deg, rgba(255,255,255,0.05) 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.05) 75%),
-                        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.05) 75%);
-                    background-size: 10px 10px;
-                    background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+                        linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
+                        linear-gradient(-45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.03) 75%),
+                        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.03) 75%);
+                    background-size: 12px 12px;
+                    background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
                 }
             `}</style>
         </Card>

@@ -15,9 +15,10 @@ interface BrandKitContextType {
 
     // Acciones
     setActiveBrandKit: (id: string) => Promise<void>
-    reloadBrandKits: () => Promise<void>
+    reloadBrandKits: (isSilent?: boolean) => Promise<void>
     deleteBrandKitById: (id: string) => Promise<void>
     updateActiveBrandKit: (data: Partial<BrandDNA>) => Promise<boolean>
+    syncActiveBrandKit: (data: BrandDNA) => void
 }
 
 const BrandKitContext = createContext<BrandKitContextType | undefined>(undefined)
@@ -52,10 +53,14 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
 
     // Cambiar el Brand Kit activo
     const setActiveBrandKit = async (id: string) => {
+        console.log('[CONTEXT] Setting active brand kit:', id);
         try {
             const result = await getUserBrandKitById(id)
             if (result.success && result.data) {
+                console.log('[CONTEXT] Brand kit loaded successfully:', result.data.brand_name);
                 setActiveBrandKitState(result.data)
+            } else {
+                console.error('[CONTEXT] Failed to load brand kit:', id, result.error);
             }
         } catch (error) {
             console.error('Error loading brand kit:', error)
@@ -63,8 +68,8 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
     }
 
     // Recargar la lista de Brand Kits
-    const reloadBrandKits = async () => {
-        await loadBrandKits()
+    const reloadBrandKits = async (isSilent = true) => {
+        await loadBrandKits(isSilent)
     }
 
     // Eliminar un Brand Kit
@@ -106,6 +111,11 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    // Sincronizar estado localmente sin persistir (útil tras un guardado externo)
+    const syncActiveBrandKit = (data: BrandDNA) => {
+        setActiveBrandKitState(data)
+    }
+
     // Cargar Brand Kits cuando el usuario esté disponible
     useEffect(() => {
         if (isLoaded && user) {
@@ -121,6 +131,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         reloadBrandKits,
         deleteBrandKitById,
         updateActiveBrandKit,
+        syncActiveBrandKit,
     }
 
     return (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { BrandDNAPanel } from '@/components/studio/BrandDNAPanel'
@@ -10,11 +11,16 @@ import type { BrandDNA } from '@/lib/brand-types'
 import { Loader2, Plus } from 'lucide-react'
 
 export default function StudioPage() {
+    const router = useRouter()
     const { activeBrandKit, brandKits, loading, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const [isGenerating, setIsGenerating] = useState(false)
     const [currentImage, setCurrentImage] = useState<string | null>(null)
     const [isAnnotating, setIsAnnotating] = useState(false)
     const [logoInclusion, setLogoInclusion] = useState(true)
+
+    const handleNewBrandKit = () => {
+        router.push('/brand-kit?action=new')
+    }
 
 
 
@@ -72,6 +78,7 @@ export default function StudioPage() {
             currentBrand={activeBrandKit}
             onBrandChange={setActiveBrandKit}
             onBrandDelete={deleteBrandKitById}
+            onNewBrandKit={handleNewBrandKit}
         >
             {activeBrandKit ? (
                 <div className="flex-1 flex overflow-hidden h-full">

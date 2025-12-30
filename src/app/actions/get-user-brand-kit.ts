@@ -107,7 +107,7 @@ export async function getUserBrandKitById(brandKitId: string): Promise<{
             colors: data.colors || [],
             fonts: data.fonts || [],
             logo_url: data.logo_url || '',
-            logos: [], // logos field doesn't exist in schema, just images
+            logos: normalizeImages(data.logos),
             favicon_url: data.favicon_url || '',
             screenshot_url: data.screenshot_url || '',
             images: normalizeImages(data.images),
@@ -160,7 +160,7 @@ export async function getUserBrandKit(clerkUserId: string): Promise<{
             colors: record.colors || [],
             fonts: record.fonts || [],
             logo_url: record.logo_url || '',
-            logos: [], // logos field doesn't exist in schema, just images
+            logos: normalizeImages(record.logos),
             favicon_url: record.favicon_url || '',
             screenshot_url: record.screenshot_url || '',
             images: normalizeImages(record.images),

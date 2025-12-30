@@ -104,7 +104,10 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                         </Button>
                                     </DropdownMenuItem>
                                 ))}
-                                <DropdownMenuItem className="text-primary">
+                                <DropdownMenuItem
+                                    className="text-primary cursor-pointer"
+                                    onClick={onNewBrandKit}
+                                >
                                     + {t('common.newBrand')}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { HexColorPicker } from 'react-colorful';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,8 +36,23 @@ export function ColorPalette({
     hideHeader = false
 }: ColorPaletteProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState<number | null>(null);
+    const [localColor, setLocalColor] = useState<{ index: number, color: string } | null>(null);
     const [copiedColor, setCopiedColor] = useState<string | null>(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
     const { theme } = useTheme();
+
+    // Sincronizar con el padre cuando el color local cambia (debounced)
+    useEffect(() => {
+        if (localColor) {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                onUpdateColor(localColor.index, localColor.color);
+            }, 100);
+        }
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, [localColor, onUpdateColor]);
     const isDark = theme === 'dark';
 
     const getContrastColor = (hex: string) => {
@@ -59,14 +74,26 @@ export function ColorPalette({
     const handleEyedropper = async (index: number) => {
         if ('EyeDropper' in window) {
             try {
+                // Keep track of current state
+                const wasOpen = colorPickerOpen === index;
+
                 // @ts-ignore
                 const eyeDropper = new window.EyeDropper();
                 const result = await eyeDropper.open();
+
                 if (result?.sRGBHex) {
                     onUpdateColor(index, result.sRGBHex);
                 }
+
+                // Re-open the popover if it was open before
+                // Use setTimeout to ensure the DOM has updated
+                if (wasOpen) {
+                    setTimeout(() => setColorPickerOpen(index), 50);
+                }
             } catch (error) {
                 console.log('Eyedropper cancelled or failed', error);
+                // Re-open popover even if cancelled
+                setTimeout(() => setColorPickerOpen(index), 50);
             }
         }
     };
@@ -121,7 +148,10 @@ export function ColorPalette({
                                 <Tooltip>
                                     <Popover
                                         open={colorPickerOpen === idx}
-                                        onOpenChange={(open) => setColorPickerOpen(open ? idx : null)}
+                                        onOpenChange={(open) => {
+                                            setColorPickerOpen(open ? idx : null);
+                                            if (!open) setLocalColor(null);
+                                        }}
                                     >
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
@@ -171,8 +201,10 @@ export function ColorPalette({
                                         </TooltipTrigger>
                                         <PopoverContent className="w-[240px] p-3 border-border bg-popover z-[100]" side="right" align="start">
                                             <HexColorPicker
-                                                color={item.color}
-                                                onChange={(newColor) => onUpdateColor(idx, newColor)}
+                                                color={localColor?.index === idx ? localColor.color : item.color}
+                                                onChange={(newColor) => {
+                                                    setLocalColor({ index: idx, color: newColor });
+                                                }}
                                                 style={{ width: '100%' }}
                                             />
                                             <div className="mt-3 flex gap-2">

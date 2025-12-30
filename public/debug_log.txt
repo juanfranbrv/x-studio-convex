@@ -1274,3 +1274,871 @@
     "brand_context": "Rosella de Rubielos es una casa rural de estilo sencillo y acogedor ubicada en el tranquilo pueblo de Fuentes de Rubielos, en la Sierra de Gúdar (962 metros de altitud). La propiedad se alquila de forma completa y está optimizada para grupos grandes de 10 a 12 personas, con un mínimo de seis. Sus características distintivas incluyen construcción con piedra local, calefacción central, chimenea, un salón de juegos con billar, y una barbacoa. Dispone de cinco habitaciones diferenciadas (azul, Columbia, Java, verde, morada) y tres baños completos. Además de la proximidad a zonas de esquí, la ubicación facilita excursiones a puntos históricos y naturales como Rubielos de Mora y Teruel, ofreciendo también la posibilidad de contratar servicios de comidas y cenas."
   }
 }
+[2025-12-29T23:52:43.287Z] Microlink error: {}
+[2025-12-29T23:52:53.543Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "Qualitat i Tradició. El sabor autèntic del Mediterrani.",
+  "business_overview": "Oli Lagaiana es dedica a la producció i venda d'oli d’oliva verge extra (AOVE) de València, elaborat amb olives 100% Koroneiki de primera collita. Utilitzen un procés artesanal de premsa en fred per preservar les propietats del producte, reflectint la riquesa i la tradició de l’Horta Nord. A més de la venda en línia i en botiga, ofereixen visites guiades per mostrar el seu entorn SIPAM (Patrimoni Agrícola Mundial).",
+  "brand_values": [
+    "Qualitat",
+    "Tradició",
+    "Mediterrani",
+    "Artesania",
+    "Sostenibilitat"
+  ],
+  "tone_of_voice": [
+    "Autèntic",
+    "Familiar",
+    "Respetuós"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Natural",
+    "Mediterrani"
+  ],
+  "colors": [
+    "#BF7F3F",
+    "#550300",
+    "#25D366",
+    "#141827",
+    "#0044CC"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Descobreix l’autèntic sabor del Mediterrani.",
+      "Oli de València: Qualitat i Tradició a la teva taula.",
+      "Elaborat amb olives 100% Koroneiki de primera collita.",
+      "Un tresor líquid que transforma cada plat.",
+      "Sorprèn amb el Pack Regal: AOVE i copes de tast."
+    ],
+    "visual_keywords": [
+      "Valencian olive grove landscape",
+      "Cold pressed EVOO bottling",
+      "Koroneiki olives close-up",
+      "Rustic Mediterranean kitchen light",
+      "Ancient agricultural heritage (SIPAM)"
+    ],
+    "ctas": [
+      "Comprar Oli Ara",
+      "Reserva la Teva Visita Guiada",
+      "Contactar per a Més Informació"
+    ],
+    "brand_context": "Oli Lagaiana produeix oli d’oliva verge extra (AOVE) 100% de la varietat grega Koroneiki, fet que el fa molt adient al territori de Roca – Meliana, a l’Horta Nord de València, situat a només 1500 metres de la mar Mediterrània. L'oli s'obté amb premsa en fred i procediments exclusivament mecànics a partir de la primera collita. Els camps formen part d’una Horta protegida amb un gran valor agrari i paisatgístic, reconeguda per la FAO com a territori SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial), destacant el seu compromís amb l'ecosistema local i les tècniques tradicionals de producció. La marca també ofereix packs regal amb copes de tast i visites guiades per complementar la seva oferta principal de producte."
+  }
+}
+[2025-12-29T23:54:47.520Z] Microlink error: {}
+[2025-12-29T23:54:58.569Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "L'essència de l'Horta Nord en cada gota.",
+  "business_overview": "Oli Lagaiana produeix oli d'oliva verge extra (AOVE) de primera collita, obtingut a Roca – Meliana, a la comarca protegida de l’Horta Nord de València. Utilitzen olives de varietat 100% Koroneiki, premsades en fred, garantint la màxima qualitat i la preservació de les propietats. A més de la venda, ofereixen visites guiades per connectar els consumidors amb l'entorn agrari i la tradició mediterrània.",
+  "brand_values": [
+    "Qualitat",
+    "Tradició",
+    "Autenticitat",
+    "Artesania",
+    "Patrimoni Agrari"
+  ],
+  "tone_of_voice": [
+    "Autèntic",
+    "Cercà",
+    "Apasionat"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Mediterrani",
+    "Natural"
+  ],
+  "colors": [
+    "#141827",
+    "#334AFF",
+    "#BF7F3F",
+    "#550300",
+    "#0044CC"
+  ],
+  "fonts": [
+    "Lora",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Oli Lagaiana: El tresor líquid de l'Horta Nord.",
+      "AOVE 100% Koroneiki: La qualitat grega, el sabor valencià.",
+      "Descobreix l’autèntic sabor del Mediterrani premsat en fred.",
+      "De la nostra terra a la teua taula: Qualitat i salut garantides.",
+      "Pack Regal: Sorprèn amb l'exclusiu sabor de València."
+    ],
+    "visual_keywords": [
+      "Valencian olive grove sunlight",
+      "Traditional cold press machinery",
+      "Koroneiki olive branch close-up",
+      "Mediterranean coastal farmland",
+      "Amber olive oil glass bottle rustic"
+    ],
+    "ctas": [
+      "Comprar Oli Verge Extra",
+      "Reservar Visita Guiada",
+      "Descobrir el Sabor Autèntic"
+    ],
+    "brand_context": "Oli Lagaiana és un productor d’oli d’oliva verge extra de primera collita, obtingut exclusivament amb la varietat d'oliva 100% Koroneiki, una varietat grega idealment adaptada al clima de la costa valenciana. La producció es duu a terme a Roca – Meliana, dins de l'Horta Nord, un territori amb reconeixement SIPAM per la FAO (Sistemes Importants de Patrimoni Agrícola Mundial), destacant el seu valor agrari i paisatgístic. L'extracció de l'oli es fa mitjançant premsa en fred i procediments estrictament mecànics. Els camps estan situats a només 1500 m de la mar Mediterrània, influència que lliga el producte estretament a l'entorn. L'empresa es centra en oferir qualitat i salut, reflectint la riquesa i la tradició de les seves terres."
+  }
+}
+[2025-12-30T05:35:55.781Z] Microlink error: {}
+[2025-12-30T05:36:07.146Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "El sabor autèntic del Mediterrani, directament de l'Horta Nord.",
+  "business_overview": "Oli Lagaiana produeix i ven Oli d’Oliva Verge Extra (AOVE) de la màxima qualitat, elaborat amb olives 100% Koroneiki i premsat en fred als seus camps de Roca – Meliana, València. El negoci es basa en la tradició artesanal i la riquesa d'una horta protegida (territori SIPAM), oferint tant producte com experiències de visites guiades.",
+  "brand_values": [
+    "Tradició",
+    "Qualitat",
+    "Arrelament a la Terra",
+    "Artesania",
+    "Patrimoni Agrícola"
+  ],
+  "tone_of_voice": [
+    "Autèntic",
+    "Cercà",
+    "Respetuós"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Mediterrani",
+    "Natural"
+  ],
+  "colors": [
+    "#334AFF",
+    "#141827",
+    "#0044CC",
+    "#BF7F3F",
+    "#550300"
+  ],
+  "fonts": [
+    "Cormorant Garamond",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "AOVE 100% Koroneiki: Qualitat de primera collita.",
+      "Descobreix el tresor líquid de l'Horta Nord protegit per la FAO.",
+      "Premsa en fred: Totes les propietats del Mediterrani a la teua taula.",
+      "Oli Lagaiana: El sabor de la terra transformat en una experiència única.",
+      "Sorprèn amb el Pack Regal: AOVE i copes de tast exclusives."
+    ],
+    "visual_keywords": [
+      "Mediterranean olive grove",
+      "Rustic packaging",
+      "Cold press process",
+      "Golden oil texture",
+      "Valencia agricultural heritage"
+    ],
+    "ctas": [
+      "Comprar Oli Verge Extra",
+      "Reservar Visita Guiada",
+      "Descobreix el Pack Regal"
+    ],
+    "brand_context": "Oli Lagaiana produeix oli d’oliva verge extra de la varietat 100% Koroneiki, una oliva grega molt adient al territori valencià, cultivat a menys de 1500 metres de la mar Mediterrània, específicament als camps de Roca – Meliana, a l’Horta Nord. L’oli és obtingut amb procediments exclusivament mecànics, utilitzant premsa en fred per preservar les propietats antioxidants. L'Horta Nord està protegida per la Generalitat valenciana i ha estat reconeguda per la FAO com a territori SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial), destacant el valor agrari i paisatgístic de la seva producció. Ofereixen botiga online i visites guiades al cultiu."
+  }
+}
+[2025-12-30T05:46:15.312Z] Microlink error: {}
+[2025-12-30T05:46:24.051Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "Gaudeix de l’autèntic sabor valencià a casa teua amb el nostre oli de la terra",
+  "business_overview": "Oli Lagaiana es un productor de aceite de oliva virgen extra (AOVE) de València que combina calidad y tradición, elaborando un producto de primera cosecha. Su AOVE, de la variedad Koroneiki, se cultiva en los campos de Roca— (Meliana) y se obtiene mediante prensa en frío para preservar todas sus propiedades. También ofrecen visitas guiadas para experimentar de cerca el entorno de l'Horta Nord, reconocido como territorio SIPAM por la FAO.",
+  "brand_values": [
+    "Tradición",
+    "Qualitat",
+    "Autenticidad",
+    "Sostenibilidad",
+    "Origen"
+  ],
+  "tone_of_voice": [
+    "Tradicional",
+    "Cercano",
+    "Apasionado"
+  ],
+  "visual_aesthetic": [
+    "Mediterráneo",
+    "Rústico",
+    "Natural"
+  ],
+  "colors": [
+    "#334AFF",
+    "#141827",
+    "#0044CC",
+    "#BF7F3F",
+    "#550300"
+  ],
+  "fonts": [
+    "EB Garamond",
+    "Roboto"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Oli Lagaiana: El sabor autèntic de València a la teva taula.",
+      "Oli Koroneiki 100%: Premsa en fred des de l'Horta Nord.",
+      "Un tresor líquid: Oli d’oliva verge extra, qualitat i tradició.",
+      "Visita Roca – Meliana: Descobreix els camps on neix el nostre oli.",
+      "El secret del Mediterrani, a només 1500m del mar."
+    ],
+    "visual_keywords": [
+      "Golden liquid olive oil pouring",
+      "Valencian landscape Horta Nord SIPAM",
+      "Koroneiki olive variety close-up",
+      "Rustic wooden press cold extraction",
+      "Mediterranean essence tradition"
+    ],
+    "ctas": [
+      "Comprar Oli Ara",
+      "Reserva la teva Visita Guiada",
+      "Descobreix el Pack Regal Exclusiu"
+    ],
+    "brand_context": "El negocio, Oli Lagaiana, se especializa en la producción y venta de aceite de oliva verge extra (AOVE) de primera cosecha, cultivado íntegrament en sus campos ubicados en Roca – Meliana, dentro de la comarca de l’Horta Nord en València. Utilizan la variedad de aceituna 100% Koroneiki, de origen griego pero perfectamente adaptada a su territorio mediterráneo, situado a tan sols 1500m de la mar. El AOVE s'obté mitjançant un procés artesanal de premsat en fred i procediments mecànics, garantint la preservació de les seves propietats. Els camps gaudeixen del reconeixement SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial) per la FAO, destacant el seu compromís amb la tradició, el valor agrari i el respecte al medi ambient, subratllant l'alta qualitat del producte i el seu profund arrelament territorial. Ofereixen venda en línia i visites guiades. Contacte: 660363898."
+  }
+}
+[2025-12-30T05:52:48.592Z] Microlink error: {}
+[2025-12-30T05:52:59.116Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "El sabor auténtico de la tradición mediterránea valenciana.",
+  "business_overview": "Oli Lagaiana es una productora de Aceite de Oliva Virgen Extra (AOVE) premium de Valencia, especializada en la variedad Koroneiki. Elaborado con olives de primera collita y prensado en frío, capturan el auténtico sabor de L’Horta Nord. Además de la venta de productos, ofrecen visitas guiadas a sus campos situados en Roca – Meliana.",
+  "brand_values": [
+    "Tradición",
+    "Calidad",
+    "Origen",
+    "Autenticidad",
+    "Patrimonio"
+  ],
+  "tone_of_voice": [
+    "Artesanal",
+    "Cercano",
+    "Especializado"
+  ],
+  "visual_aesthetic": [
+    "Mediterráneo",
+    "Natural",
+    "Rústico"
+  ],
+  "colors": [
+    "#141827",
+    "#334AFF",
+    "#0044CC",
+    "#BF7F3F",
+    "#550300"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Roboto"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Koroneiki: La variedad griega que florece en la Horta Nord de València.",
+      "Aceite de Oliva Virgen Extra. Primera Cosecha. Prensado en Frío.",
+      "El sabor de la tierra valenciana, reconocido como Patrimonio Agrícola Mundial (SIPAM).",
+      "El tesoro líquido del Mediterráneo a solo 1500m del mar.",
+      "Regala autenticidad: Packs exclusivos con copas de cata."
+    ],
+    "visual_keywords": [
+      "Valencian EVOO",
+      "Koroneiki olives",
+      "Mediterranean sunlight",
+      "Traditional cold pressing",
+      "Horta Nord landscape"
+    ],
+    "ctas": [
+      "Comprar AOVE Ahora",
+      "Reservar Visita Guiada",
+      "Descubrir Packs Regalo"
+    ],
+    "brand_context": "Oli Lagaiana produce Aceite de Oliva Virgen Extra (AOVE) a partir de la variedad Koroneiki, cultivada íntegramente en sus campos de Roca – Meliana, en la comarca de L’Horta Nord, Valencia. Este entorno es un territorio SIPAM (Sistemas Importantes de Patrimonio Agrícola Mundial), destacando su gran valor agrario y paisajístico protegido por la Generalitat Valenciana. El proceso de extracción se realiza mediante premsa en frío y procedimientos mecánicos, garantizando un aceite de primera collita. Los cultivos se sitúan a escasos 1500 metros del mar Mediterráneo, lo que aporta características únicas al producto. La marca no solo vende aceite, sino que también ofrece la experiencia de visitas guiadas para conectar a los clientes con el entorno y la tradición agrícola. El compromiso con la calidad se subraya en el uso de la variedad griega Koroneiki, adaptada exitosamente al territorio valenciano."
+  }
+}
+[2025-12-30T05:58:43.466Z] Microlink error: {}
+[2025-12-30T05:58:54.282Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "L'autèntic sabor del Mediterrani a València.",
+  "business_overview": "Oli Lagaiana es dedica a la producció i venda d'oli d'oliva verge extra (AOVE) de primera collita, elaborat amb olives 100% Koroneiki en els seus camps de Roca–Meliana. El negoci combina una estricta tradició artesanal, utilitzant premsa en fred, amb el valor agrari i paisatgístic de l'Horta Nord valenciana.",
+  "brand_values": [
+    "Qualitat",
+    "Tradició",
+    "Autenticitat",
+    "Sostenibilitat",
+    "Mediterrani"
+  ],
+  "tone_of_voice": [
+    "Artesanal",
+    "Proper",
+    "Gastronòmic"
+  ],
+  "visual_aesthetic": [
+    "Natural",
+    "Rústic",
+    "Mediterrani"
+  ],
+  "colors": [
+    "#BF7F3F",
+    "#550300",
+    "#141827",
+    "#25D366",
+    "#32323A"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Roboto"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "El tresor líquid de València: Oli Lagaiana.",
+      "Oli de primera collita: sabor autèntic Koroneiki 100%.",
+      "Qualitat i Tradició des de l'Horta Nord SIPAM.",
+      "AOVE premsat en fred a 1500m de la Mediterrània.",
+      "Sorprèn amb l'exclusiu Pack Regal d'oli i copes de tast."
+    ],
+    "visual_keywords": [
+      "Oli d'oliva verd daurat",
+      "Olives Koroneiki",
+      "Paisatge d'Horta Nord",
+      "Premsa en fred rústica",
+      "Llum solar mediterrània"
+    ],
+    "ctas": [
+      "Comprar el nostre AOVE",
+      "Reservar Visita Guiada",
+      "Contactar per a Comandes"
+    ],
+    "brand_context": "Oli Lagaiana produeix oli d’oliva verge extra (AOVE) de primera collita, cultivat íntegrament en els seus camps de Roca – Meliana, a la comarca valenciana de l’Horta Nord. Aquest territori, situat a escassos 1500m de la mar Mediterrània, ha estat reconegut per la FAO com a SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial), subratllant el seu valor agrari i paisatgístic. L'oli és 100% monovarietal Koroneiki, una varietat grega molt adient al territori, obtingut exclusivament mitjançant premsa en fred i procediments mecànics per preservar totes les seves propietats. A més de la venda directa de producte, Oli Lagaiana ofereix la possibilitat de realitzar visites guiades als seus camps."
+  }
+}
+[2025-12-30T06:04:07.268Z] Microlink error: {}
+[2025-12-30T06:04:16.244Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "Qualitat i Tradició. El sabor autèntic valencià.",
+  "business_overview": "Oli Lagaiana és un productor d'Oli d'Oliva Verge Extra (AOVE) valencià, elaborat amb olives 100% Koroneiki de primera collita. S'extreu mitjançant premsa en fred i procediments artesanals a la reconeguda Horta Nord de València, garantint un producte que reflecteix la riquesa del territori mediterrani. A més de la venda en línia i packs regal, ofereixen la possibilitat de visites guiades als seus camps.",
+  "brand_values": [
+    "Tradició",
+    "Qualitat",
+    "Artesania",
+    "Patrimoni Agrícola",
+    "Proximitat"
+  ],
+  "tone_of_voice": [
+    "Autèntic",
+    "Familiar",
+    "Orgullós"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Ecològic",
+    "Mediterrani"
+  ],
+  "colors": [
+    "#141827",
+    "#BF7F3F",
+    "#550300",
+    "#334AFF",
+    "#25D366"
+  ],
+  "fonts": [
+    "Libre Baskerville",
+    "Roboto"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "El secret líquid del Mediterrani a la teva taula.",
+      "Oli d'Oliva Koroneiki: Premsa en fred, sabor intens.",
+      "Descobreix l'AOVE de Roca-Meliana, reconegut per la FAO.",
+      "Compra directament de l'Horta: Qualitat garantida.",
+      "El Pack Regal ideal per als amants del sabor autèntic."
+    ],
+    "visual_keywords": [
+      "Mediterranean landscape",
+      "Cold press olive oil",
+      "Koroneiki olive variety",
+      "Earthy tones, rustic texture",
+      "Valencian Horta, sun-drenched"
+    ],
+    "ctas": [
+      "Comprar el nostre AOVE",
+      "Reservar Visita Guiada",
+      "Contactar per a Grans Comandes"
+    ],
+    "brand_context": "Oli Lagaiana és un productor d'Oli d'Oliva Verge Extra (AOVE) ubicat a Roca – Meliana, a la comarca de l'Horta Nord de València. L'oli és de primera collita, obtingut exclusivament amb la varietat grega Koroneiki, 100% monovarietal. El procés d'extracció es realitza mitjançant premsa en fred i procediments estrictament mecànics, assegurant la preservació de les propietats i la qualitat de l'oli. Els camps es troben a escassos 1500 metres de la Mar Mediterrània i l'entorn de cultiu gaudeix del reconeixement SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial) per part de la FAO, donat el gran valor agrari i paisatgístic de l'Horta protegida per la Generalitat Valenciana. A més de la venda directa de producte, Oli Lagaiana ofereix l'experiència de visites guiades als seus camps. El contacte telefònic és 660 36 38 98."
+  }
+}
+[2025-12-30T06:06:58.483Z] Microlink error: {}
+[2025-12-30T06:07:07.800Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "Qualitat i Tradició. El sabor autèntic de la terra.",
+  "business_overview": "Oli Lagaiana es un productor d'oli d'oliva verge extra de primera collita, elaborat artesanalment a Roca – Meliana (Horta Nord de València). S'especialitzen en la varietat 100% Koroneiki, utilitzant premsa en fred per garantir la màxima qualitat i la preservació de les propietats. A més de la venda directa, ofereixen visites guiades per connectar els consumidors amb el ric patrimoni agrícola de la zona SIPAM.",
+  "brand_values": [
+    "Tradició",
+    "Qualitat",
+    "Autenticitat",
+    "Artesania",
+    "Sostenibilitat"
+  ],
+  "tone_of_voice": [
+    "Artesanal",
+    "Proper",
+    "Orgullós"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Natural",
+    "Mediterrani"
+  ],
+  "colors": [
+    "#141827",
+    "#334AFF",
+    "#0044CC",
+    "#BF7F3F",
+    "#550300"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "El tresor líquid de l'Horta Nord.",
+      "Oli 100% Koroneiki: La qualitat grega nascuda a València.",
+      "De Roca a la teva taula: Oli d’oliva de primera collita.",
+      "Descobreix el sabor autènticament mediterrani.",
+      "Premsa en fred, sabor artesanal garantit."
+    ],
+    "visual_keywords": [
+      "Olive groves Valencia",
+      "artisanal cold press",
+      "Mediterranean landscape",
+      "golden liquid oil",
+      "rustic elegant packaging"
+    ],
+    "ctas": [
+      "Comprar Oli Verge Extra",
+      "Reservar Visita Guiada",
+      "Explorar el Pack Regal"
+    ],
+    "brand_context": "Oli Lagaiana produeix oli d'oliva verge extra (AOVE) de varietat 100% Koroneiki, obtingut exclusivament als seus camps situats a Roca – Meliana, dins de l'Horta Nord de València. La producció es realitza mitjançant premsa en fred i procediments mecànics per preservar les propietats. L'entorn és SIPAM (Sistema Important de Patrimoni Agrícola Mundial) reconegut per la FAO, destacant el seu valor agrari i paisatgístic. La proximitat a la Mar Mediterrània (1500m) influeix en el caràcter del producte, que és considerat de primera collita. Ofereixen venda en línia i l'experiència afegida de visites guiades al cultiu."
+  }
+}
+[2025-12-30T06:09:14.461Z] Microlink error: {}
+[2025-12-30T06:09:25.280Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "Qualitat i Tradició: L'autèntic sabor valencià.",
+  "business_overview": "Oli Lagaiana és un productor d'oli d'oliva verge extra (OOVE) elaborat amb olives Koroneiki seleccionades, de primera collita i premsades en fred. Amb els seus camps situats a Roca – Meliana (Horta Nord), el seu procés artesanal honora la tradició valenciana i el patrimoni SIPAM de la regió. Ofereixen el sabor pur del Mediterrani, a més de visites guiades i packs de regal exclusius.",
+  "brand_values": [
+    "Qualitat",
+    "Tradició",
+    "Autenticitat",
+    "Patrimoni",
+    "Proximitat"
+  ],
+  "tone_of_voice": [
+    "Autèntic",
+    "Familiar",
+    "Respectuós"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Mediterrani",
+    "Artesanal"
+  ],
+  "colors": [
+    "#334AFF",
+    "#141827",
+    "#BF7F3F",
+    "#550300",
+    "#0044CC"
+  ],
+  "fonts": [
+    "Lora",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Descobreix l'OOVE 100% Koroneiki de la Horta Nord.",
+      "El sabor autèntic del Mediterrani en la teva taula.",
+      "Oli de primera collita, premsat en fred: Qualitat garantida.",
+      "Un tresor líquid de València reconegut per la FAO (SIPAM).",
+      "Sorprén als teus: Aconsegueix el nostre exclusiu Pack Regal amb copes de tast."
+    ],
+    "visual_keywords": [
+      "Camp d'oliveres",
+      "Llum mediterrània",
+      "Premsa en fred",
+      "Terra SIPAM",
+      "Ampolla d'OOVE"
+    ],
+    "ctas": [
+      "Comprar Oli Ara",
+      "Reservar Visita Guiada",
+      "Contactar amb Nosaltres"
+    ],
+    "brand_context": "Oli Lagaiana produeix oli d’oliva verge extra de primera collita a Roca – Meliana, dins de la comarca protegida de l’Horta Nord, reconeguda per la Generalitat Valenciana i designada com a territori SIPAM per la FAO (Sistemes Importants de Patrimoni Agrícola Mundial). La seva producció es basa exclusivament en la varietat d'olivera grega Koroneiki, que ha resultat ser molt adequada per a la seva ubicació, a només 1500 metres de la mar Mediterrània. L'oli s'obté mitjançant procediments mecànics i premsa en fred, garantint la preservació de les seves propietats i un perfil ric en antioxidants. A més de la venda del producte (OOVE i Pack Regal), l'empresa ofereix visites guiades per als consumidors interessats en l'entorn i el procés d'elaboració."
+  }
+}
+[2025-12-30T06:19:54.633Z] Microlink error: {}
+[2025-12-30T06:20:03.364Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "El sabor autèntic del Mediterrani valencià.",
+  "business_overview": "Oli Lagaiana es un productor de aceite de oliva virgen extra de València, especializado en AOVE monovarietal Koroneiki de primera cosecha. Operan en la Horta Nord, una zona protegida SIPAM, combinando métodos artesanales como la prensa en frío con un profundo respeto por la tradición y el entorno. Venden su aceite directamente al consumidor y ofrecen experiencias como visitas guiadas.",
+  "brand_values": [
+    "Qualitat",
+    "Tradició",
+    "Autenticitat",
+    "Sostenibilitat",
+    "Salut"
+  ],
+  "tone_of_voice": [
+    "Auténtico",
+    "Cercano",
+    "Artesanal"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Mediterráneo",
+    "Natural"
+  ],
+  "colors": [
+    "#141827",
+    "#334AFF",
+    "#0044CC",
+    "#BF7F3F",
+    "#550300"
+  ],
+  "fonts": [
+    "Cormorant Garamond",
+    "Inter"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Autèntic oli valencià: Qualitat i Tradició garantida.",
+      "El tresor líquid de l'Horta Nord, territori SIPAM.",
+      "Oli 100% Koroneiki: El sabor grec a la Mediterrània valenciana.",
+      "Prensa en fred. Sabor intens. Essencial per a una vida saludable.",
+      "Descobreix la nostra producció: Reserva una visita guiada als nostres camps."
+    ],
+    "visual_keywords": [
+      "Mediterranean light",
+      "olive grove",
+      "rustic",
+      "cold press",
+      "golden liquid"
+    ],
+    "ctas": [
+      "Comprar Oli Verge Extra",
+      "Reservar Visita Guiada",
+      "Descobrir el Sabor Autèntic"
+    ],
+    "brand_context": "Oli Lagaiana produeix oli d'oliva verge extra de primera collita a Roca, Meliana, dins de la comarca de l'Horta Nord, reconeguda com a territori SIPAM per la FAO pel seu valor agrari. La producció es basa exclusivament en la varietat grega Koroneiki (100%), adaptada al clima mediterrani a només 1500m de la costa. L'oli s'obté mitjançant premsa en fred i procediments mecànics, assegurant la preservació de totes les seves propietats, destacant el seu alt contingut en antioxidants i àcids grassos saludables. A més de la venda directa de producte, el negoci promou l'agroturisme oferint visites guiades als seus camps per a connectar amb l'origen del producte."
+  }
+}
+[2025-12-30T06:23:36.503Z] Microlink error: {}
+[2025-12-30T06:23:46.241Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "Qualitat i Tradició, el sabor autèntic del Mediterrani.",
+  "business_overview": "Oli Lagaiana elabora Oli d’Oliva Verge Extra (AOVE) de primera collita a València, utilitzant olives 100% Koroneiki cultivades als camps protegits de Roca—Meliana. Mitjançant la premsa en fred i processos mecànics, preserven les propietats i el sabor intens, oferint un autèntic tresor líquid valencià, a més de visites guiades.",
+  "brand_values": [
+    "Tradició",
+    "Qualitat",
+    "Autenticitat",
+    "Sostenibilitat",
+    "Mediterrani"
+  ],
+  "tone_of_voice": [
+    "Artesanal",
+    "Passional",
+    "Arrelat"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Natural",
+    "Earthy"
+  ],
+  "colors": [
+    "#BF7F3F",
+    "#550300",
+    "#141827",
+    "#32323A",
+    "#04AAAA"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Descobreix l'AOVE 100% Koroneiki fet a València.",
+      "Oli de Roca—Meliana: El sabor autèntic de l'Horta Nord.",
+      "Premsa en fred: Tota la salut i el sabor del Mediterrani a la teva taula.",
+      "Un tresor líquid amb reconeixement SIPAM per la FAO.",
+      "Sorprèn amb el nostre Pack Regal exclusiu i copes de tast."
+    ],
+    "visual_keywords": [
+      "Olive grove",
+      "Mediterranean light",
+      "Cold press",
+      "Golden liquid",
+      "Rustic tradition"
+    ],
+    "ctas": [
+      "Comprar el nostre AOVE",
+      "Reservar Visita Guiada",
+      "Contactar per a Detalls"
+    ],
+    "brand_context": "Oli Lagaiana es dedica a la producció i comercialització d'Oli d'Oliva Verge Extra (AOVE) de primera collita a Roca – Meliana, València, dins la comarca de l'Horta Nord. Aquesta zona té el reconeixement de SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial) per la FAO, destacant el seu valor agrari i paisatgístic. L'oli és obtingut exclusivament amb la varietat d'oliva 100% Koroneiki (una varietat grega molt adient al territori a 1500m de la mar) i processat mitjançant premsa en fred i procediments exclusivament mecànics. L'empresa també ofereix serveis complementaris com visites guiades als camps i venda de packs regal exclusius amb copes de tast, posicionant-se en el segment de qualitat i tradició lligada al territori Mediterrani."
+  }
+}
+[2025-12-30T06:27:36.918Z] Microlink error: {}
+[2025-12-30T06:27:47.351Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "El sabor autèntic del Mediterrani.",
+  "business_overview": "Oli Lagaiana produeix i ven oli d'oliva verge extra (AOVE) de primera collita a València. Elaborat amb olives de la varietat Koroneiki 100%, utilitzen premsa en fred i un procés artesanal per preservar totes les seves propietats. A més de la venda en línia, també ofereixen visites guiades als seus camps situats a l'Horta Nord, un territori protegit per la Generalitat Valenciana.",
+  "brand_values": [
+    "Tradició",
+    "Qualitat",
+    "Origen Valencià",
+    "Artesania",
+    "Sostenibilitat"
+  ],
+  "tone_of_voice": [
+    "Autèntic",
+    "Proper",
+    "Apasionat"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Natural",
+    "Càlid"
+  ],
+  "colors": [
+    "#141827",
+    "#334AFF",
+    "#0044CC",
+    "#BF7F3F",
+    "#550300"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Oli Lagaiana: Qualitat i Tradició. El millor AOVE de València.",
+      "El sabor autèntic de la terra. Premsa en fred i Koroneiki 100%.",
+      "Descobreix l'AOVE que ha valgut a l'Horta Nord el reconeixement SIPAM.",
+      "De Roca a casa teva: Oli d'oliva verge extra de primera collita.",
+      "Un regal amb sabor: Sorprèn amb el nostre Pack Regal exclusiu amb copes de tast."
+    ],
+    "visual_keywords": [
+      "Horta Nord (Valencian orchard)",
+      "Oliveres Koroneiki",
+      "Premsa en fred (Cold press)",
+      "Terra Mediterrània",
+      "Ampolla vidre gourmet"
+    ],
+    "ctas": [
+      "Comprar Oli d'Oliva Verge Extra",
+      "Reservar Visita Guiada als Camps",
+      "Descobrir el Pack Regal Exclusiu"
+    ],
+    "brand_context": "Oli Lagaiana produeix i comercialitza oli d'oliva verge extra (AOVE) 100% de la varietat Koroneiki. L'oli és de primera collita i s'obté mitjançant premsa en fred i procediments exclusivament mecànics. La producció es realitza íntegrament als camps propis situats a Roca – Meliana, dins de la comarca de l'Horta Nord. Aquesta àrea està protegida per la Generalitat Valenciana i ha estat reconeguda per la FAO com a territori SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial), destacant el valor agrari i paisatgístic de l'entorn, que es troba a escassos 1500 metres de la mar Mediterrània. A més de la venda directa del seu AOVE, Oli Lagaiana ofereix productes especials com el Pack Regal i organitza visites guiades als camps per promoure l'experiència i el coneixement del seu procés."
+  }
+}
+[2025-12-30T06:36:34.101Z] Microlink error: {}
+[2025-12-30T06:36:43.033Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "Qualitat i Tradició: Gaudeix de l’autèntic sabor valencià.",
+  "business_overview": "Oli Lagaiana produeix oli d'oliva verge extra (AOVE) de València, utilitzant olives 100% Koroneiki cultivades als seus camps de l’Horta Nord, reconeguda com a territori SIPAM. El procés de premsa en fred artesanal assegura un producte d’alta qualitat que reflecteix l'autèntic sabor del Mediterrani, ideal per cuinar o regalar.",
+  "brand_values": [
+    "Qualitat",
+    "Tradició",
+    "Artesania",
+    "Arrels Mediterrànies",
+    "Sostenibilitat"
+  ],
+  "tone_of_voice": [
+    "Autèntic",
+    "Proper",
+    "Didàctic"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Mediterrani",
+    "Artesanal"
+  ],
+  "colors": [
+    "#334AFF",
+    "#141827",
+    "#0044CC",
+    "#BF7F3F",
+    "#550300"
+  ],
+  "fonts": [
+    "Lora",
+    "Roboto"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Descobreix l'AOVE 100% Koroneiki de la Mediterrània.",
+      "El sabor autèntic de València: Oli Lagaiana.",
+      "De l'Horta Nord a la teva taula: tradició protegida.",
+      "Oli obtingut amb premsa en fred: Qualitat verge extra garantida.",
+      "Sorprèn amb el Pack Regal: l'essència valenciana i copes de tast."
+    ],
+    "visual_keywords": [
+      "cold pressed olive oil",
+      "Koroneiki olives close-up",
+      "Mediterranean sunset",
+      "rustic wooden interior",
+      "Valencian agricultural landscape"
+    ],
+    "ctas": [
+      "Comprar el nostre AOVE",
+      "Reservar Visita Guiada",
+      "Contactar i Tastareu"
+    ],
+    "brand_context": "Oli Lagaiana produeix oli d'oliva verge extra de primera collita obtingut íntegrament als seus camps a Roca – Meliana, dins de la comarca de l’Horta Nord, reconeguda com a territori SIPAM (Sistemes Importants de Patrimoni Agrícola Mundial) per la FAO. Utilitzen la varietat grega Koroneiki al 100%, que és molt adient al seu territori, situat a escassos 1500 m de la mar Mediterrània. L'oli es processa exclusivament mitjançant premsa en fred i procediments mecànics, sense additius, assegurant la preservació de totes les seves propietats i el seu sabor intens i afruitat, ric en antioxidants i àcids grassos saludables. A més de la venda de producte, el negoci promou l'experiència mitjançant visites guiades a la zona d’oliveres."
+  }
+}
+[2025-12-30T06:39:30.393Z] Microlink error: {}
+[2025-12-30T06:39:41.798Z] ✅ Gemini Response: {
+  "brand_name": "Quattre",
+  "tagline": "La teleco valenciana. Precios fijos, trato cercano.",
+  "business_overview": "Quattre es una teleoperadora valenciana con 15 años de experiencia que ofrece servicios de fibra óptica (1Gbps), móvil, TV y fijo. Se diferencian por garantizar precios fijos sin subidas ni permanencia, combinando alta velocidad con una atención al cliente 100% local y personalizada, extendiendo su modelo de negocio honesto también al sector energético.",
+  "brand_values": [
+    "Transparencia",
+    "Localidad",
+    "Libertad",
+    "Confianza",
+    "Sencillez"
+  ],
+  "tone_of_voice": [
+    "Cercano",
+    "Gamberro",
+    "Directo"
+  ],
+  "visual_aesthetic": [
+    "Pop",
+    "Claro",
+    "Funcional"
+  ],
+  "colors": [
+    "#240000",
+    "#3E42C8",
+    "#81BA26",
+    "#383F3F",
+    "#E2E8F0"
+  ],
+  "fonts": [
+    "Oswald",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Fibra 1Gbps + Móvil 40GB por solo 25€/mes.",
+      "¡Adiós permanencia! Contrata lo que quieras, porque mandas tú.",
+      "Somos tus vecinos: el servicio técnico mejor valorado y 100% local.",
+      "Precios Fijos y para siempre. La única teleco sin sorpresas en la factura.",
+      "Instalación, Router 5G y Asistencia: ¡Todo Gratis!"
+    ],
+    "visual_keywords": [
+      "Diseño pop art de baja fidelidad",
+      "Iconografía simple y amigable",
+      "Esquemas de precios contrastados",
+      "Ilustraciones de mascota irónicas",
+      "Estética de comunidad y barrio valenciano"
+    ],
+    "ctas": [
+      "Crea Tu Tarifa a Medida",
+      "Compara y Ahorra en Energía",
+      "Localiza Tu Tienda Más Cercana"
+    ],
+    "brand_context": "Quattre es una teleoperadora valenciana con 15 años de trayectoria que ofrece servicios de telecomunicaciones cuádruples, incluyendo fibra simétrica de 1Gbps (desde 20€/mes), y paquetes combinados con móvil (40GB ILIM por 25€/mes o GB Ilimitados por 33€/mes). La instalación del servicio, el router 5G y la asistencia técnica son gratuitos. Su política central se basa en los '#preciossinsorpresas', garantizando que el coste de la tarifa contratada es fijo y 'para siempre', sin aplicar permanencia. La atención al cliente está altamente valorada (4,8 estrellas), caracterizada por ser local y personal ('nunca hablarás con un robot'). Adicionalmente, extienden su filosofía de precios justos a la comercialización de energía eléctrica."
+  }
+}
+[2025-12-30T06:55:54.954Z] Microlink error: {}
+[2025-12-30T06:56:04.523Z] ✅ Gemini Response: {
+  "brand_name": "Quattre",
+  "tagline": "La teleco valenciana. Precios fijos y atención de tú a tú.",
+  "business_overview": "Quattre es una compañía valenciana de telecomunicaciones con 15 años de experiencia, que ofrece servicios de Fibra Óptica, Móvil, TV y Fijo, además de tarifas de energía. Su modelo de negocio se basa en la transparencia, ofreciendo precios fijos de por vida, instalación y router gratuitos, y atención local sin robots ni permanencia.",
+  "brand_values": [
+    "Proximidad",
+    "Transparencia",
+    "Estabilidad de precios",
+    "Simplicidad",
+    "Libertad (Sin permanencia)"
+  ],
+  "tone_of_voice": [
+    "Cercano",
+    "Directo",
+    "Desafiante"
+  ],
+  "visual_aesthetic": [
+    "Moderno",
+    "Enérgico",
+    "Legible"
+  ],
+  "colors": [
+    "#240000",
+    "#3E42C8",
+    "#429538",
+    "#FFFFFF",
+    "#81BA26"
+  ],
+  "fonts": [
+    "Oswald",
+    "Inter"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Fibra 1Gbps y Móvil 40GB: Contrata desde 25€ y sin permanencia.",
+      "Cámbiate sin sustos: ¡Instalación GRATIS y Router 5G de regalo!",
+      "El precio que contratas es para siempre. #preciossinsorpresas.",
+      "Somos tus vecinos: Te ayudamos cara a cara, nunca con un robot.",
+      "Paga menos por la luz: Mándanos tu factura y te aplicamos el precio más justo."
+    ],
+    "visual_keywords": [
+      "High-speed fiber optic",
+      "Local community shop",
+      "Bold pricing graphics",
+      "Minimalist iconography",
+      "Green/Blue contrast"
+    ],
+    "ctas": [
+      "Configura Tu Tarifa Ahora",
+      "Contrata 1Gbps Hoy",
+      "Saber más sobre Energía"
+    ],
+    "brand_context": "Quattre se posiciona como una operadora de telecomunicaciones valenciana con 15 años de trayectoria, ofreciendo servicios esenciales (Fibra Óptica de 1Gbps simétrico, móvil con GB ilimitados, TV y Fijo) y diversificando hacia la energía. El valor central de Quattre es la honestidad y la estabilidad de costes, destacando que el precio inicial es 'para siempre' y nunca ha sido modificado para sus clientes, eliminando así las 'sorpresas'. Ofrecen instalación y router 5G gratuitos, sin obligar a permanencias. La atención es clave, con tiendas físicas para asistencia 'cara a cara' y un servicio técnico valorado en 4.8 estrellas, subrayando su compromiso como 'vecinos' y la eliminación de la atención automatizada por robots. También buscan activamente clientes de energía (luz) prometiendo el precio más justo y alta gratis."
+  }
+}
+[2025-12-30T07:14:30.299Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 29.700829111s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 29.700829111s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__3e85682f._.js:2731:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-30T07:19:07.463Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 52.543645859s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 52.543645859s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__3e85682f._.js:2735:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-30T07:21:57.349Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 2.656117015s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 2.656117015s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__3e85682f._.js:2754:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-30T07:25:49.093Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 10.910841009s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 10.910841009s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__3e85682f._.js:2754:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-30T07:32:33.016Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 26.98697752s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 26.98697752s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__3e85682f._.js:2754:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-30T07:39:49.660Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 10.336973944s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 10.336973944s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__3e85682f._.js:2754:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}
+[2025-12-30T07:50:29.184Z] ❌ Gemini AI Error: {
+  "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 30.815607005s.",
+  "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 30.815607005s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__3e85682f._.js:2754:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
+}

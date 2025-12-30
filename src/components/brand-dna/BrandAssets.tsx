@@ -9,10 +9,12 @@ import { Pencil, Check, X, Trash2, Plus, Sparkles, Type, MessageCircle, Quote } 
 
 interface BrandAssetsProps {
     tagline: string;
+    business_overview: string;
     values: string[];
     aesthetic: string[];
     tone: string[];
     onUpdateTagline: (val: string) => void;
+    onUpdateOverview: (val: string) => void;
     onUpdateValue: (index: number, val: string) => void;
     onAddValue: () => void;
     onRemoveValue: (index: number) => void;
@@ -26,10 +28,12 @@ interface BrandAssetsProps {
 
 export function BrandAssets({
     tagline,
+    business_overview,
     values,
     aesthetic,
     tone,
     onUpdateTagline,
+    onUpdateOverview,
     onUpdateValue,
     onAddValue,
     onRemoveValue,
@@ -42,6 +46,8 @@ export function BrandAssets({
 }: BrandAssetsProps) {
     const [isEditingTagline, setIsEditingTagline] = useState(false);
     const [taglineEdit, setTaglineEdit] = useState(tagline);
+    const [isEditingOverview, setIsEditingOverview] = useState(false);
+    const [overviewEdit, setOverviewEdit] = useState(business_overview);
     const [editingItem, setEditingItem] = useState<{ section: string; index: number } | null>(null);
     const [editValue, setEditValue] = useState('');
 
@@ -108,6 +114,50 @@ export function BrandAssets({
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Business Overview */}
+            <Card className="md:col-span-2 bg-card border-border">
+                <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+                        <MessageCircle className="w-5 h-5 text-primary" />
+                        Visión General del Negocio
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="group relative p-3 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all">
+                        {isEditingOverview ? (
+                            <div className="space-y-2">
+                                <textarea
+                                    value={overviewEdit}
+                                    onChange={(e) => setOverviewEdit(e.target.value)}
+                                    className="w-full min-h-[100px] p-2 text-sm bg-transparent border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
+                                    autoFocus
+                                />
+                                <div className="flex justify-end gap-2">
+                                    <Button size="sm" variant="ghost" onClick={() => { setOverviewEdit(business_overview); setIsEditingOverview(false); }}>
+                                        <X className="w-4 h-4 mr-1 text-red-500" /> Cancelar
+                                    </Button>
+                                    <Button size="sm" variant="ghost" onClick={() => { onUpdateOverview(overviewEdit); setIsEditingOverview(false); }}>
+                                        <Check className="w-4 h-4 mr-1 text-green-500" /> Guardar
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-sm text-foreground leading-relaxed pr-8">{business_overview || 'No hay descripción disponible.'}</p>
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        className="p-1 rounded hover:bg-[var(--accent)]/10 text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+                                        onClick={() => { setOverviewEdit(business_overview); setIsEditingOverview(true); }}
+                                    >
+                                        <Pencil className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Tagline */}
             <Card className="md:col-span-2 bg-card border-border">
                 <CardHeader className="pb-2">

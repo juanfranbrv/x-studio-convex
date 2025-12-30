@@ -32,6 +32,7 @@ export async function updateUserBrandKit(brandKitId: string, brandData: BrandDNA
         });
 
         revalidatePath('/dashboard');
+        revalidatePath('/brand-kit');
         return { success: true };
     } catch (error: any) {
         console.error('Error inesperado al actualizar brand kit:', error);

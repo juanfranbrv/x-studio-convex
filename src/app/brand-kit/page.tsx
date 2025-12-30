@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useUser } from '@clerk/nextjs';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { analyzeBrandDNA } from '@/app/actions/analyze-brand-dna';
 import { useBrandKit } from '@/contexts/BrandKitContext';
 import type { BrandDNA } from '@/lib/brand-types';
@@ -37,14 +38,32 @@ import { useToast } from '@/hooks/use-toast';
 
 const LOADING_MESSAGES = [
     "Iniciando motores de análisis...",
+    "Conectando con Microlink API...",
     "Capturando esencia visual de la web...",
+    "Extrayendo paleta técnica (DOM)...",
+    "Analizando candidatos a logo...",
+    "Descubriendo tipografías en CSS...",
     "Extrayendo ADN de marca con IA...",
     "Generando activos y paletas finales...",
     "Puliendo los últimos detalles..."
 ];
 
-export default function BrandKitPage() {
+const TECHNICAL_LOGS = [
+    "[INFO] Initializing analyze-engine v2.4...",
+    "[NETWORK] Connecting to headfull browser cluster...",
+    "[DOM] Analyzing 428 nodes for color frequency...",
+    "[IMAGE] Processing full-page screenshot (1920x1080)...",
+    "[AI] Running Gemini-1.5-Flash vision analysis...",
+    "[STYLE] Extracting computed CSS variables...",
+    "[LOGO] Scoring candidates based on prominence...",
+    "[CONSENSUS] Running Delta-E clustering algorithm...",
+    "[DONE] Brand DNA architecture complete."
+];
+
+function BrandKitPageContent() {
     const { user, isLoaded } = useUser();
+    const searchParams = useSearchParams();
+    const router = useRouter();
     const {
         activeBrandKit,
         brandKits,
@@ -92,14 +111,28 @@ export default function BrandKitPage() {
         return () => clearInterval(interval);
     }, [loading]);
 
-    // Asegurar que si hay perfiles y no hay resultado visible, se muestre el formulario o se cargue uno
+    // Handle initial state and query params
     useEffect(() => {
-        if (!contextLoading && brandKits.length === 0) {
-            setShowNewKitForm(true);
-        } else if (activeBrandKit) {
+        if (!contextLoading) {
+            const action = searchParams.get('action');
+            if (action === 'new') {
+                setShowNewKitForm(true);
+                // Clear the param without refreshing to avoid re-triggering on reload
+                const newParams = new URLSearchParams(searchParams.toString());
+                newParams.delete('action');
+                router.replace(`/brand-kit${newParams.toString() ? `?${newParams.toString()}` : ''}`);
+            } else if (brandKits.length === 0) {
+                setShowNewKitForm(true);
+            }
+        }
+    }, [contextLoading, brandKits, searchParams, router]);
+
+    // Handle case where active brand kit changes
+    useEffect(() => {
+        if (activeBrandKit && !searchParams.get('action')) {
             setShowNewKitForm(false);
         }
-    }, [contextLoading, brandKits, activeBrandKit]);
+    }, [activeBrandKit]);
 
     const handleBrandDelete = async (brandId: string) => {
         try {
@@ -153,10 +186,35 @@ export default function BrandKitPage() {
 
     const handleRegenerate = async () => {
         setShowRegenerateConfirm(false);
-        if (!url || !user?.id) return;
+        const targetUrl = url || activeBrandKit?.url;
+        if (!targetUrl || !user?.id) {
+            console.warn('❌ Cannot regenerate: No URL found', { url, activeBrandKitUrl: activeBrandKit?.url });
+            return;
+        }
+
         setLoading(true);
         setError('');
-        await handleSubmit({ preventDefault: () => { } } as any);
+
+        try {
+            const response = await analyzeBrandDNA(targetUrl, true, user.id);
+
+            if (response.success && response.data) {
+                setShowNewKitForm(false);
+                // The activeBrandKit context should handle updating the current kit if its ID matches
+                // and reloadBrandKits is not needed here to avoid flickering.
+                toast({
+                    title: "✅ Brand Kit regenerado",
+                    description: "El análisis se ha completado correctamente.",
+                });
+            } else {
+                setError(response.error || 'No se pudo regenerar el Brand Kit.');
+            }
+        } catch (err) {
+            console.error('Unexpected error during regenerate:', err);
+            setError('Ocurrió un error inesperado al regenerar.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -170,13 +228,26 @@ export default function BrandKitPage() {
             const response = await analyzeBrandDNA(url, true, user.id);
 
             if (response.success && response.data) {
+                console.log('[NEW BRAND KIT] Created successfully, reloading...', response.data.id);
                 setShowNewKitForm(false);
+
+                // Esperar un momento para que Convex propague los datos
+                await new Promise(resolve => setTimeout(resolve, 500));
+
                 // Refrescar la lista global
                 await reloadBrandKits();
-                // El contexto se encargará de poner el nuevo como activo si es el único o si implementamos lógica de "último creado"
+                console.log('[NEW BRAND KIT] List reloaded, setting active...');
+
+                // Activar el nuevo brand kit
                 if (response.data.id) {
                     await setActiveBrandKit(response.data.id);
+                    console.log('[NEW BRAND KIT] Active kit set:', response.data.id);
                 }
+
+                toast({
+                    title: "✅ Brand Kit creado",
+                    description: "El análisis se ha completado correctamente.",
+                });
             } else {
                 setError(response.error || 'No se pudo analizar la marca.');
             }
@@ -219,7 +290,7 @@ export default function BrandKitPage() {
             <main className="p-6 md:p-12 max-w-7xl mx-auto">
 
                 {/* Si no tiene Brand Kits o está creando uno nuevo */}
-                {(brandKits.length === 0 || showNewKitForm) && !activeBrandKit && (
+                {((brandKits.length === 0 || showNewKitForm) && !loading) && (
                     <div className="max-w-2xl mx-auto text-center py-12 animate-in zoom-in-95 duration-500">
                         <div className="bg-card rounded-xl p-8 mb-8 border border-border relative overflow-hidden shadow-xl">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10" />
@@ -283,80 +354,163 @@ export default function BrandKitPage() {
                     </div>
                 )}
 
-                {/* Loading state */}
+                {/* Premium Loading state */}
                 {loading && (
-                    <div className="max-w-md mx-auto text-center py-16">
-                        <div className="glass rounded-xl p-8 border border-[var(--border)] shadow-2xl relative overflow-hidden">
-                            {/* Background glow animation */}
-                            <motion.div
-                                className="absolute inset-0 bg-gradient-to-tr from-[var(--accent)]/5 to-transparent"
-                                animate={{ opacity: [0.5, 0.8, 0.5] }}
-                                transition={{ duration: 4, repeat: Infinity }}
-                            />
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xl animate-in fade-in duration-500">
+                        <div className="max-w-xl w-full mx-auto px-6 text-center">
+                            <div className="relative mb-12">
+                                {/* Large central ambient glow */}
+                                <motion.div
+                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[var(--accent)]/20 rounded-full blur-[80px]"
+                                    animate={{
+                                        scale: [1, 1.2, 1],
+                                        opacity: [0.3, 0.6, 0.3],
+                                    }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                />
 
-                            <motion.div
-                                className="relative mx-auto w-20 h-20 mb-6"
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                            >
-                                <svg className="w-20 h-20 absolute top-0 left-0 -rotate-90" viewBox="0 0 100 100">
-                                    <circle
-                                        className="text-[var(--accent)]/10 stroke-current"
-                                        strokeWidth="8"
-                                        fill="transparent"
-                                        r="42"
-                                        cx="50"
-                                        cy="50"
-                                    />
-                                    <circle
-                                        className="text-[var(--accent)] stroke-current transition-all duration-300 ease-in-out"
-                                        strokeWidth="8"
-                                        strokeLinecap="round"
-                                        fill="transparent"
-                                        r="42"
-                                        cx="50"
-                                        cy="50"
+                                {/* Spinning Ring */}
+                                <div className="relative mx-auto w-32 h-32">
+                                    <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                                        {/* Background track */}
+                                        <circle
+                                            className="text-white/5 stroke-current"
+                                            strokeWidth="4"
+                                            fill="transparent"
+                                            r="46"
+                                            cx="50"
+                                            cy="50"
+                                        />
+                                        {/* Progress bar */}
+                                        <motion.circle
+                                            className="text-[var(--accent)] stroke-current"
+                                            strokeWidth="4"
+                                            strokeLinecap="round"
+                                            fill="transparent"
+                                            r="46"
+                                            cx="50"
+                                            cy="50"
+                                            initial={{ strokeDasharray: "289", strokeDashoffset: "289" }}
+                                            animate={{ strokeDashoffset: 289 - (progress / 100) * 289 }}
+                                            transition={{ duration: 0.5, ease: "easeOut" }}
+                                            style={{ filter: "drop-shadow(0 0 8px var(--accent))" }}
+                                        />
+                                    </svg>
+
+                                    {/* Percentage text */}
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                        <motion.span
+                                            key={Math.floor(progress / 10)}
+                                            initial={{ y: 5, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            className="text-2xl font-bold tracking-tighter"
+                                        >
+                                            {Math.round(progress)}%
+                                        </motion.span>
+                                    </div>
+                                </div>
+
+                                {/* Floating particles/nodes */}
+                                {[...Array(6)].map((_, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className="absolute w-1.5 h-1.5 rounded-full bg-[var(--accent)]"
+                                        animate={{
+                                            x: [
+                                                Math.cos(i * 60 * (Math.PI / 180)) * 80,
+                                                Math.cos(i * 60 * (Math.PI / 180)) * 60
+                                            ],
+                                            y: [
+                                                Math.sin(i * 60 * (Math.PI / 180)) * 80,
+                                                Math.sin(i * 60 * (Math.PI / 180)) * 60
+                                            ],
+                                            opacity: [0, 1, 0],
+                                            scale: [0, 1.5, 0]
+                                        }}
+                                        transition={{
+                                            duration: 2,
+                                            repeat: Infinity,
+                                            delay: i * 0.3,
+                                            ease: "circOut"
+                                        }}
                                         style={{
-                                            strokeDasharray: '263.89',
-                                            strokeDashoffset: `${263.89 - (progress / 100) * 263.89}`
+                                            left: '50%',
+                                            top: '50%',
+                                            marginLeft: '-3px',
+                                            marginTop: '-3px'
                                         }}
                                     />
-                                </svg>
-                                <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">
-                                    {Math.round(progress)}%
-                                </div>
-                            </motion.div>
+                                ))}
+                            </div>
 
-                            <AnimatePresence mode="wait">
-                                <motion.p
-                                    key={loadingMessageIndex}
+                            <div className="space-y-4">
+                                <motion.h3
+                                    className="text-2xl font-medium tracking-tight bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-transparent"
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="text-lg font-medium text-[var(--accent)] relative z-10"
                                 >
-                                    {LOADING_MESSAGES[loadingMessageIndex]}
-                                </motion.p>
-                            </AnimatePresence>
+                                    {progress < 20 && "Analizando estructura del sitio..."}
+                                    {progress >= 20 && progress < 40 && "Conectando con el motor visual..."}
+                                    {progress >= 40 && progress < 60 && "Extrayendo ADN de marca..."}
+                                    {progress >= 60 && progress < 80 && "Procesando activos visuales..."}
+                                    {progress >= 80 && progress < 95 && "Generando paletas de diseño..."}
+                                    {progress >= 95 && "Finalizando el Kit de Marca..."}
+                                </motion.h3>
 
-                            <div className="mt-6 w-full bg-[var(--border)] h-1 rounded-full overflow-hidden relative z-10">
-                                <motion.div
-                                    className="h-full bg-[var(--accent)] shadow-[0_0_10px_var(--accent)]"
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${progress}%` }}
-                                />
+                                {/* Technical Log Overlay */}
+                                <div className="h-24 overflow-hidden relative max-w-sm mx-auto bg-black/5 rounded-lg border border-border/5 p-3 font-mono text-[10px] text-muted-foreground/40 text-left">
+                                    <motion.div
+                                        animate={{ y: [0, -120] }}
+                                        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                                        className="space-y-1"
+                                    >
+                                        {[...TECHNICAL_LOGS, ...TECHNICAL_LOGS].map((log, i) => (
+                                            <div key={i} className="truncate">
+                                                <span className="text-[var(--accent)]/50 mr-2 opacity-50">{">"}</span>
+                                                {log}
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/50 pointer-events-none" />
+                                </div>
+
+                                <div className="flex justify-center gap-1.5">
+                                    {[0, 1, 2].map((i) => (
+                                        <motion.div
+                                            key={i}
+                                            className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]"
+                                            animate={{ opacity: [0.2, 1, 0.2] }}
+                                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                                        />
+                                    ))}
+                                </div>
+
+                                <motion.p
+                                    className="text-xs text-muted-foreground/40 max-w-sm mx-auto"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.5 }}
+                                >
+                                    FIRE-SC Engine v4.0 • Gemini 1.5 Flash • Headless-Chromium
+                                </motion.p>
                             </div>
                         </div>
+
+                        {/* Animated scanning bar effect */}
+                        <motion.div
+                            className="absolute inset-0 pointer-events-none opacity-10 bg-gradient-to-b from-transparent via-[var(--accent)] to-transparent h-40"
+                            animate={{ top: ['-20%', '110%'] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        />
                     </div>
                 )}
-
                 {/* Result State */}
                 {!loading && activeBrandKit && !showNewKitForm && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <BrandDNABoard
-                            key={activeBrandKit.updated_at || activeBrandKit.id || 'new'}
+                            key={activeBrandKit.id || 'new'}
                             data={activeBrandKit}
-                            isDebug={false}
+                            isDebug={searchParams.get('debug') === 'true'}
                             onRegenerate={() => setShowRegenerateConfirm(true)}
                             onNewBrandKit={handleNewProfile}
                             onSaveSuccess={reloadBrandKits}
@@ -406,5 +560,17 @@ export default function BrandKitPage() {
                 </AlertDialog>
             </main>
         </DashboardLayout>
+    );
+}
+
+export default function BrandKitPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        }>
+            <BrandKitPageContent />
+        </Suspense>
     );
 }
