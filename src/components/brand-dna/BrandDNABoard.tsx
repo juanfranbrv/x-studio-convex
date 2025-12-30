@@ -8,6 +8,7 @@ import { ColorPalette } from './ColorPalette';
 import { LogoCard, FaviconCard, ScreenshotCard, ImageGallery } from './VisualAssetComponents';
 import { BrandAssets } from './BrandAssets';
 import { TypographySection } from './TypographySection';
+import { BrandContextCard } from './BrandContextCard';
 import { TechnicalAudit } from './TechnicalAudit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -413,6 +414,23 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                 </div>
             </div>
 
+            {/* Middle Section: Brand Context (Full Width Focus) */}
+            <div className="w-full">
+                <BrandContextCard
+                    context={data.business_overview || ''}
+                    onUpdate={(val) => updateData(prev => ({
+                        ...prev,
+                        business_overview: val,
+                        text_assets: prev.text_assets ? { ...prev.text_assets, brand_context: val } : {
+                            marketing_hooks: [],
+                            visual_keywords: [],
+                            ctas: [],
+                            brand_context: val
+                        }
+                    }))}
+                />
+            </div>
+
             {/* Middle Section: Typography & Strategy */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <TypographySection
@@ -423,21 +441,10 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                 />
                 <BrandAssets
                     tagline={data.tagline || ''}
-                    business_overview={data.business_overview || ''}
                     values={data.brand_values || []}
                     aesthetic={data.visual_aesthetic || []}
                     tone={data.tone_of_voice || []}
                     onUpdateTagline={(val) => updateData(prev => ({ ...prev, tagline: val }))}
-                    onUpdateOverview={(val) => updateData(prev => ({
-                        ...prev,
-                        business_overview: val,
-                        text_assets: prev.text_assets ? { ...prev.text_assets, brand_context: val } : {
-                            marketing_hooks: [],
-                            visual_keywords: [],
-                            ctas: [],
-                            brand_context: val
-                        }
-                    }))}
                     onUpdateValue={(index, val) => {
                         updateData(prev => ({
                             ...prev,

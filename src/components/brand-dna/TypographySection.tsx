@@ -99,7 +99,7 @@ export function TypographySection({
     }, [searchResults]);
 
     return (
-        <Card className="bg-card border-border overflow-hidden h-full">
+        <Card className="bg-card border-border overflow-hidden">
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <Type className="w-5 h-5 text-primary" />

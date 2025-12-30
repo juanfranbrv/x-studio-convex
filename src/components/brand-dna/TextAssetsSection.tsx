@@ -54,7 +54,6 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
     const [assets, setAssets] = useState<TextAssets>(data || DEFAULT_DATA);
     const [editingItem, setEditingItem] = useState<{ section: keyof TextAssets; index: number } | null>(null);
     const [editValue, setEditValue] = useState('');
-    const [isEditingContext, setIsEditingContext] = useState(false);
 
     // Sincronizar estado interno cuando cambian los props (para edición bidireccional)
     useEffect(() => {
@@ -100,10 +99,6 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
         updateAssets({ ...assets, [section]: [...assets[section], newItem] });
     };
 
-    // Handler para Brand Context
-    const handleContextChange = (value: string) => {
-        updateAssets({ ...assets, brand_context: value });
-    };
 
     // Componente de título de sección con tooltip
     const SectionTitle = ({
@@ -297,50 +292,6 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
                         </div>
                     </div>
 
-                    {/* D. Brand Context */}
-                    <div className="space-y-3">
-                        <SectionTitle icon={FileText} title="Contexto de Marca" tooltipKey="brand_context" />
-                        <div className="group relative p-3 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all min-h-[140px]">
-                            {isEditingContext ? (
-                                <div className="space-y-2">
-                                    <textarea
-                                        value={assets.brand_context}
-                                        onChange={(e) => handleContextChange(e.target.value)}
-                                        className={cn(
-                                            "w-full min-h-[100px] p-0 text-sm rounded-lg resize-none",
-                                            "bg-transparent border-0 text-[var(--text-primary)]",
-                                            "focus:outline-none focus:ring-0"
-                                        )}
-                                        autoFocus
-                                    />
-                                    <div className="flex justify-end">
-                                        <Button
-                                            size="sm"
-                                            onClick={() => setIsEditingContext(false)}
-                                            className="gap-1 h-7 text-xs bg-[var(--accent)] hover:bg-[var(--accent-light)]"
-                                        >
-                                            <Check className="w-4 h-4" />
-                                            Guardar
-                                        </Button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <>
-                                    <p className="text-sm text-[var(--text-primary)] opacity-90 leading-relaxed pr-8">
-                                        {assets.brand_context}
-                                    </p>
-                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                            className="p-1 rounded hover:bg-[var(--accent)]/10 text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
-                                            onClick={() => setIsEditingContext(true)}
-                                        >
-                                            <Pencil className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </div>
 
                 </div>
             </CardContent>
