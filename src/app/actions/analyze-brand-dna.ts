@@ -2068,8 +2068,9 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         }
 
         // 1. Fetch paralelo: Jina + HTML extraction (Microlink eliminado - daba 400/403)
+        // 1. Fetch paralelo: Jina + HTML extraction
         console.log('📡 Obteniendo datos de Jina y analizando CSS...');
-        const [jinaContent, htmlAssets] = await Promise.all([
+        const [jinaResult, htmlAssets] = await Promise.all([
             fetchJinaContent(url).catch(err => {
                 logDebug('Jina error:', err);
                 return '';
@@ -2088,13 +2089,30 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
                     svgPalette: [] as string[],
                     designPalette: [] as string[],
                     fonts: [] as string[],
-                    html: '' // Added for weighted analysis
+                    html: ''
                 };
             }),
         ]);
 
-        if (!jinaContent) {
-            throw new Error('No se pudo obtener información de la URL');
+        let jinaContent = jinaResult;
+
+        // Fallback: Si Jina falla pero tenemos HTML, extraemos texto básico
+        if (!jinaContent && htmlAssets.html) {
+            console.log('⚠️ Jina failed, falling back to local HTML text extraction');
+            try {
+                const $ = cheerio.load(htmlAssets.html);
+                // Eliminar ruido
+                $('script, style, svg, noscript, iframe, link, meta').remove();
+                // Extraer texto limpio
+                jinaContent = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 50000);
+                console.log(`✅ Texto extraído de HTML: ${jinaContent.length} caracteres`);
+            } catch (e) {
+                console.error('Error extracting text from HTML:', e);
+            }
+        }
+
+        if (!jinaContent && !htmlAssets.html) {
+            throw new Error('No se pudo obtener información de la URL (Fallo total de Jina y Fetch)');
         }
 
         // === CONSOLIDAR CANDIDATOS DE LOGO INICIALES ===
