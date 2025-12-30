@@ -148,13 +148,13 @@ function createFinalPalette(
         });
     };
 
-    // Base weights from implementation plan
-    addVotes(designPalette, 'design', 0.40);
-    addVotes(weightedPalette, 'weighted', 0.20);
-    addVotes(visualPalette, 'visual', 0.15);
-    addVotes(logoPalette, 'logo', 0.15);
-    addVotes(svgPalette, 'svg', 0.05);
-    addVotes(codePalette, 'code', 0.05);
+    // Base weights updated as per USER request:
+    addVotes(visualPalette, 'visual', 0.50);    // 50% Visual Grid
+    addVotes(weightedPalette, 'weighted', 0.15); // 15% Weighted DOM
+    addVotes(logoPalette, 'logo', 0.15);         // 15% Logo Audit
+    addVotes(designPalette, 'design', 0.10);     // 10% Design Intent
+    addVotes(svgPalette, 'svg', 0.05);           // 5% SVG Palette
+    addVotes(codePalette, 'code', 0.05);         // 5% Code Palette
 
     // 2. Hierarchical Clustering (Delta E < 10)
     // We group colors into "Consensus Clusters"
@@ -539,7 +539,11 @@ async function getProminentColors(buffer: Buffer): Promise<string[]> {
  * Extract fonts from HTML/CSS content
  * Uses multiple strategies: Google Fonts links, @font-face, font-family declarations
  */
-function extractFontsFromHTML(html: string): string[] {
+/**
+ * Extract fonts from HTML/CSS content
+ * Uses multiple strategies: Google Fonts links, @font-face, font-family declarations
+ */
+function extractFontsFromContent(content: string): string[] {
     const fonts: Set<string> = new Set();
 
     // Common font names to filter out (system fonts, generic families)
@@ -550,13 +554,15 @@ function extractFontsFromHTML(html: string): string[] {
         'ui-sans-serif', 'ui-serif', 'ui-monospace', '-apple-system', 'blinkmacsystemfont',
         'segoe ui', 'roboto', 'oxygen', 'ubuntu', 'cantarell', 'fira sans', 'droid sans',
         'helvetica neue', 'inherit', 'initial', 'unset', 'fontawesome', 'font awesome',
-        'icons', 'icomoon', 'material icons', 'dashicons'
+        'icons', 'icomoon', 'material icons', 'dashicons', 'fusion-font'
     ]);
 
     const cleanFontName = (name: string): string | null => {
         if (!name) return null;
         // Remove quotes, extra spaces, and weight/style suffixes
         let cleaned = name.replace(/['"]/g, '').replace(/\s+/g, ' ').trim();
+        // Take only the first font if it's a list (e.g. "Open Sans, sans-serif")
+        cleaned = cleaned.split(',')[0].trim();
         // Remove common suffixes like :wght@400
         cleaned = cleaned.split(':')[0].split('@')[0].trim();
         // Decode URL encoding
@@ -575,9 +581,9 @@ function extractFontsFromHTML(html: string): string[] {
         // Strategy 1: Google Fonts CSS links (most reliable)
         // Matches: fonts.googleapis.com/css?family=Roboto:400,700|Open+Sans
         // And: fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans
-        const googleFontsRegex = /fonts\.googleapis\.com\/css2?\?[^"'\s>]*family=([^"'&>\s]+)/gi;
+        const googleFontsRegex = /fonts\.googleapis\.com\/css2?\?[^"'\s>]*family=([^"'\&>\s]+)/gi;
         let match;
-        while ((match = googleFontsRegex.exec(html)) !== null) {
+        while ((match = googleFontsRegex.exec(content)) !== null) {
             const familyParam = match[1];
             // Handle both old format (|) and new format (&family=)
             const families = familyParam.split(/[|&]/).filter(f => f.includes('family=') || !f.includes('='));
@@ -588,46 +594,70 @@ function extractFontsFromHTML(html: string): string[] {
             });
         }
 
+        // Strategy 1b: Generic CSS imports (@import url("..."))
+        // Often used for fonts
+        const importRegex = /@import\s+url\(['"]?([^'")]*)['"]?\)/gi;
+        while ((match = importRegex.exec(content)) !== null) {
+            const importUrl = match[1];
+            if (importUrl.includes('fonts.googleapis.com')) {
+                const familyParam = importUrl.split('family=')[1];
+                if (familyParam) {
+                    const name = familyParam.split(/[&:]/)[0];
+                    const cleaned = cleanFontName(name);
+                    if (cleaned) fonts.add(cleaned);
+                }
+            }
+        }
+
         // Strategy 2: @font-face declarations
-        const fontFaceRegex = /@font-face\s*\{[^}]*font-family\s*:\s*['"]?([^'";}\n]+)/gi;
-        while ((match = fontFaceRegex.exec(html)) !== null) {
+        const fontFaceRegex = /@font-face\s*\{[^}]*font-family\s*:\s*['"]?([^'";}\n]+)['"]?/gi;
+        while ((match = fontFaceRegex.exec(content)) !== null) {
             const cleaned = cleanFontName(match[1]);
             if (cleaned) fonts.add(cleaned);
         }
 
         // Strategy 3: CSS variables with font names
-        const cssVarFontRegex = /--(?:font|typography)[^:]*:\s*['"]?([A-Z][a-zA-Z\s]+)(?:['"]|,|;)/gi;
-        while ((match = cssVarFontRegex.exec(html)) !== null) {
+        // Matches: --font-primary: "Open Sans", ... or --base-font: Roboto
+        const cssVarFontRegex = /--[\w-]*(?:font|family|typography|main|heading|body)[\w-]*\s*:\s*['"]?([^;}'"]+)['"]?/gi;
+        while ((match = cssVarFontRegex.exec(content)) !== null) {
             const cleaned = cleanFontName(match[1]);
             if (cleaned) fonts.add(cleaned);
         }
 
-        // Strategy 4: Inline font-family with capitalized names (likely custom fonts)
-        const inlineFontRegex = /font-family\s*:\s*['"]?([A-Z][a-zA-Z\s]+)(?:['"]|,|;)/g;
-        while ((match = inlineFontRegex.exec(html)) !== null) {
+        // Strategy 3b: Common class-based font declarations
+        // Matches: .font-heading { font-family: 'Open Sans' }
+        const classFontRegex = /\.[\w-]*(?:font|family|typography)[\w-]*\s*\{[^}]*font-family\s*:\s*['"]?([^'";}\n]+)['"]?/gi;
+        while ((match = classFontRegex.exec(content)) !== null) {
             const cleaned = cleanFontName(match[1]);
             if (cleaned) fonts.add(cleaned);
         }
 
-        // Strategy 5: Adobe Fonts / Typekit
+        // Strategy 4: Main font-family declarations (usually body or main headers)
+        // We look for capitalized names to avoid generic "sans-serif"
+        const inlineFontRegex = /font-family\s*:\s*['"]?([A-Z][a-zA-Z0-s ]+)(?:['"]|,|;)/g;
+        while ((match = inlineFontRegex.exec(content)) !== null) {
+            const cleaned = cleanFontName(match[1]);
+            if (cleaned) fonts.add(cleaned);
+        }
+
+        // Strategy 5: Adobe Fonts / Typekit Detection
         const typekitRegex = /use\.typekit\.net\/([a-z0-9]+)\.css/gi;
-        if (typekitRegex.test(html)) {
-            console.log('🔤 Adobe Fonts/Typekit detected (fonts loaded dynamically)');
+        if (typekitRegex.test(content)) {
+            console.log('🔤 Adobe Fonts/Typekit detected in content');
         }
 
-        // Strategy 6: data-font or data-family attributes
+        // Strategy 6: data-font or data-family attributes (common in builders)
         const dataFontRegex = /data-(?:font|family)=['"]([^'"]+)['"]/gi;
-        while ((match = dataFontRegex.exec(html)) !== null) {
+        while ((match = dataFontRegex.exec(content)) !== null) {
             const cleaned = cleanFontName(match[1]);
             if (cleaned) fonts.add(cleaned);
         }
 
     } catch (error) {
-        console.error('Error extracting fonts from HTML:', error);
+        console.error('Error extracting fonts:', error);
     }
 
-    const result = [...fonts].slice(0, 5);
-    console.log(`🔤 Fonts extracted from HTML: ${result.length} fonts:`, result);
+    const result = [...fonts].slice(0, 8); // Allow up to 8 candidates
     return result;
 }
 
@@ -1098,44 +1128,9 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
         const colors: string[] = [];
         const logoCandidatesScored: LogoCandidate[] = [];
 
-        // === FONT EXTRACTION (Fallback) ===
-        const detectedFonts: string[] = [];
-        // 1. Google Fonts Links
-        $('link[href*="fonts.googleapis.com"]').each((_, el) => {
-            const href = $(el).attr('href');
-            if (href) {
-                try {
-                    const urlObj = new URL(href);
-                    const familyParam = urlObj.searchParams.get('family');
-                    if (familyParam) {
-                        const families = familyParam.split('|');
-                        families.forEach(f => {
-                            const cleanName = f.split(':')[0].replace(/\+/g, ' ');
-                            if (cleanName && !detectedFonts.includes(cleanName)) {
-                                detectedFonts.push(cleanName);
-                            }
-                        });
-                    }
-                } catch (e) { }
-            }
-        });
-
-        // 2. Scan internal styles for font-family
-        $('style').each((_, styleEl) => {
-            const cssContent = $(styleEl).text();
-            const varFontRegex = /--[\w-]*font[\w-]*:\s*['"]?([^;}'"]+)['"]?/gi;
-            let match;
-            while ((match = varFontRegex.exec(cssContent)) !== null) {
-                const fontName = match[1].split(',')[0].trim();
-                if (fontName && !detectedFonts.includes(fontName) && fontName.length > 2) {
-                    detectedFonts.push(fontName);
-                }
-            }
-        });
-
-        if (detectedFonts.length > 0) {
-            console.log(`🔤 Fuentes detectadas (HTML Fallback):`, detectedFonts);
-        }
+        // === FONT EXTRACTION (Robust) ===
+        let detectedFonts: string[] = extractFontsFromContent(html);
+        console.log(`🔤 Fuentes iniciales extraídas: ${detectedFonts.length}`, detectedFonts);
 
         // Meta theme-color
         const themeColor = $('meta[name="theme-color"]').attr('content');
@@ -1635,6 +1630,14 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
                         }
                     }
                     console.log(`✅ CSS procesado: ${Object.keys(rootColors).length} variables encontradas`);
+
+                    // 🔤 Deep Font Audit: Extraer fuentes del CSS
+                    const cssFonts = extractFontsFromContent(cssContent);
+                    cssFonts.forEach(f => {
+                        if (!detectedFonts.includes(f)) {
+                            detectedFonts.push(f);
+                        }
+                    });
 
                     // Extraer HEX
                     const hexMatches = cssContent.match(hexRegex);
@@ -2476,6 +2479,14 @@ ${fullBrandContext.slice(0, 45000)}`;
                 raw_weighted_total: weightedColors.length,
                 raw_visual_total: visualPalette.length,
                 raw_allColors_total: allColors.length,
+                consensus_weights: {
+                    visual: 0.50,
+                    weighted: 0.15,
+                    logo: 0.15,
+                    design: 0.10,
+                    svg: 0.05,
+                    code: 0.05
+                }
             },
         };
 

@@ -428,7 +428,16 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                     aesthetic={data.visual_aesthetic || []}
                     tone={data.tone_of_voice || []}
                     onUpdateTagline={(val) => updateData(prev => ({ ...prev, tagline: val }))}
-                    onUpdateOverview={(val) => updateData(prev => ({ ...prev, business_overview: val }))}
+                    onUpdateOverview={(val) => updateData(prev => ({
+                        ...prev,
+                        business_overview: val,
+                        text_assets: prev.text_assets ? { ...prev.text_assets, brand_context: val } : {
+                            marketing_hooks: [],
+                            visual_keywords: [],
+                            ctas: [],
+                            brand_context: val
+                        }
+                    }))}
                     onUpdateValue={(index, val) => {
                         updateData(prev => ({
                             ...prev,
@@ -473,7 +482,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             </div>
 
             {/* Technical Audit (Debug) */}
-            {(isDebug || isDebug) && <TechnicalAudit data={data} />}
+            {isDebug && <TechnicalAudit data={data} />}
 
             {/* Lightbox */}
             {

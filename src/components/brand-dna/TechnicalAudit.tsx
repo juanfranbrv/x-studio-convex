@@ -90,6 +90,41 @@ export function TechnicalAudit({ data }: TechnicalAuditProps) {
                     </div>
                 </div>
 
+                {/* Motor de Consenso (Lógica de Pesos) */}
+                <div className="p-4 rounded-xl bg-slate-900/60 border border-emerald-500/20 shadow-inner">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Bug className="w-4 h-4 text-emerald-500" />
+                        <h4 className="text-xs font-bold text-slate-100 uppercase tracking-widest">
+                            Motor de Consenso: Lógica de Ponderación
+                        </h4>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+                        {[
+                            { id: 'visual', label: 'Visual Grid', weight: data.debug?.consensus_weights?.visual || 0.50, color: 'text-emerald-400' },
+                            { id: 'weighted', label: 'Weighted DOM', weight: data.debug?.consensus_weights?.weighted || 0.15, color: 'text-blue-400' },
+                            { id: 'logo', label: 'Logo Audit', weight: data.debug?.consensus_weights?.logo || 0.15, color: 'text-orange-400' },
+                            { id: 'design', label: 'Design Intent', weight: data.debug?.consensus_weights?.design || 0.10, color: 'text-purple-400' },
+                            { id: 'svg', label: 'SVG Palette', weight: data.debug?.consensus_weights?.svg || 0.05, color: 'text-pink-400' },
+                            { id: 'code', label: 'Code Sweep', weight: data.debug?.consensus_weights?.code || 0.05, color: 'text-slate-400' },
+                        ].map((w) => (
+                            <div key={w.id} className="flex flex-col items-center p-2 rounded bg-black/40 border border-slate-800">
+                                <span className="text-[9px] text-slate-500 font-bold uppercase mb-1">{w.label}</span>
+                                <span className={`text-sm font-black ${w.color}`}>{(w.weight * 100).toFixed(0)}%</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="text-[10px] text-slate-500 leading-relaxed bg-black/20 p-3 rounded border border-white/5">
+                        <p className="mb-2 italic">
+                            <TriangleAlert className="w-3 h-3 inline-block mr-1 text-orange-500" />
+                            <strong>Lógica de Redundancia:</strong> Si un color aparece en múltiples fuentes, recibe un bono multiplicador:
+                            <span className="text-slate-300 ml-1">2 fuentes (1.5x), 3 fuentes (2.5x), 4+ fuentes (5.0x)</span>.
+                        </p>
+                        <p>
+                            Los colores son agrupados mediante <strong>Delta-E (perceptual)</strong> con un umbral de &lt; 10 para evitar duplicidad de tonos visualmente idénticos.
+                        </p>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
                         <h4 className="text-slate-100 mb-4 text-sm font-bold uppercase tracking-wider">Candidatos a Logo (Scored)</h4>

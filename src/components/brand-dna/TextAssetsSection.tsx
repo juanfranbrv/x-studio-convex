@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +55,13 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
     const [editingItem, setEditingItem] = useState<{ section: keyof TextAssets; index: number } | null>(null);
     const [editValue, setEditValue] = useState('');
     const [isEditingContext, setIsEditingContext] = useState(false);
+
+    // Sincronizar estado interno cuando cambian los props (para edición bidireccional)
+    useEffect(() => {
+        if (data) {
+            setAssets(data);
+        }
+    }, [data]);
 
     const updateAssets = (newAssets: TextAssets) => {
         setAssets(newAssets);
