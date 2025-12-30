@@ -2142,3 +2142,75 @@
   "message": "Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 30.815607005s.",
   "stack": "AI_RetryError: Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 30.815607005s.\n    at _retryWithExponentialBackoff (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2278:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async fn (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8892:40)\n    at async F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:2056:28\n    at async generateObject (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_ai_dist_index_mjs_7a62fa11._.js:8845:16)\n    at async analyzeBrandDNA (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\[root-of-the-server]__3e85682f._.js:2754:32)\n    at async executeActionAndPrepareForRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:3803)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:36:1109\n    at async handleAction (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:34:23598)\n    at async renderToHTMLOrFlightImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:41:42106)\n    at async doRender (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:2831:28)\n    at async AppPageRouteModule.handleResponse (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\compiled\\next-server\\app-page-turbo.runtime.dev.js:43:64241)\n    at async handleResponse (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3037:32)\n    at async Module.handler (F:\\_PROYECTOS\\x-studio-convex\\.next\\dev\\server\\chunks\\ssr\\node_modules_next_dist_edb46ba1._.js:3408:20)\n    at async DevServer.renderToResponseWithComponentsImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1422:9)\n    at async DevServer.renderPageComponent (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1474:24)\n    at async DevServer.renderToResponseImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1524:32)\n    at async DevServer.pipeImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:1018:25)\n    at async NextNodeServer.handleCatchallRenderRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\next-server.js:395:17)\n    at async DevServer.handleRequestImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\base-server.js:909:17)\n    at async F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:387:20\n    at async Span.traceAsyncFn (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\trace\\trace.js:157:20)\n    at async DevServer.handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\dev\\next-dev-server.js:383:24)\n    at async invokeRender (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:248:21)\n    at async handleRequest (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:447:24)\n    at async requestHandlerImpl (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\router-server.js:496:13)\n    at async Server.requestListener (F:\\_PROYECTOS\\x-studio-convex\\node_modules\\next\\dist\\server\\lib\\start-server.js:226:13)"
 }
+[2025-12-30T22:09:26.685Z] 📄 HTML cargado. Longitud: 77257 caracteres.
+[2025-12-30T22:09:26.685Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-30T22:09:26.687Z] 🔤 Fuentes iniciales extraídas: 2 ["Open Sans","Abel"]
+[2025-12-30T22:09:26.691Z] 🔍 Favicon encontrado: https://macmeliana.com/wp-content/uploads/2018/06/favicon-32x32.png (4 candidatos)
+[2025-12-30T22:09:26.709Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-30T22:09:26.710Z]    - SVGs en header encontrados: 1
+[2025-12-30T22:09:26.710Z]    - IMGs en header encontrados: 13
+[2025-12-30T22:09:26.711Z]    - firstHeaderSvg.length: 1
+[2025-12-30T22:09:26.711Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 223 caracteres
+[2025-12-30T22:09:26.712Z] 🎯 BOOST: SVG existente en header potenciado (+300) - Score final: 420
+[2025-12-30T22:09:26.713Z] 🖼️ Logo candidates encontrados: 14 (Top score: 420)
+[2025-12-30T22:09:26.713Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-30T22:09:26.713Z]    1. SVG inline - Score: 420 - Length: 223 chars
+[2025-12-30T22:09:26.713Z]    2. URL: https://macmeliana.com/wp-content/uploads/2018/06/logo.png - Score: 350
+[2025-12-30T22:09:26.714Z]    3. URL: https://macmeliana.com/wp-content/uploads/2024/03/logoco2n.png - Score: 310
+[2025-12-30T22:09:26.714Z]    4. URL: https://macmeliana.com/wp-content/uploads/2024/03/logomel.png - Score: 310
+[2025-12-30T22:09:26.714Z]    5. URL: https://macmeliana.com/wp-content/uploads/2019/03/logo1.png - Score: 310
+[2025-12-30T22:09:40.202Z] ✅ Gemini Response: {
+  "brand_name": "Agrupació de Comerciants i Professionals de Meliana MAC",
+  "tagline": "Un comerç, un amic",
+  "business_overview": "MAC Meliana és l'agrupació de comerciants i professionals que impulsa la dinamització econòmica i social de Meliana. L'associació organitza fires, concursos i campanyes temàtiques per fomentar la compra local i establir el municipi com un centre comercial obert. També ofereix un directori complet per connectar els consumidors amb una àmplia gamma de serveis i productes locals.",
+  "brand_values": [
+    "Proximitat",
+    "Comunitat",
+    "Dinamisme",
+    "Confiança",
+    "Promoció Local"
+  ],
+  "tone_of_voice": [
+    "Cercà",
+    "Dinàmic",
+    "Comunitari"
+  ],
+  "visual_aesthetic": [
+    "Acolorit",
+    "Festiu",
+    "Funcional"
+  ],
+  "colors": [
+    "#FF0000",
+    "#00008E",
+    "#008E00",
+    "#FCB900",
+    "#FFFFFF"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Roboto"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Meliana, el teu centre comercial obert.",
+      "Descobreix el comerç local amb més color i premis.",
+      "Participa en el XXI Concurs Fotogràfic i guanya 200€!",
+      "Super ofertes i animació infantil a la Fira Outlet de Meliana.",
+      "Fes amics comprant: Troba el teu comerç al directori MAC."
+    ],
+    "visual_keywords": [
+      "Fira local i animada",
+      "Colors vibrants de campanya",
+      "Comerç divers i proper",
+      "Ambient familiar i festiu",
+      "Esdeveniments municipals"
+    ],
+    "ctas": [
+      "EXPLORA EL DIRECTORI",
+      "Coneix-nos. Associa’t a la MAC",
+      "Inscriu-te al Concurs Fotogràfic"
+    ],
+    "brand_context": "La MAC (Agrupació de Comerciants i Professionals de Meliana) és l’entitat clau en la dinamització del teixit empresarial local, operant des del Carrer La Font, 9. Implementen estratègies de màrqueting participatiu com la campanya 'donem color al COMERÇ LOCAL', que classifica el comerç en 7 sectors identificats per colors (Roig per Alimentació, Verd per Bellesa i salut, etc.), oferint sortejos sectorials (motxilles, davantals) i un gran premi final de 2 viatges de cap de setmana. A més, organitzen la Fira Outlet amb activitats lúdiques (DJ, animacions infantils) i el tradicional Concurs Fotogràfic amb dotacions econòmiques significatives per les categories de Tema Lliure i Oficis (200€ cadascuna). Promouen activament la compra local sota el lema 'Meliana, el teu centre comercial obert'."
+  }
+}

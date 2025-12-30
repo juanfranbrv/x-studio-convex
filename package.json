@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.1",
+    "@ai-sdk/groq": "^3.0.2",
     "@ai-sdk/openai": "^3.0.1",
     "@clerk/localizations": "^3.32.1",
     "@clerk/nextjs": "^6.36.5",
