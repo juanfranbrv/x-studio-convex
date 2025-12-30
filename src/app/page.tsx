@@ -1,8 +1,11 @@
 import Link from 'next/link'
 import { Bot, ArrowRight, Sparkles, Palette, Layers, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { auth } from '@clerk/nextjs/server'
+import { UserButton } from '@clerk/nextjs'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { userId } = await auth()
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -17,17 +20,30 @@ export default function HomePage() {
             <span className="text-xl font-bold font-heading">X Studio</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" asChild>
-              <Link href="/sign-in">
-                Iniciar sesión
-              </Link>
-            </Button>
-            <Button className="btn-gradient" asChild>
-              <Link href="/sign-up">
-                Comenzar gratis
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
-            </Button>
+            {userId ? (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/brand-kit">
+                    Ir al Dashboard
+                  </Link>
+                </Button>
+                <UserButton afterSignOutUrl="/" />
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/sign-in">
+                    Iniciar sesión
+                  </Link>
+                </Button>
+                <Button className="btn-gradient" asChild>
+                  <Link href="/sign-up">
+                    Comenzar gratis
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </nav>
 
