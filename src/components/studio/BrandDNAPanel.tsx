@@ -412,13 +412,13 @@ export function BrandDNAPanel({
     const SectionHeader = ({ icon: Icon, title, count, maxCount, isOpen, extra }: {
         icon: any, title: string, count?: number, maxCount?: number, isOpen: boolean, extra?: React.ReactNode
     }) => (
-        <CollapsibleTrigger className="flex items-center justify-between w-full px-1 py-1.5 hover:bg-muted/30 rounded-md transition-colors group">
-            <div className="flex items-center gap-1.5 text-muted-foreground/70">
-                <Icon className="w-3.5 h-3.5" />
-                <span className="text-[10px] uppercase tracking-wider font-bold">
+        <CollapsibleTrigger className="flex items-center justify-between w-full px-1 py-0.5 hover:bg-muted/30 rounded-md transition-colors group">
+            <div className="flex items-center gap-2 text-foreground">
+                <Icon className="w-4 h-4" />
+                <span className="text-[13px] uppercase tracking-wide font-bold">
                     {title}
                     {count !== undefined && maxCount !== undefined && (
-                        <span className="text-[9px] opacity-40 ml-1">({count}/{maxCount})</span>
+                        <span className="text-[10px] opacity-50 ml-1">({count}/{maxCount})</span>
                     )}
                 </span>
             </div>
@@ -434,7 +434,7 @@ export function BrandDNAPanel({
 
 
     return (
-        <div className="w-[340px] h-full bg-card border-r border-border flex flex-col gap-1 overflow-hidden relative">
+        <div className="w-[340px] h-full bg-card border-r-2 border-border flex flex-col gap-1 overflow-hidden relative">
             {/* Lightbox Viewer */}
             {viewerImage && (
                 <div
@@ -458,7 +458,7 @@ export function BrandDNAPanel({
             <div className="p-2 flex flex-col gap-1 overflow-y-auto scrollbar-thin flex-1">
                 {/* COLORS SECTION */}
                 <Collapsible open={openSections.colors} onOpenChange={() => toggleSection('colors')}>
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                         <SectionHeader
                             icon={Palette}
                             title={t('brandDNA.colorPalette')}
@@ -470,7 +470,7 @@ export function BrandDNAPanel({
                             )}
                         />
                         <CollapsibleContent>
-                            <div className="bg-muted/20 rounded-xl p-2">
+                            <div className="bg-muted/20 rounded-xl p-1">
                                 <ColorPalette
                                     colors={colors}
                                     isEdited={hasUnsavedChanges}
@@ -489,6 +489,8 @@ export function BrandDNAPanel({
                         </CollapsibleContent>
                     </div>
                 </Collapsible>
+
+                <hr className="border-t-2 border-border/50 my-1 -mx-2" />
 
                 {/* LOGOS SECTION */}
                 <Collapsible open={openSections.logos} onOpenChange={() => toggleSection('logos')}>
@@ -573,6 +575,8 @@ export function BrandDNAPanel({
                         </CollapsibleContent>
                     </div>
                 </Collapsible>
+
+                <hr className="border-t-2 border-border/50 my-1 -mx-2" />
 
                 {/* IMAGES SECTION */}
                 <Collapsible open={openSections.images} onOpenChange={() => toggleSection('images')}>
@@ -744,6 +748,8 @@ export function BrandDNAPanel({
                     </div>
                 </Collapsible>
 
+                <hr className="border-t-2 border-border/50 my-1 -mx-2" />
+
                 {/* TYPOGRAPHY SECTION */}
                 <Collapsible open={openSections.typography} onOpenChange={() => toggleSection('typography')}>
                     <div className="space-y-1">
@@ -767,6 +773,8 @@ export function BrandDNAPanel({
                         </CollapsibleContent>
                     </div>
                 </Collapsible>
+
+                <hr className="border-t-2 border-border/50 my-1 -mx-2" />
 
                 {/* TEXT ASSETS SECTION */}
                 <Collapsible open={openSections.textAssets} onOpenChange={() => toggleSection('textAssets')}>
@@ -840,6 +848,8 @@ export function BrandDNAPanel({
                         </CollapsibleContent>
                     </div>
                 </Collapsible>
+
+                <hr className="border-t-2 border-border/50 my-1 -mx-2" />
 
                 {/* LINKS & CONTACT SECTION */}
                 <Collapsible open={openSections.links} onOpenChange={() => toggleSection('links')}>

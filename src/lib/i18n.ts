@@ -10,7 +10,7 @@ const resources = {
                 home: 'Inicio',
                 studio: 'Estudio',
                 brands: 'Marcas',
-                settings: 'Configuración',
+                settings: 'Config',
             },
             // Brand DNA Panel
             brandDNA: {

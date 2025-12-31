@@ -125,28 +125,6 @@ export function CampaignBriefPanel({ onGenerate, isGenerating = false }: Campaig
                     </div>
                 </CardContent>
             </Card>
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Generate Button */}
-            <Button
-                onClick={handleGenerate}
-                disabled={isGenerating || !prompt.trim()}
-                className="w-full h-12 btn-gradient font-semibold text-base gap-2 glow-primary"
-            >
-                {isGenerating ? (
-                    <>
-                        <CircularProgress size={20} color="inherit" />
-                        {t('campaign.generating')}
-                    </>
-                ) : (
-                    <>
-                        {t('campaign.generate')}
-                        <AutoAwesomeIcon fontSize="small" />
-                    </>
-                )}
-            </Button>
         </div>
     )
 }

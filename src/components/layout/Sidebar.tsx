@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
-import { Bot, Home, Palette, Type, Image, Settings, Sparkles } from 'lucide-react'
+import { Bot, Home, Palette, Type, Image, Settings, FileSpreadsheet } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -13,7 +13,7 @@ interface SidebarProps {
 
 const navItems = [
     { icon: Home, label: 'nav.home', href: '/' },
-    { icon: Sparkles, label: 'Brand Kit', href: '/brand-kit' },
+    { icon: FileSpreadsheet, label: 'Brand Kit', href: '/brand-kit' },
     { icon: Palette, label: 'nav.studio', href: '/studio' },
     { icon: Type, label: 'brandDNA.typography', href: '/studio' },
     { icon: Image, label: 'canvas.title', href: '/studio' },
@@ -37,16 +37,16 @@ export function Sidebar({ className }: SidebarProps) {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 flex flex-col items-center gap-3 py-4">
+            <nav className="flex-1 flex flex-col items-center gap-6 py-4">
                 {navItems.map((item) => (
-                    <Link key={item.label} href={item.href} className="flex flex-col items-center gap-1 group">
+                    <Link key={item.label} href={item.href} className="flex flex-col items-center gap-0.5 group w-full">
                         <Button
                             variant="ghost"
                             className="w-14 h-14 p-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         >
                             <item.icon className="size-7" strokeWidth={2} />
                         </Button>
-                        <span className="text-[9px] text-sidebar-foreground/70 group-hover:text-sidebar-accent-foreground font-medium text-center leading-tight">
+                        <span className="text-xs text-sidebar-foreground group-hover:text-primary font-semibold text-center leading-none w-full px-1">
                             {item.label.includes('.') ? t(item.label) : item.label}
                         </span>
                     </Link>
@@ -54,11 +54,11 @@ export function Sidebar({ className }: SidebarProps) {
             </nav>
 
             {/* Settings at bottom */}
-            <div className="flex flex-col items-center gap-1 py-4 border-t border-sidebar-border">
+            <div className="flex flex-col items-center gap-0.5 py-4 border-t border-sidebar-border">
                 <Button variant="ghost" className="w-14 h-14 p-0 text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                     <Settings className="size-7" strokeWidth={2} />
                 </Button>
-                <span className="text-[9px] text-sidebar-foreground/70 font-medium">
+                <span className="text-xs text-sidebar-foreground font-semibold text-center leading-none">
                     {t('nav.settings')}
                 </span>
             </div>

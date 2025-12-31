@@ -37,11 +37,13 @@ export async function POST(request: NextRequest) {
             imageUrl
         })
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Generation error:', error)
+        const status = error.status || 500
+        const message = error.message || 'Failed to generate image'
         return NextResponse.json(
-            { error: 'Failed to generate image' },
-            { status: 500 }
+            { error: message },
+            { status }
         )
     }
 }

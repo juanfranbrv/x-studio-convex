@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useBrandKit } from '@/contexts/BrandKitContext'
+import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { BrandDNAPanel } from '@/components/studio/BrandDNAPanel'
 import { CanvasPanel } from '@/components/studio/CanvasPanel'
@@ -29,6 +30,7 @@ export default function StudioPage() {
     const router = useRouter()
     const { activeBrandKit, brandKits, loading, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const [isGenerating, setIsGenerating] = useState(false)
+    const { toast } = useToast()
     const [currentImage, setCurrentImage] = useState<string | null>(null)
     const [generations, setGenerations] = useState<Generation[]>([])
     const [selectedContext, setSelectedContext] = useState<ContextElement[]>([])
@@ -43,9 +45,9 @@ export default function StudioPage() {
 
 
     const handleGenerate = async (data: {
-        platform: string
-        headline: string
-        cta: string
+        platform?: string
+        headline?: string
+        cta?: string
         prompt: string
     }) => {
         if (!activeBrandKit) return
@@ -82,6 +84,11 @@ export default function StudioPage() {
             }
         } catch (error) {
             console.error('Generation failed:', error)
+            toast({
+                title: "Error de generación",
+                description: "No se pudo generar la imagen. Inténtalo de nuevo en unos momentos.",
+                variant: "destructive",
+            })
         } finally {
             setIsGenerating(false)
         }
@@ -128,6 +135,8 @@ export default function StudioPage() {
                         onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
                         onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
                         draggedElement={draggedElement}
+                        onGenerate={(prompt) => handleGenerate({ prompt })}
+                        isGenerating={isGenerating}
                     />
 
                     {/* Right: Campaign Brief */}

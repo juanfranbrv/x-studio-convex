@@ -145,10 +145,10 @@ export function ColorPalette({
                         </CardHeader>
                     </>
                 )}
-                <CardContent className={cn("relative space-y-4 overflow-visible", hideHeader && "p-0")}>
+                <CardContent className={cn("relative space-y-1 overflow-visible", hideHeader && "p-0")}>
                     <div className={cn(
-                        "grid gap-2",
-                        hideHeader ? "grid-cols-4 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
+                        "grid gap-3",
+                        hideHeader ? "grid-cols-5" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
                     )}>
                         {colors.map((item, idx) => (
                             <div key={idx} className="group relative">
@@ -172,7 +172,7 @@ export function ColorPalette({
                                                     })}
                                                     onDragEnd={onDragEnd}
                                                     className={cn(
-                                                        "aspect-square rounded-lg cursor-grab active:cursor-grabbing transition-all duration-300",
+                                                        "aspect-square rounded-full cursor-grab active:cursor-grabbing transition-all duration-300",
                                                         "hover:scale-105 hover:shadow-xl border-2 border-border",
                                                         "hover:border-primary relative overflow-visible",
                                                         colorPickerOpen === idx ? 'border-primary ring-2 ring-primary/20' : '',
@@ -275,7 +275,7 @@ export function ColorPalette({
                         {colors.length < 10 && (
                             <div
                                 onClick={onAddColor}
-                                className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary flex items-center justify-center transition-colors group bg-muted/50 cursor-pointer w-full"
+                                className="aspect-square rounded-full border-2 border-dashed border-border hover:border-primary flex items-center justify-center transition-colors group bg-muted/50 cursor-pointer w-full"
                             >
                                 <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                             </div>

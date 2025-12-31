@@ -9,7 +9,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 import RestartAltIcon from '@mui/icons-material/RestartAlt'
-import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { Button } from '@/components/ui/button'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
@@ -40,6 +40,8 @@ interface CanvasPanelProps {
     onRemoveContext?: (id: string) => void
     onAddContext?: (element: ContextElement) => void
     draggedElement?: ContextElement | null
+    onGenerate: (prompt: string) => void
+    isGenerating: boolean
 }
 
 export function CanvasPanel({
@@ -52,6 +54,8 @@ export function CanvasPanel({
     onRemoveContext,
     onAddContext,
     draggedElement,
+    onGenerate,
+    isGenerating
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const [zoom, setZoom] = useState(100)
@@ -104,7 +108,7 @@ export function CanvasPanel({
     return (
         <div className="flex-1 flex flex-col h-full bg-background">
             {/* Canvas Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div className="flex items-center justify-between px-4 py-3 border-b-2 border-border">
                 <h2 className="text-lg font-semibold font-heading">{t('canvas.title')}</h2>
                 <div className="flex items-center gap-2">
                     <Button
@@ -135,7 +139,7 @@ export function CanvasPanel({
             </div>
 
             {/* Main Canvas Area */}
-            <div className="flex-1 relative flex items-center justify-center p-8 overflow-hidden">
+            <div className="flex-1 relative flex items-center justify-center p-8 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                 {currentImage ? (
                     <div
                         className="relative transition-transform duration-200"
@@ -161,10 +165,10 @@ export function CanvasPanel({
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
-                        <div className="w-32 h-32 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                            <span className="text-5xl">🎨</span>
+                        <div className="w-16 h-16 rounded-2xl bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center mb-3">
+                            <span className="text-3xl">🎨</span>
                         </div>
-                        <p className="text-lg">{t('canvas.noImage')}</p>
+                        <p className="text-base font-medium text-muted-foreground/80">{t('canvas.noImage')}</p>
                     </div>
                 )}
 
@@ -186,9 +190,9 @@ export function CanvasPanel({
             </div>
 
             {/* Footer Area: History & Prompt */}
-            <div className="border-t border-border bg-muted/20">
+            <div className="border-t-2 border-border bg-muted/20">
                 {/* Version History Row */}
-                <div className="px-4 py-2 border-b border-border/50">
+                <div className="px-4 py-2 border-b-2 border-border/50">
                     <ScrollArea className="w-full">
                         <div className="flex gap-2 min-h-[70px] py-1">
                             {generations.map((gen) => (
@@ -224,7 +228,12 @@ export function CanvasPanel({
 
                 {/* Staging Area / Context Drawer */}
                 {selectedContext.length > 0 && (
-                    <div className="px-4 py-2 border-b border-border/30 bg-muted/10">
+                    <div
+                        className="px-4 py-2 bg-background/50"
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                    >
                         <div className="flex flex-wrap gap-2">
                             {selectedContext.map((item) => (
                                 <div
@@ -353,7 +362,7 @@ export function CanvasPanel({
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     className={cn(
-                        "p-3 bg-background/50 backdrop-blur-md transition-all duration-300 relative",
+                        "p-3 pt-2 bg-background/50 backdrop-blur-md transition-all duration-300 relative",
                         isDraggingOver ? "bg-primary/10 ring-2 ring-primary ring-inset shadow-[0_0_20px_rgba(var(--primary),0.2)]" : ""
                     )}
                 >
@@ -370,7 +379,7 @@ export function CanvasPanel({
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
                                 placeholder="Describe los cambios..."
-                                className="pr-12 min-h-[50px] max-h-[120px] py-3 resize-none bg-background/80 border-border/50 focus:border-primary/50 transition-all rounded-xl shadow-inner text-sm"
+                                className="pr-12 min-h-[50px] max-h-[120px] py-3 resize-none bg-background/80 border-border/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all rounded-xl shadow-inner text-sm"
                             />
                             <div className="absolute right-3 bottom-3 flex items-center gap-2">
                                 <Button
@@ -388,10 +397,20 @@ export function CanvasPanel({
                         <Button
                             size="sm"
                             className="h-10 px-4 btn-gradient rounded-xl font-semibold gap-2 shadow-lg glow-primary transition-transform active:scale-95 shrink-0 mb-1"
-                            disabled={!prompt.trim() && selectedContext.length === 0}
+                            disabled={isGenerating || (!prompt.trim() && selectedContext.length === 0)}
+                            onClick={() => onGenerate(prompt)}
                         >
-                            <span className="text-xs">Lanzar</span>
-                            <KeyboardReturnIcon style={{ fontSize: 16 }} />
+                            {isGenerating ? (
+                                <>
+                                    <span className="text-xs">Generando...</span>
+                                    <span className="loading loading-spinner loading-xs"></span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="text-xs">Generar</span>
+                                    <AutoAwesomeIcon style={{ fontSize: 16 }} />
+                                </>
+                            )}
                         </Button>
                     </div>
                 </div>
@@ -403,6 +422,6 @@ export function CanvasPanel({
                 onSelect={handleSelectTemplate}
                 selectedTemplateId={selectedContext.find(c => c.type === 'template')?.id}
             />
-        </div>
+        </div >
     )
 }
