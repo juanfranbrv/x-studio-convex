@@ -67,7 +67,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, is
                         Logo de marca
                     </div>
                     <span className="text-xs font-normal text-muted-foreground">
-                        {effectiveLogos.length}/5
+                        {effectiveLogos.length}/6
                     </span>
                 </CardTitle>
             </CardHeader>
@@ -78,7 +78,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, is
                         onClick={handleUploadClick}
                     >
                         <Building2 className="w-8 h-8 mb-2" />
-                        <p className="text-xs">Subir logos (Max 5)</p>
+                        <p className="text-xs">Subir logos (Max 6)</p>
                         <input
                             type="file"
                             className="hidden"
@@ -128,7 +128,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, is
                         ))}
 
                         {/* Upload Button inside Grid */}
-                        {effectiveLogos.length < 5 && (
+                        {effectiveLogos.length < 6 && (
                             <div
                                 className={cn(
                                     "aspect-square rounded-md border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:bg-accent/50 hover:border-primary/50 transition-colors gap-1 text-muted-foreground hover:text-primary",

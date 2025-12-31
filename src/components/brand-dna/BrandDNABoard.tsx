@@ -217,11 +217,11 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
 
         // Check limit
         const currentCount = (data.logos?.length || (data.logo_url ? 1 : 0));
-        if (currentCount + files.length > 5) {
+        if (currentCount + files.length > 6) {
             setErrorModal({
                 open: true,
                 title: 'Límite Excedido',
-                message: 'Solo puedes tener hasta 5 logos.'
+                message: 'Solo puedes tener hasta 6 logos.'
             });
             return;
         }

@@ -2773,7 +2773,7 @@ ${fullBrandContext.slice(0, 45000)}`;
                 logos.push({ url: processedLogo, selected: logos.length === 0 });
                 console.log(`✅ Logo #${logos.length} subido: ${processedLogo}`);
 
-                if (logos.length >= 5) break; // Máximo 5 logos por ahora
+                if (logos.length >= 6) break; // Máximo 6 logos
             }
         }
 
@@ -2990,6 +2990,7 @@ ${fullBrandContext.slice(0, 45000)}`;
                 fonts: result.fonts,
                 text_assets: result.text_assets,
                 logo_url: result.logo_url,
+                logos: result.logos,
                 favicon_url: result.favicon_url,
                 screenshot_url: result.screenshot_url,
                 images: result.images,

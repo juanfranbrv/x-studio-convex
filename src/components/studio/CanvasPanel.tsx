@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/studio/page'
-import { Layout, X, Image as ImageIcon } from 'lucide-react'
+import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Generation {
@@ -253,7 +253,28 @@ export function CanvasPanel({
                                         </div>
                                     )}
 
-                                    {(item.type === 'color' || item.type === 'template') && (
+                                    {/* Font */}
+                                    {item.type === 'font' && (
+                                        <Type className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                                    )}
+
+                                    {/* Text assets */}
+                                    {item.type === 'text' && (
+                                        <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                    )}
+
+                                    {/* Links */}
+                                    {item.type === 'link' && (
+                                        <Link2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                    )}
+
+                                    {/* Contact */}
+                                    {item.type === 'contact' && (
+                                        <AtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                                    )}
+
+                                    {/* Label for non-image types */}
+                                    {(item.type === 'color' || item.type === 'template' || item.type === 'font' || item.type === 'text' || item.type === 'link' || item.type === 'contact') && (
                                         <span className="text-[11px] font-medium max-w-[120px] truncate">
                                             {item.label || item.value}
                                         </span>
@@ -294,7 +315,28 @@ export function CanvasPanel({
                                             />
                                         </div>
                                     )}
-                                    {(draggedElement.type === 'color' || draggedElement.type === 'template') && (
+
+                                    {/* Font */}
+                                    {draggedElement.type === 'font' && (
+                                        <Type className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                                    )}
+
+                                    {/* Text assets */}
+                                    {draggedElement.type === 'text' && (
+                                        <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                    )}
+
+                                    {/* Links */}
+                                    {draggedElement.type === 'link' && (
+                                        <Link2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                    )}
+
+                                    {/* Contact */}
+                                    {draggedElement.type === 'contact' && (
+                                        <AtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                                    )}
+
+                                    {(draggedElement.type === 'color' || draggedElement.type === 'template' || draggedElement.type === 'font' || draggedElement.type === 'text' || draggedElement.type === 'link' || draggedElement.type === 'contact') && (
                                         <span className="text-[11px] font-medium opacity-50">
                                             {draggedElement.label}
                                         </span>

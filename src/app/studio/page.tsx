@@ -16,7 +16,7 @@ interface Generation {
     created_at: string
 }
 
-export type ContextType = 'color' | 'logo' | 'template' | 'image'
+export type ContextType = 'color' | 'logo' | 'template' | 'image' | 'font' | 'text' | 'link' | 'contact'
 
 export interface ContextElement {
     id: string

@@ -1,21 +1,60 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import type { BrandDNA } from '@/lib/brand-types'
 import { ColorPalette } from '@/components/brand-dna/ColorPalette'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Image, Check, Plus, Trash2, Upload, Maximize2, Loader2, X, Search, ZoomIn } from 'lucide-react'
+import { Palette, Image, Check, Plus, X, ZoomIn, ChevronDown, Type, FileText, Link2, AtSign, Phone, MapPin, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTheme } from 'next-themes'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
-import { ContextElement } from '@/app/studio/page'
+import { ContextElement, ContextType } from '@/app/studio/page'
+
+// Extracted DraggableChip component to avoid re-creation on parent re-renders
+interface DraggableChipProps {
+    id: string
+    type: ContextType
+    value: string
+    label: string
+    icon?: React.ComponentType<{ className?: string }>
+    isSelected: boolean
+    onDragStart: (e: React.DragEvent, element: ContextElement) => void
+    onDragEnd: () => void
+    onToggle: () => void
+}
+
+function DraggableChip({ id, type, value, label, icon: Icon, isSelected, onDragStart, onDragEnd, onToggle }: DraggableChipProps) {
+    return (
+        <div
+            draggable={true}
+            onDragStart={(e) => {
+                e.stopPropagation()
+                onDragStart(e, { id, type, value, label })
+            }}
+            onDragEnd={onDragEnd}
+            onClick={(e) => {
+                e.stopPropagation()
+                onToggle()
+            }}
+            className={cn(
+                "inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium cursor-grab active:cursor-grabbing transition-all border select-none",
+                isSelected
+                    ? "bg-primary/10 text-primary border-primary/30 shadow-sm"
+                    : "bg-muted/30 text-muted-foreground border-transparent hover:border-border hover:bg-muted/50"
+            )}
+        >
+            {Icon && <Icon className="w-3 h-3 opacity-60 pointer-events-none" />}
+            <span className="truncate max-w-[180px] pointer-events-none">{label}</span>
+            {isSelected && <Check className="w-3 h-3 ml-0.5 pointer-events-none" />}
+        </div>
+    )
+}
 
 interface BrandDNAPanelProps {
     brandDNA: BrandDNA
@@ -45,7 +84,20 @@ export function BrandDNAPanel({
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
     const [viewerImage, setViewerImage] = useState<string | null>(null)
 
-    // Sync when initialData changes
+    // Accordion state - sections open by default
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+        colors: true,
+        logos: true,
+        images: true,
+        typography: false,
+        textAssets: false,
+        links: false,
+    })
+
+    const toggleSection = (section: string) => {
+        setOpenSections(prev => ({ ...prev, [section]: !prev[section] }))
+    }
+
     // Sync with initialData only when brand ID changes or there are no unsaved changes
     useEffect(() => {
         const isSameBrand = initialData.id && data.id && initialData.id === data.id;
@@ -54,14 +106,14 @@ export function BrandDNAPanel({
             setData(initialData);
             setHasUnsavedChanges(false);
         }
-    }, [initialData.id]); // Solo re-sync si cambia el ID del Brand Kit activo
+    }, [initialData.id]);
 
     // Auto-save logic
     useEffect(() => {
         if (hasUnsavedChanges && !isSaving) {
             const timer = setTimeout(() => {
                 handleSave()
-            }, 2000) // 2 seconds debounce
+            }, 2000)
             return () => clearTimeout(timer)
         }
     }, [data, hasUnsavedChanges, isSaving])
@@ -87,7 +139,7 @@ export function BrandDNAPanel({
         })
     }, [])
 
-    const { colors = [], fonts = [], brand_name, logo_url, logos = [], tone_of_voice = [] } = data
+    const { colors = [], fonts = [], brand_name, logo_url, logos = [], tone_of_voice = [], tagline, brand_values = [], visual_aesthetic = [], url, social_links = [], emails = [], phones = [], addresses = [] } = data
 
     // Handlers for ColorPalette
     const handleAddColor = () => {
@@ -200,7 +252,6 @@ export function BrandDNAPanel({
 
         updateData(prev => {
             const newLogos = [...(prev.logos || [])]
-            // Deselect all others if we select this one
             newLogos.forEach((l, i) => {
                 if (i !== idx) l.selected = false
                 else l.selected = !l.selected
@@ -216,7 +267,6 @@ export function BrandDNAPanel({
     const handleRemoveLogo = (idx: number) => {
         updateData(prev => {
             const newLogos = prev.logos?.filter((_, i) => i !== idx) || []
-            // If we removed the selected one, select the first available or clear logo_url
             const hasSelected = newLogos.some(l => l.selected)
             if (!hasSelected && newLogos.length > 0) {
                 newLogos[0].selected = true
@@ -233,7 +283,7 @@ export function BrandDNAPanel({
         if (!e.target.files) return
         const files = Array.from(e.target.files)
         const currentCount = logos.length
-        const remaining = 5 - currentCount
+        const remaining = 6 - currentCount
         if (remaining <= 0) return
 
         const toUpload = files.slice(0, remaining)
@@ -330,7 +380,6 @@ export function BrandDNAPanel({
     const handleDragStart = (e: React.DragEvent, element: ContextElement) => {
         const jsonData = JSON.stringify(element)
         e.dataTransfer.setData('application/x-studio-context', jsonData)
-        // Fallback for standard drag handle support
         e.dataTransfer.setData('text/plain', element.label || element.value)
         e.dataTransfer.effectAllowed = 'copy'
         onSetDraggedElement?.(element)
@@ -340,8 +389,52 @@ export function BrandDNAPanel({
         onSetDraggedElement?.(null)
     }
 
+    // Helper to generate common chip props
+    const chipProps = (id: string, type: ContextType, value: string, label: string) => ({
+        id,
+        type,
+        value,
+        label,
+        isSelected: selectedContext.some(c => c.id === id),
+        onDragStart: handleDragStart,
+        onDragEnd: handleDragEnd,
+        onToggle: () => {
+            const isSelected = selectedContext.some(c => c.id === id)
+            if (isSelected) {
+                onRemoveContext?.(id)
+            } else {
+                onAddContext?.({ id, type, value, label })
+            }
+        }
+    })
+
+    // Helper component for section headers
+    const SectionHeader = ({ icon: Icon, title, count, maxCount, isOpen, extra }: {
+        icon: any, title: string, count?: number, maxCount?: number, isOpen: boolean, extra?: React.ReactNode
+    }) => (
+        <CollapsibleTrigger className="flex items-center justify-between w-full px-1 py-1.5 hover:bg-muted/30 rounded-md transition-colors group">
+            <div className="flex items-center gap-1.5 text-muted-foreground/70">
+                <Icon className="w-3.5 h-3.5" />
+                <span className="text-[10px] uppercase tracking-wider font-bold">
+                    {title}
+                    {count !== undefined && maxCount !== undefined && (
+                        <span className="text-[9px] opacity-40 ml-1">({count}/{maxCount})</span>
+                    )}
+                </span>
+            </div>
+            <div className="flex items-center gap-1">
+                {extra}
+                <ChevronDown className={cn(
+                    "w-3.5 h-3.5 text-muted-foreground/40 transition-transform duration-200",
+                    isOpen && "rotate-180"
+                )} />
+            </div>
+        </CollapsibleTrigger>
+    )
+
+
     return (
-        <div className="w-[340px] h-full bg-card border-r border-border flex flex-col gap-3 overflow-hidden relative">
+        <div className="w-[340px] h-full bg-card border-r border-border flex flex-col gap-1 overflow-hidden relative">
             {/* Lightbox Viewer */}
             {viewerImage && (
                 <div
@@ -362,332 +455,469 @@ export function BrandDNAPanel({
                 </div>
             )}
 
-            <div className="p-3 flex flex-col gap-3 overflow-y-auto scrollbar-thin flex-1">
-                {/* Color Palette (Prominent) */}
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between px-1">
-                        <div className="flex items-center gap-1.5">
-                            <Palette className="w-3.5 h-3.5 text-muted-foreground/70" />
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/70">
-                                {t('brandDNA.colorPalette')}
-                            </span>
-                        </div>
-
-                        {isSaving && (
-                            <Badge variant="outline" className="animate-pulse bg-primary/10 text-[9px] py-0 px-1.5 h-4 text-primary border-primary/20">
-                                SINC...
-                            </Badge>
-                        )}
-                    </div>
-                    <div className="bg-muted/20 rounded-xl p-2.5">
-                        <ColorPalette
-                            colors={colors}
-                            isEdited={hasUnsavedChanges}
-                            onUpdateColor={handleUpdateColor}
-                            onUpdateRole={handleUpdateColorRole}
-                            onToggleSelection={handleToggleColorSelection}
-                            onRemoveColor={handleRemoveColor}
-                            onAddColor={handleAddColor}
-                            onReset={handleResetColors}
-                            hideHeader={true}
-                            selectedColorIds={selectedContext.filter(c => c.type === 'color').map(c => c.id)}
-                            onDragStart={handleDragStart}
-                            onDragEnd={handleDragEnd}
+            <div className="p-2 flex flex-col gap-1 overflow-y-auto scrollbar-thin flex-1">
+                {/* COLORS SECTION */}
+                <Collapsible open={openSections.colors} onOpenChange={() => toggleSection('colors')}>
+                    <div className="space-y-1">
+                        <SectionHeader
+                            icon={Palette}
+                            title={t('brandDNA.colorPalette')}
+                            isOpen={openSections.colors}
+                            extra={isSaving && (
+                                <Badge variant="outline" className="animate-pulse bg-primary/10 text-[8px] py-0 px-1 h-3.5 text-primary border-primary/20">
+                                    SINC
+                                </Badge>
+                            )}
                         />
-                    </div>
-                </div>
-
-                {/* Visual Elements */}
-                <div className="space-y-4">
-                    {/* Logo Section */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between px-1">
-                            <div className="flex items-center gap-1.5 text-muted-foreground/70">
-                                <Image className="w-3.5 h-3.5" />
-                                <span className="text-[10px] uppercase tracking-wider font-bold">
-                                    Logos de Marca <span className="text-[9px] opacity-40 ml-1">({logos.length}/5)</span>
-                                </span>
-                            </div>
-
-                            <label className={cn(
-                                "cursor-pointer hover:text-primary transition-colors p-1",
-                                logos.length >= 5 && "opacity-20 cursor-not-allowed pointer-events-none"
-                            )}>
-                                <Plus className="w-3.5 h-3.5 text-muted-foreground/60" />
-                                <input type="file" className="hidden" accept="image/*" onChange={handleUploadLogos} disabled={logos.length >= 5} />
-                            </label>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-1.5">
-                            {logos.map((logo, idx) => (
-                                <div
-                                    key={`logo-${idx}`}
-                                    draggable
-                                    onDragStart={(e) => handleDragStart(e, {
-                                        id: `logo-${idx}`,
-                                        type: 'logo',
-                                        value: logo.url,
-                                        label: `Logo ${idx + 1}`
-                                    })}
+                        <CollapsibleContent>
+                            <div className="bg-muted/20 rounded-xl p-2">
+                                <ColorPalette
+                                    colors={colors}
+                                    isEdited={hasUnsavedChanges}
+                                    onUpdateColor={handleUpdateColor}
+                                    onUpdateRole={handleUpdateColorRole}
+                                    onToggleSelection={handleToggleColorSelection}
+                                    onRemoveColor={handleRemoveColor}
+                                    onAddColor={handleAddColor}
+                                    onReset={handleResetColors}
+                                    hideHeader={true}
+                                    selectedColorIds={selectedContext.filter(c => c.type === 'color').map(c => c.id)}
+                                    onDragStart={handleDragStart}
                                     onDragEnd={handleDragEnd}
-                                    onClick={() => handleToggleLogoSelection(idx)}
-                                    className={cn(
-                                        "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing flex items-center justify-center p-1.5",
-                                        selectedContext.some(c => c.id === `logo-${idx}`)
-                                            ? "border-primary shadow-sm ring-1 ring-primary/20"
-                                            : "border-transparent opacity-60 hover:opacity-100 hover:border-border"
-                                    )}
-                                >
-                                    <img
-                                        src={logo.url}
-                                        draggable={false}
-                                        className="max-h-full max-w-full object-contain transition-transform group-hover:scale-110 pointer-events-none select-none"
-                                        alt={`Logo ${idx}`}
-                                    />
+                                />
+                            </div>
+                        </CollapsibleContent>
+                    </div>
+                </Collapsible>
 
-                                    {/* Selection Check */}
-                                    {selectedContext.some(c => c.id === `logo-${idx}`) && (
-                                        <div className={cn(
-                                            "absolute top-1 left-1 z-20 pointer-events-none",
-                                            isDark ? "text-white drop-shadow-md" : "text-primary drop-shadow-sm"
-                                        )}>
-                                            <Check className="w-3 h-3 stroke-[4px]" />
-                                        </div>
-                                    )}
-
-                                    {/* Delete Button */}
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleRemoveLogo(idx); }}
-                                        className="absolute top-1 right-1 p-0.5 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
-                                    >
-                                        <X className="w-2 h-2" />
-                                    </button>
-
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setViewerImage(logo.url); }}
-                                        className="absolute bottom-1 right-1 p-0.5 bg-white/90 text-black rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
-                                    >
-                                        <ZoomIn className="w-2 h-2" />
-                                    </button>
-                                </div>
-                            ))}
-
-                            {/* Empty slots placeholders */}
-                            {Array.from({ length: Math.max(0, 5 - logos.length) }).map((_, i) => (
-                                <label
-                                    key={`placeholder-${i}`}
-                                    className="border border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center bg-muted/5 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer aspect-square group"
-                                >
-                                    <Plus className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary/50" />
-                                    <input type="file" className="hidden" accept="image/*" onChange={handleUploadLogos} />
+                {/* LOGOS SECTION */}
+                <Collapsible open={openSections.logos} onOpenChange={() => toggleSection('logos')}>
+                    <div className="space-y-1">
+                        <SectionHeader
+                            icon={Image}
+                            title="Logos de Marca"
+                            count={logos.length}
+                            maxCount={6}
+                            isOpen={openSections.logos}
+                            extra={
+                                <label className={cn(
+                                    "cursor-pointer hover:text-primary transition-colors p-0.5",
+                                    logos.length >= 6 && "opacity-20 cursor-not-allowed pointer-events-none"
+                                )} onClick={(e) => e.stopPropagation()}>
+                                    <Plus className="w-3 h-3 text-muted-foreground/60" />
+                                    <input type="file" className="hidden" accept="image/*" onChange={handleUploadLogos} disabled={logos.length >= 6} />
                                 </label>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Image Management with Tabs */}
-                    <div className="space-y-3">
-                        <Tabs defaultValue="selected" className="w-full">
-                            <div className="flex items-center justify-between px-1 mb-2">
-                                <TabsList className="bg-muted/50 h-7 p-0.5">
-                                    <TabsTrigger value="selected" className="text-[9px] px-2 h-6 uppercase font-bold tracking-tight">
-                                        Usadas <Badge className="ml-1 h-3.5 min-w-[14px] px-0.5 text-[8px] flex items-center justify-center bg-primary/20 text-primary border-none">{selectedCount}</Badge>
-                                    </TabsTrigger>
-                                    <TabsTrigger value="library" className="text-[9px] px-2 h-6 uppercase font-bold tracking-tight">Biblioteca</TabsTrigger>
-                                </TabsList>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-[9px] text-muted-foreground/50 font-medium">{totalCount}/20</span>
-                                    <label className={cn(
-                                        "cursor-pointer hover:text-primary transition-colors p-1",
-                                        totalCount >= 20 && "opacity-20 cursor-not-allowed pointer-events-none"
-                                    )} title="Subir a biblioteca">
-                                        <Plus className="w-3.5 h-3.5 text-muted-foreground/60" />
-                                        <input type="file" multiple className="hidden" accept="image/*" onChange={handleUploadImages} disabled={totalCount >= 20} />
-                                    </label>
-                                </div>
-                            </div>
-
-                            <TabsContent value="selected" className="mt-0">
-                                <div className="grid grid-cols-3 gap-1.5 p-0.5 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
-                                    {selectedImages.map((img, i) => {
-                                        const originalIdx = (data.images || []).findIndex(orig => (orig as any).url === img.url || orig === img.url);
-                                        const item = img;
-                                        const idx = originalIdx;
-                                        const elementId = `image-${idx}`;
-                                        const isSelected = selectedContext.some(c => c.id === elementId);
-
-                                        return (
-                                            <div
-                                                key={`sel-${i}`}
-                                                draggable
-                                                onDragStart={(e) => handleDragStart(e, {
-                                                    id: elementId,
-                                                    type: 'image',
-                                                    value: item.url,
-                                                    label: `Imagen ${idx + 1}`
-                                                })}
-                                                onDragEnd={handleDragEnd}
-                                                onClick={() => handleToggleImageSelection(idx)}
-                                                className={cn(
-                                                    "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing transparency-grid",
-                                                    isSelected
-                                                        ? "border-primary shadow-sm"
-                                                        : "border-transparent opacity-60 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 hover:border-border"
-                                                )}
-                                            >
-                                                <img
-                                                    src={item.url}
-                                                    draggable={false}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none select-none"
-                                                    alt={`Asset ${idx}`}
-                                                />
-                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors z-10 pointer-events-none" />
-                                                <div className={cn(
-                                                    "absolute top-2 left-2 flex items-center justify-center transition-all duration-200 z-30 pointer-events-none",
-                                                    isSelected
-                                                        ? (isDark
-                                                            ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] scale-110 opacity-100"
-                                                            : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)] scale-110 opacity-100")
-                                                        : "text-white/20 scale-90 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:scale-110"
-                                                )}>
-                                                    <Check className="w-4 h-4 stroke-[3px]" />
-                                                </div>
-                                                <div className="absolute bottom-1 right-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); setViewerImage(item.url); }}
-                                                        className="w-5 h-5 bg-white/90 text-black rounded-full flex items-center justify-center hover:scale-110 shadow-lg"
-                                                    >
-                                                        <ZoomIn className="w-2.5 h-2.5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
-                                                        className="w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center hover:scale-110 shadow-lg"
-                                                    >
-                                                        <X className="w-2.5 h-2.5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                    {selectedImages.length === 0 && (
-                                        <div className="col-span-3 py-10 text-center border-2 border-dashed border-muted/50 rounded-lg">
-                                            <p className="text-[10px] text-muted-foreground opacity-50">Nada seleccionado</p>
-                                        </div>
-                                    )}
-                                </div>
-                                {selectedImages.length > 0 && (
-                                    <button
-                                        onClick={handleDeselectAll}
-                                        className="w-full mt-2 text-[8px] text-muted-foreground hover:text-primary font-bold uppercase tracking-wider transition-colors"
+                            }
+                        />
+                        <CollapsibleContent>
+                            <div className="grid grid-cols-3 gap-1.5 p-1">
+                                {logos.map((logo, idx) => (
+                                    <div
+                                        key={`logo-${idx}`}
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, {
+                                            id: `logo-${idx}`,
+                                            type: 'logo',
+                                            value: logo.url,
+                                            label: `Logo ${idx + 1}`
+                                        })}
+                                        onDragEnd={handleDragEnd}
+                                        onClick={() => handleToggleLogoSelection(idx)}
+                                        className={cn(
+                                            "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing flex items-center justify-center p-1.5 transparency-grid",
+                                            selectedContext.some(c => c.id === `logo-${idx}`)
+                                                ? "border-primary shadow-sm ring-1 ring-primary/20"
+                                                : "border-transparent opacity-60 hover:opacity-100 hover:border-border"
+                                        )}
                                     >
-                                        Limpiar Seleccionadas
-                                    </button>
-                                )}
-                            </TabsContent>
-
-                            <TabsContent value="library" className="mt-0">
-                                <div className="grid grid-cols-3 gap-1.5 p-0.5 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
-                                    {allImages.map((img, i) => {
-                                        const item = img;
-                                        const idx = i;
-                                        const elementId = `image-${idx}`;
-                                        const isSelected = selectedContext.some(c => c.id === elementId);
-
-                                        return (
-                                            <div
-                                                key={`lib-${i}`}
-                                                draggable
-                                                onDragStart={(e) => handleDragStart(e, {
-                                                    id: elementId,
-                                                    type: 'image',
-                                                    value: item.url,
-                                                    label: `Imagen ${idx + 1}`
-                                                })}
-                                                onDragEnd={handleDragEnd}
-                                                onClick={() => handleToggleImageSelection(idx)}
-                                                className={cn(
-                                                    "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing transparency-grid",
-                                                    isSelected
-                                                        ? "border-primary shadow-sm"
-                                                        : "border-transparent opacity-60 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 hover:border-border"
-                                                )}
-                                            >
-                                                <img
-                                                    src={item.url}
-                                                    draggable={false}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none select-none"
-                                                    alt={`Asset ${idx}`}
-                                                />
-                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors z-10 pointer-events-none" />
-                                                <div className={cn(
-                                                    "absolute top-2 left-2 flex items-center justify-center transition-all duration-200 z-30 pointer-events-none",
-                                                    isSelected
-                                                        ? (isDark
-                                                            ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] scale-110 opacity-100"
-                                                            : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)] scale-110 opacity-100")
-                                                        : "text-white/20 scale-90 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:scale-110"
-                                                )}>
-                                                    <Check className="w-4 h-4 stroke-[3px]" />
-                                                </div>
-                                                <div className="absolute bottom-1 right-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); setViewerImage(item.url); }}
-                                                        className="w-5 h-5 bg-white/90 text-black rounded-full flex items-center justify-center hover:scale-110 shadow-lg"
-                                                    >
-                                                        <ZoomIn className="w-2.5 h-2.5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
-                                                        className="w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center hover:scale-110 shadow-lg"
-                                                    >
-                                                        <X className="w-2.5 h-2.5" />
-                                                    </button>
-                                                </div>
+                                        <img
+                                            src={logo.url}
+                                            draggable={false}
+                                            className="max-h-full max-w-full object-contain transition-transform group-hover:scale-110 pointer-events-none select-none"
+                                            alt={`Logo ${idx}`}
+                                        />
+                                        {selectedContext.some(c => c.id === `logo-${idx}`) && (
+                                            <div className={cn(
+                                                "absolute top-1 left-1 flex items-center justify-center transition-all duration-200 z-30 pointer-events-none",
+                                                isDark
+                                                    ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                                                    : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)]"
+                                            )}>
+                                                <Check className="w-3.5 h-3.5 stroke-[3px]" />
                                             </div>
-                                        );
-                                    })}
-                                    {totalCount < 20 && (
-                                        <label className="border border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center gap-0.5 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer aspect-square group">
-                                            <Plus className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary/50" />
-                                            <span className="text-[7px] text-muted-foreground/40 group-hover:text-primary/50 uppercase font-bold">Subir</span>
-                                            <input type="file" multiple className="hidden" accept="image/*" onChange={handleUploadImages} />
-                                        </label>
-                                    )}
-                                    {totalCount === 0 && (
-                                        <div className="col-span-3 py-6 text-center border-2 border-dashed border-muted/50 rounded-lg">
-                                            <p className="text-[10px] text-muted-foreground opacity-50">Biblioteca vacía</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </TabsContent>
-                        </Tabs>
-                    </div>
-                </div>
-
-                {/* Typography & Other Details */}
-                <div className="space-y-2 mt-2">
-                    <Card className="bg-muted/10 border-none shadow-none">
-                        <CardContent className="p-2.5 space-y-3">
-                            <div>
-                                <p className="text-[9px] font-bold uppercase text-muted-foreground/40 mb-1 flex items-center gap-1.5">
-                                    <span className="w-1 h-1 rounded-full bg-primary/40" />
-                                    {t('brandDNA.typography')}
-                                </p>
-                                <div className="space-y-0.5 px-1.5">
-                                    {fonts.length > 0 ? (
-                                        fonts.map((font, idx) => (
-                                            <p key={idx} className={idx === 0 ? "text-sm font-heading font-bold truncate" : "text-[11px] truncate opacity-60"}>
-                                                {font}
-                                            </p>
-                                        ))
-                                    ) : (
-                                        <p className="text-[9px] text-muted-foreground italic">Sin tipografía</p>
-                                    )}
-                                </div>
+                                        )}
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleRemoveLogo(idx); }}
+                                            className="absolute top-0.5 right-0.5 p-0.5 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
+                                        >
+                                            <X className="w-2 h-2" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setViewerImage(logo.url); }}
+                                            className="absolute bottom-0.5 right-0.5 p-0.5 bg-white/90 text-black rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
+                                        >
+                                            <ZoomIn className="w-2 h-2" />
+                                        </button>
+                                    </div>
+                                ))}
+                                {Array.from({ length: Math.max(0, 6 - logos.length) }).map((_, i) => (
+                                    <label
+                                        key={`placeholder-${i}`}
+                                        className="border border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center bg-muted/5 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer aspect-square group"
+                                    >
+                                        <Plus className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary/50" />
+                                        <input type="file" className="hidden" accept="image/*" onChange={handleUploadLogos} />
+                                    </label>
+                                ))}
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                        </CollapsibleContent>
+                    </div>
+                </Collapsible>
+
+                {/* IMAGES SECTION */}
+                <Collapsible open={openSections.images} onOpenChange={() => toggleSection('images')}>
+                    <div className="space-y-1">
+                        <SectionHeader
+                            icon={Image}
+                            title="Imágenes"
+                            count={selectedCount}
+                            maxCount={totalCount}
+                            isOpen={openSections.images}
+                            extra={
+                                <label className={cn(
+                                    "cursor-pointer hover:text-primary transition-colors p-0.5",
+                                    totalCount >= 20 && "opacity-20 cursor-not-allowed pointer-events-none"
+                                )} onClick={(e) => e.stopPropagation()}>
+                                    <Plus className="w-3 h-3 text-muted-foreground/60" />
+                                    <input type="file" multiple className="hidden" accept="image/*" onChange={handleUploadImages} disabled={totalCount >= 20} />
+                                </label>
+                            }
+                        />
+                        <CollapsibleContent>
+                            <Tabs defaultValue="selected" className="w-full">
+                                <TabsList className="bg-muted/50 h-6 p-0.5 w-full">
+                                    <TabsTrigger value="selected" className="text-[9px] px-2 h-5 uppercase font-bold tracking-tight flex-1">
+                                        Usadas <Badge className="ml-1 h-3 min-w-[12px] px-0.5 text-[7px] flex items-center justify-center bg-primary/20 text-primary border-none">{selectedCount}</Badge>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="library" className="text-[9px] px-2 h-5 uppercase font-bold tracking-tight flex-1">Biblioteca</TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="selected" className="mt-1">
+                                    <div className="grid grid-cols-3 gap-1 max-h-[200px] overflow-y-auto pr-0.5 scrollbar-thin">
+                                        {selectedImages.map((img, i) => {
+                                            const originalIdx = (data.images || []).findIndex(orig => (orig as any).url === img.url || orig === img.url);
+                                            const elementId = `image-${originalIdx}`;
+                                            const isSelected = selectedContext.some(c => c.id === elementId);
+
+                                            return (
+                                                <div
+                                                    key={`sel-${i}`}
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, {
+                                                        id: elementId,
+                                                        type: 'image',
+                                                        value: img.url,
+                                                        label: `Imagen ${originalIdx + 1}`
+                                                    })}
+                                                    onDragEnd={handleDragEnd}
+                                                    onClick={() => handleToggleImageSelection(originalIdx)}
+                                                    className={cn(
+                                                        "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing transparency-grid",
+                                                        isSelected
+                                                            ? "border-primary shadow-sm"
+                                                            : "border-transparent opacity-60 hover:opacity-100 hover:border-border"
+                                                    )}
+                                                >
+                                                    <img
+                                                        src={img.url}
+                                                        draggable={false}
+                                                        className="w-full h-full object-cover pointer-events-none select-none"
+                                                        alt={`Asset ${originalIdx}`}
+                                                    />
+                                                    {isSelected && (
+                                                        <div className={cn(
+                                                            "absolute top-1 left-1 z-30 pointer-events-none",
+                                                            isDark ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)]"
+                                                        )}>
+                                                            <Check className="w-3.5 h-3.5 stroke-[3px]" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute bottom-0.5 right-0.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); setViewerImage(img.url); }}
+                                                            className="w-4 h-4 bg-white/90 text-black rounded-full flex items-center justify-center hover:scale-110"
+                                                        >
+                                                            <ZoomIn className="w-2 h-2" />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleRemoveImage(originalIdx); }}
+                                                            className="w-4 h-4 bg-destructive text-white rounded-full flex items-center justify-center hover:scale-110"
+                                                        >
+                                                            <X className="w-2 h-2" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        {selectedImages.length === 0 && (
+                                            <div className="col-span-3 py-6 text-center border border-dashed border-muted/50 rounded-lg">
+                                                <p className="text-[9px] text-muted-foreground opacity-50">Nada seleccionado</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {selectedImages.length > 0 && (
+                                        <button
+                                            onClick={handleDeselectAll}
+                                            className="w-full mt-1.5 text-[8px] text-muted-foreground hover:text-primary font-bold uppercase tracking-wider transition-colors"
+                                        >
+                                            Limpiar Selección
+                                        </button>
+                                    )}
+                                </TabsContent>
+
+                                <TabsContent value="library" className="mt-1">
+                                    <div className="grid grid-cols-3 gap-1 max-h-[200px] overflow-y-auto pr-0.5 scrollbar-thin">
+                                        {allImages.map((img, idx) => {
+                                            const elementId = `image-${idx}`;
+                                            const isSelected = selectedContext.some(c => c.id === elementId);
+
+                                            return (
+                                                <div
+                                                    key={`lib-${idx}`}
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, {
+                                                        id: elementId,
+                                                        type: 'image',
+                                                        value: img.url,
+                                                        label: `Imagen ${idx + 1}`
+                                                    })}
+                                                    onDragEnd={handleDragEnd}
+                                                    onClick={() => handleToggleImageSelection(idx)}
+                                                    className={cn(
+                                                        "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing transparency-grid",
+                                                        isSelected
+                                                            ? "border-primary shadow-sm"
+                                                            : "border-transparent opacity-60 hover:opacity-100 hover:border-border"
+                                                    )}
+                                                >
+                                                    <img
+                                                        src={img.url}
+                                                        draggable={false}
+                                                        className="w-full h-full object-cover pointer-events-none select-none"
+                                                        alt={`Asset ${idx}`}
+                                                    />
+                                                    {isSelected && (
+                                                        <div className={cn(
+                                                            "absolute top-1 left-1 z-30 pointer-events-none",
+                                                            isDark ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)]"
+                                                        )}>
+                                                            <Check className="w-3.5 h-3.5 stroke-[3px]" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute bottom-0.5 right-0.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); setViewerImage(img.url); }}
+                                                            className="w-4 h-4 bg-white/90 text-black rounded-full flex items-center justify-center hover:scale-110"
+                                                        >
+                                                            <ZoomIn className="w-2 h-2" />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
+                                                            className="w-4 h-4 bg-destructive text-white rounded-full flex items-center justify-center hover:scale-110"
+                                                        >
+                                                            <X className="w-2 h-2" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        {totalCount < 20 && (
+                                            <label className="border border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer aspect-square group">
+                                                <Plus className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary/50" />
+                                                <input type="file" multiple className="hidden" accept="image/*" onChange={handleUploadImages} />
+                                            </label>
+                                        )}
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+                        </CollapsibleContent>
+                    </div>
+                </Collapsible>
+
+                {/* TYPOGRAPHY SECTION */}
+                <Collapsible open={openSections.typography} onOpenChange={() => toggleSection('typography')}>
+                    <div className="space-y-1">
+                        <SectionHeader
+                            icon={Type}
+                            title="Tipografía"
+                            isOpen={openSections.typography}
+                        />
+                        <CollapsibleContent>
+                            <div className="flex flex-wrap gap-1.5 p-1.5 bg-muted/10 rounded-lg">
+                                {fonts.length > 0 ? fonts.map((font, idx) => (
+                                    <DraggableChip
+                                        key={`font-${idx}`}
+                                        {...chipProps(`font-${idx}`, 'font', font, font)}
+                                        icon={Type}
+                                    />
+                                )) : (
+                                    <p className="text-[9px] text-muted-foreground/50 italic p-1">Sin tipografías detectadas</p>
+                                )}
+                            </div>
+                        </CollapsibleContent>
+                    </div>
+                </Collapsible>
+
+                {/* TEXT ASSETS SECTION */}
+                <Collapsible open={openSections.textAssets} onOpenChange={() => toggleSection('textAssets')}>
+                    <div className="space-y-1">
+                        <SectionHeader
+                            icon={FileText}
+                            title="Textos de Marca"
+                            isOpen={openSections.textAssets}
+                        />
+                        <CollapsibleContent>
+                            <div className="space-y-2 p-1.5 bg-muted/10 rounded-lg">
+                                {/* Tagline */}
+                                {tagline && (
+                                    <div className="space-y-0.5">
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Tagline</p>
+                                        <DraggableChip
+                                            {...chipProps('tagline', 'text', tagline, tagline)}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Brand Values */}
+                                {brand_values.length > 0 && (
+                                    <div className="space-y-0.5">
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Valores</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {brand_values.map((val, idx) => (
+                                                <DraggableChip
+                                                    key={`value-${idx}`}
+                                                    {...chipProps(`value-${idx}`, 'text', val, val)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Tone of Voice */}
+                                {tone_of_voice.length > 0 && (
+                                    <div className="space-y-0.5">
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Tono de Voz</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {tone_of_voice.map((tone, idx) => (
+                                                <DraggableChip
+                                                    key={`tone-${idx}`}
+                                                    {...chipProps(`tone-${idx}`, 'text', tone, tone)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Visual Aesthetic */}
+                                {visual_aesthetic.length > 0 && (
+                                    <div className="space-y-0.5">
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Estética Visual</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {visual_aesthetic.map((ae, idx) => (
+                                                <DraggableChip
+                                                    key={`aesthetic-${idx}`}
+                                                    {...chipProps(`aesthetic-${idx}`, 'text', ae, ae)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!tagline && brand_values.length === 0 && tone_of_voice.length === 0 && visual_aesthetic.length === 0 && (
+                                    <p className="text-[9px] text-muted-foreground/50 italic p-1">Sin textos de marca</p>
+                                )}
+                            </div>
+                        </CollapsibleContent>
+                    </div>
+                </Collapsible>
+
+                {/* LINKS & CONTACT SECTION */}
+                <Collapsible open={openSections.links} onOpenChange={() => toggleSection('links')}>
+                    <div className="space-y-1">
+                        <SectionHeader
+                            icon={Link2}
+                            title="Enlaces y Contacto"
+                            isOpen={openSections.links}
+                        />
+                        <CollapsibleContent>
+                            <div className="space-y-2 p-1.5 bg-muted/10 rounded-lg">
+                                {/* URL */}
+                                {url && (
+                                    <DraggableChip
+                                        {...chipProps('url', 'link', url, url.replace(/^https?:\/\//, '').replace(/\/$/, ''))}
+                                        icon={Link2}
+                                    />
+                                )}
+
+                                {/* Social Links */}
+                                {social_links.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                        {social_links.map((link, idx) => (
+                                            <DraggableChip
+                                                key={`social-${idx}`}
+                                                {...chipProps(`social-${idx}`, 'link', link.url, link.username || link.platform)}
+                                                icon={AtSign}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Emails */}
+                                {emails.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                        {emails.map((email, idx) => (
+                                            <DraggableChip
+                                                key={`email-${idx}`}
+                                                {...chipProps(`email-${idx}`, 'contact', email, email)}
+                                                icon={Mail}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Phones */}
+                                {phones.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                        {phones.map((phone, idx) => (
+                                            <DraggableChip
+                                                key={`phone-${idx}`}
+                                                {...chipProps(`phone-${idx}`, 'contact', phone, phone)}
+                                                icon={Phone}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Addresses */}
+                                {addresses.length > 0 && (
+                                    <div className="flex flex-wrap gap-1">
+                                        {addresses.map((addr, idx) => (
+                                            <DraggableChip
+                                                key={`address-${idx}`}
+                                                {...chipProps(`address-${idx}`, 'contact', addr, addr.length > 30 ? addr.substring(0, 30) + '...' : addr)}
+                                                icon={MapPin}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
+                                {!url && social_links.length === 0 && emails.length === 0 && phones.length === 0 && addresses.length === 0 && (
+                                    <p className="text-[9px] text-muted-foreground/50 italic p-1">Sin enlaces ni contacto</p>
+                                )}
+                            </div>
+                        </CollapsibleContent>
+                    </div>
+                </Collapsible>
             </div>
 
             {/* Brand Identity Footer */}
@@ -706,4 +936,3 @@ export function BrandDNAPanel({
         </div>
     )
 }
-
