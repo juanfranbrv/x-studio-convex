@@ -51,6 +51,12 @@ export default defineSchema({
     favicon_url: v.optional(v.string()),
     screenshot_url: v.optional(v.string()),
     images: v.optional(v.any()), // Array of objects
+    target_audience: v.optional(v.array(v.string())),
+    social_links: v.optional(v.any()), // Array of platform/url objects
+    emails: v.optional(v.array(v.string())),
+    phones: v.optional(v.array(v.string())),
+    addresses: v.optional(v.array(v.string())),
+    api_trace: v.optional(v.any()), // Array of trace objects
     debug: v.optional(v.any()), // JSON
     clerk_user_id: v.optional(v.string()),
     updated_at: v.string(),

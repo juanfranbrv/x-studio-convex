@@ -2214,3 +2214,1737 @@
     "brand_context": "La MAC (Agrupació de Comerciants i Professionals de Meliana) és l’entitat clau en la dinamització del teixit empresarial local, operant des del Carrer La Font, 9. Implementen estratègies de màrqueting participatiu com la campanya 'donem color al COMERÇ LOCAL', que classifica el comerç en 7 sectors identificats per colors (Roig per Alimentació, Verd per Bellesa i salut, etc.), oferint sortejos sectorials (motxilles, davantals) i un gran premi final de 2 viatges de cap de setmana. A més, organitzen la Fira Outlet amb activitats lúdiques (DJ, animacions infantils) i el tradicional Concurs Fotogràfic amb dotacions econòmiques significatives per les categories de Tema Lliure i Oficis (200€ cadascuna). Promouen activament la compra local sota el lema 'Meliana, el teu centre comercial obert'."
   }
 }
+[2025-12-31T08:53:42.041Z] 📄 HTML cargado. Longitud: 192731 caracteres.
+[2025-12-31T08:53:42.042Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T08:53:42.049Z] 🔤 Fuentes iniciales extraídas: 2 ["Lato","Playfair Display"]
+[2025-12-31T08:53:42.055Z] 🔍 Favicon encontrado: https://mentoriasherpa.com/assets/favicon.jpg (1 candidatos)
+[2025-12-31T08:53:42.110Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T08:53:42.113Z]    - SVGs en header encontrados: 0
+[2025-12-31T08:53:42.114Z]    - IMGs en header encontrados: 1
+[2025-12-31T08:53:42.114Z]    - firstHeaderSvg.length: 0
+[2025-12-31T08:53:42.114Z] 🎯 Primera IMG en header detectada
+[2025-12-31T08:53:42.115Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T08:53:42.117Z] 🖼️ Logo candidates encontrados: 7 (Top score: 510)
+[2025-12-31T08:53:42.118Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T08:53:42.118Z]    1. URL: https://mentoriasherpa.com/assets/sherpa-black.png - Score: 510
+[2025-12-31T08:53:42.118Z]    2. URL: https://mentoriasherpa.com/assets/sherpa-white.png - Score: 220
+[2025-12-31T08:53:42.118Z]    3. URL: https://mentoriasherpa.com/assets/bg-header.jpg - Score: 150
+[2025-12-31T08:53:42.119Z]    4. URL: https://mentoriasherpa.com/assets/banner-carlos.png - Score: 150
+[2025-12-31T08:53:42.119Z]    5. URL: https://mentoriasherpa.com/assets/banner-sherpa.jpg - Score: 150
+[2025-12-31T08:53:55.887Z] Jina error: {}
+[2025-12-31T08:54:06.429Z] ✅ Gemini Response: {
+  "brand_name": "Sherpa",
+  "tagline": "El equipo de expertos que te falta en consulta.",
+  "business_overview": "Sherpa es un programa de membresía online que proporciona mentoría profesional, resolución de dudas clínicas y desbloqueo de casos complejos a profesionales de la salud. Está enfocado en medicina funcional, salud integrativa y Psiconeuroinmunología Clínica (PNI), ofreciendo un equipo de expertos para contrastar opiniones y garantizar la actualización constante del terapeuta. Su misión es eliminar la sensación de soledad en la práctica clínica y mejorar la eficiencia diagnóstica y terapéutica de sus miembros.",
+  "brand_values": [
+    "Experiencia Clínica",
+    "Actualización Científica",
+    "Soporte Continuo",
+    "Integración Holística",
+    "Confidencialidad"
+  ],
+  "tone_of_voice": [
+    "Profesional",
+    "Autoritativo",
+    "Empático"
+  ],
+  "visual_aesthetic": [
+    "Clínico",
+    "Claro",
+    "Elegante"
+  ],
+  "colors": [
+    "#111827",
+    "#FFFFFF",
+    "#004900",
+    "#2563EB",
+    "#D06C15"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Lato"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Deja de sentirte solo en consulta: Accede al equipo de PNI que te respalda.",
+      "Desbloquea tus casos clínicos más complejos con el apoyo de expertos médicos.",
+      "Actualización clínica garantizada: Formación mensual lista para aplicar.",
+      "Diagnóstico preciso, tratamiento efectivo: Mejora tus habilidades terapéuticas.",
+      "Resuelve tus dudas anónimamente y aprende de 6851 casos ya resueltos."
+    ],
+    "visual_keywords": [
+      "Medicina funcional sofisticada",
+      "Gráficos analíticos limpios",
+      "Mentoría experta digital",
+      "Esquemas de fisiopatología detallados",
+      "Comunidad de profesionales élite"
+    ],
+    "ctas": [
+      "QUIERO UNIRME AHORA",
+      "Ver Planes de Membresía",
+      "Desbloquea Mi Caso Clínico"
+    ],
+    "brand_context": "Sherpa es un programa de mentoría para profesionales de la salud integrativa, con especialización en Psiconeuroinmunología Clínica (PNI). Liderado por Carlos González, enfermero, fisioterapeuta y especialista en PNI con más de 20 años de experiencia, el equipo de mentores incluye médicos, dietistas y PNI reconocidos. El servicio se estructura en torno a la resolución anónima de hasta 40 dudas clínicas mensuales vía audio, un servicio de desbloqueo clínico personalizado para casos complejos, formación mensual en directo (grabada y accesible en librería), y una comunidad privada. Los miembros acceden a un vasto archivo de más de 35 formaciones grabadas y miles de horas de audio de dudas resueltas, manteniendo así sus conocimientos actualizados sin la necesidad de buscar en papers científicos por su cuenta."
+  }
+}
+[2025-12-31T08:57:49.142Z] 📄 HTML cargado. Longitud: 192731 caracteres.
+[2025-12-31T08:57:49.143Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T08:57:49.144Z] 🔤 Fuentes iniciales extraídas: 2 ["Lato","Playfair Display"]
+[2025-12-31T08:57:49.147Z] 🔍 Favicon encontrado: https://mentoriasherpa.com/assets/favicon.jpg (1 candidatos)
+[2025-12-31T08:57:49.175Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T08:57:49.176Z]    - SVGs en header encontrados: 0
+[2025-12-31T08:57:49.177Z]    - IMGs en header encontrados: 1
+[2025-12-31T08:57:49.177Z]    - firstHeaderSvg.length: 0
+[2025-12-31T08:57:49.178Z] 🎯 Primera IMG en header detectada
+[2025-12-31T08:57:49.178Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T08:57:49.179Z] 🖼️ Logo candidates encontrados: 7 (Top score: 510)
+[2025-12-31T08:57:49.179Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T08:57:49.179Z]    1. URL: https://mentoriasherpa.com/assets/sherpa-black.png - Score: 510
+[2025-12-31T08:57:49.180Z]    2. URL: https://mentoriasherpa.com/assets/sherpa-white.png - Score: 220
+[2025-12-31T08:57:49.180Z]    3. URL: https://mentoriasherpa.com/assets/bg-header.jpg - Score: 150
+[2025-12-31T08:57:49.180Z]    4. URL: https://mentoriasherpa.com/assets/banner-carlos.png - Score: 150
+[2025-12-31T08:57:49.180Z]    5. URL: https://mentoriasherpa.com/assets/banner-sherpa.jpg - Score: 150
+[2025-12-31T08:57:59.949Z] ✅ Gemini Response: {
+  "brand_name": "Mentorías Sherpa",
+  "tagline": "El equipo de expertos que te falta en consulta.",
+  "business_overview": "Mentorías Sherpa es un programa de soporte profesional diseñado para terapeutas, médicos y profesionales de la salud que se sienten bloqueados o aislados con casos clínicos complejos. Ofrecemos acceso directo a un equipo multidisciplinar de expertos en Psiconeuroinmunología (PNI) para la resolución de dudas, el desbloqueo de casos y formación avanzada. Nuestro objetivo es elevar la eficiencia y la confianza clínica de nuestros miembros, proporcionando el rigor científico y la experiencia práctica que necesitan.",
+  "brand_values": [
+    "Soporte Profesional",
+    "Rigor Científico",
+    "Experiencia Clínica",
+    "Formación Continua",
+    "Confidencialidad"
+  ],
+  "tone_of_voice": [
+    "Experto",
+    "Cercano",
+    "Rigoroso"
+  ],
+  "visual_aesthetic": [
+    "Profesional",
+    "Clínico",
+    "Confiable"
+  ],
+  "colors": [
+    "#360000",
+    "#004900",
+    "#000032",
+    "#111827",
+    "#FFFFFF"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Lato"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Termina con la soledad en consulta: Accede a un equipo de expertos PNI.",
+      "¿Bloqueado con un caso complejo? Desbloquéalo con orientación experta personalizada.",
+      "Deja de dudar en el diagnóstico: Resuelve tus preguntas clínicas con notas de audio detalladas.",
+      "El rigor científico de la PNI y medicina funcional, listo para tu consulta.",
+      "Actualiza tus conocimientos clínicos sin perder tiempo buscando en papers."
+    ],
+    "visual_keywords": [
+      "Salud Integrativa",
+      "Rigor Médico",
+      "Mentoría Profesional",
+      "Confianza Clínica",
+      "Comunidad Terapéutica"
+    ],
+    "ctas": [
+      "Únete a la Mentoría Sherpa",
+      "Desbloquea tu Primer Caso Clínico",
+      "Accede a la Librería de Formación"
+    ],
+    "brand_context": "Mentorías Sherpa es un programa de membresía que ofrece un sistema de apoyo operativo basado en la Psiconeuroinmunología Clínica (PNI) para profesionales de la salud. Los miembros reciben resolución de dudas clínicas semanales mediante notas de audio detalladas, lo que permite aprovechar el tiempo eficientemente (se han resuelto 6851 dudas en total, con 24126 horas de audio). El equipo está liderado por Carlos González, director académico y experto en PNI, y profesionales como Borja Fernández, Silvia Fernández (Médico), Carla Pitarch (Dietista) e Isabel Sánchez (Médico). Los servicios clave incluyen el servicio de 'desbloqueo clínico' personalizado y un calendario de formaciones mensuales en directo sobre temas especializados (ej: Enfermedad cardiovascular, Microbiota oral, Abordaje del Eje Tiroideo), además de acceso inmediato a una biblioteca de más de 35 formaciones grabadas."
+  }
+}
+[2025-12-31T09:00:24.734Z] 📄 HTML cargado. Longitud: 64198 caracteres.
+[2025-12-31T09:00:24.735Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T09:00:24.736Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T09:00:24.737Z] 🔍 Favicon encontrado: https://www.google.com/s2/favicons?domain=devpost.com&sz=256 (0 candidatos)
+[2025-12-31T09:00:24.744Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T09:00:24.745Z]    - SVGs en header encontrados: 0
+[2025-12-31T09:00:24.745Z]    - IMGs en header encontrados: 19
+[2025-12-31T09:00:24.746Z]    - firstHeaderSvg.length: 0
+[2025-12-31T09:00:24.747Z] 🎯 Primera IMG en header detectada
+[2025-12-31T09:00:24.748Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T09:00:24.749Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T09:00:24.750Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T09:00:24.750Z]    1. URL: https://d2dmyh35ffsxbl.cloudfront.net/assets/reimagine2/devpost-logo-mobile-f3aff76bfc0b6ada9bb4ddd773bfc534769ed793f962612804a1e84c305a5f94.svg - Score: 650
+[2025-12-31T09:00:24.750Z]    2. URL: https://d2dmyh35ffsxbl.cloudfront.net/assets/reimagine2/dft-logo-mobile-ab66dd5a4f4b2f045ad86d0e5f432dc85974c3d778b353d32213c24ca176484b.svg - Score: 420
+[2025-12-31T09:00:24.751Z]    3. URL: https://d2dmyh35ffsxbl.cloudfront.net/assets/home/homepage/header/brands/logo-microsoft-f031e14cee2eed463f96ffb0dfb12c1673c267b26c121a8eeb84b7d73167aad6.svg - Score: 420
+[2025-12-31T09:00:24.751Z]    4. URL: https://d2dmyh35ffsxbl.cloudfront.net/assets/home/homepage/header/brands/logo-google-787fe6abad1dd82c9649d3df3bd69dd57f809a9e0ed03f50d34bd7fe99c65149.svg - Score: 420
+[2025-12-31T09:00:24.752Z]    5. URL: https://d2dmyh35ffsxbl.cloudfront.net/assets/home/homepage/header/brands/logo-meta-4dc0e3e51b1a51daf337cce5b8bf88248e03de5f091c71b19aa5bab51d300a13.svg - Score: 420
+[2025-12-31T09:00:35.343Z] ✅ Gemini Response: {
+  "brand_name": "Devpost",
+  "tagline": "Where organizations and developers come together to build, inspire, and innovate.",
+  "business_overview": "Devpost is the leading platform connecting major global organizations with a massive community of developers through organized hackathons and innovation challenges. It enables companies like Google and Microsoft to crowdsource solutions, drive adoption of new technologies, and identify emerging talent. Developers leverage the platform to compete for significant prizes, build portfolios, and collaborate on diverse technical projects ranging from AI to Social Good.",
+  "brand_values": [
+    "Innovation",
+    "Community",
+    "Collaboration",
+    "Empowerment",
+    "Meritocracy"
+  ],
+  "tone_of_voice": [
+    "Dynamic",
+    "Professional",
+    "Tech-forward"
+  ],
+  "visual_aesthetic": [
+    "Technical",
+    "Clean",
+    "Modern"
+  ],
+  "colors": [
+    "#0D516D",
+    "#1F78D1",
+    "#B6F0E0",
+    "#233136",
+    "#EDF1F2"
+  ],
+  "fonts": [
+    "Montserrat",
+    "Inter"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Crowdsource innovation: Launch your next hackathon with Devpost.",
+      "Build your portfolio and win big prizes in global challenges.",
+      "Trusted by Microsoft, Google, and AWS for global developer challenges.",
+      "The fastest path from idea to prototype is a Devpost hackathon.",
+      "Find the perfect developer talent for your specialized projects."
+    ],
+    "visual_keywords": [
+      "Futuristic technology interface",
+      "Global collaboration network",
+      "Vibrant developer community",
+      "Abstract data visualization",
+      "Clean, professional tech design"
+    ],
+    "ctas": [
+      "Launch a Challenge",
+      "Join a Hackathon",
+      "View All Opportunities"
+    ],
+    "brand_context": "Devpost is a dedicated platform hosting online hackathons and challenges, facilitating collaboration between major global organizations (including Meta, Okta, and Atlassian) and a vast developer base. These challenges span critical technological themes such as Machine Learning/AI (boasting over $606,000 in prizes), Social Good, Education, IoT, Blockchain, and DevOps. The platform features time-sensitive events with substantial prize pools, such as the Gemini 3 Hackathon offering $100,000. Devpost caters to both beginner-friendly initiatives and specialized development tracks like Databases, ensuring organizers can target specific skill sets and participants can find relevant, high-value competitive projects to advance their skills and gain recognition."
+  }
+}
+[2025-12-31T09:18:55.875Z] 📄 HTML cargado. Longitud: 185593 caracteres.
+[2025-12-31T09:18:55.875Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T09:18:55.877Z] 🔤 Fuentes iniciales extraídas: 1 ["Source Sans\\ 3"]
+[2025-12-31T09:18:56.002Z] 🔍 Favicon encontrado: https://www.l2toiture.com/app/themes/l2toiture/assets/favicon/apple-touch-icon.png (4 candidatos)
+[2025-12-31T09:18:56.005Z] 📱 Social links found: 2, Emails: 1
+[2025-12-31T09:18:56.047Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T09:18:56.048Z]    - SVGs en header encontrados: 41
+[2025-12-31T09:18:56.049Z]    - IMGs en header encontrados: 2
+[2025-12-31T09:18:56.049Z]    - firstHeaderSvg.length: 1
+[2025-12-31T09:18:56.050Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 564 caracteres
+[2025-12-31T09:18:56.050Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2025-12-31T09:18:56.051Z] 🖼️ Logo candidates encontrados: 37 (Top score: 440)
+[2025-12-31T09:18:56.051Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T09:18:56.051Z]    1. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo.svg - Score: 440
+[2025-12-31T09:18:56.052Z]    2. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo-white.svg - Score: 440
+[2025-12-31T09:18:56.052Z]    3. SVG inline - Score: 350 - Length: 564 chars
+[2025-12-31T09:18:56.052Z]    4. URL: https://www.l2toiture.com/app/uploads/2025/03/cnesst.svg - Score: 190
+[2025-12-31T09:18:56.053Z]    5. URL: https://www.l2toiture.com/app/uploads/2025/03/acq.svg - Score: 190
+[2025-12-31T09:19:15.531Z] ✅ Gemini Response: {
+  "brand_name": "L2 Toitures",
+  "tagline": "L'expertise certifiée pour une toiture durable à Québec et Lévis.",
+  "business_overview": "L2 Toiture est une compagnie de couvreurs certifiés opérant dans la grande région de Québec et Lévis, spécialisée en réfection, réparation et entretien de toitures résidentielles et commerciales. Avec près de 15 ans de savoir-faire, l'entreprise propose des services professionnels clé en main incluant l'installation de bardeaux d’asphalte et de membranes élastomères. Elle se distingue par son engagement envers la sécurité, la rapidité d'exécution et la propreté du chantier.",
+  "brand_values": [
+    "Sécurité",
+    "Qualité",
+    "Expertise",
+    "Rapidité",
+    "Propreté"
+  ],
+  "tone_of_voice": [
+    "Professionnel",
+    "Fiable",
+    "Transparent"
+  ],
+  "visual_aesthetic": [
+    "Robuste",
+    "Structuré",
+    "Technique"
+  ],
+  "target_audience": [
+    "Propriétaires résidentiels de la grande région de Québec",
+    "Propriétaires et gestionnaires d'immeubles commerciaux et industriels",
+    "Syndicats de copropriété recherchant des réparations fiables"
+  ],
+  "colors": [
+    "#009CCC",
+    "#1F1D1D",
+    "#CC7E00",
+    "#007AFF",
+    "#FFFFFF"
+  ],
+  "fonts": [
+    "IBM Plex Serif",
+    "Source Sans 3"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Protégez votre investissement: Obtenez une toiture durable garantie par des couvreurs certifiés.",
+      "Urgence toiture à Québec? Intervention rapide 24/7 de nos experts.",
+      "Réfection de toiture clé en main pour résidentiel et commercial.",
+      "15 ans d'expérience et 12 573 réalisations: Votre toit est entre de bonnes mains.",
+      "Soumission gratuite: Découvrez le coût réel de votre projet de réfection, sans surprise."
+    ],
+    "visual_keywords": [
+      "Couvreurs certifiés sur toit",
+      "Chantier propre et sécuritaire",
+      "Bardeaux d'asphalte noir qualité premium",
+      "Toit plat moderne membrane élastomère",
+      "Paysage urbain de Québec vue de toiture"
+    ],
+    "ctas": [
+      "Ma Soumission Gratuite",
+      "Demander une Inspection",
+      "Appeler le Service d'Urgence (24/7)"
+    ],
+    "brand_context": "L2 Toiture, établie depuis 15 ans à Québec et Lévis (licence RBQ: 5716-4626-01), est spécialisée dans les services de toiture complets, incluant installation, réparation et rénovation pour les secteurs résidentiel, commercial et industriel. L'entreprise compte 50 employés répartis en 7 équipes professionnelles et couvre annuellement plus d'un million de pieds carrés de superficie de toiture. Ils travaillent avec divers matériaux comme les bardeaux d’asphalte, les membranes élastomères, et installent également soffites et gouttières. Leurs certifications (SOPREMA, CertainTeed, IKO, APCHQ) garantissent la conformité et la durabilité des travaux."
+  }
+}
+[2025-12-31T09:21:18.266Z] 📄 HTML cargado. Longitud: 185593 caracteres.
+[2025-12-31T09:21:18.267Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T09:21:18.268Z] 🔤 Fuentes iniciales extraídas: 1 ["Source Sans\\ 3"]
+[2025-12-31T09:21:18.392Z] 🔍 Favicon encontrado: https://www.l2toiture.com/app/themes/l2toiture/assets/favicon/apple-touch-icon.png (4 candidatos)
+[2025-12-31T09:21:18.395Z] 📱 Social links found: 2, Emails: 1
+[2025-12-31T09:21:18.421Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T09:21:18.422Z]    - SVGs en header encontrados: 41
+[2025-12-31T09:21:18.423Z]    - IMGs en header encontrados: 2
+[2025-12-31T09:21:18.423Z]    - firstHeaderSvg.length: 1
+[2025-12-31T09:21:18.424Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 564 caracteres
+[2025-12-31T09:21:18.424Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2025-12-31T09:21:18.425Z] 🖼️ Logo candidates encontrados: 37 (Top score: 440)
+[2025-12-31T09:21:18.425Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T09:21:18.426Z]    1. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo.svg - Score: 440
+[2025-12-31T09:21:18.426Z]    2. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo-white.svg - Score: 440
+[2025-12-31T09:21:18.426Z]    3. SVG inline - Score: 350 - Length: 564 chars
+[2025-12-31T09:21:18.426Z]    4. URL: https://www.l2toiture.com/app/uploads/2025/03/cnesst.svg - Score: 190
+[2025-12-31T09:21:18.427Z]    5. URL: https://www.l2toiture.com/app/uploads/2025/03/acq.svg - Score: 190
+[2025-12-31T09:21:29.975Z] ✅ Gemini Response: {
+  "brand_name": "L2 Toitures",
+  "tagline": "L'excellence certifiée en toiture pour votre tranquillité d'esprit.",
+  "business_overview": "L2 Toitures est une compagnie de couvreurs certifiés opérant dans la grande région de Québec et Lévis, spécialisée dans la réfection et la réparation de toitures résidentielles, commerciales et industrielles. Forte de près de 15 ans d'expérience, l'entreprise assure des travaux clé en main de qualité supérieure, incluant l'installation de bardeaux d'asphalte et de membranes élastomères, ainsi que des services d'urgence.",
+  "brand_values": [
+    "Certification",
+    "Qualité Supérieure",
+    "Sécurité",
+    "Efficacité",
+    "Durabilité"
+  ],
+  "tone_of_voice": [
+    "Professionnel",
+    "Fiable",
+    "Direct"
+  ],
+  "visual_aesthetic": [
+    "Robuste",
+    "Institutionnel",
+    "Clair"
+  ],
+  "target_audience": [
+    "Propriétaires résidentiels de la grande région de Québec et Lévis",
+    "Gestionnaires d'immeubles et Syndicats de Copropriété (Commercial)",
+    "Clients en situation d'urgence nécessitant une intervention immédiate"
+  ],
+  "colors": [
+    "#009CCC",
+    "#CC7E00",
+    "#1F1D1D",
+    "#FFFFFF",
+    "#007AFF"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Source Sans 3"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Votre toiture montre des signes d'usure? Obtenez votre soumission gratuite.",
+      "Couvreurs Certifiés IKO, SOPREMA et CertainTeed: La garantie de travaux durables.",
+      "Urgence toiture 24/7 à Québec et Lévis. Intervention rapide assurée!",
+      "Réfection de toiture résidentielle ou commerciale: Plus de 15 ans d'expertise.",
+      "Sécurité, Rapidité, Propreté, Qualité: Choisissez l'expert L2 Toitures."
+    ],
+    "visual_keywords": [
+      "Toiture plate membrane élastomère",
+      "Couvreurs professionnels sur chantier",
+      "Toit en bardeaux d'asphalte haute définition",
+      "Inspection de toiture par drone",
+      "Architecture de Québec sous la neige"
+    ],
+    "ctas": [
+      "Demander ma soumission gratuite",
+      "Appeler pour une urgence",
+      "Voir nos réalisations"
+    ],
+    "brand_context": "L2 Toitures est un entrepreneur spécialisé en réfection et réparation de toits, actif depuis près de 15 ans (fondé autour de 2010), desservant la grande région de Québec et Lévis, ainsi que 42 villes au Québec et en Ontario. L'entreprise met l'accent sur la qualité supérieure, la sécurité (priorité des travailleurs et clients), la rapidité et la propreté sur le chantier. Les couvreurs sont certifiés par des organismes reconnus (SOPREMA, CertainTeed, IKO) et l'entreprise possède la licence RBQ 5716-4626-01, garantissant le respect des normes. L2 Toitures emploie 50 personnes et couvre plus d'un million de pieds carrés de toiture annuellement, offrant des services pour toits plats, blancs, en pente, et l'installation de soffites et gouttières."
+  }
+}
+[2025-12-31T09:24:32.760Z] 📄 HTML cargado. Longitud: 78067 caracteres.
+[2025-12-31T09:24:32.761Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T09:24:32.762Z] 🔤 Fuentes iniciales extraídas: 1 ["Open Sans"]
+[2025-12-31T09:24:32.892Z] 🔍 Favicon encontrado: https://apiflash.com/static/favicons/apple-touch-icon.png (6 candidatos)
+[2025-12-31T09:24:32.894Z] 📱 Social links found: 0, Emails: 0
+[2025-12-31T09:24:32.918Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T09:24:32.918Z]    - SVGs en header encontrados: 0
+[2025-12-31T09:24:32.919Z]    - IMGs en header encontrados: 1
+[2025-12-31T09:24:32.919Z]    - firstHeaderSvg.length: 0
+[2025-12-31T09:24:32.920Z] 🎯 Primera IMG en header detectada
+[2025-12-31T09:24:32.920Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T09:24:32.921Z] 🖼️ Logo candidates encontrados: 7 (Top score: 660)
+[2025-12-31T09:24:32.921Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T09:24:32.921Z]    1. URL: https://apiflash.com/static/logo.svg - Score: 660
+[2025-12-31T09:24:32.922Z]    2. URL: https://apiflash.com/static/references/brandsintown.svg - Score: 110
+[2025-12-31T09:24:32.922Z]    3. URL: https://apiflash.com/static/references/axeptio.svg - Score: 110
+[2025-12-31T09:24:32.923Z]    4. URL: https://apiflash.com/static/references/accenture.svg - Score: 110
+[2025-12-31T09:24:32.923Z]    5. URL: https://apiflash.com/static/references/arcelormittal.svg - Score: 110
+[2025-12-31T09:24:45.286Z] ✅ Gemini Response: {
+  "brand_name": "ApiFlash",
+  "tagline": "The simple and powerful website screenshot API.",
+  "business_overview": "ApiFlash provides a robust API for converting any URL into pixel-perfect image formats (PNG, JPEG, WebP). Built on modern Google Chrome rendering and a highly scalable AWS Lambda infrastructure, the service guarantees reliability and high throughput under massive workloads. It is used by over 24,000 businesses to capture millions of screenshots daily.",
+  "brand_values": [
+    "Scalability",
+    "Precision",
+    "Stability",
+    "Simplicity",
+    "Security"
+  ],
+  "tone_of_voice": [
+    "Technical",
+    "Professional",
+    "Reliable"
+  ],
+  "visual_aesthetic": [
+    "Clean",
+    "Functional",
+    "High-Tech"
+  ],
+  "target_audience": [
+    "Software Developers/Engineers",
+    "SaaS and MarTech Platforms",
+    "Large Enterprises requiring visual data capture"
+  ],
+  "colors": [
+    "#3B5FBF",
+    "#6C757D",
+    "#3EFFFF",
+    "#DC3545",
+    "#28A745"
+  ],
+  "fonts": [
+    "Montserrat",
+    "Open Sans"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Capture Any Website: Pixel-Perfect Screenshots, Every Time.",
+      "Scale Your Visual Data Needs with AWS Lambda Power.",
+      "Forget Headless Browsers. Use the Simple, Fast Screenshot API.",
+      "Full Page, Mobile Ready, Cookie-Free Screenshots Instantly.",
+      "Trusted by 24,000+ Businesses for Millions of Screenshots Daily."
+    ],
+    "visual_keywords": [
+      "Pixel perfect rendering",
+      "High fidelity browser capture",
+      "Scalable cloud infrastructure",
+      "Clean API documentation interface",
+      "Modern web standards compliance"
+    ],
+    "ctas": [
+      "Get Started Now",
+      "Sign up for free",
+      "Chat with us"
+    ],
+    "brand_context": "ApiFlash is a robust URL-to-image conversion service built upon up-to-date Google Chrome instances for guaranteed pixel-perfect rendering and support for modern web features. The infrastructure is truly scalable, built entirely on top of AWS Lambda to ensure stability and cost-effectiveness under heavy workloads. Key features include full-page screenshots, precise viewport control, automatic capture timing, removal of ads and cookie banners, and S3 export capabilities. ApiFlash is a product of NetCube EURL, a technology company based in Montpellier, France, operating since 2017, and serves over 24,000 businesses with plans ranging from free to custom enterprise solutions handling millions of requests."
+  }
+}
+[2025-12-31T09:45:08.347Z] 📄 HTML cargado. Longitud: 185593 caracteres.
+[2025-12-31T09:45:08.348Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T09:45:08.349Z] 🔤 Fuentes iniciales extraídas: 1 ["Source Sans\\ 3"]
+[2025-12-31T09:45:08.483Z] 🔍 Favicon encontrado: https://www.l2toiture.com/app/themes/l2toiture/assets/favicon/apple-touch-icon.png (4 candidatos)
+[2025-12-31T09:45:08.487Z] 📱 Social links found: 2, Emails: 1
+[2025-12-31T09:45:08.556Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T09:45:08.557Z]    - SVGs en header encontrados: 41
+[2025-12-31T09:45:08.557Z]    - IMGs en header encontrados: 2
+[2025-12-31T09:45:08.558Z]    - firstHeaderSvg.length: 1
+[2025-12-31T09:45:08.558Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 564 caracteres
+[2025-12-31T09:45:08.558Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2025-12-31T09:45:08.559Z] 🖼️ Logo candidates encontrados: 37 (Top score: 440)
+[2025-12-31T09:45:08.559Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T09:45:08.560Z]    1. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo.svg - Score: 440
+[2025-12-31T09:45:08.560Z]    2. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo-white.svg - Score: 440
+[2025-12-31T09:45:08.560Z]    3. SVG inline - Score: 350 - Length: 564 chars
+[2025-12-31T09:45:08.560Z]    4. URL: https://www.l2toiture.com/app/uploads/2025/03/cnesst.svg - Score: 190
+[2025-12-31T09:45:08.561Z]    5. URL: https://www.l2toiture.com/app/uploads/2025/03/acq.svg - Score: 190
+[2025-12-31T09:45:19.088Z] ✅ Gemini Response: {
+  "brand_name": "L2 Toitures",
+  "tagline": "La référence en toiture durable à Québec et Lévis.",
+  "business_overview": "L2 Toitures est une compagnie de couvreurs certifiés opérant à Québec et Lévis, spécialisée dans la réfection et réparation de toitures résidentielles et commerciales. Forte de 15 ans d'expérience, l'entreprise garantit des travaux clés en main de haute qualité en utilisant des matériaux certifiés comme les bardeaux d’asphalte et la membrane élastomère.",
+  "brand_values": [
+    "Qualité",
+    "Sécurité",
+    "Expertise",
+    "Durabilité",
+    "Efficacité"
+  ],
+  "tone_of_voice": [
+    "Professionnel",
+    "Fiable",
+    "Orienté client"
+  ],
+  "visual_aesthetic": [
+    "Robuste",
+    "Industriel",
+    "Certifié"
+  ],
+  "target_audience": [
+    "Propriétaires résidentiels cherchant une réfection ou réparation durable",
+    "Gestionnaires d'immeubles commerciaux nécessitant des travaux sur toits plats",
+    "Syndicats de copropriété exigeant des entrepreneurs certifiés et transparents"
+  ],
+  "colors": [
+    "#009CCC",
+    "#1F1D1D",
+    "#FFFFFF",
+    "#007AFF",
+    "#CC7E00"
+  ],
+  "fonts": [
+    "Poppins",
+    "Open Sans"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Votre toiture est en urgence ? Service 24/7 disponible à Québec.",
+      "Couvreurs certifiés SOPREMA et IKO: La qualité garantie pour 15 ans.",
+      "Obtenez une soumission gratuite pour votre réfection de toit, sans engagement.",
+      "Sécurité, Rapidité, Propreté: Choisissez l'efficacité L2 Toitures.",
+      "Spécialistes des toits plats et des bardeaux d’asphalte à Lévis."
+    ],
+    "visual_keywords": [
+      "Toit plat membrane élastomère industriel",
+      "Couvreurs certifiés en hauteur sécurité",
+      "Gros plan bardeaux d'asphalte impeccables",
+      "Toiture résidentielle contemporaine sous ciel bleu",
+      "Chantier de construction propre et organisé"
+    ],
+    "ctas": [
+      "Demandez votre soumission gratuite",
+      "Appelez pour une urgence toiture 24/7",
+      "Parlez à un couvreur certifié"
+    ],
+    "brand_context": "L2 Toitures est un entrepreneur spécialisé en toiture opérant principalement dans la grande région de Québec et Lévis, y compris la Rive-Nord et la Rive-Sud (zones comme Charlesbourg, Beauport, Sillery, Saint-Nicolas). L'entreprise dispose de 7 équipes de couvreurs professionnelles, totalisant 50 employés. En 15 ans d'existence, ils ont réalisé 12 573 projets, couvrant plus d'un million de pieds carrés annuellement. Ils sont certifiés par des organismes clés tels que SOPREMA, CertainTeed et IKO, et détiennent la licence RBQ ainsi que la certification APCHQ, garantissant des travaux conformes aux normes de sécurité et de construction. Les services couvrent l'installation, la rénovation, la réparation (y compris les urgences 24/7) de toits plats, en pente, en bardeaux d’asphalte ou à membrane élastomère."
+  }
+}
+[2025-12-31T09:55:20.010Z] 📄 HTML cargado. Longitud: 185593 caracteres.
+[2025-12-31T09:55:20.011Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T09:55:20.013Z] 🔤 Fuentes iniciales extraídas: 1 ["Source Sans\\ 3"]
+[2025-12-31T09:55:20.142Z] 🔍 Favicon encontrado: https://www.l2toiture.com/app/themes/l2toiture/assets/favicon/apple-touch-icon.png (4 candidatos)
+[2025-12-31T09:55:20.147Z] 📱 Social links found: 2, Emails: 1, Phones: 2
+[2025-12-31T09:55:20.179Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T09:55:20.181Z]    - SVGs en header encontrados: 41
+[2025-12-31T09:55:20.181Z]    - IMGs en header encontrados: 2
+[2025-12-31T09:55:20.182Z]    - firstHeaderSvg.length: 1
+[2025-12-31T09:55:20.183Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 564 caracteres
+[2025-12-31T09:55:20.183Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2025-12-31T09:55:20.184Z] 🖼️ Logo candidates encontrados: 37 (Top score: 440)
+[2025-12-31T09:55:20.184Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T09:55:20.185Z]    1. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo.svg - Score: 440
+[2025-12-31T09:55:20.185Z]    2. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo-white.svg - Score: 440
+[2025-12-31T09:55:20.186Z]    3. SVG inline - Score: 350 - Length: 564 chars
+[2025-12-31T09:55:20.186Z]    4. URL: https://www.l2toiture.com/app/uploads/2025/03/cnesst.svg - Score: 190
+[2025-12-31T09:55:20.187Z]    5. URL: https://www.l2toiture.com/app/uploads/2025/03/acq.svg - Score: 190
+[2025-12-31T09:55:32.606Z] ✅ Gemini Response: {
+  "brand_name": "L2 Toitures",
+  "tagline": "Couvreurs certifiés. Durabilité assurée.",
+  "business_overview": "L2 Toitures est une compagnie de toiture à Québec et Lévis experte en réfection, réparation et entretien de toits résidentiels, commerciaux et industriels. Forts de près de 15 ans d'expérience et d'une main-d'œuvre certifiée (SOPREMA, IKO), nous assurons des travaux clé en main avec un engagement fort envers la sécurité, la propreté et la qualité supérieure des matériaux.",
+  "brand_values": [
+    "Qualité Supérieure",
+    "Sécurité Prioritaire",
+    "Efficacité (Rapidité)",
+    "Expertise Certifiée",
+    "Durabilité"
+  ],
+  "tone_of_voice": [
+    "Professionnel",
+    "Fiable",
+    "Direct"
+  ],
+  "visual_aesthetic": [
+    "Robuste",
+    "Net et précis",
+    "Technique"
+  ],
+  "target_audience": [
+    "Propriétaires résidentiels dans la région de Québec/Lévis",
+    "Gestionnaires d'immeubles commerciaux et industriels",
+    "Syndicats de copropriété nécessitant des réparations majeures"
+  ],
+  "colors": [
+    "#009CCC",
+    "#1F1D1D",
+    "#000099",
+    "#007AFF",
+    "#FFFFFF"
+  ],
+  "fonts": [
+    "EB Garamond",
+    "Source Sans 3"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Votre toiture est-elle prête pour l'hiver québécois? Inspection gratuite!",
+      "Infiltration d'eau? Nous intervenons en urgence 24/7 à Québec et Lévis.",
+      "Rénovation de toiture commerciale: matériaux SOPREMA et installation certifiée.",
+      "15 ans d'expertise en toiture. Ne confiez pas votre toit à n'importe qui.",
+      "Obtenez une soumission clé en main pour bardeaux d'asphalte ou membrane élastomère."
+    ],
+    "visual_keywords": [
+      "Couvreurs certifiés en action",
+      "Toit plat commercial",
+      "Architecture résidentielle québécoise",
+      "Sécurité chantier hivernal",
+      "Matériaux de toiture durables"
+    ],
+    "ctas": [
+      "Demandez ma soumission gratuite",
+      "Appelez l'urgence toiture (24/7)",
+      "Voir nos réalisations professionnelles"
+    ],
+    "brand_context": "L2 Toitures est une entreprise de couvreurs spécialisée dans la réfection, la réparation et l'entretien de toitures dans la grande région de Québec et Lévis, incluant des zones spécifiques sur la Rive-Nord (Charlesbourg, Beauport, Lac-Beauport) et la Rive-Sud (Lévis, Saint-Nicolas). L'entreprise, qui compte près de 15 ans d'existence (depuis 2010), emploie 50 personnes réparties en 7 équipes professionnelles. Ils se concentrent sur les marchés résidentiel, commercial et industriel, couvrant plus d'un million de pieds carrés par an. Leurs services incluent l'installation de bardeaux d'asphalte, de membranes élastomères et travaillent sur tous les types de toits (plats, en pente, blancs). L2 Toitures met l'accent sur la conformité et la durabilité, comme en témoignent leurs certifications auprès d'organismes reconnus (SOPREMA, CertainTeed, IKO) et leur licence RBQ 5716-4626-01. Ils offrent un service d'urgence 24h/24 pour les problèmes critiques comme les infiltrations."
+  }
+}
+[2025-12-31T10:09:52.694Z] 📄 HTML cargado. Longitud: 185593 caracteres.
+[2025-12-31T10:09:52.694Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T10:09:52.696Z] 🔤 Fuentes iniciales extraídas: 1 ["Source Sans\\ 3"]
+[2025-12-31T10:09:52.825Z] 🔍 Favicon encontrado: https://www.l2toiture.com/app/themes/l2toiture/assets/favicon/apple-touch-icon.png (4 candidatos)
+[2025-12-31T10:09:52.831Z] 📱 Social links found: 2, Emails: 1, Phones: 2
+[2025-12-31T10:09:52.877Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T10:09:52.878Z]    - SVGs en header encontrados: 41
+[2025-12-31T10:09:52.880Z]    - IMGs en header encontrados: 2
+[2025-12-31T10:09:52.880Z]    - firstHeaderSvg.length: 1
+[2025-12-31T10:09:52.881Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 564 caracteres
+[2025-12-31T10:09:52.881Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2025-12-31T10:09:52.882Z] 🖼️ Logo candidates encontrados: 37 (Top score: 440)
+[2025-12-31T10:09:52.883Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T10:09:52.883Z]    1. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo.svg - Score: 440
+[2025-12-31T10:09:52.883Z]    2. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo-white.svg - Score: 440
+[2025-12-31T10:09:52.883Z]    3. SVG inline - Score: 350 - Length: 564 chars
+[2025-12-31T10:09:52.884Z]    4. URL: https://www.l2toiture.com/app/uploads/2025/03/cnesst.svg - Score: 190
+[2025-12-31T10:09:52.884Z]    5. URL: https://www.l2toiture.com/app/uploads/2025/03/acq.svg - Score: 190
+[2025-12-31T10:09:52.892Z] 🔍 Extracción inicial: 3 RRSS, 1 emails, 2 teléfonos
+[2025-12-31T10:10:03.289Z] ✅ Gemini Response: {
+  "brand_name": "L2 Toitures",
+  "tagline": "La force de l'expertise sur votre toit.",
+  "business_overview": "L2 Toitures est une compagnie de toiture experte en réfection, réparation et entretien de toits pour les secteurs résidentiel, commercial et industriel dans la région de Québec et Lévis. Forte de près de 15 ans d'expérience et d’équipes certifiées, l'entreprise garantit des travaux durables, réalisés avec un accent mis sur la sécurité, la rapidité et la propreté du chantier.",
+  "brand_values": [
+    "Qualité Supérieure",
+    "Expertise Certifiée",
+    "Sécurité Prioritaire",
+    "Efficacité",
+    "Durabilité"
+  ],
+  "tone_of_voice": [
+    "Professionnel",
+    "Fiable",
+    "Direct"
+  ],
+  "visual_aesthetic": [
+    "Robuste",
+    "Technique",
+    "Clair"
+  ],
+  "target_audience": [
+    "Propriétaires résidentiels dans la grande région de Québec et Lévis nécessitant une rénovation ou réparation urgente.",
+    "Gestionnaires de bâtiments commerciaux ou industriels cherchant des solutions de toiture membrane élastomère ou plat.",
+    "Syndicats de copropriété exigeant des entrepreneurs certifiés pour des mandats de grande envergure."
+  ],
+  "colors": [
+    "#009CCC",
+    "#1F1D1D",
+    "#FFFFFF",
+    "#CC7E00",
+    "#007AFF"
+  ],
+  "fonts": [
+    "Libre Baskerville",
+    "Source Sans 3"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Urgence toiture? Intervention 24/7 garantie à Québec et Lévis.",
+      "Plus de 15 ans d'expertise : Votre toiture entre de bonnes mains certifiées.",
+      "Réfection de toiture commerciale et résidentielle : Demandez votre soumission gratuite.",
+      "Sécurité, Propreté, Qualité : Les 3 piliers de vos travaux de toiture réussis.",
+      "Couvreurs certifiés SOPREMA, CertainTeed et IKO. La tranquillité d'esprit est incluse."
+    ],
+    "visual_keywords": [
+      "Couvreurs certifiés",
+      "Toits plats et en pente",
+      "Chantier impeccable",
+      "Vues aériennes Québec",
+      "Membrane élastomère et bardeaux d’asphalte"
+    ],
+    "ctas": [
+      "Ma soumission gratuite",
+      "Contactez l'urgence 24/7",
+      "Demandez une inspection complète"
+    ],
+    "brand_context": "L2 Toitures est un entrepreneur spécialisé en toiture (RBQ: 5716-4626-01) actif dans la grande région de Québec et Lévis depuis près de 15 ans. L'entreprise est polyvalente, offrant installation, réparation et entretien pour toits résidentiels, commerciaux et industriels (incluant toits plats, blancs, en bardeaux d'asphalte et membrane élastomère). Elle opère avec 7 équipes professionnelles et 50 employés, ayant couvert plus d'un million de pieds carrés de superficie de toiture annuellement. L'entreprise met l'accent sur le travail clé en main et la conformité, étant certifiée par des organismes reconnus comme SOPREMA, CertainTeed et IKO, ainsi que détenant l'accréditation APCHQ."
+  }
+}
+[2025-12-31T10:22:56.746Z] 📄 HTML cargado. Longitud: 185593 caracteres.
+[2025-12-31T10:22:56.747Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T10:22:56.748Z] 🔤 Fuentes iniciales extraídas: 1 ["Source Sans\\ 3"]
+[2025-12-31T10:22:56.878Z] 🔍 Favicon encontrado: https://www.l2toiture.com/app/themes/l2toiture/assets/favicon/apple-touch-icon.png (4 candidatos)
+[2025-12-31T10:22:56.883Z] 📱 Social links found: 2, Emails: 1, Phones: 2
+[2025-12-31T10:22:56.925Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T10:22:56.926Z]    - SVGs en header encontrados: 41
+[2025-12-31T10:22:56.927Z]    - IMGs en header encontrados: 2
+[2025-12-31T10:22:56.928Z]    - firstHeaderSvg.length: 1
+[2025-12-31T10:22:56.928Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 564 caracteres
+[2025-12-31T10:22:56.928Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2025-12-31T10:22:56.929Z] 🖼️ Logo candidates encontrados: 37 (Top score: 440)
+[2025-12-31T10:22:56.930Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T10:22:56.930Z]    1. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo.svg - Score: 440
+[2025-12-31T10:22:56.930Z]    2. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo-white.svg - Score: 440
+[2025-12-31T10:22:56.930Z]    3. SVG inline - Score: 350 - Length: 564 chars
+[2025-12-31T10:22:56.931Z]    4. URL: https://www.l2toiture.com/app/uploads/2025/03/cnesst.svg - Score: 190
+[2025-12-31T10:22:56.931Z]    5. URL: https://www.l2toiture.com/app/uploads/2025/03/acq.svg - Score: 190
+[2025-12-31T10:22:56.939Z] 🔍 Extracción inicial: 3 RRSS, 1 emails, 2 teléfonos
+[2025-12-31T10:23:17.266Z] ✅ Gemini Response: {
+  "brand_name": "L2 Toitures",
+  "tagline": "Experts certifiés en toiture. Sécurité et durabilité garantie.",
+  "business_overview": "L2 Toitures est une compagnie de toiture basée à Québec et Lévis, experte en réfection, réparation et entretien de toits pour les secteurs résidentiel, commercial et industriel. Avec près de 15 ans d'expérience, l'entreprise s'appuie sur des couvreurs certifiés pour garantir des travaux de haute qualité, une intervention rapide et un chantier toujours propre, couvrant plus d'un million de pieds carrés annuellement.",
+  "brand_values": [
+    "Qualité supérieure",
+    "Sécurité (travailleurs et clients)",
+    "Efficacité et Rapidité",
+    "Certification (APCHQ, RBQ)",
+    "Durabilité des matériaux"
+  ],
+  "tone_of_voice": [
+    "Professionnel",
+    "Fiable",
+    "Direct"
+  ],
+  "visual_aesthetic": [
+    "Robuste",
+    "Institutionnel",
+    "Clair"
+  ],
+  "target_audience": [
+    "Propriétaires résidentiels dans la grande région de Québec et Lévis ayant besoin de rénovations ou réparations.",
+    "Gestionnaires d'immeubles commerciaux recherchant des solutions pour toits plats et membranes élastomères.",
+    "Syndicats de copropriété ou propriétaires fonciers exigeant des couvreurs certifiés et une intervention structurée."
+  ],
+  "colors": [
+    "#009CCC",
+    "#1F1D1D",
+    "#FFFFFF",
+    "#CC7E00",
+    "#007AFF"
+  ],
+  "fonts": [
+    "Libre Baskerville",
+    "Source Sans 3"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Urgence toiture 24/7: Protégez votre propriété immédiatement.",
+      "Couvreurs certifiés SOPREMA et IKO: La garantie d'une toiture bien faite.",
+      "Votre toit montre des signes d’usure? Demandez votre soumission gratuite dès aujourd'hui.",
+      "15 ans d’expertise en toiture résidentielle et commerciale à Québec.",
+      "Plus d'un million de pieds carrés couverts annuellement. Faites confiance au volume."
+    ],
+    "visual_keywords": [
+      "Chantier propre",
+      "Toiture commerciale moderne",
+      "Installation bardeaux d’asphalte",
+      "Couvreurs avec harnais de sécurité",
+      "Inspection de toit par drone"
+    ],
+    "ctas": [
+      "Ma soumission gratuite",
+      "Contactez l'urgence 24/7",
+      "Découvrez nos réalisations"
+    ],
+    "brand_context": "L2 Toitures est un entrepreneur spécialisé en toiture (licence RBQ: 5716-4626-01) opérant dans la grande région de Québec et Lévis, ainsi que dans plus de 40 villes distinctes au Québec et en Ontario. Fondée en 2010 (près de 15 ans d'existence), l'entreprise emploie 50 personnes réparties en 7 équipes professionnelles et affiche 12 573 réalisations à ce jour. L'offre de services inclut la réparation, la rénovation et l'installation de toitures, avec une expertise particulière sur les bardeaux d'asphalte, les membranes élastomères et les toits plats. L2 Toitures garantit la qualité de ses travaux grâce à la certification APCHQ et la certification de ses couvreurs par des organismes reconnus comme SOPREMA, CertainTeed et IKO, tout en mettant l'accent sur la sécurité et la propreté du chantier pour des travaux clé en main."
+  }
+}
+[2025-12-31T10:37:01.571Z] 📄 HTML cargado. Longitud: 185593 caracteres.
+[2025-12-31T10:37:01.571Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T10:37:01.572Z] 🔤 Fuentes iniciales extraídas: 1 ["Source Sans\\ 3"]
+[2025-12-31T10:37:01.707Z] 🔍 Favicon encontrado: https://www.l2toiture.com/app/themes/l2toiture/assets/favicon/apple-touch-icon.png (4 candidatos)
+[2025-12-31T10:37:01.712Z] 📱 Social links found: 2, Emails: 1, Phones: 2
+[2025-12-31T10:37:01.752Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T10:37:01.753Z]    - SVGs en header encontrados: 41
+[2025-12-31T10:37:01.754Z]    - IMGs en header encontrados: 2
+[2025-12-31T10:37:01.754Z]    - firstHeaderSvg.length: 1
+[2025-12-31T10:37:01.754Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 564 caracteres
+[2025-12-31T10:37:01.755Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2025-12-31T10:37:01.755Z] 🖼️ Logo candidates encontrados: 37 (Top score: 440)
+[2025-12-31T10:37:01.756Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T10:37:01.756Z]    1. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo.svg - Score: 440
+[2025-12-31T10:37:01.756Z]    2. URL: https://www.l2toiture.com/app/themes/l2toiture/assets/img/logo-white.svg - Score: 440
+[2025-12-31T10:37:01.756Z]    3. SVG inline - Score: 350 - Length: 564 chars
+[2025-12-31T10:37:01.757Z]    4. URL: https://www.l2toiture.com/app/uploads/2025/03/cnesst.svg - Score: 190
+[2025-12-31T10:37:01.757Z]    5. URL: https://www.l2toiture.com/app/uploads/2025/03/acq.svg - Score: 190
+[2025-12-31T10:37:01.763Z] 🔍 Extracción inicial: 3 RRSS, 1 emails, 2 teléfonos
+[2025-12-31T10:37:13.958Z] ✅ Gemini Response: {
+  "brand_name": "L2 Toitures",
+  "tagline": "La qualité certifiée pour votre toit, de Québec à Lévis.",
+  "business_overview": "L2 Toiture est une entreprise de couvreurs certifiés à Québec et Lévis, spécialisée dans la réfection, la réparation et l'entretien de toitures résidentielles, commerciales et industrielles. Forts de près de 15 ans d'expérience, ils garantissent des travaux durables grâce à l'expertise de leurs équipes, à des matériaux de première qualité et au strict respect des normes de sécurité.",
+  "brand_values": [
+    "Qualité Supérieure",
+    "Expertise Certifiée",
+    "Sécurité Prioritaire",
+    "Efficacité Rapide",
+    "Fiabilité Locale"
+  ],
+  "tone_of_voice": [
+    "Professionnel",
+    "Fiable",
+    "Direct"
+  ],
+  "visual_aesthetic": [
+    "Robuste",
+    "Net et Propre",
+    "Industriel"
+  ],
+  "target_audience": [
+    "Propriétaires immobiliers résidentiels de Québec et Lévis",
+    "Gestionnaires de bâtiments commerciaux ou industriels",
+    "Syndicats de copropriété recherchant des entrepreneurs certifiés"
+  ],
+  "colors": [
+    "#009CCC",
+    "#1F1D1D",
+    "#FFFFFF",
+    "#CC7E00",
+    "#000099"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Inter"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Plus de 15 ans d'expertise en toiture à Québec et Lévis. Demandez votre soumission gratuite!",
+      "Urgence toiture 24/7: Ne laissez pas une infiltration menacer votre propriété. Intervention rapide.",
+      "Toiture commerciale ou résidentielle? Obtenez la qualité certifiée SOPREMA, CertainTeed et IKO.",
+      "Sécurité, Rapidité, Propreté, Qualité : L'engagement clé en main de L2 Toiture.",
+      "Spécialistes des toits plats, blancs, et bardeaux d’asphalte : Trouvez votre solution durable ici."
+    ],
+    "visual_keywords": [
+      "Toiture québécoise sous la neige",
+      "Couvreurs professionnels certifiés sur un toit plat",
+      "Bardeaux d'asphalte neufs et nets",
+      "Gouttières et soffites modernes",
+      "Chantier de construction propre et organisé"
+    ],
+    "ctas": [
+      "Obtenez Ma Soumission Gratuite",
+      "Appelez pour une Urgence 24/7",
+      "Planifiez Votre Inspection de Toit"
+    ],
+    "brand_context": "L2 Toiture est un entrepreneur spécialisé dans la réfection, la réparation et l'entretien de toits dans les secteurs résidentiel, commercial et industriel pour la grande région de Québec et Lévis. Fondée en 2010, l'entreprise cumule 15 années d'existence, compte 50 employés répartis en 7 équipes, et couvre plus d'un million de pieds carrés de toiture annuellement. L'expertise est garantie par des certifications de haut niveau (SOPREMA, CertainTeed, IKO) et une licence RBQ (5716-4626-01), assurant des travaux durables sur divers types de toits (plats, en pente, bardeaux d'asphalte, membrane élastomère). Ils mettent l'accent sur la sécurité, la propreté du site et l'efficacité, offrant également un service d'urgence 24h/24 pour les problèmes critiques."
+  }
+}
+[2025-12-31T10:40:02.424Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T10:40:02.424Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T10:40:02.425Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T10:40:02.426Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T10:40:02.427Z] 📱 Social links found: 2, Emails: 1, Phones: 2
+[2025-12-31T10:40:02.431Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T10:40:02.432Z]    - SVGs en header encontrados: 0
+[2025-12-31T10:40:02.432Z]    - IMGs en header encontrados: 11
+[2025-12-31T10:40:02.432Z]    - firstHeaderSvg.length: 0
+[2025-12-31T10:40:02.433Z] 🎯 Primera IMG en header detectada
+[2025-12-31T10:40:02.433Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T10:40:02.434Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T10:40:02.434Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T10:40:02.434Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T10:40:02.435Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T10:40:02.435Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T10:40:02.435Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T10:40:02.435Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T10:40:02.641Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 2 teléfonos
+[2025-12-31T10:40:21.137Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años formando el futuro con excelencia y humanidad.",
+  "business_overview": "Academia Bauset es un centro de estudios con más de 45 años de trayectoria en Meliana, especializado en la formación integral que abarca desde idiomas y certificaciones oficiales, hasta informática, robótica y refuerzo escolar. Se distinguen por un alto porcentaje de aprobados y por la combinación de experiencia docente con tecnologías educativas modernas, manteniendo siempre un fuerte carácter humano y familiar.",
+  "brand_values": [
+    "Experiencia (45+ años)",
+    "Profesionalidad Docente",
+    "Trato Humano y Cercanía",
+    "Excelencia Académica",
+    "Compromiso Local"
+  ],
+  "tone_of_voice": [
+    "Experimentado",
+    "Cercano",
+    "Motivador"
+  ],
+  "visual_aesthetic": [
+    "Institucional",
+    "Didáctica",
+    "Funcional"
+  ],
+  "target_audience": [
+    "Estudiantes de Horta Nord que buscan titulaciones oficiales de idiomas (Cambridge, Pearson, JQCV).",
+    "Jóvenes y adultos que necesitan preparación efectiva para Pruebas de Acceso (Universidad, Ciclos Formativos, Bachillerato).",
+    "Empresas y corporaciones que requieren formación de idiomas in-company para sus directivos y empleados."
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#4A1E11",
+    "#000000",
+    "#FFFFFF"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Obtén tu certificación oficial de idiomas con un alto índice de éxito comprobado.",
+      "45 años de tradición académica en Meliana: la confianza de varias generaciones.",
+      "Prepárate para la PAU o Ciclos Formativos y asegura tu futuro profesional.",
+      "Refuerzo escolar y Robótica: la combinación perfecta para el rendimiento de tus hijos.",
+      "Formación de idiomas in-company adaptada a las necesidades reales de tu empresa."
+    ],
+    "visual_keywords": [
+      "Aula moderna con tecnología",
+      "Profesores interactuando con alumnos",
+      "Diplomas y certificados oficiales",
+      "Ambiente de estudio familiar",
+      "Niños en clases de robótica"
+    ],
+    "ctas": [
+      "Pide Información sin Compromiso",
+      "Realiza tu Prueba de Nivel Gratuita",
+      "Llama o Envía un WhatsApp Ahora"
+    ],
+    "brand_context": "Academia Bauset, fundada por Amparo Bauset Ferrer hace más de cuatro décadas en Meliana (Avda. Santa María, 31), se enfoca en la formación integral cubriendo idiomas, informática y apoyo académico. Están acreditados como centro oficial examinador de Trinity College London (nº 32290), centro sub-oficial de Pearson Test of English General (nº32014V), y Centro Addvantage preparador de Cambridge ESOL examinations, asegurando una alta tasa de aprobados en niveles A1 a C2. Su oferta incluye robótica y cálculo mental, refuerzo en todas las materias hasta bachillerato, y formación específica para empresas como Mitsubishi materials España, operando con diez aulas totalmente equipadas tecnológicamente."
+  }
+}
+[2025-12-31T10:47:04.868Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T10:47:04.869Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T10:47:04.870Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T10:47:04.873Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T10:47:04.874Z] 📱 Social links found: 2, Emails: 1, Phones: 2
+[2025-12-31T10:47:04.882Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T10:47:04.882Z]    - SVGs en header encontrados: 0
+[2025-12-31T10:47:04.883Z]    - IMGs en header encontrados: 11
+[2025-12-31T10:47:04.883Z]    - firstHeaderSvg.length: 0
+[2025-12-31T10:47:04.883Z] 🎯 Primera IMG en header detectada
+[2025-12-31T10:47:04.884Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T10:47:04.884Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T10:47:04.885Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T10:47:04.885Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T10:47:04.885Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T10:47:04.885Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T10:47:04.886Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T10:47:04.886Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T10:47:05.038Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 2 teléfonos, 0 direcciones
+[2025-12-31T10:47:15.488Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "45 años de tradición, profesionalidad y futuro en tu formación.",
+  "business_overview": "Academia Bauset es un centro de estudios con más de 45 años de experiencia en Meliana, especializado en formación integral que abarca idiomas, pruebas de acceso (universidad, ciclos formativos) e innovación tecnológica como la robótica. Combina una alta profesionalidad docente con un trato humano y familiar, siendo centro examinador oficial de importantes certificaciones internacionales.",
+  "brand_values": [
+    "Experiencia",
+    "Familiaridad",
+    "Profesionalidad",
+    "Excelencia Académica",
+    "Innovación Educativa"
+  ],
+  "tone_of_voice": [
+    "Profesional",
+    "Cercano",
+    "Efectivo"
+  ],
+  "visual_aesthetic": [
+    "Académico",
+    "Funcional",
+    "Energético"
+  ],
+  "target_audience": [
+    "Estudiantes de primaria y secundaria que necesitan refuerzo escolar y apoyo en materias específicas.",
+    "Adultos y jóvenes buscando certificaciones oficiales de idiomas (B1, B2, C1) para fines académicos o laborales.",
+    "Empresas e instituciones públicas que requieren formación especializada in-company para sus empleados (idiomas comerciales)."
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#000000",
+    "#4A1E11",
+    "#ABB8C3"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "45 Años de Excelencia: La tradición que asegura tu título oficial.",
+      "¿Necesitas el B2 o C1? Somos centro examinador oficial de Cambridge y Trinity.",
+      "Refuerzo Escolar y Robótica: Prepara a tus hijos para el futuro, hoy.",
+      "Accede a la Universidad o a Ciclos Formativos con nuestro alto porcentaje de aprobados.",
+      "Capacita a tu equipo en idiomas: Soluciones de formación in-company para empresas."
+    ],
+    "visual_keywords": [
+      "Aula tecnológica",
+      "Certificaciones oficiales sobre mesa",
+      "Estudiantes colaborando sonrientes",
+      "Ambiente académico profesional",
+      "Logotipo con fondo verde vibrante"
+    ],
+    "ctas": [
+      "Pide tu Prueba de Nivel Gratis",
+      "Consulta Nuestros Cursos Oficiales",
+      "Matricúlate Ahora"
+    ],
+    "brand_context": "Academia Bauset es un centro de estudios fundado hace más de 45 años por Amparo Bauset Ferrer, ubicado en Meliana (Avda. Santa María, 31). El centro está especializado en la preparación de idiomas (Inglés, Francés, Alemán, Valenciano JQCV) y en la obtención de titulaciones oficiales, siendo centro examinador oficial de Trinity College London (nº 32290), sub-oficial de Pearson Test of English General (nº32014V) y centro preparador de Cambridge ESOL, reportando un altísimo porcentaje de aprobados. Ofrece también formación para pruebas de acceso (PAU, Ciclos Formativos y Bachillerato) y ha incorporado áreas de vanguardia como la Robótica y didácticas de cálculo mental. La academia cuenta con diez aulas totalmente acondicionadas con tecnología. Además, se extiende al ámbito corporativo, impartiendo clases in-company a empresas como Mitsubishi materials España y Nanta, y a instituciones públicas como el Ayuntamiento de Meliana."
+  }
+}
+[2025-12-31T10:56:08.209Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T10:56:08.209Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T10:56:08.210Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T10:56:08.214Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T10:56:08.220Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2025-12-31T10:56:08.227Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T10:56:08.228Z]    - SVGs en header encontrados: 0
+[2025-12-31T10:56:08.229Z]    - IMGs en header encontrados: 11
+[2025-12-31T10:56:08.229Z]    - firstHeaderSvg.length: 0
+[2025-12-31T10:56:08.229Z] 🎯 Primera IMG en header detectada
+[2025-12-31T10:56:08.230Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T10:56:08.230Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T10:56:08.230Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T10:56:08.231Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T10:56:08.231Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T10:56:08.231Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T10:56:08.232Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T10:56:08.232Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T10:56:08.396Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2025-12-31T10:56:18.726Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Formación con experiencia y visión de futuro, arraigada en Meliana.",
+  "business_overview": "Academia Bauset es un centro de estudios fundado hace más de 45 años en Meliana, especializado en ofrecer una formación integral que abarca desde idiomas y refuerzo escolar hasta robótica e informática avanzada. Preparamos a alumnos de todas las edades para obtener certificaciones oficiales y superar pruebas de acceso, destacando por nuestra alta tasa de aprobados y un trato familiar y profesional.",
+  "brand_values": [
+    "Experiencia",
+    "Familiaridad",
+    "Efectividad",
+    "Profesionalidad",
+    "Innovación Educativa"
+  ],
+  "tone_of_voice": [
+    "Cercano",
+    "Experimentado",
+    "Motivador"
+  ],
+  "visual_aesthetic": [
+    "Establecido",
+    "Dinámico",
+    "Funcional"
+  ],
+  "target_audience": [
+    "Estudiantes de Primaria a Bachillerato que buscan refuerzo escolar y preparación para exámenes de acceso.",
+    "Adultos y profesionales que necesitan certificaciones oficiales de idiomas (Cambridge, Pearson, JQCV).",
+    "Empresas y directivos interesados en formación in-company especializada en idiomas comerciales."
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#000000",
+    "#FFFFFF",
+    "#ABB8C3"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Certifícate con la experiencia de 45 años. ¡Alto porcentaje de aprobados garantizado!",
+      "¿Necesitas un título oficial? Prepárate para Cambridge, Pearson o JQCV con expertos.",
+      "De taquigrafía a Robótica: Formación integral y vanguardista para el futuro en Meliana.",
+      "El refuerzo escolar que sí funciona: Atención individualizada para asegurar tu éxito académico.",
+      "Idiomas, informática y acceso a la universidad: Tu camino al éxito profesional empieza aquí."
+    ],
+    "visual_keywords": [
+      "Aula moderna y luminosa",
+      "Interacción estudiante-profesor",
+      "Logros y certificados oficiales",
+      "Tecnología educativa",
+      "Ambiente de estudio colaborativo"
+    ],
+    "ctas": [
+      "¡Pide tu prueba de nivel ahora!",
+      "Consulta nuestros horarios y tarifas.",
+      "Inscríbete en el curso que necesitas."
+    ],
+    "brand_context": "Academia Bauset es un centro de formación fundado hace más de 45 años por Amparo Bauset Ferrer en Meliana (Avda. Santa María, 31). El centro cuenta con un equipo humano que combina experiencia docente con alta preparación universitaria, ofreciendo formación en idiomas (Inglés, Francés, Alemán, Valenciano, Español), informática, robótica y preparación para pruebas de acceso a ciclos formativos y universidad. Son centro examinador oficial de Trinity College London (nº 32290), sub-oficial de Pearson Test of English General (nº32014V) y Centro Addvantage preparador de Cambridge ESOL examinations, garantizando un altísimo porcentaje de aprobados. Disponen de diez aulas totalmente acondicionadas con las últimas tecnologías para facilitar el aprendizaje."
+  }
+}
+[2025-12-31T10:57:31.078Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T10:57:31.079Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T10:57:31.080Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T10:57:31.083Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T10:57:31.086Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2025-12-31T10:57:31.094Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T10:57:31.095Z]    - SVGs en header encontrados: 0
+[2025-12-31T10:57:31.096Z]    - IMGs en header encontrados: 11
+[2025-12-31T10:57:31.096Z]    - firstHeaderSvg.length: 0
+[2025-12-31T10:57:31.097Z] 🎯 Primera IMG en header detectada
+[2025-12-31T10:57:31.097Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T10:57:31.098Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T10:57:31.098Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T10:57:31.098Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T10:57:31.099Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T10:57:31.099Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T10:57:31.099Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T10:57:31.099Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T10:57:31.257Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2025-12-31T10:57:41.332Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años formando generaciones en idiomas, tecnología y acceso.",
+  "business_overview": "Academia Bauset es un centro de formación con una trayectoria de más de cuatro décadas en Meliana, especializado en una educación integral que abarca desde idiomas y certificaciones oficiales hasta áreas técnicas como robótica e informática. Se distingue por su enfoque humano, la profesionalidad de su equipo y su compromiso con el éxito académico de sus alumnos en todas las etapas educativas y profesionales.",
+  "brand_values": [
+    "Experiencia Docente",
+    "Tradición Familiar",
+    "Cercanía Humana",
+    "Calidad Certificada",
+    "Innovación Educativa"
+  ],
+  "tone_of_voice": [
+    "Profesional",
+    "Cercano",
+    "Experimentado"
+  ],
+  "visual_aesthetic": [
+    "Estable",
+    "Didáctico",
+    "Tradicional-moderno"
+  ],
+  "target_audience": [
+    "Estudiantes de primaria, ESO y Bachillerato que buscan refuerzo escolar y preparación para exámenes de acceso (PAU, Ciclos Formativos).",
+    "Adultos y jóvenes que necesitan obtener certificaciones oficiales de idiomas (Cambridge, Trinity, JQCV) para su desarrollo profesional.",
+    "Empresas y corporaciones en la comarca de Horta Nord que requieren formación in-company para sus directivos y empleados (inglés/francés comercial)."
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#000000",
+    "#FFFFFF",
+    "#4A1E11"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Certifica tu nivel de idiomas con los expertos de Meliana: Cambridge, Trinity, Pearson.",
+      "Acelera tu futuro: Pruebas de Acceso a Universidad y Ciclos Formativos garantizadas.",
+      "La academia que combina 45 años de tradición con la robótica educativa más actual.",
+      "Refuerzo escolar con atención individualizada que logra resultados comprobados.",
+      "Cursos de Idiomas, Informática y Repaso para todas las edades y objetivos."
+    ],
+    "visual_keywords": [
+      "Aula moderna con tecnología",
+      "Estudiantes concentrados y felices",
+      "Ambiente familiar y profesional",
+      "Certificados oficiales y sellos de aprobación",
+      "Profesor guiando a estudiante"
+    ],
+    "ctas": [
+      "¡Pide tu Prueba de Nivel Gratis!",
+      "Matricúlate y Asegura tu Éxito",
+      "Consulta Horarios y Áreas"
+    ],
+    "brand_context": "Academia Bauset, ubicada en Avenida Santa María 31, Meliana, es un Centro de Estudios fundado hace más de 45 años por Amparo Bauset Ferrer. La academia se ha consolidado como centro examinador oficial o preparador de importantes entidades como Trinity College London (nº 32290), Pearson Test of English General (nº32014V) y Cambridge ESOL. Ofrece una formación educativa muy amplia que abarca desde la preparación para exámenes de la JQCV, TOEFL, IELTS y pruebas de acceso (PAU, Ciclos) hasta clases especializadas en robótica y ordenografía. Sus programas se dirigen a particulares y a formación in-company para empresas como Corporación F.Turia y Mitsubishi Materials España, destacando por una plantilla de profesionales con alta preparación universitaria y experiencia docente, garantizando un alto porcentaje de aprobados. El centro cuenta con diez aulas acondicionadas con las últimas tecnologías y está activamente comprometido con el comercio local (MAC)."
+  }
+}
+[2025-12-31T11:06:03.736Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T11:06:03.737Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T11:06:03.738Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T11:06:03.740Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T11:06:03.743Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2025-12-31T11:06:03.751Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T11:06:03.751Z]    - SVGs en header encontrados: 0
+[2025-12-31T11:06:03.753Z]    - IMGs en header encontrados: 11
+[2025-12-31T11:06:03.753Z]    - firstHeaderSvg.length: 0
+[2025-12-31T11:06:03.753Z] 🎯 Primera IMG en header detectada
+[2025-12-31T11:06:03.753Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T11:06:03.754Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T11:06:03.754Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T11:06:03.755Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T11:06:03.755Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T11:06:03.755Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T11:06:03.756Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T11:06:03.756Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T11:06:03.919Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2025-12-31T11:06:15.822Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años formando el futuro académico en Meliana.",
+  "business_overview": "Academia Bauset es un centro de estudios consolidado en Meliana, con más de cuatro décadas de experiencia, que ofrece formación multidisciplinar en idiomas, informática, robótica y preparación para exámenes de acceso. El centro se distingue por su alta tasa de aprobados en certificaciones oficiales y su enfoque en la atención individualizada y la combinación de tradición con tecnología educativa moderna.",
+  "brand_values": [
+    "Trayectoria",
+    "Excelencia Académica",
+    "Atención Personalizada",
+    "Innovación Didáctica",
+    "Compromiso Local"
+  ],
+  "tone_of_voice": [
+    "Profesional",
+    "Cercano",
+    "Efectivo"
+  ],
+  "visual_aesthetic": [
+    "Didáctico",
+    "Contrastado",
+    "Tradicional-Moderno"
+  ],
+  "target_audience": [
+    "Estudiantes de todos los niveles que buscan certificaciones de idiomas oficiales (Cambridge, Trinity)",
+    "Familias y padres que necesitan refuerzo escolar y preparación para pruebas de acceso (PAU, Ciclos)",
+    "Empresas y profesionales que requieren formación lingüística in-company (Inglés, Francés comercial)"
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#000000",
+    "#FFFFFF",
+    "#4A1E11"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Asegura tu título oficial: Alto porcentaje de aprobados en Cambridge y Trinity.",
+      "Lleva a tus hijos al futuro con nuestros cursos de Robótica e Informática.",
+      "Prepara tus pruebas de acceso a Ciclos y Universidad con 45 años de experiencia.",
+      "El centro de idiomas líder en Meliana: Inglés, Francés, Alemán y Valencià.",
+      "Formación in-company: Capacitación lingüística para directivos y trabajadores."
+    ],
+    "visual_keywords": [
+      "Aula moderna y tecnológica",
+      "Ambiente de estudio acogedor",
+      "Detalle de certificación oficial",
+      "Luz brillante sobre libros",
+      "Profesores nativos y titulados"
+    ],
+    "ctas": [
+      "Reserva tu prueba de nivel",
+      "Consulta nuestros horarios y precios",
+      "Matrícula abierta 2025/2026"
+    ],
+    "brand_context": "Centro de Estudios Bauset fue fundado hace más de 45 años por Amparo Bauset Ferrer en Meliana (Avda. Santa María 31) y se ha mantenido como un negocio familiar en Horta Nord. Está especializado en formación lingüística y es centro oficial examinador de Trinity College London (nº 32290), centro sub-oficial de Pearson Test of English General (nº32014V) y Centro Addvantage preparador de Cambridge ESOL. Ofrece preparación para TOEFL, IELTS y JQCV, además de formación en áreas como robótica para primaria, informática y refuerzo escolar, con diez aulas equipadas con la última tecnología. También se desplaza a empresas como Corporación F.Turia y Mitsubishi Materials España para impartir clases comerciales a través de la fundación tripartita."
+  }
+}
+[2025-12-31T11:14:38.088Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T11:14:38.089Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T11:14:38.090Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T11:14:38.097Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T11:14:38.099Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2025-12-31T11:14:38.106Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T11:14:38.106Z]    - SVGs en header encontrados: 0
+[2025-12-31T11:14:38.107Z]    - IMGs en header encontrados: 11
+[2025-12-31T11:14:38.108Z]    - firstHeaderSvg.length: 0
+[2025-12-31T11:14:38.109Z] 🎯 Primera IMG en header detectada
+[2025-12-31T11:14:38.109Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T11:14:38.110Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T11:14:38.110Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T11:14:38.111Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T11:14:38.111Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T11:14:38.112Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T11:14:38.112Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T11:14:38.112Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T11:14:38.291Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2025-12-31T11:14:48.707Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años de experiencia y oficialidad formando tu futuro.",
+  "business_overview": "Academia Bauset es un centro de estudios consolidado en Meliana con más de cuatro décadas de experiencia, ofreciendo una formación integral y multidisciplinar. Se especializan en idiomas (con foco en certificaciones oficiales como Cambridge y Trinity), informática, robótica, y preparación para todas las pruebas de acceso y refuerzo escolar, destacando por su profesionalidad y trato humano. Buscan combinar la tradición familiar con las didácticas tecnológicas más recientes para garantizar el éxito académico de sus alumnos.",
+  "brand_values": [
+    "Experiencia",
+    "Oficialidad",
+    "Trato Humano",
+    "Formación Integral",
+    "Compromiso Local"
+  ],
+  "tone_of_voice": [
+    "Profesional",
+    "Cercano",
+    "Efectivo"
+  ],
+  "visual_aesthetic": [
+    "Institucional",
+    "Claro",
+    "Funcional"
+  ],
+  "target_audience": [
+    "Estudiantes de Primaria, ESO y Bachillerato que requieren refuerzo o preparación para acceso.",
+    "Jóvenes y adultos buscando certificaciones oficiales de idiomas (A1-C2).",
+    "Empresas e instituciones públicas que necesitan formación continua para sus empleados (inglés/francés comercial)."
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#000000",
+    "#FFFFFF",
+    "#8ED1FC"
+  ],
+  "fonts": [
+    "Lora",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Aprueba tu examen oficial: Alto porcentaje de éxito garantizado.",
+      "45 años de experiencia formando profesionales en Horta Nord.",
+      "Cursos de Robótica, Informática e Idiomas: Prepara a tus hijos para el futuro.",
+      "Consigue tu título oficial de Cambridge, Trinity o Pearson en Bauset.",
+      "Formación especializada 'in-company' para directivos y trabajadores."
+    ],
+    "visual_keywords": [
+      "Aulas modernas y equipadas",
+      "Interacción profesional docente",
+      "Certificados y diplomas oficiales",
+      "Clases de idiomas dinámicas",
+      "Ambiente de estudio centrado y tecnológico"
+    ],
+    "ctas": [
+      "Pide tu prueba de nivel gratuita.",
+      "Consulta nuestros horarios y precios.",
+      "Automatricúlate ahora."
+    ],
+    "brand_context": "Academia Bauset, fundada hace más de 45 años por Amparo Bauset Ferrer, originalmente especializada en taquimecanografía, es hoy un centro de estudios multidisciplinar ubicado en Meliana (Avda. Santa María, 31, y Polígono Industrial nº-2), con fácil acceso por Metro Valencia. La academia es centro oficial examinador de Trinity College London (nº 32290), centro sub-oficial de Pearson Test of English General (nº 32014V), y preparador de Cambridge ESOL, ofreciendo titulación oficial hasta C2 en Inglés, Francés, Alemán y Valenciano (JQCV). También abordan áreas de tecnología (Robótica, Informática) y preparación exhaustiva para accesos universitarios y ciclos formativos, con un alto índice de aprobados. El centro dispone de diez aulas con tecnología avanzada y provee servicios de formación para empresas como Corporación F.Turia y Nanta."
+  }
+}
+[2025-12-31T11:19:20.851Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T11:19:20.852Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T11:19:20.853Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T11:19:20.854Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T11:19:20.856Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2025-12-31T11:19:20.863Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T11:19:20.864Z]    - SVGs en header encontrados: 0
+[2025-12-31T11:19:20.864Z]    - IMGs en header encontrados: 11
+[2025-12-31T11:19:20.864Z]    - firstHeaderSvg.length: 0
+[2025-12-31T11:19:20.865Z] 🎯 Primera IMG en header detectada
+[2025-12-31T11:19:20.865Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T11:19:20.865Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T11:19:20.866Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T11:19:20.866Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T11:19:20.866Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T11:19:20.866Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T11:19:20.867Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T11:19:20.867Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T11:19:21.017Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2025-12-31T11:19:34.093Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años formando generaciones en Meliana.",
+  "business_overview": "Academia Bauset es un centro de estudios con más de 45 años de trayectoria, ofreciendo una formación integral que abarca desde idiomas y certificaciones oficiales (Cambridge, Trinity) hasta clases de refuerzo escolar, preparación de pruebas de acceso y cursos de robótica e informática. El centro se distingue por su enfoque humano, profesionalidad y su profundo compromiso con la formación continua de alumnos de todas las edades.",
+  "brand_values": [
+    "Experiencia",
+    "Tradición",
+    "Profesionalidad",
+    "Familiaridad",
+    "Efectividad"
+  ],
+  "tone_of_voice": [
+    "Profesional",
+    "Cercano",
+    "Experimentado"
+  ],
+  "visual_aesthetic": [
+    "Fiable",
+    "Institucional",
+    "Diverso"
+  ],
+  "target_audience": [
+    "Estudiantes que buscan certificaciones oficiales de idiomas (B1, B2, C1, C2)",
+    "Estudiantes de primaria, ESO y Bachillerato que necesitan refuerzo y preparación de accesos",
+    "Empresas e instituciones públicas que requieren formación in-company (inglés/francés comercial)"
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#4A1E11",
+    "#000000",
+    "#FFFFFF"
+  ],
+  "fonts": [
+    "Lora",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Aprueba tu examen oficial: Alto porcentaje de éxito en Cambridge, Trinity y JQCV.",
+      "¿Acceso a la universidad? Te preparamos con más de 15 años de experiencia y resultados.",
+      "El centro de estudios de Meliana en el que confían tres generaciones.",
+      "Refuerzo escolar efectivo: Mejora el rendimiento con atención individualizada.",
+      "Aprende robótica e informática con la tecnología didáctica más avanzada."
+    ],
+    "visual_keywords": [
+      "Aula moderna y luminosa",
+      "Profesores titulados y sonrientes",
+      "Comunidad de estudiantes diversa",
+      "Pizarra digital y tecnología educativa",
+      "Ambiente de estudio familiar y profesional"
+    ],
+    "ctas": [
+      "¡Matricúlate ahora!",
+      "Pide tu prueba de nivel gratuita",
+      "Consulta nuestros horarios"
+    ],
+    "brand_context": "Academia Bauset, ubicada en Avenida Santa María 31, Meliana (Horta Nord), es un centro educativo fundado hace más de 45 años por Amparo Bauset Ferrer, quien comenzó impartiendo taquimecanografía. El centro se especializa en la preparación de idiomas oficiales (Inglés, Francés, Alemán, Valenciano) siendo centro examinador oficial de Trinity College London (nº 32290), centro sub-oficial de Pearson Test of English General (nº 32014V) y preparador de Cambridge ESOL examinations. Además, ofrecen formación para pruebas de acceso (PAU, Ciclos, Bachillerato), refuerzo escolar, informática, ordenografía, y cursos innovadores como robótica y cálculo mental (1,2,3, Bauset). También imparten clases in-company para entidades como Corporación F.Turia, Mitsubishi materials y Nanta, y al ayuntamiento de Meliana, demostrando una fuerte conexión con el tejido empresarial local y regional. Cuentan con diez aulas equipadas con las últimas tecnologías."
+  }
+}
+[2025-12-31T11:23:16.051Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T11:23:16.052Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T11:23:16.053Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T11:23:16.057Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T11:23:16.060Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2025-12-31T11:23:16.071Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T11:23:16.072Z]    - SVGs en header encontrados: 0
+[2025-12-31T11:23:16.072Z]    - IMGs en header encontrados: 11
+[2025-12-31T11:23:16.073Z]    - firstHeaderSvg.length: 0
+[2025-12-31T11:23:16.073Z] 🎯 Primera IMG en header detectada
+[2025-12-31T11:23:16.073Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T11:23:16.074Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T11:23:16.074Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T11:23:16.074Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T11:23:16.075Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T11:23:16.075Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T11:23:16.075Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T11:23:16.075Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T11:23:16.249Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2025-12-31T11:23:28.017Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años formando el futuro con experiencia y profesionalidad.",
+  "business_overview": "Academia Bauset es un centro de formación integral ubicado en Meliana con más de cuatro décadas de experiencia, ofreciendo desde clases de idiomas con certificaciones oficiales hasta refuerzo escolar, informática y robótica. Se distingue por su enfoque humano, su alta tasa de aprobados en exámenes oficiales y su compromiso con la formación de calidad para todas las edades y niveles, incluyendo programas para empresas y pruebas de acceso.",
+  "brand_values": [
+    "Experiencia",
+    "Profesionalidad",
+    "Tradición familiar",
+    "Efectividad académica",
+    "Atención individualizada"
+  ],
+  "tone_of_voice": [
+    "Profesional",
+    "Cercano",
+    "Motivador"
+  ],
+  "visual_aesthetic": [
+    "Institucional",
+    "Didáctico",
+    "Confiable"
+  ],
+  "target_audience": [
+    "Estudiantes de primaria, ESO y Bachillerato que requieren refuerzo escolar y extraescolares.",
+    "Adultos y jóvenes que buscan certificaciones oficiales de idiomas (Cambridge, Pearson, JQCV) o acceso a la universidad.",
+    "Empresas e instituciones locales que necesitan formación bonificada en idiomas comerciales (Inglés y Francés)."
+  ],
+  "colors": [
+    "#0D3A00",
+    "#0EFF1D",
+    "#4A1E11",
+    "#240000",
+    "#ABB8C3"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Asegura tu título oficial: ¡Altísimo porcentaje de aprobados garantizado!",
+      "45 años de experiencia formando generaciones en Meliana, la tradición que funciona.",
+      "¿Acceso a la universidad o FP? Prepárate con los expertos que conocen las pruebas.",
+      "Idiomas, Robótica, Informática: La formación integral que tus hijos necesitan para el futuro.",
+      "Formación Bonificada para Empresas: Capacita a tu equipo con Inglés o Francés Comercial."
+    ],
+    "visual_keywords": [
+      "Aula moderna y luminosa",
+      "Estudiantes de diferentes edades interactuando",
+      "Certificados y logotipos de exámenes oficiales (Cambridge, Pearson)",
+      "Tablet y robot programable en una mesa",
+      "Profesores titulados y sonrientes"
+    ],
+    "ctas": [
+      "Pide tu prueba de nivel gratuita",
+      "Matricúlate ahora y asegura tu plaza",
+      "Consulta nuestros horarios y tarifas"
+    ],
+    "brand_context": "Academia Bauset, ubicada en Avda. Santa María 31 en Meliana, es un centro educativo establecido en Horta Nord por Amparo Bauset Ferrer, con una trayectoria que supera los 45 años. El centro está altamente especializado en preparación de idiomas (Inglés, Francés, Alemán, Valenciano JQCV y Español para Extranjeros) y actúa como centro oficial examinador de Trinity College London (nº 32290), sub-oficial de Pearson Test of English General (nº32014V), y preparador Cambridge ESOL. Además, ofrece refuerzo escolar, preparación de accesos a ciclos y universidad, e imparte programas innovadores como Robótica (para primaria) y Ordenografía. Cuenta con diez aulas totalmente acondicionadas con tecnología y un equipo docente con más de 15 años de experiencia, destacando por su servicio 'in-company' a grandes firmas como Mitsubishi Materials España y Nanta."
+  }
+}
+[2025-12-31T11:28:26.447Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T11:28:26.447Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T11:28:26.448Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T11:28:26.452Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T11:28:26.454Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2025-12-31T11:28:26.462Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T11:28:26.462Z]    - SVGs en header encontrados: 0
+[2025-12-31T11:28:26.463Z]    - IMGs en header encontrados: 11
+[2025-12-31T11:28:26.463Z]    - firstHeaderSvg.length: 0
+[2025-12-31T11:28:26.464Z] 🎯 Primera IMG en header detectada
+[2025-12-31T11:28:26.464Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T11:28:26.464Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T11:28:26.465Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T11:28:26.465Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T11:28:26.465Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T11:28:26.465Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T11:28:26.466Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T11:28:26.466Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T11:28:26.639Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2025-12-31T11:28:36.771Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años formando el futuro en Meliana.",
+  "business_overview": "Academia Bauset es un centro de estudios integral con más de 45 años de trayectoria en Meliana, especializado en la preparación de idiomas oficiales y pruebas de acceso, además de ofrecer refuerzo escolar y áreas innovadoras como robótica. Su modelo combina la experiencia docente tradicional y un trato familiar con el uso de las últimas tecnologías en sus diez aulas acondicionadas. Son centro oficial examinador de Trinity, sub-oficial de Pearson y preparador de Cambridge, asegurando un alto índice de aprobados para sus alumnos.",
+  "brand_values": [
+    "Tradición",
+    "Profesionalidad",
+    "Formación Integral",
+    "Familiaridad",
+    "Efectividad"
+  ],
+  "tone_of_voice": [
+    "Profesional",
+    "Cercano",
+    "Experimentado"
+  ],
+  "visual_aesthetic": [
+    "Académico",
+    "Estable",
+    "Claro"
+  ],
+  "target_audience": [
+    "Estudiantes de Primaria, ESO y Bachillerato que necesitan refuerzo y preparación de accesos.",
+    "Adultos y profesionales que buscan certificaciones oficiales de idiomas (A1 a C2).",
+    "Empresas e instituciones que requieren formación in-company bonificada (inglés/francés comercial)."
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#000000",
+    "#FFFFFF",
+    "#ABB8C3"
+  ],
+  "fonts": [
+    "EB Garamond",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Aprueba tu examen oficial de idiomas con nuestro alto índice de éxito.",
+      "Expertos en accesos: Prepárate para Ciclos Formativos y Universidad en tu centro de confianza.",
+      "Más de 45 años de experiencia formando a tu familia en Horta Nord.",
+      "Refuerzo escolar garantizado: Profesores con más de 15 años de experiencia docente.",
+      "Desarrolla habilidades clave: Clases de Robótica, Informática y Ordenografía para el futuro."
+    ],
+    "visual_keywords": [
+      "Aula moderna y luminosa",
+      "Certificación oficial de idiomas",
+      "Ambiente académico tradicional",
+      "Estudiantes interactuando con tecnología",
+      "Profesores experimentados y sonrientes"
+    ],
+    "ctas": [
+      "Haz tu prueba de nivel gratuita",
+      "Matrícula abierta. ¡Reserva tu plaza!",
+      "Solicita información sobre cursos in-company"
+    ],
+    "brand_context": "Academia Bauset, ubicada en Avenida Santa María 31, Meliana, fue fundada por Amparo Bauset Ferrer y opera con una trayectoria de más de 45 años. Es un centro examinador oficial (Trinity College London nº 32290, Pearson Test of English General nº32014V, y Centro Addvantage preparador de Cambridge ESOL). Ofrece una vasta gama de programas que incluyen lenguas (Inglés, Francés, Alemán, Valenciano/JQCV, Español para extranjeros), accesos a Ciclos Formativos y Universidad, y áreas innovadoras como Robótica y Ordenografía. Cuentan con diez aulas acondicionadas tecnológicamente y se desplazan a empresas como Corporación F.Turia y Nanta para formación bonificada. El equipo se destaca por su alta preparación universitaria y su atención individualizada, manteniendo un alto porcentaje de aprobados."
+  }
+}
+[2025-12-31T11:36:06.621Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T11:36:06.622Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T11:36:06.623Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T11:36:06.626Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T11:36:06.628Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2025-12-31T11:36:06.638Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T11:36:06.639Z]    - SVGs en header encontrados: 0
+[2025-12-31T11:36:06.640Z]    - IMGs en header encontrados: 11
+[2025-12-31T11:36:06.640Z]    - firstHeaderSvg.length: 0
+[2025-12-31T11:36:06.640Z] 🎯 Primera IMG en header detectada
+[2025-12-31T11:36:06.640Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T11:36:06.641Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T11:36:06.641Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T11:36:06.642Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T11:36:06.642Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T11:36:06.642Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T11:36:06.642Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T11:36:06.642Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T11:36:06.835Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2025-12-31T11:36:17.455Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "La tradición de formar profesionales en Horta Nord.",
+  "business_overview": "Academia Bauset es un centro de estudios fundado hace más de 45 años en Meliana, especializado en formación integral para todas las edades. Ofrecen clases de idiomas, refuerzo escolar, preparación para exámenes oficiales (Cambridge, Pearson, JQCV), pruebas de acceso a la universidad y ciclos formativos, e innovadoras áreas como robótica e informática. Su equipo altamente cualificado garantiza una alta tasa de aprobados, manteniendo un ambiente familiar y profesional.",
+  "brand_values": [
+    "Experiencia",
+    "Profesionalidad",
+    "Formación Integral",
+    "Efectividad",
+    "Compromiso Local"
+  ],
+  "tone_of_voice": [
+    "Experimentado",
+    "Cercano",
+    "Profesional"
+  ],
+  "visual_aesthetic": [
+    "Institucional",
+    "Claro",
+    "Dinámico"
+  ],
+  "target_audience": [
+    "Estudiantes (Primaria a Bachillerato) buscando refuerzo y alto rendimiento escolar.",
+    "Adultos y profesionales que requieren certificaciones de idiomas (B1, C2) o preparación para accesos universitarios.",
+    "Empresas y corporaciones que necesitan capacitación lingüística (Inglés/Francés comercial) para sus empleados."
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#000000",
+    "#FFFFFF",
+    "#8ED1FC"
+  ],
+  "fonts": [
+    "Francois One",
+    "Open Sans"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "De la mecanografía a la robótica: 45 años de historia formando el futuro.",
+      "Asegura tu B2 de Cambridge: Alto porcentaje de aprobados garantizado.",
+      "Clases In-Company: Capacitación de idiomas para tu equipo directivo en Horta Nord.",
+      "El refuerzo escolar más efectivo para Primaria, ESO y Bachillerato.",
+      "Accede a la Universidad o Ciclos Formativos con la mejor preparación especializada."
+    ],
+    "visual_keywords": [
+      "Aula moderna e iluminada",
+      "Estudiantes concentrados",
+      "Certificaciones oficiales",
+      "Robótica educativa",
+      "Ambiente familiar y profesional"
+    ],
+    "ctas": [
+      "Reserva tu Prueba de Nivel",
+      "Matricúlate Ahora",
+      "Solicita Información Detallada"
+    ],
+    "brand_context": "Centro de Estudios Bauset, fundado hace más de 45 años por Amparo Bauset Ferrer, es una academia de referencia en Meliana y Horta Nord. Ofrecen un amplio catálogo de servicios que incluye preparación intensiva para exámenes oficiales de idiomas, siendo centro examinador oficial de Trinity College London nº 32290 y sub-oficial de Pearson PTE General nº32014V, además de preparar para Cambridge ESOL, TOEFL, IELTS y JQCV. El centro cuenta con diez aulas totalmente acondicionadas con tecnología moderna, e imparte formación in-company a empresas como Corporación F.Turia, Mitsubishi Materials España y Nanta, además de ofrecer programas de robótica (para alumnos desde primaria) y cursos en el extranjero."
+  }
+}
+[2025-12-31T11:41:07.455Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T11:41:07.456Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T11:41:07.457Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T11:41:07.461Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T11:41:07.463Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2025-12-31T11:41:07.478Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T11:41:07.480Z]    - SVGs en header encontrados: 0
+[2025-12-31T11:41:07.481Z]    - IMGs en header encontrados: 11
+[2025-12-31T11:41:07.481Z]    - firstHeaderSvg.length: 0
+[2025-12-31T11:41:07.481Z] 🎯 Primera IMG en header detectada
+[2025-12-31T11:41:07.482Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T11:41:07.483Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T11:41:07.483Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T11:41:07.484Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T11:41:07.484Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T11:41:07.484Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T11:41:07.484Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T11:41:07.485Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T11:41:07.634Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2025-12-31T11:41:22.496Z] ⚠️ Gemini falló. Intentando con Groq (Llama 3.3)...
+[2025-12-31T11:41:22.627Z] ❌ Fallo total de IA (Gemini y Groq). Usando heurística.
+[2025-12-31T13:19:42.020Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2025-12-31T13:19:42.020Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2025-12-31T13:19:42.021Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2025-12-31T13:19:42.025Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2025-12-31T13:19:42.030Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2025-12-31T13:19:42.040Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2025-12-31T13:19:42.040Z]    - SVGs en header encontrados: 0
+[2025-12-31T13:19:42.041Z]    - IMGs en header encontrados: 11
+[2025-12-31T13:19:42.041Z]    - firstHeaderSvg.length: 0
+[2025-12-31T13:19:42.041Z] 🎯 Primera IMG en header detectada
+[2025-12-31T13:19:42.042Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2025-12-31T13:19:42.042Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2025-12-31T13:19:42.043Z] 📋 CANDIDATOS A LOGO (scored):
+[2025-12-31T13:19:42.043Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2025-12-31T13:19:42.043Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2025-12-31T13:19:42.044Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2025-12-31T13:19:42.044Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2025-12-31T13:19:42.044Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2025-12-31T13:19:42.214Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2025-12-31T13:19:58.515Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años formando tu futuro profesional y académico.",
+  "business_overview": "Academia Bauset es un centro de estudios de referencia en Meliana con más de 45 años de experiencia, fundado por Amparo Bauset. Ofrecen una formación integral que abarca desde idiomas con certificaciones oficiales (Cambridge, Pearson, Trinity) hasta refuerzo escolar, pruebas de acceso y nuevas áreas tecnológicas como la robótica. Se distinguen por combinar la alta profesionalidad docente con un trato humano y cercano, manteniendo una alta tasa de aprobados en todas las convocatorias.",
+  "brand_values": [
+    "Tradición",
+    "Profesionalidad",
+    "Familiaridad",
+    "Excelencia Académica",
+    "Compromiso Local"
+  ],
+  "tone_of_voice": [
+    "Profesional",
+    "Cercano",
+    "Motivador"
+  ],
+  "visual_aesthetic": [
+    "Institucional",
+    "Establecido",
+    "Moderno-Funcional"
+  ],
+  "target_audience": [
+    "Estudiantes de primaria, ESO y Bachillerato que buscan refuerzo escolar efectivo.",
+    "Jóvenes y adultos que requieren certificaciones oficiales de idiomas (A1-C2).",
+    "Empresas e instituciones de Horta Nord que buscan formación in-house para empleados."
+  ],
+  "colors": [
+    "#0D3A00",
+    "#0EFF1D",
+    "#000000",
+    "#FFFFFF",
+    "#ABB8C3"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Asegura tu título oficial de idiomas con más de 45 años de experiencia.",
+      "Refuerzo escolar garantizado: ¡Llegamos al éxito en cada convocatoria!",
+      "De la robótica al C2: Formación integral para todas las edades y niveles.",
+      "Prepárate para las pruebas de acceso a Ciclos Formativos y Universidad.",
+      "El trato familiar y la profesionalidad que tu formación necesita."
+    ],
+    "visual_keywords": [
+      "Aulas luminosas y tecnológicas",
+      "Grupo de estudio motivado",
+      "Profesores nativos y titulados",
+      "Certificaciones oficiales apiladas",
+      "Ambiente de aprendizaje dinámico"
+    ],
+    "ctas": [
+      "¡Matricúlate ahora!",
+      "Pide tu prueba de nivel gratis.",
+      "Contacta y empieza a formarte."
+    ],
+    "brand_context": "Centro de Estudios Bauset, ubicado en Meliana (Avda. Santa Maria, 31), es una academia con una trayectoria de más de 45 años desde su fundación por Amparo Bauset Ferrer. La institución opera con diez aulas totalmente acondicionadas con tecnología avanzada y mantiene un equipo humano que combina experiencia con alta preparación universitaria. Son centro oficial examinador de Trinity College London (nº 32290), centro sub-oficial de Pearson Test of English General (nº32014V) y centro Addvantage preparador de Cambridge ESOL examinations, cubriendo niveles A1 a C2, además de ofrecer preparación para TOEFL e IELTS. Además de la formación local en idiomas, refuerzo, robótica y pruebas de acceso, Bauset imparte clases in-company para entidades como Corporación F.Turia, Mitsubishi materials España y Nanta, gestionando esta formación a través de la fundación tripartita."
+  }
+}

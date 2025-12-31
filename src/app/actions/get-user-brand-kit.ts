@@ -111,6 +111,11 @@ export async function getUserBrandKitById(brandKitId: string): Promise<{
             favicon_url: data.favicon_url || '',
             screenshot_url: data.screenshot_url || '',
             images: normalizeImages(data.images),
+            social_links: data.social_links || [],
+            emails: data.emails || [],
+            phones: data.phones || [],
+            addresses: data.addresses || [],
+            api_trace: data.api_trace || [],
             text_assets: data.text_assets || undefined,
             debug: data.debug || undefined,
             created_at: data.updated_at || new Date().toISOString(), // Using updated_at as created_at doesn't exist
@@ -164,6 +169,11 @@ export async function getUserBrandKit(clerkUserId: string): Promise<{
             favicon_url: record.favicon_url || '',
             screenshot_url: record.screenshot_url || '',
             images: normalizeImages(record.images),
+            social_links: record.social_links || [],
+            emails: record.emails || [],
+            phones: record.phones || [],
+            addresses: record.addresses || [],
+            api_trace: record.api_trace || [],
             text_assets: record.text_assets || undefined,
             debug: record.debug || undefined,
             created_at: record.updated_at || new Date().toISOString(), // Using updated_at as created_at doesn't exist

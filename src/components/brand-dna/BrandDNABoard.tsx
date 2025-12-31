@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { BrandDNA } from '@/lib/brand-types';
+import { cn } from '@/lib/utils';
 import { TextAssetsSection } from './TextAssetsSection';
 import { ColorPalette } from './ColorPalette';
 import { LogoCard, FaviconCard, ScreenshotCard, ImageGallery } from './VisualAssetComponents';
@@ -10,6 +11,8 @@ import { BrandAssets } from './BrandAssets';
 import { TypographySection } from './TypographySection';
 import { BrandContextCard } from './BrandContextCard';
 import { TechnicalAudit } from './TechnicalAudit';
+import { ContactSocialCard } from './ContactSocialCard';
+import { TargetAudienceCard } from './TargetAudienceCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBrandKit } from '@/contexts/BrandKitContext';
@@ -17,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { uploadBrandImage } from '@/app/actions/upload-image';
 import { updateUserBrandKit } from '@/app/actions/update-user-brand-kit';
 
-import { Save, Download, CheckCircle, RotateCcw, AlertCircle, X, Check, Pencil, Plus } from 'lucide-react';
+import { Save, Download, CheckCircle, RotateCcw, AlertCircle, X, Check, Pencil, Plus, Bug } from 'lucide-react';
 
 interface BrandDNABoardProps {
     data: BrandDNA;
@@ -43,6 +46,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
     });
     const [isEditingBrandName, setIsEditingBrandName] = useState(false);
     const [brandNameEdit, setBrandNameEdit] = useState(initialData.brand_name);
+    const [showDebug, setShowDebug] = useState(isDebug);
 
     const handleSave = async (isAuto = false) => {
         if (!user || !hasUnsavedChanges) return;
@@ -264,6 +268,15 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         }
     };
 
+    const handleUpdateContact = (contactData: { socialLinks: { platform: string; url: string }[], emails: string[], phones: string[] }) => {
+        updateData(prev => ({
+            ...prev,
+            social_links: contactData.socialLinks,
+            emails: contactData.emails,
+            phones: contactData.phones
+        }));
+    };
+
     const handleExportJSON = () => {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
         const downloadAnchorNode = document.createElement('a');
@@ -369,8 +382,20 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                             Regenerar
                         </Button>
                     )}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                            "text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-all gap-2 h-9",
+                            showDebug && "text-emerald-500 bg-emerald-500/10"
+                        )}
+                        onClick={() => setShowDebug(!showDebug)}
+                    >
+                        <Bug className="w-4 h-4" />
+                        Auditoría
+                    </Button>
                     <Button variant="outline" size="sm" onClick={handleExportJSON} className="gap-2 h-9">
-                        <Download className="w-4 h-4 mr-2" />
+                        <Download className="w-4 h-4" />
                         Exportar
                     </Button>
                     <Button size="sm" onClick={() => handleSave(false)} disabled={!hasUnsavedChanges || isSaving} className="gap-2 h-9">
@@ -428,6 +453,17 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                             brand_context: val
                         }
                     }))}
+                />
+            </div>
+
+            {/* New Insights Section: Contact & Audience */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <TargetAudienceCard audience={data.target_audience} />
+                <ContactSocialCard
+                    socialLinks={data.social_links}
+                    emails={data.emails}
+                    phones={data.phones}
+                    onUpdate={handleUpdateContact}
                 />
             </div>
 
@@ -489,7 +525,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             </div>
 
             {/* Technical Audit (Debug) */}
-            {isDebug && <TechnicalAudit data={data} />}
+            {showDebug && <TechnicalAudit trace={data.api_trace} isVisible={showDebug} />}
 
             {/* Lightbox */}
             {

@@ -222,6 +222,7 @@ const BrandDNASchema = z.object({
     brand_values: z.array(z.string()).length(5).describe('Lista de 5 valores clave (ej: "Sostenibilidad", "Tradición")'),
     tone_of_voice: z.array(z.string()).length(3).describe('3 adjetivos que describan cómo hablan (ej: "Profesional", "Cercano")'),
     visual_aesthetic: z.array(z.string()).length(3).describe('3 adjetivos que describan su look (ej: "Rústico", "Minimalista")'),
+    target_audience: z.array(z.string()).length(3).describe('3 perfiles de clientes ideales o segmentos de público a los que se dirige'),
     colors: z.array(z.string()).length(5).describe('Array de 5 códigos Hexadecimales de la lista proporcionada'),
     fonts: z.array(z.string()).length(2).describe('Dos fuentes de Google Fonts: una Serif/Display para títulos y una Sans para cuerpo'),
     text_assets: z.object({
@@ -1111,7 +1112,11 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
     svgPalette: string[];
     designPalette: string[];
     fonts: string[];
-    html: string; // Added for weighted analysis
+    socialLinks: { platform: string; url: string }[];
+    emails: string[];
+    phones: string[];
+    addresses: string[];
+    html: string;
 }> {
     const hexRegex = /#([0-9A-Fa-f]{3}){1,2}\b/g;
     const rgbRegex = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*[\d.]+)?\s*\)/g;
@@ -1133,7 +1138,7 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
             });
 
             if (!response.ok) {
-                return { colors: [], colorFrequency: {}, logoCandidates: [], faviconUrl: null, imageCandidates: [], cssLinks: [], rootColors: {}, codePalette: [], svgPalette: [], designPalette: [], fonts: [], html: '' };
+                return { colors: [], colorFrequency: {}, logoCandidates: [], faviconUrl: null, imageCandidates: [], cssLinks: [], rootColors: {}, codePalette: [], svgPalette: [], designPalette: [], fonts: [], socialLinks: [], emails: [], phones: [], addresses: [], html: '' };
             }
             html = await response.text();
         }
@@ -1243,6 +1248,115 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
 
         logToFile(`🔍 Favicon encontrado: ${faviconUrl} (${faviconCandidates.length} candidatos)`);
 
+        // === SOCIAL LINKS & EMAILS EXTRACTION ===
+        const socialLinks: { platform: string; url: string }[] = [];
+        const detectedEmails = new Set<string>();
+        const detectedPhones = new Set<string>();
+        const detectedAddresses = new Set<string>();
+
+        const socialPlatforms = [
+            { name: 'facebook', patterns: ['facebook.com', 'fb.me', 'fb.com'] },
+            { name: 'instagram', patterns: ['instagram.com', 'instagr.am'] },
+            { name: 'tiktok', patterns: ['tiktok.com'] },
+            { name: 'twitter', patterns: ['twitter.com', 'x.com'] },
+            { name: 'linkedin', patterns: ['linkedin.com/company', 'linkedin.com/in', 'linkedin.com/school'] },
+            { name: 'youtube', patterns: ['youtube.com', 'youtu.be'] },
+            { name: 'whatsapp', patterns: ['wa.me', 'api.whatsapp.com'] },
+            { name: 'telegram', patterns: ['t.me'] }
+        ];
+
+        $('a[href]').each((_, el) => {
+            const href = $(el).attr('href');
+            if (!href) return;
+
+            // Extract Emails
+            if (href.startsWith('mailto:')) {
+                const email = href.replace('mailto:', '').split('?')[0].trim();
+                if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    detectedEmails.add(email.toLowerCase());
+                }
+            }
+
+            // Extract Phones from tel:
+            if (href.startsWith('tel:')) {
+                const phone = href.replace('tel:', '').split('?')[0].trim();
+                if (phone && phone.length > 5) {
+                    detectedPhones.add(phone);
+                }
+            }
+
+            // Extract Social Links
+            try {
+                const fullUrl = new URL(href, url).toString().toLowerCase();
+                for (const platform of socialPlatforms) {
+                    if (platform.patterns.some(p => fullUrl.includes(p))) {
+                        // Avoid duplicates
+                        if (!socialLinks.some(s => s.url === fullUrl)) {
+                            socialLinks.push({ platform: platform.name, url: fullUrl });
+                        }
+                    }
+                }
+            } catch { }
+
+            // Extract Addresses from postal address links (rare but exists)
+            const ariaLabel = $(el).attr('aria-label') || '';
+            const title = $(el).attr('title') || '';
+            const text = $(el).text().trim();
+            if (href.includes('google.com/maps') || href.includes('maps.apple.com')) {
+                // If it's a maps link, the text or label might be the address
+                const possibleAddress = text || ariaLabel || title;
+                if (possibleAddress && possibleAddress.length > 10 && possibleAddress.length < 200) {
+                    detectedAddresses.add(possibleAddress);
+                }
+            }
+        });
+
+        // Search for emails in text if none found in mailto
+        if (detectedEmails.size === 0) {
+            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+            const matches = html.match(emailRegex);
+            if (matches) {
+                matches.forEach(m => detectedEmails.add(m.toLowerCase()));
+            }
+        }
+
+        // Search for phones in text (improved regex for Spanish and international formats)
+        if (detectedPhones.size < 3) {
+            // RegEx mejorada para formatos españoles: 96 149 32 66, +34 961 493 266, 600-000-000, etc.
+            const phoneRegex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}?\)?[-.\s]?\d{2,4}[-.\s]?\d{2,4}[-.\s]?\d{2,4}/g;
+            const textMatches = html.match(phoneRegex);
+            if (textMatches) {
+                textMatches.forEach(m => {
+                    const cleanPhone = m.trim();
+                    // Validar longitud mínima y que no sea una fecha u otro número largo irrelevante
+                    if (cleanPhone.replace(/[-.\s()+]/g, '').length >= 9 && detectedPhones.size < 3) {
+                        detectedPhones.add(cleanPhone);
+                    }
+                });
+            }
+        }
+
+        // Search for physical addresses in text (robust keywords)
+        if (detectedAddresses.size < 3) {
+            const addressKeywords = ['calle', 'avenida', 'avda', 'pasaje', 'plaza', 'pza', 'carretera', 'ctra', 'c/'];
+            const lines = html.replace(/<[^>]*>/g, '\n').split('\n');
+            for (const line of lines) {
+                const cleanLine = line.trim();
+                if (cleanLine.length > 15 && cleanLine.length < 100) {
+                    const lowerLine = cleanLine.toLowerCase();
+                    if (addressKeywords.some(kw => lowerLine.includes(kw))) {
+                        // Verificar si tiene un código postal (5 dígitos)
+                        if (/\d{5}/.test(cleanLine)) {
+                            detectedAddresses.add(cleanLine);
+                        }
+                    }
+                }
+                if (detectedAddresses.size >= 3) break;
+            }
+        }
+
+        logToFile(`📱 Social links found: ${socialLinks.length}, Emails: ${detectedEmails.size}, Phones: ${detectedPhones.size}`);
+
         // === EXTRACCIÓN DE CANDIDATOS DE LOGO (MEJORADA) ===
 
         // 1. JSON-LD EXTRACTION (Critical for CSR sites like Next.js)
@@ -1289,8 +1403,25 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
                         if (Array.isArray(val)) val.forEach(v => extractLogosFromJson(v));
                         else if (typeof val === 'object') extractLogosFromJson(val);
                     });
+                    // SameAs extraction for social links
+                    if (obj.sameAs) {
+                        const sameAs = Array.isArray(obj.sameAs) ? obj.sameAs : [obj.sameAs];
+                        sameAs.forEach((link: any) => {
+                            if (typeof link === 'string') {
+                                try {
+                                    const fullUrl = new URL(link).toString().toLowerCase();
+                                    for (const platform of socialPlatforms) {
+                                        if (platform.patterns.some(p => fullUrl.includes(p))) {
+                                            if (!socialLinks.some(s => s.url === fullUrl)) {
+                                                socialLinks.push({ platform: platform.name, url: fullUrl });
+                                            }
+                                        }
+                                    }
+                                } catch { }
+                            }
+                        });
+                    }
                 };
-
                 extractLogosFromJson(data);
             } catch (e) { }
         });
@@ -1906,7 +2037,7 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
                     // MODO SELECTOR: Buscar selectores con "logo" que tengan un background
                     // REGEX SIMPLIFICADO para evitar backtracking catastrófico
                     console.log(`🔍 Buscando logos por selector...`);
-                    const logoBgRegex = /\.[\w-]*logo[\w-]*[^{]*\{[^}]*background(?:-image)?[^}]*url\(['"]?([^'"]+)['"]?\)/gi;
+                    const logoBgRegex = /\.[\w-]*logo[\w-]*[^{]*\{[^}]*(?:background(?:-image)?)?[^}]*url\(['"]?([^'"]+)['"]?\)/gi;
                     let logoMatch;
                     let selectorLogoIterationCount = 0;
                     const MAX_SELECTOR_ITERATIONS = 100; // Más estricto para regex complejo
@@ -2068,20 +2199,23 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
         console.log(`🎨 Design Intent Palette generated: ${designPalette.length} colors`);
 
         return {
-            colors: finalColors,
+            colors: Object.keys(colorFrequency),
             colorFrequency,
             logoCandidates: uniqueLogoCandidates,
             faviconUrl,
-            imageCandidates: imageCandidates.slice(0, 5),
+            imageCandidates,
             cssLinks: cssLinksProcessed,
             rootColors,
             codePalette,
             svgPalette: deduplicateSimilarColors(svgColors, 15).slice(0, 10),
             designPalette,
             fonts: detectedFonts,
-            html // Return HTML for weighted analysis
+            socialLinks,
+            emails: Array.from(detectedEmails),
+            phones: Array.from(detectedPhones),
+            addresses: Array.from(detectedAddresses),
+            html
         };
-
     } catch (error) {
         console.error('Error en fetchHtmlAndExtractAssets:', error);
         return {
@@ -2096,7 +2230,11 @@ async function fetchHtmlAndExtractAssets(url: string, providedHtml?: string, for
             svgPalette: [],
             designPalette: [],
             fonts: [],
-            html: '' // Error fallback
+            socialLinks: [],
+            emails: [],
+            phones: [],
+            addresses: [],
+            html: ''
         };
     }
 }
@@ -2174,6 +2312,7 @@ async function processAndUploadImage(
             MIN_WIDTH = 32;
             MIN_HEIGHT = 32;
         }
+
 
         if (!metadata.width || !metadata.height || metadata.width < MIN_WIDTH || metadata.height < MIN_HEIGHT) {
             console.error(`❌ Imagen rechazada (${prefix}): dimensiones inválidas (${metadata.width}x${metadata.height}). Se requiere mínimo ${MIN_WIDTH}x${MIN_HEIGHT}px`);
@@ -2273,6 +2412,9 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
             }
         }
 
+        // === API TRACE & DATA EXTRACTION ===
+        const apiTrace: { action: string; status: 'success' | 'fail' | 'pending' | 'highlight'; timestamp: number; details?: string }[] = [];
+
         // 0. Cache Lookup - SOLO PARA EL SCREENSHOT (Skip si forceRefresh=true)
         console.log(`🔍 Checking cache for screenshot: ${url}`);
         let cachedScreenshotUrl: string | undefined;
@@ -2285,6 +2427,7 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
                 if (cachedData && cachedData.debug?.screenshot_url) {
                     console.log('✅ Found cached screenshot! Will reuse it but re-analyze everything else.');
                     cachedScreenshotUrl = cachedData.debug.screenshot_url;
+                    apiTrace.push({ action: 'Capture: ApiFlash', status: 'success', timestamp: Date.now(), details: 'Screenshot recuperado de caché' });
                 }
             } catch (err) {
                 console.log('Cache search skipped or failed', err);
@@ -2293,15 +2436,30 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
             console.log('⚡ Skipping cache due to forceRefresh=true');
         }
 
-        // 1. Fetch paralelo: Jina + HTML extraction (Microlink eliminado - daba 400/403)
+        const addTrace = (action: string, status: 'success' | 'fail' | 'highlight' | 'pending', details?: string) => {
+            apiTrace.push({ action, status, timestamp: Date.now(), details });
+        };
+
         // 1. Fetch paralelo: Jina + HTML extraction
         console.log('📡 Obteniendo datos de Jina y analizando CSS...');
+        addTrace('Content: Fetch', 'pending', 'Iniciando fetch de contenido...');
+
         const [jinaResult, htmlAssets] = await Promise.all([
-            fetchJinaContent(url).catch(err => {
+            fetchJinaContent(url).then(res => {
+                addTrace('Content: Jina', res ? 'success' : 'fail', res ? `Jina: ${res.length} chars` : 'Jina falló');
+                return res;
+            }).catch(err => {
+                addTrace('Content: Jina', 'fail', `Jina error: ${err.message}`);
                 logDebug('Jina error:', err);
                 return '';
             }),
-            fetchHtmlAndExtractAssets(url, undefined, forceRefresh).catch(err => {
+            fetchHtmlAndExtractAssets(url, undefined, forceRefresh).then(res => {
+                addTrace('Content: Scraper', 'success', `Assets: ${res.logoCandidates.length} logos, ${res.colors.length} colores`);
+                // Logging de extracción para debug
+                logToFile(`🔍 Extracción inicial: ${res.socialLinks.length} RRSS, ${res.emails.length} emails, ${res.phones.length} teléfonos, ${res.addresses.length} direcciones`);
+                return res;
+            }).catch(err => {
+                addTrace('Content: Scraper', 'fail', `Scraper error: ${err.message}`);
                 logDebug('HTML assets error:', err);
                 return {
                     colors: [] as string[],
@@ -2315,10 +2473,16 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
                     svgPalette: [] as string[],
                     designPalette: [] as string[],
                     fonts: [] as string[],
+                    socialLinks: [] as { platform: string; url: string }[],
+                    emails: [] as string[],
+                    phones: [] as string[],
+                    addresses: [] as string[],
                     html: ''
                 };
             }),
         ]);
+
+        addTrace('Content: Fetch', 'success', 'Contenido descargado correctamente');
 
         let jinaContent = jinaResult;
 
@@ -2460,8 +2624,12 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         console.log(`🎨 Colores finales: ${finalColors.slice(0, 5).join(', ')}`);
         console.log(`🖼️ Logo candidates: ${assets.logoCandidates?.length || 0}`);
 
+        addTrace('Content: Assets', 'success', `Assets procesados: ${finalColors.length} colores, ${allLogoCandidatesScored.length} logos`);
+
+
         // 2. Procesar con Gemini Flash Lite
         console.log('🤖 Procesando con Gemini Flash Lite...');
+        addTrace('Analysis: Gemini', 'pending', 'Iniciando generación de identidad con Gemini...');
 
         const systemPrompt = `Eres un experto en Branding y Diseño Estratégico. Tu objetivo es destilar la esencia de un negocio a partir de su contenido web y datos visuales.
 
@@ -2480,9 +2648,10 @@ REGLAS IMPORTANTES:
 4. brand_values: Exactamente 5 valores (ej: "Calidad", "Innovación", "Sostenibilidad")
 5. tone_of_voice: Exactamente 3 adjetivos sobre cómo se comunican
 6. visual_aesthetic: Exactamente 3 adjetivos sobre su estilo visual (ej: "Moderno", "Minimalista", "Elegante")
-7. colors: DEBES usar SOLO colores de la lista COLORES DETECTADOS DEL CSS. Elige los 5 más representativos de la marca. NO inventes colores.
-8. fonts: Sugiere 2 Google Fonts que encajen (una Display/Serif, una Sans)
-9. text_assets:
+7. target_audience: Exactamente 3 slots describiendo el público objetivo (ej: "Emprendedores digitales", "Padres jóvenes", "Profesionales del diseño")
+8. colors: DEBES usar SOLO colores de la lista COLORES DETECTADOS DEL CSS. Elige los 5 más representativos de la marca. NO inventes colores.
+9. fonts: Sugiere 2 Google Fonts que encajen (una Display/Serif, una Sans)
+10. text_assets:
    - marketing_hooks: 5 frases tipo titular que capturen la propuesta de valor (EN EL IDIOMA DEL CONTENIDO)
    - visual_keywords: 5 términos visuales descriptivos (EN EL IDIOMA DEL CONTENIDO - ej: si es español: "lujoso", "minimalista", "dinámico"; si es inglés: "luxurious", "minimalist", "dynamic")
    - ctas: 3 variaciones de llamadas a la acción relevantes para su embudo (EN EL IDIOMA DEL CONTENIDO)
@@ -2496,6 +2665,7 @@ ${fullBrandContext.slice(0, 45000)}`;
         let brandDNA: any;
 
         try {
+            console.log('🤖 Intentando con Gemini Flash Lite...');
             const { object } = await generateObject({
                 model,
                 schema: BrandDNASchema,
@@ -2503,9 +2673,11 @@ ${fullBrandContext.slice(0, 45000)}`;
             });
 
             brandDNA = object;
+            addTrace('Analysis: Gemini', 'highlight', 'Análisis de Brand DNA completado con éxito');
             console.log('✅ Gemini generated Brand DNA successfully');
             logDebug('✅ Gemini Response:', brandDNA);
         } catch (aiError: any) {
+            addTrace('Analysis: Gemini', 'fail', aiError.message);
             console.error('❌ Gemini AI Error:', aiError.message);
             logToFile(`⚠️ Gemini falló. Intentando con Groq (Llama 3.3)...`);
 
@@ -2516,11 +2688,14 @@ ${fullBrandContext.slice(0, 45000)}`;
                     prompt: systemPrompt,
                 });
                 brandDNA = object;
+                addTrace('Analysis: Groq', 'highlight', 'Análisis de Brand DNA completado con éxito');
                 console.log('✅ Groq generated Brand DNA successfully');
             } catch (groqError: any) {
+                addTrace('Analysis: Groq', 'fail', groqError.message);
                 console.error('❌ Groq AI Error:', groqError.message);
                 logToFile(`❌ Fallo total de IA (Gemini y Groq). Usando heurística.`);
 
+                addTrace('Analysis: Heuristic', 'highlight', 'Generando Brand DNA básico por fallo de IA');
                 // Fallback HEURÍSTICO basado en el DOM
                 const $ = cheerio.load(htmlAssets.html || '');
                 const siteTitle = $('title').text() || $('meta[property="og:title"]').attr('content') || new URL(url).hostname;
@@ -2545,6 +2720,19 @@ ${fullBrandContext.slice(0, 45000)}`;
             }
         }
 
+        // MERGE CONTACT INFO: Scraper findings are usually more accurate/complete for this specific data
+        if (brandDNA) {
+            console.log('🔗 Merging scraped contact info into Brand DNA...');
+            brandDNA.emails = Array.from(new Set([...(brandDNA.emails || []), ...htmlAssets.emails]));
+            brandDNA.phones = Array.from(new Set([...(brandDNA.phones || []), ...htmlAssets.phones]));
+            brandDNA.addresses = Array.from(new Set([...(brandDNA.addresses || []), ...htmlAssets.addresses]));
+
+            // Merge social links avoiding duplicates by URL
+            const existingUrls = new Set((brandDNA.social_links || []).map((l: any) => l.url));
+            const newLinks = htmlAssets.socialLinks.filter(l => !existingUrls.has(l.url));
+            brandDNA.social_links = [...(brandDNA.social_links || []), ...newLinks];
+        }
+
         console.log('✅ Brand DNA ready');
 
         // 3. Procesar imágenes y subirlas a Supabase
@@ -2563,34 +2751,45 @@ ${fullBrandContext.slice(0, 45000)}`;
         }
 
         // Procesar LOGO - PRIORIZAR candidatos HTML (tienen sistema de scoring)
-        let logoUrl: string | undefined;
+        let primaryLogoUrl: string | undefined;
         let logoSvgContent: string | undefined;
+        const logos: { url: string; selected?: boolean }[] = [];
 
         console.log(`🔍 Probando ${allLogoCandidatesScored.length} candidatos de logo consolidado...`);
-        for (const candidate of allLogoCandidatesScored.sort((a, b) => b.score - a.score).slice(0, 8)) {
+        for (const candidate of allLogoCandidatesScored.sort((a, b) => b.score - a.score).slice(0, 10)) {
             const source = candidate.type === 'inline-svg' ? candidate.content! : candidate.url!;
             console.log(`   Probando logo #${allLogoCandidatesScored.indexOf(candidate) + 1}...`);
 
             const processedLogo = await processAndUploadImage(source, 'logos', 512);
             if (processedLogo) {
-                logoUrl = processedLogo;
-                if (candidate.type === 'inline-svg') {
-                    logoSvgContent = candidate.content;
+                if (!primaryLogoUrl) {
+                    primaryLogoUrl = processedLogo;
+                    if (candidate.type === 'inline-svg') {
+                        logoSvgContent = candidate.content;
+                    }
+                    addTrace('Content: Assets', 'success', `Logo principal subido: ${processedLogo}`);
                 }
-                console.log(`✅ Logo seleccionado y subido: ${logoUrl}`);
-                break;
+
+                logos.push({ url: processedLogo, selected: logos.length === 0 });
+                console.log(`✅ Logo #${logos.length} subido: ${processedLogo}`);
+
+                if (logos.length >= 5) break; // Máximo 5 logos por ahora
             }
+        }
+
+        if (logos.length === 0) {
+            addTrace('Content: Assets', 'fail', 'No se pudo subir ningún logo candidato');
         }
 
         // Extract logo colors if we have a logo
         let logoPalette: string[] = [];
-        if (logoUrl) {
+        if (primaryLogoUrl) {
             console.log(`🎨 Extrayendo paleta oficial del logo...`);
-            logoPalette = await extractLogoColors(logoUrl);
+            logoPalette = await extractLogoColors(primaryLogoUrl);
         }
 
-        if (logoUrl) {
-            galleryImages.push(logoUrl);
+        if (primaryLogoUrl) {
+            galleryImages.push(primaryLogoUrl);
             console.log(`✅ Logo añadido a la galería visual`);
         }
 
@@ -2615,19 +2814,26 @@ ${fullBrandContext.slice(0, 45000)}`;
         // 2. Si no hay cache, intentar con ApiFlash (PRIMERA OPCIÓN - más confiable)
         if (!screenshotSourceUrl) {
             console.log(`📸 Generando screenshot con ApiFlash...`);
-            screenshotSourceUrl = await fetchApiFlashScreenshot(url);
+            screenshotSourceUrl = await fetchApiFlashScreenshot(url).then(res => {
+                addTrace('Capture: ApiFlash', res ? 'success' : 'fail', res ? 'ApiFlash exitoso' : 'ApiFlash falló');
+                return res;
+            });
         }
 
         // 3. Fallback a ScreenshotLayer
         if (!screenshotSourceUrl) {
             console.warn(`⚠️ ApiFlash falló. Intentando con ScreenshotLayer...`);
-            screenshotSourceUrl = await fetchScreenshotLayerScreenshot(url);
+            screenshotSourceUrl = await fetchScreenshotLayerScreenshot(url).then(res => {
+                addTrace('Capture: Layer', res ? 'success' : 'fail', res ? 'ScreenshotLayer exitoso' : 'Layer falló');
+                return res;
+            });
         }
 
         // 4. Fallback a Thum.io
         if (!screenshotSourceUrl) {
             console.warn(`⚠️ ScreenshotLayer falló. Intentando con Thum.io...`);
             screenshotSourceUrl = `https://image.thum.io/get/width/1440/noanimate/wait/5/fullpage/${url}`;
+            addTrace('Capture: Thum.io', 'highlight', 'Usando fallback Thum.io');
         }
 
 
@@ -2713,13 +2919,20 @@ ${fullBrandContext.slice(0, 45000)}`;
             brand_values: brandDNA.brand_values,
             tone_of_voice: brandDNA.tone_of_voice,
             visual_aesthetic: brandDNA.visual_aesthetic,
+            target_audience: brandDNA.target_audience,
             colors: finalPalette.length > 0 ? finalPalette : [{ color: "#000000", sources: ['ai'], score: 1 }, { color: "#FFFFFF", sources: ['ai'], score: 1 }],
             fonts: brandDNA.fonts,
             text_assets: brandDNA.text_assets,
-            logo_url: logoUrl,
+            logo_url: primaryLogoUrl,
+            logos,
             favicon_url: faviconUrl,
             screenshot_url: debugScreenshotUrl,
             images: (galleryImages || []).map(url => ({ url, selected: true })),
+            social_links: htmlAssets.socialLinks,
+            emails: htmlAssets.emails,
+            phones: htmlAssets.phones,
+            addresses: htmlAssets.addresses,
+            api_trace: apiTrace,
             debug: {
                 css_links: htmlAssets.cssLinks,
                 root_colors: htmlAssets.rootColors,
@@ -2772,6 +2985,7 @@ ${fullBrandContext.slice(0, 45000)}`;
                 brand_values: result.brand_values,
                 tone_of_voice: result.tone_of_voice,
                 visual_aesthetic: result.visual_aesthetic,
+                target_audience: result.target_audience,
                 colors: result.colors,
                 fonts: result.fonts,
                 text_assets: result.text_assets,
@@ -2779,9 +2993,14 @@ ${fullBrandContext.slice(0, 45000)}`;
                 favicon_url: result.favicon_url,
                 screenshot_url: result.screenshot_url,
                 images: result.images,
+                social_links: result.social_links,
+                emails: result.emails,
+                phones: result.phones,
+                addresses: result.addresses,
+                api_trace: result.api_trace,
                 debug: result.debug,
-                clerk_user_id: clerkUserId || undefined,
-                updated_at: new Date().toISOString(),
+                clerk_user_id: clerkUserId || undefined, // Assuming clerkUserId is defined elsewhere, or user.id is passed
+                updated_at: new Date().toISOString()
             };
 
             console.log('📄 [DEBUG] Upsert Payload Details:', {
@@ -2802,7 +3021,7 @@ ${fullBrandContext.slice(0, 45000)}`;
 
             /* Supabase Logic Removed
             const { data: dbData, error: dbError } = await supabase.from('brand_dna').upsert(upsertPayload, { onConflict: 'url' }).select();
-    
+     
             if (dbError) {
                 console.error('❌ [DEBUG] Supabase Upsert Error:', dbError);
                 // ... (rest of existing error handling remains same)

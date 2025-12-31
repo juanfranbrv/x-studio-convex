@@ -26,6 +26,10 @@ export async function updateUserBrandKit(brandKitId: string, brandData: BrandDNA
                 favicon_url: brandData.favicon_url,
                 screenshot_url: brandData.screenshot_url,
                 images: brandData.images,
+                target_audience: brandData.target_audience,
+                social_links: brandData.social_links,
+                emails: brandData.emails,
+                phones: brandData.phones,
                 text_assets: brandData.text_assets,
                 updated_at: new Date().toISOString(),
             }

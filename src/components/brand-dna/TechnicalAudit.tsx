@@ -1,210 +1,157 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { Bug, Camera, Globe, Cpu, ChevronRight, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-import { Terminal, Bug, X, TriangleAlert } from 'lucide-react';
-
-interface TechnicalAuditProps {
-    data: any;
+interface ApiTraceEntry {
+    action: string;
+    status: 'pending' | 'success' | 'fail' | 'highlight';
+    timestamp: number;
+    details?: string;
+    duration?: number;
 }
 
-export function TechnicalAudit({ data }: TechnicalAuditProps) {
-    if (!data) return null;
+interface TechnicalAuditProps {
+    trace?: ApiTraceEntry[];
+    isVisible: boolean;
+}
+
+interface ChainStep {
+    id: string;
+    label: string;
+    prefix: string;
+    description: string;
+}
+
+const CAPTURE_CHAIN: ChainStep[] = [
+    { id: 'apiflash', label: 'ApiFlash', prefix: 'Capture: ApiFlash', description: 'Servicio de captura de pantalla de alta fidelidad.' },
+    { id: 'layer', label: 'Layer', prefix: 'Capture: Layer', description: 'Sistema de respaldo para capturas visuales.' },
+    { id: 'thum', label: 'Thum.io', prefix: 'Capture: Thum.io', description: 'Tercera opción de fallback para screenshots.' },
+];
+
+const CONTENT_CHAIN: ChainStep[] = [
+    { id: 'fetch', label: 'Fetch', prefix: 'Content: Fetch', description: 'Descarga inicial del código HTML crudo.' },
+    { id: 'jina', label: 'Jina', prefix: 'Content: Jina', description: 'Extrae contenido limpio en formato Markdown para la IA.' },
+    { id: 'scraper', label: 'Scraper', prefix: 'Content: Scraper', description: 'Analiza la estructura DOM y clases CSS.' },
+    { id: 'assets', label: 'Assets', prefix: 'Content: Assets', description: 'Procesa, optimiza y sube logos e imágenes.' },
+];
+
+const AI_CHAIN: ChainStep[] = [
+    { id: 'gemini', label: 'Gemini', prefix: 'Analysis: Gemini', description: 'Motor IA principal (Google Gemini) para análisis cognitivo.' },
+    { id: 'groq', label: 'Groq', prefix: 'Analysis: Groq', description: 'Motor IA ultrarrápido (Llama 3). Se activa si Gemini falla.' },
+    { id: 'heuristic', label: 'Heuristic', prefix: 'Analysis: Heuristic', description: 'Análisis basado en reglas si fallan todas las IAs.' },
+];
+
+export function TechnicalAudit({ trace = [], isVisible }: TechnicalAuditProps) {
+    if (!isVisible) return null;
+
+    const renderChain = (title: string, icon: any, steps: ChainStep[]) => {
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">
+                    {icon}
+                    <span>{title}</span>
+                </div>
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                    {steps.map((step, idx) => {
+                        // Buscar el ÚLTIMO estado (el más reciente) revertiendo el array temporalmente
+                        const entry = [...trace].reverse().find(t => t.action.startsWith(step.prefix));
+                        const status = !entry ? 'inactive' : entry.status === 'fail' ? 'fail' : entry.status === 'success' || entry.status === 'highlight' ? 'success' : 'pending';
+
+                        return (
+                            <div key={step.id} className="flex items-center shrink-0">
+                                <TooltipProvider delayDuration={0}>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div className={cn(
+                                                "px-4 py-2.5 rounded-2xl border flex flex-col gap-1 min-w-[110px] transition-all duration-500 shadow-sm cursor-help",
+                                                status === 'success' ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-500 ring-1 ring-emerald-500/20" :
+                                                    status === 'fail' ? "bg-rose-500/10 border-rose-500/40 text-rose-500 ring-1 ring-rose-500/20" :
+                                                        status === 'pending' ? "bg-sky-500/10 border-sky-500/40 text-sky-500 animate-pulse ring-1 ring-sky-500/20" :
+                                                            "bg-muted/40 border-border text-muted-foreground opacity-60 grayscale"
+                                            )}>
+                                                <span className="text-[9px] font-bold opacity-80 uppercase tracking-tighter">{step.label}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={cn(
+                                                        "w-2 h-2 rounded-full",
+                                                        status === 'success' ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]" :
+                                                            status === 'fail' ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" :
+                                                                status === 'pending' ? "bg-sky-500" : "bg-zinc-600"
+                                                    )} />
+                                                    <span className="text-[12px] font-black tracking-tight">{entry ? (entry.status === 'fail' ? 'ERROR' : 'OK') : 'SKIP'}</span>
+                                                </div>
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom" className="text-xs bg-zinc-900 border-zinc-800 text-zinc-300 max-w-[200px]">
+                                            <p>{step.description}</p>
+                                            {entry?.details && (
+                                                <p className="mt-1 pt-1 opacity-70 border-t border-zinc-700 italic font-mono text-[10px]">
+                                                    {entry.details}
+                                                </p>
+                                            )}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                {idx < steps.length - 1 && (
+                                    <div className="mx-1 h-px w-4 bg-zinc-700 relative">
+                                        <ChevronRight className="w-3 h-3 text-zinc-600 absolute -top-[5.5px] -right-1" />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
 
     return (
-        <Card className="mt-8 bg-black/80 border-slate-700 text-slate-300 font-mono text-sm shadow-2xl">
-            <CardHeader className="border-b border-slate-700 pb-3">
-                <CardTitle className="flex items-center gap-3 text-slate-100 text-base">
-                    <Terminal className="w-5 h-5 text-emerald-500" />
-                    Auditoría Técnica del Extractor
-                    <div className="flex gap-2 ml-auto">
-                        <Badge variant="outline" className="text-xs h-5 border-emerald-500/50 text-emerald-400 bg-emerald-500/5">
-                            AI-GEN v2.0
-                        </Badge>
-                        <Badge variant="outline" className="text-xs h-5 border-blue-500/50 text-blue-400 bg-blue-500/5">
-                            FIRE-SC-v4
-                        </Badge>
+        <Card className="mt-8 bg-card border-border shadow-lg">
+            <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="flex items-center gap-2 text-base text-foreground font-bold uppercase">
+                            <Bug className="w-5 h-5 text-primary" />
+                            Arquitectura de Extracción
+                        </CardTitle>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 ml-7">
+                            Monitor de Trazabilidad en Tiempo Real
+                        </p>
                     </div>
-                </CardTitle>
+
+                    <div className="flex gap-4 items-center bg-muted/30 px-3 py-1.5 rounded-full border border-border/50">
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Éxito</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Fallo</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Omitido</span>
+                        </div>
+                    </div>
+                </div>
             </CardHeader>
-            <CardContent className="pt-6 space-y-8">
-                {/* Paletas Técnicas */}
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            Fuentes de Color Extraídas (Consenso Engine)
-                        </h4>
-                        <div className="flex gap-2">
-                            <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-400 border-blue-500/20">AI-GEN v2.4</Badge>
-                            <Badge variant="outline" className="text-[10px] bg-orange-500/10 text-orange-400 border-orange-500/20">FIRE-SC v4.2</Badge>
-                        </div>
-                    </div>
+            <CardContent className="p-6 pt-2 space-y-8">
+                <div className="grid grid-cols-1 gap-8 relative">
+                    {/* Decorative line connecting rows */}
+                    <div className="absolute left-[19px] top-4 bottom-4 w-px bg-border/60 -z-10 border-l border-dashed border-zinc-300 dark:border-zinc-700" />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[
-                            { id: 'design_palette', label: 'Design System Intent' },
-                            { id: 'weighted_palette', label: 'Weighted DOM (JS)' },
-                            { id: 'visual_palette', label: 'AI Visual (Vision)' },
-                            { id: 'logo_palette', label: 'Logo Extraction' },
-                            { id: 'svg_palette', label: 'SVG & Icons' },
-                            { id: 'code_palette', label: 'CSS / Root Variables' },
-                        ].map((source) => {
-                            const colors = data.debug?.[source.id] || [];
-                            const isEmpty = colors.length === 0 || (colors.length === 1 && colors[0].startsWith('#NO_'));
-
-                            return (
-                                <div key={source.id} className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex flex-col gap-3 group hover:border-slate-700 transition-colors">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-medium text-slate-300">{source.label}</span>
-                                        <Badge variant="secondary" className="text-[9px] bg-slate-800 text-slate-400 group-hover:bg-[var(--accent)] group-hover:text-black transition-colors">
-                                            {isEmpty ? 0 : colors.length} slots
-                                        </Badge>
-                                    </div>
-                                    <div className="flex flex-wrap gap-1.5 p-2 bg-black/30 rounded-lg min-h-[44px] items-center justify-center">
-                                        {!isEmpty ? (
-                                            colors.slice(0, 15).map((c: any, i: number) => {
-                                                const hex = typeof c === 'string' ? c : c.hex;
-                                                return (
-                                                    <div
-                                                        key={i}
-                                                        className="w-7 h-7 rounded-sm border border-white/10 shadow-sm"
-                                                        style={{ backgroundColor: hex }}
-                                                        title={hex}
-                                                    />
-                                                );
-                                            })
-                                        ) : (
-                                            <div className="flex flex-col items-center gap-1 opacity-40">
-                                                <X className="w-4 h-4 text-red-500" />
-                                                <span className="text-[10px] italic text-slate-500">
-                                                    {colors[0]?.substring(1) || 'Sin datos'}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Motor de Consenso (Lógica de Pesos) */}
-                <div className="p-4 rounded-xl bg-slate-900/60 border border-emerald-500/20 shadow-inner">
-                    <div className="flex items-center gap-2 mb-4">
-                        <Bug className="w-4 h-4 text-emerald-500" />
-                        <h4 className="text-xs font-bold text-slate-100 uppercase tracking-widest">
-                            Motor de Consenso: Lógica de Ponderación
-                        </h4>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-                        {[
-                            { id: 'visual', label: 'Visual Grid', weight: data.debug?.consensus_weights?.visual || 0.50, color: 'text-emerald-400' },
-                            { id: 'weighted', label: 'Weighted DOM', weight: data.debug?.consensus_weights?.weighted || 0.15, color: 'text-blue-400' },
-                            { id: 'logo', label: 'Logo Audit', weight: data.debug?.consensus_weights?.logo || 0.15, color: 'text-orange-400' },
-                            { id: 'design', label: 'Design Intent', weight: data.debug?.consensus_weights?.design || 0.10, color: 'text-purple-400' },
-                            { id: 'svg', label: 'SVG Palette', weight: data.debug?.consensus_weights?.svg || 0.05, color: 'text-pink-400' },
-                            { id: 'code', label: 'Code Sweep', weight: data.debug?.consensus_weights?.code || 0.05, color: 'text-slate-400' },
-                        ].map((w) => (
-                            <div key={w.id} className="flex flex-col items-center p-2 rounded bg-black/40 border border-slate-800">
-                                <span className="text-[9px] text-slate-500 font-bold uppercase mb-1">{w.label}</span>
-                                <span className={`text-sm font-black ${w.color}`}>{(w.weight * 100).toFixed(0)}%</span>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="text-[10px] text-slate-500 leading-relaxed bg-black/20 p-3 rounded border border-white/5">
-                        <p className="mb-2 italic">
-                            <TriangleAlert className="w-3 h-3 inline-block mr-1 text-orange-500" />
-                            <strong>Lógica de Redundancia:</strong> Si un color aparece en múltiples fuentes, recibe un bono multiplicador:
-                            <span className="text-slate-300 ml-1">2 fuentes (1.5x), 3 fuentes (2.5x), 4+ fuentes (5.0x)</span>.
-                        </p>
-                        <p>
-                            Los colores son agrupados mediante <strong>Delta-E (perceptual)</strong> con un umbral de &lt; 10 para evitar duplicidad de tonos visualmente idénticos.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div>
-                        <h4 className="text-slate-100 mb-4 text-sm font-bold uppercase tracking-wider">Candidatos a Logo (Scored)</h4>
-                        <ScrollArea className="h-[280px] bg-slate-900/40 rounded-lg border border-slate-800 p-3">
-                            <div className="space-y-3">
-                                {data.debug?.logo_candidates?.map((logo: any, i: number) => (
-                                    <div key={i} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
-                                        <div className="w-14 h-14 transparency-grid bg-white/5 rounded-md flex items-center justify-center p-1.5 overflow-hidden border border-slate-800">
-                                            {logo.url ? (
-                                                <img src={logo.url} className="max-w-full max-h-full object-contain" alt={`Candidate ${i}`} />
-                                            ) : (
-                                                <div className="text-[10px] text-slate-500 font-bold">SVG</div>
-                                            )}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="truncate text-xs text-slate-400 mb-2 font-medium">{logo.url || 'Contenido SVG Inline'}</p>
-                                            <div className="flex gap-2">
-                                                <Badge variant="outline" className="text-[10px] px-2 py-0 border-slate-700 text-slate-400 capitalize bg-slate-800/50">{logo.type || 'unknown'}</Badge>
-                                                <Badge variant="outline" className="text-[10px] px-2 py-0 border-emerald-900/50 text-emerald-400 bg-emerald-500/5">Score: {logo.score?.toFixed(2)}</Badge>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </ScrollArea>
-                    </div>
-
-                    <div>
-                        <h4 className="text-slate-100 mb-4 text-sm font-bold uppercase tracking-wider">Análisis Técnico</h4>
-                        <div className="bg-slate-900/40 rounded-lg border border-slate-800 p-4 space-y-6 h-[280px] overflow-auto">
-                            <div>
-                                <span className="text-slate-500 block uppercase text-[10px] font-bold tracking-widest mb-2">Tipografías Detectadas:</span>
-                                <div className="flex flex-wrap gap-2">
-                                    {data.debug?.code_fonts?.length > 0 ? (
-                                        (data.debug.code_fonts).map((f: string, i: number) => (
-                                            <Badge key={i} variant="outline" className="text-xs px-2 py-0.5 border-slate-700 text-slate-200 bg-slate-800/50">{f}</Badge>
-                                        ))
-                                    ) : (
-                                        <span className="text-xs text-slate-600 italic">No se detectaron fuentes en el código.</span>
-                                    )}
-                                </div>
-                            </div>
-                            <div>
-                                <span className="text-slate-500 block uppercase text-[10px] font-bold tracking-widest mb-2">Ficheros CSS Analizados:</span>
-                                <div className="space-y-2">
-                                    {data.debug?.css_links?.length > 0 ? (
-                                        <div className="grid gap-2">
-                                            {data.debug.css_links.map((link: string, i: number) => (
-                                                <div key={i} className="flex items-center gap-2 p-2 bg-blue-500/5 border border-blue-500/10 rounded group hover:bg-blue-500/10 transition-colors">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
-                                                    <span className="text-[11px] text-slate-400 truncate flex-1" title={link}>
-                                                        {link.split('/').pop()}
-                                                    </span>
-                                                    <span className="text-[9px] text-slate-600 hidden group-hover:block truncate max-w-[150px]">
-                                                        {link}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <span className="text-xs text-slate-600 italic">No se detectaron archivos CSS externos.</span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {renderChain("Secuencia de Captura Visual", <Camera className="w-3.5 h-3.5" />, CAPTURE_CHAIN)}
+                    {renderChain("Secuencia de Procesamiento de Código", <Globe className="w-3.5 h-3.5" />, CONTENT_CHAIN)}
+                    {renderChain("Secuencia de Inteligencia Cognitiva", <Cpu className="w-3.5 h-3.5" />, AI_CHAIN)}
                 </div>
             </CardContent>
-
-            <style jsx>{`
-                .transparency-grid {
-                    background-image: 
-                        linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
-                        linear-gradient(-45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.03) 75%),
-                        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.03) 75%);
-                    background-size: 12px 12px;
-                    background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
-                }
-            `}</style>
         </Card>
     );
 }

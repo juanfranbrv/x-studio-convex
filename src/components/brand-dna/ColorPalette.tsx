@@ -174,11 +174,11 @@ export function ColorPalette({
                                                     className={cn(
                                                         "aspect-square rounded-lg cursor-grab active:cursor-grabbing transition-all duration-300",
                                                         "hover:scale-105 hover:shadow-xl border-2 border-border",
-                                                        "hover:border-primary relative overflow-hidden",
+                                                        "hover:border-primary relative overflow-visible",
                                                         colorPickerOpen === idx ? 'border-primary ring-2 ring-primary/20' : '',
                                                         selectedColorIds.includes(`color-${idx}`)
                                                             ? "border-primary shadow-sm"
-                                                            : "border-transparent opacity-60 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 hover:border-border"
+                                                            : "border-transparent hover:border-border"
                                                     )}
                                                     style={{ backgroundColor: item.color }}
                                                 >

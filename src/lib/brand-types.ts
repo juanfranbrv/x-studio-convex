@@ -23,6 +23,12 @@ export interface BrandDNA {
     favicon_url?: string;
     screenshot_url?: string;
     images: { url: string; selected?: boolean }[];
+    target_audience?: string[];
+    social_links?: { platform: string; url: string; username?: string }[];
+    emails?: string[];
+    phones?: string[];
+    addresses?: string[];
+    api_trace?: { action: string; status: 'pending' | 'success' | 'fail' | 'highlight'; timestamp: number; details?: string; duration?: number; }[];
     text_assets?: TextAssets;
     created_at?: string;
     updated_at?: string;
