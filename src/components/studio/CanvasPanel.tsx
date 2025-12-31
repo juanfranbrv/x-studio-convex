@@ -23,6 +23,8 @@ import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/studio/page'
 import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { motion, AnimatePresence } from 'framer-motion'
+import { TechProcessingLoader } from './TechProcessingLoader'
 
 interface Generation {
     id: string
@@ -138,10 +140,28 @@ export function CanvasPanel({
                 </div>
             </div>
 
-            {/* Main Canvas Area */}
             <div className="flex-1 relative flex items-center justify-center p-8 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+                <AnimatePresence mode="wait">
+                    {isGenerating && (
+                        <motion.div
+                            key="loader"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 z-50"
+                        >
+                            <TechProcessingLoader />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Main Image content (wrapped in motion.div for smooth fade-in after loader) */}
                 {currentImage ? (
-                    <div
+                    <motion.div
+                        key="image"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
                         className="relative transition-transform duration-200"
                         style={{ transform: `scale(${zoom / 100})` }}
                     >
@@ -150,8 +170,7 @@ export function CanvasPanel({
                             alt="Generated design"
                             className="max-w-full max-h-[60vh] rounded-lg shadow-2xl object-contain"
                         />
-
-                        {/* Annotation overlay example (dashed circle from mockup) */}
+                        {/* ... annotations ... */}
                         {isAnnotating && (
                             <div className="absolute top-1/4 right-1/4 w-24 h-24 annotation-ring flex items-center justify-center">
                                 <div className="bg-primary rounded-full p-1">
@@ -162,8 +181,9 @@ export function CanvasPanel({
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </motion.div>
                 ) : (
+                    // empty state
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
                         <div className="w-16 h-16 rounded-2xl bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center mb-3">
                             <span className="text-3xl">🎨</span>

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { BrandDNA } from './brand-types'
+import { buildImagePrompt, ImageGenerationOptions } from './prompt-builder'
 
 // Initialize Gemini clients
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -55,41 +56,76 @@ export async function generateMarketingCopy(
     return result.response.text()
 }
 
+// Helper to fetch image and convert to Gemini Part
+async function urlToPart(url: string): Promise<{ inlineData: { data: string; mimeType: string } } | null> {
+    try {
+        const response = await fetch(url)
+        if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`)
+
+        const arrayBuffer = await response.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        const base64 = buffer.toString('base64')
+        const mimeType = response.headers.get('content-type') || 'image/png'
+
+        return {
+            inlineData: {
+                data: base64,
+                mimeType
+            }
+        }
+    } catch (error) {
+        console.error('Error processing context image:', error)
+        return null
+    }
+}
+
 // Generate image with brand context
 export async function generateBrandImage(
     brand: { name: string; brand_dna: BrandDNA },
     userPrompt: string,
-    options: {
-        headline?: string
-        cta?: string
-        platform?: 'instagram' | 'tiktok' | 'youtube' | 'linkedin'
-    } = {}
+    options: ImageGenerationOptions = {}
 ): Promise<string> {
-    const { colors, tone_of_voice } = brand.brand_dna
-    const tone = tone_of_voice?.join(', ') || 'Sin definir'
-    const colorList = colors?.map(c => c.color).join(', ') || 'Sin definir'
 
-    // Build enhanced prompt with brand context
-    const enhancedPrompt = `
-Crear una imagen de marketing para la marca "${brand.name}".
+    // 1. Build text prompt
+    const enhancedPrompt = buildImagePrompt(brand, userPrompt, options)
 
-COLORES DE MARCA: ${colorList}
-TONO: ${tone}
-${options.headline ? `TITULAR: "${options.headline}"` : ''}
-${options.cta ? `CTA: "${options.cta}"` : ''}
-${options.platform ? `FORMATO: Optimizado para ${options.platform}` : ''}
+    console.log('\n--- 🎨 GENERATING IMAGE ---')
+    console.log('Prompt Length:', enhancedPrompt.length)
 
-PROMPT DEL USUARIO:
-${userPrompt}
+    // 2. Prepare Payload Parts (Text + Images)
+    const promptParts: any[] = [{ text: enhancedPrompt }]
 
-IMPORTANTE: La imagen debe reflejar la identidad visual de la marca.
-`
+    // 3. Process Context Images/Logos (Fetch & convert to Base64)
+    if (options.context && options.context.length > 0) {
+        const imageItems = options.context.filter(c => c.type === 'image' || c.type === 'logo')
+
+        if (imageItems.length > 0) {
+            console.log(`Processing ${imageItems.length} context images...`)
+
+            // Process in parallel
+            const imagePartsPromises = imageItems.map(async (item) => {
+                if (!item.value) return null
+                console.log(`Fetching image: ${item.label || 'Reference'}`)
+                return await urlToPart(item.value)
+            })
+
+            const imageParts = await Promise.all(imagePartsPromises)
+
+            // Add valid images to parts (prepend or append? standard is mix, usually text first or images first)
+            // Gemini often prefers images then text, or text then images. Let's append images for "reference".
+            imageParts.forEach(part => {
+                if (part) promptParts.push(part)
+            })
+        }
+    }
+
+    console.log(`Sending payload with ${promptParts.length} parts to Gemini...`)
 
     const result = await imageModel.generateContent({
         contents: [
             {
                 role: 'user',
-                parts: [{ text: enhancedPrompt }]
+                parts: promptParts
             }
         ],
         generationConfig: {

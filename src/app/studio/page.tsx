@@ -69,6 +69,7 @@ export default function StudioPage() {
                         images: selectedImages
                     },
                     logoInclusion,
+                    context: selectedContext,
                 }),
             })
 
