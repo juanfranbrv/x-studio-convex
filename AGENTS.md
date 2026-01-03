@@ -98,3 +98,17 @@ Cuando Juanfran diga **"sincroniza"**, ejecuta automáticamente:
     - Si un componente supera las ~250-300 líneas, es una señal roja. **DIVÍDELO**.
     - Extrae lógica a hooks personalizados (`useSomething`) o subcomponentes en el mismo directorio.
     - Mantén los archivos manejables y con responsabilidad única.
+
+### 13. Uso del Copiloto Técnico (Chrome DevTools MCP)
+**Propósito**: El MCP `chrome-devtools` es tu herramienta de "Rayos X" para debugear la lógica de cliente, red y DOM en tiempo real.
+- **Cuándo Usarlo**:
+    - Errores de consola que no se ven en el terminal de VSCode (hooks, Clerk, etc.).
+    - Peticiones de red (Convex, APIs) para ver payloads y status.
+    - Inspección de estilos computados para puzzles de CSS difíciles.
+    - Verificación técnica de estados de la UI (ej. ¿está este botón realmente habilitado?).
+- **REGLA DE CONEXIÓN**: Siempre verifica que el puerto `9222` está abierto antes de intentar conectar.
+- **ÉTICA DE USO (Cruce con Regla 6)**:
+    - Úsalo **EXCLUSIVAMENTE** para diagnóstico técnico y resolución de bloqueos.
+    - **NUNCA** lo uses para "ver si ha quedado bonito" (eso es tarea de Juanfran).
+    - Reporta hallazgos técnicos (logs de error, variables CSS) para fundamentar tus cambios.
+- **Proactividad**: Si detectas un bug visual reportado por el usuario, ofrece usar el MCP para "inspeccionar las tripas" antes de proponer cambios a ciegas.

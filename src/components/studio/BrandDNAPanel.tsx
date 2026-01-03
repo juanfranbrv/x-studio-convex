@@ -64,6 +64,7 @@ interface BrandDNAPanelProps {
     onRemoveContext?: (id: string) => void
     onSetDraggedElement?: (element: ContextElement | null) => void
     selectedContext?: ContextElement[]
+    onImageClick?: (url: string) => void
 }
 
 export function BrandDNAPanel({
@@ -74,6 +75,7 @@ export function BrandDNAPanel({
     onRemoveContext,
     onSetDraggedElement,
     selectedContext = [],
+    onImageClick,
 }: BrandDNAPanelProps) {
     const { t } = useTranslation()
     const { updateActiveBrandKit } = useBrandKit()
@@ -98,15 +100,22 @@ export function BrandDNAPanel({
         setOpenSections(prev => ({ ...prev, [section]: !prev[section] }))
     }
 
-    // Sync with initialData only when brand ID changes or there are no unsaved changes
+    // Sync with initialData when brand ID changes or there are no unsaved changes
     useEffect(() => {
         const isSameBrand = initialData.id && data.id && initialData.id === data.id;
 
-        if (!isSameBrand || !hasUnsavedChanges) {
+        // If brand ID changed, always sync and reset unsaved changes
+        if (!isSameBrand) {
             setData(initialData);
             setHasUnsavedChanges(false);
+            return;
         }
-    }, [initialData.id]);
+
+        // If same brand, only sync if there are no unsaved changes
+        if (!hasUnsavedChanges) {
+            setData(initialData);
+        }
+    }, [initialData, hasUnsavedChanges]);
 
     // Auto-save logic
     useEffect(() => {
@@ -434,7 +443,7 @@ export function BrandDNAPanel({
 
 
     return (
-        <div className="w-[340px] h-full bg-card border-r-2 border-border flex flex-col gap-1 overflow-hidden relative">
+        <div className="w-[360px] h-full bg-card border-r-2 border-border flex flex-col gap-1 overflow-hidden relative">
             {/* Lightbox Viewer */}
             {viewerImage && (
                 <div
@@ -624,7 +633,13 @@ export function BrandDNAPanel({
                                                         label: `Imagen ${originalIdx + 1}`
                                                     })}
                                                     onDragEnd={handleDragEnd}
-                                                    onClick={() => handleToggleImageSelection(originalIdx)}
+                                                    onClick={() => {
+                                                        if (onImageClick) {
+                                                            onImageClick(img.url)
+                                                        } else {
+                                                            handleToggleImageSelection(originalIdx)
+                                                        }
+                                                    }}
                                                     className={cn(
                                                         "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing transparency-grid",
                                                         isSelected
@@ -696,7 +711,13 @@ export function BrandDNAPanel({
                                                         label: `Imagen ${idx + 1}`
                                                     })}
                                                     onDragEnd={handleDragEnd}
-                                                    onClick={() => handleToggleImageSelection(idx)}
+                                                    onClick={() => {
+                                                        if (onImageClick) {
+                                                            onImageClick(img.url)
+                                                        } else {
+                                                            handleToggleImageSelection(idx)
+                                                        }
+                                                    }}
                                                     className={cn(
                                                         "group relative aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing transparency-grid",
                                                         isSelected

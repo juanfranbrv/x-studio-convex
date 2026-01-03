@@ -13,13 +13,15 @@ export async function POST(request: NextRequest) {
 
         // Parse request body
         const body = await request.json()
-        const { prompt, headline, cta, platform, brandDNA, context } = body as {
+        const { prompt, headline, cta, platform, brandDNA, context, model, layoutReference } = body as {
             prompt: string
             headline?: string
             cta?: string
             platform?: 'instagram' | 'tiktok' | 'youtube' | 'linkedin'
             brandDNA: BrandDNA
             context?: any[]
+            model?: string
+            layoutReference?: string
         }
 
         if (!prompt) {
@@ -28,9 +30,9 @@ export async function POST(request: NextRequest) {
 
         // Generate image with brand context
         const imageUrl = await generateBrandImage(
-            { name: 'Brand', brand_dna: brandDNA },
+            { name: brandDNA.brand_name || 'Brand', brand_dna: brandDNA },
             prompt,
-            { headline, cta, platform, context }
+            { headline, cta, platform, context, model, layoutReference }
         )
 
         return NextResponse.json({

@@ -8,6 +8,9 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { BrandDNAPanel } from '@/components/studio/BrandDNAPanel'
 import { CanvasPanel } from '@/components/studio/CanvasPanel'
 import { CampaignBriefPanel } from '@/components/studio/CampaignBriefPanel'
+import { CreationCommandPanel } from '@/components/studio/creation-flow'
+import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow'
+import { uploadBrandImage } from '@/app/actions/upload-image'
 import type { BrandDNA } from '@/lib/brand-types'
 import { Loader2, Plus } from 'lucide-react'
 
@@ -28,7 +31,7 @@ export interface ContextElement {
 
 export default function StudioPage() {
     const router = useRouter()
-    const { activeBrandKit, brandKits, loading, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
+    const { activeBrandKit, brandKits, loading, setActiveBrandKit, updateActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const [isGenerating, setIsGenerating] = useState(false)
     const { toast } = useToast()
     const [currentImage, setCurrentImage] = useState<string | null>(null)
@@ -37,18 +40,41 @@ export default function StudioPage() {
     const [draggedElement, setDraggedElement] = useState<ContextElement | null>(null)
     const [isAnnotating, setIsAnnotating] = useState(false)
     const [logoInclusion, setLogoInclusion] = useState(true)
+    const [selectedModel, setSelectedModel] = useState('models/gemini-3-pro-image-preview')
+
+    const creationFlow = useCreationFlow({
+        onImageUploaded: async (file: File) => {
+            if (!activeBrandKit) return
+            try {
+                const formData = new FormData()
+                formData.append('file', file)
+                const result = await uploadBrandImage(formData)
+                if (result.success && result.url) {
+                    const updatedImages = [...(activeBrandKit.images || []), { url: result.url, selected: true }]
+                    await updateActiveBrandKit({
+                        images: updatedImages
+                    })
+                    toast({
+                        title: "Imagen guardada",
+                        description: "La imagen se ha añadido a tu Brand Kit automáticamente.",
+                    })
+                }
+            } catch (error) {
+                console.error('Error saving flow image to kit:', error)
+            }
+        }
+    } as UseCreationFlowOptions)
 
     const handleNewBrandKit = () => {
         router.push('/brand-kit?action=new')
     }
-
-
 
     const handleGenerate = async (data: {
         platform?: string
         headline?: string
         cta?: string
         prompt: string
+        model?: string
     }) => {
         if (!activeBrandKit) return
 
@@ -58,6 +84,41 @@ export default function StudioPage() {
             const selectedImages = (activeBrandKit.images || [])
                 .filter(img => (img as any).selected !== false)
                 .map(img => (img as any).url || img);
+
+            // MERGE: Combine elements from the "Mesa" with elements from the "Creation Flow"
+            const finalContext = [...selectedContext]
+
+            // 1. Add uploaded product image from flow (if not already there)
+            if (creationFlow.state.uploadedImage) {
+                const hasUploadedImage = finalContext.some(c => c.type === 'image' && c.value === creationFlow.state.uploadedImage)
+                if (!hasUploadedImage) {
+                    finalContext.push({
+                        id: 'flow-product',
+                        type: 'image',
+                        value: creationFlow.state.uploadedImage,
+                        label: 'Producto'
+                    })
+                }
+            }
+
+            // 2. Add selected logo from flow (if logoInclusion is true and not already in context)
+            if (logoInclusion && creationFlow.state.selectedLogoId) {
+                const logo = activeBrandKit.logos?.find((l, idx) =>
+                    (l as any).id === creationFlow.state.selectedLogoId || `logo-${idx}` === creationFlow.state.selectedLogoId
+                )
+                const logoUrl = logo ? ((logo as any).url || logo) : null
+                if (logoUrl) {
+                    const hasLogo = finalContext.some(c => c.type === 'logo')
+                    if (!hasLogo) {
+                        finalContext.push({
+                            id: 'flow-logo',
+                            type: 'logo',
+                            value: logoUrl,
+                            label: 'Logo'
+                        })
+                    }
+                }
+            }
 
             const response = await fetch('/api/generate', {
                 method: 'POST',
@@ -69,7 +130,9 @@ export default function StudioPage() {
                         images: selectedImages
                     },
                     logoInclusion,
-                    context: selectedContext,
+                    context: finalContext,
+                    model: data.model || selectedModel,
+                    layoutReference: creationFlow.selectedLayoutMeta?.referenceImage
                 }),
             })
 
@@ -111,9 +174,10 @@ export default function StudioPage() {
             onBrandChange={setActiveBrandKit}
             onBrandDelete={deleteBrandKitById}
             onNewBrandKit={handleNewBrandKit}
+            isFixed={true}
         >
             {activeBrandKit ? (
-                <div className="flex-1 flex overflow-hidden h-full">
+                <div className="flex-1 flex overflow-hidden min-h-0">
                     {/* Left: Brand DNA Panel */}
                     <BrandDNAPanel
                         brandDNA={activeBrandKit}
@@ -123,6 +187,7 @@ export default function StudioPage() {
                         onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
                         onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
                         onSetDraggedElement={setDraggedElement}
+                        onImageClick={(url) => creationFlow.setImageFromUrl(url)}
                     />
 
                     {/* Center: Canvas */}
@@ -136,14 +201,17 @@ export default function StudioPage() {
                         onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
                         onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
                         draggedElement={draggedElement}
-                        onGenerate={(prompt) => handleGenerate({ prompt })}
+                        onGenerate={(prompt, model) => handleGenerate({ prompt, model })}
                         isGenerating={isGenerating}
+                        selectedModel={selectedModel}
+                        onModelChange={setSelectedModel}
                     />
 
-                    {/* Right: Campaign Brief */}
-                    <CampaignBriefPanel
-                        onGenerate={handleGenerate}
+                    {/* Right: Creation Command Panel (Cascade Interface) */}
+                    <CreationCommandPanel
+                        onGenerate={async (prompt) => handleGenerate({ prompt })}
                         isGenerating={isGenerating}
+                        creationFlow={creationFlow}
                     />
                 </div>
             ) : (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import EditIcon from '@mui/icons-material/Edit'
 import DownloadIcon from '@mui/icons-material/Download'
@@ -19,12 +19,19 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/studio/page'
 import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
-import { TechProcessingLoader } from './TechProcessingLoader'
+import { DigitalStaticLoader } from './DigitalStaticLoader'
 
 interface Generation {
     id: string
@@ -42,8 +49,10 @@ interface CanvasPanelProps {
     onRemoveContext?: (id: string) => void
     onAddContext?: (element: ContextElement) => void
     draggedElement?: ContextElement | null
-    onGenerate: (prompt: string) => void
+    onGenerate: (prompt: string, model?: string) => void
     isGenerating: boolean
+    selectedModel?: string
+    onModelChange?: (model: string) => void
 }
 
 export function CanvasPanel({
@@ -57,22 +66,40 @@ export function CanvasPanel({
     onAddContext,
     draggedElement,
     onGenerate,
-    isGenerating
+    isGenerating,
+    selectedModel,
+    onModelChange
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const [zoom, setZoom] = useState(100)
     const [prompt, setPrompt] = useState('')
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
     const [isDraggingOver, setIsDraggingOver] = useState(false);
+    const [isRevealing, setIsRevealing] = useState(false)
+    const [prevImage, setPrevImage] = useState<string | null>(currentImage)
 
     const handleZoomIn = () => setZoom((z) => Math.min(z + 25, 200))
     const handleZoomOut = () => setZoom((z) => Math.max(z - 25, 50))
     const handleResetZoom = () => setZoom(100)
 
+    // Handle Generation Reveal Effect
+    useEffect(() => {
+        if (isGenerating) {
+            setIsRevealing(true)
+        } else if (isRevealing && currentImage !== prevImage) {
+            // Keep noise for a bit after gen but start fade out
+            const timer = setTimeout(() => {
+                setIsRevealing(false)
+                setPrevImage(currentImage)
+            }, 1000)
+            return () => clearTimeout(timer)
+        }
+    }, [isGenerating, currentImage, prevImage, isRevealing])
+
     const handleSelectTemplate = (template: Template) => {
         onAddContext?.({
             id: template.id,
-            type: 'template',
+            type: 'image',
             value: template.thumbnail,
             label: template.name
         });
@@ -142,15 +169,16 @@ export function CanvasPanel({
 
             <div className="flex-1 relative flex items-center justify-center p-8 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                 <AnimatePresence mode="wait">
-                    {isGenerating && (
+                    {(isGenerating || isRevealing) && (
                         <motion.div
                             key="loader"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 z-50"
+                            transition={{ duration: 0.8 }}
+                            className="absolute inset-0 z-50 overflow-hidden rounded-lg"
                         >
-                            <TechProcessingLoader />
+                            <DigitalStaticLoader />
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -414,24 +442,37 @@ export function CanvasPanel({
                             </div>
                         </div>
 
-                        <Button
-                            size="sm"
-                            className="h-10 px-4 btn-gradient rounded-xl font-semibold gap-2 shadow-lg glow-primary transition-transform active:scale-95 shrink-0 mb-1"
-                            disabled={isGenerating || (!prompt.trim() && selectedContext.length === 0)}
-                            onClick={() => onGenerate(prompt)}
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <span className="text-xs">Generando...</span>
-                                    <span className="loading loading-spinner loading-xs"></span>
-                                </>
-                            ) : (
-                                <>
-                                    <span className="text-xs">Generar</span>
-                                    <AutoAwesomeIcon style={{ fontSize: 16 }} />
-                                </>
+                        <div className="flex items-center gap-2 mb-1">
+                            {(selectedModel && onModelChange) && (
+                                <Select value={selectedModel} onValueChange={onModelChange}>
+                                    <SelectTrigger className="w-[130px] h-9 text-[10px] bg-background/50 border-border/50 shadow-none focus:ring-1 focus:ring-primary/30 rounded-xl">
+                                        <SelectValue placeholder="Modelo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="gemini-3-pro-image-preview" className="text-xs">Gemini 3 Pro</SelectItem>
+                                        <SelectItem value="models/gemini-2.5-flash-image" className="text-xs">Gemini 2.5 Flash</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             )}
-                        </Button>
+                            <Button
+                                size="sm"
+                                className="h-10 px-4 btn-gradient rounded-xl font-semibold gap-2 shadow-lg glow-primary transition-transform active:scale-95 shrink-0"
+                                disabled={isGenerating || (!prompt.trim() && selectedContext.length === 0)}
+                                onClick={() => onGenerate(prompt, selectedModel)}
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <span className="text-xs">Generando...</span>
+                                        <span className="loading loading-spinner loading-xs"></span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="text-xs">Generar</span>
+                                        <AutoAwesomeIcon style={{ fontSize: 16 }} />
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

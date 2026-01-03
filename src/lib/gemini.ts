@@ -8,7 +8,9 @@ const imageGenAI = new GoogleGenerativeAI(process.env.GEMINI_IMAGE_API_KEY!)
 
 // Models
 export const flashModel = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
-export const imageModel = imageGenAI.getGenerativeModel({ model: 'gemini-3-pro-image-preview' })
+
+// Default image model
+const DEFAULT_IMAGE_MODEL = 'models/gemini-2.5-flash-image'
 
 // Brand-aware system prompt builder
 export function buildBrandSystemPrompt(brand: { name: string; brand_dna: BrandDNA }): string {
@@ -59,6 +61,22 @@ export async function generateMarketingCopy(
 // Helper to fetch image and convert to Gemini Part
 async function urlToPart(url: string): Promise<{ inlineData: { data: string; mimeType: string } } | null> {
     try {
+        // Handle Data URLs (Base64) immediately without fetching
+        if (url.startsWith('data:')) {
+            const base64Index = url.indexOf(';base64,')
+            if (base64Index === -1) throw new Error('Invalid Data URL: missing ;base64,')
+
+            const base64 = url.substring(base64Index + 8)
+            const mimeType = url.substring(5, base64Index)
+
+            return {
+                inlineData: {
+                    data: base64,
+                    mimeType
+                }
+            }
+        }
+
         const response = await fetch(url)
         if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`)
 
@@ -79,6 +97,7 @@ async function urlToPart(url: string): Promise<{ inlineData: { data: string; mim
     }
 }
 
+
 // Generate image with brand context
 export async function generateBrandImage(
     brand: { name: string; brand_dna: BrandDNA },
@@ -89,13 +108,18 @@ export async function generateBrandImage(
     // 1. Build text prompt
     const enhancedPrompt = buildImagePrompt(brand, userPrompt, options)
 
+    // 2. Select model (dynamic or default)
+    const modelName = options.model || DEFAULT_IMAGE_MODEL
+    const activeImageModel = imageGenAI.getGenerativeModel({ model: modelName })
+
     console.log('\n--- 🎨 GENERATING IMAGE ---')
+    console.log('Model:', modelName)
     console.log('Prompt Length:', enhancedPrompt.length)
 
-    // 2. Prepare Payload Parts (Text + Images)
+    // 3. Prepare Payload Parts (Text + Images)
     const promptParts: any[] = [{ text: enhancedPrompt }]
 
-    // 3. Process Context Images/Logos (Fetch & convert to Base64)
+    // 4. Process Context Images/Logos (Fetch & convert to Base64)
     if (options.context && options.context.length > 0) {
         const imageItems = options.context.filter(c => c.type === 'image' || c.type === 'logo')
 
@@ -111,17 +135,37 @@ export async function generateBrandImage(
 
             const imageParts = await Promise.all(imagePartsPromises)
 
-            // Add valid images to parts (prepend or append? standard is mix, usually text first or images first)
-            // Gemini often prefers images then text, or text then images. Let's append images for "reference".
+            // Add valid images to parts
             imageParts.forEach(part => {
                 if (part) promptParts.push(part)
             })
         }
     }
 
+    // 5. Process Layout Reference (Phantom Template)
+    if (options.layoutReference) {
+        console.log(`Processing layout reference: ${options.layoutReference}`)
+
+        // Handle relative paths for local templates
+        let layoutUrl = options.layoutReference
+        if (layoutUrl.startsWith('/')) {
+            // Use local origin if available, or fallback to localhost
+            const baseUrl = typeof window !== 'undefined'
+                ? window.location.origin
+                : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
+            layoutUrl = `${baseUrl}${layoutUrl}`
+        }
+
+        const layoutPart = await urlToPart(layoutUrl)
+        if (layoutPart) {
+            console.log('Layout reference image [REF_PLANTILLA_ESTRUCTURAL] added to prompt parts.')
+            promptParts.push(layoutPart)
+        }
+    }
+
     console.log(`Sending payload with ${promptParts.length} parts to Gemini...`)
 
-    const result = await imageModel.generateContent({
+    const result = await activeImageModel.generateContent({
         contents: [
             {
                 role: 'user',

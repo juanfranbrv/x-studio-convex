@@ -3,6 +3,7 @@
 import { ReactNode } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
+import { cn } from '@/lib/utils'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 
 import { BrandKitSummary, BrandDNA } from '@/lib/brand-types'
@@ -14,6 +15,7 @@ interface DashboardLayoutProps {
     onBrandChange?: (brandId: string) => void
     onBrandDelete?: (brandId: string) => void
     onNewBrandKit?: () => void
+    isFixed?: boolean
 }
 
 export function DashboardLayout({
@@ -22,7 +24,8 @@ export function DashboardLayout({
     currentBrand,
     onBrandChange,
     onBrandDelete,
-    onNewBrandKit
+    onNewBrandKit,
+    isFixed = false
 }: DashboardLayoutProps) {
     return (
         <I18nProvider>
@@ -42,7 +45,10 @@ export function DashboardLayout({
                     />
 
                     {/* Scrollable Content Container */}
-                    <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide">
+                    <div className={cn(
+                        "flex-1 min-w-0 overflow-x-hidden scrollbar-hide flex flex-col min-h-0",
+                        isFixed ? "overflow-hidden" : "overflow-y-auto"
+                    )}>
                         {children}
                     </div>
                 </div>

@@ -1,10 +1,14 @@
 import type { BrandDNA } from './brand-types'
+import { IMAGE_GENERATION_BASE_PROMPT } from './prompts/image-generator-base'
+import { LAYOUTS_BY_INTENT, DEFAULT_LAYOUTS, LayoutOption } from './creation-flow-types'
 
 export interface ImageGenerationOptions {
     headline?: string
     cta?: string
     platform?: 'instagram' | 'tiktok' | 'youtube' | 'linkedin'
     context?: Array<{ type: string; value: string; label?: string }>
+    model?: string
+    layoutReference?: string // Path to Phantom Template
 }
 
 export function buildImagePrompt(
@@ -36,15 +40,39 @@ export function buildImagePrompt(
                     contextInstructions += `- ${tagRef} (Logo): Insertar este logo.\n`
                     break
                 case 'image':
-                    contextInstructions += `- ${tagRef} (Imagen Ref): Estilo/Contenido basado en esto.\n`
+                    contextInstructions += `- ${tagRef}: ESTE ES EL PRODUCTO PRINCIPAL. Debe aparecer de forma prominente e integrada orgánicamente en la escena. Respeta su forma, color y detalles técnicos.\n`
                     break
                 case 'font':
                     contextInstructions += `- ${tagRef} (Fuente): Usar tipografía ${item.value}\n`
+                    break
+                case 'layout_img':
+                    contextInstructions += `- [REF_PLANTILLA_ESTRUCTURAL]: Esta imagen es tu guía de composición obligatoria.\n`
                     break
                 default:
                     contextInstructions += `- ${tagRef}: ${item.value}\n`
             }
         })
+    }
+
+    // Special instruction for Phantom Templates
+    let layoutReferencePart = ''
+    if (options.layoutReference) {
+        // Find the layout option to get its description
+        const allLayouts = Object.values(LAYOUTS_BY_INTENT).flat()
+        const selectedLayout = allLayouts.find(l => l?.referenceImage === options.layoutReference) ||
+            DEFAULT_LAYOUTS.find(l => l.referenceImage === options.layoutReference)
+
+        const description = selectedLayout?.referenceImageDescription || ''
+
+        layoutReferencePart = `
+COMPOSICIÓN Y PLANIMETRÍA (DIRECCIÓN TÉCNICA OBLIGATORIA):
+Usa la imagen etiquetada como [REF_PLANTILLA_ESTRUCTURAL] como un MAPA ESTRUCTURAL SAGRADO. 
+- CALCA la distribución espacial y la jerarquía de los elementos.
+- DESCRIPCIÓN REFORZADA: ${description}
+- Respeta la ALINEACIÓN MILIMÉTRICA de los bloques de texto y contenedores.
+- Ignora el contenido visual de la plantilla (colores/fotos de ejemplo); solo hereda su GEOMETRÍA DE COMPOSICIÓN.
+- La fidelidad al layout de [REF_PLANTILLA_ESTRUCTURAL] es prioritaria sobre cualquier inferencia estética propia.
+`
     }
 
     // Determine aspect ratio/format context based on platform
@@ -53,36 +81,11 @@ export function buildImagePrompt(
         : ''
 
     // The Final Prompt Construction
-    return `
-ROL: Eres un diseñador gráfico experto automatizado. Tu misión es componer una imagen usando los recursos proporcionados.
-
-DATOS DE MARCA:
-- Colores base: ${colorList}
-- Tono visual: ${tone}
-
-RECURSOS ARRASTRADOS (PRIORIDAD TOTAL):
-${contextInstructions}
-
-SOLICITUD DEL USUARIO:
-"${userPrompt}"
-
----------------------------------------------------------
-🧠 LÓGICA DE INFERENCIA INTELIGENTE (SMART MODE):
-Si la solicitud del usuario es breve o ambigua, APLICA LOS RECURSOS AUTOMÁTICAMENTE:
-
-1. ¿Hay Colores arrastrados?
-   - Úsalos como colores dominantes (Fondos, bloques grandes).
-   - "Color 1" suele ser primario/fondo. "Color 2" acento.
-
-2. ¿Hay Texto arrastrado?
-   - DEBE aparecer en la imagen. Prioridad absoluta a la legibilidad.
-   - Si no se dice dónde, ponlo centrado o en una zona limpia.
-
-3. ¿Hay Logos?
-   - Intégralos sutilmente en una esquina superior o como cierre.
-
-4. ¿El usuario refiere a una etiqueta ("Usa Color 2")?
-   - Busca en lineas de RECURSOS ARRASTRADOS la referencia [Ref: "Color 2"] y úsalo exactamente como se pide.
----------------------------------------------------------
-`.trim()
+    // The Final Prompt Construction using the external template
+    return IMAGE_GENERATION_BASE_PROMPT
+        .replace('{{colorList}}', colorList)
+        .replace('{{tone}}', tone)
+        .replace('{{contextInstructions}}', contextInstructions)
+        .replace('{{layoutReferencePart}}', layoutReferencePart)
+        .replace('{{userPrompt}}', userPrompt)
 }

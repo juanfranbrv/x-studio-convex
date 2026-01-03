@@ -22,16 +22,17 @@ export interface Template {
 }
 
 // Mock data for templates
+// Mock data for templates
 const MOCK_TEMPLATES: Template[] = [
+    { id: 'plantilla1', name: 'Plantilla de Producto 1', category: 'Producto', thumbnail: '/plantillas/plantilla1.png' },
+    { id: 'plantilla2', name: 'Plantilla de Producto 2', category: 'Producto', thumbnail: '/plantillas/plantilla2.png' },
+    { id: 'plantilla3', name: 'Plantilla de Producto 3', category: 'Producto', thumbnail: '/plantillas/plantilla3.png' },
     { id: '1', name: 'Minimal Editorial', category: 'Modern', thumbnail: 'https://placehold.co/400x300/222/white?text=Minimal+Editorial' },
     { id: '2', name: 'Bold Retail', category: 'Retail', thumbnail: 'https://placehold.co/400x300/333/white?text=Bold+Retail' },
-    { id: '3', name: 'High Tech Grid', category: 'Tech', thumbnail: 'https://placehold.co/400x300/444/white?text=High+Tech+Grid' },
-    { id: '4', name: 'Organic Soft', category: 'Nature', thumbnail: 'https://placehold.co/400x300/555/white?text=Organic+Soft' },
     { id: '5', name: 'Dark Mode Hero', category: 'Modern', thumbnail: 'https://placehold.co/400x300/111/white?text=Dark+Mode+Hero' },
-    { id: '6', name: 'Flashy Promo', category: 'Retail', thumbnail: 'https://placehold.co/400x300/666/white?text=Flashy+Promo' },
 ]
 
-const CATEGORIES = ['All', 'Modern', 'Retail', 'Tech', 'Nature']
+const CATEGORIES = ['All', 'Producto', 'Modern', 'Retail']
 
 interface TemplateSelectorModalProps {
     isOpen: boolean
@@ -105,8 +106,8 @@ export function TemplateSelectorModal({
                                 <div
                                     key={template.id}
                                     className={`group relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-300 ${selectedTemplateId === template.id
-                                            ? 'border-primary ring-4 ring-primary/10 scale-[0.98]'
-                                            : 'border-transparent hover:border-primary/30 hover:shadow-xl hover:-translate-y-1'
+                                        ? 'border-primary ring-4 ring-primary/10 scale-[0.98]'
+                                        : 'border-transparent hover:border-primary/30 hover:shadow-xl hover:-translate-y-1'
                                         }`}
                                     onClick={() => {
                                         onSelect(template)

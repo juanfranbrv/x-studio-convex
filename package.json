@@ -6,7 +6,9 @@
     "dev": "concurrently \"npx convex dev\" \"next dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "debug": "powershell -ExecutionPolicy Bypass -File ./debug-chrome.ps1",
+    "kill-chrome": "powershell -ExecutionPolicy Bypass -File ./kill-chrome.ps1"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.1",

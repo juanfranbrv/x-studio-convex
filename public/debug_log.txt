@@ -3948,3 +3948,247 @@
     "brand_context": "Centro de Estudios Bauset, ubicado en Meliana (Avda. Santa Maria, 31), es una academia con una trayectoria de más de 45 años desde su fundación por Amparo Bauset Ferrer. La institución opera con diez aulas totalmente acondicionadas con tecnología avanzada y mantiene un equipo humano que combina experiencia con alta preparación universitaria. Son centro oficial examinador de Trinity College London (nº 32290), centro sub-oficial de Pearson Test of English General (nº32014V) y centro Addvantage preparador de Cambridge ESOL examinations, cubriendo niveles A1 a C2, además de ofrecer preparación para TOEFL e IELTS. Además de la formación local en idiomas, refuerzo, robótica y pruebas de acceso, Bauset imparte clases in-company para entidades como Corporación F.Turia, Mitsubishi materials España y Nanta, gestionando esta formación a través de la fundación tripartita."
   }
 }
+[2026-01-02T15:54:53.089Z] 📄 HTML cargado. Longitud: 23531 caracteres.
+[2026-01-02T15:54:53.090Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-01-02T15:54:53.091Z] 🔤 Fuentes iniciales extraídas: 1 ["Poppins"]
+[2026-01-02T15:54:53.094Z] 🔍 Favicon encontrado: https://www.google.com/s2/favicons?domain=www.roselladerubielos.com&sz=256 (0 candidatos)
+[2026-01-02T15:54:53.096Z] 📱 Social links found: 0, Emails: 1, Phones: 2
+[2026-01-02T15:54:53.112Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-01-02T15:54:53.114Z]    - SVGs en header encontrados: 0
+[2026-01-02T15:54:53.115Z]    - IMGs en header encontrados: 1
+[2026-01-02T15:54:53.115Z]    - firstHeaderSvg.length: 0
+[2026-01-02T15:54:53.116Z] 🎯 Primera IMG en header detectada
+[2026-01-02T15:54:53.116Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-01-02T15:54:53.117Z] 🖼️ Logo candidates encontrados: 1 (Top score: 460)
+[2026-01-02T15:54:53.118Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-01-02T15:54:53.118Z]    1. URL: https://www.roselladerubielos.com/img-struct/logo.png - Score: 460
+[2026-01-02T15:54:53.202Z] 🔍 Extracción inicial: 0 RRSS, 1 emails, 2 teléfonos, 0 direcciones
+[2026-01-02T15:55:03.105Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Exclusividad y carácter en el corazón de la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una acogedora casa rural de alquiler completo, ideal para grupos grandes (10-12 personas), ubicada en el tranquilo pueblo de Fuentes de Rubielos. Ofrece una estancia confortable de excepcional calidad con decoración cuidada, calefacción central, y múltiples comodidades para disfrutar de la naturaleza y el descanso.",
+  "brand_values": [
+    "Confort",
+    "Naturaleza",
+    "Exclusividad",
+    "Tradición",
+    "Calidad"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Íntimo",
+    "Descriptivo"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Natural",
+    "Cálido"
+  ],
+  "target_audience": [
+    "Familias numerosas buscando reuniones",
+    "Grupos de amigos amantes del esquí y la montaña",
+    "Turistas culturales interesados en Teruel y sus pueblos históricos"
+  ],
+  "colors": [
+    "#3E4951",
+    "#F4F4F0",
+    "#004042",
+    "#7F7F02",
+    "#FF0100"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Tu casa rural de lujo en la Sierra de Gúdar para 12 personas.",
+      "Desconecta de la rutina: Chimenea, billar y naturaleza.",
+      "Alquiler completo y exclusivo: El plan perfecto para tu grupo.",
+      "Vive la experiencia rural con la máxima calidad y confort.",
+      "Rosella: Piedra del lugar, decoración cuidada, estancia inolvidable."
+    ],
+    "visual_keywords": [
+      "Rústico",
+      "Piedra natural",
+      "Interior cálido",
+      "Sierra nevada",
+      "Entorno montañoso"
+    ],
+    "ctas": [
+      "Consultar Tarifas y Disponibilidad",
+      "Reservar Estancia Exclusiva",
+      "Ver Galería Completa de Fotos"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa de estilo rural, construida con piedra del lugar, diseñada específicamente para el alquiler completo de grupos grandes (10 a 12 personas), aunque ofrece la posibilidad de alquilar a partir de seis. La propiedad dispone de comodidades clave como calefacción central, una chimenea ideal para después de una jornada de esquí, barbacoa, salón de juegos con billar y tres baños completos, complementados por cinco habitaciones temáticas (Habitación azul, Columbia, Java, verde, morada), algunas de ellas abuhardilladas. Se encuentra estratégicamente ubicada en Fuentes de Rubielos, a 962 metros de altitud, sirviendo como base ideal para actividades de aventura como esquí (Javalambre/Valdelinares), senderismo y turismo cultural en la Comarca Gúdar-Javalambre."
+  }
+}
+[2026-01-02T18:06:28.213Z] 📄 HTML cargado. Longitud: 227802 caracteres.
+[2026-01-02T18:06:28.214Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-01-02T18:06:28.216Z] 🔤 Fuentes iniciales extraídas: 8 ["var(--h2_typography-font-family)","var(--h2_typography-font-weight)","var(--h2_typography-font-style)","flex-start","var(--awb-typography3-font-family)","var(--awb-typography3-font-weight)","var(--awb-typography3-font-style)","normal"]
+[2026-01-02T18:06:28.222Z] 🔍 Favicon encontrado: https://olilagaiana.com/wp-content/uploads/2025/04/cropped-bubble-gum-olive-branch-192x192-1.png (1 candidatos)
+[2026-01-02T18:06:28.228Z] 📱 Social links found: 3, Emails: 1, Phones: 3
+[2026-01-02T18:06:28.246Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-01-02T18:06:28.247Z]    - SVGs en header encontrados: 2
+[2026-01-02T18:06:28.249Z]    - IMGs en header encontrados: 15
+[2026-01-02T18:06:28.249Z]    - firstHeaderSvg.length: 1
+[2026-01-02T18:06:28.250Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 600 caracteres
+[2026-01-02T18:06:28.250Z] 🎯 BOOST: SVG existente en header potenciado (+300) - Score final: 420
+[2026-01-02T18:06:28.252Z] 🖼️ Logo candidates encontrados: 13 (Top score: 420)
+[2026-01-02T18:06:28.252Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-01-02T18:06:28.253Z]    1. SVG inline - Score: 420 - Length: 600 chars
+[2026-01-02T18:06:28.253Z]    2. URL: https://olilagaiana.com/wp-content/uploads/2025/12/062ba0bd-c5a5-471d-8d81-d5ff4802af05.jpg_logo-removebg-preview-1-e1766746972136.png - Score: 390
+[2026-01-02T18:06:28.253Z]    3. URL: https://olilagaiana.com/wp-content/uploads/2025/04/Logo-sene-fons-blanc.png - Score: 380
+[2026-01-02T18:06:28.254Z]    4. URL: https://olilagaiana.com/wp-content/uploads/2025/12/WhatsApp-Image-2025-12-05-at-11.33.17.jpeg - Score: 210
+[2026-01-02T18:06:28.254Z]    5. URL: https://olilagaiana.com/wp-content/uploads/2025/04/camp-816x1024-1.jpg - Score: 210
+[2026-01-02T18:06:28.756Z] 🔍 Extracción inicial: 3 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2026-01-02T18:06:52.537Z] ✅ Gemini Response: {
+  "brand_name": "Oli Lagaiana",
+  "tagline": "Qualitat i Tradició. L'autèntic sabor de la Mediterrània valenciana.",
+  "business_overview": "Oli Lagaiana produeix i comercialitza oli d'oliva verge extra (AOVE) de màxima qualitat, utilitzant olives seleccionades de la varietat 100% Koroneiki. Elaboren el seu oli amb premsa en fred en els seus camps de Roca – Meliana, a l'Horta Nord de València, garantint un producte que reflecteix la tradició i la riquesa del sabor mediterrani. També ofereixen l'experiència de visites guiades als seus camps.",
+  "brand_values": [
+    "Qualitat",
+    "Tradició",
+    "Autenticitat",
+    "Origen Valencià",
+    "Sostenibilitat"
+  ],
+  "tone_of_voice": [
+    "Cercà",
+    "Artesanal",
+    "Honest"
+  ],
+  "visual_aesthetic": [
+    "Rústic",
+    "Mediterrani",
+    "Orgànic"
+  ],
+  "target_audience": [
+    "Amants de la cuina i la gastronomia gurmet",
+    "Consumidors que valoren els productes locals i amb Denominació d'Origen",
+    "Turistes o residents interessats en el patrimoni agrícola i les visites experiencials (agroturisme)"
+  ],
+  "colors": [
+    "#004600",
+    "#141827",
+    "#FFFFFF",
+    "#00A99D",
+    "#DA394D"
+  ],
+  "fonts": [
+    "Libre Baskerville",
+    "Lato"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Descobreix l'AOVE valencià reconegut com a Patrimoni Mundial (SIPAM).",
+      "Oli de primera collita: Sabor artesanal, 100% Koroneiki.",
+      "El gust autèntic del Mediterrani a només 1500m del mar.",
+      "Transforma els teus plats: L'oli verge extra de Roca - Meliana.",
+      "Qualitat i Tradició: Compra l'oli que preserva totes les propietats."
+    ],
+    "visual_keywords": [
+      "Oliveres Koroneiki",
+      "Camp de Roca-Meliana",
+      "Premsa en fred",
+      "Ampolla d'oli gurmet",
+      "Horta Nord protegida"
+    ],
+    "ctas": [
+      "Comprar el Nostre Oli",
+      "Reserva la Teua Visita Guiada",
+      "Descobreix la Botiga"
+    ],
+    "brand_context": "Oli Lagaiana és un productor d'oli d'oliva verge extra (AOVE) ubicat a Roca – Meliana, a la comarca de l’Horta Nord de València. La producció utilitza olives de la varietat 100% Koroneiki, conreades en camps situats a escassos 1500 metres de la mar Mediterrània. L'oli s'obté exclusivament mitjançant premsa en fred i procediments mecànics, assegurant la màxima qualitat. L'entorn de producció, l'Horta Nord, té un gran valor agrari i paisatgístic, i ha estat reconegut per la FAO com a territori SIPAM, la qual cosa subratlla el compromís de la marca amb la qualitat, la tradició i la sostenibilitat del medi ambient local. A més de la venda a la botiga online, la marca ofereix l'opció de comprar directament a les instal·lacions de Carrer de Sant Isidre, 69B, i la possibilitat de realitzar visites guiades, així com adquirir packs regal amb ampolles i copes de tast."
+  }
+}
+[2026-01-02T19:46:50.715Z] 📄 HTML cargado. Longitud: 753676 caracteres.
+[2026-01-02T19:46:50.716Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-01-02T19:46:50.719Z] 🔤 Fuentes iniciales extraídas: 3 ["Segoe UI Historic","Placeholder Font","Instagram Sans UI"]
+[2026-01-02T19:46:50.723Z] 🔍 Favicon encontrado: https://static.cdninstagram.com/rsrc.php/v4/yI/r/VsNE-OHk_8a.png (12 candidatos)
+[2026-01-02T19:46:50.735Z] 📱 Social links found: 0, Emails: 0, Phones: 3
+[2026-01-02T19:46:50.739Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-01-02T19:46:50.740Z]    - SVGs en header encontrados: 0
+[2026-01-02T19:46:50.740Z]    - IMGs en header encontrados: 0
+[2026-01-02T19:46:50.741Z]    - firstHeaderSvg.length: 0
+[2026-01-02T19:46:50.741Z] ⚠️ No se encontró ningún SVG ni IMG en contenedores de cabecera
+[2026-01-02T19:46:50.741Z] 🖼️ Logo candidates encontrados: 0 (Top score: 0)
+[2026-01-02T19:46:50.742Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-01-02T20:21:55.903Z] 📄 HTML cargado. Longitud: 22749 caracteres.
+[2026-01-02T20:21:55.904Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-01-02T20:21:55.905Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-01-02T20:21:55.909Z] 🔍 Favicon encontrado: https://awordz.com/logo.svg (1 candidatos)
+[2026-01-02T20:21:55.911Z] 📱 Social links found: 0, Emails: 0, Phones: 0
+[2026-01-02T20:21:55.911Z] 🎯 FAVICON ESCALATION: Favicon SVG tratado como logo candidato (220 puntos)
+[2026-01-02T20:21:55.917Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-01-02T20:21:55.918Z]    - SVGs en header encontrados: 3
+[2026-01-02T20:21:55.918Z]    - IMGs en header encontrados: 1
+[2026-01-02T20:21:55.919Z]    - firstHeaderSvg.length: 1
+[2026-01-02T20:21:55.920Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 377 caracteres
+[2026-01-02T20:21:55.920Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2026-01-02T20:21:55.921Z] 🖼️ Logo candidates encontrados: 3 (Top score: 350)
+[2026-01-02T20:21:55.921Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-01-02T20:21:55.922Z]    1. SVG inline - Score: 350 - Length: 377 chars
+[2026-01-02T20:21:55.922Z]    2. URL: https://awordz.com/logo.svg - Score: 310
+[2026-01-02T20:21:55.923Z]    3. URL: https://awordz.com/og.jpg - Score: 5
+[2026-01-02T20:21:56.025Z] 🔍 Extracción inicial: 0 RRSS, 0 emails, 0 teléfonos, 0 direcciones
+[2026-01-02T20:22:08.281Z] ✅ Gemini Response: {
+  "brand_name": "Awordz",
+  "tagline": "Assist. Augment. Accelerate. AI for Professional Linguistics.",
+  "business_overview": "Awordz provides personalized AI agents that act as expert co-pilots for translation teams, handling repetitive tasks and ensuring consistency before human review. This multi-agent system, referred to as the “quality escalator,” significantly boosts fluency, enforces style guides, and delivers near-final drafts quickly, allowing global releases to ship faster.",
+  "brand_values": [
+    "Efficiency",
+    "Quality Assurance",
+    "Augmentation",
+    "Innovation",
+    "Linguistic Expertise"
+  ],
+  "tone_of_voice": [
+    "Technical",
+    "Confident",
+    "Professional"
+  ],
+  "visual_aesthetic": [
+    "Modern",
+    "Technological",
+    "Clean"
+  ],
+  "target_audience": [
+    "Professional Linguists and Translators",
+    "Localization and Translation Managers",
+    "Global Product Release Teams"
+  ],
+  "colors": [
+    "#228855",
+    "#0F172A",
+    "#0000D4",
+    "#D40000",
+    "#9CA3AF"
+  ],
+  "fonts": [
+    "Lora",
+    "Inter"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Slash turnaround times: Go live in days, not months.",
+      "Clear the clutter: AI co-pilots pre-translate automatically.",
+      "The Quality Escalator: Near-final drafts your reviewers will love.",
+      "Augment your team without adding headcount.",
+      "Enforce glossaries and fix fluency before a human reads a line."
+    ],
+    "visual_keywords": [
+      "digital co-pilot dashboard",
+      "clean data workflow",
+      "futuristic interface",
+      "augmented linguistic process",
+      "green efficiency metrics"
+    ],
+    "ctas": [
+      "Request a 20-Minute Demo",
+      "See AI Agents Live",
+      "Start Your Free Trial"
+    ],
+    "brand_context": "Awordz specializes in multi-agent personalized AI co-pilots designed to revolutionize localization and translation workflows for professional teams. The system manages the full cycle: initial pre-translation and adequacy checks (Assist), utilizing a 'quality escalator' to polish fluency and rigorously enforce style guides and glossaries (Augment), resulting in dramatically reduced turnaround times for global releases (Accelerate). The core value proposition is trimming busy-work and boosting overall linguistic quality, enabling clients to ship global projects faster without increasing overhead. The company provides plug-and-play workflows and aims to educate potential clients via targeted 20-minute demonstrations."
+  }
+}
