@@ -174,13 +174,14 @@ export function BrandAssets({
                 </CardContent>
             </Card>
 
-            {/* Aesthetic */}
+            {/* Visual Styles (unified for image generation) */}
             <Card className="bg-card border-border">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Type className="w-5 h-5 text-primary" />
-                        Estética
+                        Estilos Visuales
                     </CardTitle>
+                    <p className="text-xs text-muted-foreground">Para generación de imágenes en el Studio</p>
                 </CardHeader>
                 <CardContent className="space-y-2">
                     {aesthetic.map((v, i) => (
@@ -188,7 +189,7 @@ export function BrandAssets({
                     ))}
                     <Button variant="outline" size="sm" className="w-full border-dashed border-border hover:border-primary hover:bg-primary/5 h-8 text-xs" onClick={onAddAesthetic}>
                         <Plus className="w-4 h-4 mr-1" />
-                        Añadir Estética
+                        Añadir Estilo
                     </Button>
                 </CardContent>
             </Card>

@@ -10,6 +10,38 @@ import { LucideIcon } from 'lucide-react'
 import { OFERTA_IMPACTO_PROMPT, OFERTA_IMPACTO_DESCRIPTION } from './prompts/layouts/oferta-impacto'
 import { PROMO_MOVIL_PROMPT, PROMO_MOVIL_DESCRIPTION } from './prompts/layouts/promo-movil'
 
+// Intent-specific prompts
+import {
+    ESCAPARATE_EXTENDED_DESCRIPTION,
+    ESCAPARATE_REQUIRED_FIELDS,
+    ESCAPARATE_PROMPT,
+    ESCAPARATE_DESCRIPTION,
+} from './prompts/intents/escaparate'
+import {
+    COMUNICADO_EXTENDED_DESCRIPTION,
+    COMUNICADO_REQUIRED_FIELDS,
+    COMUNICADO_PROMPT,
+    COMUNICADO_DESCRIPTION,
+} from './prompts/intents/comunicado'
+import {
+    LOGRO_EXTENDED_DESCRIPTION,
+    LOGRO_REQUIRED_FIELDS,
+    LOGRO_PROMPT,
+    LOGRO_DESCRIPTION,
+} from './prompts/intents/logro'
+import {
+    DATO_EXTENDED_DESCRIPTION,
+    DATO_REQUIRED_FIELDS,
+    DATO_PROMPT,
+    DATO_DESCRIPTION,
+} from './prompts/intents/dato'
+import {
+    PREGUNTA_EXTENDED_DESCRIPTION,
+    PREGUNTA_REQUIRED_FIELDS,
+    PREGUNTA_PROMPT,
+    PREGUNTA_DESCRIPTION,
+} from './prompts/intents/pregunta'
+
 export type IntentGroup = 'vender' | 'informar' | 'conectar' | 'educar' | 'engagement'
 
 export type IntentCategory =
@@ -43,13 +75,24 @@ export type IntentCategory =
 // INTENT METADATA
 // -----------------------------------------------------------------------------
 
+export interface IntentRequiredField {
+    id: string
+    label: string
+    placeholder: string
+    type: 'text' | 'textarea' | 'url' | 'phone' | 'address'
+    required: boolean
+    aiContext?: string
+}
+
 export interface IntentMeta {
     id: IntentCategory
     name: string
     description: string
+    extendedDescription?: string  // 3 líneas explicando uso tras seleccionar
     group: IntentGroup
     icon: string  // Lucide icon name
     requiresImage: boolean
+    requiredFields?: IntentRequiredField[]  // Campos específicos de esta intención
     subModes?: string[]  // e.g., Escaparate: ['studio', 'lifestyle', 'servicio']
     defaultHeadline?: string
     defaultCta?: string
@@ -65,34 +108,34 @@ export const INTENT_GROUPS: Record<IntentGroup, { name: string; icon: string; de
 
 export const INTENT_CATALOG: IntentMeta[] = [
     // Grupo A: Vender
-    { id: 'oferta', name: 'La Oferta', description: 'Descuento, precio destacado', group: 'vender', icon: 'Percent', requiresImage: true, defaultHeadline: '30% OFF', defaultCta: 'Comprar Ahora' },
-    { id: 'escaparate', name: 'El Escaparate', description: 'Producto protagonista', group: 'vender', icon: 'Package', requiresImage: true, subModes: ['studio', 'lifestyle', 'mockup'] },
-    { id: 'catalogo', name: 'El Catálogo', description: 'Colección de productos', group: 'vender', icon: 'Grid3x3', requiresImage: true },
-    { id: 'lanzamiento', name: 'El Lanzamiento', description: 'Coming Soon, novedad', group: 'vender', icon: 'Rocket', requiresImage: false, defaultHeadline: 'Próximamente' },
-    { id: 'servicio', name: 'El Servicio', description: 'Servicios intangibles', group: 'vender', icon: 'Briefcase', requiresImage: false },
+    { id: 'oferta', name: 'La Oferta', description: 'Descuento, precio destacado', extendedDescription: 'Promociones con precio o descuento destacado. Ideal para ofertas flash, rebajas y Black Friday. Requiere imagen del producto a promocionar.', group: 'vender', icon: 'Percent', requiresImage: true, defaultHeadline: '30% OFF', defaultCta: 'Comprar Ahora' },
+    { id: 'escaparate', name: 'El Escaparate', description: 'Producto protagonista', extendedDescription: ESCAPARATE_EXTENDED_DESCRIPTION, group: 'vender', icon: 'Package', requiresImage: true, requiredFields: ESCAPARATE_REQUIRED_FIELDS, subModes: ['studio', 'lifestyle', 'mockup'] },
+    { id: 'catalogo', name: 'El Catálogo', description: 'Colección de productos', extendedDescription: 'Muestra varios productos en una cuadrícula elegante. Perfecto para lanzar colecciones o destacar la variedad de tu catálogo.', group: 'vender', icon: 'Grid3x3', requiresImage: true },
+    { id: 'lanzamiento', name: 'El Lanzamiento', description: 'Coming Soon, novedad', extendedDescription: 'Genera expectativa para un producto o servicio próximo. Diseño misterioso que invita a estar atentos sin revelar demasiado.', group: 'vender', icon: 'Rocket', requiresImage: false, defaultHeadline: 'Próximamente' },
+    { id: 'servicio', name: 'El Servicio', description: 'Servicios intangibles', extendedDescription: 'Para promocionar servicios que no se pueden fotografiar. Usa iconografía y textos claros para comunicar el valor.', group: 'vender', icon: 'Briefcase', requiresImage: false },
 
     // Grupo B: Informar
-    { id: 'comunicado', name: 'El Comunicado', description: 'Aviso, información densa', group: 'informar', icon: 'FileText', requiresImage: false },
-    { id: 'evento', name: 'El Evento', description: 'Fecha, hora, lugar', group: 'informar', icon: 'Calendar', requiresImage: false, defaultHeadline: 'Save the Date' },
-    { id: 'lista', name: 'La Lista', description: 'Pasos, checklist', group: 'informar', icon: 'ListChecks', requiresImage: false },
-    { id: 'comparativa', name: 'La Comparativa', description: 'Antes/Después, Versus', group: 'informar', icon: 'ArrowLeftRight', requiresImage: true },
-    { id: 'efemeride', name: 'La Efeméride', description: 'Navidad, Verano, fechas especiales', group: 'informar', icon: 'Sparkles', requiresImage: false },
+    { id: 'comunicado', name: 'El Comunicado', description: 'Aviso, información densa', extendedDescription: COMUNICADO_EXTENDED_DESCRIPTION, group: 'informar', icon: 'FileText', requiresImage: false, requiredFields: COMUNICADO_REQUIRED_FIELDS },
+    { id: 'evento', name: 'El Evento', description: 'Fecha, hora, lugar', extendedDescription: 'Save the Date para eventos, talleres o webinars. Fecha y hora prominentes con información esencial del evento.', group: 'informar', icon: 'Calendar', requiresImage: false, defaultHeadline: 'Save the Date' },
+    { id: 'lista', name: 'La Lista', description: 'Pasos, checklist', extendedDescription: 'Información estructurada en formato lista. Ideal para tips, pasos a seguir o requisitos. Fácil de escanear y recordar.', group: 'informar', icon: 'ListChecks', requiresImage: false },
+    { id: 'comparativa', name: 'La Comparativa', description: 'Antes/Después, Versus', extendedDescription: 'Comparación visual entre dos estados o opciones. Perfecto para transformaciones, diferencias de producto o decisiones.', group: 'informar', icon: 'ArrowLeftRight', requiresImage: true },
+    { id: 'efemeride', name: 'La Efeméride', description: 'Navidad, Verano, fechas especiales', extendedDescription: 'Contenido para fechas señaladas: festividades, días mundiales o temporadas. Conecta con el momento cultural actual.', group: 'informar', icon: 'Sparkles', requiresImage: false },
 
     // Grupo C: Conectar
-    { id: 'equipo', name: 'El Equipo', description: 'Meet the Team', group: 'conectar', icon: 'Users', requiresImage: true },
-    { id: 'cita', name: 'La Cita', description: 'Quote, frase inspiracional', group: 'conectar', icon: 'Quote', requiresImage: false },
-    { id: 'talento', name: 'El Talento', description: 'Hiring, buscamos personal', group: 'conectar', icon: 'UserPlus', requiresImage: false, defaultHeadline: 'Te Buscamos' },
-    { id: 'logro', name: 'El Logro', description: 'Milestone, celebración', group: 'conectar', icon: 'Trophy', requiresImage: false, defaultHeadline: '¡Gracias!' },
-    { id: 'bts', name: 'Behind the Scenes', description: 'Proceso, storytelling', group: 'conectar', icon: 'Clapperboard', requiresImage: true },
+    { id: 'equipo', name: 'El Equipo', description: 'Meet the Team', extendedDescription: 'Presenta a las personas detrás de la marca. Humaniza tu negocio mostrando rostros, nombres y roles del equipo.', group: 'conectar', icon: 'Users', requiresImage: true },
+    { id: 'cita', name: 'La Cita', description: 'Quote, frase inspiracional', extendedDescription: 'Citas memorables, testimonios o frases de marca. Diseño tipográfico protagonista que transmite personalidad.', group: 'conectar', icon: 'Quote', requiresImage: false },
+    { id: 'talento', name: 'El Talento', description: 'Hiring, buscamos personal', extendedDescription: 'Atrae candidatos con ofertas de empleo atractivas. Muestra cultura de empresa y requisitos del puesto de forma visual.', group: 'conectar', icon: 'UserPlus', requiresImage: false, defaultHeadline: 'Te Buscamos' },
+    { id: 'logro', name: 'El Logro', description: 'Milestone, celebración', extendedDescription: LOGRO_EXTENDED_DESCRIPTION, group: 'conectar', icon: 'Trophy', requiresImage: false, requiredFields: LOGRO_REQUIRED_FIELDS, defaultHeadline: '¡Gracias!' },
+    { id: 'bts', name: 'Behind the Scenes', description: 'Proceso, storytelling', extendedDescription: 'Muestra el proceso creativo o día a día del negocio. Contenido auténtico que genera confianza y cercanía.', group: 'conectar', icon: 'Clapperboard', requiresImage: true },
 
     // Grupo D: Educar
-    { id: 'dato', name: 'El Dato', description: 'Estadística, infografía', group: 'educar', icon: 'BarChart3', requiresImage: false },
-    { id: 'pasos', name: 'El Paso a Paso', description: 'How-To, tutorial', group: 'educar', icon: 'ListOrdered', requiresImage: false },
-    { id: 'definicion', name: 'La Definición', description: 'Palabra + significado', group: 'educar', icon: 'BookOpen', requiresImage: false },
+    { id: 'dato', name: 'El Dato', description: 'Estadística, infografía', extendedDescription: DATO_EXTENDED_DESCRIPTION, group: 'educar', icon: 'BarChart3', requiresImage: false, requiredFields: DATO_REQUIRED_FIELDS },
+    { id: 'pasos', name: 'El Paso a Paso', description: 'How-To, tutorial', extendedDescription: 'Tutoriales y guías paso a paso. Enseña a tu audiencia algo útil relacionado con tu expertise o producto.', group: 'educar', icon: 'ListOrdered', requiresImage: false },
+    { id: 'definicion', name: 'La Definición', description: 'Palabra + significado', extendedDescription: 'Explica términos de tu industria. Posiciónate como experto educando sobre conceptos importantes para tu audiencia.', group: 'educar', icon: 'BookOpen', requiresImage: false },
 
     // Grupo E: Engagement
-    { id: 'pregunta', name: 'La Pregunta', description: 'Q&A, genera comentarios', group: 'engagement', icon: 'HelpCircle', requiresImage: false, defaultHeadline: '¿Qué opinas?' },
-    { id: 'reto', name: 'El Reto', description: 'Quiz, juego visual', group: 'engagement', icon: 'Gamepad2', requiresImage: false },
+    { id: 'pregunta', name: 'La Pregunta', description: 'Q&A, genera comentarios', extendedDescription: PREGUNTA_EXTENDED_DESCRIPTION, group: 'engagement', icon: 'HelpCircle', requiresImage: false, requiredFields: PREGUNTA_REQUIRED_FIELDS, defaultHeadline: '¿Qué opinas?' },
+    { id: 'reto', name: 'El Reto', description: 'Quiz, juego visual', extendedDescription: 'Contenido interactivo: quizzes, encuentra las diferencias o retos visuales. Maximiza el engagement y tiempo en publicación.', group: 'engagement', icon: 'Gamepad2', requiresImage: false },
 ]
 
 // -----------------------------------------------------------------------------
@@ -262,6 +305,7 @@ export const STYLE_CHIPS_BY_SUBJECT: Record<DetectedSubject, StyleChip[]> = {
 // -----------------------------------------------------------------------------
 
 export const ARTISTIC_STYLE_GROUPS = [
+    { id: 'brand', label: '💼 Tu Marca', description: 'Estilos de tu Brand Kit' },
     { id: 'suggested', label: '⭐ Sugeridos', description: 'Basados en tu imagen' },
     { id: 'design', label: '🎨 Diseño & Mockups', description: 'Editorial y Comercial' },
     { id: 'artistic', label: '🎭 Arte & Retro', description: 'Estilos clásicos y vintage' },
@@ -404,9 +448,41 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         { id: 'hero-text', name: 'Hero Text', description: 'Texto gigante', svgIcon: 'Type', textZone: 'overlay', promptInstruction: 'Large bold discount text overlaying product. Semi-transparent background for readability.' },
     ],
     escaparate: [
-        { id: 'hero', name: 'Hero Producto', description: 'Producto centrado', svgIcon: 'Square', textZone: 'bottom', promptInstruction: 'Clean product photography with subject centered. Leave bottom 20% for text.' },
+        {
+            id: 'hero',
+            name: 'Hero Producto',
+            description: 'Producto centrado',
+            svgIcon: 'Square',
+            textZone: 'bottom',
+            promptInstruction: 'Clean product photography with subject centered. Leave bottom 20% for text.',
+            structuralPrompt: ESCAPARATE_PROMPT,
+            referenceImageDescription: ESCAPARATE_DESCRIPTION,
+            textFields: [
+                { id: 'product_name', label: 'Nombre del Producto', placeholder: 'Ej: Zapatillas Air Max', defaultValue: '', aiContext: 'The main product name' },
+                { id: 'price', label: 'Precio (opcional)', placeholder: '149€', defaultValue: '', aiContext: 'Product price' },
+                { id: 'tagline', label: 'Tagline', placeholder: 'Comodidad sin límites', defaultValue: '', aiContext: 'Short product tagline' },
+            ]
+        },
         { id: 'grid-2x2', name: 'Grid 2x2', description: 'Cuatro productos', svgIcon: 'Grid2x2', textZone: 'bottom', promptInstruction: 'Four product grid layout with equal spacing.' },
         { id: 'lifestyle', name: 'Lifestyle', description: 'En contexto', svgIcon: 'Image', textZone: 'bottom-left', promptInstruction: 'Product in lifestyle context/environment. Text area at bottom left corner.' },
+    ],
+    comunicado: [
+        {
+            id: 'comunicado-oficial',
+            name: 'Comunicado Oficial',
+            description: 'Diseño formal con máxima legibilidad',
+            svgIcon: 'FileText',
+            textZone: 'center',
+            promptInstruction: 'Official announcement layout with maximum readability.',
+            structuralPrompt: COMUNICADO_PROMPT,
+            referenceImageDescription: COMUNICADO_DESCRIPTION,
+            textFields: [
+                { id: 'announcement_title', label: 'Título del Comunicado', placeholder: 'Cambio de Horario', defaultValue: '', aiContext: 'Main announcement headline' },
+                { id: 'announcement_body', label: 'Texto del Comunicado', placeholder: 'Detalla aquí el mensaje...', defaultValue: '', aiContext: 'Full announcement text' },
+                { id: 'effective_date', label: 'Fecha Efectiva', placeholder: 'A partir del 15 de enero', defaultValue: '', aiContext: 'When it takes effect' },
+            ]
+        },
+        { id: 'notice-banner', name: 'Banner Aviso', description: 'Horizontal llamativo', svgIcon: 'AlertCircle', textZone: 'center', promptInstruction: 'Horizontal notice banner with attention-grabbing design. Bold header, clear body text.' },
     ],
     evento: [
         { id: 'save-date', name: 'Save the Date', description: 'Fecha destacada', svgIcon: 'Calendar', textZone: 'center', promptInstruction: 'Event visual with large centered date. Leave 50% for text overlay.' },
@@ -414,8 +490,39 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         { id: 'banner', name: 'Banner', description: 'Horizontal', svgIcon: 'RectangleHorizontal', textZone: 'right', promptInstruction: 'Wide banner with visual left, text right.' },
     ],
     logro: [
-        { id: 'celebration', name: 'Celebración', description: 'Confetti/Estrellas', svgIcon: 'PartyPopper', textZone: 'center', promptInstruction: 'Celebratory design with confetti or stars. Large centered text area for milestone number.' },
+        {
+            id: 'celebration',
+            name: 'Celebración',
+            description: 'Confetti/Estrellas',
+            svgIcon: 'PartyPopper',
+            textZone: 'center',
+            promptInstruction: 'Celebratory design with confetti or stars.',
+            structuralPrompt: LOGRO_PROMPT,
+            referenceImageDescription: LOGRO_DESCRIPTION,
+            textFields: [
+                { id: 'milestone_number', label: 'Cifra o Logro', placeholder: '10.000 seguidores', defaultValue: '', aiContext: 'The main milestone' },
+                { id: 'gratitude_message', label: 'Mensaje', placeholder: '¡Gracias!', defaultValue: '¡Gracias!', aiContext: 'Thank you message' },
+            ]
+        },
         { id: 'trophy', name: 'Trofeo', description: 'Icono destacado', svgIcon: 'Trophy', textZone: 'bottom', promptInstruction: 'Trophy or achievement icon at top, text at bottom.' },
+    ],
+    dato: [
+        {
+            id: 'dato-infografia',
+            name: 'Infografía',
+            description: 'Estadística protagonista',
+            svgIcon: 'BarChart3',
+            textZone: 'center',
+            promptInstruction: 'Data-driven infographic with prominent statistic.',
+            structuralPrompt: DATO_PROMPT,
+            referenceImageDescription: DATO_DESCRIPTION,
+            textFields: [
+                { id: 'main_stat', label: 'Dato Principal', placeholder: '73%', defaultValue: '', aiContext: 'The main statistic' },
+                { id: 'stat_context', label: 'Contexto', placeholder: 'de consumidores prefieren...', defaultValue: '', aiContext: 'What the stat means' },
+                { id: 'source', label: 'Fuente', placeholder: 'Estudio Nielsen 2024', defaultValue: '', aiContext: 'Data source' },
+            ]
+        },
+        { id: 'stat-simple', name: 'Número Grande', description: 'Solo la cifra', svgIcon: 'Hash', textZone: 'center', promptInstruction: 'Large number/statistic as the sole visual focus. Minimal decoration, maximum impact.' },
     ],
 }
 
@@ -573,6 +680,7 @@ export interface GenerationState {
     cta: string
     customTexts: Record<string, string>
     selectedBrandColors: string[]
+    rawMessage: string // User's raw message for AI to use as context
     additionalInstructions: string // Direct instructions from user
     customStyle: string // User defined custom visual style
 
@@ -603,6 +711,7 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     cta: '',
     customTexts: {},
     selectedBrandColors: [],
+    rawMessage: '',
     additionalInstructions: '',
     customStyle: '',
     isGenerating: false,

@@ -12,7 +12,10 @@ import {
     Layout,
     MessageCircle,
     Smartphone,
-    Youtube
+    Youtube,
+    Square,
+    RectangleHorizontal,
+    RectangleVertical
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -72,6 +75,12 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
                         {availableFormats.map((format) => {
                             const isSelected = selectedFormat === format.id
 
+                            // Determine icon based on aspect ratio
+                            const [w, h] = format.aspectRatio.split(':').map(Number)
+                            let FormatIcon = RectangleVertical
+                            if (w > h) FormatIcon = RectangleHorizontal
+                            else if (w === h) FormatIcon = Square
+
                             return (
                                 <motion.button
                                     key={format.id}
@@ -90,7 +99,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
                                             "p-1.5 rounded-lg transition-colors",
                                             isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                                         )}>
-                                            <Smartphone className="w-3.5 h-3.5" />
+                                            <FormatIcon className="w-3.5 h-3.5" />
                                         </div>
                                         <span className={cn(
                                             "text-[10px] font-bold px-1.5 py-0.5 rounded-md border",

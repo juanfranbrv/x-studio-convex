@@ -1,10 +1,36 @@
+import { useState, useCallback } from 'react'
+import {
+    Fingerprint,
+    Globe,
+    AtSign,
+    Mail,
+    Phone,
+    MapPin,
+    Check,
+    Sparkles,
+    Wand2,
+    Type,
+    Eraser,
+    Quote,
+    Megaphone,
+    MousePointerClick,
+    MessageSquareText
+} from 'lucide-react'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
-import { Check, Sparkles, Wand2, Type, Eraser } from 'lucide-react'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuGroup,
+} from '@/components/ui/dropdown-menu'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { type LayoutOption, type LayoutTextField } from '@/lib/creation-flow-types'
 import { NO_TEXT_TOKEN } from '@/hooks/useCreationFlow'
-import { useState } from 'react'
 
 interface BrandingConfiguratorProps {
     selectedLayout: LayoutOption | null
@@ -14,10 +40,12 @@ interface BrandingConfiguratorProps {
     cta: string
     selectedBrandColors: string[]
     additionalInstructions: string
+    rawMessage: string
     onSelectLogo: (logoId: string | null) => void
     onHeadlineChange: (headline: string) => void
     onCtaChange: (cta: string) => void
     onAdditionalInstructionsChange: (instructions: string) => void
+    onRawMessageChange: (message: string) => void
     onCustomTextChange: (id: string, value: string) => void
     onToggleNoText: (id: string) => void
     onToggleBrandColor: (color: string) => void
@@ -36,10 +64,12 @@ export function BrandingConfigurator({
     cta,
     selectedBrandColors,
     additionalInstructions,
+    rawMessage,
     onSelectLogo,
     onHeadlineChange,
     onCtaChange,
     onAdditionalInstructionsChange,
+    onRawMessageChange,
     onCustomTextChange,
     onToggleNoText,
     onToggleBrandColor,
@@ -72,6 +102,73 @@ export function BrandingConfigurator({
     ]
 
     const fieldsToRender = selectedLayout?.textFields || defaultFields
+
+    // Extract all DNA resources for quick-fill
+    const generalItems = [
+        activeBrandKit?.url ? { label: 'Sitio Web', value: activeBrandKit.url, icon: Globe } : null,
+        activeBrandKit?.tagline ? { label: 'Tagline', value: activeBrandKit.tagline, icon: Quote } : null,
+    ].filter((item): item is NonNullable<typeof item> => item !== null)
+
+    const contactItems = [
+        ...(activeBrandKit?.emails || []).map(e => ({ label: 'Email', value: e, icon: Mail })),
+        ...(activeBrandKit?.phones || []).map(p => ({ label: 'Teléfono', value: p, icon: Phone })),
+        ...(activeBrandKit?.addresses || []).map(a => ({ label: 'Dirección', value: a, icon: MapPin })),
+    ]
+
+    const socialItems = [
+        ...(activeBrandKit?.social_links || []).map(s => ({
+            label: s.platform,
+            value: s.url,
+            icon: AtSign
+        }))
+    ]
+
+    // Text assets from brand kit (for direct insertion)
+    const titularItems = [
+        ...(activeBrandKit?.text_assets?.marketing_hooks || []).map(h => ({ label: 'Titular', value: h, icon: Megaphone })),
+    ]
+
+    const ctaItems = [
+        ...(activeBrandKit?.text_assets?.ctas || []).map(c => ({ label: 'CTA', value: c, icon: MousePointerClick })),
+    ]
+
+    const dnaResources = [
+        titularItems.length > 0 ? { category: 'Titulares', items: titularItems } : null,
+        ctaItems.length > 0 ? { category: 'CTAs', items: ctaItems } : null,
+        generalItems.length > 0 ? { category: 'General', items: generalItems } : null,
+        contactItems.length > 0 ? { category: 'Contacto', items: contactItems } : null,
+        socialItems.length > 0 ? { category: 'Social', items: socialItems } : null,
+    ].filter((cat): cat is NonNullable<typeof cat> => cat !== null)
+
+    const handleValueUpdate = (fieldId: string, newValue: string) => {
+        if (fieldId === 'headline') onHeadlineChange(newValue)
+        else if (fieldId === 'cta') onCtaChange(newValue)
+        else onCustomTextChange(fieldId, newValue)
+    }
+
+    const handleDrop = useCallback((e: React.DragEvent, fieldId: string) => {
+        e.preventDefault()
+        const jsonData = e.dataTransfer.getData('application/x-studio-context')
+        if (jsonData) {
+            try {
+                const element = JSON.parse(jsonData)
+                if (element.value) {
+                    handleValueUpdate(fieldId, element.value)
+                }
+            } catch (err) {
+                console.error("Error parsing drop data", err)
+            }
+        } else {
+            const text = e.dataTransfer.getData('text/plain')
+            if (text) {
+                handleValueUpdate(fieldId, text)
+            }
+        }
+    }, [onHeadlineChange, onCtaChange, onCustomTextChange])
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault()
+    }
 
     return (
         <div className="space-y-4">
@@ -161,11 +258,30 @@ export function BrandingConfigurator({
                 </div>
             )}
 
+            {/* Raw Message Input */}
+            {showTexts && (
+                <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                        <MessageSquareText className="w-3 h-3 text-primary" />
+                        Tu Mensaje (opcional)
+                    </label>
+                    <textarea
+                        value={rawMessage}
+                        onChange={(e) => onRawMessageChange(e.target.value)}
+                        placeholder="Escribe aquí tu idea, oferta o mensaje. La IA usará esto + tu ADN de marca para generar titulares y CTAs..."
+                        className="w-full h-20 bg-muted/30 border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none placeholder:italic placeholder:text-muted-foreground/50"
+                    />
+                    {rawMessage && (
+                        <p className="text-[10px] text-muted-foreground/60 italic">
+                            ✨ La IA usará este texto como base para generar contenido
+                        </p>
+                    )}
+                </div>
+            )}
+
             {/* Dynamic Text Fields */}
             {showTexts && (
                 <div className="space-y-4">
-
-
                     {fieldsToRender.map((field) => {
                         const isCustom = field.id !== 'headline' && field.id !== 'cta'
                         const value = isCustom ? (customTexts[field.id] || '') : (field.id === 'headline' ? headline : cta)
@@ -211,30 +327,72 @@ export function BrandingConfigurator({
                                     </div>
                                 </div>
 
-                                <div className="relative group">
+                                <div
+                                    className="relative group"
+                                    onDrop={(e) => handleDrop(e, field.id)}
+                                    onDragOver={handleDragOver}
+                                >
                                     <Input
                                         value={isNoText ? '' : value}
                                         disabled={isNoText}
-                                        onChange={(e) => {
-                                            if (field.id === 'headline') onHeadlineChange(e.target.value)
-                                            else if (field.id === 'cta') onCtaChange(e.target.value)
-                                            else onCustomTextChange(field.id, e.target.value)
-                                        }}
+                                        onChange={(e) => handleValueUpdate(field.id, e.target.value)}
                                         placeholder={isNoText ? "Elemento eliminado de la plantilla" : field.placeholder}
                                         className={cn(
-                                            "h-9 text-sm transition-all pr-12",
+                                            "h-9 text-sm transition-all pr-20", // Increased padding for 2 buttons
                                             isNoText
                                                 ? "bg-red-500/5 border-red-500/20 text-red-500 italic placeholder:text-red-300/50"
-                                                : "bg-muted/30 border-border/50 focus:border-primary/50"
+                                                : "bg-muted/30 border-border/50 focus:border-primary/50 group-hover:border-primary/30"
                                         )}
                                     />
-                                    {isNoText && (
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 overflow-hidden pointer-events-none">
-                                            <span className="text-[10px] font-bold uppercase tracking-tighter text-red-400 opacity-60">
-                                                Omitido
-                                            </span>
-                                        </div>
-                                    )}
+
+                                    {/* Action Buttons Container */}
+                                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pr-1">
+                                        {/* DNA Quick Fill */}
+                                        {!isNoText && dnaResources.length > 0 && (
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <button className="p-1.5 rounded-md text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors">
+                                                        <Fingerprint className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-56 p-0 border-border/50">
+                                                    <DropdownMenuLabel className="flex items-center gap-2 px-3 py-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                                                        <Fingerprint className="w-3 h-3 text-primary" />
+                                                        ADN de Marca
+                                                    </DropdownMenuLabel>
+                                                    <DropdownMenuSeparator />
+                                                    <ScrollArea className="h-[280px]">
+                                                        {dnaResources.map((cat, idx) => (
+                                                            <DropdownMenuGroup key={idx}>
+                                                                <div className="px-3 py-1.5 text-[9px] font-bold text-primary/70 uppercase bg-primary/5">
+                                                                    {cat.category}
+                                                                </div>
+                                                                {cat.items.map((item, iIdx) => (
+                                                                    <DropdownMenuItem
+                                                                        key={iIdx}
+                                                                        onClick={() => handleValueUpdate(field.id, item.value)}
+                                                                        className="flex items-center gap-2 px-3 py-2 text-xs truncate cursor-pointer hover:bg-primary/5 focus:bg-primary/5"
+                                                                    >
+                                                                        <item.icon className="w-3 h-3 text-muted-foreground shrink-0" />
+                                                                        <span className="truncate">{item.value}</span>
+                                                                    </DropdownMenuItem>
+                                                                ))}
+                                                                {idx < dnaResources.length - 1 && <DropdownMenuSeparator />}
+                                                            </DropdownMenuGroup>
+                                                        ))}
+                                                    </ScrollArea>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        )}
+
+                                        {isNoText && (
+                                            <div className="overflow-hidden pointer-events-none pr-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-tighter text-red-400 opacity-60">
+                                                    Omitido
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )

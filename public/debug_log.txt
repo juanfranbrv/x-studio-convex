@@ -4192,3 +4192,153 @@
     "brand_context": "Awordz specializes in multi-agent personalized AI co-pilots designed to revolutionize localization and translation workflows for professional teams. The system manages the full cycle: initial pre-translation and adequacy checks (Assist), utilizing a 'quality escalator' to polish fluency and rigorously enforce style guides and glossaries (Augment), resulting in dramatically reduced turnaround times for global releases (Accelerate). The core value proposition is trimming busy-work and boosting overall linguistic quality, enabling clients to ship global projects faster without increasing overhead. The company provides plug-and-play workflows and aims to educate potential clients via targeted 20-minute demonstrations."
   }
 }
+[2026-01-03T17:19:52.886Z] 📄 HTML cargado. Longitud: 23531 caracteres.
+[2026-01-03T17:19:52.887Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-01-03T17:19:52.889Z] 🔤 Fuentes iniciales extraídas: 1 ["Poppins"]
+[2026-01-03T17:19:52.893Z] 🔍 Favicon encontrado: https://www.google.com/s2/favicons?domain=www.roselladerubielos.com&sz=256 (0 candidatos)
+[2026-01-03T17:19:52.895Z] 📱 Social links found: 0, Emails: 1, Phones: 2
+[2026-01-03T17:19:52.914Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-01-03T17:19:52.915Z]    - SVGs en header encontrados: 0
+[2026-01-03T17:19:52.916Z]    - IMGs en header encontrados: 1
+[2026-01-03T17:19:52.917Z]    - firstHeaderSvg.length: 0
+[2026-01-03T17:19:52.917Z] 🎯 Primera IMG en header detectada
+[2026-01-03T17:19:52.917Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-01-03T17:19:52.918Z] 🖼️ Logo candidates encontrados: 1 (Top score: 460)
+[2026-01-03T17:19:52.919Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-01-03T17:19:52.919Z]    1. URL: https://www.roselladerubielos.com/img-struct/logo.png - Score: 460
+[2026-01-03T17:19:53.008Z] 🔍 Extracción inicial: 0 RRSS, 1 emails, 2 teléfonos, 0 direcciones
+[2026-01-03T17:20:01.762Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Un retiro de calidad para compartir momentos inolvidables.",
+  "business_overview": "Rosella de Rubielos es una acogedora casa rural de estilo tradicional, construida con piedra del lugar, ubicada en el tranquilo pueblo de Fuentes de Rubielos, Teruel. Ofrece un alojamiento de alquiler completo, diseñado para grupos grandes de 10 a 12 personas, ideal para escapadas familiares o entre amigos. Sus instalaciones cuidadas, que incluyen chimenea y salón de juegos, garantizan una estancia confortable en el bello entorno de la Sierra de Gúdar.",
+  "brand_values": [
+    "Confort",
+    "Tradición",
+    "Naturaleza",
+    "Comunidad",
+    "Calidad"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Rural",
+    "Cercano"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Cálido",
+    "Tradicional"
+  ],
+  "target_audience": [
+    "Familias numerosas buscando tranquilidad y espacio",
+    "Grupos de amigos que organizan escapadas de fin de semana",
+    "Amantes del turismo de naturaleza y deportes de montaña (Esquí, Senderismo)"
+  ],
+  "colors": [
+    "#3E4951",
+    "#F4F4F0",
+    "#004042",
+    "#7F7F02",
+    "#FF0100"
+  ],
+  "fonts": [
+    "Libre Baskerville",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Vuestra escapada perfecta en la Sierra de Gúdar: Rosella de Rubielos.",
+      "Reúne a los tuyos: Alquiler completo hasta 12 personas con encanto rural.",
+      "Desconexión total: Chimenea, billar y naturaleza te esperan en Teruel.",
+      "Calidad excepcional en un entorno inigualable en Fuentes de Rubielos.",
+      "Vive el invierno con esquí o el verano con rafting desde la puerta de la casa."
+    ],
+    "visual_keywords": [
+      "Piedra vista",
+      "Decoración rural cuidada",
+      "Chimenea encendida",
+      "Naturaleza exuberante",
+      "Ambiente rústico acogedor"
+    ],
+    "ctas": [
+      "Consulta nuestras tarifas y disponibilidad",
+      "Reserva tu casa rural para 12 personas",
+      "Descubre el entorno y actividades en Teruel"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa rural de alquiler completo ubicada en Fuentes de Rubielos, un pequeño y tranquilo pueblo en la Sierra de Gúdar, Teruel, a 962 metros de altitud. La casa está diseñada específicamente para alojar grupos grandes, con una capacidad ideal de 10 a 12 personas, aunque se permite el alquiler a partir de seis. Dispone de cinco habitaciones (Azul, Columbia, Java, Verde, Morada), tres baños completos y una decoración sencilla de estilo rural. Sus comodidades incluyen calefacción central, chimenea, barbacoa exterior y un salón de juegos con billar. Está estratégicamente situada para realizar actividades como senderismo, esquí (Javalambre-Valdelinares), BTT, rafting, y turismo cultural/gastronómico en la Comarca Gúdar-Javalambre."
+  }
+}
+[2026-01-03T17:25:18.903Z] 📄 HTML cargado. Longitud: 23531 caracteres.
+[2026-01-03T17:25:18.904Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-01-03T17:25:18.905Z] 🔤 Fuentes iniciales extraídas: 1 ["Poppins"]
+[2026-01-03T17:25:18.909Z] 🔍 Favicon encontrado: https://www.google.com/s2/favicons?domain=www.roselladerubielos.com&sz=256 (0 candidatos)
+[2026-01-03T17:25:18.911Z] 📱 Social links found: 0, Emails: 1, Phones: 2
+[2026-01-03T17:25:18.931Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-01-03T17:25:18.931Z]    - SVGs en header encontrados: 0
+[2026-01-03T17:25:18.932Z]    - IMGs en header encontrados: 1
+[2026-01-03T17:25:18.933Z]    - firstHeaderSvg.length: 0
+[2026-01-03T17:25:18.933Z] 🎯 Primera IMG en header detectada
+[2026-01-03T17:25:18.933Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-01-03T17:25:18.934Z] 🖼️ Logo candidates encontrados: 1 (Top score: 460)
+[2026-01-03T17:25:18.935Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-01-03T17:25:18.935Z]    1. URL: https://www.roselladerubielos.com/img-struct/logo.png - Score: 460
+[2026-01-03T17:25:19.026Z] 🔍 Extracción inicial: 0 RRSS, 1 emails, 2 teléfonos, 0 direcciones
+[2026-01-03T17:25:29.558Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu refugio de calidad entre la Sierra de Gúdar.",
+  "business_overview": "Rosella de Rubielos es una casa rural de alquiler completo ubicada en Fuentes de Rubielos, diseñada para alojar cómodamente a grupos de 10 a 12 personas. Ofrece una estancia de excepcional calidad en un ambiente acogedor y con decoración cuidada, ideal para el descanso y el turismo activo.\n",
+  "brand_values": [
+    "Calidad",
+    "Tradición",
+    "Convivencia",
+    "Confort",
+    "Naturaleza"
+  ],
+  "tone_of_voice": [
+    "Acogedor",
+    "Auténtico",
+    "Cercano"
+  ],
+  "visual_aesthetic": [
+    "Rústico",
+    "Cálido",
+    "Natural"
+  ],
+  "target_audience": [
+    "Familias Numerosas",
+    "Grupos de Amigos",
+    "Amantes del Turismo Activo"
+  ],
+  "colors": [
+    "#F4F4F0",
+    "#3E4951",
+    "#004042",
+    "#7F7F02",
+    "#00ACBA"
+  ],
+  "fonts": [
+    "Merriweather",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Reúne a los tuyos: Alquiler completo hasta 12 personas en la Sierra de Gúdar.",
+      "Escapada de calidad: Disfruta de una casa rural acogedora con chimenea y billar.",
+      "Desconexión total en Fuentes de Rubielos: Naturaleza, historia y gastronomía a tu alcance.",
+      "Tu base para la aventura: Esquí, senderismo y BTT a solo minutos de Rosella de Rubielos.",
+      "Piedra, carácter y confort: La casa rural perfecta para tus vacaciones en grupo."
+    ],
+    "visual_keywords": [
+      "Arquitectura rural de piedra",
+      "Interiores acogedores con chimenea",
+      "Sierra de Gúdar paisaje nevado",
+      "Salón con billar rústico",
+      "Detalles de decoración cuidada"
+    ],
+    "ctas": [
+      "Ver Tarifas y Disponibilidad",
+      "Reserva tu Alquiler Completo",
+      "Contacta y Planifica tu Escapada"
+    ],
+    "brand_context": "Rosella de Rubielos es una casa rural de alquiler completo ubicada en Fuentes de Rubielos, en el corazón de la Sierra de Gúdar (Teruel), a 962 metros de altitud. La propiedad, construida con piedra del lugar y de estilo sencillo y acogedor, está diseñada principalmente para alojar grupos grandes de entre 10 y 12 personas, aunque ofrece la posibilidad de alquiler a partir de seis. Dispone de comodidades esenciales para grupos, incluyendo calefacción central, chimenea, barbacoa exterior y un salón de juegos equipado con billar. Su ubicación privilegiada permite el acceso a una amplia gama de actividades de turismo activo como senderismo, esquí (Javalambre y Valdelinares), BTT y rafting, además de explorar el patrimonio cultural e histórico de la Comarca como Rubielos de Mora o Albarracín. Ofrecen contacto directo vía email (info@roselladerubielos.com) y dos números de teléfono (691 722 666 y 685 630 610) para reservas y consultas."
+  }
+}

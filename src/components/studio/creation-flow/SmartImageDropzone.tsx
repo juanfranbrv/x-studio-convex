@@ -12,6 +12,8 @@ interface SmartImageDropzoneProps {
     error: string | null
     onUpload: (file: File) => void
     onClear?: () => void
+    isOptional?: boolean
+    onSkip?: () => void
 }
 
 export function SmartImageDropzone({
@@ -21,6 +23,7 @@ export function SmartImageDropzone({
     error,
     onUpload,
     onClear,
+    isOptional = false,
 }: SmartImageDropzoneProps) {
     const [isDragging, setIsDragging] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)

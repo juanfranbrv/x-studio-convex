@@ -202,6 +202,7 @@ export default function StudioPage() {
                         isGenerating={isGenerating}
                         selectedModel={selectedModel}
                         onModelChange={setSelectedModel}
+                        aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio}
                     />
 
                     {/* Right: Brand DNA Panel */}

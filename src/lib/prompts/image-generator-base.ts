@@ -29,19 +29,26 @@ Si la solicitud del usuario es breve o ambigua, APLICA LOS RECURSOS AUTOMÁTICAM
    - DEBE aparecer en la imagen. Prioridad absoluta a la legibilidad.
    - Si no se dice dónde, ponlo centrado o en una zona limpia.
 
-3. ¿Hay Logos?
-   - Intégralos sutilmente en una esquina superior o como cierre.
-
-4. ¿El usuario refiere a una etiqueta ("Usa Color 2")?
+3. ¿El usuario refiere a una etiqueta ("Usa Color 2")?
    - Busca en lineas de RECURSOS ARRASTRADOS la referencia [Ref: "Color 2"] y úsalo exactamente como se pide.
 
-REGLAS DE ORO:
+---------------------------------------------------------
+⚡ REGLAS CRÍTICAS - INTOCABLES:
+---------------------------------------------------------
+
+🔒 PROTECCIÓN DE LOGOS (MÁXIMA PRIORIDAD):
+- Los logos son SAGRADOS e INMUTABLES.
+- NUNCA alteres, distorsiones, recrees o simplifiques un logo.
+- El logo debe aparecer EXACTAMENTE como en la imagen original: misma forma, proporción, colores y detalles.
+- Tratamiento: El logo es una CAPA SUPERIOR superpuesta sobre la composición final.
+- NO apliques efectos visuales (blur, glow, sombras exageradas, distorsión) al logo.
+- Si no puedes preservar el logo perfectamente, NO lo incluyas.
+
+🎨 COMPOSICIÓN:
 - NO alucines productos que no estén en las imágenes de contexto.
 - Si hay una imagen de PRODUCTO PRINCIPAL, úsala tal cual, no la recrees.
-- NO alucines productos que no estén en las imágenes de contexto.
-- Si hay una imagen de PRODUCTO PRINCIPAL, úsala tal cual, no la recrees.
-- CONTROL DE TEXTO RADICAL: Solo incluye los textos listados explícitamente debajo. SI UN ELEMENTO O ZONA DE LA PLANTILLA NO ESTÁ EN LA LISTA, DÉJALO VACÍO. PROHIBIDO añadir "Lorem Ipsum" o textos de relleno en las zonas no mencionadas. Elimina cualquier barra o caja decorativa de las zonas sin texto.
-- PROHIBICIÓN DE COLORES EXTRAÑOS: Está TERMINANTEMENTE PROHIBIDO usar el color ROJO si no está en la lista de colores de la marca. No ignores esta regla aunque la plantilla de referencia sea roja. Si la plantilla tiene elementos rojos, cámbialos por el color primario de la marca ({{colorList}}).
+- CONTROL DE TEXTO RADICAL: Solo incluye los textos listados explícitamente. PROHIBIDO "Lorem Ipsum" o rellenos.
+- PROHIBICIÓN DE COLORES EXTRAÑOS: NO uses colores que no estén en la paleta de marca. Si la plantilla tiene elementos rojos y la marca no tiene rojo, cámbialos al color primario de la marca ({{colorList}}).
 - Fidelidad estructural absoluta al layout de referencia, pero con estética 100% de la marca.
 ---------------------------------------------------------
 `.trim();

@@ -137,7 +137,8 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
         onCancel,
         onDelete,
         editValue,
-        setEditValue
+        setEditValue,
+        sectionType // Added prop to determine height
     }: {
         value: string;
         isEditing: boolean;
@@ -147,26 +148,46 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
         onDelete: () => void;
         editValue: string;
         setEditValue: (v: string) => void;
+        sectionType?: 'marketing_hooks' | 'ctas' | 'visual_keywords';
     }) => (
         <div className="group relative flex items-center gap-2 p-2.5 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all">
             {isEditing ? (
-                <div className="flex-1 flex items-center gap-2">
-                    <Input
+                <div className="flex-1 flex items-start gap-2">
+                    <textarea
                         value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="flex-1 h-7 text-sm bg-transparent border-border focus-visible:ring-primary"
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                            setEditValue(e.target.value)
+                            e.target.style.height = 'auto'
+                            e.target.style.height = e.target.scrollHeight + 'px'
+                        }}
+                        ref={(ref) => {
+                            if (ref) {
+                                ref.style.height = 'auto'
+                                ref.style.height = ref.scrollHeight + 'px'
+                            }
+                        }}
+                        className={cn(
+                            "flex-1 text-sm bg-transparent border-border focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-md p-2 resize-none leading-relaxed overflow-hidden",
+                            sectionType === 'marketing_hooks' ? "min-h-[120px]" : "min-h-[80px]"
+                        )}
+                        rows={sectionType === 'marketing_hooks' ? 3 : 2}
                         autoFocus
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') onSave();
+                        onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                            if (e.key === 'Enter' && !e.shiftKey) { // Allow shift+enter for new lines
+                                e.preventDefault();
+                                onSave();
+                            }
                             if (e.key === 'Escape') onCancel();
                         }}
                     />
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-green-500/10" onClick={onSave}>
-                        <Check className="w-4 h-4 text-green-500" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-red-500/10" onClick={onCancel}>
-                        <X className="w-4 h-4 text-red-500" />
-                    </Button>
+                    <div className="flex flex-col gap-1">
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-green-500/10" onClick={onSave}>
+                            <Check className="w-4 h-4 text-green-500" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-red-500/10" onClick={onCancel}>
+                            <X className="w-4 h-4 text-red-500" />
+                        </Button>
+                    </div>
                 </div>
             ) : (
                 <>
@@ -220,6 +241,7 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
                                     onDelete={() => handleDelete('marketing_hooks', idx)}
                                     editValue={editValue}
                                     setEditValue={setEditValue}
+                                    sectionType="marketing_hooks"
                                 />
                             ))}
                             <Button
@@ -234,36 +256,8 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
                         </div>
                     </div>
 
-                    {/* B. Visual Keywords */}
-                    <div className="space-y-3">
-                        <SectionTitle icon={Tag} title="Palabras Clave Visuales" tooltipKey="visual_keywords" />
-                        <div className="space-y-2">
-                            {assets.visual_keywords.map((keyword, idx) => (
-                                <EditableCard
-                                    key={idx}
-                                    value={keyword}
-                                    isEditing={editingItem?.section === 'visual_keywords' && editingItem.index === idx}
-                                    onEdit={() => handleStartEdit('visual_keywords', idx)}
-                                    onSave={handleSaveEdit}
-                                    onCancel={handleCancelEdit}
-                                    onDelete={() => handleDelete('visual_keywords', idx)}
-                                    editValue={editValue}
-                                    setEditValue={setEditValue}
-                                />
-                            ))}
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full border-dashed border-border hover:border-primary hover:bg-primary/5 text-xs h-8"
-                                onClick={() => handleAdd('visual_keywords')}
-                            >
-                                <Plus className="w-4 h-4 mr-1" />
-                                Añadir Palabra Clave
-                            </Button>
-                        </div>
-                    </div>
 
-                    {/* C. Call to Actions */}
+                    {/* B. Call to Actions (moved up since visual_keywords removed) */}
                     <div className="space-y-3">
                         <SectionTitle icon={MousePointerClick} title="Llamadas a la Acción" tooltipKey="ctas" />
                         <div className="space-y-2">
@@ -278,6 +272,7 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
                                     onDelete={() => handleDelete('ctas', idx)}
                                     editValue={editValue}
                                     setEditValue={setEditValue}
+                                    sectionType="ctas"
                                 />
                             ))}
                             <Button

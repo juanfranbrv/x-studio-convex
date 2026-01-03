@@ -112,3 +112,8 @@ Cuando Juanfran diga **"sincroniza"**, ejecuta automáticamente:
     - **NUNCA** lo uses para "ver si ha quedado bonito" (eso es tarea de Juanfran).
     - Reporta hallazgos técnicos (logs de error, variables CSS) para fundamentar tus cambios.
 - **Proactividad**: Si detectas un bug visual reportado por el usuario, ofrece usar el MCP para "inspeccionar las tripas" antes de proponer cambios a ciegas.
+
+### 14. Estandarización de Modelos AI
+- **Texto**: Cuando necesites un modelo de texto, **USA SIEMPRE** el mismo que se utiliza en el resto del proyecto.
+- **Modelo Oficial**: `gemini-flash-latest` (o la exportación `flashModel` de `@/lib/gemini`).
+- **Prohibido**: No inventes nombres de modelos ni instancies clientes nuevos si ya existe uno centralizado. MANTÉN LA COHERENCIA.

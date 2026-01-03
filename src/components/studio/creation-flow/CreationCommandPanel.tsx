@@ -3,7 +3,6 @@
 import { useCreationFlow } from '@/hooks/useCreationFlow'
 import { IntentSelector } from './IntentSelector'
 import { SmartImageDropzone } from './SmartImageDropzone'
-import { ThemeSelector } from './ThemeSelector'
 import { StyleChipsSelector } from './StyleChipsSelector'
 import { LayoutSelector } from './LayoutSelector'
 import { BrandingConfigurator } from './BrandingConfigurator'
@@ -74,6 +73,7 @@ export function CreationCommandPanel({
         setHeadline,
         setCta,
         setAdditionalInstructions,
+        setRawMessage,
         setCustomStyle,
         setCustomText,
         toggleBrandColor,
@@ -95,7 +95,8 @@ export function CreationCommandPanel({
     // Determine what level is visible based on state
     const showLevel1 = state.selectedPlatform !== null && state.selectedFormat !== null
     const showLevel2 = showLevel1 && state.selectedIntent !== null
-    const showLevel3 = showLevel2 && (state.visionAnalysis !== null || state.selectedTheme !== null)
+    // For intents that require image, wait for vision analysis. For others, always show next step.
+    const showLevel3 = showLevel2 && (state.visionAnalysis !== null || !requiresImage)
     const hasStyle = state.selectedStyles.length > 0 || state.customStyle.trim() !== ''
     const showLevel4 = showLevel3 && hasStyle
     const showLevel5 = showLevel4
@@ -104,7 +105,7 @@ export function CreationCommandPanel({
     const canGenerate = showLevel3 && (hasStyle || hasBranding)
 
     return (
-        <div className="w-[360px] h-full bg-card border-l border-border flex flex-col shadow-2xl">
+        <div className="w-[360px] h-full bg-card border-r border-border flex flex-col shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/10">
                 <div className="space-y-0.5">
@@ -156,28 +157,25 @@ export function CreationCommandPanel({
 
                     {showLevel2 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
 
-                    {/* Level 4: Smart Input (Image or Theme) */}
+                    {/* Level 4: Reference Image (always available, optional for some intents) */}
                     <StepSection
                         number={3}
                         title="IMAGEN DE REFERENCIA"
-                        description="Sube una imagen o elige un tema para guiar la IA"
+                        description={requiresImage
+                            ? "Sube una imagen del producto o referencia"
+                            : "Sube una imagen de referencia (opcional)"
+                        }
                         show={showLevel2}
                     >
-                        {requiresImage ? (
-                            <SmartImageDropzone
-                                uploadedImage={state.uploadedImage}
-                                visionAnalysis={state.visionAnalysis}
-                                isAnalyzing={state.isAnalyzing}
-                                error={state.error}
-                                onUpload={uploadImage}
-                                onClear={clearImage}
-                            />
-                        ) : (
-                            <ThemeSelector
-                                selectedTheme={state.selectedTheme}
-                                onSelectTheme={selectTheme}
-                            />
-                        )}
+                        <SmartImageDropzone
+                            uploadedImage={state.uploadedImage}
+                            visionAnalysis={state.visionAnalysis}
+                            isAnalyzing={state.isAnalyzing}
+                            error={state.error}
+                            onUpload={uploadImage}
+                            onClear={clearImage}
+                            isOptional={!requiresImage}
+                        />
                     </StepSection>
 
                     {showLevel3 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
@@ -215,10 +213,12 @@ export function CreationCommandPanel({
                             headline={state.headline}
                             cta={state.cta}
                             selectedBrandColors={state.selectedBrandColors}
+                            rawMessage={state.rawMessage}
                             additionalInstructions={state.additionalInstructions}
                             onSelectLogo={selectLogo}
                             onHeadlineChange={setHeadline}
                             onCtaChange={setCta}
+                            onRawMessageChange={setRawMessage}
                             onAdditionalInstructionsChange={setAdditionalInstructions}
                             onCustomTextChange={setCustomText}
                             onToggleNoText={creationFlow.toggleNoText}
@@ -247,10 +247,12 @@ export function CreationCommandPanel({
                             headline={state.headline}
                             cta={state.cta}
                             selectedBrandColors={state.selectedBrandColors}
+                            rawMessage={state.rawMessage}
                             additionalInstructions={state.additionalInstructions}
                             onSelectLogo={selectLogo}
                             onHeadlineChange={setHeadline}
                             onCtaChange={setCta}
+                            onRawMessageChange={setRawMessage}
                             onAdditionalInstructionsChange={setAdditionalInstructions}
                             onCustomTextChange={setCustomText}
                             onToggleNoText={creationFlow.toggleNoText}
@@ -279,10 +281,12 @@ export function CreationCommandPanel({
                             headline={state.headline}
                             cta={state.cta}
                             selectedBrandColors={state.selectedBrandColors}
+                            rawMessage={state.rawMessage}
                             additionalInstructions={state.additionalInstructions}
                             onSelectLogo={selectLogo}
                             onHeadlineChange={setHeadline}
                             onCtaChange={setCta}
+                            onRawMessageChange={setRawMessage}
                             onAdditionalInstructionsChange={setAdditionalInstructions}
                             onCustomTextChange={setCustomText}
                             onToggleNoText={creationFlow.toggleNoText}

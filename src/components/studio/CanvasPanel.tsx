@@ -32,6 +32,9 @@ import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign } from 'lu
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
+import { GeneratedCopyCard } from './GeneratedCopyCard'
+import { useBrandKit } from '@/contexts/BrandKitContext'
+import { generateSocialPost } from '@/app/actions/generate-social-post'
 
 interface Generation {
     id: string
@@ -53,6 +56,7 @@ interface CanvasPanelProps {
     isGenerating: boolean
     selectedModel?: string
     onModelChange?: (model: string) => void
+    aspectRatio?: string
 }
 
 export function CanvasPanel({
@@ -68,33 +72,84 @@ export function CanvasPanel({
     onGenerate,
     isGenerating,
     selectedModel,
-    onModelChange
+    onModelChange,
+    aspectRatio = "1:1"
 }: CanvasPanelProps) {
     const { t } = useTranslation()
+    const { activeBrandKit } = useBrandKit()
     const [zoom, setZoom] = useState(100)
     const [prompt, setPrompt] = useState('')
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [isRevealing, setIsRevealing] = useState(false)
     const [prevImage, setPrevImage] = useState<string | null>(currentImage)
+    const [wasJustGenerated, setWasJustGenerated] = useState(false)
+
+    // Copy Generation State
+    const [generatedCopy, setGeneratedCopy] = useState<string | null>(null)
+    const [generatedHashtags, setGeneratedHashtags] = useState<string[]>([])
+    const [isGeneratingCopy, setIsGeneratingCopy] = useState(false)
 
     const handleZoomIn = () => setZoom((z) => Math.min(z + 25, 200))
     const handleZoomOut = () => setZoom((z) => Math.max(z - 25, 50))
     const handleResetZoom = () => setZoom(100)
 
-    // Handle Generation Reveal Effect
+    // Handle Generation Reveal Effect - ONLY for newly generated images
     useEffect(() => {
         if (isGenerating) {
             setIsRevealing(true)
-        } else if (isRevealing && currentImage !== prevImage) {
-            // Keep noise for a bit after gen but start fade out
+            setWasJustGenerated(true)
+        } else if (isRevealing && currentImage !== prevImage && wasJustGenerated) {
+            // SLOW CRYSTALLIZATION: Keep revealing for 3.5 seconds
             const timer = setTimeout(() => {
                 setIsRevealing(false)
                 setPrevImage(currentImage)
-            }, 1000)
+                setWasJustGenerated(false)
+            }, 3500)
             return () => clearTimeout(timer)
+        } else if (!isGenerating && !wasJustGenerated) {
+            // History navigation: update immediately without animation
+            setPrevImage(currentImage)
         }
-    }, [isGenerating, currentImage, prevImage, isRevealing])
+    }, [isGenerating, currentImage, prevImage, isRevealing, wasJustGenerated])
+
+    const handleGenerateCopy = async () => {
+        if (!activeBrandKit || !currentImage) return
+
+        setIsGeneratingCopy(true)
+        try {
+            const result = await generateSocialPost({
+                brand: activeBrandKit,
+                imageBase64: currentImage,
+            })
+
+            if (result.success && result.data) {
+                setGeneratedCopy(result.data.copy)
+                setGeneratedHashtags(result.data.hashtags)
+            }
+        } catch (error) {
+            console.error('Failed to generate copy:', error)
+        } finally {
+            setIsGeneratingCopy(false)
+        }
+    }
+
+    // Trigger Copy Generation when image changes
+    useEffect(() => {
+        if (currentImage && activeBrandKit && !isGenerating) {
+            handleGenerateCopy()
+        }
+    }, [currentImage, isGenerating]) // activeBrandKit is stable enough
+
+    const handleDownload = () => {
+        if (!currentImage) return
+        const link = document.createElement('a')
+        link.href = currentImage
+        link.download = `x-studio-generation-${Date.now()}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }
 
     const handleSelectTemplate = (template: Template) => {
         onAddContext?.({
@@ -148,7 +203,7 @@ export function CanvasPanel({
                     >
                         <EditIcon fontSize="small" />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" onClick={handleDownload}>
                         <DownloadIcon fontSize="small" />
                     </Button>
                     <DropdownMenu>
@@ -167,56 +222,111 @@ export function CanvasPanel({
                 </div>
             </div>
 
-            <div className="flex-1 relative flex items-center justify-center p-8 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
-                <AnimatePresence mode="wait">
-                    {(isGenerating || isRevealing) && (
-                        <motion.div
-                            key="loader"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.8 }}
-                            className="absolute inset-0 z-50 overflow-hidden rounded-lg"
-                        >
-                            <DigitalStaticLoader />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Main Image content (wrapped in motion.div for smooth fade-in after loader) */}
-                {currentImage ? (
-                    <motion.div
-                        key="image"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="relative transition-transform duration-200"
-                        style={{ transform: `scale(${zoom / 100})` }}
-                    >
-                        <img
-                            src={currentImage}
-                            alt="Generated design"
-                            className="max-w-full max-h-[60vh] rounded-lg shadow-2xl object-contain"
-                        />
-                        {/* ... annotations ... */}
-                        {isAnnotating && (
-                            <div className="absolute top-1/4 right-1/4 w-24 h-24 annotation-ring flex items-center justify-center">
-                                <div className="bg-primary rounded-full p-1">
-                                    <EditIcon fontSize="small" className="text-primary-foreground" style={{ width: 12, height: 12 }} />
-                                </div>
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover px-2 py-1 rounded text-xs whitespace-nowrap">
-                                    Add red accent stitching to laces.
-                                </div>
-                            </div>
+            <div className="flex-1 relative flex flex-col items-center justify-center p-8 pb-24 overflow-y-auto bg-zinc-100 dark:bg-zinc-900 scrollbar-hide">
+                {/* Unified Aspect Ratio Container */}
+                {/* Unified Aspect Ratio Container */}
+                <div
+                    className="relative flex items-center justify-center shadow-sm shrink-0 transition-[width,height] duration-200 ease-out"
+                    style={{
+                        aspectRatio: aspectRatio.replace(':', '/'),
+                        ...(() => {
+                            const [w, h] = aspectRatio.split(':').map(Number);
+                            const ratio = w / h;
+                            const zoomFactor = zoom / 100;
+                            // Box container ratio is roughly 800/600 = 1.33
+                            // If content is wider than box (ratio > 1.33), constrain width.
+                            // Otherwise (taller or square), constrain height.
+                            return ratio > (4 / 3) ? {
+                                width: `calc(min(calc(100vw - 480px), 800px) * ${zoomFactor})`, // Dynamic width based on zoom
+                                height: 'auto'
+                            } : {
+                                height: `calc(min(calc(100vh - 320px), 600px) * ${zoomFactor})`, // Dynamic height based on zoom
+                                width: 'auto'
+                            };
+                        })()
+                    }}
+                >
+                    <AnimatePresence mode="wait">
+                        {(isGenerating || isRevealing) && (
+                            <motion.div
+                                key="loader"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.8 }}
+                                className="absolute inset-0 z-50 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/10"
+                            >
+                                <DigitalStaticLoader />
+                            </motion.div>
                         )}
-                    </motion.div>
-                ) : (
-                    // empty state
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                        <div className="w-16 h-16 rounded-2xl bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center mb-3">
-                            <span className="text-3xl">🎨</span>
+                    </AnimatePresence>
+
+                    {/* Main Image content */}
+                    {currentImage ? (
+                        <div
+                            className="relative w-full h-full overflow-hidden rounded-lg bg-background/50 ring-1 ring-black/5"
+                        >
+                            <div
+                                className="w-full h-full flex items-center justify-center"
+                            >
+                                <motion.div
+                                    key={currentImage}
+                                    initial={wasJustGenerated ? { opacity: 0, filter: 'blur(80px) saturate(0.2)' } : { opacity: 1, filter: 'blur(0px) saturate(1)' }}
+                                    animate={{
+                                        opacity: 1,
+                                        filter: 'blur(0px) saturate(1)',
+                                    }}
+                                    transition={wasJustGenerated ? {
+                                        duration: 3.5,
+                                        ease: [0.22, 1, 0.36, 1],
+                                        filter: { duration: 4, ease: "linear" },
+                                        opacity: { duration: 1.5 }
+                                    } : {
+                                        duration: 0.15
+                                    }}
+                                    className="w-full h-full flex items-center justify-center"
+                                >
+                                    <img
+                                        src={currentImage}
+                                        alt="Generated design"
+                                        className="w-full h-full object-cover"
+                                    />
+                                    {/* ... annotations ... */}
+                                    {isAnnotating && (
+                                        <div className="absolute top-1/4 right-1/4 w-24 h-24 annotation-ring flex items-center justify-center">
+                                            <div className="bg-primary rounded-full p-1">
+                                                <EditIcon fontSize="small" className="text-primary-foreground" style={{ width: 12, height: 12 }} />
+                                            </div>
+                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover px-2 py-1 rounded text-xs whitespace-nowrap">
+                                                Add red accent stitching to laces.
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            </div>
                         </div>
-                        <p className="text-base font-medium text-muted-foreground/80">{t('canvas.noImage')}</p>
+                    ) : (
+                        // Empty state with visible frame matching aspect ratio
+                        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
+                            <div className="w-16 h-16 rounded-2xl bg-white/50 dark:bg-zinc-800/50 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm">
+                                <span className="text-3xl opacity-70">🎨</span>
+                            </div>
+                            <p className="text-sm font-medium text-muted-foreground/70">{t('canvas.noImage')}</p>
+                            <div className="mt-4 px-3 py-1 rounded-full bg-muted/50 text-[10px] uppercase tracking-wider font-mono text-muted-foreground/60 border border-border/30">
+                                {aspectRatio}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {currentImage && (
+                    <div className="w-full max-w-[600px] mt-6 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10">
+                        <GeneratedCopyCard
+                            copy={generatedCopy}
+                            hashtags={generatedHashtags}
+                            isLoading={isGeneratingCopy}
+                            onRegenerate={handleGenerateCopy}
+                        />
                     </div>
                 )}
 
@@ -229,9 +339,6 @@ export function CanvasPanel({
                         <span className="text-xs font-mono w-12 text-center">{zoom}%</span>
                         <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomIn}>
                             <ZoomInIcon fontSize="small" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleResetZoom}>
-                            <RestartAltIcon fontSize="small" />
                         </Button>
                     </div>
                 )}
@@ -449,7 +556,7 @@ export function CanvasPanel({
                                         <SelectValue placeholder="Modelo" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="gemini-3-pro-image-preview" className="text-xs">Gemini 3 Pro</SelectItem>
+                                        <SelectItem value="models/gemini-3-pro-image-preview" className="text-xs">Gemini 3 Pro</SelectItem>
                                         <SelectItem value="models/gemini-2.5-flash-image" className="text-xs">Gemini 2.5 Flash</SelectItem>
                                     </SelectContent>
                                 </Select>

@@ -443,7 +443,7 @@ export function BrandDNAPanel({
 
 
     return (
-        <div className="w-[360px] h-full bg-card border-r-2 border-border flex flex-col gap-1 overflow-hidden relative">
+        <div className="w-[360px] h-full bg-card border-l-2 border-border flex flex-col gap-1 overflow-hidden relative">
             {/* Lightbox Viewer */}
             {viewerImage && (
                 <div
