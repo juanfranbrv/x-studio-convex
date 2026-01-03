@@ -165,6 +165,29 @@ export async function generateBrandImage(
 
     console.log(`Sending payload with ${promptParts.length} parts to Gemini...`)
 
+    // Helper to map social ratios to Gemini supported ratios
+    function mapToSupportedAspectRatio(ratio: string | undefined): string | undefined {
+        if (!ratio) return undefined
+
+        // Supported by Gemini Flash/Pro/Imagen
+        const supported = ['1:1', '3:4', '4:3', '9:16', '16:9']
+        if (supported.includes(ratio)) return ratio
+
+        // Mappings for social formats
+        if (ratio === '1.91:1') return '16:9'   // Approx for IG/FB Horizontal
+        if (ratio === '4:5') return '3:4'       // Approx for IG Portrait (0.8 vs 0.75)
+        if (ratio === '1.2:1') return '1:1'     // Approx for LinkedIn
+
+        return undefined // Let model decide or use default
+    }
+
+    // ... inside generateBrandImage
+
+    const targetAspectRatio = mapToSupportedAspectRatio(options.aspectRatio)
+    if (targetAspectRatio) {
+        console.log('Target Aspect Ratio:', targetAspectRatio, '(Original:', options.aspectRatio, ')')
+    }
+
     const result = await activeImageModel.generateContent({
         contents: [
             {
@@ -174,6 +197,11 @@ export async function generateBrandImage(
         ],
         generationConfig: {
             responseModalities: ['IMAGE', 'TEXT'],
+            ...(targetAspectRatio ? {
+                image_config: {
+                    aspect_ratio: targetAspectRatio
+                }
+            } : {})
         } as never
     })
 

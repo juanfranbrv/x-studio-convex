@@ -214,11 +214,11 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const toggleStyle = useCallback((styleId: string) => {
         setState(prev => {
             const isSelected = prev.selectedStyles.includes(styleId)
+            // Mutually exclusive: If selecting a new one, clear previous ones.
+            // If deselecting the current one, just clear.
             return {
                 ...prev,
-                selectedStyles: isSelected
-                    ? prev.selectedStyles.filter(s => s !== styleId)
-                    : [...prev.selectedStyles, styleId],
+                selectedStyles: isSelected ? [] : [styleId],
             }
         })
     }, [])
@@ -255,6 +255,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     const setAdditionalInstructions = useCallback((instructions: string) => {
         setState(prev => ({ ...prev, additionalInstructions: instructions }))
+    }, [])
+
+    const setRawMessage = useCallback((message: string) => {
+        setState(prev => ({ ...prev, rawMessage: message }))
     }, [])
 
     const setCustomStyle = useCallback((style: string) => {
@@ -296,7 +300,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 intent: state.selectedIntent,
                 visionAnalysis: state.visionAnalysis,
                 fieldLabel: field.label,
-                fieldDescription: field.aiContext
+                fieldDescription: field.aiContext,
+                rawMessage: state.rawMessage || undefined  // User's raw input as context
             })
 
             if (result.success && result.text) {
@@ -308,7 +313,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         } catch (error) {
             console.error('Error in generateFieldCopy:', error)
         }
-    }, [activeBrandKit, state.selectedIntent, state.visionAnalysis, setHeadline, setCta, setCustomText])
+    }, [activeBrandKit, state.selectedIntent, state.visionAnalysis, state.rawMessage, setHeadline, setCta, setCustomText])
 
     const toggleBrandColor = useCallback((color: string) => {
         setState(prev => {
@@ -330,6 +335,39 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const requiresImage = currentIntent?.requiresImage ?? false
 
     const availableStyles = useMemo(() => {
+        // BRAND KIT STYLES - First priority (unified from visual_aesthetic + visual_keywords)
+        const brandStyles: Array<{ id: string; label: string; icon: string; keywords: string[]; category: string }> = []
+
+        if (activeBrandKit) {
+            // Add visual_aesthetic entries
+            const aesthetics = activeBrandKit.visual_aesthetic || []
+            aesthetics.forEach((style, i) => {
+                brandStyles.push({
+                    id: `brand_aesthetic_${i}`,
+                    label: style,
+                    icon: '🎨',
+                    keywords: [style.toLowerCase()],
+                    category: 'brand'
+                })
+            })
+
+            // Add visual_keywords from text_assets
+            const visualKeywords = activeBrandKit.text_assets?.visual_keywords || []
+            visualKeywords.forEach((kw, i) => {
+                // Avoid duplicates with aesthetics
+                if (!aesthetics.some(a => a.toLowerCase() === kw.toLowerCase())) {
+                    brandStyles.push({
+                        id: `brand_keyword_${i}`,
+                        label: kw,
+                        icon: '✨',
+                        keywords: [kw.toLowerCase()],
+                        category: 'brand'
+                    })
+                }
+            })
+        }
+
+        // Suggested styles from vision analysis
         const suggested = state.visionAnalysis
             ? STYLE_CHIPS_BY_SUBJECT[state.visionAnalysis.subject] || STYLE_CHIPS_BY_SUBJECT.unknown
             : []
@@ -342,8 +380,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         const catalogIds = new Set(suggested.map(s => s.id))
         const catalogFiltered = ARTISTIC_STYLE_CATALOG.filter(s => !catalogIds.has(s.id))
 
-        return [...suggestedWithCategory, ...catalogFiltered]
-    }, [state.visionAnalysis])
+        // Brand styles first, then suggested, then catalog
+        return [...brandStyles, ...suggestedWithCategory, ...catalogFiltered]
+    }, [state.visionAnalysis, activeBrandKit])
 
     const availableLayouts: LayoutOption[] = state.selectedIntent
         ? (LAYOUTS_BY_INTENT[state.selectedIntent] || DEFAULT_LAYOUTS)
@@ -460,22 +499,29 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             parts.push(`AVISO: No se ha proporcionado ningún texto. La imagen DEBE estar totalmente limpia de letras, números o palabras.`)
         }
 
-        // Selected Logo
-        if (state.selectedLogoId && activeBrandKit?.logos) {
-            const logo = activeBrandKit.logos.find((l, idx) =>
-                (l as any).id === state.selectedLogoId || `logo-${idx}` === state.selectedLogoId
-            )
-            if (logo) {
-                parts.push(`LOGO: Include brand logo subtly in corner`)
-            }
-        }
-
         // Final Format
         if (state.selectedFormat) {
             const format = SOCIAL_FORMATS.find(f => f.id === state.selectedFormat)
             if (format) {
                 parts.push(`FORMAT: ${format.name} (${format.aspectRatio})`)
                 parts.push(`ASPECT RATIO: ${format.aspectRatio}`)
+            }
+        }
+
+        // Selected Logo - MOVED TO ABSOLUTE END FOR MAXIMUM PRIORITY
+        if (state.selectedLogoId && activeBrandKit?.logos) {
+            const logo = activeBrandKit.logos.find((l, idx) =>
+                (l as any).id === state.selectedLogoId || `logo-${idx}` === state.selectedLogoId
+            )
+            if (logo) {
+                parts.push(`\n--- ABSOLUTE PRIORITY: ZERO TOLERANCE LOGO INTEGRITY RULE ---`)
+                parts.push(`CRITICAL OVERRIDE: The following rules take absolute precedence over ALL preceding instructions, styles, and artistic filters.`)
+                parts.push(`1. THE LOGO IS SACRED: It must be rendered as an immutable, crystal-clear, and perfectly sharp top-layer overlay.`)
+                parts.push(`2. NO STYLIZATION: Do NOT apply any grain, noise, blur, texture, lighting effects, or artistic filters to the logo area.`)
+                parts.push(`3. NO DISTORTION: Maintain 1:1 original geometric proportions and shapes. No 3D effects, no skewing, no warping.`)
+                parts.push(`4. COMPLETELY INDEPENDENT: The logo must look like it was pasted digitally on top of the finished image, unaffected by the background environment.`)
+                parts.push(`FAIL CASE: If the logo appears blurry, stylized, or integrated into the background, the generation is a failure.`)
+                parts.push(`--- END CRITICAL RULES ---`)
             }
         }
 
@@ -550,14 +596,15 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setHeadline,
         setCta,
         setAdditionalInstructions,
+        setRawMessage,
         setCustomStyle,
         setCustomText,
+        toggleNoText,
         generateFieldCopy,
         toggleBrandColor,
         constructFinalPrompt,
         generate,
         reset,
-        toggleNoText,
         // Constants
         styleGroups: ARTISTIC_STYLE_GROUPS,
     }

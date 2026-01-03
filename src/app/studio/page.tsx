@@ -12,6 +12,7 @@ import { CreationCommandPanel } from '@/components/studio/creation-flow'
 import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import type { BrandDNA } from '@/lib/brand-types'
+import { SOCIAL_FORMATS } from '@/lib/creation-flow-types'
 import { Loader2, Plus } from 'lucide-react'
 
 interface Generation {
@@ -132,7 +133,8 @@ export default function StudioPage() {
                     logoInclusion,
                     context: finalContext,
                     model: data.model || selectedModel,
-                    layoutReference: creationFlow.selectedLayoutMeta?.referenceImage
+                    layoutReference: creationFlow.selectedLayoutMeta?.referenceImage,
+                    aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio
                 }),
             })
 
@@ -178,16 +180,11 @@ export default function StudioPage() {
         >
             {activeBrandKit ? (
                 <div className="flex-1 flex overflow-hidden min-h-0">
-                    {/* Left: Brand DNA Panel */}
-                    <BrandDNAPanel
-                        brandDNA={activeBrandKit}
-                        logoInclusion={logoInclusion}
-                        onLogoInclusionChange={setLogoInclusion}
-                        selectedContext={selectedContext}
-                        onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
-                        onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
-                        onSetDraggedElement={setDraggedElement}
-                        onImageClick={(url) => creationFlow.setImageFromUrl(url)}
+                    {/* Left: Creation Command Panel (Cascade Interface) */}
+                    <CreationCommandPanel
+                        onGenerate={async (prompt) => handleGenerate({ prompt })}
+                        isGenerating={isGenerating}
+                        creationFlow={creationFlow}
                     />
 
                     {/* Center: Canvas */}
@@ -207,11 +204,16 @@ export default function StudioPage() {
                         onModelChange={setSelectedModel}
                     />
 
-                    {/* Right: Creation Command Panel (Cascade Interface) */}
-                    <CreationCommandPanel
-                        onGenerate={async (prompt) => handleGenerate({ prompt })}
-                        isGenerating={isGenerating}
-                        creationFlow={creationFlow}
+                    {/* Right: Brand DNA Panel */}
+                    <BrandDNAPanel
+                        brandDNA={activeBrandKit}
+                        logoInclusion={logoInclusion}
+                        onLogoInclusionChange={setLogoInclusion}
+                        selectedContext={selectedContext}
+                        onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
+                        onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
+                        onSetDraggedElement={setDraggedElement}
+                        onImageClick={(url) => creationFlow.setImageFromUrl(url)}
                     />
                 </div>
             ) : (

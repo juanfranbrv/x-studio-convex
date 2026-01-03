@@ -9,6 +9,7 @@ export interface ImageGenerationOptions {
     context?: Array<{ type: string; value: string; label?: string }>
     model?: string
     layoutReference?: string // Path to Phantom Template
+    aspectRatio?: string
 }
 
 export function buildImagePrompt(
