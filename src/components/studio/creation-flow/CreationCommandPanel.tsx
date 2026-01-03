@@ -34,7 +34,7 @@ const StepSection = ({
     if (!show) return null;
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="space-y-1 mb-3">
+            <div className="space-y-1 mb-2">
                 <div className="flex items-center gap-2">
                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold border border-primary/20 shadow-sm">
                         {number}
@@ -126,7 +126,7 @@ export function CreationCommandPanel({
 
             {/* Scrollable Content Container */}
             <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide">
-                <div className="px-6 py-6 flex flex-col">
+                <div className="px-6 pt-2 pb-8 flex flex-col">
                     {/* Level 1: Platform & Format */}
                     <StepSection number={1} title="PLATAFORMA Y FORMATO">
                         <SocialFormatSelector
@@ -137,7 +137,7 @@ export function CreationCommandPanel({
                         />
                     </StepSection>
 
-                    {showLevel1 && <hr className="border-t-2 border-border/50 my-6 -mx-6" />}
+                    {showLevel1 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
 
                     {/* Level 3: Intent Selector */}
                     <StepSection
@@ -154,7 +154,7 @@ export function CreationCommandPanel({
                         />
                     </StepSection>
 
-                    {showLevel2 && <hr className="border-t-2 border-border/50 my-6 -mx-6" />}
+                    {showLevel2 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
 
                     {/* Level 4: Smart Input (Image or Theme) */}
                     <StepSection
@@ -180,7 +180,7 @@ export function CreationCommandPanel({
                         )}
                     </StepSection>
 
-                    {showLevel3 && <hr className="border-t-2 border-border/50 my-6 -mx-6" />}
+                    {showLevel3 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
 
                     {/* Step 4: Visual Style */}
                     <StepSection
@@ -199,7 +199,7 @@ export function CreationCommandPanel({
                         />
                     </StepSection>
 
-                    {showLevel3 && <hr className="border-t-2 border-border/50 my-6 -mx-6" />}
+                    {showLevel3 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
 
                     {/* Step 5: Branding Identity */}
                     <StepSection
@@ -231,7 +231,7 @@ export function CreationCommandPanel({
                         />
                     </StepSection>
 
-                    {showLevel3 && <hr className="border-t-2 border-border/50 my-6 -mx-6" />}
+                    {showLevel3 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
 
                     {/* Step 6: Content & Texts */}
                     <StepSection
