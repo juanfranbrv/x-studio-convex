@@ -83,46 +83,58 @@ export function CanvasPanel({
     const { activeBrandKit } = useBrandKit()
     const [zoom, setZoom] = useState(100)
     const [prompt, setPrompt] = useState('')
+    const [isDraggingOver, setIsDraggingOver] = useState(false)
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
-    const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+    // Animation & Reveal States
     const [isRevealing, setIsRevealing] = useState(false)
-    const [prevImage, setPrevImage] = useState<string | null>(currentImage)
     const [wasJustGenerated, setWasJustGenerated] = useState(false)
+    const [prevImage, setPrevImage] = useState<string | null>(null)
+
+    // Track last used prompt for regeneration
+    const [lastUsedPrompt, setLastUsedPrompt] = useState('')
 
     // Copy Generation State
     const [generatedCopy, setGeneratedCopy] = useState<string | null>(null)
     const [generatedHashtags, setGeneratedHashtags] = useState<string[]>([])
     const [isGeneratingCopy, setIsGeneratingCopy] = useState(false)
+    const [isCopyLocked, setIsCopyLocked] = useState(false) // New state for locking copy
 
     const handleZoomIn = () => setZoom((z) => Math.min(z + 25, 200))
     const handleZoomOut = () => setZoom((z) => Math.max(z - 25, 50))
     const handleResetZoom = () => setZoom(100)
 
+    // Handle Generation Wrapper to save prompt
+    const handleGenerateWrapper = (promptToUse: string, model?: string) => {
+        setLastUsedPrompt(promptToUse)
+        setIsRevealing(true) // Ensure reveal starts
+        setWasJustGenerated(true)
+        onGenerate(promptToUse, model)
+    }
+
     // Handle Generation Reveal Effect - ONLY for newly generated images
+    // Handle Generation Reveal Effect
     useEffect(() => {
         if (isGenerating) {
             setIsRevealing(true)
-            setWasJustGenerated(true)
-        } else if (isRevealing && currentImage !== prevImage && wasJustGenerated) {
-            // SLOW CRYSTALLIZATION: Keep revealing for 3.5 seconds
-            const timer = setTimeout(() => {
-                setIsRevealing(false)
-                setPrevImage(currentImage)
-                setWasJustGenerated(false)
-            }, 3500)
-            return () => clearTimeout(timer)
-        } else if (!isGenerating && isRevealing) {
-            // Generation failed or was cancelled: reset immediately
-            setIsRevealing(false)
-            setWasJustGenerated(false)
-        } else if (!isGenerating && !wasJustGenerated) {
-            // History navigation: update immediately without animation
+        } else if (currentImage && currentImage !== prevImage) {
             setPrevImage(currentImage)
+            setIsRevealing(false)
+
+            if (wasJustGenerated) {
+                const timer = setTimeout(() => {
+                    setWasJustGenerated(false)
+                }, 4000)
+                return () => clearTimeout(timer)
+            }
         }
-    }, [isGenerating, currentImage, prevImage, isRevealing, wasJustGenerated])
+    }, [isGenerating, currentImage, prevImage, wasJustGenerated])
 
     const handleGenerateCopy = async () => {
         if (!activeBrandKit || !currentImage) return
+
+        // Respect Lock
+        if (isCopyLocked) return
 
         setIsGeneratingCopy(true)
         try {
@@ -148,7 +160,7 @@ export function CanvasPanel({
         if (currentImage && activeBrandKit) {
             handleGenerateCopy()
         }
-    }, [currentImage]) // Only trigger on new images, not on isGenerating changes
+    }, [currentImage])
 
     const handleDownload = () => {
         if (!currentImage) return
@@ -159,6 +171,8 @@ export function CanvasPanel({
         link.click()
         document.body.removeChild(link)
     }
+
+    // -- End of Logic --
 
     const handleSelectTemplate = (template: Template) => {
         onAddContext?.({
@@ -249,7 +263,8 @@ export function CanvasPanel({
                                 width: `calc(min(calc(100vw - 480px), 800px) * ${zoomFactor})`, // Dynamic width based on zoom
                                 height: 'auto'
                             } : {
-                                height: `calc(min(calc(100vh - 320px), 600px) * ${zoomFactor})`, // Dynamic height based on zoom
+                                // Increased offset from 320px to 480px to fit Copy Card without scrolling
+                                height: `calc(min(calc(100vh - 480px), 600px) * ${zoomFactor})`,
                                 width: 'auto'
                             };
                         })()
@@ -335,13 +350,28 @@ export function CanvasPanel({
                             hashtags={generatedHashtags}
                             isLoading={isGeneratingCopy}
                             onRegenerate={handleGenerateCopy}
+                            isLocked={isCopyLocked}
+                            onToggleLock={() => setIsCopyLocked(!isCopyLocked)}
                         />
                     </div>
                 )}
 
                 {/* Zoom Controls */}
                 {currentImage && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-popover/90 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border">
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-popover/90 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border shadow-sm z-20">
+                        {/* Regenerate Image Button */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-7 h-7 hover:text-primary hover:bg-primary/10"
+                            onClick={() => handleGenerateWrapper(lastUsedPrompt || prompt, selectedModel)}
+                            disabled={isGenerating}
+                            title={t('canvas.regenerate') || "Regenerar"}
+                        >
+                            <RestartAltIcon fontSize="small" className={isGenerating ? "animate-spin" : ""} />
+                        </Button>
+                        <div className="w-px h-4 bg-border mx-1" />
+
                         <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomOut}>
                             <ZoomOutIcon fontSize="small" />
                         </Button>
@@ -542,7 +572,7 @@ export function CanvasPanel({
                             <Textarea
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
-                                placeholder="Describe los cambios..."
+                                placeholder="Describe la imagen que quieres generar..."
                                 className="pr-12 min-h-[50px] max-h-[120px] py-3 resize-none bg-background/80 border-border/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all rounded-xl shadow-inner text-sm"
                             />
                             <div className="absolute right-3 bottom-3 flex items-center gap-2">
@@ -566,7 +596,7 @@ export function CanvasPanel({
                                             <SelectValue placeholder="Modelo Imagen" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="wisdom/gemini-3.0-pro-image-01-preview" className="text-xs">Gemini 3.0 Pro Image 01 (Wisdom)</SelectItem>
+                                            <SelectItem value="wisdom/gemini-3-pro-image-preview" className="text-xs">Gemini 3 Pro Image (Wisdom)</SelectItem>
                                             <SelectItem value="wisdom/qwen-image" className="text-xs">Qwen Image (Wisdom)</SelectItem>
                                             <SelectItem value="wisdom/seedream-4.0" className="text-xs">Seedream 4.0 (Wisdom)</SelectItem>
                                             <SelectItem value="models/gemini-3-pro-image-preview" className="text-xs">Gemini 3 Pro (Google Legacy)</SelectItem>

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Copy, RefreshCw, Share2 } from 'lucide-react'
+import { Copy, RefreshCw, Share2, Lock, Unlock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 
@@ -15,6 +15,8 @@ interface GeneratedCopyCardProps {
     onRegenerate?: () => void
     className?: string
     isLoading?: boolean
+    isLocked?: boolean
+    onToggleLock?: () => void
 }
 
 export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
@@ -23,7 +25,9 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
     onCopy,
     onRegenerate,
     className,
-    isLoading = false
+    isLoading = false,
+    isLocked = false,
+    onToggleLock
 }) => {
     const { activeBrandKit: brand } = useBrandKit()
     const [editedCopy, setEditedCopy] = React.useState(copy || '')
@@ -95,6 +99,16 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                     {isLoading ? 'Generando...' : 'Regenerar'}
                 </Button>
                 <div className="flex gap-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onToggleLock}
+                        className={cn("h-7 text-xs", isLocked ? "text-primary bg-primary/10" : "text-muted-foreground")}
+                        title={isLocked ? "Desbloquear copy" : "Congelar copy para mantenerlo al generar nueva imagen"}
+                    >
+                        {isLocked ? <Lock className="mr-1.5 h-3 w-3" /> : <Unlock className="mr-1.5 h-3 w-3" />}
+                        {isLocked ? 'Congelado' : 'Congelar'}
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={handleCopy} className="h-7 text-xs">
                         <Copy className="mr-1.5 h-3 w-3" />
                         Copiar

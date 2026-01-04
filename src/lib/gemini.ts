@@ -10,7 +10,7 @@ const imageGenAI = new GoogleGenerativeAI(process.env.GEMINI_IMAGE_API_KEY!)
 export const flashModel = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
 
 // Default image model
-const DEFAULT_IMAGE_MODEL = 'wisdom/gemini-3.0-pro-image-01-preview'
+const DEFAULT_IMAGE_MODEL = 'gemini-3-pro-image-preview'
 
 // Brand-aware system prompt builder
 import { buildBrandDirectorPrompt } from './prompts/system/brand-director'
@@ -85,54 +85,38 @@ export async function generateBrandImage(
     // 1. Build text prompt
     const enhancedPrompt = buildImagePrompt(brand, userPrompt, options)
 
-    // 2. Select model (dynamic or default)
-    const modelName = options.model || DEFAULT_IMAGE_MODEL
-    const activeImageModel = imageGenAI.getGenerativeModel({ model: modelName })
+    // 2. Prepare Payload Parts from options
+    const model = options.model || DEFAULT_IMAGE_MODEL
+    console.log('\n--- 🎨 GENERATING IMAGE WITH WISDOM GATE ---')
+    console.log('Model:', model)
 
-    console.log('\n--- 🎨 GENERATING IMAGE ---')
-    console.log('Model:', modelName)
-    console.log('Prompt Length:', enhancedPrompt.length)
+    // Build parts array for Wisdom API
+    const parts: any[] = [{ text: enhancedPrompt }]
 
-    // 3. Prepare Payload Parts (Text + Images)
-    console.log('\n🔵 ===================================================')
-    console.log('📜 FINAL CONSTRUCTED PROMPT SENT TO GEMINI:')
-    console.log('===================================================')
-    console.log(enhancedPrompt)
-    console.log('===================================================\n')
-
-    const promptParts: any[] = [{ text: enhancedPrompt }]
-
-    // 4. Process Context Images/Logos (Fetch & convert to Base64)
+    // Add context images if any
     if (options.context && options.context.length > 0) {
         const imageItems = options.context.filter(c => c.type === 'image' || c.type === 'logo')
 
         if (imageItems.length > 0) {
             console.log(`Processing ${imageItems.length} context images...`)
-
-            // Process in parallel
+            // Convert urls/base64 to parts suitable for standard Gemini format
+            // generateWisdomImage will handle final formatting if needed
             const imagePartsPromises = imageItems.map(async (item) => {
                 if (!item.value) return null
-                console.log(`Fetching image: ${item.label || 'Reference'}`)
                 return await urlToPart(item.value)
             })
 
             const imageParts = await Promise.all(imagePartsPromises)
-
-            // Add valid images to parts
             imageParts.forEach(part => {
-                if (part) promptParts.push(part)
+                if (part) parts.push(part)
             })
         }
     }
 
-    // 5. Process Layout Reference (Phantom Template)
+    // Add layout reference if any
     if (options.layoutReference) {
-        console.log(`Processing layout reference: ${options.layoutReference}`)
-
-        // Handle relative paths for local templates
         let layoutUrl = options.layoutReference
         if (layoutUrl.startsWith('/')) {
-            // Use local origin if available, or fallback to localhost
             const baseUrl = typeof window !== 'undefined'
                 ? window.location.origin
                 : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
@@ -141,70 +125,18 @@ export async function generateBrandImage(
 
         const layoutPart = await urlToPart(layoutUrl)
         if (layoutPart) {
-            console.log('Layout reference image [REF_PLANTILLA_ESTRUCTURAL] added to prompt parts.')
-            promptParts.push(layoutPart)
+            console.log('Layout reference added.')
+            parts.push(layoutPart)
         }
     }
 
-    console.log(`Sending payload with ${promptParts.length} parts to Gemini...`)
-
-    // Helper to map social ratios to Gemini supported ratios
-    function mapToSupportedAspectRatio(ratio: string | undefined): string | undefined {
-        if (!ratio) return undefined
-
-        // Supported by Gemini Flash/Pro/Imagen
-        const supported = ['1:1', '3:4', '4:3', '9:16', '16:9']
-        if (supported.includes(ratio)) return ratio
-
-        // Mappings for social formats
-        if (ratio === '1.91:1') return '16:9'   // Approx for IG/FB Horizontal
-        if (ratio === '4:5') return '3:4'       // Approx for IG Portrait (0.8 vs 0.75)
-        if (ratio === '1.2:1') return '1:1'     // Approx for LinkedIn
-
-        return undefined // Let model decide or use default
-    }
-
-    // ... inside generateBrandImage
-
-    const targetAspectRatio = mapToSupportedAspectRatio(options.aspectRatio)
-    if (targetAspectRatio) {
-        console.log('Target Aspect Ratio:', targetAspectRatio, '(Original:', options.aspectRatio, ')')
-    }
-
-    const result = await activeImageModel.generateContent({
-        contents: [
-            {
-                role: 'user',
-                parts: promptParts
-            }
-        ],
-        generationConfig: {
-            responseModalities: ['IMAGE', 'TEXT'],
-            ...(targetAspectRatio ? {
-                image_config: {
-                    aspect_ratio: targetAspectRatio
-                }
-            } : {})
-        } as never
-    })
-
-    // Extract image from response
-    const response = result.response
-    const parts = response.candidates?.[0]?.content?.parts || []
-
-    for (const part of parts) {
-        if ('inlineData' in part && part.inlineData) {
-            const { mimeType, data } = part.inlineData
-            return `data:${mimeType};base64,${data}`
-        }
-    }
-
-    throw new Error('No se pudo generar la imagen')
+    // 3. Call Wisdom API
+    return await generateWisdomImage(parts, model, options.aspectRatio)
 }
 
 // --- WIDOM GATE INTEGRATION ---
 const WISDOM_API_KEY = process.env.WISDOM_API_KEY || ''
-const WISDOM_BASE_URL = 'https://wisdom-gate.juheapi.com/v1'
+const WISDOM_BASE_URL = 'https://wisdom-gate.juheapi.com'
 
 export const WISDOM_MODELS = {
     TEXT: {
@@ -213,7 +145,7 @@ export const WISDOM_MODELS = {
         'gemini-2.5-flash': 'Gemini 2.5 Flash (Wisdom)',
     },
     IMAGE: {
-        'gemini-3.0-pro-image-01-preview': 'Gemini 3 Image (Wisdom)',
+        'gemini-3-pro-image-preview': 'Gemini 3 Image (Wisdom)',
         'qwen-image': 'Qwen Image',
         'seedream-4.0': 'SeeDream 4.0'
     }
@@ -221,46 +153,71 @@ export const WISDOM_MODELS = {
 
 async function generateWisdomText(prompt: string, model: string, systemPrompt?: string, images?: string[]): Promise<string> {
     try {
-        const messages: any[] = []
-        if (systemPrompt) messages.push({ role: 'system', content: systemPrompt })
+        console.log(`Generating Wisdom Text with model: ${model}`)
 
-        const userContent: any[] = [{ type: 'text', text: prompt }]
+        // Construct Gemini-native payload
+        const parts: any[] = []
+
+        // Add text prompt
+        // Note: For Gemini, system instructions are usually passed in a separate field 'systemInstruction' 
+        // or prepended to the user prompt if the model doesn't support it strictly.
+        // For simplicity and broad compatibility, we'll prepend system prompt or use the config if strictly supported.
+        // However, the unified flow often combines them. Let's prepend for now to ensure context.
+        let finalPrompt = prompt
+
+        // Build contents array
+        // Gemini expects: { role: 'user', parts: [...] }
+        const promptParts: any[] = []
 
         if (images && images.length > 0) {
-            images.forEach(img => {
-                // Determine format. If data:image, send as url.
-                userContent.push({
-                    type: 'image_url',
-                    image_url: {
-                        url: img.startsWith('data:') ? img : `data:image/png;base64,${img}` // OpenAI vision usually expects url or base64 data url
-                    }
-                })
-            })
+            console.log(`Processing ${images.length} images for text generation...`)
+            for (const img of images) {
+                const part = await urlToPart(img)
+                if (part) promptParts.push(part)
+            }
         }
 
-        messages.push({ role: 'user', content: userContent })
+        // Add text part
+        promptParts.push({ text: finalPrompt })
 
-        // Retry logic with exponential backoff for "System busy" errors
+        const contents = [{
+            role: 'user',
+            parts: promptParts
+        }]
+
+        // Retry logic with exponential backoff
         const maxRetries = 3
-        const retryDelays = [1000, 2000, 4000] // 1s, 2s, 4s
+        const retryDelays = [1000, 2000, 4000]
         let lastError: Error | null = null
 
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-                console.log(`[Text ${attempt + 1}/${maxRetries + 1}] Attempting Wisdom Gate API call...`)
+                console.log(`[Text ${attempt + 1}/${maxRetries + 1}] Attempting Wisdom Gate API call (Native)...`)
 
-                const response = await fetch(`${WISDOM_BASE_URL}/chat/completions`, {
+                const requestBody: any = {
+                    contents,
+                    generationConfig: {
+                        temperature: 0.7
+                    }
+                }
+
+                // Add system instruction if provided (Gemini 1.5+ supports this)
+                if (systemPrompt) {
+                    requestBody.systemInstruction = {
+                        parts: [{ text: systemPrompt }]
+                    }
+                }
+
+                // Use the correct base URL with /v1beta as per docs
+                const endpoint = `${WISDOM_BASE_URL}/v1beta/models/${model}:generateContent`
+
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${WISDOM_API_KEY}`
+                        'x-goog-api-key': WISDOM_API_KEY
                     },
-                    body: JSON.stringify({
-                        model,
-                        messages,
-                        temperature: 0.7,
-                        response_format: { type: "json_object" } // Force JSON for copy generation
-                    })
+                    body: JSON.stringify(requestBody)
                 })
 
                 if (!response.ok) {
@@ -271,19 +228,26 @@ async function generateWisdomText(prompt: string, model: string, systemPrompt?: 
                         if (json.error?.message) errorMessage = json.error.message
                     } catch (e) { }
 
-                    // Check if it's a "System busy" error that we should retry
                     const isSystemBusy = errorMessage.toLowerCase().includes('system busy') ||
-                        errorMessage.toLowerCase().includes('please try again')
+                        errorMessage.toLowerCase().includes('please try again') ||
+                        errorMessage.includes('503') ||
+                        errorMessage.includes('429')
 
                     if (isSystemBusy && attempt < maxRetries) {
                         const delay = retryDelays[attempt]
                         console.warn(`[Text ${attempt + 1}/${maxRetries + 1}] Wisdom Gate busy, retrying in ${delay}ms...`)
                         lastError = new Error(errorMessage)
                         await new Promise(resolve => setTimeout(resolve, delay))
-                        continue // Retry
+                        continue
                     }
 
-                    // Non-retryable error or max retries reached
+                    // Fallback to gemini-2.5-flash for other errors or exhausted retries
+                    const FALLBACK_MODEL = 'gemini-2.5-flash'
+                    if (model !== FALLBACK_MODEL && attempt === maxRetries) {
+                        console.warn(`⚠️ Primary model ${model} failed. Falling back to ${FALLBACK_MODEL}...`)
+                        return await generateWisdomText(prompt, FALLBACK_MODEL, systemPrompt, images)
+                    }
+
                     console.error(`Wisdom Text API failed: ${errorMessage}`)
                     throw new Error(errorMessage)
                 }
@@ -291,19 +255,18 @@ async function generateWisdomText(prompt: string, model: string, systemPrompt?: 
                 // Success
                 console.log(`[Text ${attempt + 1}/${maxRetries + 1}] Wisdom Gate API call succeeded`)
                 const data = await response.json()
-                return data.choices[0]?.message?.content || ''
+
+                // Extract text from Gemini response candidates
+                // data.candidates[0].content.parts[0].text
+                const text = data.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('') || ''
+                return text
 
             } catch (error) {
-                if (attempt === maxRetries) {
-                    // All retries exhausted
-                    throw error
-                }
-                // Store error and continue to next retry
+                if (attempt === maxRetries) throw error
                 lastError = error as Error
             }
         }
 
-        // This should never be reached, but just in case
         throw lastError || new Error('Unknown error during Wisdom Gate text API call')
 
     } catch (error) {
@@ -321,8 +284,29 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
         // This ensures context images (logos, references) are passed correctly.
 
         // Map Aspect Ratio to Google format if needed (though app uses 16:9, 1:1 which match)
-        const validRatios = ['1:1', '16:9', '9:16', '3:2', '4:3']
-        const targetRatio = validRatios.includes(aspectRatio || '') ? aspectRatio : '1:1'
+        // Map Aspect Ratio to Google format if needed
+        // Valid ratios per documentation: 1:1, 3:2, 2:3, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9
+        const validRatios = ['1:1', '3:2', '2:3', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9']
+        let targetRatio = '1:1'
+
+        if (aspectRatio) {
+            if (validRatios.includes(aspectRatio)) {
+                targetRatio = aspectRatio
+            } else {
+                // Map custom social ratios to closest supported
+                switch (aspectRatio) {
+                    case '1.91:1': // Facebook/Twitter Horizontal (1.91)
+                        targetRatio = '16:9' // Closest (1.77) - 21:9 (2.33) is too wide
+                        break
+                    case '1.2:1':  // LinkedIn (1.2)
+                        targetRatio = '5:4'  // Closest (1.25) - matches better than 1:1
+                        break
+                    default:
+                        targetRatio = '1:1'
+                }
+                console.log(`Mapping custom ratio ${aspectRatio} to supported ${targetRatio}`)
+            }
+        }
 
         // Retry logic with exponential backoff for "System busy" errors
         const maxRetries = 3
@@ -333,7 +317,7 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
             try {
                 console.log(`[${attempt + 1}/${maxRetries + 1}] Attempting Wisdom Gate API call...`)
 
-                const response = await fetch(`https://wisdom-gate.juheapi.com/v1beta/models/${model}:generateContent`, {
+                const response = await fetch(`${WISDOM_BASE_URL}/v1beta/models/${model}:generateContent`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -464,7 +448,13 @@ export async function generateContentImageUnified(
     const modelName = options.model || DEFAULT_IMAGE_MODEL
 
     if (modelName.startsWith('wisdom/')) {
-        const wisdomModel = modelName.replace('wisdom/', '')
+        let wisdomModel = modelName.replace('wisdom/', '')
+
+        // Failsafe: Map known incorrect model names to valid ones
+        if (wisdomModel === 'gemini-3.0-pro-image-01-preview') {
+            console.warn('⚠️ Correcting invalid model name: gemini-3.0-pro-image-01-preview -> gemini-3-pro-image-preview')
+            wisdomModel = 'gemini-3-pro-image-preview'
+        }
         const enhancedPrompt = buildImagePrompt(brand, prompt, options)
 
         // Prepare parts similar to generateBrandImage to ensure parity
