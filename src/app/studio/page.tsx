@@ -154,6 +154,7 @@ export default function StudioPage() {
                 const errorMessage = errorData.error || 'Error al generar la imagen'
 
                 console.error('API Error:', errorMessage)
+                console.log('Calling toast with error message:', errorMessage)
 
                 toast({
                     title: "Error de generación",

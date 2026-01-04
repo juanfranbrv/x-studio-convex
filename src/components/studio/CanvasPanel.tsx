@@ -111,6 +111,10 @@ export function CanvasPanel({
                 setWasJustGenerated(false)
             }, 3500)
             return () => clearTimeout(timer)
+        } else if (!isGenerating && isRevealing) {
+            // Generation failed or was cancelled: reset immediately
+            setIsRevealing(false)
+            setWasJustGenerated(false)
         } else if (!isGenerating && !wasJustGenerated) {
             // History navigation: update immediately without animation
             setPrevImage(currentImage)
