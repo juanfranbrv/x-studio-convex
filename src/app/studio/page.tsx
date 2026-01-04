@@ -173,6 +173,7 @@ export default function StudioPage() {
                 variant: "destructive",
             })
         } finally {
+            console.log('Resetting isGenerating to false')
             setIsGenerating(false)
         }
     }

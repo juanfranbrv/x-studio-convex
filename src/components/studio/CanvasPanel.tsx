@@ -141,10 +141,10 @@ export function CanvasPanel({
 
     // Trigger Copy Generation when image changes
     useEffect(() => {
-        if (currentImage && activeBrandKit && !isGenerating) {
+        if (currentImage && activeBrandKit) {
             handleGenerateCopy()
         }
-    }, [currentImage, isGenerating]) // activeBrandKit is stable enough
+    }, [currentImage]) // Only trigger on new images, not on isGenerating changes
 
     const handleDownload = () => {
         if (!currentImage) return
