@@ -43,10 +43,36 @@ export async function POST(request: NextRequest) {
 
     } catch (error: any) {
         console.error('Generation error:', error)
-        const status = error.status || 500
-        const message = error.message || 'Failed to generate image'
+
+        const errorMessage = error.message || 'Failed to generate image'
+
+        // Determine error type and appropriate status code
+        let status = 500
+        let userMessage = 'Error al generar la imagen. Por favor, inténtalo de nuevo.'
+        let errorType = 'UNKNOWN'
+
+        if (errorMessage.toLowerCase().includes('system busy') ||
+            errorMessage.toLowerCase().includes('please try again')) {
+            status = 503
+            userMessage = 'El servicio está temporalmente saturado. Por favor, inténtalo de nuevo en unos segundos.'
+            errorType = 'WISDOM_BUSY'
+        } else if (errorMessage.toLowerCase().includes('rate limit') ||
+            errorMessage.toLowerCase().includes('quota')) {
+            status = 429
+            userMessage = 'Has alcanzado el límite de generaciones. Espera un momento antes de continuar.'
+            errorType = 'RATE_LIMIT'
+        } else if (errorMessage.toLowerCase().includes('no image found')) {
+            status = 500
+            userMessage = 'No se pudo generar la imagen. Inténtalo de nuevo con un prompt diferente.'
+            errorType = 'NO_IMAGE'
+        }
+
         return NextResponse.json(
-            { error: message },
+            {
+                error: userMessage,
+                errorType,
+                details: errorMessage // Technical details for debugging
+            },
             { status }
         )
     }

@@ -88,12 +88,12 @@ export default function StudioPage() {
                 .map(img => (img as any).url || img);
 
             // MERGE: Combine elements from the "Mesa" with elements from the "Creation Flow"
-            const finalContext = [...selectedContext]
+            const finalContext: ContextElement[] = [...selectedContext]
 
-            // 1. Add uploaded product image from flow (if not already there)
+            // 1. Add uploaded product image from flow (if exists and not already in context)
             if (creationFlow.state.uploadedImage) {
-                const hasUploadedImage = finalContext.some(c => c.type === 'image' && c.value === creationFlow.state.uploadedImage)
-                if (!hasUploadedImage) {
+                const hasProduct = finalContext.some(c => c.type === 'image' && c.label === 'Producto')
+                if (!hasProduct) {
                     finalContext.push({
                         id: 'flow-product',
                         type: 'image',
@@ -148,12 +148,28 @@ export default function StudioPage() {
                 }
                 setCurrentImage(result.imageUrl)
                 setGenerations(prev => [newGeneration, ...prev])
+            } else {
+                // Handle API error with user-friendly message
+                const errorData = await response.json().catch(() => ({ error: 'Error al generar la imagen' }))
+                const errorMessage = errorData.error || 'Error al generar la imagen'
+
+                console.error('API Error:', errorMessage)
+
+                toast({
+                    title: "Error de generación",
+                    description: errorMessage,
+                    variant: "destructive",
+                })
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Generation failed:', error)
+
+            // Display user-friendly error message
+            const errorMessage = error.message || 'No se pudo generar la imagen. Inténtalo de nuevo en unos momentos.'
+
             toast({
                 title: "Error de generación",
-                description: "No se pudo generar la imagen. Inténtalo de nuevo en unos momentos.",
+                description: errorMessage,
                 variant: "destructive",
             })
         } finally {

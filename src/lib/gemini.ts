@@ -240,32 +240,72 @@ async function generateWisdomText(prompt: string, model: string, systemPrompt?: 
 
         messages.push({ role: 'user', content: userContent })
 
-        const response = await fetch(`${WISDOM_BASE_URL}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${WISDOM_API_KEY}`
-            },
-            body: JSON.stringify({
-                model,
-                messages,
-                temperature: 0.7,
-                response_format: { type: "json_object" } // Force JSON for copy generation
-            })
-        })
+        // Retry logic with exponential backoff for "System busy" errors
+        const maxRetries = 3
+        const retryDelays = [1000, 2000, 4000] // 1s, 2s, 4s
+        let lastError: Error | null = null
 
-        if (!response.ok) {
-            const errorText = await response.text()
-            let errorMessage = errorText
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-                const json = JSON.parse(errorText)
-                if (json.error?.message) errorMessage = json.error.message
-            } catch (e) { }
-            throw new Error(errorMessage)
+                console.log(`[Text ${attempt + 1}/${maxRetries + 1}] Attempting Wisdom Gate API call...`)
+
+                const response = await fetch(`${WISDOM_BASE_URL}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${WISDOM_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model,
+                        messages,
+                        temperature: 0.7,
+                        response_format: { type: "json_object" } // Force JSON for copy generation
+                    })
+                })
+
+                if (!response.ok) {
+                    const errorText = await response.text()
+                    let errorMessage = errorText
+                    try {
+                        const json = JSON.parse(errorText)
+                        if (json.error?.message) errorMessage = json.error.message
+                    } catch (e) { }
+
+                    // Check if it's a "System busy" error that we should retry
+                    const isSystemBusy = errorMessage.toLowerCase().includes('system busy') ||
+                        errorMessage.toLowerCase().includes('please try again')
+
+                    if (isSystemBusy && attempt < maxRetries) {
+                        const delay = retryDelays[attempt]
+                        console.warn(`[Text ${attempt + 1}/${maxRetries + 1}] Wisdom Gate busy, retrying in ${delay}ms...`)
+                        lastError = new Error(errorMessage)
+                        await new Promise(resolve => setTimeout(resolve, delay))
+                        continue // Retry
+                    }
+
+                    // Non-retryable error or max retries reached
+                    console.error(`Wisdom Text API failed: ${errorMessage}`)
+                    throw new Error(errorMessage)
+                }
+
+                // Success
+                console.log(`[Text ${attempt + 1}/${maxRetries + 1}] Wisdom Gate API call succeeded`)
+                const data = await response.json()
+                return data.choices[0]?.message?.content || ''
+
+            } catch (error) {
+                if (attempt === maxRetries) {
+                    // All retries exhausted
+                    throw error
+                }
+                // Store error and continue to next retry
+                lastError = error as Error
+            }
         }
 
-        const data = await response.json()
-        return data.choices[0]?.message?.content || ''
+        // This should never be reached, but just in case
+        throw lastError || new Error('Unknown error during Wisdom Gate text API call')
+
     } catch (error) {
         console.error('Wisdom Gate Text Generation Error:', error)
         throw error
@@ -284,51 +324,88 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
         const validRatios = ['1:1', '16:9', '9:16', '3:2', '4:3']
         const targetRatio = validRatios.includes(aspectRatio || '') ? aspectRatio : '1:1'
 
-        const response = await fetch(`https://wisdom-gate.juheapi.com/v1beta/models/${model}:generateContent`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': WISDOM_API_KEY
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: parts
-                }],
-                generationConfig: {
-                    responseModalities: ["IMAGE"],
-                    imageConfig: {
-                        aspectRatio: targetRatio
+        // Retry logic with exponential backoff for "System busy" errors
+        const maxRetries = 3
+        const retryDelays = [1000, 2000, 4000] // 1s, 2s, 4s
+        let lastError: Error | null = null
+
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`[${attempt + 1}/${maxRetries + 1}] Attempting Wisdom Gate API call...`)
+
+                const response = await fetch(`https://wisdom-gate.juheapi.com/v1beta/models/${model}:generateContent`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': WISDOM_API_KEY
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: parts
+                        }],
+                        generationConfig: {
+                            responseModalities: ["IMAGE"],
+                            imageConfig: {
+                                aspectRatio: targetRatio,
+                                imageSize: "1K"
+                            }
+                        }
+                    })
+                })
+
+                if (!response.ok) {
+                    const errorText = await response.text()
+                    let errorMessage = errorText
+                    try {
+                        const json = JSON.parse(errorText)
+                        if (json.error?.message) errorMessage = json.error.message
+                    } catch (e) { }
+
+                    // Check if it's a "System busy" error that we should retry
+                    const isSystemBusy = errorMessage.toLowerCase().includes('system busy') ||
+                        errorMessage.toLowerCase().includes('please try again')
+
+                    if (isSystemBusy && attempt < maxRetries) {
+                        const delay = retryDelays[attempt]
+                        console.warn(`[${attempt + 1}/${maxRetries + 1}] Wisdom Gate busy, retrying in ${delay}ms...`)
+                        lastError = new Error(errorMessage)
+                        await new Promise(resolve => setTimeout(resolve, delay))
+                        continue // Retry
+                    }
+
+                    // Non-retryable error or max retries reached
+                    console.error(`Wisdom Image API failed: ${errorMessage}`)
+                    throw new Error(errorMessage)
+                }
+
+                // Success - return the response data
+                console.log(`[${attempt + 1}/${maxRetries + 1}] Wisdom Gate API call succeeded`)
+                const data = await response.json()
+
+                // Extract image from Google-style response
+                const candidate = data.candidates?.[0]
+                if (candidate) {
+                    for (const part of candidate.content?.parts || []) {
+                        if (part.inlineData && part.inlineData.data) {
+                            return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`
+                        }
                     }
                 }
-            })
-        })
 
-        if (!response.ok) {
-            const errorText = await response.text()
-            let errorMessage = errorText
-            try {
-                const json = JSON.parse(errorText)
-                if (json.error?.message) errorMessage = json.error.message
-            } catch (e) { }
-            console.warn(`Wisdom Image API failed: ${errorMessage}`)
-            throw new Error(errorMessage)
-        }
+                // No image found in response
+                throw new Error('No image found in Wisdom response')
 
-        const data = await response.json()
-
-        // Extract image from Google-style response
-        const candidate = data.candidates?.[0]
-        if (candidate) {
-            for (const part of candidate.content?.parts || []) {
-                if (part.inlineData && part.inlineData.data) {
-                    return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`
+            } catch (error) {
+                if (attempt === maxRetries) {
+                    // All retries exhausted
+                    throw error
                 }
+                // Store error and continue to next retry
+                lastError = error as Error
             }
         }
 
-        // Fallback: Check if they returned a URL or b64_json in a weird location (unlikely if protocols match)
-        // But strictly, we expect standard Gemini response structure now.
-        throw new Error('No image found in Wisdom response')
+        throw lastError || new Error('Unknown error during Wisdom Gate API call')
 
     } catch (error) {
         console.error('Wisdom Gate Image Generation Error:', error)
