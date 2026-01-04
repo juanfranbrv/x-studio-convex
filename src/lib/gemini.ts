@@ -10,34 +10,11 @@ const imageGenAI = new GoogleGenerativeAI(process.env.GEMINI_IMAGE_API_KEY!)
 export const flashModel = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
 
 // Default image model
-const DEFAULT_IMAGE_MODEL = 'models/gemini-2.5-flash-image'
+const DEFAULT_IMAGE_MODEL = 'wisdom/gemini-3.0-pro-image-01-preview'
 
 // Brand-aware system prompt builder
-export function buildBrandSystemPrompt(brand: { name: string; brand_dna: BrandDNA }): string {
-    const { name, brand_dna } = brand
-    const { colors, tone_of_voice, fonts } = brand_dna
-
-    // Adapt legacy property access to new array structure
-    const tone = tone_of_voice?.join(', ') || 'Sin definir'
-    const headingFont = fonts?.[0] || 'Sin definir'
-    const bodyFont = fonts?.[1] || 'Sin definir'
-
-    return `Eres un director creativo experto trabajando para la marca "${name}".
-
-DIRECTRICES DE MARCA OBLIGATORIAS:
-- Paleta de colores: ${colors.map(c => c.color).join(', ') || 'Sin definir'}
-- Tono de comunicación: ${tone}
-- Tipografía principal: ${headingFont}
-- Tipografía secundaria: ${bodyFont}
-
-REGLAS DE DISEÑO:
-1. Siempre incorpora sutilmente la identidad de marca
-2. Los colores primarios deben ser dominantes
-3. Mantén coherencia con el tono de marca
-4. Evita elementos que contradigan la personalidad de marca
-
-Responde siempre en español.`
-}
+import { buildBrandDirectorPrompt } from './prompts/system/brand-director'
+export const buildBrandSystemPrompt = buildBrandDirectorPrompt
 
 // Generate marketing copy with brand context
 export async function generateMarketingCopy(
@@ -117,6 +94,12 @@ export async function generateBrandImage(
     console.log('Prompt Length:', enhancedPrompt.length)
 
     // 3. Prepare Payload Parts (Text + Images)
+    console.log('\n🔵 ===================================================')
+    console.log('📜 FINAL CONSTRUCTED PROMPT SENT TO GEMINI:')
+    console.log('===================================================')
+    console.log(enhancedPrompt)
+    console.log('===================================================\n')
+
     const promptParts: any[] = [{ text: enhancedPrompt }]
 
     // 4. Process Context Images/Logos (Fetch & convert to Base64)
@@ -217,4 +200,239 @@ export async function generateBrandImage(
     }
 
     throw new Error('No se pudo generar la imagen')
+}
+
+// --- WIDOM GATE INTEGRATION ---
+const WISDOM_API_KEY = process.env.WISDOM_API_KEY || ''
+const WISDOM_BASE_URL = 'https://wisdom-gate.juheapi.com/v1'
+
+export const WISDOM_MODELS = {
+    TEXT: {
+        'gemini-3-pro': 'Gemini 3 Pro (Wisdom)',
+        'gemini-3-flash': 'Gemini 3 Flash (Wisdom)',
+        'gemini-2.5-flash': 'Gemini 2.5 Flash (Wisdom)',
+    },
+    IMAGE: {
+        'gemini-3.0-pro-image-01-preview': 'Gemini 3 Image (Wisdom)',
+        'qwen-image': 'Qwen Image',
+        'seedream-4.0': 'SeeDream 4.0'
+    }
+}
+
+async function generateWisdomText(prompt: string, model: string, systemPrompt?: string, images?: string[]): Promise<string> {
+    try {
+        const messages: any[] = []
+        if (systemPrompt) messages.push({ role: 'system', content: systemPrompt })
+
+        const userContent: any[] = [{ type: 'text', text: prompt }]
+
+        if (images && images.length > 0) {
+            images.forEach(img => {
+                // Determine format. If data:image, send as url.
+                userContent.push({
+                    type: 'image_url',
+                    image_url: {
+                        url: img.startsWith('data:') ? img : `data:image/png;base64,${img}` // OpenAI vision usually expects url or base64 data url
+                    }
+                })
+            })
+        }
+
+        messages.push({ role: 'user', content: userContent })
+
+        const response = await fetch(`${WISDOM_BASE_URL}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${WISDOM_API_KEY}`
+            },
+            body: JSON.stringify({
+                model,
+                messages,
+                temperature: 0.7,
+                response_format: { type: "json_object" } // Force JSON for copy generation
+            })
+        })
+
+        if (!response.ok) {
+            const errorText = await response.text()
+            let errorMessage = errorText
+            try {
+                const json = JSON.parse(errorText)
+                if (json.error?.message) errorMessage = json.error.message
+            } catch (e) { }
+            throw new Error(errorMessage)
+        }
+
+        const data = await response.json()
+        return data.choices[0]?.message?.content || ''
+    } catch (error) {
+        console.error('Wisdom Gate Text Generation Error:', error)
+        throw error
+    }
+}
+
+async function generateWisdomImage(parts: any[], model: string, aspectRatio?: string): Promise<string> {
+    try {
+        console.log(`Generating Wisdom Image with model: ${model}`)
+        console.log(`Payload parts: ${parts.length}`)
+
+        // UNIFIED LOGIC: ALWAYS Use Wisdom/Google Native Endpoint for ALL models
+        // This ensures context images (logos, references) are passed correctly.
+
+        // Map Aspect Ratio to Google format if needed (though app uses 16:9, 1:1 which match)
+        const validRatios = ['1:1', '16:9', '9:16', '3:2', '4:3']
+        const targetRatio = validRatios.includes(aspectRatio || '') ? aspectRatio : '1:1'
+
+        const response = await fetch(`https://wisdom-gate.juheapi.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': WISDOM_API_KEY
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: parts
+                }],
+                generationConfig: {
+                    responseModalities: ["IMAGE"],
+                    imageConfig: {
+                        aspectRatio: targetRatio
+                    }
+                }
+            })
+        })
+
+        if (!response.ok) {
+            const errorText = await response.text()
+            let errorMessage = errorText
+            try {
+                const json = JSON.parse(errorText)
+                if (json.error?.message) errorMessage = json.error.message
+            } catch (e) { }
+            console.warn(`Wisdom Image API failed: ${errorMessage}`)
+            throw new Error(errorMessage)
+        }
+
+        const data = await response.json()
+
+        // Extract image from Google-style response
+        const candidate = data.candidates?.[0]
+        if (candidate) {
+            for (const part of candidate.content?.parts || []) {
+                if (part.inlineData && part.inlineData.data) {
+                    return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`
+                }
+            }
+        }
+
+        // Fallback: Check if they returned a URL or b64_json in a weird location (unlikely if protocols match)
+        // But strictly, we expect standard Gemini response structure now.
+        throw new Error('No image found in Wisdom response')
+
+    } catch (error) {
+        console.error('Wisdom Gate Image Generation Error:', error)
+        throw error
+    }
+}
+
+// Unified Generator Function
+export async function generateTextUnified(
+    brand: { name: string; brand_dna: BrandDNA },
+    prompt: string,
+    model: string = 'wisdom/gemini-2.5-flash', // Default to Wisdom
+    images?: string[]
+): Promise<string> {
+    const systemPrompt = buildBrandSystemPrompt(brand)
+
+    if (model.startsWith('wisdom/')) {
+        const wisdomModel = model.replace('wisdom/', '')
+        return await generateWisdomText(prompt, wisdomModel, systemPrompt, images)
+    }
+
+    // Default to Google
+    const parts: any[] = [{ text: `${systemPrompt}\n\nSOLICITUD DEL USUARIO:\n${prompt}` }]
+
+    if (images && images.length > 0) {
+        images.forEach(img => {
+            // Handle base64
+            const base64Data = img.includes('base64,') ? img.split('base64,')[1] : img
+            parts.push({
+                inlineData: {
+                    data: base64Data,
+                    mimeType: 'image/png'
+                }
+            })
+        })
+    }
+
+    const result = await flashModel.generateContent({
+        contents: [
+            {
+                role: 'user',
+                parts
+            }
+        ],
+        generationConfig: { responseMimeType: "application/json" }
+    })
+    return result.response.text()
+}
+
+// Exposed wrapper for Image Generation
+export async function generateContentImageUnified(
+    brand: { name: string; brand_dna: BrandDNA },
+    prompt: string,
+    options: ImageGenerationOptions = {}
+): Promise<string> {
+    const modelName = options.model || DEFAULT_IMAGE_MODEL
+
+    if (modelName.startsWith('wisdom/')) {
+        const wisdomModel = modelName.replace('wisdom/', '')
+        const enhancedPrompt = buildImagePrompt(brand, prompt, options)
+
+        // Prepare parts similar to generateBrandImage to ensure parity
+        const promptParts: any[] = [{ text: enhancedPrompt }]
+
+        // Process Context Images/Logos (Fetch & convert to Base64)
+        if (options.context && options.context.length > 0) {
+            const imageItems = options.context.filter(c => c.type === 'image' || c.type === 'logo')
+
+            if (imageItems.length > 0) {
+                console.log(`Processing ${imageItems.length} context images for Wisdom...`)
+                const imagePartsPromises = imageItems.map(async (item) => {
+                    if (!item.value) return null
+                    // Use existing urlToPart helper
+                    return await urlToPart(item.value)
+                })
+
+                const imageParts = await Promise.all(imagePartsPromises)
+                imageParts.forEach(part => {
+                    if (part) promptParts.push(part)
+                })
+            }
+        }
+
+        // Process Layout Reference
+        if (options.layoutReference) {
+            // Handle relative paths for local templates
+            let layoutUrl = options.layoutReference
+            if (layoutUrl.startsWith('/')) {
+                const baseUrl = typeof window !== 'undefined'
+                    ? window.location.origin
+                    : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
+                layoutUrl = `${baseUrl}${layoutUrl}`
+            }
+
+            const layoutPart = await urlToPart(layoutUrl)
+            if (layoutPart) {
+                console.log('Layout reference image added to Wisdom parts.')
+                promptParts.push(layoutPart)
+            }
+        }
+
+        return await generateWisdomImage(promptParts, wisdomModel, options.aspectRatio)
+    }
+
+    // Fallback to existing Google Implementation
+    return await generateBrandImage(brand, prompt, options)
 }

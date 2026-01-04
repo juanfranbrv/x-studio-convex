@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { generateBrandImage } from '@/lib/gemini'
+import { generateContentImageUnified } from '@/lib/gemini'
 import type { BrandDNA } from '@/lib/brand-types'
 
 export async function POST(request: NextRequest) {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Generate image with brand context
-        const imageUrl = await generateBrandImage(
+        const imageUrl = await generateContentImageUnified(
             { name: brandDNA.brand_name || 'Brand', brand_dna: brandDNA },
             prompt,
             { headline, cta, platform, context, model, layoutReference, aspectRatio }

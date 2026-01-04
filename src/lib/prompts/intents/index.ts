@@ -7,6 +7,7 @@ export * from './escaparate'
 export * from './catalogo'
 export * from './lanzamiento'
 export * from './servicio'
+export * from './oferta'
 
 // Informar
 export * from './comunicado'

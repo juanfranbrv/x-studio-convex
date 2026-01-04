@@ -456,72 +456,74 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                 />
             </div>
 
-            {/* New Insights Section: Contact & Audience */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <TargetAudienceCard audience={data.target_audience} />
-                <ContactSocialCard
-                    socialLinks={data.social_links}
-                    emails={data.emails}
-                    phones={data.phones}
-                    onUpdate={handleUpdateContact}
-                />
-            </div>
+            {/* Two-Column Layout: Content Cards (Left) + Image Gallery (Right) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                {/* Left Column: All Content/Info Cards */}
+                <div className="space-y-6">
+                    {/* Contact & Audience */}
+                    <TargetAudienceCard audience={data.target_audience} />
+                    <ContactSocialCard
+                        socialLinks={data.social_links}
+                        emails={data.emails}
+                        phones={data.phones}
+                        onUpdate={handleUpdateContact}
+                    />
 
-            {/* Middle Section: Typography & Strategy */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <TypographySection
-                    fonts={data.fonts || []}
-                    tagline={data.tagline || ''}
-                    onAddFont={(f) => updateData(prev => ({ ...prev, fonts: [...(prev.fonts || []), f] }))}
-                    onRemoveFont={(idx) => updateData(prev => ({ ...prev, fonts: prev.fonts?.filter((_, i) => i !== idx) }))}
-                />
-                <BrandAssets
-                    tagline={data.tagline || ''}
-                    values={data.brand_values || []}
-                    aesthetic={data.visual_aesthetic || []}
-                    tone={data.tone_of_voice || []}
-                    onUpdateTagline={(val) => updateData(prev => ({ ...prev, tagline: val }))}
-                    onUpdateValue={(index, val) => {
-                        updateData(prev => ({
-                            ...prev,
-                            brand_values: (prev.brand_values || []).map((v, i) => i === index ? val : v)
-                        }));
-                    }}
-                    onAddValue={() => updateData(prev => ({ ...prev, brand_values: [...(prev.brand_values || []), 'Nuevo Valor'] }))}
-                    onRemoveValue={(idx) => updateData(prev => ({ ...prev, brand_values: prev.brand_values?.filter((_, i) => i !== idx) }))}
-                    onUpdateAesthetic={(idx, val) => updateData(prev => ({ ...prev, visual_aesthetic: prev.visual_aesthetic?.map((v, i) => i === idx ? val : v) }))}
-                    onAddAesthetic={() => updateData(prev => ({ ...prev, visual_aesthetic: [...(prev.visual_aesthetic || []), 'Nueva Estética'] }))}
-                    onRemoveAesthetic={(idx) => updateData(prev => ({ ...prev, visual_aesthetic: prev.visual_aesthetic?.filter((_, i) => i !== idx) }))}
-                    onUpdateTone={(idx, val) => updateData(prev => ({ ...prev, tone_of_voice: prev.tone_of_voice?.map((v, i) => i === idx ? val : v) }))}
-                    onAddTone={() => updateData(prev => ({ ...prev, tone_of_voice: [...(prev.tone_of_voice || []), 'Nuevo Tono'] }))}
-                    onRemoveTone={(idx) => updateData(prev => ({ ...prev, tone_of_voice: prev.tone_of_voice?.filter((_, i) => i !== idx) }))}
-                />
-            </div>
+                    {/* Typography */}
+                    <TypographySection
+                        fonts={data.fonts || []}
+                        tagline={data.tagline || ''}
+                        onAddFont={(f) => updateData(prev => ({ ...prev, fonts: [...(prev.fonts || []), f] }))}
+                        onRemoveFont={(idx) => updateData(prev => ({ ...prev, fonts: prev.fonts?.filter((_, i) => i !== idx) }))}
+                    />
 
-            {/* Bottom Section: Text Assets & Gallery */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left: Text Assets */}
-                <TextAssetsSection
-                    data={data.text_assets}
-                    onChange={(newTextAssets) => {
-                        updateData(prev => ({
-                            ...prev,
-                            text_assets: newTextAssets,
-                            // Keep business_overview in sync with brand_context if updated
-                            business_overview: newTextAssets.brand_context || prev.business_overview
-                        }));
-                    }}
-                />
+                    {/* Brand Assets */}
+                    <BrandAssets
+                        tagline={data.tagline || ''}
+                        values={data.brand_values || []}
+                        aesthetic={data.visual_aesthetic || []}
+                        tone={data.tone_of_voice || []}
+                        onUpdateTagline={(val) => updateData(prev => ({ ...prev, tagline: val }))}
+                        onUpdateValue={(index, val) => {
+                            updateData(prev => ({
+                                ...prev,
+                                brand_values: (prev.brand_values || []).map((v, i) => i === index ? val : v)
+                            }));
+                        }}
+                        onAddValue={() => updateData(prev => ({ ...prev, brand_values: [...(prev.brand_values || []), 'Nuevo Valor'] }))}
+                        onRemoveValue={(idx) => updateData(prev => ({ ...prev, brand_values: prev.brand_values?.filter((_, i) => i !== idx) }))}
+                        onUpdateAesthetic={(idx, val) => updateData(prev => ({ ...prev, visual_aesthetic: prev.visual_aesthetic?.map((v, i) => i === idx ? val : v) }))}
+                        onAddAesthetic={() => updateData(prev => ({ ...prev, visual_aesthetic: [...(prev.visual_aesthetic || []), ''] }))}
+                        onRemoveAesthetic={(idx) => updateData(prev => ({ ...prev, visual_aesthetic: prev.visual_aesthetic?.filter((_, i) => i !== idx) }))}
+                        onUpdateTone={(idx, val) => updateData(prev => ({ ...prev, tone_of_voice: prev.tone_of_voice?.map((v, i) => i === idx ? val : v) }))}
+                        onAddTone={() => updateData(prev => ({ ...prev, tone_of_voice: [...(prev.tone_of_voice || []), 'Nuevo Tono'] }))}
+                        onRemoveTone={(idx) => updateData(prev => ({ ...prev, tone_of_voice: prev.tone_of_voice?.filter((_, i) => i !== idx) }))}
+                    />
 
-                {/* Right: Gallery */}
-                <ImageGallery
-                    images={data.images || []}
-                    isUploading={isUploading}
-                    onUpload={handleUploadFiles}
-                    onRemoveImage={(idx) => updateData(prev => ({ ...prev, images: prev.images?.filter((_, i) => i !== idx) }))}
-                    onToggleSelection={handleToggleImageSelection}
-                    onOpenLightbox={setLightboxImage}
-                />
+                    {/* Text Assets */}
+                    <TextAssetsSection
+                        data={data.text_assets}
+                        onChange={(newTextAssets) => {
+                            updateData(prev => ({
+                                ...prev,
+                                text_assets: newTextAssets,
+                                business_overview: newTextAssets.brand_context || prev.business_overview
+                            }));
+                        }}
+                    />
+                </div>
+
+                {/* Right Column: Image Gallery */}
+                <div className="lg:sticky lg:top-6">
+                    <ImageGallery
+                        images={data.images || []}
+                        isUploading={isUploading}
+                        onUpload={handleUploadFiles}
+                        onRemoveImage={(idx) => updateData(prev => ({ ...prev, images: prev.images?.filter((_, i) => i !== idx) }))}
+                        onToggleSelection={handleToggleImageSelection}
+                        onOpenLightbox={setLightboxImage}
+                    />
+                </div>
             </div>
 
             {/* Technical Audit (Debug) */}

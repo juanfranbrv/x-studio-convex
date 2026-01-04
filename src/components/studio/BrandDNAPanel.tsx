@@ -13,6 +13,10 @@ import { useTheme } from 'next-themes'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Trash2 } from 'lucide-react'
+import { ARTISTIC_STYLE_CATALOG } from '@/lib/creation-flow-types'
 
 import { ContextElement, ContextType } from '@/app/studio/page'
 
@@ -95,6 +99,7 @@ export function BrandDNAPanel({
         textAssets: false,
         links: false,
     })
+    const [newAesthetic, setNewAesthetic] = useState('')
 
     const toggleSection = (section: string) => {
         setOpenSections(prev => ({ ...prev, [section]: !prev[section] }))
@@ -385,6 +390,60 @@ export function BrandDNAPanel({
     }
 
     const selectedImages = allImages.filter(img => img.selected !== false);
+
+
+    // Social Links Handlers
+    const handleUpdateSocialLink = (index: number, field: 'username' | 'url', value: string) => {
+        updateData(prev => {
+            const newLinks = [...(prev.social_links || [])]
+            if (newLinks[index]) {
+                newLinks[index] = { ...newLinks[index], [field]: value }
+            }
+            return { ...prev, social_links: newLinks }
+        })
+    }
+
+    const handleRemoveSocialLink = (index: number) => {
+        updateData(prev => ({
+            ...prev,
+            social_links: prev.social_links?.filter((_, i) => i !== index)
+        }))
+    }
+
+    const handleAddSocialLink = () => {
+        updateData(prev => ({
+            ...prev,
+            social_links: [...(prev.social_links || []), { platform: 'Social', url: '', username: '' }]
+        }))
+    }
+
+    // Visual Aesthetic Handlers
+    const handleAddAesthetic = (value: string) => {
+        if (!value.trim()) return
+        updateData(prev => {
+            // Avoid duplicates
+            if (prev.visual_aesthetic?.includes(value)) return prev;
+            return {
+                ...prev,
+                visual_aesthetic: [...(prev.visual_aesthetic || []), value]
+            }
+        })
+        setNewAesthetic('')
+    }
+
+    const handleRemoveAesthetic = (index: number) => {
+        updateData(prev => ({
+            ...prev,
+            visual_aesthetic: prev.visual_aesthetic?.filter((_, i) => i !== index)
+        }))
+    }
+
+    const handleKeyPressAesthetic = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            handleAddAesthetic(newAesthetic)
+        }
+    }
 
     const handleDragStart = (e: React.DragEvent, element: ContextElement) => {
         const jsonData = JSON.stringify(element)
@@ -848,19 +907,63 @@ export function BrandDNAPanel({
                                 )}
 
                                 {/* Visual Aesthetic */}
-                                {visual_aesthetic.length > 0 && (
-                                    <div className="space-y-0.5">
-                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Estética Visual</p>
-                                        <div className="flex flex-wrap gap-1">
+                                <div className="space-y-2">
+                                    <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Estética Visual</p>
+
+                                    {/* Add New Style */}
+                                    <div className="flex gap-1.5">
+                                        <Input
+                                            value={newAesthetic}
+                                            onChange={(e) => setNewAesthetic(e.target.value)}
+                                            onKeyDown={handleKeyPressAesthetic}
+                                            placeholder="Añadir estilo visual..."
+                                            className="h-7 text-xs bg-muted/20 border-border/50"
+                                        />
+                                        <Button
+                                            size="icon"
+                                            variant="outline"
+                                            className="h-7 w-7 shrink-0"
+                                            onClick={() => handleAddAesthetic(newAesthetic)}
+                                            disabled={!newAesthetic.trim()}
+                                        >
+                                            <Plus className="w-3.5 h-3.5" />
+                                        </Button>
+                                    </div>
+
+                                    {/* Edit Existing Styles / Chips */}
+                                    {visual_aesthetic.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 pt-1">
                                             {visual_aesthetic.map((ae, idx) => (
-                                                <DraggableChip
-                                                    key={`aesthetic-${idx}`}
-                                                    {...chipProps(`aesthetic-${idx}`, 'text', ae, ae)}
-                                                />
+                                                <div key={`aesthetic-${idx}`} className="group relative">
+                                                    <DraggableChip
+                                                        id={`aesthetic-${idx}`}
+                                                        type="text"
+                                                        value={ae}
+                                                        label={ae}
+                                                        isSelected={selectedContext.some(c => c.id === `aesthetic-${idx}`)}
+                                                        onDragStart={handleDragStart}
+                                                        onDragEnd={() => onSetDraggedElement?.(null)}
+                                                        onToggle={() => {
+                                                            const id = `aesthetic-${idx}`
+                                                            const exists = selectedContext.some(c => c.id === id)
+                                                            if (exists) onRemoveContext?.(id)
+                                                            else onAddContext?.({ id, type: 'text', value: ae, label: ae })
+                                                        }}
+                                                    />
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleRemoveAesthetic(idx)
+                                                        }}
+                                                        className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                                                    >
+                                                        <X className="w-2.5 h-2.5" />
+                                                    </button>
+                                                </div>
                                             ))}
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
 
                                 {!tagline && brand_values.length === 0 && tone_of_voice.length === 0 && visual_aesthetic.length === 0 && (
                                     <p className="text-[9px] text-muted-foreground/50 italic p-1">Sin textos de marca</p>
@@ -891,17 +994,57 @@ export function BrandDNAPanel({
                                 )}
 
                                 {/* Social Links */}
-                                {social_links.length > 0 && (
-                                    <div className="flex flex-wrap gap-1">
-                                        {social_links.map((link, idx) => (
-                                            <DraggableChip
-                                                key={`social-${idx}`}
-                                                {...chipProps(`social-${idx}`, 'link', link.url, link.username || link.platform)}
-                                                icon={AtSign}
-                                            />
-                                        ))}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between px-0.5">
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50">Redes Sociales</p>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-5 text-[10px] text-muted-foreground hover:text-primary px-1"
+                                            onClick={handleAddSocialLink}
+                                        >
+                                            <Plus className="w-3 h-3 mr-1" /> Añadir red
+                                        </Button>
                                     </div>
-                                )}
+
+                                    {social_links.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {social_links.map((link, idx) => (
+                                                <div key={`social-${idx}`} className="flex gap-2 items-center bg-muted/20 p-1.5 rounded-lg border border-border/30 group">
+                                                    <div className="grid grid-cols-2 gap-2 flex-1">
+                                                        <Input
+                                                            value={link.username || ''}
+                                                            onChange={(e) => handleUpdateSocialLink(idx, 'username', e.target.value)}
+                                                            placeholder="@usuario"
+                                                            className="h-7 text-xs bg-background/50 border-border/50"
+                                                        />
+                                                        <Input
+                                                            value={link.url}
+                                                            onChange={(e) => handleUpdateSocialLink(idx, 'url', e.target.value)}
+                                                            placeholder="https://..."
+                                                            className="h-7 text-xs bg-background/50 border-border/50"
+                                                        />
+                                                    </div>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0 opacity-50 group-hover:opacity-100 transition-opacity"
+                                                        onClick={() => handleRemoveSocialLink(idx)}
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4 border border-dashed border-border/50 rounded-lg">
+                                            <p className="text-[10px] text-muted-foreground/60 mb-2">No has añadido redes sociales</p>
+                                            <Button variant="outline" size="sm" onClick={handleAddSocialLink} className="h-7 text-xs">
+                                                <Plus className="w-3 h-3 mr-1" /> Añadir primera red
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Emails */}
                                 {emails.length > 0 && (

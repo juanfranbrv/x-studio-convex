@@ -29,7 +29,7 @@ import {
     DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { type LayoutOption, type LayoutTextField } from '@/lib/creation-flow-types'
+import { type LayoutOption, type LayoutTextField, type IntentRequiredField } from '@/lib/creation-flow-types'
 import { NO_TEXT_TOKEN } from '@/hooks/useCreationFlow'
 
 interface BrandingConfiguratorProps {
@@ -54,6 +54,7 @@ interface BrandingConfiguratorProps {
     showColors?: boolean
     showTexts?: boolean
     showInstructions?: boolean
+    intentRequiredFields?: IntentRequiredField[]
 }
 
 export function BrandingConfigurator({
@@ -78,12 +79,20 @@ export function BrandingConfigurator({
     showColors = true,
     showTexts = true,
     showInstructions = true,
+    intentRequiredFields = [],
 }: BrandingConfiguratorProps) {
     const { activeBrandKit } = useBrandKit()
     const [generatingFields, setGeneratingFields] = useState<Record<string, boolean>>({})
 
     const logos = activeBrandKit?.logos || []
     const colors = activeBrandKit?.colors?.filter(c => c.selected !== false) || []
+
+    // Ensure first logo is selected by default if none is selected and logos exist
+    useState(() => {
+        if (selectedLogoId === undefined && logos.length > 0) {
+            onSelectLogo('logo-0')
+        }
+    })
 
     // Helper to handle AI generation with local loading state
     const handleGenerate = async (field: LayoutTextField) => {
@@ -176,20 +185,6 @@ export function BrandingConfigurator({
             {showLogo && logos.length > 0 && (
                 <div className="space-y-2">
                     <div className="flex gap-2">
-                        {/* No logo option */}
-                        <button
-                            onClick={() => onSelectLogo(null)}
-                            className={cn(
-                                "w-12 h-12 rounded-lg border-2 flex items-center justify-center transition-all",
-                                "text-[10px] text-muted-foreground leading-none px-1 text-center",
-                                selectedLogoId === null
-                                    ? "border-primary bg-primary/10"
-                                    : "border-border hover:border-primary/50 bg-muted/30"
-                            )}
-                        >
-                            Sin Logo
-                        </button>
-
                         {/* Logo options */}
                         {logos.map((logo, idx) => {
                             const logoId = `logo-${idx}`
@@ -221,6 +216,20 @@ export function BrandingConfigurator({
                                 </button>
                             )
                         })}
+
+                        {/* No logo option */}
+                        <button
+                            onClick={() => onSelectLogo(null)}
+                            className={cn(
+                                "w-12 h-12 rounded-lg border-2 flex items-center justify-center transition-all",
+                                "text-[10px] text-muted-foreground leading-none px-1 text-center",
+                                selectedLogoId === null
+                                    ? "border-primary bg-primary/10"
+                                    : "border-border hover:border-primary/50 bg-muted/30"
+                            )}
+                        >
+                            Sin Logo
+                        </button>
                     </div>
                 </div>
             )}
@@ -260,22 +269,58 @@ export function BrandingConfigurator({
 
             {/* Raw Message Input */}
             {showTexts && (
-                <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                        <MessageSquareText className="w-3 h-3 text-primary" />
-                        Tu Mensaje (opcional)
-                    </label>
-                    <textarea
-                        value={rawMessage}
-                        onChange={(e) => onRawMessageChange(e.target.value)}
-                        placeholder="Escribe aquí tu idea, oferta o mensaje. La IA usará esto + tu ADN de marca para generar titulares y CTAs..."
-                        className="w-full h-20 bg-muted/30 border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none placeholder:italic placeholder:text-muted-foreground/50"
-                    />
-                    {rawMessage && (
-                        <p className="text-[10px] text-muted-foreground/60 italic">
-                            ✨ La IA usará este texto como base para generar contenido
-                        </p>
+                <div className="space-y-4">
+                    {/* Intent Required Fields (NEW) */}
+                    {intentRequiredFields.length > 0 && (
+                        <div className="space-y-3 bg-primary/5 p-3 rounded-lg border border-primary/10">
+                            <label className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5">
+                                <Sparkles className="w-3 h-3" />
+                                Detalles Clave
+                            </label>
+
+                            {intentRequiredFields.map((field) => (
+                                <div key={field.id} className="space-y-1.5">
+                                    <label className="text-[11px] font-semibold text-foreground/80 flex items-center gap-1.5">
+                                        {field.label}
+                                        {field.required && <span className="text-red-500">*</span>}
+                                    </label>
+                                    {field.type === 'textarea' ? (
+                                        <textarea
+                                            value={customTexts[field.id] || ''}
+                                            onChange={(e) => onCustomTextChange(field.id, e.target.value)}
+                                            placeholder={field.placeholder}
+                                            className="w-full h-20 bg-background border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+                                        />
+                                    ) : (
+                                        <Input
+                                            value={customTexts[field.id] || ''}
+                                            onChange={(e) => onCustomTextChange(field.id, e.target.value)}
+                                            placeholder={field.placeholder}
+                                            className="bg-background border-border/50 h-9"
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     )}
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                            <MessageSquareText className="w-3 h-3 text-primary" />
+                            Tu Mensaje (opcional)
+                        </label>
+                        <textarea
+                            value={rawMessage}
+                            onChange={(e) => onRawMessageChange(e.target.value)}
+                            placeholder="Escribe aquí tu idea, oferta o mensaje. La IA usará esto + tu ADN de marca para generar titulares y CTAs..."
+                            className="w-full h-20 bg-muted/30 border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none placeholder:italic placeholder:text-muted-foreground/50"
+                        />
+                        {rawMessage && (
+                            <p className="text-[10px] text-muted-foreground/60 italic">
+                                ✨ La IA usará este texto como base para generar contenido
+                            </p>
+                        )}
+                    </div>
                 </div>
             )}
 

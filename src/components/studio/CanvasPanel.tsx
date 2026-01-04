@@ -56,6 +56,8 @@ interface CanvasPanelProps {
     isGenerating: boolean
     selectedModel?: string
     onModelChange?: (model: string) => void
+    selectedTextModel?: string
+    onTextModelChange?: (model: string) => void
     aspectRatio?: string
 }
 
@@ -73,6 +75,8 @@ export function CanvasPanel({
     isGenerating,
     selectedModel,
     onModelChange,
+    selectedTextModel,
+    onTextModelChange,
     aspectRatio = "1:1"
 }: CanvasPanelProps) {
     const { t } = useTranslation()
@@ -121,6 +125,7 @@ export function CanvasPanel({
             const result = await generateSocialPost({
                 brand: activeBrandKit,
                 imageBase64: currentImage,
+                model: selectedTextModel
             })
 
             if (result.success && result.data) {
@@ -551,15 +556,33 @@ export function CanvasPanel({
 
                         <div className="flex items-center gap-2 mb-1">
                             {(selectedModel && onModelChange) && (
-                                <Select value={selectedModel} onValueChange={onModelChange}>
-                                    <SelectTrigger className="w-[130px] h-9 text-[10px] bg-background/50 border-border/50 shadow-none focus:ring-1 focus:ring-primary/30 rounded-xl">
-                                        <SelectValue placeholder="Modelo" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="models/gemini-3-pro-image-preview" className="text-xs">Gemini 3 Pro</SelectItem>
-                                        <SelectItem value="models/gemini-2.5-flash-image" className="text-xs">Gemini 2.5 Flash</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <div className="flex gap-1">
+                                    <Select value={selectedModel} onValueChange={onModelChange}>
+                                        <SelectTrigger className="w-[140px] h-9 text-[10px] bg-background/50 border-border/50 shadow-none focus:ring-1 focus:ring-primary/30 rounded-xl">
+                                            <SelectValue placeholder="Modelo Imagen" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="wisdom/gemini-3.0-pro-image-01-preview" className="text-xs">Gemini 3.0 Pro Image 01 (Wisdom)</SelectItem>
+                                            <SelectItem value="wisdom/qwen-image" className="text-xs">Qwen Image (Wisdom)</SelectItem>
+                                            <SelectItem value="wisdom/seedream-4.0" className="text-xs">Seedream 4.0 (Wisdom)</SelectItem>
+                                            <SelectItem value="models/gemini-3-pro-image-preview" className="text-xs">Gemini 3 Pro (Google Legacy)</SelectItem>
+                                            <SelectItem value="models/gemini-2.5-flash-image" className="text-xs">Gemini 2.5 Flash (Google Legacy)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {(selectedTextModel && onTextModelChange) && (
+                                        <Select value={selectedTextModel} onValueChange={onTextModelChange}>
+                                            <SelectTrigger className="w-[140px] h-9 text-[10px] bg-background/50 border-border/50 shadow-none focus:ring-1 focus:ring-primary/30 rounded-xl">
+                                                <SelectValue placeholder="Inteligencia" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="wisdom/gemini-2.5-flash" className="text-xs">Gemini 2.5 Flash (Wisdom)</SelectItem>
+                                                <SelectItem value="wisdom/gemini-3-pro" className="text-xs">Gemini 3 Pro (Wisdom)</SelectItem>
+                                                <SelectItem value="wisdom/gemini-3-flash" className="text-xs">Gemini 3 Flash (Wisdom)</SelectItem>
+                                                <SelectItem value="google/gemini-flash-latest" className="text-xs">Gemini Flash Lite (Google)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                </div>
                             )}
                             <Button
                                 size="sm"

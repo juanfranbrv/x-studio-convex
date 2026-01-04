@@ -41,7 +41,7 @@ const StepSection = ({
                     <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">{title}</h3>
                 </div>
                 {description && (
-                    <p className="text-[10px] text-muted-foreground leading-relaxed ml-7">
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
                         {description}
                     </p>
                 )}
@@ -262,6 +262,7 @@ export function CreationCommandPanel({
                             showColors={false}
                             showTexts={true}
                             showInstructions={false}
+                            intentRequiredFields={creationFlow.currentIntent?.requiredFields}
                         />
                     </StepSection>
 

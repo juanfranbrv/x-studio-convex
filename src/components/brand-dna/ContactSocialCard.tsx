@@ -166,46 +166,51 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
             <div className="group relative flex items-center gap-3 p-3 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all">
                 {isEditing ? (
                     <div className="flex-1 flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                            {platform && (
-                                <Select value={editPlatform} onValueChange={setEditPlatform}>
-                                    <SelectTrigger className="h-7 w-[110px] text-[10px] px-2 bg-white shrink-0">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="instagram">Instagram</SelectItem>
-                                        <SelectItem value="facebook">Facebook</SelectItem>
-                                        <SelectItem value="twitter">X / Twitter</SelectItem>
-                                        <SelectItem value="linkedin">LinkedIn</SelectItem>
-                                        <SelectItem value="youtube">YouTube</SelectItem>
-                                        <SelectItem value="tiktok">TikTok</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            )}
-                            <Input
-                                placeholder="https://..."
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                className="flex-1 h-7 text-xs bg-white border-border focus-visible:ring-primary"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') onSave();
-                                    if (e.key === 'Escape') onCancel();
-                                }}
-                            />
-                        </div>
                         {platform && (
-                            <Input
-                                placeholder="Nombre de usuario (ej. @marca)"
-                                value={editUsername}
-                                onChange={(e) => setEditUsername(e.target.value)}
-                                className="h-7 text-xs bg-white border-border focus-visible:ring-primary w-full"
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') onSave();
-                                    if (e.key === 'Escape') onCancel();
-                                }}
-                            />
+                            <Select value={editPlatform} onValueChange={setEditPlatform}>
+                                <SelectTrigger className="h-7 w-full text-xs px-2 bg-white">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="instagram">Instagram</SelectItem>
+                                    <SelectItem value="facebook">Facebook</SelectItem>
+                                    <SelectItem value="twitter">X / Twitter</SelectItem>
+                                    <SelectItem value="linkedin">LinkedIn</SelectItem>
+                                    <SelectItem value="youtube">YouTube</SelectItem>
+                                    <SelectItem value="tiktok">TikTok</SelectItem>
+                                </SelectContent>
+                            </Select>
                         )}
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="flex flex-col gap-1">
+                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">URL</label>
+                                <Input
+                                    placeholder="https://..."
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    className="h-7 text-xs bg-white border-border focus-visible:ring-primary"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') onSave();
+                                        if (e.key === 'Escape') onCancel();
+                                    }}
+                                />
+                            </div>
+                            {platform && (
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Usuario</label>
+                                    <Input
+                                        placeholder="@usuario"
+                                        value={editUsername}
+                                        onChange={(e) => setEditUsername(e.target.value)}
+                                        className="h-7 text-xs bg-white border-border focus-visible:ring-primary"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') onSave();
+                                            if (e.key === 'Escape') onCancel();
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
                         <div className="flex justify-end gap-2 mt-1">
                             <Button size="sm" variant="ghost" className="h-6 px-2 hover:bg-red-500/10 text-red-500 text-[10px]" onClick={onCancel}>
                                 Cancelar
@@ -224,33 +229,37 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                         )}
 
                         <div className="flex-1 min-w-0">
-                            <div className="flex flex-col">
-                                {platform && (
-                                    <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider mb-0.5">
-                                        {platform}
-                                    </span>
-                                )}
-                                {platform ? (
-                                    <>
+                            {platform && (
+                                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider mb-1 block">
+                                    {platform}
+                                </span>
+                            )}
+                            {platform ? (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="flex flex-col gap-0.5">
+                                        <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide">URL</span>
+                                        <a href={value} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline truncate">
+                                            {value || 'Sin URL'}
+                                        </a>
+                                    </div>
+                                    <div className="flex flex-col gap-0.5">
+                                        <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-wide">Usuario</span>
                                         {username ? (
-                                            <span className="text-sm font-semibold text-foreground truncate">
+                                            <span className="text-xs font-semibold text-foreground truncate">
                                                 {username}
                                             </span>
                                         ) : (
-                                            <span className="text-sm font-medium text-foreground truncate opacity-80 italic">
+                                            <span className="text-xs text-muted-foreground italic truncate">
                                                 Sin usuario
                                             </span>
                                         )}
-                                        <a href={value} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline truncate opacity-70">
-                                            {value}
-                                        </a>
-                                    </>
-                                ) : (
-                                    <span className="text-sm font-medium text-foreground truncate">
-                                        {value}
-                                    </span>
-                                )}
-                            </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <span className="text-sm font-medium text-foreground truncate">
+                                    {value}
+                                </span>
+                            )}
                         </div>
 
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity self-start mt-1">

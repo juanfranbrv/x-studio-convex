@@ -41,7 +41,8 @@ export default function StudioPage() {
     const [draggedElement, setDraggedElement] = useState<ContextElement | null>(null)
     const [isAnnotating, setIsAnnotating] = useState(false)
     const [logoInclusion, setLogoInclusion] = useState(true)
-    const [selectedModel, setSelectedModel] = useState('models/gemini-3-pro-image-preview')
+    const [selectedModel, setSelectedModel] = useState('wisdom/gemini-3.0-pro-image-01-preview')
+    const [selectedTextModel, setSelectedTextModel] = useState('wisdom/gemini-2.5-flash')
 
     const creationFlow = useCreationFlow({
         onImageUploaded: async (file: File) => {
@@ -202,6 +203,8 @@ export default function StudioPage() {
                         isGenerating={isGenerating}
                         selectedModel={selectedModel}
                         onModelChange={setSelectedModel}
+                        selectedTextModel={selectedTextModel}
+                        onTextModelChange={setSelectedTextModel}
                         aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio}
                     />
 

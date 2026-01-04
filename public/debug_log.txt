@@ -4342,3 +4342,240 @@
     "brand_context": "Rosella de Rubielos es una casa rural de alquiler completo ubicada en Fuentes de Rubielos, en el corazón de la Sierra de Gúdar (Teruel), a 962 metros de altitud. La propiedad, construida con piedra del lugar y de estilo sencillo y acogedor, está diseñada principalmente para alojar grupos grandes de entre 10 y 12 personas, aunque ofrece la posibilidad de alquiler a partir de seis. Dispone de comodidades esenciales para grupos, incluyendo calefacción central, chimenea, barbacoa exterior y un salón de juegos equipado con billar. Su ubicación privilegiada permite el acceso a una amplia gama de actividades de turismo activo como senderismo, esquí (Javalambre y Valdelinares), BTT y rafting, además de explorar el patrimonio cultural e histórico de la Comarca como Rubielos de Mora o Albarracín. Ofrecen contacto directo vía email (info@roselladerubielos.com) y dos números de teléfono (691 722 666 y 685 630 610) para reservas y consultas."
   }
 }
+[2026-01-04T17:18:12.930Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2026-01-04T17:18:12.931Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-01-04T17:18:12.932Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-01-04T17:18:12.936Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2026-01-04T17:18:12.938Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2026-01-04T17:18:12.953Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-01-04T17:18:12.954Z]    - SVGs en header encontrados: 0
+[2026-01-04T17:18:12.954Z]    - IMGs en header encontrados: 11
+[2026-01-04T17:18:12.954Z]    - firstHeaderSvg.length: 0
+[2026-01-04T17:18:12.955Z] 🎯 Primera IMG en header detectada
+[2026-01-04T17:18:12.955Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-01-04T17:18:12.956Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2026-01-04T17:18:12.957Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-01-04T17:18:12.957Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2026-01-04T17:18:12.957Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2026-01-04T17:18:12.958Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2026-01-04T17:18:12.958Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2026-01-04T17:18:12.958Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2026-01-04T17:18:13.128Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2026-01-04T17:18:31.376Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años formando el futuro en Meliana.",
+  "business_overview": "Academia Bauset es un centro de formación integral con más de 45 años de historia, fundado por Amparo Bauset Ferrer, ofreciendo una amplia gama de cursos. Están especializados en idiomas con certificaciones oficiales y preparación para pruebas de acceso, junto con áreas técnicas como informática y robótica.\nSu misión es proporcionar una educación de alta calidad, combinando la experiencia docente tradicional con las últimas tecnologías para garantizar un alto porcentaje de aprobados entre sus alumnos.",
+  "brand_values": [
+    "Experiencia (45+ años)",
+    "Familiaridad y Trato Humano",
+    "Excelencia Académica",
+    "Profesionalidad Certificada",
+    "Compromiso Comarcal"
+  ],
+  "tone_of_voice": [
+    "Cercano",
+    "Experimentado",
+    "Motivador"
+  ],
+  "visual_aesthetic": [
+    "Institucional",
+    "Didáctico",
+    "Funcionalismo"
+  ],
+  "target_audience": [
+    "Estudiantes de primaria a bachillerato que requieren refuerzo escolar y tecnología (robótica).",
+    "Adultos y jóvenes que buscan certificaciones oficiales de idiomas (Cambridge, Trinity, JQCV).",
+    "Profesionales y empresas que necesitan formación continua en idiomas comerciales para sus plantillas."
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#4A1E11",
+    "#000000",
+    "#8ED1FC"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Aprueba tu examen oficial: ¡Altísimo porcentaje de éxito garantizado!",
+      "Robótica e Informática: Prepara a tus hijos para el futuro digital en Meliana.",
+      "Tu certificación de inglés B2 o C1 empieza aquí: Centro examinador oficial.",
+      "Refuerzo escolar personalizado con más de 15 años de experiencia docente.",
+      "Acceso a la Universidad o Ciclos Formativos: Garantiza tu plaza con Bauset."
+    ],
+    "visual_keywords": [
+      "Clase moderna y digital",
+      "Certificado oficial europeo",
+      "Ambiente de estudio motivador",
+      "Fundadora Amparo Bauset",
+      "Grupos reducidos concentrados"
+    ],
+    "ctas": [
+      "¡Matricúlate ahora!",
+      "Haz tu prueba de nivel gratis",
+      "Solicita información sobre accesos"
+    ],
+    "brand_context": "Academia Bauset, fundada en 1972 por Amparo Bauset Ferrer, es un centro educativo arraigado en Meliana (Avda. Santa María, 31). Ofrece preparación exhaustiva para idiomas (Inglés, Francés, Alemán, Valenciano) siendo Centro Oficial Examinador de Trinity College London nº 32290 y centro sub-oficial de Pearson Test of English General nº32014V. Imparten formación técnica avanzada, incluyendo robótica para alumnos desde primaria y ordenografía. Su equipo cuenta con más de 15 años de experiencia docente en ciencias y letras, y se desplazan a empresas como Corporación F.Turia y Mitsubishi para impartir clases in-situ a través de la fundación tripartita. El centro opera con diez aulas totalmente acondicionadas tecnológicamente."
+  }
+}
+[2026-01-04T17:33:36.254Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2026-01-04T17:33:36.255Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-01-04T17:33:36.256Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-01-04T17:33:36.260Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2026-01-04T17:33:36.262Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2026-01-04T17:33:36.276Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-01-04T17:33:36.277Z]    - SVGs en header encontrados: 0
+[2026-01-04T17:33:36.278Z]    - IMGs en header encontrados: 11
+[2026-01-04T17:33:36.278Z]    - firstHeaderSvg.length: 0
+[2026-01-04T17:33:36.278Z] 🎯 Primera IMG en header detectada
+[2026-01-04T17:33:36.279Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-01-04T17:33:36.279Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2026-01-04T17:33:36.279Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-01-04T17:33:36.280Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2026-01-04T17:33:36.280Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2026-01-04T17:33:36.280Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2026-01-04T17:33:36.281Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2026-01-04T17:33:36.282Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2026-01-04T17:33:36.438Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2026-01-04T17:33:46.385Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años formando el futuro en Meliana.",
+  "business_overview": "Academia Bauset es un centro de estudios con más de cuatro décadas de experiencia en Meliana, especializado en formación integral para todas las edades y niveles. Ofrecen una amplia gama de clases que incluyen idiomas (Inglés, Francés, Alemán), preparación para exámenes oficiales (Cambridge, Trinity, Pearson) y pruebas de acceso universitarias. Además, integran áreas modernas como robótica, informática y refuerzo escolar, combinando tradición con las últimas didácticas.",
+  "brand_values": [
+    "Tradición familiar",
+    "Excelencia académica",
+    "Atención humanizada",
+    "Profesionalidad docente",
+    "Adaptación tecnológica"
+  ],
+  "tone_of_voice": [
+    "Experimentado",
+    "Cercano",
+    "Orientado a resultados"
+  ],
+  "visual_aesthetic": [
+    "Swiss Style",
+    "Academic Minimalist",
+    "Corporate Traditionalism"
+  ],
+  "target_audience": [
+    "Estudiantes de Primaria, ESO y Bachillerato que buscan refuerzo escolar o actividades extraescolares innovadoras.",
+    "Adultos y profesionales que necesitan certificaciones oficiales de idiomas (Cambridge, Trinity, JQCV).",
+    "Empresas e instituciones públicas que requieren formación in-company y cursos comerciales para sus empleados."
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#000000",
+    "#FFFFFF",
+    "#ABB8C3"
+  ],
+  "fonts": [
+    "Francois One",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Obtén tu certificado oficial (Cambridge, Trinity, JQCV) con nuestro altísimo porcentaje de aprobados.",
+      "¿Preparado para el futuro? Inscríbete en nuestros cursos de Robótica e Informática.",
+      "Refuerzo escolar efectivo: Garantiza el éxito académico de tus hijos.",
+      "Más de cuatro décadas de experiencia formando a profesionales en Meliana y la Horta Nord.",
+      "Acceso a Ciclos Formativos y Universidad: Prepara tus pruebas con profesores expertos."
+    ],
+    "visual_keywords": [
+      "Education Infographics",
+      "Poster Design, Mid-Century Modern",
+      "Flat Design Illustration, Technology",
+      "Corporate Typography-Driven",
+      "Certification Seal Graphic Design"
+    ],
+    "ctas": [
+      "¡Pide tu Prueba de Nivel Gratis!",
+      "Consulta Nuestros Horarios y Tarifas",
+      "Asegura tu Plaza: Matricúlate Hoy"
+    ],
+    "brand_context": "Academia Bauset, fundada hace más de 45 años por Amparo Bauset Ferrer, está ubicada en Meliana (Avda. Santa María, 31) y se especializa en una formación muy diversificada. La academia es un centro oficial examinador de Trinity College London (nº 32290), centro sub-oficial de Pearson Test of English General (nº32014V) y centro preparador para Cambridge ESOL, ofreciendo preparación para niveles A1 a C2. Su oferta incluye idiomas (Inglés, Francés, Alemán, Valenciano, Español para extranjeros), pruebas de acceso (PAU, Ciclos Formativos), refuerzo escolar y áreas innovadoras como Robótica, Informática y Ordenografía. Además, Bauset imparte formación in-company para grandes empresas (ej. Corporación F.Turia, Mitsubishi materials España) y para el ayuntamiento de Meliana, destacando su compromiso con el desarrollo local y el uso de diez aulas totalmente acondicionadas con tecnología de punta."
+  }
+}
+[2026-01-04T17:45:05.410Z] 📄 HTML cargado. Longitud: 54945 caracteres.
+[2026-01-04T17:45:05.410Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-01-04T17:45:05.411Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-01-04T17:45:05.415Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2026-01-04T17:45:05.416Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2026-01-04T17:45:05.431Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-01-04T17:45:05.432Z]    - SVGs en header encontrados: 0
+[2026-01-04T17:45:05.433Z]    - IMGs en header encontrados: 11
+[2026-01-04T17:45:05.433Z]    - firstHeaderSvg.length: 0
+[2026-01-04T17:45:05.434Z] 🎯 Primera IMG en header detectada
+[2026-01-04T17:45:05.434Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-01-04T17:45:05.435Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2026-01-04T17:45:05.436Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-01-04T17:45:05.436Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2026-01-04T17:45:05.436Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2026-01-04T17:45:05.436Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2026-01-04T17:45:05.437Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2026-01-04T17:45:05.437Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2026-01-04T17:45:05.606Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2026-01-04T17:45:17.509Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "45 años formando generaciones con experiencia, rigor y tecnología.",
+  "business_overview": "Academia Bauset es un centro de estudios en Meliana con más de 45 años de trayectoria, especializado en idiomas con certificaciones oficiales (Trinity, Cambridge, Pearson) y refuerzo académico integral desde primaria hasta acceso a la universidad. El centro también ofrece formación tecnológica avanzada, incluyendo robótica e informática, adaptándose a las necesidades del alumnado local y del sector empresarial.",
+  "brand_values": [
+    "Experiencia Consolidada",
+    "Efectividad Probada",
+    "Trato Familiar",
+    "Compromiso Local",
+    "Innovación Educativa"
+  ],
+  "tone_of_voice": [
+    "Experimentado",
+    "Cercano",
+    "Efectivo"
+  ],
+  "visual_aesthetic": [
+    "Academic Poster Design",
+    "Information Design",
+    "Typographic Modernism"
+  ],
+  "target_audience": [
+    "Estudiantes de ESO y Bachillerato buscando refuerzo escolar y acceso a la universidad.",
+    "Jóvenes y adultos interesados en obtener certificaciones oficiales de idiomas (B1, B2, C1).",
+    "Empresas y directivos que requieren formación 'in-company' en idiomas comerciales y técnicos."
+  ],
+  "colors": [
+    "#0D3A00",
+    "#0EFF1D",
+    "#000000",
+    "#FFFFFF",
+    "#8ED1FC"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Aprueba tu examen oficial de idiomas a la primera: Alto porcentaje de éxito garantizado.",
+      "Centro Examinador Oficial de Trinity College London y Pearson en Meliana.",
+      "De Primaria a la Universidad: Refuerzo escolar con profesores de alta efectividad.",
+      "Aulas totalmente acondicionadas con las últimas tecnologías para un aprendizaje motivador.",
+      "Robótica, Informática y Ordenografía: Prepara a tus hijos para el futuro tecnológico."
+    ],
+    "visual_keywords": [
+      "Swiss Style Typography",
+      "Didactic Illustration",
+      "Academic Poster Design",
+      "Infographic Layout",
+      "Mid-Century Modern Textbooks"
+    ],
+    "ctas": [
+      "Pide tu prueba de nivel gratuita",
+      "Consulta nuestros horarios y tarifas",
+      "Inscríbete en el próximo curso de Acceso"
+    ],
+    "brand_context": "Academia Bauset, con más de cuatro décadas de trayectoria desde su fundación por Amparo Bauset Ferrer, opera desde la Avda. Santa María 31 en Meliana (Horta Nord). La institución se especializa en la preparación de titulaciones oficiales de idiomas como Inglés, Francés, Alemán y Valenciano JQCV. Son Centro Oficial Examinador Trinity College London (nº 32290) y sub-oficial Pearson Test of English General (nº 32014V), además de preparadores Cambridge. Ofrecen servicios de refuerzo, pruebas de acceso (PAU, Ciclos) y programas tecnológicos como robótica. La academia colabora activamente con el comercio local (MAC) e imparte formación in-company para clientes como Corporación F.Turia, Mitsubishi Materials España y el Ayuntamiento de Meliana. Disponen de diez aulas equipadas con tecnología avanzada."
+  }
+}

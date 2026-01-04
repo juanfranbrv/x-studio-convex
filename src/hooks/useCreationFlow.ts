@@ -56,6 +56,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const selectGroup = useCallback((group: IntentGroup) => {
         setState(prev => ({
             ...INITIAL_GENERATION_STATE,
+            // Preserve Platform and Format selection
+            selectedPlatform: prev.selectedPlatform,
+            selectedFormat: prev.selectedFormat,
             selectedGroup: group,
         }))
     }, [])
@@ -351,7 +354,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 })
             })
 
-            // Add visual_keywords from text_assets
+            // START MODIFICATION: Exclude visual_keywords from Style Selector to keep it strictly artistic
             const visualKeywords = activeBrandKit.text_assets?.visual_keywords || []
             visualKeywords.forEach((kw, i) => {
                 // Avoid duplicates with aesthetics
@@ -365,6 +368,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                     })
                 }
             })
+            // END MODIFICATION
         }
 
         // Suggested styles from vision analysis
@@ -381,7 +385,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         const catalogFiltered = ARTISTIC_STYLE_CATALOG.filter(s => !catalogIds.has(s.id))
 
         // Brand styles first, then suggested, then catalog
-        return [...brandStyles, ...suggestedWithCategory, ...catalogFiltered]
+        // Brand styles first, then suggested, then catalog
+        // START MODIFICATION: User requested to ONLY show brand styles in Studio
+        return [...brandStyles] //, ...suggestedWithCategory, ...catalogFiltered]
+        // END MODIFICATION
     }, [state.visionAnalysis, activeBrandKit])
 
     const availableLayouts: LayoutOption[] = state.selectedIntent

@@ -11,6 +11,10 @@ import { model, groqModel } from '@/lib/ai';
 import fs from 'fs';
 import path from 'path';
 import { clusterColors, deltaE, categorizeColorRole, getHarmonyBonus } from '@/lib/color-utils';
+import { buildBrandAnalysisPrompt } from '@/lib/prompts/actions/brand-analyst';
+import { BrandDNASchema } from '@/lib/prompts/schemas/brand-dna-schema';
+import { WEIGHTED_DOM_SCRIPT } from '@/lib/prompts/automation/weighted-dom';
+import { SYSTEM_FONTS } from '@/lib/prompts/data/system-fonts';
 
 function logDebug(message: string, data?: any) {
     const timestamp = new Date().toISOString();
@@ -214,24 +218,7 @@ function createFinalPalette(
 
 import type { BrandDNA, AnalyzeBrandDNAResponse } from '@/lib/brand-types';
 
-// Schema Zod para la respuesta de Gemini
-const BrandDNASchema = z.object({
-    brand_name: z.string().describe('Nombre comercial de la marca'),
-    tagline: z.string().describe('Un eslogan corto y potente en el idioma original de la web'),
-    business_overview: z.string().describe('Descripción de 2-3 frases sobre qué hacen'),
-    brand_values: z.array(z.string()).length(5).describe('Lista de 5 valores clave (ej: "Sostenibilidad", "Tradición")'),
-    tone_of_voice: z.array(z.string()).length(3).describe('3 adjetivos que describan cómo hablan (ej: "Profesional", "Cercano")'),
-    visual_aesthetic: z.array(z.string()).length(3).describe('3 adjetivos que describan su look (ej: "Rústico", "Minimalista")'),
-    target_audience: z.array(z.string()).length(3).describe('3 perfiles de clientes ideales o segmentos de público a los que se dirige'),
-    colors: z.array(z.string()).length(5).describe('Array de 5 códigos Hexadecimales de la lista proporcionada'),
-    fonts: z.array(z.string()).length(2).describe('Dos fuentes de Google Fonts: una Serif/Display para títulos y una Sans para cuerpo'),
-    text_assets: z.object({
-        marketing_hooks: z.array(z.string()).length(5).describe('Titulares cortos para banners de publicidad (Hooks)'),
-        visual_keywords: z.array(z.string()).length(5).describe('Palabras clave para generación de imágenes (Prompting)'),
-        ctas: z.array(z.string()).length(3).describe('Llamadas a la acción (CTAs) potentes'),
-        brand_context: z.string().describe('Contexto de negocio profundo para el generador de anuncios IA'),
-    }).describe('Activos de texto extraídos del contenido'),
-});
+
 
 // Tipos para las respuestas de las APIs externas
 interface MicrolinkResponse {
@@ -565,15 +552,7 @@ function extractFontsFromContent(content: string): string[] {
     const fonts: Set<string> = new Set();
 
     // Common font names to filter out (system fonts, generic families)
-    const systemFonts = new Set([
-        'arial', 'helvetica', 'times', 'times new roman', 'georgia', 'verdana',
-        'courier', 'courier new', 'tahoma', 'trebuchet ms', 'impact', 'comic sans ms',
-        'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy', 'system-ui',
-        'ui-sans-serif', 'ui-serif', 'ui-monospace', '-apple-system', 'blinkmacsystemfont',
-        'segoe ui', 'roboto', 'oxygen', 'ubuntu', 'cantarell', 'fira sans', 'droid sans',
-        'helvetica neue', 'inherit', 'initial', 'unset', 'fontawesome', 'font awesome',
-        'icons', 'icomoon', 'material icons', 'dashicons', 'fusion-font'
-    ]);
+    const systemFonts = SYSTEM_FONTS;
 
     const cleanFontName = (name: string): string | null => {
         if (!name) return null;
@@ -707,143 +686,7 @@ async function fetchJinaContent(url: string): Promise<string> {
  * Weighted DOM Analysis script for Microlink
  * Calculates color prominence based on area, position, and element type
  */
-const WEIGHTED_DOM_SCRIPT = `
-async ({ page }) => {
-  return await page.evaluate(() => {
-    const results = {};
-    const fontResults = {};
-    const vh = window.innerHeight;
-    const vw = window.innerWidth;
 
-    const toHex = (color) => {
-      if (!color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return null;
-      if (color.startsWith('#')) return color.toUpperCase();
-      const match = color.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)(?:,\\s*([\\d.]+))?\\)/);
-      if (!match) return null;
-      const r = parseInt(match[1]);
-      const g = parseInt(match[2]);
-      const b = parseInt(match[3]);
-      const a = match[4] ? parseFloat(match[4]) : 1;
-      if (a < 0.1) return null;
-      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
-    };
-
-    const cleanFontName = (fontFamily) => {
-        if (!fontFamily) return null;
-        const primary = fontFamily.split(',')[0].trim().replace(/['"]/g, '');
-        if (['inherit', 'initial', 'unset', 'FontAwesome', 'font-awesome', 'sans-serif', 'serif', 'monospace'].includes(primary.toLowerCase())) return null;
-        return primary;
-    };
-
-    const elements = document.querySelectorAll('*');
-    elements.forEach(el => {
-      const rect = el.getBoundingClientRect();
-      if (rect.width < 2 || rect.height < 2 || rect.top > 3000 || rect.bottom < 0) return;
-
-      const style = window.getComputedStyle(el);
-      
-      const candidates = [
-        { val: style.backgroundColor, w: 1.0 },
-        { val: style.color, w: 0.15 },
-        { val: style.borderColor, w: 0.05 }
-      ];
-
-      candidates.forEach(({ val, w }) => {
-        const hex = toHex(val);
-        if (!hex) return;
-        
-        const visibleW = Math.min(rect.right, vw) - Math.max(rect.left, 0);
-        const visibleH = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
-        // Be more inclusive: if it's in the top 3000px, count it as visible for color purposes
-        const area = Math.max(0, visibleW * visibleH);
-        if (area < 5 && rect.top > 3000) return;
-
-        const foldBonus = rect.top < 1000 ? 1.5 : 1.0;
-        const totalW = area * w * foldBonus;
-
-        results[hex] = (results[hex] || 0) + totalW;
-      });
-
-      // FONTS
-      if (el.innerText && el.innerText.trim().length > 0) {
-          const font = cleanFontName(style.fontFamily);
-          if (font) {
-              const visibleW = Math.min(rect.right, vw) - Math.max(rect.left, 0);
-              const visibleH = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
-              const area = Math.max(0, visibleW * visibleH);
-              
-              const isHeading = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(el.tagName);
-              const weight = isHeading ? 3.0 : 1.0;
-              
-              if (fontResults[font]) {
-                  fontResults[font] += (area * weight);
-              } else {
-                  fontResults[font] = (area * weight);
-              }
-          }
-      }
-    });
-
-    const sortedColors = Object.entries(results)
-      .sort(([, a], [, b]) => (b) - (a))
-      .slice(0, 15)
-      .map(([hex]) => hex);
-
-    const sortedComputedFonts = Object.entries(fontResults)
-      .sort(([, a], [, b]) => (b) - (a))
-      .slice(0, 5)
-      .map(([font]) => font);
-
-    // Google Fonts scraping via Link tags
-    const linkFonts = [];
-    document.querySelectorAll('link[href*="fonts.googleapis.com"]').forEach(link => {
-        try {
-            const url = new URL(link.href);
-            const familyParam = url.searchParams.get('family');
-            if (familyParam) {
-                const families = familyParam.split('|');
-                families.forEach(f => {
-                    const cleanName = f.split(':')[0].replace(/\\+/g, ' ');
-                    if (cleanName && !linkFonts.includes(cleanName)) {
-                        linkFonts.push(cleanName);
-                    }
-                });
-            }
-        } catch (e) {}
-    });
-
-    // Root Variables
-    const variableFonts = [];
-    try {
-        const computedRoot = window.getComputedStyle(document.documentElement);
-        ['--font-sans', '--font-serif', '--font-heading', '--font-primary'].forEach(v => {
-            const val = computedRoot.getPropertyValue(v);
-            const clean = cleanFontName(val);
-            if (clean && !variableFonts.includes(clean)) variableFonts.push(clean);
-        });
-    } catch(e) {}
-
-    // Logo Candidates
-    const logoCandidates = [];
-    document.querySelectorAll('img[src*="logo"], img[class*="logo"], img[id*="logo"], img[src*="brand"], [class*="logo"] img, [id*="logo"] img, header img').forEach(el => {
-      const src = el.src;
-      if (!src) return;
-      const rect = el.getBoundingClientRect();
-      let score = 50; 
-      if (src.toLowerCase().includes('logo')) score += 50;
-      if (el.className.toLowerCase().includes('logo') || el.id.toLowerCase().includes('logo')) score += 50;
-      if (rect.width > 30 && rect.height > 10) score += 30;
-      if (rect.top < 500) score += 40;
-      
-      logoCandidates.push({ url: src, score, type: 'url' });
-    });
-
-    const finalFonts = [...new Set([...linkFonts, ...variableFonts, ...sortedComputedFonts])].slice(0, 5);
-
-    return { colors: sortedColors, fonts: finalFonts, logoCandidates: logoCandidates.sort((a,b) => b.score - a.score).slice(0, 5) };
-  });
-}
-`;
 
 /**
  * Extrae metadatos visuales usando Microlink API con sistema de reintentos
@@ -2631,36 +2474,13 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         console.log('🤖 Procesando con Gemini Flash Lite...');
         addTrace('Analysis: Gemini', 'pending', 'Iniciando generación de identidad con Gemini...');
 
-        const systemPrompt = `Eres un experto en Branding y Diseño Estratégico. Tu objetivo es destilar la esencia de un negocio a partir de su contenido web y datos visuales.
-
-Meta título: Analizado desde contenido de página
-Meta descripción: Extraída desde HTML\n
-
-FUENTES DETECTADAS (Prioridad): ${(assets.fonts || []).concat(weightedFonts).join(', ') || 'No detectadas'}
-
-COLORES DETECTADOS DEL CSS (ordenados por frecuencia de uso):
-${finalColors.slice(0, 15).map((color, idx) => `${idx + 1}. ${color}${assets.colorFrequency?.[color] ? ` (usado ${assets.colorFrequency[color]}x)` : ''}`).join('\n')}
-
-REGLAS IMPORTANTES:
-1. brand_name: Usa el nombre comercial real, no el dominio
-2. tagline: Créalo en el idioma original del contenido
-3. business_overview: 2-3 frases claras sobre qué hace el negocio
-4. brand_values: Exactamente 5 valores (ej: "Calidad", "Innovación", "Sostenibilidad")
-5. tone_of_voice: Exactamente 3 adjetivos sobre cómo se comunican
-6. visual_aesthetic: Exactamente 3 adjetivos sobre su estilo visual (ej: "Moderno", "Minimalista", "Elegante")
-7. target_audience: Exactamente 3 slots describiendo el público objetivo (ej: "Emprendedores digitales", "Padres jóvenes", "Profesionales del diseño")
-8. colors: DEBES usar SOLO colores de la lista COLORES DETECTADOS DEL CSS. Elige los 5 más representativos de la marca. NO inventes colores.
-9. fonts: Sugiere 2 Google Fonts que encajen (una Display/Serif, una Sans)
-10. text_assets:
-   - marketing_hooks: 5 frases tipo titular que capturen la propuesta de valor (EN EL IDIOMA DEL CONTENIDO)
-   - visual_keywords: 5 términos visuales descriptivos (EN EL IDIOMA DEL CONTENIDO - ej: si es español: "lujoso", "minimalista", "dinámico"; si es inglés: "luxurious", "minimalist", "dynamic")
-   - ctas: 3 variaciones de llamadas a la acción relevantes para su embudo (EN EL IDIOMA DEL CONTENIDO)
-   - brand_context: Un párrafo denso con detalles técnicos y operacionales del negocio extraídos del texto (mínimo 200 caracteres). Usa todo el contexto proporcionado para ser muy específico.
-
-IMPORTANTE: Detecta automáticamente el idioma del contenido y genera TODOS los text_assets en ese mismo idioma.
-
-Contenido del sitio web (Usa esto para los TEXT ASSETS):
-${fullBrandContext.slice(0, 45000)}`;
+        const systemPrompt = buildBrandAnalysisPrompt({
+            detectedFonts: assets.fonts || [],
+            weightedFonts,
+            detectedColors: finalColors,
+            colorFrequency: assets.colorFrequency,
+            fullBrandContext
+        });
 
         let brandDNA: any;
 

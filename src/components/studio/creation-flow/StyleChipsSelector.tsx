@@ -37,29 +37,36 @@ export function StyleChipsSelector({
         return styleGroups.filter(g => categoriesWithStyles.has(g.id))
     }, [availableStyles, styleGroups])
 
+    // Auto-select first category if current is invalid
+    if (!activeGroups.find(g => g.id === activeCategory) && activeGroups.length > 0) {
+        setActiveCategory(activeGroups[0].id)
+    }
+
     if (availableStyles.length === 0) {
         return null
     }
 
     return (
         <div className="space-y-4">
-            {/* Category Tabs */}
-            <div className="flex flex-wrap gap-1 pb-1">
-                {activeGroups.map(group => (
-                    <button
-                        key={group.id}
-                        onClick={() => setActiveCategory(group.id)}
-                        className={cn(
-                            "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
-                            activeCategory === group.id
-                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                                : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                        )}
-                    >
-                        {group.label}
-                    </button>
-                ))}
-            </div>
+            {/* Category Tabs - Only show if more than 1 category */}
+            {activeGroups.length > 1 && (
+                <div className="flex flex-wrap gap-1 pb-1">
+                    {activeGroups.map(group => (
+                        <button
+                            key={group.id}
+                            onClick={() => setActiveCategory(group.id)}
+                            className={cn(
+                                "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
+                                activeCategory === group.id
+                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                            )}
+                        >
+                            {group.label}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             <div className="space-y-4 min-h-[100px]">
                 <div className="flex flex-wrap gap-2">
@@ -93,25 +100,31 @@ export function StyleChipsSelector({
             </div>
 
             {/* Custom Style Input */}
-            <div className="space-y-2 pt-4 border-t border-border/40">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold px-1">O define tu propio estilo</p>
+            <div className="pt-2">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
+                    ¿Otro estilo en mente?
+                </label>
                 <input
                     type="text"
                     value={customStyle}
                     onChange={(e) => onCustomStyleChange(e.target.value)}
-                    placeholder="Ej: Cyberpunk, Minimalist, Cinematic High Contrast..."
-                    className="w-full bg-muted/20 border-border/50 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all placeholder:text-muted-foreground/50"
+                    placeholder="Ej: Cyberpunk, Acuarela, Lego..."
+                    className="w-full h-9 px-3 rounded-lg bg-background border border-border text-xs focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-muted-foreground/50"
                 />
             </div>
 
-            {(selectedStyles.length > 0 || customStyle) && (
-                <div className="flex items-center gap-2 px-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <p className="text-[10px] text-muted-foreground">
-                        Dirección estética configurada ({selectedStyles.length} estilos seleccionados)
-                    </p>
-                </div>
-            )}
-        </div>
+
+
+            {
+                (selectedStyles.length > 0 || customStyle) && (
+                    <div className="flex items-center gap-2 px-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <p className="text-[10px] text-muted-foreground">
+                            Dirección estética configurada ({selectedStyles.length} estilos seleccionados)
+                        </p>
+                    </div>
+                )
+            }
+        </div >
     )
 }
