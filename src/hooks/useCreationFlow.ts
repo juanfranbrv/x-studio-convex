@@ -641,34 +641,17 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 }
             })
 
-            // Add role-based color sections
-            if (roleGroups['Principal'].length > 0) {
-                sections.push(`🎨 PRIMARY (backgrounds, hero sections): ${roleGroups['Principal'].join(', ')}`)
-            }
-            if (roleGroups['Secundario'].length > 0) {
-                sections.push(`✨ SECONDARY (CTAs, highlights, accents): ${roleGroups['Secundario'].join(', ')}`)
-            }
-            if (roleGroups['Texto'].length > 0) {
-                sections.push(`📝 TEXT (body text, ensure readable contrast): ${roleGroups['Texto'].join(', ')}`)
-            }
-            if (roleGroups['Fondo'].length > 0) {
-                sections.push(`🖼️ BACKGROUND (large areas): ${roleGroups['Fondo'].join(', ')}`)
-            }
-            if (roleGroups['Acento'].length > 0) {
-                sections.push(`💥 ACCENT (focal points, small details): ${roleGroups['Acento'].join(', ')}`)
-            }
-            if (roleGroups['Neutral'].length > 0) {
-                sections.push(`⚪ NEUTRAL (supporting elements): ${roleGroups['Neutral'].join(', ')}`)
-            }
+            // Add role-based color sections using imported labels
+            Object.entries(roleGroups).forEach(([role, colors]) => {
+                if (colors.length > 0 && role in P04.ROLE_LABELS) {
+                    const label = P04.ROLE_LABELS[role as keyof typeof P04.ROLE_LABELS]
+                    sections.push(`${label}: ${colors.join(', ')}`)
+                }
+            })
 
             sections.push(
                 ``,
-                `⚠️  COLOR USAGE GUIDELINES:`,
-                `- Use PRIMARY colors for dominant areas (backgrounds, hero sections)`,
-                `- Use SECONDARY colors for CTAs and key highlights`,
-                `- Use TEXT colors with minimum 4.5:1 contrast ratio (WCAG AA)`,
-                `- ACCENT colors for small focal points only`,
-                `- Ensure readability takes priority over aesthetics`,
+                P04.COLOR_USAGE_GUIDELINES,
                 ``
             )
         }
