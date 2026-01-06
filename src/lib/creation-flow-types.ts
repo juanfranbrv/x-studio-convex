@@ -699,8 +699,8 @@ export interface GenerationState {
 }
 
 export const INITIAL_GENERATION_STATE: GenerationState = {
-    selectedPlatform: 'instagram',
-    selectedFormat: 'ig-square',
+    selectedPlatform: null, // Changed: was 'instagram'
+    selectedFormat: null,   // Changed: was 'ig-square'
     selectedGroup: null,
     selectedIntent: null,
     selectedSubMode: null,

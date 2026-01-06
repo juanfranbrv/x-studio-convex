@@ -108,7 +108,7 @@ export function CreationCommandPanel({
     }
 
     const handleSmartAnalyze = async () => {
-        if (!state.selectedIntent || !state.rawMessage.trim() || !currentIntent) return
+        if (!state.rawMessage.trim()) return // Only require message now
 
         setIsMagicParsing(true)
         setHighlightedFields(new Set()) // Reset highlights
@@ -116,11 +116,11 @@ export function CreationCommandPanel({
         try {
             console.log("Analyzing lazy prompt:", state.rawMessage)
 
-            // Call Server Action
+            // Call Server Action with new parameter order
             const result = await parseLazyIntentAction(
                 state.rawMessage,
-                currentIntent,
-                activeBrandKit?.brand_name || "My Brand", // Context
+                activeBrandKit?.brand_name || "My Brand",
+                currentIntent || undefined, // Optional - will auto-detect if not provided
                 selectedLayoutMeta || undefined
             )
 
@@ -134,6 +134,17 @@ export function CreationCommandPanel({
             }
 
             const newHighlights = new Set<string>()
+
+            // AUTO-DETECT MODE: Set the detected intent
+            if (result.detectedIntent && !state.selectedIntent) {
+                console.log(`[AUTO-DETECT] Intent detected: ${result.detectedIntent} (confidence: ${result.confidence})`)
+                selectIntent(result.detectedIntent as IntentCategory)
+
+                toast({
+                    title: "✨ Intención detectada",
+                    description: `Detectamos que quieres crear: ${result.detectedIntent}`,
+                })
+            }
 
             // Populate Fields
             if (result.headline) {
@@ -176,9 +187,11 @@ export function CreationCommandPanel({
         }
     }
 
-    // Determine what level is visible based on state
-    const showMagic = state.selectedPlatform !== null && state.selectedFormat !== null && state.selectedIntent !== null
-    const showVisuals = showMagic && (state.visionAnalysis !== null || !requiresImage)
+    // Determine what level is visible based on NEW flow
+    const showIntentAndLayout = true // Always show (step 2)
+    const showPlatformSelector = state.selectedIntent !== null // Show after intent (step 3)
+    const showImageAndContent = state.selectedPlatform !== null && state.selectedFormat !== null // Show after platform (step 4)
+    const showVisuals = showImageAndContent && (state.visionAnalysis !== null || !requiresImage) // Show after image (step 5)
 
     const canGenerate = showVisuals && (
         state.selectedStyles.length > 0 ||
@@ -201,25 +214,26 @@ export function CreationCommandPanel({
                         />
                     </div>
 
-                    {/* STEP 1: PLATFORM & FORMAT */}
+                    {/* STEP 1: LAZY PROMPT (Intent Auto-Detection) */}
                     <div className="border-t border-border/40"></div>
                     <div className="px-6 pt-4">
                         <StepSection
                             number={1}
-                            title="PLATAFORMA Y FORMATO"
-                            description="Selecciona dónde publicarás"
+                            title="DESCRIBE TU IDEA"
+                            description="La IA detectará el tipo de publicación y extraerá los campos"
                         >
-                            <SocialFormatSelector
-                                selectedPlatform={state.selectedPlatform}
-                                selectedFormat={state.selectedFormat}
-                                onSelectPlatform={selectPlatform}
-                                onSelectFormat={selectFormat}
+                            <LazyPromptInput
+                                intent={state.selectedIntent}
+                                rawMessage={state.rawMessage}
+                                onMessageChange={setRawMessage}
+                                onAnalyze={handleSmartAnalyze}
+                                isAnalyzing={isMagicParsing}
                             />
                         </StepSection>
                     </div>
 
                     {/* STEP 2: INTENT & LAYOUT */}
-                    {state.selectedPlatform !== null && (
+                    {showIntentAndLayout && (
                         <>
                             <div className="border-t border-border/40 mt-4"></div>
                             <div className="px-6 pt-4">
@@ -256,25 +270,38 @@ export function CreationCommandPanel({
                         </>
                     )}
 
-                    {/* STEP 3: CONTENT & MAGIC */}
-                    {showMagic && (
+                    {/* STEP 3: PLATFORM & FORMAT */}
+                    {showPlatformSelector && (
                         <>
                             <div className="border-t border-border/40 mt-4"></div>
                             <div className="px-6 pt-4">
                                 <StepSection
                                     number={3}
-                                    title="CONTENIDO & MAGIA"
-                                    description="Describe tu idea y deja que la IA trabaje"
+                                    title="PLATAFORMA Y FORMATO"
+                                    description="Selecciona dónde publicarás"
+                                >
+                                    <SocialFormatSelector
+                                        selectedPlatform={state.selectedPlatform}
+                                        selectedFormat={state.selectedFormat}
+                                        onSelectPlatform={selectPlatform}
+                                        onSelectFormat={selectFormat}
+                                    />
+                                </StepSection>
+                            </div>
+                        </>
+                    )}
+
+                    {/* STEP 4: IMAGE REFERENCE & CONTENT FIELDS */}
+                    {showImageAndContent && (
+                        <>
+                            <div className="border-t border-border/40 mt-4"></div>
+                            <div className="px-6 pt-4">
+                                <StepSection
+                                    number={4}
+                                    title="REFERENCIA & CONTENIDO"
+                                    description="Imagen de referencia y campos de texto"
                                 >
                                     <div className="space-y-6">
-                                        <LazyPromptInput
-                                            intent={state.selectedIntent}
-                                            rawMessage={state.rawMessage}
-                                            onMessageChange={setRawMessage}
-                                            onAnalyze={handleSmartAnalyze}
-                                            isAnalyzing={isMagicParsing}
-                                        />
-
                                         <div className="space-y-2">
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                                 Referencia Visual {requiresImage ? '(Obligatoria)' : '(Opcional)'}
@@ -335,13 +362,13 @@ export function CreationCommandPanel({
                         </>
                     )}
 
-                    {/* STEP 4: VISUAL STYLE */}
+                    {/* STEP 5: VISUAL STYLE */}
                     {showVisuals && (
                         <>
                             <div className="border-t border-border/40 mt-4"></div>
                             <div className="px-6 pt-4">
                                 <StepSection
-                                    number={4}
+                                    number={5}
                                     title="ESTILO VISUAL"
                                     description="Define la estética final"
                                 >

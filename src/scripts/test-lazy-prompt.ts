@@ -51,9 +51,9 @@ async function runTests() {
             try {
                 const result = await parseLazyIntentAction(
                     test.text,
-                    intent,
-                    "Acme Corp", // Mock Brand
-                    undefined
+                    "Acme Corp", // Brand name
+                    intent,      // Intent (optional)
+                    undefined    // Layout
                 )
 
                 if (result.error) {

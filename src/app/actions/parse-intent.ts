@@ -6,6 +6,8 @@ import { buildIntentParserPrompt } from '@/lib/prompts/intents/parser'
 import { IntentMeta, LayoutOption } from '@/lib/creation-flow-types'
 
 export interface ParsedIntentResult {
+    detectedIntent?: string // Auto-detected intent ID
+    confidence?: number      // Confidence score 0-1
     headline?: string
     cta?: string
     customTexts?: Record<string, string>
@@ -14,12 +16,12 @@ export interface ParsedIntentResult {
 
 export async function parseLazyIntentAction(
     userText: string,
-    intent: IntentMeta,
-    brandName: string, // Simplified context
+    brandName: string,
+    intent?: IntentMeta, // Now optional - if not provided, will auto-detect
     layout?: LayoutOption
 ): Promise<ParsedIntentResult> {
     try {
-        console.log(`[LazyPrompt] Parsing for intent: ${intent.name}`)
+        console.log(`[LazyPrompt] Parsing ${intent ? `for intent: ${intent.name}` : 'with auto-detection'}`)
 
         // 1. Build Prompt
         const prompt = buildIntentParserPrompt(userText, intent, layout)
