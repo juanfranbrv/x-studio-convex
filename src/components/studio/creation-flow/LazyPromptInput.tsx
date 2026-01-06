@@ -27,7 +27,7 @@ export function LazyPromptInput({
 
     useEffect(() => {
         if (!intent) {
-            setPlaceholder("Primero selecciona una intención arriba...")
+            setPlaceholder("Describe lo que quieres crear... La IA detectará el tipo de publicación automáticamente ✨")
             return
         }
 
@@ -63,8 +63,7 @@ export function LazyPromptInput({
     return (
         <div className={cn(
             "relative rounded-xl border-2 transition-all duration-300 bg-background",
-            isFocused ? "border-primary shadow-lg ring-2 ring-primary/20" : "border-muted shadow-sm hover:border-primary/50",
-            !intent && "opacity-50 pointer-events-none grayscale"
+            isFocused ? "border-primary shadow-lg ring-2 ring-primary/20" : "border-muted shadow-sm hover:border-primary/50"
         )}>
             <div className="absolute top-3 left-3">
                 <div className={cn(
@@ -87,7 +86,7 @@ export function LazyPromptInput({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 className="w-full min-h-[100px] pl-12 pr-12 py-3 bg-transparent border-none resize-none focus-visible:ring-0 text-sm leading-relaxed placeholder:text-muted-foreground/70"
-                disabled={isAnalyzing || !intent}
+                disabled={isAnalyzing}
             />
 
             <div className="absolute bottom-3 right-3">
@@ -105,9 +104,12 @@ export function LazyPromptInput({
             </div>
 
             {/* Helper Text */}
-            {intent && isFocused && (
+            {isFocused && (
                 <div className="absolute -bottom-6 left-0 text-[10px] text-primary/80 font-medium animate-in fade-in slide-in-from-top-1">
-                    Presiona Enter para autocompletar el formulario ✨
+                    {intent
+                        ? "Presiona Enter para autocompletar el formulario ✨"
+                        : "Presiona Enter para que la IA detecte la intención y complete los campos ✨"
+                    }
                 </div>
             )}
         </div>
