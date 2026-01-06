@@ -77,11 +77,11 @@ export function PromptDebugModal({
                     {(promptData.logoUrl || promptData.referenceImageUrl) && (
                         <div className="space-y-2">
                             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Imágenes Adjuntas</p>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="flex gap-4">
                                 {promptData.logoUrl && (
-                                    <div className="space-y-2">
+                                    <div className="space-y-1">
                                         <p className="text-xs text-muted-foreground">Logo</p>
-                                        <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-border bg-muted/30">
+                                        <div className="relative w-[120px] h-[120px] rounded-lg overflow-hidden border-2 border-border bg-muted/30">
                                             <img
                                                 src={promptData.logoUrl}
                                                 alt="Logo preview"
@@ -91,9 +91,9 @@ export function PromptDebugModal({
                                     </div>
                                 )}
                                 {promptData.referenceImageUrl && (
-                                    <div className="space-y-2">
+                                    <div className="space-y-1">
                                         <p className="text-xs text-muted-foreground">Imagen de Referencia</p>
-                                        <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-border bg-muted/30">
+                                        <div className="relative w-[120px] h-[120px] rounded-lg overflow-hidden border-2 border-border bg-muted/30">
                                             <img
                                                 src={promptData.referenceImageUrl}
                                                 alt="Reference preview"
