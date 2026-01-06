@@ -12,10 +12,11 @@ import { CreationCommandPanel } from '@/components/studio/creation-flow'
 import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import type { BrandDNA } from '@/lib/brand-types'
-import { SOCIAL_FORMATS } from '@/lib/creation-flow-types'
+import { SOCIAL_FORMATS, type DebugPromptData } from '@/lib/creation-flow-types'
 import { Loader2, Plus, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 
 interface Generation {
     id: string
@@ -46,6 +47,11 @@ export default function StudioPage() {
     const [selectedModel, setSelectedModel] = useState('wisdom/gemini-3-pro-image-preview')
     const [selectedTextModel, setSelectedTextModel] = useState('wisdom/gemini-2.5-flash')
     const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false)
+
+    // Debug Modal States
+    const [showDebugModal, setShowDebugModal] = useState(false)
+    const [debugPromptData, setDebugPromptData] = useState<DebugPromptData | null>(null)
+    const [pendingGenerationData, setPendingGenerationData] = useState<any>(null)
 
     const creationFlow = useCreationFlow({
         onImageUploaded: async (file: File) => {
@@ -182,6 +188,55 @@ export default function StudioPage() {
         }
     }
 
+    // Wrapped handleGenerate with debug modal intercept
+    const handleGenerateWithDebug = async (data: {
+        platform?: string
+        headline?: string
+        cta?: string
+        prompt: string
+        model?: string
+    }) => {
+        // Build debug data
+        const selectedLogo = logoInclusion && creationFlow.state.selectedLogoId
+            ? activeBrandKit?.logos?.find((l, idx) =>
+                (l as any).id === creationFlow.state.selectedLogoId || `logo-${idx}` === creationFlow.state.selectedLogoId
+            )
+            : null
+
+        const debugData: DebugPromptData = {
+            finalPrompt: data.prompt,
+            logoUrl: selectedLogo ? ((selectedLogo as any).url || selectedLogo) : undefined,
+            referenceImageUrl: creationFlow.state.uploadedImage || undefined,
+            selectedStyles: creationFlow.state.selectedStyles,
+            headline: data.headline,
+            cta: data.cta,
+            platform: data.platform,
+            format: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.name,
+            intent: creationFlow.state.selectedIntent || undefined
+        }
+
+        // Show modal and store pending data
+        setDebugPromptData(debugData)
+        setPendingGenerationData(data)
+        setShowDebugModal(true)
+    }
+
+    // Actual generation after modal confirmation
+    const confirmGeneration = async () => {
+        setShowDebugModal(false)
+        if (pendingGenerationData) {
+            await handleGenerate(pendingGenerationData)
+            setPendingGenerationData(null)
+        }
+    }
+
+    // Cancel generation
+    const cancelGeneration = () => {
+        setShowDebugModal(false)
+        setPendingGenerationData(null)
+        setDebugPromptData(null)
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen">
@@ -204,7 +259,7 @@ export default function StudioPage() {
                 <div className="flex-1 flex overflow-hidden min-h-0">
                     {/* Left: Creation Command Panel (Cascade Interface) */}
                     <CreationCommandPanel
-                        onGenerate={async (prompt) => handleGenerate({ prompt })}
+                        onGenerate={async (prompt) => handleGenerateWithDebug({ prompt })}
                         isGenerating={isGenerating}
                         creationFlow={creationFlow}
                     />
@@ -220,7 +275,7 @@ export default function StudioPage() {
                         onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
                         onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
                         draggedElement={draggedElement}
-                        onGenerate={(prompt, model) => handleGenerate({ prompt, model })}
+                        onGenerate={(prompt, model) => handleGenerateWithDebug({ prompt, model })}
                         isGenerating={isGenerating}
                         selectedModel={selectedModel}
                         onModelChange={setSelectedModel}
@@ -277,6 +332,14 @@ export default function StudioPage() {
                     </div>
                 </div>
             )}
+
+            {/* Debug Modal */}
+            <PromptDebugModal
+                open={showDebugModal}
+                onClose={cancelGeneration}
+                onConfirm={confirmGeneration}
+                promptData={debugPromptData}
+            />
         </DashboardLayout>
     )
 }

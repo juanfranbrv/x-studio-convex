@@ -10,6 +10,19 @@ import { LucideIcon } from 'lucide-react'
 import { OFERTA_IMPACTO_PROMPT, OFERTA_IMPACTO_DESCRIPTION } from './prompts/layouts/oferta-impacto'
 import { PROMO_MOVIL_PROMPT, PROMO_MOVIL_DESCRIPTION } from './prompts/layouts/promo-movil'
 
+// Debug Modal Data
+export interface DebugPromptData {
+    finalPrompt: string
+    logoUrl?: string
+    referenceImageUrl?: string
+    selectedStyles: string[]
+    headline?: string
+    cta?: string
+    platform?: string
+    format?: string
+    intent?: string
+}
+
 // Intent-specific prompts
 import {
     ESCAPARATE_EXTENDED_DESCRIPTION,
