@@ -612,15 +612,63 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 4 - BRAND COLORS
         // ═══════════════════════════════════════════════════════════════
-        const brandColors = state.selectedBrandColors.length > 0
+        // Get colors with roles from Brand Kit
+        const colorsWithRoles = activeBrandKit?.colors?.filter(c => c.selected) || []
+        const selectedColors = state.selectedBrandColors.length > 0
             ? state.selectedBrandColors
-            : activeBrandKit?.colors?.filter(c => c.selected).map(c => c.color) || []
+            : colorsWithRoles.map(c => c.color)
 
-        if (brandColors.length > 0) {
+        if (selectedColors.length > 0) {
             sections.push(
                 P04.PRIORITY_HEADER,
+                ``
+            )
+
+            // Group colors by role
+            const roleGroups: Record<string, string[]> = {
+                'Principal': [],
+                'Secundario': [],
+                'Texto': [],
+                'Fondo': [],
+                'Acento': [],
+                'Neutral': []
+            }
+
+            colorsWithRoles.forEach(colorItem => {
+                const role = colorItem.role || 'Neutral'
+                if (roleGroups[role]) {
+                    roleGroups[role].push(colorItem.color)
+                }
+            })
+
+            // Add role-based color sections
+            if (roleGroups['Principal'].length > 0) {
+                sections.push(`🎨 PRIMARY (backgrounds, hero sections): ${roleGroups['Principal'].join(', ')}`)
+            }
+            if (roleGroups['Secundario'].length > 0) {
+                sections.push(`✨ SECONDARY (CTAs, highlights, accents): ${roleGroups['Secundario'].join(', ')}`)
+            }
+            if (roleGroups['Texto'].length > 0) {
+                sections.push(`📝 TEXT (body text, ensure readable contrast): ${roleGroups['Texto'].join(', ')}`)
+            }
+            if (roleGroups['Fondo'].length > 0) {
+                sections.push(`🖼️ BACKGROUND (large areas): ${roleGroups['Fondo'].join(', ')}`)
+            }
+            if (roleGroups['Acento'].length > 0) {
+                sections.push(`💥 ACCENT (focal points, small details): ${roleGroups['Acento'].join(', ')}`)
+            }
+            if (roleGroups['Neutral'].length > 0) {
+                sections.push(`⚪ NEUTRAL (supporting elements): ${roleGroups['Neutral'].join(', ')}`)
+            }
+
+            sections.push(
                 ``,
-                `COLORS: ${brandColors.join(', ')}`,
+                `⚠️  COLOR USAGE GUIDELINES:`,
+                `- Use PRIMARY colors for dominant areas (backgrounds, hero sections)`,
+                `- Use SECONDARY colors for CTAs and key highlights`,
+                `- Use TEXT colors with minimum 4.5:1 contrast ratio (WCAG AA)`,
+                `- ACCENT colors for small focal points only`,
+                `- Ensure readability takes priority over aesthetics`,
                 ``
             )
         }
