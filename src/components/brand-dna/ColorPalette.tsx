@@ -148,7 +148,7 @@ export function ColorPalette({
                 <CardContent className={cn("relative space-y-1 overflow-visible", hideHeader && "p-0")}>
                     <div className={cn(
                         "grid gap-3",
-                        hideHeader ? "grid-cols-5" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
+                        hideHeader ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
                     )}>
                         {colors.map((item, idx) => (
                             <div key={idx} className="group relative">
@@ -172,16 +172,37 @@ export function ColorPalette({
                                                     })}
                                                     onDragEnd={onDragEnd}
                                                     className={cn(
-                                                        "aspect-square rounded-full cursor-grab active:cursor-grabbing transition-all duration-300",
+                                                        "aspect-video rounded-xl cursor-grab active:cursor-grabbing transition-all duration-300", // Widen to aspect-video
                                                         "hover:scale-105 hover:shadow-xl border-2 border-border",
-                                                        "hover:border-primary relative overflow-visible",
+                                                        "hover:border-primary relative overflow-visible flex items-center justify-center", // Centered content
                                                         colorPickerOpen === idx ? 'border-primary ring-2 ring-primary/20' : '',
                                                         selectedColorIds.includes(`color-${idx}`)
                                                             ? "border-primary shadow-sm"
                                                             : "border-transparent hover:border-border"
                                                     )}
                                                     style={{ backgroundColor: item.color }}
+                                                    onClick={(e) => {
+                                                        // Toggle role on click if not dragging or using eyedropper
+                                                        if (!colorPickerOpen) {
+                                                            const roles = ['Texto', 'Fondo', 'Acento 1', 'Acento 2'];
+                                                            const currentIndex = roles.indexOf(item.role || 'Texto');
+                                                            // Initialize to 'Texto' if undefined or not in list
+                                                            const nextRole = roles[(currentIndex + 1) % roles.length];
+                                                            onUpdateRole(idx, nextRole);
+                                                        }
+                                                    }}
                                                 >
+                                                    {/* Role Label INSIDE */}
+                                                    <span
+                                                        className={cn(
+                                                            "text-xs font-bold uppercase tracking-wide select-none transition-colors duration-200",
+                                                            getContrastColor(item.color)
+                                                        )}
+                                                    >
+                                                        {item.role || 'Texto'}
+                                                    </span>
+
+
                                                     {/* Toggle Selection Checkmark */}
                                                     {onToggleSelection && (
                                                         <button
@@ -207,9 +228,9 @@ export function ColorPalette({
                                                             e.stopPropagation();
                                                             onRemoveColor(idx);
                                                         }}
-                                                        className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:scale-110 shadow-lg z-20"
+                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:scale-110 shadow-lg z-50"
                                                     >
-                                                        <X className="w-3 h-3" />
+                                                        <X className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>
                                             </PopoverTrigger>
@@ -240,7 +261,7 @@ export function ColorPalette({
                                     </Popover>
                                     <TooltipContent side="bottom" className="flex flex-col gap-1 p-2 bg-popover border-border shadow-md z-[110]">
                                         <p className="text-xs font-mono font-bold text-foreground">HEX: {item.color.toUpperCase()}</p>
-                                        <p className="text-[10px] text-muted-foreground">Rol: <span className="text-primary font-medium">{item.role || 'Neutral'}</span></p>
+                                        <p className="text-[10px] text-muted-foreground">Click para cambiar rol</p>
                                     </TooltipContent>
                                 </Tooltip>
 
@@ -257,17 +278,7 @@ export function ColorPalette({
                                                 </span>
                                             )}
                                         </button>
-                                        <button
-                                            onClick={() => {
-                                                const roles = ['Principal', 'Secundario', 'Texto', 'Fondo', 'Acento', 'Neutral'];
-                                                const currentIndex = roles.indexOf(item.role || 'Neutral');
-                                                const nextRole = roles[(currentIndex + 1) % roles.length];
-                                                onUpdateRole(idx, nextRole);
-                                            }}
-                                            className="w-full text-[10px] text-center px-1 py-1 rounded bg-secondary/50 text-secondary-foreground hover:bg-secondary/80 transition-colors font-medium truncate"
-                                        >
-                                            {item.role || 'Neutral'}
-                                        </button>
+                                        {/* Removed external role button */}
                                     </div>
                                 )}
                             </div>
@@ -275,9 +286,9 @@ export function ColorPalette({
                         {colors.length < 10 && (
                             <div
                                 onClick={onAddColor}
-                                className="aspect-square rounded-full border-2 border-dashed border-border hover:border-primary flex items-center justify-center transition-colors group bg-muted/50 cursor-pointer w-full"
+                                className="aspect-video rounded-xl border-2 border-dashed border-border hover:border-primary flex items-center justify-center transition-colors group bg-muted/50 cursor-pointer w-full"
                             >
-                                <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                             </div>
                         )}
                     </div>

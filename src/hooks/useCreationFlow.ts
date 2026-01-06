@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { generateFieldCopy as getAICopy } from '@/app/actions/generate-copy'
 import {
     type IntentGroup,
@@ -57,6 +57,21 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [state.selectedIntent])
 
     const requiresImage = currentIntent?.requiresImage ?? false
+
+    // Initialize defaults from Brand Kit
+    useEffect(() => {
+        // Initialize with default colors if brand kit is available
+        if (activeBrandKit?.colors && state.selectedBrandColors.length === 0) {
+            const defaultColors = (activeBrandKit.colors as any[]).map(c => ({
+                color: c.color || c.hex || (typeof c === 'string' ? c : ''),
+                role: (c.role as ColorRole) || 'Principal'
+            })).filter(c => c.color)
+
+            if (defaultColors.length > 0) {
+                setState(prev => ({ ...prev, selectedBrandColors: defaultColors }))
+            }
+        }
+    }, [activeBrandKit])
 
     // -------------------------------------------------------------------------
     // STEP 0: Platform and Format Selection
@@ -560,7 +575,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         // ═══════════════════════════════════════════════════════════════
         if (state.selectedLogoId && activeBrandKit?.logos) {
             const logo = activeBrandKit.logos.find((l, idx) =>
-                (l as any).id === state.selectedLogoId || `logo-${idx}` === state.selectedLogoId
+                (l as any)._id === state.selectedLogoId || `logo-${idx}` === state.selectedLogoId
             )
             if (logo) {
                 sections.push(
@@ -752,7 +767,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             // Default to brand kit colors if nothing explicitly selected in Studio
             // Map legacy brand colors to SelectedColor format
             colorsToUse = (activeBrandKit.colors as any[]).map(c => ({
-                color: c.hex || (typeof c === 'string' ? c : ''),
+                color: c.color || c.hex || (typeof c === 'string' ? c : ''),
                 role: (c.role as ColorRole) || 'Principal'
             })).filter(c => c.color)
         }

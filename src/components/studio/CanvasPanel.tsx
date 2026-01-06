@@ -485,7 +485,7 @@ export function CanvasPanel({
                                 <div className="absolute top-4 right-4 z-20">
                                     <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
                                         <img
-                                            src={activeBrandKit.logos.find((l: any) => l._id === creationState.selectedLogoId)?.url}
+                                            src={activeBrandKit.logos.find((l: any, idx: number) => l._id === creationState.selectedLogoId || `logo-${idx}` === creationState.selectedLogoId)?.url}
                                             alt="Logo"
                                             className="w-full h-full object-contain drop-shadow"
                                         />

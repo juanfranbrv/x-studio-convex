@@ -13,7 +13,7 @@ const ANALYSIS_PROMPT = `Analyze this image for marketing/advertising purposes. 
 2. "subjectLabel": A short Spanish description of the main subject (e.g., "Botella de aceite de oliva", "Auriculares inalámbricos")
 3. "lighting": One of: "bright", "dim", "natural", "studio", "golden_hour", "unknown"
 4. "colorPalette": Array of 3-5 dominant hex colors extracted from the image
-5. "keywords": Array of 5-8 visual keywords in English that describe the style (e.g., "minimalist", "rustic", "premium", "vibrant")
+5. "keywords": Provide 3-5 rigorous visual style descriptors in English. Focus on: lighting (e.g. cinematic, flat), vibe (e.g. minimalist, authentic, neon, luxury), and composition (e.g. wide angle, macro). Avoid generic terms.
 6. "confidence": A number between 0 and 1 indicating confidence in the analysis
 
 Respond ONLY with valid JSON, no markdown or explanation.`
