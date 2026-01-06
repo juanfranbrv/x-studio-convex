@@ -37,7 +37,10 @@ export function PromptDebugModal({
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="w-[90vw] max-w-[1400px] max-h-[90vh] flex flex-col">
+            <DialogContent
+                className="max-h-[90vh] flex flex-col"
+                style={{ width: '95vw', maxWidth: '1600px' }}
+            >
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-primary" />
