@@ -64,10 +64,19 @@ export default defineSchema({
     .index("by_clerk_id", ["clerk_user_id"]),
 
   generations: defineTable({
-    brand_id: v.id("brands"),
+    brand_id: v.id("brand_dna"),
     prompt_snapshot: v.any(), // JSON
     image_url: v.string(), // Could be external URL or Convex storage URL
     annotations: v.optional(v.any()), // JSON
+    // Snapshot of GenerationState for "Recents" functionality
+    state: v.object({
+      platform: v.string(),
+      format: v.string(),
+      intent: v.string(),
+      layout: v.optional(v.string()),
+      styles: v.optional(v.array(v.string())),
+      customTexts: v.optional(v.any()),
+    }),
     created_at: v.string(),
   }).index("by_brand", ["brand_id"]),
 

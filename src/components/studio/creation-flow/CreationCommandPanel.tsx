@@ -11,14 +11,17 @@ import { GenerateButton } from './GenerateButton'
 import { PresetsCarousel } from './PresetsCarousel'
 import { LazyPromptInput } from './LazyPromptInput'
 import { UnifiedContentSection } from './UnifiedContentSection'
-import { RotateCcw, Sparkles } from 'lucide-react'
+import { IntentCategory } from '@/lib/creation-flow-types'
+import { SavePresetDialog } from './SavePresetDialog'
+import { BookmarkPlus, RotateCcw, Sparkles } from 'lucide-react'
+import { useMutation } from 'convex/react'
+import { api } from '@/../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { useUser } from '@clerk/nextjs'
 import { parseLazyIntentAction } from '@/app/actions/parse-intent'
 import { useState } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { IntentCategory } from '@/lib/creation-flow-types'
 
 interface CreationCommandPanelProps {
     onGenerate?: (prompt: string) => Promise<void>
@@ -99,6 +102,42 @@ export function CreationCommandPanel({
     const { toast } = useToast()
     const [isMagicParsing, setIsMagicParsing] = useState(false)
     const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
+
+    // Save Preset State
+    const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
+    const [isSavingPreset, setIsSavingPreset] = useState(false)
+    const createPreset = useMutation(api.presets.create)
+
+    const handleSavePreset = async (name: string, description: string) => {
+        if (!user?.id || !state.selectedPlatform || !state.selectedFormat || !state.selectedIntent) {
+            toast({ title: "Error", description: "Faltan datos para guardar el preset.", variant: "destructive" })
+            return
+        }
+
+        setIsSavingPreset(true)
+        try {
+            await createPreset({
+                userId: user.id,
+                name,
+                description,
+                state: {
+                    platform: state.selectedPlatform,
+                    format: state.selectedFormat,
+                    intent: state.selectedIntent,
+                    layout: state.selectedLayout || undefined,
+                    styles: state.selectedStyles,
+                    customTexts: state.customTexts
+                }
+            })
+            toast({ title: "Preset guardado", description: "Tu configuración se ha guardado en favoritos." })
+            setIsSaveDialogOpen(false)
+        } catch (e) {
+            console.error(e)
+            toast({ title: "Error", description: "No se pudo guardar el preset.", variant: "destructive" })
+        } finally {
+            setIsSavingPreset(false)
+        }
+    }
 
     const handleGenerate = async () => {
         const prompt = constructFinalPrompt()
@@ -410,13 +449,31 @@ export function CreationCommandPanel({
             </div>
 
             {/* Footer: Generate Button */}
-            <div className="p-6 border-t border-border bg-muted/5 z-20">
+            <div className="p-3 pt-2 border-t-2 border-border bg-muted/20 z-20 flex gap-2 items-center">
+                <Button
+                    variant="outline"
+                    className="h-[50px] w-[50px] rounded-xl p-0 flex-none border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-muted-foreground hover:text-primary transition-all"
+                    onClick={() => setIsSaveDialogOpen(true)}
+                    disabled={!canGenerate}
+                    title="Guardar como Preset"
+                >
+                    <BookmarkPlus className="w-5 h-5" />
+                </Button>
+
                 <GenerateButton
                     isGenerating={isGenerating || state.isGenerating}
                     isDisabled={!canGenerate}
                     onClick={handleGenerate}
+                    className="h-[50px]"
                 />
             </div>
+
+            <SavePresetDialog
+                open={isSaveDialogOpen}
+                onOpenChange={setIsSaveDialogOpen}
+                onSave={handleSavePreset}
+                isSaving={isSavingPreset}
+            />
         </div>
     )
 }

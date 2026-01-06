@@ -22,6 +22,8 @@ import {
     SelectedColor,
 } from '@/lib/creation-flow-types'
 import { useBrandKit } from '@/contexts/BrandKitContext'
+import { useMutation } from 'convex/react'
+import { api } from '../../convex/_generated/api'
 
 // Priority-based prompt construction imports
 import * as P11 from '@/lib/prompts/priorities/p11-system-persona'
@@ -46,6 +48,7 @@ export interface UseCreationFlowOptions {
 
 export function useCreationFlow(options?: UseCreationFlowOptions) {
     const { activeBrandKit } = useBrandKit()
+    const saveGeneration = useMutation(api.generations.saveGeneration)
     const [state, setState] = useState<GenerationState>(INITIAL_GENERATION_STATE)
 
     // -------------------------------------------------------------------------
@@ -908,6 +911,29 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 ...prev,
                 isGenerating: false,
             }))
+
+            // Save Generation to History (Recents)
+            if (activeBrandKit?.id) {
+                // Create a clean snapshot of the state
+                const stateSnapshot: any = {
+                    platform: state.selectedPlatform,
+                    format: state.selectedFormat,
+                    intent: state.selectedIntent,
+                    layout: state.selectedLayout,
+                    styles: state.selectedStyles,
+                    customTexts: state.customTexts,
+                    // We don't save ephemeral file data in the state snapshot for presets/recents
+                    // But we might want to know if an image was uploaded?
+                    // For now, adhering to the schema "state" object
+                }
+
+                await saveGeneration({
+                    brand_id: activeBrandKit.id as any, // ID type casting
+                    prompt_snapshot: { prompt }, // simplified for now
+                    image_url: "https://placehold.co/600x400?text=Generated+Image", // Placeholder until real generation
+                    state: stateSnapshot
+                })
+            }
 
             return prompt
         } catch (error) {

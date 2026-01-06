@@ -277,15 +277,33 @@ export function CanvasPanel({
     }
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-background">
-            {/* Canvas Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b-2 border-border">
-                <h2 className="text-lg font-semibold font-heading">{t('canvas.title')}</h2>
-                <div className="flex items-center gap-2">
+        <div className="flex-1 flex flex-col h-full bg-background relative isolate">
+            {/* Header Overlay */}
+            <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between p-4 z-40 pointer-events-none">
+
+                {/* Left: Badge & Title */}
+                <div className="pointer-events-auto flex items-center gap-2 pt-1">
+                    <Badge variant="outline" className="text-[10px] h-6 gap-2 bg-background/80 backdrop-blur-sm border-border shadow-sm px-2">
+                        <span className="font-bold text-muted-foreground">{t('canvas.title')}</span>
+                        <div className="w-px h-3 bg-border" />
+                        {aspectRatio}
+                        <span className="opacity-50">|</span>
+                        {(() => {
+                            const [w, h] = aspectRatio.split(':').map(Number);
+                            const ratio = w / h;
+                            const baseH = 600;
+                            const calcW = baseH * ratio;
+                            return `${Math.round(calcW)}x${baseH}`;
+                        })()}
+                    </Badge>
+                </div>
+
+                {/* Right: Actions */}
+                <div className="pointer-events-auto flex items-center gap-1 bg-background/80 backdrop-blur-sm p-1 rounded-lg border border-border shadow-sm">
                     <Dialog open={isSavePresetOpen} onOpenChange={setIsSavePresetOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="ghost" size="icon" title={t('canvas.savePreset') || "Guardar Preset"}>
-                                <Save className="w-4 h-4" />
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title={t('canvas.savePreset') || "Guardar Preset"}>
+                                <Save className="w-3.5 h-3.5" />
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
@@ -328,17 +346,17 @@ export function CanvasPanel({
                         variant={isAnnotating ? 'default' : 'ghost'}
                         size="icon"
                         onClick={onAnnotate}
-                        className={isAnnotating ? 'btn-gradient' : ''}
+                        className={cn("h-7 w-7", isAnnotating ? 'btn-gradient' : '')}
                     >
-                        <EditIcon fontSize="small" />
+                        <EditIcon fontSize="small" style={{ fontSize: '1.1rem' }} />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleDownload}>
-                        <DownloadIcon fontSize="small" />
+                    <Button variant="ghost" size="icon" onClick={handleDownload} className="h-7 w-7">
+                        <DownloadIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <MoreHorizIcon fontSize="small" />
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <MoreHorizIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -353,22 +371,7 @@ export function CanvasPanel({
 
             <div className="flex-1 relative flex flex-col items-center justify-center p-8 pb-24 overflow-y-auto bg-zinc-100 dark:bg-zinc-900 scrollbar-hide bg-[url('/grid-pattern.svg')]">
 
-                {/* Header / Zoom Controls Overlay */}
-                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-between px-4 z-10 pointer-events-none">
-                    <div className="pointer-events-auto flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px] h-5 gap-1 bg-white/50 backdrop-blur-sm">
-                            {aspectRatio}
-                            <span className="opacity-50">|</span>
-                            {(() => {
-                                const [w, h] = aspectRatio.split(':').map(Number);
-                                const ratio = w / h;
-                                const baseH = 600;
-                                const calcW = baseH * ratio;
-                                return `${Math.round(calcW)}x${baseH}`;
-                            })()}
-                        </Badge>
-                    </div>
-                </div>
+
 
                 <div
                     ref={containerRef}
@@ -496,8 +499,32 @@ export function CanvasPanel({
                     )}
                 </div>
 
+                {/* Zoom Controls - Integrated in flow */}
+                <div className="flex items-center gap-2 bg-popover/90 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border shadow-sm z-20 mt-6 mb-2">
+                    {/* Regenerate Image Button */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-7 h-7 hover:text-primary hover:bg-primary/10"
+                        onClick={() => handleGenerateWrapper(lastUsedPrompt || prompt, selectedModel)}
+                        disabled={isGenerating}
+                        title={t('canvas.regenerate') || "Regenerar"}
+                    >
+                        <RestartAltIcon fontSize="small" className={isGenerating ? "animate-spin" : ""} />
+                    </Button>
+                    <div className="w-px h-4 bg-border mx-1" />
+
+                    <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomOut}>
+                        <ZoomOutIcon fontSize="small" />
+                    </Button>
+                    <span className="text-xs font-mono w-12 text-center">{zoom}%</span>
+                    <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomIn}>
+                        <ZoomInIcon fontSize="small" />
+                    </Button>
+                </div>
+
                 {currentImage && (
-                    <div className="w-full max-w-[600px] mt-8 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10">
+                    <div className="w-full max-w-[600px] mt-4 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10">
                         <GeneratedCopyCard
                             copy={generatedCopy}
                             hashtags={generatedHashtags}
@@ -510,29 +537,7 @@ export function CanvasPanel({
                 )}
             </div>
 
-            {/* Zoom Controls */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-popover/90 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border shadow-sm z-20">
-                {/* Regenerate Image Button */}
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-7 h-7 hover:text-primary hover:bg-primary/10"
-                    onClick={() => handleGenerateWrapper(lastUsedPrompt || prompt, selectedModel)}
-                    disabled={isGenerating}
-                    title={t('canvas.regenerate') || "Regenerar"}
-                >
-                    <RestartAltIcon fontSize="small" className={isGenerating ? "animate-spin" : ""} />
-                </Button>
-                <div className="w-px h-4 bg-border mx-1" />
 
-                <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomOut}>
-                    <ZoomOutIcon fontSize="small" />
-                </Button>
-                <span className="text-xs font-mono w-12 text-center">{zoom}%</span>
-                <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomIn}>
-                    <ZoomInIcon fontSize="small" />
-                </Button>
-            </div>
 
             {/* Footer Area: History & Prompt */}
             <div className="border-t-2 border-border bg-muted/20">

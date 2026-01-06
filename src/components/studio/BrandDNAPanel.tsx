@@ -1095,16 +1095,16 @@ export function BrandDNAPanel({
             </div>
 
             {/* Brand Identity Footer */}
-            <div className="p-2 border-t border-border bg-muted/20">
-                <div className="flex items-center gap-2 overflow-hidden px-1">
+            <div className="p-3 pt-2 border-t-2 border-border bg-muted/20">
+                <div className="h-[50px] flex items-center gap-2 overflow-hidden px-1">
                     {logo_url ? (
-                        <img src={logo_url} alt="Logo" className="w-4 h-4 object-contain opacity-60" />
+                        <img src={logo_url} alt="Logo" className="w-8 h-8 object-contain opacity-60" />
                     ) : (
-                        <div className="w-4 h-4 bg-muted rounded flex items-center justify-center text-[8px]">
+                        <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-[10px]">
                             🖼️
                         </div>
                     )}
-                    <span className="text-[10px] font-medium truncate text-muted-foreground/80">{brand_name}</span>
+                    <span className="text-xs font-medium truncate text-muted-foreground/80">{brand_name}</span>
                 </div>
             </div>
         </div>
