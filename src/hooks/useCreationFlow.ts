@@ -463,18 +463,13 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         const toneCount = activeBrandKit?.tone_of_voice?.length ?? 0
         const aestheticCount = activeBrandKit?.visual_aesthetic?.length ?? 0
 
-        if (toneCount > 0 || aestheticCount > 0) {
+        if (toneCount > 0) {
             brandDNA.push(
                 P09.PRIORITY_HEADER,
                 ``
             )
 
-            if (toneCount > 0) {
-                brandDNA.push(`BRAND TONE: ${activeBrandKit!.tone_of_voice.join(', ')}`)
-            }
-            if (aestheticCount > 0) {
-                brandDNA.push(`VISUAL AESTHETIC: ${activeBrandKit!.visual_aesthetic.join(', ')}`)
-            }
+            brandDNA.push(`BRAND TONE: ${activeBrandKit!.tone_of_voice.join(', ')}`)
 
             brandDNA.push(
                 ``,
