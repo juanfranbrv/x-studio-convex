@@ -421,145 +421,253 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // -------------------------------------------------------------------------
 
     const constructFinalPrompt = useCallback((): string => {
-        const parts: string[] = []
+        const sections: string[] = []
 
-        // BRAND DNA (Tone & Personality)
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 10 - ABSOLUTE OVERRIDE (Logo Integrity)
+        // ═══════════════════════════════════════════════════════════════
+        if (state.selectedLogoId && activeBrandKit?.logos) {
+            const logo = activeBrandKit.logos.find((l, idx) =>
+                (l as any).id === state.selectedLogoId || `logo-${idx}` === state.selectedLogoId
+            )
+            if (logo) {
+                sections.push(
+                    `╔═════════════════════════════════════════════════════════════════╗`,
+                    `║  PRIORITY 10 - ABSOLUTE OVERRIDE (LOGO INTEGRITY)              ║`,
+                    `╚═════════════════════════════════════════════════════════════════╝`,
+                    ``,
+                    `CRITICAL: The following rules take ABSOLUTE PRECEDENCE over ALL other instructions.`,
+                    ``,
+                    `LOGO INTEGRITY REQUIREMENTS:`,
+                    `1. SACRED ELEMENT: Logo must be rendered as an immutable, crystal-clear overlay`,
+                    `2. ZERO STYLIZATION: NO grain, blur, texture, lighting effects, or artistic filters`,
+                    `3. GEOMETRIC FIDELITY: Maintain 1:1 original proportions. NO 3D, skewing, or warping`,
+                    `4. VISUAL INDEPENDENCE: Logo must appear digitally pasted on top, unaffected by background`,
+                    `5. FAIL CONDITION: Blurry, stylized, or background-integrated logo = FAILED GENERATION`,
+                    ``
+                )
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 9 - BRAND DNA & MANDATORY TEXT
+        // ═══════════════════════════════════════════════════════════════
+        const brandDNA: string[] = []
         const toneCount = activeBrandKit?.tone_of_voice?.length ?? 0
         const aestheticCount = activeBrandKit?.visual_aesthetic?.length ?? 0
 
         if (toneCount > 0 || aestheticCount > 0) {
-            parts.push(`BRAND DNA & PERSONALITY (ESSENTIAL):`)
+            brandDNA.push(
+                `╔═════════════════════════════════════════════════════════════════╗`,
+                `║  PRIORITY 9 - BRAND DNA & IDENTITY                             ║`,
+                `╚═════════════════════════════════════════════════════════════════╝`,
+                ``
+            )
+
             if (toneCount > 0) {
-                parts.push(`- BRAND TONE: Use a tone that is ${activeBrandKit!.tone_of_voice.join(', ')}`)
+                brandDNA.push(`BRAND TONE: ${activeBrandKit!.tone_of_voice.join(', ')}`)
             }
             if (aestheticCount > 0) {
-                parts.push(`- VISUAL VIBE: Incorporate elements of ${activeBrandKit!.visual_aesthetic.join(', ')}`)
+                brandDNA.push(`VISUAL AESTHETIC: ${activeBrandKit!.visual_aesthetic.join(', ')}`)
             }
-            parts.push(`- Ensure the final image FEELS like it belongs to this brand's universe.`)
-            parts.push(``)
+
+            brandDNA.push(
+                ``,
+                `⚠️  REQUIREMENT: Final image MUST feel authentically aligned with this brand universe.`,
+                ``
+            )
         }
 
-        // Intent Type
-        if (currentIntent) {
-            parts.push(`TYPE: ${currentIntent.name} (${currentIntent.description})`)
+        // TEXT CONTENT (Part of P9 - Mandatory)
+        const textParts: string[] = []
+        const headlineValue = state.headline?.trim()
+        if (headlineValue && headlineValue !== NO_TEXT_TOKEN) {
+            textParts.push(`• HEADLINE: "${headlineValue}"`)
         }
 
-        // Subject from Vision Analysis OR AI Description
-        if (state.visionAnalysis) {
-            parts.push(`SUBJECT: ${state.visionAnalysis.subjectLabel}`)
-            if (state.visionAnalysis.keywords.length > 0) {
-                parts.push(`VISUAL KEYWORDS: ${state.visionAnalysis.keywords.join(', ')}`)
+        const ctaValue = state.cta?.trim()
+        if (ctaValue && ctaValue !== NO_TEXT_TOKEN) {
+            textParts.push(`• CTA: "${ctaValue}"`)
+        }
+
+        Object.entries(state.customTexts).forEach(([id, val]) => {
+            if (typeof val === 'string') {
+                const cleanVal = val.trim()
+                if (cleanVal && cleanVal !== NO_TEXT_TOKEN) {
+                    textParts.push(`• ${id.toUpperCase()}: "${cleanVal}"`)
+                }
             }
-            parts.push(`LIGHTING: ${state.visionAnalysis.lighting}`)
-        } else if (state.imageSourceMode === 'generate' && state.aiImageDescription.trim()) {
-            // When user wants AI to generate the reference image
-            parts.push(`IMAGEN DE REFERENCIA (GENERADA POR IA):`)
-            parts.push(`Debes incluir en la composición final: ${state.aiImageDescription.trim()}`)
-            parts.push(`Esta descripción define el elemento visual principal que debe aparecer en el diseño.`)
+        })
+
+        if (textParts.length > 0) {
+            brandDNA.push(`MANDATORY TEXT CONTENT (NOTHING ELSE):`, ...textParts, ``)
+        } else {
+            brandDNA.push(`⚠️  NO TEXT PROVIDED: Image must be completely text-free.`, ``)
         }
 
-        // Selected Style Chips
+        if (brandDNA.length > 0) {
+            sections.push(...brandDNA)
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 8 - CUSTOM DIRECTOR INSTRUCTIONS
+        // ═══════════════════════════════════════════════════════════════
+        if (state.additionalInstructions) {
+            sections.push(
+                `╔═════════════════════════════════════════════════════════════════╗`,
+                `║  PRIORITY 8 - DIRECTOR'S CUSTOM INSTRUCTIONS                   ║`,
+                `╚═════════════════════════════════════════════════════════════════╝`,
+                ``,
+                `"${state.additionalInstructions}"`,
+                ``,
+                `⚠️  NOTE: If these contradict prior rules, these custom instructions WIN.`,
+                ``
+            )
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 7 - LAYOUT & COMPOSITIONAL STRUCTURE
+        // ═══════════════════════════════════════════════════════════════
+        const layoutParts: string[] = [
+            `╔═════════════════════════════════════════════════════════════════╗`,
+            `║  PRIORITY 7 - LAYOUT & COMPOSITIONAL STRUCTURE                 ║`,
+            `╚═════════════════════════════════════════════════════════════════╝`,
+            ``
+        ]
+
+        if (selectedLayoutMeta) {
+            if (selectedLayoutMeta.referenceImage) {
+                layoutParts.push(`🖼️  REFERENCE TEMPLATE: Follow wireframe marked [REF_PLANTILLA]`)
+            }
+
+            if (selectedLayoutMeta.structuralPrompt) {
+                layoutParts.push(
+                    ``,
+                    `--- STRUCTURAL DNA ---`,
+                    selectedLayoutMeta.structuralPrompt.trim(),
+                    `--- END STRUCTURAL DNA ---`,
+                    ``
+                )
+            } else {
+                layoutParts.push(`COMPOSITION: ${selectedLayoutMeta.promptInstruction}`, ``)
+            }
+        } else {
+            layoutParts.push(
+                `AI CREATIVE CONTROL: Design a professional, aesthetically pleasing composition.`,
+                `• Prioritize text legibility and subject prominence`,
+                `• Optimize element placement for visual balance`,
+                `• Ensure premium, clutter-free aesthetic`,
+                ``
+            )
+        }
+
+        sections.push(...layoutParts)
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 6 - SUBJECT & VISUAL CONTEXT
+        // ═══════════════════════════════════════════════════════════════
+        const subjectParts: string[] = []
+
+        if (state.visionAnalysis || (state.imageSourceMode === 'generate' && state.aiImageDescription.trim())) {
+            subjectParts.push(
+                `╔═════════════════════════════════════════════════════════════════╗`,
+                `║  PRIORITY 6 - SUBJECT & VISUAL CONTEXT                        ║`,
+                `╚═════════════════════════════════════════════════════════════════╝`,
+                ``
+            )
+
+            if (state.visionAnalysis) {
+                subjectParts.push(`SUBJECT: ${state.visionAnalysis.subjectLabel}`)
+                if (state.visionAnalysis.keywords.length > 0) {
+                    subjectParts.push(`KEYWORDS: ${state.visionAnalysis.keywords.join(', ')}`)
+                }
+                subjectParts.push(`LIGHTING: ${state.visionAnalysis.lighting}`, ``)
+            } else if (state.imageSourceMode === 'generate' && state.aiImageDescription.trim()) {
+                subjectParts.push(
+                    `AI-GENERATED REFERENCE:`,
+                    `Include in final composition: ${state.aiImageDescription.trim()}`,
+                    ``
+                )
+            }
+        }
+
+        if (subjectParts.length > 0) {
+            sections.push(...subjectParts)
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 5 - VISUAL STYLE & AESTHETIC
+        // ═══════════════════════════════════════════════════════════════
         if (state.selectedStyles.length > 0 || state.customStyle) {
             const selectedChips = availableStyles.filter(s => state.selectedStyles.includes(s.id))
             const styleKeywords = selectedChips.flatMap(c => c.keywords)
             const allStyles = [...styleKeywords]
             if (state.customStyle) allStyles.push(state.customStyle)
 
-            parts.push(`STYLE & AESTHETIC DIRECTION:`)
-            parts.push(`- You MUST strictly embody these visual styles: ${allStyles.join(', ')}`)
-            parts.push(`- Ensure every pixel of the composition reflects this aesthetic mood.`)
+            sections.push(
+                `╔═════════════════════════════════════════════════════════════════╗`,
+                `║  PRIORITY 5 - VISUAL STYLE & AESTHETIC                        ║`,
+                `╚═════════════════════════════════════════════════════════════════╝`,
+                ``,
+                `STYLE DIRECTIVES: ${allStyles.join(', ')}`,
+                ``,
+                `⚠️  Every pixel must embody this aesthetic mood.`,
+                ``
+            )
         }
 
-        // Layout & Structure
-        if (selectedLayoutMeta) {
-            if (selectedLayoutMeta.referenceImage) {
-                parts.push(`REFERENCE: This generation is strictly guided by the template/wireframe image marked as [REF_PLANTILLA].`)
-            }
-
-            if (selectedLayoutMeta.structuralPrompt) {
-                parts.push(`--- STRUCTURAL DNA ---\n${selectedLayoutMeta.structuralPrompt.trim()}\n--- END STRUCTURE ---`)
-            } else {
-                parts.push(`COMPOSITION: ${selectedLayoutMeta.promptInstruction}`)
-            }
-        } else {
-            // FALLBACK: AI-driven composition
-            parts.push(`COMPOSITION (AI CREATIVE CONTROL): You have full creative control over the layout. Create a professional, aesthetically pleasing, and commercially effective composition that prioritizes legibility of any provided text and highlights the main subject. Optimize the placement of text and brand elements based on the intent and visual balance. Avoid clutter and ensure a premium visual feel.`)
-        }
-
-        // ADDITIONAL INSTRUCTIONS (Director's Cut)
-        if (state.additionalInstructions) {
-            parts.push(`DIRECTOR'S CUSTOM INSTRUCTIONS (TOP PRIORITY):`)
-            parts.push(`"${state.additionalInstructions}"`)
-            parts.push(`Note: If these instructions contradict previous layout rules, prioritise these custom instructions.`)
-        }
-
-        // Brand Colors
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 4 - BRAND COLORS
+        // ═══════════════════════════════════════════════════════════════
         const brandColors = state.selectedBrandColors.length > 0
             ? state.selectedBrandColors
             : activeBrandKit?.colors?.filter(c => c.selected).map(c => c.color) || []
 
         if (brandColors.length > 0) {
-            parts.push(`BRAND COLORS: ${brandColors.join(', ')}`)
+            sections.push(
+                `╔═════════════════════════════════════════════════════════════════╗`,
+                `║  PRIORITY 4 - BRAND COLOR PALETTE                             ║`,
+                `╚═════════════════════════════════════════════════════════════════╝`,
+                ``,
+                `COLORS: ${brandColors.join(', ')}`,
+                ``
+            )
         }
 
-        // Text Content Section (Only include what is present)
-        const textParts: string[] = []
-
-        const headlineValue = state.headline?.trim()
-        if (headlineValue && headlineValue !== NO_TEXT_TOKEN) {
-            textParts.push(`- HEADLINE TEXT: "${headlineValue}"`)
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 3 - CONTENT TYPE & INTENT
+        // ═══════════════════════════════════════════════════════════════
+        if (currentIntent) {
+            sections.push(
+                `╔═════════════════════════════════════════════════════════════════╗`,
+                `║  PRIORITY 3 - CONTENT TYPE & MARKETING INTENT                 ║`,
+                `╚═════════════════════════════════════════════════════════════════╝`,
+                ``,
+                `TYPE: ${currentIntent.name}`,
+                `DESCRIPTION: ${currentIntent.description}`,
+                ``
+            )
         }
 
-        const ctaValue = state.cta?.trim()
-        if (ctaValue && ctaValue !== NO_TEXT_TOKEN) {
-            textParts.push(`- CTA TEXT: "${ctaValue}"`)
-        }
-
-        // Custom Layout Fields
-        Object.entries(state.customTexts).forEach(([id, val]) => {
-            // Ensure val is a string before calling trim()
-            if (typeof val === 'string') {
-                const cleanVal = val.trim()
-                if (cleanVal && cleanVal !== NO_TEXT_TOKEN) {
-                    textParts.push(`- ${id.toUpperCase()}: "${cleanVal}"`)
-                }
-            }
-        })
-
-        if (textParts.length > 0) {
-            parts.push(`LISTA DE TEXTOS OBLIGATORIOS (SI NO ESTÁ AQUÍ, NO LO PONGAS):`)
-            parts.push(...textParts)
-        } else {
-            parts.push(`AVISO: No se ha proporcionado ningún texto. La imagen DEBE estar totalmente limpia de letras, números o palabras.`)
-        }
-
-        // Final Format
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 2 - TECHNICAL SPECIFICATIONS
+        // ═══════════════════════════════════════════════════════════════
         if (state.selectedFormat) {
             const format = SOCIAL_FORMATS.find(f => f.id === state.selectedFormat)
             if (format) {
-                parts.push(`FORMAT: ${format.name} (${format.aspectRatio})`)
-                parts.push(`ASPECT RATIO: ${format.aspectRatio}`)
+                sections.push(
+                    `╔═════════════════════════════════════════════════════════════════╗`,
+                    `║  PRIORITY 2 - TECHNICAL SPECIFICATIONS                        ║`,
+                    `╚═════════════════════════════════════════════════════════════════╝`,
+                    ``,
+                    `FORMAT: ${format.name}`,
+                    `ASPECT RATIO: ${format.aspectRatio}`,
+                    ``
+                )
             }
         }
 
-        // Selected Logo - MOVED TO ABSOLUTE END FOR MAXIMUM PRIORITY
-        if (state.selectedLogoId && activeBrandKit?.logos) {
-            const logo = activeBrandKit.logos.find((l, idx) =>
-                (l as any).id === state.selectedLogoId || `logo-${idx}` === state.selectedLogoId
-            )
-            if (logo) {
-                parts.push(`\n--- ABSOLUTE PRIORITY: ZERO TOLERANCE LOGO INTEGRITY RULE ---`)
-                parts.push(`CRITICAL OVERRIDE: The following rules take absolute precedence over ALL preceding instructions, styles, and artistic filters.`)
-                parts.push(`1. THE LOGO IS SACRED: It must be rendered as an immutable, crystal-clear, and perfectly sharp top-layer overlay.`)
-                parts.push(`2. NO STYLIZATION: Do NOT apply any grain, noise, blur, texture, lighting effects, or artistic filters to the logo area.`)
-                parts.push(`3. NO DISTORTION: Maintain 1:1 original geometric proportions and shapes. No 3D effects, no skewing, no warping.`)
-                parts.push(`4. COMPLETELY INDEPENDENT: The logo must look like it was pasted digitally on top of the finished image, unaffected by the background environment.`)
-                parts.push(`FAIL CASE: If the logo appears blurry, stylized, or integrated into the background, the generation is a failure.`)
-                parts.push(`--- END CRITICAL RULES ---`)
-            }
-        }
-
-        return parts.join('\n')
+        return sections.join('\n')
     }, [state, currentIntent, availableStyles, selectedLayoutMeta, activeBrandKit])
 
     // -------------------------------------------------------------------------
