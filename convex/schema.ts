@@ -70,4 +70,25 @@ export default defineSchema({
     annotations: v.optional(v.any()), // JSON
     created_at: v.string(),
   }).index("by_brand", ["brand_id"]),
+
+  presets: defineTable({
+    userId: v.optional(v.string()), // clerk_id, optional for system presets
+    isSystem: v.boolean(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    icon: v.optional(v.string()),
+    // Snapshot of GenerationState
+    state: v.object({
+      platform: v.string(), // e.g. 'instagram'
+      format: v.string(), // e.g. 'story', 'post'
+      intent: v.string(), // e.g. 'sales', 'quote'
+      layout: v.optional(v.string()), // e.g. 'impact-offer'
+      styles: v.optional(v.array(v.string())), // e.g. ['minimalist', 'bold']
+      customTexts: v.optional(v.any()), // Pre-filled text fields
+    }),
+    usageCount: v.number(),
+    lastUsed: v.optional(v.string()),
+    created_at: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_system", ["isSystem"]),
 });

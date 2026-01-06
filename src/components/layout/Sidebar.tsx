@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
-import { Bot, Home, Palette, Type, Image, Settings, FileSpreadsheet } from 'lucide-react'
+import { Bot, Home, Palette, GalleryHorizontal, Play, Settings, FileSpreadsheet } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -15,8 +15,8 @@ const navItems = [
     { icon: Home, label: 'nav.home', href: '/' },
     { icon: FileSpreadsheet, label: 'Brand Kit', href: '/brand-kit' },
     { icon: Palette, label: 'nav.studio', href: '/studio' },
-    { icon: Type, label: 'brandDNA.typography', href: '/studio' },
-    { icon: Image, label: 'canvas.title', href: '/studio' },
+    { icon: GalleryHorizontal, label: 'Carrusel', href: '/studio' },
+    { icon: Play, label: 'Video', href: '/studio' },
 ]
 
 export function Sidebar({ className }: SidebarProps) {
@@ -27,7 +27,7 @@ export function Sidebar({ className }: SidebarProps) {
         <aside
             className={cn(
                 'flex flex-col h-full bg-sidebar border-r border-sidebar-border transition-all duration-300',
-                collapsed ? 'w-20' : 'w-20',
+                collapsed ? 'w-16' : 'w-16',
                 className
             )}
         >

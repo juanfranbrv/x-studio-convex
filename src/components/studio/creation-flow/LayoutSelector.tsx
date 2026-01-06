@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { Zap, Smartphone, AlertCircle, Hash, BarChart3, Box } from 'lucide-react'
 import type { LayoutOption } from '@/lib/creation-flow-types'
 
 interface LayoutSelectorProps {
@@ -145,6 +146,13 @@ const WireframeIcons: Record<string, React.FC<{ className?: string }>> = {
             <path d="M8 8 L32 8 L32 18 L22 18 L18 24 L18 18 L8 18 Z" fill="currentColor" fillOpacity="0.3" stroke="currentColor" />
         </svg>
     ),
+    // Lucide Icon Wrappers
+    Zap: ({ className }) => <Zap className={className} />,
+    Smartphone: ({ className }) => <Smartphone className={className} />,
+    AlertCircle: ({ className }) => <AlertCircle className={className} />,
+    Hash: ({ className }) => <Hash className={className} />,
+    BarChart3: ({ className }) => <BarChart3 className={className} />,
+    Box: ({ className }) => <Box className={className} />,
 }
 
 export function LayoutSelector({
@@ -158,7 +166,7 @@ export function LayoutSelector({
 
     return (
         <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 Composición
             </label>
 

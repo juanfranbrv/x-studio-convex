@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import EditIcon from '@mui/icons-material/Edit'
 import DownloadIcon from '@mui/icons-material/Download'
@@ -11,8 +11,24 @@ import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { Save } from 'lucide-react'
+import { useUser } from "@clerk/nextjs"
+import { useMutation } from "convex/react"
+import { api } from "../../../convex/_generated/api"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -28,13 +44,15 @@ import {
 } from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/studio/page'
-import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign } from 'lucide-react'
+import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
 import { GeneratedCopyCard } from './GeneratedCopyCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { generateSocialPost } from '@/app/actions/generate-social-post'
+import { WireframeRenderer } from './previews/WireframeRenderer'
+import { GenerationState } from '@/lib/creation-flow-types'
 
 interface Generation {
     id: string
@@ -59,6 +77,7 @@ interface CanvasPanelProps {
     selectedTextModel?: string
     onTextModelChange?: (model: string) => void
     aspectRatio?: string
+    creationState?: GenerationState
 }
 
 export function CanvasPanel({
@@ -77,11 +96,13 @@ export function CanvasPanel({
     onModelChange,
     selectedTextModel,
     onTextModelChange,
-    aspectRatio = "1:1"
+    aspectRatio = "1:1",
+    creationState
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const { activeBrandKit } = useBrandKit()
     const [zoom, setZoom] = useState(100)
+    const containerRef = useRef<HTMLDivElement>(null)
     const [prompt, setPrompt] = useState('')
     const [isDraggingOver, setIsDraggingOver] = useState(false)
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
@@ -100,6 +121,50 @@ export function CanvasPanel({
     const [isGeneratingCopy, setIsGeneratingCopy] = useState(false)
     const [isCopyLocked, setIsCopyLocked] = useState(false) // New state for locking copy
 
+    // Save Preset State
+    const [isSavePresetOpen, setIsSavePresetOpen] = useState(false)
+    const [presetName, setPresetName] = useState('')
+    const [presetDescription, setPresetDescription] = useState('')
+    const [isSavingPreset, setIsSavingPreset] = useState(false)
+    const { user } = useUser();
+    const createPreset = useMutation(api.presets.create);
+
+    const handleSavePreset = async () => {
+        if (!presetName.trim() || !creationState) return;
+
+        setIsSavingPreset(true);
+        try {
+            // Use activeBrandKit.userId if available, otherwise check user.id (clerk)
+            // Assuming activeBrandKit might store the owner's ID or we use current user's ID
+            const userId = user?.id || (activeBrandKit as any)?.userId || "user";
+
+            await createPreset({
+                userId: userId,
+                name: presetName,
+                description: presetDescription,
+                icon: creationState.selectedIntent ? creationState.selectedIntent : "Sparkles", // Use intent ID as icon reference or default
+                state: {
+                    platform: creationState.selectedPlatform || 'instagram',
+                    format: creationState.selectedFormat || 'ig-square',
+                    intent: creationState.selectedIntent || 'general',
+                    layout: creationState.selectedLayout || undefined,
+                    styles: creationState.selectedStyles,
+                    customTexts: creationState.customTexts,
+                }
+            });
+            setIsSavePresetOpen(false);
+            setPresetName('');
+            setPresetDescription('');
+            // Optional: Toast success
+        } catch (error) {
+            console.error("Failed to save preset:", error);
+        } finally {
+            setIsSavingPreset(false);
+        }
+    };
+
+
+
     const handleZoomIn = () => setZoom((z) => Math.min(z + 25, 200))
     const handleZoomOut = () => setZoom((z) => Math.max(z - 25, 50))
     const handleResetZoom = () => setZoom(100)
@@ -112,7 +177,6 @@ export function CanvasPanel({
         onGenerate(promptToUse, model)
     }
 
-    // Handle Generation Reveal Effect - ONLY for newly generated images
     // Handle Generation Reveal Effect
     useEffect(() => {
         if (isGenerating) {
@@ -218,6 +282,48 @@ export function CanvasPanel({
             <div className="flex items-center justify-between px-4 py-3 border-b-2 border-border">
                 <h2 className="text-lg font-semibold font-heading">{t('canvas.title')}</h2>
                 <div className="flex items-center gap-2">
+                    <Dialog open={isSavePresetOpen} onOpenChange={setIsSavePresetOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="ghost" size="icon" title={t('canvas.savePreset') || "Guardar Preset"}>
+                                <Save className="w-4 h-4" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                                <DialogTitle>Guardar Preset</DialogTitle>
+                                <DialogDescription>
+                                    Guarda esta configuración para reutilizarla en futuros diseños.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="name">Nombre</Label>
+                                    <Input
+                                        id="name"
+                                        value={presetName}
+                                        onChange={(e) => setPresetName(e.target.value)}
+                                        placeholder="Ej: Oferta Black Friday"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="description">Descripción (Opcional)</Label>
+                                    <Textarea
+                                        id="description"
+                                        value={presetDescription}
+                                        onChange={(e) => setPresetDescription(e.target.value)}
+                                        placeholder="Descripción del preset..."
+                                        className="resize-none"
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsSavePresetOpen(false)}>Cancelar</Button>
+                                <Button onClick={handleSavePreset} disabled={!presetName.trim() || isSavingPreset}>
+                                    {isSavingPreset ? "Guardando..." : "Guardar Preset"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                     <Button
                         variant={isAnnotating ? 'default' : 'ghost'}
                         size="icon"
@@ -245,27 +351,39 @@ export function CanvasPanel({
                 </div>
             </div>
 
-            <div className="flex-1 relative flex flex-col items-center justify-center p-8 pb-24 overflow-y-auto bg-zinc-100 dark:bg-zinc-900 scrollbar-hide">
-                {/* Unified Aspect Ratio Container */}
-                {/* Unified Aspect Ratio Container */}
+            <div className="flex-1 relative flex flex-col items-center justify-center p-8 pb-24 overflow-y-auto bg-zinc-100 dark:bg-zinc-900 scrollbar-hide bg-[url('/grid-pattern.svg')]">
+
+                {/* Header / Zoom Controls Overlay */}
+                <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-between px-4 z-10 pointer-events-none">
+                    <div className="pointer-events-auto flex items-center gap-2">
+                        <Badge variant="outline" className="text-[10px] h-5 gap-1 bg-white/50 backdrop-blur-sm">
+                            {aspectRatio}
+                            <span className="opacity-50">|</span>
+                            {(() => {
+                                const [w, h] = aspectRatio.split(':').map(Number);
+                                const ratio = w / h;
+                                const baseH = 600;
+                                const calcW = baseH * ratio;
+                                return `${Math.round(calcW)}x${baseH}`;
+                            })()}
+                        </Badge>
+                    </div>
+                </div>
+
                 <div
-                    className="relative flex items-center justify-center shadow-sm shrink-0 transition-[width,height] duration-200 ease-out"
+                    ref={containerRef}
+                    className="relative shadow-2xl shadow-black/5 ring-1 ring-black/5 transition-all duration-300 ease-out flex items-center justify-center bg-white group"
                     style={{
-                        aspectRatio: aspectRatio.replace(':', '/'),
                         ...(() => {
                             const [w, h] = aspectRatio.split(':').map(Number);
                             const ratio = w / h;
-                            const zoomFactor = zoom / 100;
-                            // Box container ratio is roughly 800/600 = 1.33
-                            // If content is wider than box (ratio > 1.33), constrain width.
-                            // Otherwise (taller or square), constrain height.
-                            return ratio > (4 / 3) ? {
-                                width: `calc(min(calc(100vw - 480px), 800px) * ${zoomFactor})`, // Dynamic width based on zoom
-                                height: 'auto'
-                            } : {
-                                // Increased offset from 320px to 480px to fit Copy Card without scrolling
-                                height: `calc(min(calc(100vh - 480px), 600px) * ${zoomFactor})`,
-                                width: 'auto'
+                            const baseHeight = 600;
+                            const calculatedWidth = baseHeight * ratio;
+                            return {
+                                width: `${calculatedWidth}px`,
+                                height: `${baseHeight}px`,
+                                transform: `scale(${zoom / 100})`,
+                                transformOrigin: 'center center',
                             };
                         })()
                     }}
@@ -285,14 +403,9 @@ export function CanvasPanel({
                         )}
                     </AnimatePresence>
 
-                    {/* Main Image content */}
                     {currentImage ? (
-                        <div
-                            className="relative w-full h-full overflow-hidden rounded-lg bg-background/50 ring-1 ring-black/5"
-                        >
-                            <div
-                                className="w-full h-full flex items-center justify-center"
-                            >
+                        <div className="relative w-full h-full overflow-hidden rounded-lg bg-background/50">
+                            <div className="w-full h-full flex items-center justify-center">
                                 <motion.div
                                     key={currentImage}
                                     initial={wasJustGenerated ? { opacity: 0, filter: 'blur(80px) saturate(0.2)' } : { opacity: 1, filter: 'blur(0px) saturate(1)' }}
@@ -315,7 +428,6 @@ export function CanvasPanel({
                                         alt="Generated design"
                                         className="w-full h-full object-cover"
                                     />
-                                    {/* ... annotations ... */}
                                     {isAnnotating && (
                                         <div className="absolute top-1/4 right-1/4 w-24 h-24 annotation-ring flex items-center justify-center">
                                             <div className="bg-primary rounded-full p-1">
@@ -329,8 +441,15 @@ export function CanvasPanel({
                                 </motion.div>
                             </div>
                         </div>
+                    ) : creationState ? (
+                        <WireframeRenderer
+                            state={creationState}
+                            aspectRatio={(() => {
+                                const [w, h] = aspectRatio.split(':').map(Number);
+                                return w / h;
+                            })()}
+                        />
                     ) : (
-                        // Empty state with visible frame matching aspect ratio
                         <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
                             <div className="w-16 h-16 rounded-2xl bg-white/50 dark:bg-zinc-800/50 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm">
                                 <span className="text-3xl opacity-70">🎨</span>
@@ -342,45 +461,43 @@ export function CanvasPanel({
                         </div>
                     )}
                 </div>
+            </div>
 
-                {currentImage && (
-                    <div className="w-full max-w-[600px] mt-6 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10">
-                        <GeneratedCopyCard
-                            copy={generatedCopy}
-                            hashtags={generatedHashtags}
-                            isLoading={isGeneratingCopy}
-                            onRegenerate={handleGenerateCopy}
-                            isLocked={isCopyLocked}
-                            onToggleLock={() => setIsCopyLocked(!isCopyLocked)}
-                        />
-                    </div>
-                )}
+            {currentImage && (
+                <div className="w-full max-w-[600px] mt-6 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10">
+                    <GeneratedCopyCard
+                        copy={generatedCopy}
+                        hashtags={generatedHashtags}
+                        isLoading={isGeneratingCopy}
+                        onRegenerate={handleGenerateCopy}
+                        isLocked={isCopyLocked}
+                        onToggleLock={() => setIsCopyLocked(!isCopyLocked)}
+                    />
+                </div>
+            )}
 
-                {/* Zoom Controls */}
-                {currentImage && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-popover/90 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border shadow-sm z-20">
-                        {/* Regenerate Image Button */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-7 h-7 hover:text-primary hover:bg-primary/10"
-                            onClick={() => handleGenerateWrapper(lastUsedPrompt || prompt, selectedModel)}
-                            disabled={isGenerating}
-                            title={t('canvas.regenerate') || "Regenerar"}
-                        >
-                            <RestartAltIcon fontSize="small" className={isGenerating ? "animate-spin" : ""} />
-                        </Button>
-                        <div className="w-px h-4 bg-border mx-1" />
+            {/* Zoom Controls */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-popover/90 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border shadow-sm z-20">
+                {/* Regenerate Image Button */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-7 h-7 hover:text-primary hover:bg-primary/10"
+                    onClick={() => handleGenerateWrapper(lastUsedPrompt || prompt, selectedModel)}
+                    disabled={isGenerating}
+                    title={t('canvas.regenerate') || "Regenerar"}
+                >
+                    <RestartAltIcon fontSize="small" className={isGenerating ? "animate-spin" : ""} />
+                </Button>
+                <div className="w-px h-4 bg-border mx-1" />
 
-                        <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomOut}>
-                            <ZoomOutIcon fontSize="small" />
-                        </Button>
-                        <span className="text-xs font-mono w-12 text-center">{zoom}%</span>
-                        <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomIn}>
-                            <ZoomInIcon fontSize="small" />
-                        </Button>
-                    </div>
-                )}
+                <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomOut}>
+                    <ZoomOutIcon fontSize="small" />
+                </Button>
+                <span className="text-xs font-mono w-12 text-center">{zoom}%</span>
+                <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomIn}>
+                    <ZoomInIcon fontSize="small" />
+                </Button>
             </div>
 
             {/* Footer Area: History & Prompt */}
@@ -476,7 +593,6 @@ export function CanvasPanel({
                                         <AtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                                     )}
 
-                                    {/* Label for non-image types */}
                                     {(item.type === 'color' || item.type === 'template' || item.type === 'font' || item.type === 'text' || item.type === 'link' || item.type === 'contact') && (
                                         <span className="text-[11px] font-medium max-w-[120px] truncate">
                                             {item.label || item.value}
@@ -639,14 +755,14 @@ export function CanvasPanel({
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <TemplateSelectorModal
-                isOpen={isTemplateModalOpen}
-                onClose={() => setIsTemplateModalOpen(false)}
-                onSelect={handleSelectTemplate}
-                selectedTemplateId={selectedContext.find(c => c.type === 'template')?.id}
-            />
+                <TemplateSelectorModal
+                    isOpen={isTemplateModalOpen}
+                    onClose={() => setIsTemplateModalOpen(false)}
+                    onSelect={handleSelectTemplate}
+                    selectedTemplateId={selectedContext.find(c => c.type === 'template')?.id}
+                />
+            </div>
         </div >
     )
 }

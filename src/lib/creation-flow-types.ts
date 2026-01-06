@@ -684,6 +684,11 @@ export interface GenerationState {
     additionalInstructions: string // Direct instructions from user
     customStyle: string // User defined custom visual style
 
+    // Image Reference Options
+    imageSourceMode: 'upload' | 'brandkit' | 'generate' // Which image source is active
+    selectedBrandKitImageId: string | null // ID of selected brand kit image
+    aiImageDescription: string // Description for AI to generate reference image
+
     // Step 7: Final Format
     // (Moved to Step 0)
 
@@ -714,6 +719,9 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     rawMessage: '',
     additionalInstructions: '',
     customStyle: '',
+    imageSourceMode: 'upload',
+    selectedBrandKitImageId: null,
+    aiImageDescription: '',
     isGenerating: false,
     generatedImage: null,
     error: null,

@@ -2,14 +2,22 @@
 
 import { useCreationFlow } from '@/hooks/useCreationFlow'
 import { IntentSelector } from './IntentSelector'
-import { SmartImageDropzone } from './SmartImageDropzone'
+import { ImageReferenceSelector } from './ImageReferenceSelector'
 import { StyleChipsSelector } from './StyleChipsSelector'
 import { LayoutSelector } from './LayoutSelector'
 import { BrandingConfigurator } from './BrandingConfigurator'
 import { SocialFormatSelector } from './SocialFormatSelector'
 import { GenerateButton } from './GenerateButton'
+import { PresetsCarousel } from './PresetsCarousel'
+import { LazyPromptInput } from './LazyPromptInput'
 import { RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useUser } from '@clerk/nextjs'
+import { parseLazyIntentAction } from '@/app/actions/parse-intent'
+import { useState } from 'react'
+import { useToast } from '@/hooks/use-toast'
+import { useBrandKit } from '@/contexts/BrandKitContext'
+import { IntentCategory } from '@/lib/creation-flow-types'
 
 interface CreationCommandPanelProps {
     onGenerate?: (prompt: string) => Promise<void>
@@ -61,14 +69,11 @@ export function CreationCommandPanel({
         currentIntent,
         requiresImage,
         availableStyles,
-        availableLayouts,
         selectGroup,
         selectIntent,
         uploadImage,
         clearImage,
-        selectTheme,
         toggleStyle,
-        selectLayout,
         selectLogo,
         setHeadline,
         setCta,
@@ -81,7 +86,17 @@ export function CreationCommandPanel({
         selectFormat,
         constructFinalPrompt,
         reset,
+        loadPreset,
+        selectedLayoutMeta,
+        availableLayouts,
+        selectLayout,
     } = creationFlow
+
+    const { user } = useUser()
+    const { activeBrandKit } = useBrandKit()
+    const { toast } = useToast()
+    const [isMagicParsing, setIsMagicParsing] = useState(false)
+    const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
 
     const handleGenerate = async () => {
         const prompt = constructFinalPrompt()
@@ -92,244 +107,266 @@ export function CreationCommandPanel({
         }
     }
 
-    // Determine what level is visible based on state
-    const showLevel1 = state.selectedPlatform !== null && state.selectedFormat !== null
-    const showLevel2 = showLevel1 && state.selectedIntent !== null
-    // For intents that require image, wait for vision analysis. For others, always show next step.
-    const showLevel3 = showLevel2 && (state.visionAnalysis !== null || !requiresImage)
-    const hasStyle = state.selectedStyles.length > 0 || state.customStyle.trim() !== ''
-    const showLevel4 = showLevel3 && hasStyle
-    const showLevel5 = showLevel4
+    const handleSmartAnalyze = async () => {
+        if (!state.selectedIntent || !state.rawMessage.trim() || !currentIntent) return
 
-    const hasBranding = state.headline || state.cta || state.selectedLogoId || state.selectedBrandColors.length > 0 || state.additionalInstructions.trim() !== ''
-    const canGenerate = showLevel3 && (hasStyle || hasBranding)
+        setIsMagicParsing(true)
+        setHighlightedFields(new Set()) // Reset highlights
+
+        try {
+            console.log("Analyzing lazy prompt:", state.rawMessage)
+
+            // Call Server Action
+            const result = await parseLazyIntentAction(
+                state.rawMessage,
+                currentIntent,
+                activeBrandKit?.brand_name || "My Brand", // Context
+                selectedLayoutMeta || undefined
+            )
+
+            if (result.error) {
+                toast({
+                    title: "Error analyzing prompt",
+                    description: "Could not parse intent. Please fill manually.",
+                    variant: "destructive"
+                })
+                return
+            }
+
+            const newHighlights = new Set<string>()
+
+            // Populate Fields
+            if (result.headline) {
+                setHeadline(result.headline)
+                newHighlights.add('headline')
+            }
+            if (result.cta) {
+                setCta(result.cta)
+                newHighlights.add('cta')
+            }
+
+            if (result.customTexts) {
+                Object.entries(result.customTexts).forEach(([key, value]) => {
+                    setCustomText(key, value)
+                    newHighlights.add(key)
+                })
+            }
+
+            setHighlightedFields(newHighlights)
+
+            // Remove highlights after animation duration (2s)
+            setTimeout(() => {
+                setHighlightedFields(new Set())
+            }, 2500)
+
+            toast({
+                title: "Magic Applied! ✨",
+                description: "Your fields have been auto-filled based on your description.",
+            })
+
+        } catch (error) {
+            console.error(error)
+            toast({
+                title: "Error",
+                description: "Something went wrong with the magic analysis.",
+                variant: "destructive"
+            })
+        } finally {
+            setIsMagicParsing(false)
+        }
+    }
+
+    // Determine what level is visible based on state
+    const showMagic = state.selectedPlatform !== null && state.selectedFormat !== null && state.selectedIntent !== null
+    const showVisuals = showMagic && (state.visionAnalysis !== null || !requiresImage)
+
+    const canGenerate = showVisuals && (
+        state.selectedStyles.length > 0 ||
+        state.customStyle.trim() !== '' ||
+        state.headline ||
+        state.cta
+    )
 
     return (
-        <div className="w-[360px] h-full bg-card border-r border-border flex flex-col shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/10">
-                <div className="space-y-0.5">
-                    <h2 className="text-lg font-bold font-heading tracking-tight">Centro de Creación</h2>
-                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Estudio de Generación AI</p>
-                </div>
-                {state.selectedIntent && (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={reset}
-                        className="h-9 w-9 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
-                        title="Reiniciar"
-                    >
-                        <RotateCcw className="w-4 h-4" />
-                    </Button>
-                )}
-            </div>
-
+        <div className="w-[450px] h-full bg-card border-r border-border flex flex-col shadow-2xl relative z-10 hidden md:flex">
             {/* Scrollable Content Container */}
             <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide">
-                <div className="px-6 pt-2 pb-8 flex flex-col">
-                    {/* Level 1: Platform & Format */}
-                    <StepSection number={1} title="PLATAFORMA Y FORMATO">
-                        <SocialFormatSelector
-                            selectedPlatform={state.selectedPlatform}
-                            selectedFormat={state.selectedFormat}
-                            onSelectPlatform={selectPlatform}
-                            onSelectFormat={selectFormat}
+                <div className="pt-4 pb-12">
+
+                    {/* PHASE 0: PRESETS (Quick Start) */}
+                    <div className="px-6 pb-4">
+                        <PresetsCarousel
+                            onSelectPreset={loadPreset}
+                            userId={user?.id}
                         />
-                    </StepSection>
+                    </div>
 
-                    {showLevel1 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
+                    {/* STEP 1: PLATFORM & FORMAT */}
+                    <div className="border-t border-border/40"></div>
+                    <div className="px-6 pt-4">
+                        <StepSection
+                            number={1}
+                            title="PLATAFORMA Y FORMATO"
+                            description="Selecciona dónde publicarás"
+                        >
+                            <SocialFormatSelector
+                                selectedPlatform={state.selectedPlatform}
+                                selectedFormat={state.selectedFormat}
+                                onSelectPlatform={selectPlatform}
+                                onSelectFormat={selectFormat}
+                            />
+                        </StepSection>
+                    </div>
 
-                    {/* Level 3: Intent Selector */}
-                    <StepSection
-                        number={2}
-                        title="INTENCIÓN"
-                        description="¿Qué quieres conseguir con esta pieza?"
-                        show={showLevel1}
-                    >
-                        <IntentSelector
-                            selectedGroup={state.selectedGroup}
-                            selectedIntent={state.selectedIntent}
-                            onSelectGroup={selectGroup}
-                            onSelectIntent={selectIntent}
-                        />
-                    </StepSection>
+                    {/* STEP 2: INTENT & LAYOUT */}
+                    {state.selectedPlatform !== null && (
+                        <>
+                            <div className="border-t border-border/40 mt-4"></div>
+                            <div className="px-6 pt-4">
+                                <StepSection
+                                    number={2}
+                                    title="INTENCIÓN Y COMPOSICIÓN"
+                                    description="Define el objetivo y la estructura visual"
+                                >
+                                    <div className="space-y-6">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                                                Selecciona Intención
+                                            </p>
+                                            <IntentSelector
+                                                selectedGroup={state.selectedGroup}
+                                                selectedIntent={state.selectedIntent}
+                                                onSelectGroup={selectGroup}
+                                                onSelectIntent={selectIntent}
+                                            />
+                                        </div>
 
-                    {showLevel2 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
+                                        {state.selectedIntent && availableLayouts.length > 0 && (
+                                            <div>
+                                                <LayoutSelector
+                                                    availableLayouts={availableLayouts}
+                                                    selectedLayout={state.selectedLayout}
+                                                    onSelectLayout={selectLayout}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </StepSection>
+                            </div>
+                        </>
+                    )}
 
-                    {/* Level 4: Reference Image (always available, optional for some intents) */}
-                    <StepSection
-                        number={3}
-                        title="IMAGEN DE REFERENCIA"
-                        description={requiresImage
-                            ? "Sube una imagen del producto o referencia"
-                            : "Sube una imagen de referencia (opcional)"
-                        }
-                        show={showLevel2}
-                    >
-                        <SmartImageDropzone
-                            uploadedImage={state.uploadedImage}
-                            visionAnalysis={state.visionAnalysis}
-                            isAnalyzing={state.isAnalyzing}
-                            error={state.error}
-                            onUpload={uploadImage}
-                            onClear={clearImage}
-                            isOptional={!requiresImage}
-                        />
-                    </StepSection>
+                    {/* STEP 3: CONTENT & MAGIC */}
+                    {showMagic && (
+                        <>
+                            <div className="border-t border-border/40 mt-4"></div>
+                            <div className="px-6 pt-4">
+                                <StepSection
+                                    number={3}
+                                    title="CONTENIDO & MAGIA"
+                                    description="Describe tu idea y deja que la IA trabaje"
+                                >
+                                    <div className="space-y-6">
+                                        <LazyPromptInput
+                                            intent={state.selectedIntent}
+                                            rawMessage={state.rawMessage}
+                                            onMessageChange={setRawMessage}
+                                            onAnalyze={handleSmartAnalyze}
+                                            isAnalyzing={isMagicParsing}
+                                        />
 
-                    {showLevel3 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                                Referencia Visual {requiresImage ? '(Obligatoria)' : '(Opcional)'}
+                                            </p>
+                                            <ImageReferenceSelector
+                                                uploadedImage={state.uploadedImage}
+                                                visionAnalysis={state.visionAnalysis}
+                                                isAnalyzing={state.isAnalyzing}
+                                                error={state.error}
+                                                onUpload={uploadImage}
+                                                onClear={clearImage}
+                                                isOptional={!requiresImage}
+                                                // Brand Kit images
+                                                brandKitImages={activeBrandKit?.images?.map((img, idx) => ({
+                                                    id: img.url,
+                                                    url: img.url,
+                                                    name: `Imagen ${idx + 1}`
+                                                })) || []}
+                                                selectedBrandKitImageId={state.selectedBrandKitImageId}
+                                                onSelectBrandKitImage={creationFlow.selectBrandKitImage}
+                                                // AI generation
+                                                aiImageDescription={state.aiImageDescription}
+                                                onAiDescriptionChange={creationFlow.setAiImageDescription}
+                                            />
+                                        </div>
 
-                    {/* Step 4: Visual Style */}
-                    <StepSection
-                        number={4}
-                        title="ESTILO VISUAL"
-                        description="Elige la dirección estética de tu imagen"
-                        show={showLevel3}
-                    >
-                        <StyleChipsSelector
-                            availableStyles={availableStyles}
-                            styleGroups={creationFlow.styleGroups}
-                            selectedStyles={state.selectedStyles}
-                            customStyle={state.customStyle}
-                            onToggleStyle={toggleStyle}
-                            onCustomStyleChange={setCustomStyle}
-                        />
-                    </StepSection>
+                                        {/* Form Fields (Auto-filled by Lazy Prompt) */}
+                                        {state.selectedIntent && (
+                                            <BrandingConfigurator
+                                                selectedLayout={creationFlow.selectedLayoutMeta || null}
+                                                customTexts={state.customTexts}
+                                                selectedLogoId={state.selectedLogoId}
+                                                headline={state.headline}
+                                                cta={state.cta}
+                                                selectedBrandColors={state.selectedBrandColors}
+                                                rawMessage={state.rawMessage}
+                                                additionalInstructions={state.additionalInstructions}
+                                                onSelectLogo={selectLogo}
+                                                onHeadlineChange={setHeadline}
+                                                onCtaChange={setCta}
+                                                onRawMessageChange={setRawMessage}
+                                                onAdditionalInstructionsChange={setAdditionalInstructions}
+                                                onCustomTextChange={setCustomText}
+                                                onToggleNoText={creationFlow.toggleNoText}
+                                                onToggleBrandColor={toggleBrandColor}
+                                                onGenerateAICopy={creationFlow.generateFieldCopy}
+                                                showLogo={true}
+                                                showColors={true}
+                                                showTexts={true}
+                                                showInstructions={true}
+                                                intentRequiredFields={creationFlow.currentIntent?.requiredFields}
+                                                highlightedFields={highlightedFields}
+                                            />
+                                        )}
+                                    </div>
+                                </StepSection>
+                            </div>
+                        </>
+                    )}
 
-                    {showLevel3 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
-
-                    {/* Step 5: Branding Identity */}
-                    <StepSection
-                        number={5}
-                        title="IDENTIDAD DE MARCA"
-                        description="Integra tus logos y colores corporativos"
-                        show={showLevel3}
-                    >
-                        <BrandingConfigurator
-                            selectedLayout={creationFlow.selectedLayoutMeta || null}
-                            customTexts={state.customTexts}
-                            selectedLogoId={state.selectedLogoId}
-                            headline={state.headline}
-                            cta={state.cta}
-                            selectedBrandColors={state.selectedBrandColors}
-                            rawMessage={state.rawMessage}
-                            additionalInstructions={state.additionalInstructions}
-                            onSelectLogo={selectLogo}
-                            onHeadlineChange={setHeadline}
-                            onCtaChange={setCta}
-                            onRawMessageChange={setRawMessage}
-                            onAdditionalInstructionsChange={setAdditionalInstructions}
-                            onCustomTextChange={setCustomText}
-                            onToggleNoText={creationFlow.toggleNoText}
-                            onToggleBrandColor={toggleBrandColor}
-                            onGenerateAICopy={creationFlow.generateFieldCopy}
-                            showLogo={true}
-                            showColors={true}
-                            showTexts={false}
-                            showInstructions={false}
-                        />
-                    </StepSection>
-
-                    {showLevel3 && <hr className="border-t-2 border-border/50 mt-6 mb-2 -mx-6" />}
-
-                    {/* Step 6: Content & Texts */}
-                    <StepSection
-                        number={6}
-                        title="CONTENIDO Y TEXTOS"
-                        description="Personaliza los mensajes de tu pieza"
-                        show={showLevel3}
-                    >
-                        <BrandingConfigurator
-                            selectedLayout={creationFlow.selectedLayoutMeta || null}
-                            customTexts={state.customTexts}
-                            selectedLogoId={state.selectedLogoId}
-                            headline={state.headline}
-                            cta={state.cta}
-                            selectedBrandColors={state.selectedBrandColors}
-                            rawMessage={state.rawMessage}
-                            additionalInstructions={state.additionalInstructions}
-                            onSelectLogo={selectLogo}
-                            onHeadlineChange={setHeadline}
-                            onCtaChange={setCta}
-                            onRawMessageChange={setRawMessage}
-                            onAdditionalInstructionsChange={setAdditionalInstructions}
-                            onCustomTextChange={setCustomText}
-                            onToggleNoText={creationFlow.toggleNoText}
-                            onToggleBrandColor={toggleBrandColor}
-                            onGenerateAICopy={creationFlow.generateFieldCopy}
-                            showLogo={false}
-                            showColors={false}
-                            showTexts={true}
-                            showInstructions={false}
-                            intentRequiredFields={creationFlow.currentIntent?.requiredFields}
-                        />
-                    </StepSection>
-
-                    {showLevel3 && <hr className="border-t-2 border-border/50 my-6 -mx-6" />}
-
-                    {/* Step 7: Director Instructions */}
-                    <StepSection
-                        number={7}
-                        title="INSTRUCCIONES DEL DIRECTOR"
-                        description="Indicaciones finales para la IA"
-                        show={showLevel3}
-                    >
-                        <BrandingConfigurator
-                            selectedLayout={creationFlow.selectedLayoutMeta || null}
-                            customTexts={state.customTexts}
-                            selectedLogoId={state.selectedLogoId}
-                            headline={state.headline}
-                            cta={state.cta}
-                            selectedBrandColors={state.selectedBrandColors}
-                            rawMessage={state.rawMessage}
-                            additionalInstructions={state.additionalInstructions}
-                            onSelectLogo={selectLogo}
-                            onHeadlineChange={setHeadline}
-                            onCtaChange={setCta}
-                            onRawMessageChange={setRawMessage}
-                            onAdditionalInstructionsChange={setAdditionalInstructions}
-                            onCustomTextChange={setCustomText}
-                            onToggleNoText={creationFlow.toggleNoText}
-                            onToggleBrandColor={toggleBrandColor}
-                            onGenerateAICopy={creationFlow.generateFieldCopy}
-                            showLogo={false}
-                            showColors={false}
-                            showTexts={false}
-                            showInstructions={true}
-                        />
-                    </StepSection>
+                    {/* STEP 4: VISUAL STYLE */}
+                    {showVisuals && (
+                        <>
+                            <div className="border-t border-border/40 mt-4"></div>
+                            <div className="px-6 pt-4">
+                                <StepSection
+                                    number={4}
+                                    title="ESTILO VISUAL"
+                                    description="Define la estética final"
+                                >
+                                    <StyleChipsSelector
+                                        availableStyles={availableStyles}
+                                        styleGroups={creationFlow.styleGroups}
+                                        selectedStyles={state.selectedStyles}
+                                        customStyle={state.customStyle}
+                                        onToggleStyle={toggleStyle}
+                                        onCustomStyleChange={setCustomStyle}
+                                    />
+                                </StepSection>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
             {/* Footer: Generate Button */}
-            <div className="p-6 border-t border-border bg-muted/5">
+            <div className="p-6 border-t border-border bg-muted/5 z-20">
                 <GenerateButton
                     isGenerating={isGenerating || state.isGenerating}
                     isDisabled={!canGenerate}
                     onClick={handleGenerate}
                 />
-
-                {/* Progress indicator */}
-                <div className="flex justify-center gap-2 mt-4">
-                    {[1, 2, 3, 4].map((step) => {
-                        const isActive =
-                            (step === 1 && state.selectedFormat) ||
-                            (step === 2 && state.selectedIntent) ||
-                            (step === 3 && showLevel3) ||
-                            (step === 4 && canGenerate)
-
-                        return (
-                            <div
-                                key={step}
-                                className={`h-1 rounded-full transition-all duration-500 shadow-sm ${isActive
-                                    ? 'w-8 bg-primary translate-y-0 opacity-100'
-                                    : 'w-4 bg-muted translate-y-0.5 opacity-50'
-                                    }`}
-                            />
-                        )
-                    })}
-                </div>
             </div>
         </div>
     )

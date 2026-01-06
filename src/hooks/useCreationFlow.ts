@@ -211,6 +211,25 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     // -------------------------------------------------------------------------
+    // Image Source Mode Selection
+    // -------------------------------------------------------------------------
+
+    const setImageSourceMode = useCallback((mode: 'upload' | 'brandkit' | 'generate') => {
+        setState(prev => ({ ...prev, imageSourceMode: mode }))
+    }, [])
+
+    const selectBrandKitImage = useCallback(async (imageUrl: string) => {
+        setState(prev => ({ ...prev, selectedBrandKitImageId: imageUrl }))
+
+        // Use the image URL directly
+        await setImageFromUrl(imageUrl)
+    }, [setImageFromUrl])
+
+    const setAiImageDescription = useCallback((description: string) => {
+        setState(prev => ({ ...prev, aiImageDescription: description }))
+    }, [])
+
+    // -------------------------------------------------------------------------
     // STEP 3: Style Selection
     // -------------------------------------------------------------------------
 
@@ -425,13 +444,18 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             parts.push(`TYPE: ${currentIntent.name} (${currentIntent.description})`)
         }
 
-        // Subject from Vision Analysis
+        // Subject from Vision Analysis OR AI Description
         if (state.visionAnalysis) {
             parts.push(`SUBJECT: ${state.visionAnalysis.subjectLabel}`)
             if (state.visionAnalysis.keywords.length > 0) {
                 parts.push(`VISUAL KEYWORDS: ${state.visionAnalysis.keywords.join(', ')}`)
             }
             parts.push(`LIGHTING: ${state.visionAnalysis.lighting}`)
+        } else if (state.imageSourceMode === 'generate' && state.aiImageDescription.trim()) {
+            // When user wants AI to generate the reference image
+            parts.push(`IMAGEN DE REFERENCIA (GENERADA POR IA):`)
+            parts.push(`Debes incluir en la composición final: ${state.aiImageDescription.trim()}`)
+            parts.push(`Esta descripción define el elemento visual principal que debe aparecer en el diseño.`)
         }
 
         // Selected Style Chips
@@ -575,6 +599,24 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     // -------------------------------------------------------------------------
+    // PRESETS
+    // -------------------------------------------------------------------------
+
+    const loadPreset = useCallback((presetState: Partial<GenerationState>) => {
+        setState(prev => ({
+            ...INITIAL_GENERATION_STATE,
+            ...presetState,
+            // Ensure clean technical state
+            isGenerating: false,
+            isAnalyzing: false,
+            error: null,
+            uploadedImage: null, // Presets won't carry actual image data usually, or if they do we need to handle it.
+            uploadedImageFile: null,
+            visionAnalysis: null, // Reset analysis
+        }))
+    }, [])
+
+    // -------------------------------------------------------------------------
     // RETURN
     // -------------------------------------------------------------------------
 
@@ -594,6 +636,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         uploadImage,
         setImageFromUrl,
         clearImage,
+        setImageSourceMode,
+        selectBrandKitImage,
+        setAiImageDescription,
         selectTheme,
         toggleStyle,
         selectLayout,
@@ -612,6 +657,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         constructFinalPrompt,
         generate,
         reset,
+        loadPreset,
         // Constants
         styleGroups: ARTISTIC_STYLE_GROUPS,
     }

@@ -40,6 +40,7 @@ Antes de tomar cualquier acción o responder:
     -   Tras un push autorizado, **SIEMPRE** verifica el estado en Vercel.
     -   Comando: `vercel list --token 2IlaVhRb2zFoA2EUn3b7VXoN`
     -   Si falla, investiga inmediatamente.
+    **Pero SIEMPRE preguntar al usuario si quiere hacer un deploy** cuando recibas una solicitud de realizar una tarea que implique cambios en el código fuente, antes de hacerlo.
 
 
 ### 5. Comandos de Servidor

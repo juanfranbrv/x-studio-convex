@@ -13,7 +13,9 @@ import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import type { BrandDNA } from '@/lib/brand-types'
 import { SOCIAL_FORMATS } from '@/lib/creation-flow-types'
-import { Loader2, Plus } from 'lucide-react'
+import { Loader2, Plus, PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface Generation {
     id: string
@@ -43,6 +45,7 @@ export default function StudioPage() {
     const [logoInclusion, setLogoInclusion] = useState(true)
     const [selectedModel, setSelectedModel] = useState('wisdom/gemini-3-pro-image-preview')
     const [selectedTextModel, setSelectedTextModel] = useState('wisdom/gemini-2.5-flash')
+    const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false)
 
     const creationFlow = useCreationFlow({
         onImageUploaded: async (file: File) => {
@@ -224,19 +227,41 @@ export default function StudioPage() {
                         selectedTextModel={selectedTextModel}
                         onTextModelChange={setSelectedTextModel}
                         aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio}
+                        creationState={creationFlow.state}
                     />
 
-                    {/* Right: Brand DNA Panel */}
-                    <BrandDNAPanel
-                        brandDNA={activeBrandKit}
-                        logoInclusion={logoInclusion}
-                        onLogoInclusionChange={setLogoInclusion}
-                        selectedContext={selectedContext}
-                        onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
-                        onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
-                        onSetDraggedElement={setDraggedElement}
-                        onImageClick={(url) => creationFlow.setImageFromUrl(url)}
-                    />
+                    {/* Brand Drawer Toggle - Fixed on Right Edge */}
+                    <Button
+                        variant="secondary"
+                        size="icon"
+                        onClick={() => setIsBrandDrawerOpen(!isBrandDrawerOpen)}
+                        title={isBrandDrawerOpen ? "Cerrar Brand Kit" : "Abrir Brand Kit"}
+                        className={cn(
+                            "fixed z-50 top-[400px] h-12 w-10 rounded-l-xl rounded-r-none border-r-0 border-2 shadow-2xl transition-all duration-300",
+                            isBrandDrawerOpen
+                                ? "right-[360px] bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
+                                : "right-0 bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+                        )}
+                    >
+                        {isBrandDrawerOpen ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
+                    </Button>
+
+                    {/* Right: Brand DNA Panel (Drawer) */}
+                    <div className={cn(
+                        "fixed inset-y-0 right-0 w-[360px] z-40 transition-transform duration-300 ease-out shadow-2xl",
+                        isBrandDrawerOpen ? "translate-x-0" : "translate-x-full"
+                    )}>
+                        <BrandDNAPanel
+                            brandDNA={activeBrandKit}
+                            logoInclusion={logoInclusion}
+                            onLogoInclusionChange={setLogoInclusion}
+                            selectedContext={selectedContext}
+                            onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
+                            onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
+                            onSetDraggedElement={setDraggedElement}
+                            onImageClick={(url) => creationFlow.setImageFromUrl(url)}
+                        />
+                    </div>
                 </div>
             ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">

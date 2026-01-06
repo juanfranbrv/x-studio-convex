@@ -55,6 +55,7 @@ interface BrandingConfiguratorProps {
     showTexts?: boolean
     showInstructions?: boolean
     intentRequiredFields?: IntentRequiredField[]
+    highlightedFields?: Set<string>
 }
 
 export function BrandingConfigurator({
@@ -80,6 +81,7 @@ export function BrandingConfigurator({
     showTexts = true,
     showInstructions = true,
     intentRequiredFields = [],
+    highlightedFields = new Set(),
 }: BrandingConfiguratorProps) {
     const { activeBrandKit } = useBrandKit()
     const [generatingFields, setGeneratingFields] = useState<Record<string, boolean>>({})
@@ -333,6 +335,9 @@ export function BrandingConfigurator({
                         const isNoText = value === NO_TEXT_TOKEN
                         const isGenerating = generatingFields[field.id]
 
+                        // Check if this field was just highlighted
+                        const isHighlighted = highlightedFields.has(field.id)
+
                         return (
                             <div key={field.id} className="space-y-1.5 animate-in fade-in slide-in-from-left-2 duration-300">
                                 <div className="flex items-center justify-between">
@@ -384,6 +389,7 @@ export function BrandingConfigurator({
                                         placeholder={isNoText ? "Elemento eliminado de la plantilla" : field.placeholder}
                                         className={cn(
                                             "h-9 text-sm transition-all pr-20", // Increased padding for 2 buttons
+                                            isHighlighted ? "animate-flash-highlight" : "", // Apply flash highlight
                                             isNoText
                                                 ? "bg-red-500/5 border-red-500/20 text-red-500 italic placeholder:text-red-300/50"
                                                 : "bg-muted/30 border-border/50 focus:border-primary/50 group-hover:border-primary/30"
