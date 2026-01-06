@@ -39,7 +39,7 @@ export function PromptDebugModal({
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent
                 className="max-h-[90vh] flex flex-col"
-                style={{ width: '95vw', maxWidth: '1600px' }}
+                style={{ width: '80vw', maxWidth: '1200px' }}
             >
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
