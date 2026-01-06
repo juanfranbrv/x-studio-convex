@@ -24,6 +24,9 @@ interface ImageReferenceSelectorProps {
     // AI Generation
     aiImageDescription?: string
     onAiDescriptionChange?: (description: string) => void
+    // Mode Control
+    mode?: ImageSourceMode
+    onModeChange?: (mode: ImageSourceMode) => void
 }
 
 export function ImageReferenceSelector({
@@ -39,8 +42,9 @@ export function ImageReferenceSelector({
     onSelectBrandKitImage,
     aiImageDescription = '',
     onAiDescriptionChange,
+    mode = 'upload',
+    onModeChange,
 }: ImageReferenceSelectorProps) {
-    const [mode, setMode] = useState<ImageSourceMode>('upload')
     const [isDragging, setIsDragging] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
 
@@ -69,8 +73,15 @@ export function ImageReferenceSelector({
         }
     }, [onUpload])
 
+    // Internal handler to sync if onModeChange is provided, otherwise local (though we want controlled)
+    const handleModeChange = (val: string) => {
+        if (onModeChange) {
+            onModeChange(val as ImageSourceMode)
+        }
+    }
+
     return (
-        <Tabs value={mode} onValueChange={(v) => setMode(v as ImageSourceMode)} className="w-full">
+        <Tabs value={mode} onValueChange={handleModeChange} className="w-full">
             <TabsList className="grid w-full grid-cols-3 h-8">
                 <TabsTrigger value="upload" className="text-[10px] h-7">
                     <Upload className="w-3 h-3 mr-1" />
@@ -82,7 +93,7 @@ export function ImageReferenceSelector({
                 </TabsTrigger>
                 <TabsTrigger value="generate" className="text-[10px] h-7">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    Generar IA
+                    Generar con IA
                 </TabsTrigger>
             </TabsList>
 

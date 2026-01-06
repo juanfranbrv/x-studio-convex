@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { Zap, Smartphone, AlertCircle, Hash, BarChart3, Box } from 'lucide-react'
+import { Zap, Smartphone, AlertCircle, Hash, BarChart3, Box, Sparkles } from 'lucide-react'
 import type { LayoutOption } from '@/lib/creation-flow-types'
 
 interface LayoutSelectorProps {
@@ -59,13 +59,7 @@ const WireframeIcons: Record<string, React.FC<{ className?: string }>> = {
             <rect x="6" y="14" width="16" height="12" rx="1" />
         </svg>
     ),
-    RectangleHorizontal: ({ className }) => (
-        <svg className={className} viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <rect x="2" y="2" width="36" height="18" rx="2" fill="currentColor" fillOpacity="0.1" />
-            <rect x="2" y="22" width="36" height="6" rx="1" fill="currentColor" fillOpacity="0.3" />
-            <rect x="8" y="24" width="12" height="2" rx="1" fill="currentColor" />
-        </svg>
-    ),
+
     Type: ({ className }) => (
         <svg className={className} viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="2" y="2" width="36" height="26" rx="2" fill="currentColor" fillOpacity="0.1" />
@@ -146,7 +140,49 @@ const WireframeIcons: Record<string, React.FC<{ className?: string }>> = {
             <path d="M8 8 L32 8 L32 18 L22 18 L18 24 L18 18 L8 18 Z" fill="currentColor" fillOpacity="0.3" stroke="currentColor" />
         </svg>
     ),
+    // -------------------------------------------------------------
+    // VISUALLY DISTINCT ICONS FOR COMUNICADOS (ZONING BASED)
+    // -------------------------------------------------------------
+    FileText: ({ className }) => (
+        <svg className={className} viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="1.5">
+            {/* Official Doc: Header(15%) Title(20%) Body(50%) Footer(15%) */}
+            {/* 26px total height. 15%~4px, 20%~5px, 50%~13px, 15%~4px */}
+            <rect x="8" y="2" width="24" height="26" rx="1" fill="currentColor" fillOpacity="0.05" stroke="currentColor" />
+            <rect x="10" y="4" width="20" height="3" rx="0.5" fill="currentColor" fillOpacity="0.8" /> {/* Header */}
+            <rect x="10" y="8" width="20" height="4" rx="0.5" fill="currentColor" fillOpacity="0.6" /> {/* Title */}
+            <rect x="10" y="13" width="20" height="10" rx="0.5" fill="currentColor" fillOpacity="0.3" /> {/* Body */}
+            <rect x="10" y="24" width="20" height="2" rx="0.5" fill="currentColor" fillOpacity="0.4" /> {/* Footer */}
+        </svg>
+    ),
+    RectangleHorizontal: ({ className }) => (
+        <svg className={className} viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="1.5">
+            {/* Banner: Left(30%) Right(70%) */}
+            {/* 36px width. 30% ~ 11px. */}
+            <rect x="2" y="6" width="36" height="18" rx="2" stroke="currentColor" />
+            <rect x="4" y="8" width="10" height="14" rx="1" fill="currentColor" fillOpacity="0.8" /> {/* Left Icon Zone */}
+            <rect x="16" y="8" width="20" height="14" rx="1" fill="currentColor" fillOpacity="0.2" /> {/* Right Text Zone */}
+        </svg>
+    ),
+    LayoutTemplate: ({ className }) => (
+        <svg className={className} viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="1.5">
+            {/* Modern Asymmetric: Visual(40%) Content(60%) */}
+            <rect x="2" y="2" width="36" height="26" rx="2" stroke="currentColor" />
+            <path d="M2 2 L16 2 L22 28 L2 28 Z" fill="currentColor" fillOpacity="0.5" /> {/* Angled Left Block */}
+            <rect x="20" y="6" width="14" height="4" rx="0.5" fill="currentColor" fillOpacity="0.8" />
+            <rect x="20" y="12" width="14" height="10" rx="0.5" fill="currentColor" fillOpacity="0.2" />
+        </svg>
+    ),
+    MessageSquareQuote: ({ className }) => (
+        <svg className={className} viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="1.5">
+            {/* Quote Focus: Center(80%) */}
+            <rect x="2" y="2" width="36" height="26" rx="2" fill="currentColor" fillOpacity="0.05" />
+            <rect x="6" y="6" width="28" height="18" rx="1" fill="currentColor" fillOpacity="0.2" stroke="currentColor" />
+            <path d="M14 12 L16 12 L16 16 L14 16 Z M18 12 L20 12 L20 16 L18 16 Z" fill="currentColor" /> {/* Quote marks */}
+            <rect x="10" y="18" width="20" height="2" fill="currentColor" fillOpacity="0.6" />
+        </svg>
+    ),
     // Lucide Icon Wrappers
+    Sparkles: ({ className }) => <Sparkles className={className} />,
     Zap: ({ className }) => <Zap className={className} />,
     Smartphone: ({ className }) => <Smartphone className={className} />,
     AlertCircle: ({ className }) => <AlertCircle className={className} />,

@@ -10,3 +10,6 @@
 export const PRIORITY_HEADER = `╔═════════════════════════════════════════════════════════════════╗
 ║  PRIORITY 2 - TECHNICAL SPECIFICATIONS                        ║
 ╚═════════════════════════════════════════════════════════════════╝`
+
+export const COMPOSITION_RULES = `BACKGROUND: Transparent (No Background). Subject must be isolated.
+DEPTH: Elements should float freely to allow composition integration.`

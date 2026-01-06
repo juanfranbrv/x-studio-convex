@@ -669,6 +669,26 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
 
         // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 7 - COMPOSITION & LAYOUT (Dynamic from selected layout)
+        // ═══════════════════════════════════════════════════════════════
+        if (state.selectedLayout && state.selectedIntent) {
+            // Find selected layout definition
+            const intentLayouts = LAYOUTS_BY_INTENT[state.selectedIntent]
+            const layoutDef = intentLayouts?.find(l => l.id === state.selectedLayout)
+
+            if (layoutDef?.structuralPrompt) {
+                sections.push(
+                    `╔═════════════════════════════════════════════════════════════════╗`,
+                    `║  PRIORITY 7 - COMPOSITION & LAYOUT                            ║`,
+                    `╚═════════════════════════════════════════════════════════════════╝`,
+                    ``,
+                    layoutDef.structuralPrompt,
+                    ``
+                )
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
         // PRIORITY 7 - LAYOUT & COMPOSITIONAL STRUCTURE (TEMPORARILY DISABLED)
         // ═══════════════════════════════════════════════════════════════
         // COMMENTED OUT TO TEST INTENT PROMPTS EXCLUSIVELY
@@ -716,18 +736,23 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 ``
             )
 
-            if (state.visionAnalysis) {
-                subjectParts.push(`SUBJECT: ${state.visionAnalysis.subjectLabel}`)
-                if (state.visionAnalysis.keywords.length > 0) {
-                    subjectParts.push(`KEYWORDS: ${state.visionAnalysis.keywords.join(', ')}`)
-                }
-                subjectParts.push(`LIGHTING: ${state.visionAnalysis.lighting}`, ``)
-            } else if (state.imageSourceMode === 'generate' && state.aiImageDescription.trim()) {
+            // Prioritize AI Description if we are explicitly in 'generate' mode
+            const useAiDescription = state.imageSourceMode === 'generate' && state.aiImageDescription.trim()
+
+            if (useAiDescription) {
                 subjectParts.push(
                     P06.AI_GENERATED_REFERENCE_HEADER,
                     P06.AI_GENERATED_REFERENCE_INSTRUCTION(state.aiImageDescription.trim()),
                     ``
                 )
+            }
+            // Fallback to vision analysis (from upload or brand kit) if available
+            else if (state.visionAnalysis) {
+                subjectParts.push(`SUBJECT: ${state.visionAnalysis.subjectLabel}`)
+                if (state.visionAnalysis.keywords.length > 0) {
+                    subjectParts.push(`KEYWORDS: ${state.visionAnalysis.keywords.join(', ')}`)
+                }
+                subjectParts.push(`LIGHTING: ${state.visionAnalysis.lighting}`, ``)
             }
         }
 
@@ -796,6 +821,26 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
 
         // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 7 - COMPOSITION & LAYOUT (Dynamic from selected layout)
+        // ═══════════════════════════════════════════════════════════════
+        if (state.selectedLayout && state.selectedIntent) {
+            // Find selected layout definition
+            const intentLayouts = LAYOUTS_BY_INTENT[state.selectedIntent]
+            const layoutDef = intentLayouts?.find(l => l.id === state.selectedLayout)
+
+            if (layoutDef?.structuralPrompt) {
+                sections.push(
+                    `╔═════════════════════════════════════════════════════════════════╗`,
+                    `║  PRIORITY 7 - COMPOSITION & LAYOUT                            ║`,
+                    `╚═════════════════════════════════════════════════════════════════╝`,
+                    ``,
+                    layoutDef.structuralPrompt,
+                    ``
+                )
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
         // PRIORITY 3 - CONTENT TYPE & MARKETING INTENT
         // ═══════════════════════════════════════════════════════════════
         if (currentIntent) {
@@ -823,12 +868,17 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 2 - TECHNICAL SPECIFICATIONS
         // ═══════════════════════════════════════════════════════════════
+        sections.push(
+            P02.PRIORITY_HEADER,
+            ``,
+            P02.COMPOSITION_RULES,
+            ``
+        )
+
         if (state.selectedFormat) {
             const format = SOCIAL_FORMATS.find(f => f.id === state.selectedFormat)
             if (format) {
                 sections.push(
-                    P02.PRIORITY_HEADER,
-                    ``,
                     `FORMAT: ${format.name}`,
                     `ASPECT RATIO: ${format.aspectRatio}`,
                     ``

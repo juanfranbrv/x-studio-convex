@@ -33,9 +33,17 @@ import {
 import {
     COMUNICADO_EXTENDED_DESCRIPTION,
     COMUNICADO_REQUIRED_FIELDS,
-    COMUNICADO_PROMPT,
+    COMUNICADO_OFFICIAL_PROMPT,
+    COMUNICADO_BANNER_PROMPT,
+    COMUNICADO_MODERN_PROMPT,
+    COMUNICADO_QUOTE_PROMPT,
     COMUNICADO_DESCRIPTION,
 } from './prompts/intents/comunicado'
+// ... (skipping unchanged parts for brevity in tool call, but I will target the imports and the array usage)
+
+// WARNING: I need to do this in two chunks because the file is large and the imports are far from the array.
+// I will split this into two tool calls.
+
 import {
     LOGRO_EXTENDED_DESCRIPTION,
     LOGRO_REQUIRED_FIELDS,
@@ -90,6 +98,22 @@ export type IntentCategory =
     // Grupo E: Engagement (Interaction)
     | 'pregunta'         // La Pregunta (Q&A)
     | 'reto'             // El Reto/Juego
+
+export type LayoutId =
+    | 'oferta-impacto'
+    | 'promo-movil'
+    | 'comunicado-ai-freedom'
+
+export interface LayoutMeta {
+    id: LayoutId
+    name: string
+    description: string
+    prompt: string
+    icon: LucideIcon
+    intent: IntentCategory
+}
+
+
 
 // -----------------------------------------------------------------------------
 // INTENT METADATA
@@ -448,11 +472,11 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         {
             id: 'comunicado-oficial',
             name: 'Comunicado Oficial',
-            description: 'Diseño formal con máxima legibilidad',
+            description: 'Diseño formal',
             svgIcon: 'FileText',
             textZone: 'center',
             promptInstruction: 'Official announcement layout with maximum readability.',
-            structuralPrompt: COMUNICADO_PROMPT,
+            structuralPrompt: COMUNICADO_OFFICIAL_PROMPT,
             referenceImageDescription: COMUNICADO_DESCRIPTION,
             textFields: [
                 { id: 'announcement_title', label: 'Título del Comunicado', placeholder: 'Cambio de Horario', defaultValue: '', aiContext: 'Main announcement headline' },
@@ -460,7 +484,42 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
                 { id: 'effective_date', label: 'Fecha Efectiva', placeholder: 'A partir del 15 de enero', defaultValue: '', aiContext: 'When it takes effect' },
             ]
         },
-        { id: 'notice-banner', name: 'Banner Aviso', description: 'Horizontal llamativo', svgIcon: 'AlertCircle', textZone: 'center', promptInstruction: 'Horizontal notice banner with attention-grabbing design. Bold header, clear body text.' },
+        {
+            id: 'notice-banner',
+            name: 'Banner Aviso',
+            description: 'Horizontal llamativo',
+            svgIcon: 'RectangleHorizontal',
+            textZone: 'center',
+            promptInstruction: 'Horizontal notice banner with attention-grabbing design. Bold header, clear body text.',
+            structuralPrompt: COMUNICADO_BANNER_PROMPT,
+        },
+        {
+            id: 'comunicado-modern',
+            name: 'Moderno / Asim.',
+            description: 'Bloques y foto',
+            svgIcon: 'LayoutTemplate',
+            textZone: 'right',
+            promptInstruction: 'Asymmetric modern layout with geometric masks.',
+            structuralPrompt: COMUNICADO_MODERN_PROMPT,
+        },
+        {
+            id: 'comunicado-quote',
+            name: 'Destacado / Cita',
+            description: 'Tipografía gigante',
+            svgIcon: 'MessageSquareQuote',
+            textZone: 'center',
+            promptInstruction: 'Typography focused layout for short impactful messages.',
+            structuralPrompt: COMUNICADO_QUOTE_PROMPT,
+        },
+        {
+            id: 'comunicado-ai-freedom',
+            name: 'IA / Libre',
+            description: 'Creatividad total',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'No structural constraints. AI has full creative freedom.',
+            // No structuralPrompt = P7 injection skipped
+        },
     ],
     evento: [
         { id: 'save-date', name: 'Save the Date', description: 'Fecha destacada', svgIcon: 'Calendar', textZone: 'center', promptInstruction: 'Event visual with large centered date. Leave 50% for text overlay.' },

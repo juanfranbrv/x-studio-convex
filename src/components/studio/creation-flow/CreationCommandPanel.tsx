@@ -11,7 +11,7 @@ import { GenerateButton } from './GenerateButton'
 import { PresetsCarousel } from './PresetsCarousel'
 import { LazyPromptInput } from './LazyPromptInput'
 import { UnifiedContentSection } from './UnifiedContentSection'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUser } from '@clerk/nextjs'
 import { parseLazyIntentAction } from '@/app/actions/parse-intent'
@@ -265,12 +265,27 @@ export function CreationCommandPanel({
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
                                                 Selecciona Intención
                                             </p>
+                                            {/* 
                                             <IntentSelector
                                                 selectedGroup={state.selectedGroup}
                                                 selectedIntent={state.selectedIntent}
                                                 onSelectGroup={selectGroup}
                                                 onSelectIntent={selectIntent}
                                             />
+                                            */}
+                                            <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                                    <Sparkles className="w-4 h-4" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                                                        Intención Detectada
+                                                    </p>
+                                                    <p className="text-sm font-medium">
+                                                        {creationFlow.currentIntent?.name || 'Seleccionando...'}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {state.selectedIntent && availableLayouts.length > 0 && (
@@ -343,6 +358,9 @@ export function CreationCommandPanel({
                                                 // AI generation
                                                 aiImageDescription={state.aiImageDescription}
                                                 onAiDescriptionChange={creationFlow.setAiImageDescription}
+                                                // Mode Control
+                                                mode={state.imageSourceMode}
+                                                onModeChange={creationFlow.setImageSourceMode}
                                             />
                                         </div>
 
