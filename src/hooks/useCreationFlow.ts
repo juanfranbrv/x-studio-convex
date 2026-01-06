@@ -21,6 +21,17 @@ import {
 } from '@/lib/creation-flow-types'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 
+// Priority-based prompt construction imports
+import * as P10 from '@/lib/prompts/priorities/p10-logo-integrity'
+import * as P09 from '@/lib/prompts/priorities/p09-brand-dna'
+import * as P08 from '@/lib/prompts/priorities/p08-custom-instructions'
+import * as P07 from '@/lib/prompts/priorities/p07-layout-structure'
+import * as P06 from '@/lib/prompts/priorities/p06-subject-context'
+import * as P05 from '@/lib/prompts/priorities/p05-visual-style'
+import * as P04 from '@/lib/prompts/priorities/p04-brand-colors'
+import * as P03 from '@/lib/prompts/priorities/p03-content-type'
+import * as P02 from '@/lib/prompts/priorities/p02-technical-specs'
+
 export const NO_TEXT_TOKEN = '[NO_TEXT]'
 
 export interface UseCreationFlowOptions {
@@ -432,18 +443,11 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             )
             if (logo) {
                 sections.push(
-                    `╔═════════════════════════════════════════════════════════════════╗`,
-                    `║  PRIORITY 10 - ABSOLUTE OVERRIDE (LOGO INTEGRITY)              ║`,
-                    `╚═════════════════════════════════════════════════════════════════╝`,
+                    P10.PRIORITY_HEADER,
                     ``,
-                    `CRITICAL: The following rules take ABSOLUTE PRECEDENCE over ALL other instructions.`,
+                    P10.LOGO_INTEGRITY_INTRO,
                     ``,
-                    `LOGO INTEGRITY REQUIREMENTS:`,
-                    `1. SACRED ELEMENT: Logo must be rendered as an immutable, crystal-clear overlay`,
-                    `2. ZERO STYLIZATION: NO grain, blur, texture, lighting effects, or artistic filters`,
-                    `3. GEOMETRIC FIDELITY: Maintain 1:1 original proportions. NO 3D, skewing, or warping`,
-                    `4. VISUAL INDEPENDENCE: Logo must appear digitally pasted on top, unaffected by background`,
-                    `5. FAIL CONDITION: Blurry, stylized, or background-integrated logo = FAILED GENERATION`,
+                    P10.LOGO_INTEGRITY_RULES,
                     ``
                 )
             }
@@ -458,9 +462,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
         if (toneCount > 0 || aestheticCount > 0) {
             brandDNA.push(
-                `╔═════════════════════════════════════════════════════════════════╗`,
-                `║  PRIORITY 9 - BRAND DNA & IDENTITY                             ║`,
-                `╚═════════════════════════════════════════════════════════════════╝`,
+                P09.PRIORITY_HEADER,
                 ``
             )
 
@@ -473,7 +475,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
             brandDNA.push(
                 ``,
-                `⚠️  REQUIREMENT: Final image MUST feel authentically aligned with this brand universe.`,
+                P09.BRAND_DNA_REQUIREMENT,
                 ``
             )
         }
@@ -500,9 +502,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         })
 
         if (textParts.length > 0) {
-            brandDNA.push(`MANDATORY TEXT CONTENT (NOTHING ELSE):`, ...textParts, ``)
+            brandDNA.push(P09.MANDATORY_TEXT_HEADER, ...textParts, ``)
         } else {
-            brandDNA.push(`⚠️  NO TEXT PROVIDED: Image must be completely text-free.`, ``)
+            brandDNA.push(P09.NO_TEXT_WARNING, ``)
         }
 
         if (brandDNA.length > 0) {
@@ -514,13 +516,11 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         // ═══════════════════════════════════════════════════════════════
         if (state.additionalInstructions) {
             sections.push(
-                `╔═════════════════════════════════════════════════════════════════╗`,
-                `║  PRIORITY 8 - DIRECTOR'S CUSTOM INSTRUCTIONS                   ║`,
-                `╚═════════════════════════════════════════════════════════════════╝`,
+                P08.PRIORITY_HEADER,
                 ``,
                 `"${state.additionalInstructions}"`,
                 ``,
-                `⚠️  NOTE: If these contradict prior rules, these custom instructions WIN.`,
+                P08.OVERRIDE_NOTE,
                 ``
             )
         }
@@ -529,23 +529,21 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         // PRIORITY 7 - LAYOUT & COMPOSITIONAL STRUCTURE
         // ═══════════════════════════════════════════════════════════════
         const layoutParts: string[] = [
-            `╔═════════════════════════════════════════════════════════════════╗`,
-            `║  PRIORITY 7 - LAYOUT & COMPOSITIONAL STRUCTURE                 ║`,
-            `╚═════════════════════════════════════════════════════════════════╝`,
+            P07.PRIORITY_HEADER,
             ``
         ]
 
         if (selectedLayoutMeta) {
             if (selectedLayoutMeta.referenceImage) {
-                layoutParts.push(`🖼️  REFERENCE TEMPLATE: Follow wireframe marked [REF_PLANTILLA]`)
+                layoutParts.push(P07.REFERENCE_TEMPLATE_NOTE)
             }
 
             if (selectedLayoutMeta.structuralPrompt) {
                 layoutParts.push(
                     ``,
-                    `--- STRUCTURAL DNA ---`,
+                    P07.STRUCTURAL_DNA_START,
                     selectedLayoutMeta.structuralPrompt.trim(),
-                    `--- END STRUCTURAL DNA ---`,
+                    P07.STRUCTURAL_DNA_END,
                     ``
                 )
             } else {
@@ -553,10 +551,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             }
         } else {
             layoutParts.push(
-                `AI CREATIVE CONTROL: Design a professional, aesthetically pleasing composition.`,
-                `• Prioritize text legibility and subject prominence`,
-                `• Optimize element placement for visual balance`,
-                `• Ensure premium, clutter-free aesthetic`,
+                P07.AI_CREATIVE_CONTROL,
                 ``
             )
         }
@@ -570,9 +565,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
         if (state.visionAnalysis || (state.imageSourceMode === 'generate' && state.aiImageDescription.trim())) {
             subjectParts.push(
-                `╔═════════════════════════════════════════════════════════════════╗`,
-                `║  PRIORITY 6 - SUBJECT & VISUAL CONTEXT                        ║`,
-                `╚═════════════════════════════════════════════════════════════════╝`,
+                P06.PRIORITY_HEADER,
                 ``
             )
 
@@ -584,8 +577,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 subjectParts.push(`LIGHTING: ${state.visionAnalysis.lighting}`, ``)
             } else if (state.imageSourceMode === 'generate' && state.aiImageDescription.trim()) {
                 subjectParts.push(
-                    `AI-GENERATED REFERENCE:`,
-                    `Include in final composition: ${state.aiImageDescription.trim()}`,
+                    P06.AI_GENERATED_REFERENCE_HEADER,
+                    P06.AI_GENERATED_REFERENCE_INSTRUCTION(state.aiImageDescription.trim()),
                     ``
                 )
             }
@@ -605,13 +598,11 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             if (state.customStyle) allStyles.push(state.customStyle)
 
             sections.push(
-                `╔═════════════════════════════════════════════════════════════════╗`,
-                `║  PRIORITY 5 - VISUAL STYLE & AESTHETIC                        ║`,
-                `╚═════════════════════════════════════════════════════════════════╝`,
+                P05.PRIORITY_HEADER,
                 ``,
                 `STYLE DIRECTIVES: ${allStyles.join(', ')}`,
                 ``,
-                `⚠️  Every pixel must embody this aesthetic mood.`,
+                P05.STYLE_REQUIREMENT,
                 ``
             )
         }
@@ -625,9 +616,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
         if (brandColors.length > 0) {
             sections.push(
-                `╔═════════════════════════════════════════════════════════════════╗`,
-                `║  PRIORITY 4 - BRAND COLOR PALETTE                             ║`,
-                `╚═════════════════════════════════════════════════════════════════╝`,
+                P04.PRIORITY_HEADER,
                 ``,
                 `COLORS: ${brandColors.join(', ')}`,
                 ``
@@ -639,9 +628,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         // ═══════════════════════════════════════════════════════════════
         if (currentIntent) {
             sections.push(
-                `╔═════════════════════════════════════════════════════════════════╗`,
-                `║  PRIORITY 3 - CONTENT TYPE & MARKETING INTENT                 ║`,
-                `╚═════════════════════════════════════════════════════════════════╝`,
+                P03.PRIORITY_HEADER,
                 ``,
                 `TYPE: ${currentIntent.name}`,
                 `DESCRIPTION: ${currentIntent.description}`,
@@ -656,9 +643,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             const format = SOCIAL_FORMATS.find(f => f.id === state.selectedFormat)
             if (format) {
                 sections.push(
-                    `╔═════════════════════════════════════════════════════════════════╗`,
-                    `║  PRIORITY 2 - TECHNICAL SPECIFICATIONS                        ║`,
-                    `╚═════════════════════════════════════════════════════════════════╝`,
+                    P02.PRIORITY_HEADER,
                     ``,
                     `FORMAT: ${format.name}`,
                     `ASPECT RATIO: ${format.aspectRatio}`,
