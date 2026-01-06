@@ -32,6 +32,9 @@ import * as P04 from '@/lib/prompts/priorities/p04-brand-colors'
 import * as P03 from '@/lib/prompts/priorities/p03-content-type'
 import * as P02 from '@/lib/prompts/priorities/p02-technical-specs'
 
+// Intent prompts
+import * as IntentPrompts from '@/lib/prompts/intents'
+
 export const NO_TEXT_TOKEN = '[NO_TEXT]'
 
 export interface UseCreationFlowOptions {
@@ -526,14 +529,17 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // PRIORITY 7 - LAYOUT & COMPOSITIONAL STRUCTURE
+        // PRIORITY 7 - LAYOUT & COMPOSITIONAL STRUCTURE (TEMPORARILY DISABLED)
         // ═══════════════════════════════════════════════════════════════
+        // COMMENTED OUT TO TEST INTENT PROMPTS EXCLUSIVELY
+        /*
         const layoutParts: string[] = [
             P07.PRIORITY_HEADER,
             ``
         ]
 
         if (selectedLayoutMeta) {
+            // If there's a reference template image for this layout, mention it
             if (selectedLayoutMeta.referenceImage) {
                 layoutParts.push(P07.REFERENCE_TEMPLATE_NOTE)
             }
@@ -547,7 +553,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                     ``
                 )
             } else {
-                layoutParts.push(`COMPOSITION: ${selectedLayoutMeta.promptInstruction}`, ``)
+                // Layouts without a prompt still exist to track the reference image
             }
         } else {
             layoutParts.push(
@@ -557,6 +563,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
 
         sections.push(...layoutParts)
+        */
 
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 6 - SUBJECT & VISUAL CONTEXT
@@ -624,9 +631,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // PRIORITY 3 - CONTENT TYPE & INTENT
+        // PRIORITY 3 - CONTENT TYPE & MARKETING INTENT
         // ═══════════════════════════════════════════════════════════════
         if (currentIntent) {
+            const intentPromptKey = `${currentIntent.id.toUpperCase()}_PROMPT`
+            const intentPrompt = (IntentPrompts as any)[intentPromptKey]
+
             sections.push(
                 P03.PRIORITY_HEADER,
                 ``,
@@ -634,6 +644,15 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 `DESCRIPTION: ${currentIntent.description}`,
                 ``
             )
+
+            if (intentPrompt) {
+                sections.push(
+                    `--- INTENT COMPOSITION GUIDELINES ---`,
+                    intentPrompt,
+                    `--- END INTENT GUIDELINES ---`,
+                    ``
+                )
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════
