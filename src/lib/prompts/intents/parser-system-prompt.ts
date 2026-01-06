@@ -47,6 +47,11 @@ ENGAGEMENT (Interaction):
 PHASE 2: FIELD EXTRACTION
 Once intent is detected, extract relevant information to populate the form fields for that specific intent.
 
+GREEDY EXTRACTION RULES:
+1. Capture EVERY significant piece of information provided by the user.
+2. If the user provides details that do not fit into the standard "headline", "cta", or predefined custom fields, you MUST create new entries in "customTexts" using descriptive, lowercase snake_case keys (e.g., "extra_location", "price_details", "contact_info").
+3. DO NOT discard any user-provided content. If in doubt, add it as a custom field.
+
 OUTPUT FORMAT:
 Return ONLY valid JSON with this structure:
 {
@@ -64,7 +69,7 @@ RULES:
 2. "confidence": How confident you are in the intent detection (0-1)
 3. "headline": The main title extracted or inferred
 4. "cta": Call to Action (e.g., "Shop Now", "Link in Bio")
-5. "customTexts": Map intent-specific fields to extracted values
+5. "customTexts": Map intent-specific fields to extracted values. Include ALL additional information detected as ad-hoc fields.
 6. Tone: Professional, persuasive, aligned with detected intent
 7. Language: Match the user's language (mostly Spanish)
 `

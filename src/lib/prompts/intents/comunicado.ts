@@ -18,6 +18,7 @@ export const COMUNICADO_REQUIRED_FIELDS: IntentRequiredField[] = [
         placeholder: 'Ej: Cambio de Horario',
         type: 'text',
         required: true,
+        mapsTo: 'headline',
         aiContext: 'Main announcement headline'
     },
     {

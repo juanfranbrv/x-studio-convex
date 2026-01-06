@@ -18,10 +18,13 @@ import {
     THEME_CATALOG,
     SOCIAL_FORMATS,
     SocialPlatform,
+    ColorRole,
+    SelectedColor,
 } from '@/lib/creation-flow-types'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 
 // Priority-based prompt construction imports
+import * as P11 from '@/lib/prompts/priorities/p11-system-persona'
 import * as P10 from '@/lib/prompts/priorities/p10-logo-integrity'
 import * as P09 from '@/lib/prompts/priorities/p09-brand-dna'
 import * as P08 from '@/lib/prompts/priorities/p08-custom-instructions'
@@ -44,6 +47,16 @@ export interface UseCreationFlowOptions {
 export function useCreationFlow(options?: UseCreationFlowOptions) {
     const { activeBrandKit } = useBrandKit()
     const [state, setState] = useState<GenerationState>(INITIAL_GENERATION_STATE)
+
+    // -------------------------------------------------------------------------
+    // COMPUTED VALUES (Moved to top for callback access)
+    // -------------------------------------------------------------------------
+
+    const currentIntent = useMemo(() => {
+        return INTENT_CATALOG.find(i => i.id === state.selectedIntent)
+    }, [state.selectedIntent])
+
+    const requiresImage = currentIntent?.requiresImage ?? false
 
     // -------------------------------------------------------------------------
     // STEP 0: Platform and Format Selection
@@ -86,6 +99,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             // Pre-fill defaults from intent metadata
             headline: intentMeta?.defaultHeadline || '',
             cta: intentMeta?.defaultCta || '',
+            // Pre-fill mapped fields in customTexts
+            customTexts: intentMeta?.requiredFields?.reduce((acc, field) => {
+                if (field.mapsTo === 'headline') acc[field.id] = intentMeta.defaultHeadline || ''
+                if (field.mapsTo === 'cta') acc[field.id] = intentMeta.defaultCta || ''
+                return acc
+            }, {} as Record<string, string>) || {},
             // Reset downstream selections
             uploadedImage: null,
             uploadedImageFile: null,
@@ -282,12 +301,32 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     const setHeadline = useCallback((headline: string) => {
-        setState(prev => ({ ...prev, headline }))
-    }, [])
+        setState(prev => {
+            const newState = { ...prev, headline }
+            // Sync with mapped intent fields
+            if (currentIntent?.requiredFields) {
+                const mappedField = currentIntent.requiredFields.find(f => f.mapsTo === 'headline')
+                if (mappedField) {
+                    newState.customTexts = { ...newState.customTexts, [mappedField.id]: headline }
+                }
+            }
+            return newState
+        })
+    }, [currentIntent])
 
     const setCta = useCallback((cta: string) => {
-        setState(prev => ({ ...prev, cta }))
-    }, [])
+        setState(prev => {
+            const newState = { ...prev, cta }
+            // Sync with mapped intent fields
+            if (currentIntent?.requiredFields) {
+                const mappedField = currentIntent.requiredFields.find(f => f.mapsTo === 'cta')
+                if (mappedField) {
+                    newState.customTexts = { ...newState.customTexts, [mappedField.id]: cta }
+                }
+            }
+            return newState
+        })
+    }, [currentIntent])
 
     const setAdditionalInstructions = useCallback((instructions: string) => {
         setState(prev => ({ ...prev, additionalInstructions: instructions }))
@@ -302,11 +341,22 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     const setCustomText = useCallback((id: string, value: string) => {
-        setState(prev => ({
-            ...prev,
-            customTexts: { ...prev.customTexts, [id]: value }
-        }))
-    }, [])
+        setState(prev => {
+            const newState = {
+                ...prev,
+                customTexts: { ...prev.customTexts, [id]: value }
+            }
+
+            // Sync back to global headline/cta if mapped
+            if (currentIntent?.requiredFields) {
+                const field = currentIntent.requiredFields.find(f => f.id === id)
+                if (field?.mapsTo === 'headline') newState.headline = value
+                if (field?.mapsTo === 'cta') newState.cta = value
+            }
+
+            return newState
+        })
+    }, [currentIntent])
 
     const toggleNoText = useCallback((id: string) => {
         setState(prev => {
@@ -351,14 +401,83 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
     }, [activeBrandKit, state.selectedIntent, state.visionAnalysis, state.rawMessage, setHeadline, setCta, setCustomText])
 
+    const generateCustomFieldCopy = useCallback(async (fieldId: string) => {
+        if (!activeBrandKit || !state.selectedIntent || !currentIntent?.requiredFields) return
+
+        const field = currentIntent.requiredFields.find(f => f.id === fieldId)
+        if (!field) return
+
+        try {
+            const result = await getAICopy({
+                brandName: activeBrandKit.brand_name,
+                brandDNA: activeBrandKit,
+                intent: state.selectedIntent,
+                visionAnalysis: state.visionAnalysis,
+                fieldLabel: field.label,
+                fieldDescription: field.aiContext,
+                rawMessage: state.rawMessage || undefined
+            })
+
+            if (result.success && result.text) {
+                setCustomText(fieldId, result.text)
+            }
+        } catch (error) {
+            console.error('Error in generateCustomFieldCopy:', error)
+        }
+    }, [activeBrandKit, state.selectedIntent, currentIntent, state.visionAnalysis, state.rawMessage, setCustomText])
+
     const toggleBrandColor = useCallback((color: string) => {
         setState(prev => {
-            const isSelected = prev.selectedBrandColors.includes(color)
+            const index = prev.selectedBrandColors.findIndex(c => c.color.toLowerCase() === color.toLowerCase())
+            const roles: ColorRole[] = ['Principal', 'Secundario', 'Texto', 'Fondo', 'Acento', 'Neutral']
+
+            if (index === -1) {
+                // Not selected: add with default role (Principal)
+                return {
+                    ...prev,
+                    selectedBrandColors: [...prev.selectedBrandColors, { color, role: 'Principal' }]
+                }
+            } else {
+                // Already selected: cycle roles or remove if it was neutral
+                const currentRole = prev.selectedBrandColors[index].role
+                const roleIndex = roles.indexOf(currentRole)
+
+                if (roleIndex === roles.length - 1) {
+                    // It was neutral, remove it
+                    return {
+                        ...prev,
+                        selectedBrandColors: prev.selectedBrandColors.filter(c => c.color.toLowerCase() !== color.toLowerCase())
+                    }
+                } else {
+                    // Cycle to next role
+                    const newColors = [...prev.selectedBrandColors]
+                    newColors[index] = { ...newColors[index], role: roles[roleIndex + 1] }
+                    return {
+                        ...prev,
+                        selectedBrandColors: newColors
+                    }
+                }
+            }
+        })
+    }, [])
+
+    const removeBrandColor = useCallback((color: string) => {
+        setState(prev => ({
+            ...prev,
+            selectedBrandColors: prev.selectedBrandColors.filter(c => c.color.toLowerCase() !== color.toLowerCase())
+        }))
+    }, [])
+
+    const addCustomColor = useCallback((color: string) => {
+        // Basic hex validation
+        if (!/^#[0-9A-F]{6}$/i.test(color)) return
+
+        setState(prev => {
+            const exists = prev.selectedBrandColors.some(c => c.color.toLowerCase() === color.toLowerCase())
+            if (exists) return prev
             return {
                 ...prev,
-                selectedBrandColors: isSelected
-                    ? prev.selectedBrandColors.filter(c => c !== color)
-                    : [...prev.selectedBrandColors, color],
+                selectedBrandColors: [...prev.selectedBrandColors, { color, role: 'Principal' }]
             }
         })
     }, [])
@@ -367,61 +486,50 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // COMPUTED VALUES
     // -------------------------------------------------------------------------
 
-    const currentIntent = INTENT_CATALOG.find(i => i.id === state.selectedIntent)
-    const requiresImage = currentIntent?.requiresImage ?? false
 
     const availableStyles = useMemo(() => {
-        // BRAND KIT STYLES - First priority (unified from visual_aesthetic + visual_keywords)
-        const brandStyles: Array<{ id: string; label: string; icon: string; keywords: string[]; category: string }> = []
+        const combinedStyles: Array<{ id: string; label: string; icon: string; keywords: string[]; category: string }> = []
 
+        // 1. BRAND KIT STYLES (Priority)
         if (activeBrandKit) {
             // Add visual_aesthetic entries
             const aesthetics = activeBrandKit.visual_aesthetic || []
             aesthetics.forEach((style, i) => {
-                brandStyles.push({
+                combinedStyles.push({
                     id: `brand_aesthetic_${i}`,
                     label: style,
-                    icon: '🎨',
+                    icon: '💼', // Briefcase for Brand
                     keywords: [style.toLowerCase()],
                     category: 'brand'
                 })
             })
 
-            // START MODIFICATION: Exclude visual_keywords from Style Selector to keep it strictly artistic
-            const visualKeywords = activeBrandKit.text_assets?.visual_keywords || []
-            visualKeywords.forEach((kw, i) => {
-                // Avoid duplicates with aesthetics
-                if (!aesthetics.some(a => a.toLowerCase() === kw.toLowerCase())) {
-                    brandStyles.push({
-                        id: `brand_keyword_${i}`,
-                        label: kw,
-                        icon: '✨',
-                        keywords: [kw.toLowerCase()],
-                        category: 'brand'
+            // EXCLUDED: visual_keywords (to keep the list focused on aesthetics)
+        }
+
+        // 2. DYNAMIC SUGGESTIONS FROM VISION ANALYSIS (Top 4 Keywords)
+        if (state.visionAnalysis && state.visionAnalysis.keywords) {
+            // Take up to 4 keywords from the analysis
+            const topKeywords = state.visionAnalysis.keywords.slice(0, 4)
+
+            topKeywords.forEach((keyword, i) => {
+                // Ensure we don't duplicate if it's already in brand styles
+                if (!combinedStyles.some(s => s.label.toLowerCase() === keyword.toLowerCase())) {
+                    combinedStyles.push({
+                        id: `suggested_vision_${i}`,
+                        label: keyword.charAt(0).toUpperCase() + keyword.slice(1), // Capitalize
+                        icon: '✨', // Sparkles for AI
+                        keywords: [keyword.toLowerCase()],
+                        category: 'suggested'
                     })
                 }
             })
-            // END MODIFICATION
         }
 
-        // Suggested styles from vision analysis
-        const suggested = state.visionAnalysis
-            ? STYLE_CHIPS_BY_SUBJECT[state.visionAnalysis.subject] || STYLE_CHIPS_BY_SUBJECT.unknown
-            : []
+        // 3. FALLBACK: If no analysis, show general defaults is NOT desired by user.
+        // User strictly wants Brand + Analysis.
 
-        // Mark suggested styles with the 'suggested' category for the UI
-        const suggestedWithCategory = suggested.map(s => ({ ...s, category: 'suggested' }))
-
-        // Combine suggested with the global artistic catalog
-        // We filter out duplicates if a style exists in both (using ID)
-        const catalogIds = new Set(suggested.map(s => s.id))
-        const catalogFiltered = ARTISTIC_STYLE_CATALOG.filter(s => !catalogIds.has(s.id))
-
-        // Brand styles first, then suggested, then catalog
-        // Brand styles first, then suggested, then catalog
-        // START MODIFICATION: User requested to ONLY show brand styles in Studio
-        return [...brandStyles] //, ...suggestedWithCategory, ...catalogFiltered]
-        // END MODIFICATION
+        return combinedStyles
     }, [state.visionAnalysis, activeBrandKit])
 
     const availableLayouts: LayoutOption[] = state.selectedIntent
@@ -436,6 +544,16 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     const constructFinalPrompt = useCallback((): string => {
         const sections: string[] = []
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 11 - SYSTEM PERSONA
+        // ═══════════════════════════════════════════════════════════════
+        sections.push(
+            P11.PRIORITY_HEADER,
+            ``,
+            P11.SYSTEM_PERSONA_INSTRUCTION,
+            ``
+        )
 
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 10 - ABSOLUTE OVERRIDE (Logo Integrity)
@@ -491,18 +609,30 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
 
         Object.entries(state.customTexts).forEach(([id, val]) => {
-            if (typeof val === 'string') {
-                const cleanVal = val.trim()
-                if (cleanVal && cleanVal !== NO_TEXT_TOKEN) {
-                    textParts.push(`• ${id.toUpperCase()}: "${cleanVal}"`)
-                }
+            // Support strings or arrays (greedy parser sometimes returns arrays)
+            const stringVal = Array.isArray(val) ? val.join(', ') : String(val ?? '')
+            const cleanVal = stringVal.trim()
+
+            if (cleanVal && cleanVal !== 'undefined' && cleanVal !== 'null') {
+                // Filter out what is already mapped to headline/cta
+                const fieldMeta = currentIntent?.requiredFields?.find(f => f.id === id)
+                if (fieldMeta?.mapsTo) return
+
+                const displayLabel = fieldMeta?.label || id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                textParts.push(`• ${displayLabel}: "${cleanVal}"`)
             }
         })
 
         if (textParts.length > 0) {
             brandDNA.push(P09.MANDATORY_TEXT_HEADER, ...textParts, ``)
+        } else if (state.rawMessage) {
+            brandDNA.push(P09.MANDATORY_TEXT_HEADER, `(No explícitos, extraer de la INTENCIÓN ORIGINAL)`, ``)
         } else {
             brandDNA.push(P09.NO_TEXT_WARNING, ``)
+        }
+
+        if (state.rawMessage) {
+            brandDNA.push(`USER ORIGINAL INTENTION / RAW CONTEXT:`, `"${state.rawMessage}"`, ``)
         }
 
         if (brandDNA.length > 0) {
@@ -610,50 +740,44 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // PRIORITY 4 - BRAND COLORS
+        // PRIORITY 4 - BRAND COLOR PALETTE (with explicit roles)
         // ═══════════════════════════════════════════════════════════════
-        // Get colors with roles from Brand Kit
-        const colorsWithRoles = activeBrandKit?.colors?.filter(c => c.selected) || []
-        const selectedColors = state.selectedBrandColors.length > 0
-            ? state.selectedBrandColors
-            : colorsWithRoles.map(c => c.color)
+        const hasSelectedColors = state.selectedBrandColors.length > 0
 
-        if (selectedColors.length > 0) {
-            sections.push(
-                P04.PRIORITY_HEADER,
-                ``
-            )
+        let colorsToUse: SelectedColor[] = []
 
-            // Group colors by role
-            const roleGroups: Record<string, string[]> = {
-                'Principal': [],
-                'Secundario': [],
-                'Texto': [],
-                'Fondo': [],
-                'Acento': [],
-                'Neutral': []
-            }
+        if (hasSelectedColors) {
+            colorsToUse = state.selectedBrandColors
+        } else if (activeBrandKit?.colors) {
+            // Default to brand kit colors if nothing explicitly selected in Studio
+            // Map legacy brand colors to SelectedColor format
+            colorsToUse = (activeBrandKit.colors as any[]).map(c => ({
+                color: c.hex || (typeof c === 'string' ? c : ''),
+                role: (c.role as ColorRole) || 'Principal'
+            })).filter(c => c.color)
+        }
 
-            colorsWithRoles.forEach(colorItem => {
-                const role = colorItem.role || 'Neutral'
-                if (roleGroups[role]) {
-                    roleGroups[role].push(colorItem.color)
+        if (colorsToUse.length > 0) {
+            sections.push(P04.PRIORITY_HEADER) // P31 is alias for P4 in this file? Wait, check imports.
+            sections.push(`Below is the STRICT color palette for this generation. Use these specific values and respect their assigned semantic roles:`)
+            sections.push(``)
+
+            // Group by role for better AI clarity
+            const roles: ColorRole[] = ['Principal', 'Secundario', 'Texto', 'Fondo', 'Acento', 'Neutral']
+            roles.forEach(role => {
+                const group = colorsToUse.filter(c => c.role === role)
+                if (group.length > 0) {
+                    const label = (P04.ROLE_LABELS as any)[role] || role.toUpperCase()
+                    sections.push(`### ${label}`)
+                    group.forEach(c => {
+                        sections.push(`- ${c.color}`)
+                    })
+                    sections.push(``)
                 }
             })
 
-            // Add role-based color sections using imported labels
-            Object.entries(roleGroups).forEach(([role, colors]) => {
-                if (colors.length > 0 && role in P04.ROLE_LABELS) {
-                    const label = P04.ROLE_LABELS[role as keyof typeof P04.ROLE_LABELS]
-                    sections.push(`${label}: ${colors.join(', ')}`)
-                }
-            })
-
-            sections.push(
-                ``,
-                P04.COLOR_USAGE_GUIDELINES,
-                ``
-            )
+            sections.push(P04.COLOR_USAGE_GUIDELINES)
+            sections.push(``)
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -794,7 +918,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setCustomText,
         toggleNoText,
         generateFieldCopy,
+        onGenerateCustomFieldCopy: generateCustomFieldCopy,
         toggleBrandColor,
+        removeBrandColor,
+        addCustomColor,
         constructFinalPrompt,
         generate,
         reset,

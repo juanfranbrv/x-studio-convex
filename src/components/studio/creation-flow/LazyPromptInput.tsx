@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Sparkles, ArrowUp, Loader2 } from 'lucide-react'
+import { Sparkles, Wand2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -99,7 +99,7 @@ export function LazyPromptInput({
                     onClick={() => onAnalyze()}
                     disabled={isAnalyzing}
                 >
-                    <ArrowUp className="w-4 h-4" />
+                    <Wand2 className="w-4 h-4" />
                 </Button>
             </div>
 

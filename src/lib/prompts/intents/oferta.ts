@@ -18,6 +18,7 @@ export const OFERTA_REQUIRED_FIELDS: IntentRequiredField[] = [
         placeholder: 'Ej: REBAJAS DE VERANO',
         type: 'text',
         required: true,
+        mapsTo: 'headline',
         aiContext: 'The main headline of the sale event'
     },
     {
@@ -30,10 +31,11 @@ export const OFERTA_REQUIRED_FIELDS: IntentRequiredField[] = [
     },
     {
         id: 'urgency_text',
-        label: 'Texto de Urgencia (Opcional)',
+        label: 'Texto de Urgencia',
         placeholder: 'Ej: Solo 24 horas',
         type: 'text',
         required: false,
+        optional: true,
         aiContext: 'Secondary text creating urgency or valid dates'
     }
 ]

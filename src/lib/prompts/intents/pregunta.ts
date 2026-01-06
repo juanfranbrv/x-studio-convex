@@ -18,14 +18,16 @@ export const PREGUNTA_REQUIRED_FIELDS: IntentRequiredField[] = [
         placeholder: 'Ej: ¿Qué prefieres: café o té?',
         type: 'text',
         required: true,
+        mapsTo: 'headline',
         aiContext: 'The main question to ask the audience'
     },
     {
         id: 'options',
-        label: 'Opciones (opcional)',
+        label: 'Opciones de Respuesta',
         placeholder: 'Ej: A) Café  B) Té  C) Ambos',
         type: 'text',
         required: false,
+        optional: true,
         aiContext: 'Answer options if its a poll-style question'
     },
     {
@@ -34,6 +36,8 @@ export const PREGUNTA_REQUIRED_FIELDS: IntentRequiredField[] = [
         placeholder: 'Ej: ¡Cuéntanos en comentarios!',
         type: 'text',
         required: false,
+        optional: true,
+        mapsTo: 'cta',
         aiContext: 'Instruction for how to respond'
     }
 ]

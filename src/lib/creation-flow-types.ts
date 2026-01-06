@@ -57,6 +57,13 @@ import {
 
 export type IntentGroup = 'vender' | 'informar' | 'conectar' | 'educar' | 'engagement'
 
+export type ColorRole = 'Principal' | 'Secundario' | 'Texto' | 'Fondo' | 'Acento' | 'Neutral'
+
+export interface SelectedColor {
+    color: string
+    role: ColorRole
+}
+
 export type IntentCategory =
     // Grupo A: Venta y Producto (Hard Sell)
     | 'oferta'           // La Oferta (Discount)
@@ -94,6 +101,8 @@ export interface IntentRequiredField {
     placeholder: string
     type: 'text' | 'textarea' | 'url' | 'phone' | 'address'
     required: boolean
+    optional?: boolean
+    mapsTo?: 'headline' | 'cta' // Map to layout-level fields
     aiContext?: string
 }
 
@@ -692,7 +701,7 @@ export interface GenerationState {
     headline: string
     cta: string
     customTexts: Record<string, string>
-    selectedBrandColors: string[]
+    selectedBrandColors: SelectedColor[]
     rawMessage: string // User's raw message for AI to use as context
     additionalInstructions: string // Direct instructions from user
     customStyle: string // User defined custom visual style

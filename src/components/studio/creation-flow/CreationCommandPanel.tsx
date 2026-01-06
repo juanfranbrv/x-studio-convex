@@ -10,6 +10,7 @@ import { SocialFormatSelector } from './SocialFormatSelector'
 import { GenerateButton } from './GenerateButton'
 import { PresetsCarousel } from './PresetsCarousel'
 import { LazyPromptInput } from './LazyPromptInput'
+import { UnifiedContentSection } from './UnifiedContentSection'
 import { RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUser } from '@clerk/nextjs'
@@ -81,6 +82,7 @@ export function CreationCommandPanel({
         setRawMessage,
         setCustomStyle,
         setCustomText,
+        onGenerateCustomFieldCopy,
         toggleBrandColor,
         selectPlatform,
         selectFormat,
@@ -229,6 +231,22 @@ export function CreationCommandPanel({
                                 onAnalyze={handleSmartAnalyze}
                                 isAnalyzing={isMagicParsing}
                             />
+                            <div className="mt-4">
+                                <UnifiedContentSection
+                                    intentRequiredFields={currentIntent?.requiredFields || []}
+                                    fieldsToRender={selectedLayoutMeta?.textFields || []}
+                                    customTexts={state.customTexts}
+                                    headline={state.headline}
+                                    cta={state.cta}
+                                    onHeadlineChange={setHeadline}
+                                    onCtaChange={setCta}
+                                    onCustomTextChange={setCustomText}
+                                    onToggleNoText={creationFlow.toggleNoText}
+                                    onGenerateAICopy={creationFlow.generateFieldCopy}
+                                    onGenerateCustomFieldCopy={onGenerateCustomFieldCopy}
+                                    highlightedFields={highlightedFields}
+                                />
+                            </div>
                         </StepSection>
                     </div>
 
@@ -332,28 +350,14 @@ export function CreationCommandPanel({
                                         {state.selectedIntent && (
                                             <BrandingConfigurator
                                                 selectedLayout={creationFlow.selectedLayoutMeta || null}
-                                                customTexts={state.customTexts}
                                                 selectedLogoId={state.selectedLogoId}
-                                                headline={state.headline}
-                                                cta={state.cta}
                                                 selectedBrandColors={state.selectedBrandColors}
-                                                rawMessage={state.rawMessage}
-                                                additionalInstructions={state.additionalInstructions}
                                                 onSelectLogo={selectLogo}
-                                                onHeadlineChange={setHeadline}
-                                                onCtaChange={setCta}
-                                                onRawMessageChange={setRawMessage}
-                                                onAdditionalInstructionsChange={setAdditionalInstructions}
-                                                onCustomTextChange={setCustomText}
-                                                onToggleNoText={creationFlow.toggleNoText}
                                                 onToggleBrandColor={toggleBrandColor}
-                                                onGenerateAICopy={creationFlow.generateFieldCopy}
+                                                onRemoveBrandColor={creationFlow.removeBrandColor}
+                                                onAddCustomColor={creationFlow.addCustomColor}
                                                 showLogo={true}
                                                 showColors={true}
-                                                showTexts={true}
-                                                showInstructions={true}
-                                                intentRequiredFields={creationFlow.currentIntent?.requiredFields}
-                                                highlightedFields={highlightedFields}
                                             />
                                         )}
                                     </div>

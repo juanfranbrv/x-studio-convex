@@ -45,6 +45,17 @@ export function DefaultWireframe({ image, texts, intent, brandColors }: DefaultW
                             </span>
                         </div>
                     )}
+                    {/* Render other text fields */}
+                    <div className="pt-4 space-y-2">
+                        {Object.entries(texts)
+                            .filter(([key]) => key !== 'headline' && key !== 'cta' && texts[key])
+                            .map(([key, value]) => (
+                                <div key={key} className="text-sm font-medium text-zinc-600 border border-dashed border-zinc-300 rounded px-2 py-1 inline-block mx-1">
+                                    <span className="text-[10px] uppercase text-zinc-400 mr-2 block text-left">{key.replace('_', ' ')}:</span>
+                                    {value}
+                                </div>
+                            ))}
+                    </div>
                 </div>
             </div>
         </div>

@@ -25,22 +25,8 @@ export function StyleChipsSelector({
     onToggleStyle,
     onCustomStyleChange,
 }: StyleChipsSelectorProps) {
-    const [activeCategory, setActiveCategory] = useState<string>('suggested')
-
-    const filteredStyles = useMemo(() => {
-        return availableStyles.filter(s => s.category === activeCategory)
-    }, [availableStyles, activeCategory])
-
-    // Filter groups to only show those that have styles available
-    const activeGroups = useMemo(() => {
-        const categoriesWithStyles = new Set(availableStyles.map(s => s.category))
-        return styleGroups.filter(g => categoriesWithStyles.has(g.id))
-    }, [availableStyles, styleGroups])
-
-    // Auto-select first category if current is invalid
-    if (!activeGroups.find(g => g.id === activeCategory) && activeGroups.length > 0) {
-        setActiveCategory(activeGroups[0].id)
-    }
+    // NO TABS - Show Flat List
+    // We display all available styles (Brand + Dynamic Suggestions) directly
 
     if (availableStyles.length === 0) {
         return null
@@ -48,30 +34,12 @@ export function StyleChipsSelector({
 
     return (
         <div className="space-y-4">
-            {/* Category Tabs - Only show if more than 1 category */}
-            {activeGroups.length > 1 && (
-                <div className="flex flex-wrap gap-1 pb-1">
-                    {activeGroups.map(group => (
-                        <button
-                            key={group.id}
-                            onClick={() => setActiveCategory(group.id)}
-                            className={cn(
-                                "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
-                                activeCategory === group.id
-                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                                    : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                            )}
-                        >
-                            {group.label}
-                        </button>
-                    ))}
-                </div>
-            )}
-
+            {/* Flat List of Chips */}
             <div className="space-y-4 min-h-[100px]">
                 <div className="flex flex-wrap gap-2">
-                    {filteredStyles.map(style => {
+                    {availableStyles.map(style => {
                         const isSelected = selectedStyles.includes(style.id)
+                        const isSuggested = style.category === 'suggested'
 
                         return (
                             <button
@@ -83,24 +51,23 @@ export function StyleChipsSelector({
                                     "border-2",
                                     isSelected
                                         ? "border-primary bg-primary/10 text-primary shadow-[0_0_15px_rgba(var(--primary),0.15)] ring-1 ring-primary/20"
-                                        : "border-border bg-muted/20 text-muted-foreground hover:border-primary/40 hover:bg-muted/40 hover:text-foreground"
+                                        : isSuggested
+                                            ? "border-indigo-500/30 bg-indigo-500/10 text-indigo-700 hover:border-indigo-500/60 hover:bg-indigo-500/20" // Highlight AI suggestions
+                                            : "border-border bg-muted/20 text-muted-foreground hover:border-primary/40 hover:bg-muted/40 hover:text-foreground"
                                 )}
                             >
                                 <span className="text-sm opacity-80">{style.icon}</span>
                                 {style.label}
+                                {isSuggested && <span className="ml-1 text-[9px] uppercase tracking-wider text-indigo-600/70 border border-indigo-200 px-1 rounded-sm">IA</span>}
                             </button>
                         )
                     })}
-                    {filteredStyles.length === 0 && (
-                        <p className="text-xs text-muted-foreground italic py-4">
-                            No hay estilos disponibles en esta categoría.
-                        </p>
-                    )}
                 </div>
             </div>
 
+
             {/* Custom Style Input */}
-            <div className="pt-2">
+            < div className="pt-2" >
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
                     ¿Otro estilo en mente?
                 </label>
@@ -111,7 +78,7 @@ export function StyleChipsSelector({
                     placeholder="Ej: Cyberpunk, Acuarela, Lego..."
                     className="w-full h-9 px-3 rounded-lg bg-background border border-border text-xs focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-muted-foreground/50"
                 />
-            </div>
+            </div >
 
 
 

@@ -460,21 +460,55 @@ export function CanvasPanel({
                             </div>
                         </div>
                     )}
-                </div>
-            </div>
 
-            {currentImage && (
-                <div className="w-full max-w-[600px] mt-6 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10">
-                    <GeneratedCopyCard
-                        copy={generatedCopy}
-                        hashtags={generatedHashtags}
-                        isLoading={isGeneratingCopy}
-                        onRegenerate={handleGenerateCopy}
-                        isLocked={isCopyLocked}
-                        onToggleLock={() => setIsCopyLocked(!isCopyLocked)}
-                    />
+                    {/* PREVIEW OVERLAYS (Reference Image & Logo) */}
+                    {!currentImage && creationState && (
+                        <>
+                            {/* Reference Image (Top Left) */}
+                            {creationState.uploadedImage && (
+                                <div className="absolute top-4 left-4 z-20 group/ref">
+                                    <div className="w-20 h-20 rounded-lg overflow-hidden ring-2 ring-white shadow-lg bg-white relative">
+                                        <img
+                                            src={creationState.uploadedImage}
+                                            alt="Ref"
+                                            className="w-full h-full object-cover opacity-90 group-hover/ref:opacity-100 transition-opacity"
+                                        />
+                                        <div className="absolute bottom-0 inset-x-0 bg-black/50 text-[8px] text-white text-center py-0.5 backdrop-blur-sm">
+                                            REFERENCIA
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Logo (Top Right) */}
+                            {creationState.selectedLogoId && activeBrandKit?.logos && (
+                                <div className="absolute top-4 right-4 z-20">
+                                    <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
+                                        <img
+                                            src={activeBrandKit.logos.find((l: any) => l._id === creationState.selectedLogoId)?.url}
+                                            alt="Logo"
+                                            className="w-full h-full object-contain drop-shadow"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
-            )}
+
+                {currentImage && (
+                    <div className="w-full max-w-[600px] mt-8 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10">
+                        <GeneratedCopyCard
+                            copy={generatedCopy}
+                            hashtags={generatedHashtags}
+                            isLoading={isGeneratingCopy}
+                            onRegenerate={handleGenerateCopy}
+                            isLocked={isCopyLocked}
+                            onToggleLock={() => setIsCopyLocked(!isCopyLocked)}
+                        />
+                    </div>
+                )}
+            </div>
 
             {/* Zoom Controls */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-popover/90 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border shadow-sm z-20">

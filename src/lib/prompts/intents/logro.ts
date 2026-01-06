@@ -18,6 +18,7 @@ export const LOGRO_REQUIRED_FIELDS: IntentRequiredField[] = [
         placeholder: 'Ej: 10.000 seguidores / 5 años',
         type: 'text',
         required: true,
+        mapsTo: 'headline',
         aiContext: 'The main milestone number or achievement'
     },
     {
@@ -26,14 +27,16 @@ export const LOGRO_REQUIRED_FIELDS: IntentRequiredField[] = [
         placeholder: 'Ej: ¡Gracias por formar parte de esto!',
         type: 'text',
         required: false,
+        optional: true,
         aiContext: 'Thank you message to the community'
     },
     {
         id: 'celebration_context',
-        label: 'Contexto (opcional)',
+        label: 'Contexto Adicional',
         placeholder: 'Ej: Desde 2019 creciendo juntos',
         type: 'text',
         required: false,
+        optional: true,
         aiContext: 'Additional context about the achievement'
     }
 ]
