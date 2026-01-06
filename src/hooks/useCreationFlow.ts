@@ -517,9 +517,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
         // Custom Layout Fields
         Object.entries(state.customTexts).forEach(([id, val]) => {
-            const cleanVal = val?.trim()
-            if (cleanVal && cleanVal !== NO_TEXT_TOKEN) {
-                textParts.push(`- ${id.toUpperCase()}: "${cleanVal}"`)
+            // Ensure val is a string before calling trim()
+            if (typeof val === 'string') {
+                const cleanVal = val.trim()
+                if (cleanVal && cleanVal !== NO_TEXT_TOKEN) {
+                    textParts.push(`- ${id.toUpperCase()}: "${cleanVal}"`)
+                }
             }
         })
 
