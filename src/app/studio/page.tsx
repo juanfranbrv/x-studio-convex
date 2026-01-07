@@ -76,6 +76,19 @@ export default function StudioPage() {
         }
     } as UseCreationFlowOptions)
 
+    // Reset Studio when Brand Kit changes
+    useEffect(() => {
+        if (activeBrandKit?.id) {
+            setCurrentImage(null)
+            setSelectedContext([])
+            setGenerations([])
+            creationFlow.reset()
+            // Optional: Reset other states if needed
+            setIsAnnotating(false)
+            setDebugPromptData(null)
+        }
+    }, [activeBrandKit?.id])
+
     const handleNewBrandKit = () => {
         router.push('/brand-kit?action=new')
     }
@@ -315,6 +328,10 @@ export default function StudioPage() {
                             onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
                             onSetDraggedElement={setDraggedElement}
                             onImageClick={(url) => creationFlow.setImageFromUrl(url)}
+                            textAssets={creationFlow.state.selectedTextAssets}
+                            onAddTextAsset={creationFlow.addTextAsset}
+                            onRemoveTextAsset={creationFlow.removeTextAsset}
+                            onUpdateTextAsset={creationFlow.updateTextAsset}
                         />
                     </div>
                 </div>

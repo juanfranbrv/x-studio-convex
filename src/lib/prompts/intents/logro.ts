@@ -41,17 +41,60 @@ export const LOGRO_REQUIRED_FIELDS: IntentRequiredField[] = [
     }
 ]
 
-export const LOGRO_PROMPT = `
-COMPOSITION: Celebratory milestone design with visual impact.
+export const LOGRO_NUMBER_PROMPT = `
+COMPOSITION: Big Data / Metric Hero.
 ZONING:
-- Center Focus (60%): The milestone number/achievement HUGE and prominent
-- Celebration Elements: Confetti, stars, sparkles, or subtle party elements
-- Gratitude Zone (25%): Space for thank you message
-- Brand Zone (15%): Logo integrated tastefully
-STYLE: Festive but on-brand. Joyful without being childish.
-COLORS: Use brand colors as primary, add gold/silver accents for celebration.
-MOOD: Pride, gratitude, community celebration.
-ANIMATION HINT: Elements that suggest movement and celebration.
+- Hero: The milestone number occupies 80% of the visual weight.
+- Subtext: "Followers", "Years", or "Sales" small below the number.
+- Background: Clean, high contrast to make the number pop.
+STYLE: Bold, impact, statistical pride.
+TYPOGRAPHY: Massive scale, geometric sans-serif.
+`.trim()
+
+export const LOGRO_TROPHY_PROMPT = `
+COMPOSITION: Achievement Object Focus.
+ZONING:
+- Object: 3D Trophy, Medal, or Plaque in center spotlight.
+- Lighting: Dramatic rim lighting, golden/silver reflections.
+- Text: "Award Winner" or Achievement Title below object.
+STYLE: Premium, prestigious, cinematic.
+`.trim()
+
+export const LOGRO_CONFETTI_PROMPT = `
+COMPOSITION: Festive Explosion.
+ZONING:
+- Atmosphere: Falling confetti, streamers, floating elements.
+- Center: Clear zone for the main message "Thank You" or "We Did It".
+- Energy: Dynamic movement radiating from center.
+STYLE: Joyful, energetic, party mood. 
+COLORS: Brand colors + Gold/Silver accents.
+`.trim()
+
+export const LOGRO_TEAM_PROMPT = `
+COMPOSITION: Collective Success.
+ZONING:
+- Background: Team cheering or raising hands (blurred or filtered).
+- Overlay: Big bold text "TEAMWORK" or "GOAL REACHED".
+- Footer: "Thanks to everyone" message.
+STYLE: Human, inclusive, emotional.
+`.trim()
+
+export const LOGRO_PREMIUM_PROMPT = `
+COMPOSITION: Luxury Certification / Badge.
+ZONING:
+- Border: Elegant gold/metallic frame or seal.
+- Badge: Central seal style layout with "Certified" or "Winner" text.
+- Texture: High-quality paper or matte finish background.
+STYLE: Official, high-trust, luxury.
+`.trim()
+
+export const LOGRO_JOURNEY_PROMPT = `
+COMPOSITION: Timeline Milestone.
+ZONING:
+- Path: A visual line or road showing progress.
+- Marker: A flag or waypoint marking "You Are Here" or "Goal".
+- Context: Previous small dots implies history.
+STYLE: Growth, progress, forward momentum.
 `.trim()
 
 export const LOGRO_DESCRIPTION = 'Diseño celebratorio con cifra/logro protagonista. Elementos festivos (confetti, estrellas) integrados con la marca.'

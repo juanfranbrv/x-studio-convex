@@ -20,6 +20,7 @@ import {
     SocialPlatform,
     ColorRole,
     SelectedColor,
+    TextAsset,
 } from '@/lib/creation-flow-types'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useMutation } from 'convex/react'
@@ -72,6 +73,31 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
             if (defaultColors.length > 0) {
                 setState(prev => ({ ...prev, selectedBrandColors: defaultColors }))
+            }
+        }
+
+        // Initialize text assets from Brand Kit (CTA, Tagline, URL)
+        if (activeBrandKit && state.selectedTextAssets.length === 0) {
+            const defaultTextAssets: TextAsset[] = []
+
+            // Add CTA if available
+            const cta = (activeBrandKit.text_assets as any)?.ctas?.[0] || ''
+            if (cta) {
+                defaultTextAssets.push({ id: 'cta', type: 'cta', label: 'CTA', value: cta })
+            }
+
+            // Add Tagline if available
+            if (activeBrandKit.tagline) {
+                defaultTextAssets.push({ id: 'tagline', type: 'tagline', label: 'Tagline', value: activeBrandKit.tagline })
+            }
+
+            // Add URL if available
+            if (activeBrandKit.url) {
+                defaultTextAssets.push({ id: 'url', type: 'url', label: 'URL', value: activeBrandKit.url })
+            }
+
+            if (defaultTextAssets.length > 0) {
+                setState(prev => ({ ...prev, selectedTextAssets: defaultTextAssets }))
             }
         }
     }, [activeBrandKit])
@@ -260,6 +286,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             selectedLayout: null,
         }))
     }, [])
+
+
 
     // -------------------------------------------------------------------------
     // Image Source Mode Selection
@@ -501,6 +529,91 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     // -------------------------------------------------------------------------
+    // TEXT ASSETS MANAGEMENT
+    // -------------------------------------------------------------------------
+
+    const setSelectedTextAssets = useCallback((assets: TextAsset[]) => {
+        setState(prev => ({ ...prev, selectedTextAssets: assets }))
+    }, [])
+
+    const addTextAsset = useCallback((asset: TextAsset) => {
+        setState(prev => {
+            const exists = prev.selectedTextAssets.some(a => a.id === asset.id)
+            if (exists) return prev
+            return { ...prev, selectedTextAssets: [...prev.selectedTextAssets, asset] }
+        })
+    }, [])
+
+    const removeTextAsset = useCallback((id: string) => {
+        setState(prev => ({
+            ...prev,
+            selectedTextAssets: prev.selectedTextAssets.filter(a => a.id !== id)
+        }))
+    }, [])
+
+    const updateTextAsset = useCallback((id: string, value: string) => {
+        setState(prev => ({
+            ...prev,
+            selectedTextAssets: prev.selectedTextAssets.map(a =>
+                a.id === id ? { ...a, value } : a
+            )
+        }))
+    }, [])
+
+    const generateTextForField = useCallback(async (fieldType: string): Promise<string> => {
+        if (!state.rawMessage) return ''
+
+        const brandContext = activeBrandKit ? `
+Marca: ${activeBrandKit.brand_name || 'Sin nombre'}
+Tagline: ${activeBrandKit.tagline || 'No definido'}
+Tono de voz: ${activeBrandKit.tone_of_voice?.join(', ') || 'Profesional'}
+URL: ${activeBrandKit.url || 'No disponible'}
+` : ''
+
+        const fieldPrompts: Record<string, string> = {
+            'cta': 'Genera un Call-to-Action (CTA) corto, persuasivo y directo (máximo 4-5 palabras). Debe incitar a la acción inmediata.',
+            'tagline': 'Genera un tagline memorable y conciso (máximo 6-8 palabras) que capture la esencia de la propuesta.',
+            'url': 'Sugiere un texto descriptivo corto para acompañar la URL (ej: "Visita nuestra web", "Descubre más").',
+            'headline': 'Genera un titular impactante y atractivo (máximo 8-10 palabras).',
+            'custom': 'Genera un texto de marketing corto y relevante (máximo 10 palabras).',
+        }
+
+        const prompt = `
+Eres un experto en copywriting y marketing digital.
+
+CONTEXTO DE LA MARCA:
+${brandContext}
+
+INTENCIÓN DEL USUARIO:
+"${state.rawMessage}"
+
+TAREA:
+${fieldPrompts[fieldType] || fieldPrompts['custom']}
+
+RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicionales.
+`
+
+        try {
+            const response = await fetch('/api/generate-text', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            })
+
+            if (!response.ok) {
+                console.error('Error generating text:', response.statusText)
+                return ''
+            }
+
+            const data = await response.json()
+            return data.text?.trim() || ''
+        } catch (error) {
+            console.error('Error generating text:', error)
+            return ''
+        }
+    }, [activeBrandKit])
+
+    // -------------------------------------------------------------------------
     // COMPUTED VALUES
     // -------------------------------------------------------------------------
 
@@ -638,6 +751,13 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
                 const displayLabel = fieldMeta?.label || id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
                 textParts.push(`• ${displayLabel}: "${cleanVal}"`)
+            }
+        })
+
+        // Add selected text assets from Brand DNA Panel
+        state.selectedTextAssets.forEach(asset => {
+            if (asset.value?.trim()) {
+                textParts.push(`• ${asset.label.toUpperCase()}: "${asset.value.trim()}"`)
             }
         })
 
@@ -1013,6 +1133,11 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         toggleBrandColor,
         removeBrandColor,
         addCustomColor,
+        setSelectedTextAssets,
+        addTextAsset,
+        removeTextAsset,
+        updateTextAsset,
+        generateTextForField,
         constructFinalPrompt,
         generate,
         reset,

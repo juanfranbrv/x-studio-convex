@@ -1,52 +1,145 @@
-/**
- * CATÁLOGO - El Catálogo (Colección de productos)
- * Grupo: Vender
- */
+export const CATALOGO_DESCRIPTION = 'Product collections, lookbooks, and organized grids.'
+export const CATALOGO_EXTENDED_DESCRIPTION = 'Showcase multiple items or a collection in a structured layout.'
 
-import type { IntentRequiredField } from '@/lib/creation-flow-types'
+export const CATALOGO_REQUIRED_FIELDS = ['collection_name', 'items', 'style']
 
-export const CATALOGO_EXTENDED_DESCRIPTION = `
-Diseño tipo grid o composición equilibrada para mostrar varios productos 
-de una misma colección. Ideal para rebajas de temporada, nuevas colecciones 
-o packs de productos complementarios.
-`.trim()
+// 1. CLASSIC GRID - E-commerce
+export const CATALOGO_GRID_PROMPT = `
+<structural_instruction>
+    <composition_type>Product Grid</composition_type>
+    <visual_hierarchy>
+        <primary>A clean, symmetrical [GRID_2x2] or 3x3 of products</primary>
+        <secondary>Uniform background color for all items</secondary>
+        <tertiary>Minimal text labels under each item</tertiary>
+    </visual_hierarchy>
+    <zoning_guide>
+        <zone_grid>The product array</zone_grid>
+    </zoning_guide>
+    <style_modifiers>
+        <texture>Studio photography, seamless background</texture>
+        <lighting>Uniform softbox lighting</lighting>
+        <palette>Neutral, white, or pastel background</palette>
+    </style_modifiers>
+    <negative_constraints>
+        <avoid>Random angles, mismatched lighting, clutter</avoid>
+    </negative_constraints>
+</structural_instruction>
+`
 
-export const CATALOGO_REQUIRED_FIELDS: IntentRequiredField[] = [
-    {
-        id: 'collection_name',
-        label: 'Nombre de la Colección',
-        placeholder: 'Ej: Verano 2024',
-        type: 'text',
-        required: true,
-        aiContext: 'Name of the product collection'
-    },
-    {
-        id: 'product_types',
-        label: 'Tipos de Productos',
-        placeholder: 'Ej: Camisetas, Gorras y Zapatillas',
-        type: 'text',
-        required: true,
-        aiContext: 'Comma-separated list of product types to visualize in a grid'
-    },
-    {
-        id: 'promo_text',
-        label: 'Texto Promocional (Opcional)',
-        placeholder: 'Ej: Hasta 50% Dto.',
-        type: 'text',
-        required: false,
-        aiContext: 'Promotional text or discount offer'
-    }
-]
+// 2. LOOKBOOK SPREAD - Editorial
+export const CATALOGO_LOOKBOOK_PROMPT = `
+<structural_instruction>
+    <composition_type>Editorial Lookbook</composition_type>
+    <visual_hierarchy>
+        <primary>One large [HERO_IMAGE] (lifestyle shot)</primary>
+        <secondary>Two smaller product detail shots on the side</secondary>
+        <tertiary>Elegant serif title "Fall Collection"</tertiary>
+    </visual_hierarchy>
+    <zoning_guide>
+        <zone_major>Lifestyle Image</zone_major>
+        <zone_minor>Detail shots column</zone_minor>
+    </zoning_guide>
+    <style_modifiers>
+        <texture>Magazine glossy paper, high fashion</texture>
+        <lighting>Natural sunlight + studio fill</lighting>
+        <palette>Sophisticated, tonal, cohesive</palette>
+    </style_modifiers>
+    <negative_constraints>
+        <avoid>Boring grid, low resolution, cheap catalog feel</avoid>
+    </negative_constraints>
+</structural_instruction>
+`
 
-export const CATALOGO_PROMPT = `
-COMPOSITION: Grid or balanced composition showcasing multiple products (3-4 items).
-ZONING:
-- Product Grid (75%): Multiple products arranged neatly (grid or dynamic cluster). Uniform lighting.
-- Header/Text (20%): Brief space for collection name or "Sale" text. Clean typography.
-- Brand (5%): Discrete logo placement.
-STYLE: Organized, clean, editorial catalog style.
-PHOTOGRAPHY: Flat lay or consistent studio angles for all items.
-PRIORITY: Variety and cohesion. Show that it's a collection.
-`.trim()
+// 3. MASONRY - Dynamic
+export const CATALOGO_MASONRY_PROMPT = `
+<structural_instruction>
+    <composition_type>Dynamic Collage</composition_type>
+    <visual_hierarchy>
+        <primary>Interlocking [MASONRY_LAYOUT] of images</primary>
+        <secondary>Varied aspect ratios (portrait, landscape)</secondary>
+        <tertiary>Small text badges on select images</tertiary>
+    </visual_hierarchy>
+    <zoning_guide>
+        <zone_mosaic>Tightly packed images</zone_mosaic>
+    </zoning_guide>
+    <style_modifiers>
+        <texture>Pinterest aesthetic, vibrant</texture>
+        <lighting>mixed high quality sources</lighting>
+        <palette>Colorful, energetic</palette>
+    </style_modifiers>
+    <negative_constraints>
+        <avoid>Gaps, overlapping chaotic images</avoid>
+    </negative_constraints>
+</structural_instruction>
+`
 
-export const CATALOGO_DESCRIPTION = 'Composición tipo grid para mostrar colección o variedad de productos. Ideal para sales o lanzamientos de temporada.'
+// 4. SHELF DISPLAY - Retail
+export const CATALOGO_SHELF_PROMPT = `
+<structural_instruction>
+    <composition_type>Retail Shelf</composition_type>
+    <visual_hierarchy>
+        <primary>Products arranged neatly on [FLOATING_SHELVES]</primary>
+        <secondary>Soft shadows cast on the wall</secondary>
+        <tertiary>Decor elements (plants, books) styling the shelf</tertiary>
+    </visual_hierarchy>
+    <zoning_guide>
+        <zone_shelves>Horizontal lines</zone_shelves>
+        <zone_products>Items on shelves</zone_products>
+    </zoning_guide>
+    <style_modifiers>
+        <texture>Interior design, wood or metal shelves</texture>
+        <lighting>Warm interior spot lighting</lighting>
+        <palette>Neutral wall, colorful products</palette>
+    </style_modifiers>
+    <negative_constraints>
+        <avoid>Grocery store metal racks, bad perspective</avoid>
+    </negative_constraints>
+</structural_instruction>
+`
+
+// 5. COLOR VARIATIONS - Pop Art
+export const CATALOGO_VARIANTS_PROMPT = `
+<structural_instruction>
+    <composition_type>Color Series</composition_type>
+    <visual_hierarchy>
+        <primary>The same object repeated in [DIFFERENT_COLORS]</primary>
+        <secondary>Pop art repetition layout (Andy Warhol style)</secondary>
+        <tertiary>Bold color backgrounds matching the object</tertiary>
+    </visual_hierarchy>
+    <zoning_guide>
+        <zone_grid>Repeated object matrix</zone_grid>
+    </zoning_guide>
+    <style_modifiers>
+        <texture>Plastic, glossy, vibrant</texture>
+        <lighting>Hard high-contrast studio flash</lighting>
+        <palette>Monochrome per cell, rainbow overall</palette>
+    </style_modifiers>
+    <negative_constraints>
+        <avoid>Subtle hues, boring grey background</avoid>
+    </negative_constraints>
+</structural_instruction>
+`
+
+// 6. ZOOM DETAIL - Focus
+export const CATALOGO_DETAIL_PROMPT = `
+<structural_instruction>
+    <composition_type>Macro Details</composition_type>
+    <visual_hierarchy>
+        <primary>Main full product shot in center</primary>
+        <secondary>Circular [MAGNIFYING_GLASS] overlays showing texture details</secondary>
+        <tertiary>Dotted lines connecting zoom bubbles to source</tertiary>
+    </visual_hierarchy>
+    <zoning_guide>
+        <zone_center>Main Object</zone_center>
+        <zone_corners>Detail bubbles</zone_corners>
+    </zoning_guide>
+    <style_modifiers>
+        <texture>High resolution macro photography</texture>
+        <lighting>Clean crisp scientific lighting</lighting>
+        <palette>Clean white background, focus on texture</palette>
+    </style_modifiers>
+    <negative_constraints>
+        <avoid>Blurry textures, fake looking loupes</avoid>
+    </negative_constraints>
+</structural_instruction>
+`

@@ -40,45 +40,65 @@ export const COMUNICADO_REQUIRED_FIELDS: IntentRequiredField[] = [
 ]
 
 export const COMUNICADO_OFFICIAL_PROMPT = `
-COMPOSITION: Official announcement/notice layout with maximum readability.
+COMPOSITION: Trusted authority layout. Structured and hierarchical.
 ZONING:
-- Header (15%): Brand logo or "COMUNICADO" badge
-- Title Zone (20%): Large, bold announcement headline with high contrast
-- Body Zone (50%): Clean, well-spaced text area for detailed message
-- Footer (15%): Contact info, effective date, or call to action
-STYLE: Professional, clean, high contrast. Serious but not alarming.
-TYPOGRAPHY: Large, legible fonts. Generous line spacing.
-PRIORITY: Text legibility is ABSOLUTE priority. Minimal decorative elements.
+- Header: Reserved space for official seal, logo, or crest at top or center.
+- Body: Clean, single-column text area with generous margin.
+- Footer: Distinct separator for contact info or validity dates.
+STYLE: Institutional, clean, trustworthy. White or neutral subtle backgrounds.
+TYPOGRAPHY: Highly legible sans-serif or authoritative serif main text.
+PRIORITY: Clarity and Trust.
 `.trim()
 
-export const COMUNICADO_BANNER_PROMPT = `
-COMPOSITION: Horizontal alert banner layout designed for quick reading.
+export const COMUNICADO_URGENT_PROMPT = `
+COMPOSITION: High-visibility alert layout.
 ZONING:
-- Layout: Horizontal split or wide format.
-- Left Zone (30%): Large Warning/Info Icon or Brand Symbol as visual anchor.
-- Right Zone (70%): Text area with Headline on top, Body text below.
-STYLE: Urgent, eye-catching, high contrast (Yellow/Black, Red/White, or Brand/White).
-TYPOGRAPHY: Bold, impact headers. Concise body text.
+- Anchor: Large warning icon, exclamation mark, or diagonal stripes as attention grabber.
+- Content: Centralized message block with high contrast against the background.
+- Frame: Solid borders or distinct color bands at top/bottom.
+STYLE: Alert aesthetic. High contrast (Yellow/Black, Brand/White, Red/White).
+TYPOGRAPHY: Bold, impact headers. Condensed body text.
 `.trim()
 
 export const COMUNICADO_MODERN_PROMPT = `
-COMPOSITION: Asymmetric dynamic split.
+COMPOSITION: Asymmetric dynamic split. Tech-forward.
 ZONING:
-- Visual (40%): Geometric masks or large brand imagery on one side (left/right).
-- Content (60%): Clean whitespace with bold typography blocks.
-STYLE: Editorial, sharp angles, vibrant color blocking, tech-forward.
-TYPOGRAPHY: Modern sans-serif, high hierarchy contrast.
-PRIORITY: Balance between visual impact and text clarity.
+- Visual: Geometric masks, abstract shapes, or large content blocks on one side.
+- Content: Clean whitespace balancing the heavy visual side.
+- Accents: Small tech-inspired elements (lines, dots, data points).
+STYLE: Editorial, sharp angles, vibrant color blocking.
+TYPOGRAPHY: Modern, high hierarchy contrast.
 `.trim()
 
-export const COMUNICADO_QUOTE_PROMPT = `
-COMPOSITION: Centered typographical focus. High-end editorial feel.
+export const COMUNICADO_EDITORIAL_PROMPT = `
+COMPOSITION: Centered typographical focus. High-end magazine feel.
 ZONING:
-- Background: Abstract brand patterns or blurred photography.
-- Center (80%): Massive typographical element.
-- Quote/Headline: Dominates the visual space.
+- Background: Abstract brand patterns, blurred photography, or solid rich color.
+- Center: Massive typographical element or quote marks acting as graphics.
+- Caption: Discrete area for attribution or secondary details.
 STYLE: Minimalist, "Quiet Luxury", sophisticated.
-TYPOGRAPHY: Elegant serif or ultra-light sans-serif. Very large scale.
+TYPOGRAPHY: Elegant serif or ultra-light sans-serif benchmarks.
 `.trim()
 
-export const COMUNICADO_DESCRIPTION = 'Layout oficial con máxima legibilidad. Cabecera de marca, título destacado, cuerpo de texto amplio y pie informativo.'
+export const COMUNICADO_COMMUNITY_PROMPT = `
+COMPOSITION: Warm, approachable, human-centric layout.
+ZONING:
+- Organic Shapes: Curved lines, circles, or soft framing elements.
+- Image Integration: Space for lifestyle imagery or community interaction placeholders.
+- Text Flow: Wrapped or balanced text that feels conversational.
+STYLE: Friendly, inviting, soft color palette.
+TYPOGRAPHY: Rounder sans-serifs or approachable styles.
+`.trim()
+
+export const COMUNICADO_MINIMAL_PROMPT = `
+COMPOSITION: Stark, pure utility layout. Ultra-modern Swiss style.
+ZONING:
+- Grid: Strict grid alignment (left-aligned or rigid center axis).
+- Negative Space: Vast amounts of whitespace.
+- Divider: Single bold distinct line or geometric anchor.
+STYLE: Brutalist or Swiss Design. Monochrome or Duo-tone.
+TYPOGRAPHY: Monospaced or Grotesque fonts to emphasize raw data feel.
+`.trim()
+
+export const COMUNICADO_DESCRIPTION = 'Layouts oficiales para anuncios, noticias importantes y actualizaciones.'
+

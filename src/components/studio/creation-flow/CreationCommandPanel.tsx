@@ -232,7 +232,11 @@ export function CreationCommandPanel({
     const showIntentAndLayout = true // Always show (step 2)
     const showPlatformSelector = state.selectedIntent !== null // Show after intent (step 3)
     const showImageAndContent = state.selectedPlatform !== null && state.selectedFormat !== null // Show after platform (step 4)
-    const showVisuals = showImageAndContent && (state.visionAnalysis !== null || !requiresImage) // Show after image (step 5)
+    const showVisuals = showImageAndContent && (
+        state.visionAnalysis !== null ||
+        (state.imageSourceMode === 'generate' && state.aiImageDescription?.trim() !== '') ||
+        !requiresImage
+    )
 
     const canGenerate = showVisuals && (
         state.selectedStyles.length > 0 ||
@@ -242,7 +246,7 @@ export function CreationCommandPanel({
     )
 
     return (
-        <div className="w-[450px] h-full bg-card border-r border-border flex flex-col shadow-2xl relative z-10 hidden md:flex">
+        <div className="w-[450px] h-full bg-card border-r border-border flex flex-col shadow-md relative z-10 hidden md:flex">
             {/* Scrollable Content Container */}
             <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide">
                 <div className="pt-4 pb-12">
@@ -415,6 +419,12 @@ export function CreationCommandPanel({
                                                 onAddCustomColor={creationFlow.addCustomColor}
                                                 showLogo={true}
                                                 showColors={true}
+                                                textAssets={state.selectedTextAssets}
+                                                onAddTextAsset={creationFlow.addTextAsset}
+                                                onRemoveTextAsset={creationFlow.removeTextAsset}
+                                                onUpdateTextAsset={creationFlow.updateTextAsset}
+                                                rawMessage={state.rawMessage}
+                                                onGenerateText={creationFlow.generateTextForField}
                                             />
                                         )}
                                     </div>

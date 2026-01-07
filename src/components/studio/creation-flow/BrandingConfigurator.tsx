@@ -5,19 +5,32 @@ import {
     Palette,
     Pipette,
     X,
+    Type,
+    Sparkles,
+    Fingerprint,
+    Loader2,
 } from 'lucide-react'
 import { HexColorPicker } from 'react-colorful'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
-import { type LayoutOption, type SelectedColor } from '@/lib/creation-flow-types'
+import { type LayoutOption, type SelectedColor, type TextAsset } from '@/lib/creation-flow-types'
 
 interface BrandingConfiguratorProps {
     selectedLayout: LayoutOption | null
@@ -29,6 +42,14 @@ interface BrandingConfiguratorProps {
     onAddCustomColor: (color: string) => void
     showLogo?: boolean
     showColors?: boolean
+    // Text Assets
+    textAssets?: TextAsset[]
+    onAddTextAsset?: (asset: TextAsset) => void
+    onRemoveTextAsset?: (id: string) => void
+    onUpdateTextAsset?: (id: string, value: string) => void
+    // AI Generation
+    rawMessage?: string
+    onGenerateText?: (fieldType: string) => Promise<string>
 }
 
 function CustomColorPicker({ onAdd }: { onAdd: (color: string) => void }) {
@@ -125,6 +146,112 @@ function CustomColorPicker({ onAdd }: { onAdd: (color: string) => void }) {
     )
 }
 
+// Separate component for text asset row to properly use hooks
+interface TextAssetRowProps {
+    asset: { id: string; type: string; label: string; value: string }
+    textResources: { label: string; value: string }[]
+    rawMessage: string
+    onUpdate: (id: string, value: string) => void
+    onRemove: (id: string) => void
+    onGenerateText?: (fieldType: string) => Promise<string>
+}
+
+function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, onGenerateText }: TextAssetRowProps) {
+    const [isGenerating, setIsGenerating] = useState(false)
+
+    const handleGenerate = async () => {
+        if (!onGenerateText || isGenerating) return
+        setIsGenerating(true)
+        try {
+            const generated = await onGenerateText(asset.type)
+            if (generated) {
+                onUpdate(asset.id, generated)
+            }
+        } finally {
+            setIsGenerating(false)
+        }
+    }
+
+    return (
+        <div className="flex items-center gap-1.5 group">
+            <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-5 shrink-0 min-w-[50px] justify-center">
+                {asset.label}
+            </Badge>
+
+            {/* Input with Fingerprint dropdown inside */}
+            <div className="relative flex-1">
+                <Input
+                    value={asset.value}
+                    onChange={(e) => onUpdate(asset.id, e.target.value)}
+                    className="h-7 text-xs pr-7"
+                    placeholder={`Valor para ${asset.label}...`}
+                />
+                {/* Fingerprint - Brand Kit Presets */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 hover:text-primary transition-colors text-muted-foreground/50 hover:text-muted-foreground"
+                            title="Usar texto del Brand Kit"
+                        >
+                            <Fingerprint className="w-4 h-4" />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-64 max-h-60 overflow-y-auto">
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Textos del Brand Kit
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {textResources.length === 0 ? (
+                            <DropdownMenuItem disabled className="text-xs text-muted-foreground italic">
+                                Sin textos disponibles
+                            </DropdownMenuItem>
+                        ) : (
+                            textResources.map((resource, idx) => (
+                                <DropdownMenuItem
+                                    key={idx}
+                                    onClick={() => onUpdate(asset.id, resource.value)}
+                                    className="text-xs"
+                                >
+                                    <span className="text-muted-foreground mr-2">[{resource.label}]</span>
+                                    <span className="truncate">{resource.value}</span>
+                                </DropdownMenuItem>
+                            ))
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+
+            {/* Sparkles - AI Generation */}
+            <button
+                onClick={handleGenerate}
+                disabled={isGenerating || !rawMessage}
+                className={cn(
+                    "p-1 rounded transition-all",
+                    rawMessage
+                        ? "hover:text-primary hover:bg-primary/10 text-muted-foreground"
+                        : "text-muted-foreground/30 cursor-not-allowed"
+                )}
+                title={rawMessage ? "Generar con IA" : "Introduce primero tu intención"}
+            >
+                {isGenerating ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                    <Sparkles className="w-4 h-4" />
+                )}
+            </button>
+
+            {/* Delete button */}
+            <button
+                onClick={() => onRemove(asset.id)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-destructive"
+                title="Eliminar"
+            >
+                <X className="w-3.5 h-3.5" />
+            </button>
+        </div>
+    )
+}
+
 export function BrandingConfigurator({
     selectedLayout,
     selectedLogoId,
@@ -135,6 +262,12 @@ export function BrandingConfigurator({
     onAddCustomColor,
     showLogo = true,
     showColors = true,
+    textAssets = [],
+    onAddTextAsset,
+    onRemoveTextAsset,
+    onUpdateTextAsset,
+    rawMessage = '',
+    onGenerateText,
 }: BrandingConfiguratorProps) {
     const { activeBrandKit } = useBrandKit()
 
@@ -164,6 +297,9 @@ export function BrandingConfigurator({
             {/* Logo Selector */}
             {showLogo && logos.length > 0 && (
                 <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                        Logos
+                    </label>
                     <div className="flex gap-2">
                         {/* Logo options */}
                         {logos.map((logo, idx) => {
@@ -213,6 +349,55 @@ export function BrandingConfigurator({
                     </div>
                 </div>
             )}
+
+            {/* Text Assets Section */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                        <Type className="w-3 h-3 text-primary" />
+                        Textos para Prompt
+                    </label>
+                    <button
+                        onClick={() => {
+                            const newId = `custom-${Date.now()}`
+                            onAddTextAsset?.({ id: newId, type: 'custom', label: 'Texto', value: '' })
+                        }}
+                        className="p-0.5 hover:text-primary transition-colors"
+                        title="Añadir texto"
+                    >
+                        <Plus className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                </div>
+                <div className="space-y-2">
+                    {textAssets.length === 0 ? (
+                        <p className="text-[10px] text-muted-foreground/60 italic text-center py-2">
+                            No hay textos configurados
+                        </p>
+                    ) : (
+                        textAssets.map((asset) => {
+                            // Compute textResources inside the parent scope, not in map
+                            const textResources = [
+                                ...(activeBrandKit?.text_assets?.ctas || []).map((t: string) => ({ label: 'CTA', value: t })),
+                                ...(activeBrandKit?.text_assets?.marketing_hooks || []).map((t: string) => ({ label: 'Hook', value: t })),
+                                activeBrandKit?.tagline ? { label: 'Tagline', value: activeBrandKit.tagline } : null,
+                                activeBrandKit?.url ? { label: 'URL', value: activeBrandKit.url } : null,
+                            ].filter(Boolean) as { label: string; value: string }[]
+
+                            return (
+                                <TextAssetRow
+                                    key={asset.id}
+                                    asset={asset}
+                                    textResources={textResources}
+                                    rawMessage={rawMessage}
+                                    onUpdate={onUpdateTextAsset || (() => { })}
+                                    onRemove={onRemoveTextAsset || (() => { })}
+                                    onGenerateText={onGenerateText}
+                                />
+                            )
+                        })
+                    )}
+                </div>
+            </div>
 
             {/* Brand Colors */}
             {showColors && (

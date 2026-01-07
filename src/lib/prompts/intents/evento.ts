@@ -38,15 +38,64 @@ export const EVENTO_REQUIRED_FIELDS: IntentRequiredField[] = [
     }
 ]
 
-export const EVENTO_PROMPT = `
-COMPOSITION: Event poster style. Vertical hierarchy typical of flyers.
+export const EVENTO_CONFERENCE_PROMPT = `
+COMPOSITION: Professional conference poster. Authority and clarity.
 ZONING:
-- Title/Hero (40%): Big, attractive title or thematic illustration.
-- Details Block (40%): Clear, separated info for Date, Time, Location. Icons often used here.
-- CTA/Brand (20%): "Register Now" button area and branding.
-STYLE: Engaging, informative, poster-like. High readability for numbers and dates.
-PHOTOGRAPHY: Thematic background or speaker portrait if applicable, otherwise abstract event graphics.
-PRIORITY: The "When" and "Where" must be instantly readable.
+- Hero: Large area for speaker portrait or event branding.
+- Info Stack: Cleanly aligned block for text details (Who, Where, When).
+- Footer: Sponsor logo area or registration URL.
+STYLE: Corporate, clean, trustworthy. Blue/Grey/White or Brand Primary.
+TYPOGRAPHY: Modern sans-serif headers. Structured information hierarchy.
 `.trim()
 
-export const EVENTO_DESCRIPTION = 'Diseño tipo cartel/flyer con jerarquía para destacar fecha, hora y lugar. Ideal para webinars y eventos físicos.'
+export const EVENTO_PARTY_PROMPT = `
+COMPOSITION: Nightlife or concert flyer. High energy and movement.
+ZONING:
+- Visuals: Dynamic abstract shapes, lights, or crowd imagery blending with text.
+- Center: Event name in massive or stylized typography.
+- Anchors: Date and lineup anchored in corners or along edges.
+STYLE: Electric, neon, dark mode, glossy.
+TYPOGRAPHY: Display fonts, distorted or glow effects.
+`.trim()
+
+export const EVENTO_WORKSHOP_PROMPT = `
+COMPOSITION: Educational or workshop layout. Structured and inviting.
+ZONING:
+- Grid: Clear division between "What you will learn" visual cues and logistics.
+- Header: Inviting title with friendly imagery (illustration or photo).
+- Details: Boxed or highlighted area for date/time/location.
+STYLE: Clean, bright, approachable.
+TYPOGRAPHY: Readable, friendly sans-serif.
+`.trim()
+
+export const EVENTO_FESTIVAL_PROMPT = `
+COMPOSITION: Artistic festival or cultural event. Expressive.
+ZONING:
+- Canvas: Full artistic background (collage, painting, or abstract).
+- Text: Integrated into the artwork, perhaps following shapes or paths.
+- Logo: Prominent event identity.
+STYLE: Bohemic, artistic, colorful, texture-rich.
+TYPOGRAPHY: Expressive, custom-feel, eclectic.
+`.trim()
+
+export const EVENTO_NETWORKING_PROMPT = `
+COMPOSITION: Community meetup or networking. Connection focused.
+ZONING:
+- Pattern: Background with connecting lines, dots, or avatars.
+- Center: Clear central hub with event title.
+- Periphery: Space for topic keywords or sub-groups.
+STYLE: Tech, network, modern.
+TYPOGRAPHY: Clean, digital aesthetic.
+`.trim()
+
+export const EVENTO_MINIMAL_PROMPT = `
+COMPOSITION: "Save the Date" elegance. Minimalist announcement.
+ZONING:
+- Negative Space: Vast open area.
+- Focus: Centralized date or single iconic element.
+- Text: Small, refined text content balanced by whitespace.
+STYLE: High-end, premium, exclusive.
+TYPOGRAPHY: Thin, elegant, widely spaced.
+`.trim()
+
+export const EVENTO_DESCRIPTION = 'Diseño tipo cartel/flyer con jerarquía para destacar fecha, hora y lugar.'

@@ -69,6 +69,11 @@ interface BrandDNAPanelProps {
     onSetDraggedElement?: (element: ContextElement | null) => void
     selectedContext?: ContextElement[]
     onImageClick?: (url: string) => void
+    // Text Assets
+    textAssets?: { id: string; type: 'cta' | 'tagline' | 'url' | 'custom'; label: string; value: string }[]
+    onAddTextAsset?: (asset: { id: string; type: 'cta' | 'tagline' | 'url' | 'custom'; label: string; value: string }) => void
+    onRemoveTextAsset?: (id: string) => void
+    onUpdateTextAsset?: (id: string, value: string) => void
 }
 
 export function BrandDNAPanel({
@@ -80,6 +85,10 @@ export function BrandDNAPanel({
     onSetDraggedElement,
     selectedContext = [],
     onImageClick,
+    textAssets = [],
+    onAddTextAsset,
+    onRemoveTextAsset,
+    onUpdateTextAsset,
 }: BrandDNAPanelProps) {
     const { t } = useTranslation()
     const { updateActiveBrandKit } = useBrandKit()
@@ -92,6 +101,7 @@ export function BrandDNAPanel({
 
     // Accordion state - sections open by default
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+        textPrompts: true,
         colors: true,
         logos: true,
         images: true,
@@ -524,6 +534,61 @@ export function BrandDNAPanel({
             )}
 
             <div className="p-2 flex flex-col gap-1 overflow-y-auto scrollbar-thin flex-1">
+                {/* TEXT PROMPTS SECTION */}
+                <Collapsible open={openSections.textPrompts} onOpenChange={() => toggleSection('textPrompts')}>
+                    <div className="space-y-0.5">
+                        <SectionHeader
+                            icon={FileText}
+                            title="Textos para Prompt"
+                            count={textAssets.length}
+                            isOpen={openSections.textPrompts}
+                            extra={
+                                <button
+                                    className="cursor-pointer hover:text-primary transition-colors p-0.5"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        const newId = `custom-${Date.now()}`
+                                        onAddTextAsset?.({ id: newId, type: 'custom', label: 'Texto', value: '' })
+                                    }}
+                                >
+                                    <Plus className="w-3 h-3 text-muted-foreground/60" />
+                                </button>
+                            }
+                        />
+                        <CollapsibleContent>
+                            <div className="space-y-1.5 p-1.5 bg-muted/10 rounded-lg">
+                                {textAssets.length === 0 ? (
+                                    <p className="text-[10px] text-muted-foreground/60 italic text-center py-2">
+                                        No hay textos. Añade CTA, Tagline o URL.
+                                    </p>
+                                ) : (
+                                    textAssets.map((asset) => (
+                                        <div key={asset.id} className="flex items-center gap-1.5 group">
+                                            <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-4 shrink-0">
+                                                {asset.label}
+                                            </Badge>
+                                            <Input
+                                                value={asset.value}
+                                                onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
+                                                className="h-6 text-[10px] flex-1 bg-background/50"
+                                                placeholder={`Valor para ${asset.label}...`}
+                                            />
+                                            <button
+                                                onClick={() => onRemoveTextAsset?.(asset.id)}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-destructive"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </CollapsibleContent>
+                    </div>
+                </Collapsible>
+
+                <hr className="border-t-2 border-border/50 my-1 -mx-2" />
+
                 {/* COLORS SECTION */}
                 <Collapsible open={openSections.colors} onOpenChange={() => toggleSection('colors')}>
                     <div className="space-y-0.5">
@@ -580,6 +645,7 @@ export function BrandDNAPanel({
                             }
                         />
                         <CollapsibleContent>
+                            <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5 mb-1">Logos</p>
                             <div className="grid grid-cols-3 gap-1.5 p-1">
                                 {logos.map((logo, idx) => (
                                     <div
@@ -600,6 +666,12 @@ export function BrandDNAPanel({
                                                 : "border-transparent opacity-60 hover:opacity-100 hover:border-border"
                                         )}
                                     >
+                                        <Badge className={cn(
+                                            "absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 text-[8px] h-4 px-1 pointer-events-none",
+                                            isDark ? "bg-white/90 text-black" : "bg-black/90 text-white"
+                                        )}>
+                                            Logo
+                                        </Badge>
                                         <img
                                             src={logo.url}
                                             draggable={false}
