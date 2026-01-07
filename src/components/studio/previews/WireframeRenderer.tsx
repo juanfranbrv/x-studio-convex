@@ -26,7 +26,7 @@ export function WireframeRenderer({ state, aspectRatio }: WireframeRendererProps
     // Common props for all layouts
     const props = {
         image: state.uploadedImage || null,
-        brandColors: state.selectedBrandColors,
+        brandColors: state.selectedBrandColors.map(c => c.color),
         logoId: state.selectedLogoId,
         texts: {
             headline: state.headline,
