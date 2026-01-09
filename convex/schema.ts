@@ -2,12 +2,49 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // App-wide configurable settings (editable via admin panel)
+  app_settings: defineTable({
+    key: v.string(),           // "beta_initial_credits", "low_credits_threshold", "credits_per_generation"
+    value: v.number(),
+    description: v.optional(v.string()),
+    updated_at: v.string(),
+    updated_by: v.optional(v.string()), // admin email
+  }).index("by_key", ["key"]),
+
+  // Beta access requests (waitlist)
+  beta_requests: defineTable({
+    email: v.string(),
+    status: v.string(), // "pending" | "approved" | "rejected"
+    created_at: v.string(),
+    processed_at: v.optional(v.string()),
+    processed_by: v.optional(v.string()), // admin email
+  }).index("by_email", ["email"])
+    .index("by_status", ["status"]),
+
   users: defineTable({
     clerk_id: v.string(),
     email: v.string(),
-    current_brand_id: v.optional(v.string()), // Can be converted to v.id("brands") later if we want strict relations
+    current_brand_id: v.optional(v.string()),
     created_at: v.string(),
+    // Credits system
+    credits: v.number(),                      // Current balance
+    status: v.string(),                       // "waitlist" | "active" | "suspended"
+    role: v.string(),                         // "user" | "beta" | "admin"
+    plan_id: v.optional(v.string()),          // null for beta, later "free" | "pro" | etc.
+    credits_reset_at: v.optional(v.string()), // For future monthly plans
   }).index("by_clerk_id", ["clerk_id"]),
+
+  // Credit transaction audit log
+  credit_transactions: defineTable({
+    user_id: v.id("users"),
+    type: v.string(),           // "grant" | "consume" | "refund" | "purchase" | "monthly_reset" | "admin_adjust"
+    amount: v.number(),         // Positive or negative
+    balance_after: v.number(),
+    metadata: v.optional(v.any()), // { action?, generation_id?, admin_id?, note? }
+    created_at: v.string(),
+  }).index("by_user", ["user_id"])
+    .index("by_type", ["type"])
+    .index("by_created", ["created_at"]),
 
   brands: defineTable({
     owner_id: v.string(), // clerk_id
@@ -69,14 +106,7 @@ export default defineSchema({
     image_url: v.string(), // Could be external URL or Convex storage URL
     annotations: v.optional(v.any()), // JSON
     // Snapshot of GenerationState for "Recents" functionality
-    state: v.object({
-      platform: v.string(),
-      format: v.string(),
-      intent: v.string(),
-      layout: v.optional(v.string()),
-      styles: v.optional(v.array(v.string())),
-      customTexts: v.optional(v.any()),
-    }),
+    state: v.any(), // Complete GenerationState snapshot
     created_at: v.string(),
   }).index("by_brand", ["brand_id"]),
 
@@ -86,15 +116,8 @@ export default defineSchema({
     name: v.string(),
     description: v.optional(v.string()),
     icon: v.optional(v.string()),
-    // Snapshot of GenerationState
-    state: v.object({
-      platform: v.string(), // e.g. 'instagram'
-      format: v.string(), // e.g. 'story', 'post'
-      intent: v.string(), // e.g. 'sales', 'quote'
-      layout: v.optional(v.string()), // e.g. 'impact-offer'
-      styles: v.optional(v.array(v.string())), // e.g. ['minimalist', 'bold']
-      customTexts: v.optional(v.any()), // Pre-filled text fields
-    }),
+    // Snapshot of GenerationState (complete state for full restoration)
+    state: v.any(),
     usageCount: v.number(),
     lastUsed: v.optional(v.string()),
     created_at: v.string(),

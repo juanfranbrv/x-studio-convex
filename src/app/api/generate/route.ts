@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 import { generateContentImageUnified } from '@/lib/gemini'
 import type { BrandDNA } from '@/lib/brand-types'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '@/../convex/_generated/api'
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 
 export async function POST(request: NextRequest) {
     try {
@@ -9,6 +13,44 @@ export async function POST(request: NextRequest) {
         const { userId } = await auth()
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        // Check user credits before generation
+        let creditsData = await convex.query(api.users.getCredits, { clerk_id: userId })
+
+        // If user doesn't exist in Convex, create them automatically
+        if (!creditsData) {
+            const client = await clerkClient()
+            const clerkUser = await client.users.getUser(userId)
+            const email = clerkUser.emailAddresses[0]?.emailAddress || ''
+
+            await convex.mutation(api.users.upsertUser, {
+                clerk_id: userId,
+                email: email
+            })
+
+            // Re-fetch credits data
+            creditsData = await convex.query(api.users.getCredits, { clerk_id: userId })
+        }
+
+        if (!creditsData) {
+            return NextResponse.json({ error: 'Error creando usuario' }, { status: 500 })
+        }
+
+        if (creditsData.status !== 'active') {
+            const statusMessages: Record<string, string> = {
+                waitlist: 'Tu cuenta está en lista de espera. Contacta al admin para activarla.',
+                suspended: 'Tu cuenta ha sido suspendida. Contacta al admin.',
+            }
+            return NextResponse.json({
+                error: statusMessages[creditsData.status] || 'Cuenta no activa'
+            }, { status: 403 })
+        }
+
+        if (creditsData.credits < 1) {
+            return NextResponse.json({
+                error: 'Sin créditos disponibles. Contacta al admin para obtener más.'
+            }, { status: 402 })
         }
 
         // Parse request body
@@ -36,9 +78,21 @@ export async function POST(request: NextRequest) {
             { headline, cta, platform, context, model, layoutReference, aspectRatio }
         )
 
+        // Consume credit after successful generation
+        try {
+            await convex.mutation(api.users.consumeCredits, {
+                clerk_id: userId,
+                metadata: { action: 'image_generation', prompt: prompt.substring(0, 100) }
+            })
+        } catch (creditError) {
+            console.error('Failed to consume credit (image was generated):', creditError)
+            // Don't fail the request - image was generated, we just log the credit issue
+        }
+
         return NextResponse.json({
             success: true,
-            imageUrl
+            imageUrl,
+            creditsRemaining: (creditsData.credits - 1)
         })
 
     } catch (error: any) {

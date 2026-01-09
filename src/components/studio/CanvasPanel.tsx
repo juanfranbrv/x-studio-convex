@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import EditIcon from '@mui/icons-material/Edit'
 import DownloadIcon from '@mui/icons-material/Download'
@@ -106,6 +106,36 @@ export function CanvasPanel({
     const [prompt, setPrompt] = useState('')
     const [isDraggingOver, setIsDraggingOver] = useState(false)
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
+    const [viewportHeight, setViewportHeight] = useState(800) // Default fallback
+
+    // Track viewport height for responsive canvas
+    useEffect(() => {
+        const updateHeight = () => setViewportHeight(window.innerHeight)
+        updateHeight()
+        window.addEventListener('resize', updateHeight)
+        return () => window.removeEventListener('resize', updateHeight)
+    }, [])
+
+    // Calculate effective zoom (base scale * manual zoom)
+    const effectiveZoom = useMemo(() => {
+        const [w, h] = aspectRatio.split(':').map(Number);
+        const ratio = w / h;
+        const baseHeight = 600; // Reference height at 100%
+
+        const availableHeight = Math.max(200, viewportHeight - 400);
+        const availableWidth = 600;
+
+        let canvasHeight;
+        if (ratio >= 1) {
+            const canvasWidth = Math.min(availableWidth, availableHeight * ratio);
+            canvasHeight = canvasWidth / ratio;
+        } else {
+            canvasHeight = Math.min(availableHeight, availableWidth / ratio);
+        }
+
+        const baseScale = (canvasHeight / baseHeight) * 100;
+        return Math.round(baseScale * (zoom / 100));
+    }, [aspectRatio, viewportHeight, zoom])
 
     // Animation & Reveal States
     const [isRevealing, setIsRevealing] = useState(false)
@@ -144,12 +174,32 @@ export function CanvasPanel({
                 description: presetDescription,
                 icon: creationState.selectedIntent ? creationState.selectedIntent : "Sparkles", // Use intent ID as icon reference or default
                 state: {
-                    platform: creationState.selectedPlatform || 'instagram',
-                    format: creationState.selectedFormat || 'ig-square',
-                    intent: creationState.selectedIntent || 'general',
-                    layout: creationState.selectedLayout || undefined,
-                    styles: creationState.selectedStyles,
+                    // Platform & Format
+                    selectedPlatform: creationState.selectedPlatform,
+                    selectedFormat: creationState.selectedFormat,
+                    // Intent
+                    selectedGroup: creationState.selectedGroup,
+                    selectedIntent: creationState.selectedIntent,
+                    selectedSubMode: creationState.selectedSubMode,
+                    // Image/Input
+                    uploadedImage: creationState.uploadedImage,
+                    selectedTheme: creationState.selectedTheme,
+                    imageSourceMode: creationState.imageSourceMode,
+                    selectedBrandKitImageId: creationState.selectedBrandKitImageId,
+                    aiImageDescription: creationState.aiImageDescription,
+                    // Styles & Layout
+                    selectedStyles: creationState.selectedStyles,
+                    selectedLayout: creationState.selectedLayout,
+                    // Branding
+                    selectedLogoId: creationState.selectedLogoId,
+                    headline: creationState.headline,
+                    cta: creationState.cta,
                     customTexts: creationState.customTexts,
+                    selectedBrandColors: creationState.selectedBrandColors,
+                    rawMessage: creationState.rawMessage,
+                    additionalInstructions: creationState.additionalInstructions,
+                    customStyle: creationState.customStyle,
+                    selectedTextAssets: creationState.selectedTextAssets,
                 }
             });
             setIsSavePresetOpen(false);
@@ -223,6 +273,10 @@ export function CanvasPanel({
     useEffect(() => {
         if (currentImage && activeBrandKit) {
             handleGenerateCopy()
+        } else if (!currentImage) {
+            // Clear copy when image is removed (e.g. on reset)
+            setGeneratedCopy(null)
+            setGeneratedHashtags([])
         }
     }, [currentImage])
 
@@ -369,27 +423,38 @@ export function CanvasPanel({
                 </div>
             </div>
 
-            <div className="flex-1 relative flex flex-col items-center justify-center p-8 pb-24 overflow-y-auto bg-zinc-100 dark:bg-zinc-900 scrollbar-hide bg-[url('/grid-pattern.svg')]">
+            <div className="flex-1 relative flex flex-col items-center justify-start pt-16 p-8 pb-24 overflow-auto bg-zinc-100 dark:bg-zinc-900 scrollbar-hide bg-[url('/grid-pattern.svg')]">
 
-
-
+                {/* Canvas Container - constrained to available space */}
                 <div
                     ref={containerRef}
-                    className="relative shadow-2xl shadow-black/5 ring-1 ring-black/5 transition-all duration-300 ease-out flex items-center justify-center bg-white group"
-                    style={{
-                        ...(() => {
-                            const [w, h] = aspectRatio.split(':').map(Number);
-                            const ratio = w / h;
-                            const baseHeight = 600;
-                            const calculatedWidth = baseHeight * ratio;
-                            return {
-                                width: `${calculatedWidth}px`,
-                                height: `${baseHeight}px`,
-                                transform: `scale(${zoom / 100})`,
-                                transformOrigin: 'center center',
-                            };
-                        })()
-                    }}
+                    className="relative shadow-2xl shadow-black/5 ring-1 ring-black/5 transition-all duration-300 ease-out flex items-center justify-center bg-white group shrink-0"
+                    style={(() => {
+                        const [w, h] = aspectRatio.split(':').map(Number);
+                        const ratio = w / h;
+                        // Calculate maximum dimensions that fit within the container
+                        const availableHeight = Math.max(200, viewportHeight - 400);
+                        const availableWidth = 600; // Max width to not push panels
+
+                        let canvasWidth, canvasHeight;
+
+                        if (ratio >= 1) {
+                            // Horizontal or square - constrain by width
+                            canvasWidth = Math.min(availableWidth, availableHeight * ratio);
+                            canvasHeight = canvasWidth / ratio;
+                        } else {
+                            // Vertical - constrain by height
+                            canvasHeight = Math.min(availableHeight, availableWidth / ratio);
+                            canvasWidth = canvasHeight * ratio;
+                        }
+
+                        return {
+                            width: `${canvasWidth}px`,
+                            height: `${canvasHeight}px`,
+                            transform: `scale(${zoom / 100})`,
+                            transformOrigin: 'center center',
+                        };
+                    })()}
                 >
                     <AnimatePresence mode="wait">
                         {(isGenerating || isRevealing) && (
@@ -517,7 +582,7 @@ export function CanvasPanel({
                     <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomOut}>
                         <ZoomOutIcon fontSize="small" />
                     </Button>
-                    <span className="text-xs font-mono w-12 text-center">{zoom}%</span>
+                    <span className="text-xs font-mono w-12 text-center">{effectiveZoom}%</span>
                     <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomIn}>
                         <ZoomInIcon fontSize="small" />
                     </Button>

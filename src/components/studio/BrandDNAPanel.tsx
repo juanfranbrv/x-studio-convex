@@ -490,24 +490,28 @@ export function BrandDNAPanel({
     const SectionHeader = ({ icon: Icon, title, count, maxCount, isOpen, extra }: {
         icon: any, title: string, count?: number, maxCount?: number, isOpen: boolean, extra?: React.ReactNode
     }) => (
-        <CollapsibleTrigger className="flex items-center justify-between w-full px-1 py-0.5 hover:bg-muted/30 rounded-md transition-colors group">
-            <div className="flex items-center gap-2 text-foreground">
-                <Icon className="w-4 h-4" />
-                <span className="text-[13px] uppercase tracking-wide font-bold">
-                    {title}
-                    {count !== undefined && maxCount !== undefined && (
-                        <span className="text-[10px] opacity-50 ml-1">({count}/{maxCount})</span>
-                    )}
-                </span>
-            </div>
-            <div className="flex items-center gap-1">
-                {extra}
+        <div className="flex items-center justify-between w-full px-1 py-0.5">
+            <CollapsibleTrigger className="flex-1 flex items-center justify-between hover:bg-muted/30 rounded-md transition-colors group pr-1">
+                <div className="flex items-center gap-2 text-foreground">
+                    <Icon className="w-4 h-4" />
+                    <span className="text-[13px] uppercase tracking-wide font-bold">
+                        {title}
+                        {count !== undefined && maxCount !== undefined && (
+                            <span className="text-[10px] opacity-50 ml-1">({count}/{maxCount})</span>
+                        )}
+                    </span>
+                </div>
                 <ChevronDown className={cn(
                     "w-3.5 h-3.5 text-muted-foreground/40 transition-transform duration-200",
                     isOpen && "rotate-180"
                 )} />
-            </div>
-        </CollapsibleTrigger>
+            </CollapsibleTrigger>
+            {extra && (
+                <div className="flex items-center gap-1 ml-1" onClick={(e) => e.stopPropagation()}>
+                    {extra}
+                </div>
+            )}
+        </div>
     )
 
 

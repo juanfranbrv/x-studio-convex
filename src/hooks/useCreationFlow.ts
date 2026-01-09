@@ -45,6 +45,7 @@ export const NO_TEXT_TOKEN = '[NO_TEXT]'
 
 export interface UseCreationFlowOptions {
     onImageUploaded?: (file: File) => void
+    onReset?: () => void
 }
 
 export function useCreationFlow(options?: UseCreationFlowOptions) {
@@ -1034,23 +1035,40 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
             // Save Generation to History (Recents)
             if (activeBrandKit?.id) {
-                // Create a clean snapshot of the state
-                const stateSnapshot: any = {
-                    platform: state.selectedPlatform,
-                    format: state.selectedFormat,
-                    intent: state.selectedIntent,
-                    layout: state.selectedLayout,
-                    styles: state.selectedStyles,
+                // Create a complete snapshot of the state (excluding File objects and transient flags)
+                const stateSnapshot = {
+                    // Platform & Format
+                    selectedPlatform: state.selectedPlatform,
+                    selectedFormat: state.selectedFormat,
+                    // Intent
+                    selectedGroup: state.selectedGroup,
+                    selectedIntent: state.selectedIntent,
+                    selectedSubMode: state.selectedSubMode,
+                    // Image/Input
+                    uploadedImage: state.uploadedImage, // Base64/URL string only
+                    selectedTheme: state.selectedTheme,
+                    imageSourceMode: state.imageSourceMode,
+                    selectedBrandKitImageId: state.selectedBrandKitImageId,
+                    aiImageDescription: state.aiImageDescription,
+                    // Styles & Layout
+                    selectedStyles: state.selectedStyles,
+                    selectedLayout: state.selectedLayout,
+                    // Branding
+                    selectedLogoId: state.selectedLogoId,
+                    headline: state.headline,
+                    cta: state.cta,
                     customTexts: state.customTexts,
-                    // We don't save ephemeral file data in the state snapshot for presets/recents
-                    // But we might want to know if an image was uploaded?
-                    // For now, adhering to the schema "state" object
+                    selectedBrandColors: state.selectedBrandColors,
+                    rawMessage: state.rawMessage,
+                    additionalInstructions: state.additionalInstructions,
+                    customStyle: state.customStyle,
+                    selectedTextAssets: state.selectedTextAssets,
                 }
 
                 await saveGeneration({
                     brand_id: activeBrandKit.id as any, // ID type casting
                     prompt_snapshot: { prompt }, // simplified for now
-                    image_url: "https://placehold.co/600x400?text=Generated+Image", // Placeholder until real generation
+                    image_url: state.generatedImage || "https://placehold.co/600x400?text=Generated+Image",
                     state: stateSnapshot
                 })
             }
@@ -1072,7 +1090,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
     const reset = useCallback(() => {
         setState(INITIAL_GENERATION_STATE)
-    }, [])
+        options?.onReset?.()
+    }, [options])
 
     // -------------------------------------------------------------------------
     // PRESETS
@@ -1086,7 +1105,6 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             isGenerating: false,
             isAnalyzing: false,
             error: null,
-            uploadedImage: null, // Presets won't carry actual image data usually, or if they do we need to handle it.
             uploadedImageFile: null,
             visionAnalysis: null, // Reset analysis
         }))

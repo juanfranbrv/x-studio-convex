@@ -4579,3 +4579,80 @@
     "brand_context": "Academia Bauset, con más de cuatro décadas de trayectoria desde su fundación por Amparo Bauset Ferrer, opera desde la Avda. Santa María 31 en Meliana (Horta Nord). La institución se especializa en la preparación de titulaciones oficiales de idiomas como Inglés, Francés, Alemán y Valenciano JQCV. Son Centro Oficial Examinador Trinity College London (nº 32290) y sub-oficial Pearson Test of English General (nº 32014V), además de preparadores Cambridge. Ofrecen servicios de refuerzo, pruebas de acceso (PAU, Ciclos) y programas tecnológicos como robótica. La academia colabora activamente con el comercio local (MAC) e imparte formación in-company para clientes como Corporación F.Turia, Mitsubishi Materials España y el Ayuntamiento de Meliana. Disponen de diez aulas equipadas con tecnología avanzada."
   }
 }
+[2026-01-09T17:09:06.537Z] 📄 HTML cargado. Longitud: 35644 caracteres.
+[2026-01-09T17:09:06.538Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-01-09T17:09:06.539Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-01-09T17:09:06.541Z] 🔍 Favicon encontrado: https://x-studio-convex.vercel.app/favicon.svg (2 candidatos)
+[2026-01-09T17:09:06.543Z] 📱 Social links found: 0, Emails: 0, Phones: 1
+[2026-01-09T17:09:06.543Z] 🎯 FAVICON ESCALATION: Favicon SVG tratado como logo candidato (220 puntos)
+[2026-01-09T17:09:06.546Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-01-09T17:09:06.547Z]    - SVGs en header encontrados: 4
+[2026-01-09T17:09:06.547Z]    - IMGs en header encontrados: 0
+[2026-01-09T17:09:06.548Z]    - firstHeaderSvg.length: 1
+[2026-01-09T17:09:06.548Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 437 caracteres
+[2026-01-09T17:09:06.549Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2026-01-09T17:09:06.550Z] 🖼️ Logo candidates encontrados: 2 (Top score: 350)
+[2026-01-09T17:09:06.550Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-01-09T17:09:06.550Z]    1. SVG inline - Score: 350 - Length: 437 chars
+[2026-01-09T17:09:06.551Z]    2. URL: https://x-studio-convex.vercel.app/favicon.svg - Score: 220
+[2026-01-09T17:09:06.646Z] 🔍 Extracción inicial: 0 RRSS, 0 emails, 1 teléfonos, 0 direcciones
+[2026-01-09T17:09:19.779Z] ✅ Gemini Response: {
+  "brand_name": "X Studio",
+  "tagline": "Tu Director Creativo Potenciado por IA",
+  "business_overview": "X Studio es un motor de diseño inteligente que utiliza IA para generar assets de marketing visual. La plataforma garantiza que estos activos sean siempre coherentes, respetando el ADN de marca definido por el usuario (colores, logotipos, tipografía y tono). Además, permite la gestión multi-marca y la iteración visual directa mediante anotaciones espaciales sobre la imagen.",
+  "brand_values": [
+    "Coherencia",
+    "Innovación",
+    "Eficiencia",
+    "Multi-Marca",
+    "Precisión Algorítmica"
+  ],
+  "tone_of_voice": [
+    "Inteligente",
+    "Directo",
+    "Técnico"
+  ],
+  "visual_aesthetic": [
+    "Digital Minimalism",
+    "Dark Mode Aesthetic",
+    "Typographic Grid"
+  ],
+  "target_audience": [
+    "Jefes de Marketing Digital",
+    "Brand Managers con múltiples cuentas",
+    "Equipos creativos que buscan eficiencia"
+  ],
+  "colors": [
+    "#000017",
+    "#FE6E00",
+    "#59168B",
+    "#FB2C36",
+    "#FFFFFF"
+  ],
+  "fonts": [
+    "Chivo",
+    "Inter"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "El 90% de tus assets listos en segundos.",
+      "Diseño visual coherente, garantizado por IA.",
+      "Tu identidad de marca, innegociable.",
+      "Gestiona 10 marcas con la misma cuenta.",
+      "Itera sin límites, la IA entiende tus correcciones."
+    ],
+    "visual_keywords": [
+      "Algorithmic Design",
+      "Digital Grid System",
+      "Typographic Poster",
+      "Data Visualization",
+      "UI/UX Minimalism"
+    ],
+    "ctas": [
+      "Comenzar gratis",
+      "Definir mi Brand DNA",
+      "Ver demo interactiva"
+    ],
+    "brand_context": "X Studio opera como un motor de diseño inteligente avanzado, especializado en la generación automatizada de activos de marketing visual. Su funcionalidad central reside en el concepto de \"Brand DNA\", permitiendo a los usuarios definir previamente paletas de colores, tipografías y tono de voz, asegurando que la IA mantenga una coherencia absoluta en todas las salidas. El sistema soporta la gestión simultánea de múltiples marcas desde una única cuenta, ofreciendo cambio de contexto instantáneo. Una característica destacada es la Iteración Visual, donde el usuario puede anotar directamente sobre las imágenes generadas, y la IA interpreta estas correcciones espaciales para refinar el diseño, optimizando significativamente los flujos de trabajo creativos y reduciendo el tiempo de comercialización de los activos."
+  }
+}

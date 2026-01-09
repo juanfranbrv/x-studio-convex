@@ -73,6 +73,13 @@ export default function StudioPage() {
             } catch (error) {
                 console.error('Error saving flow image to kit:', error)
             }
+        },
+        onReset: () => {
+            setCurrentImage(null)
+            setGenerations([])
+            setIsAnnotating(false)
+            setDebugPromptData(null)
+            setSelectedContext([])
         }
     } as UseCreationFlowOptions)
 

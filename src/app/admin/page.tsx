@@ -1,0 +1,618 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useUser, UserButton } from '@clerk/nextjs'
+import { useTheme } from 'next-themes'
+import { dark } from '@clerk/themes'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '@/../convex/_generated/api'
+import type { Id } from '@/../convex/_generated/dataModel'
+import { Loader2, Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail } from 'lucide-react'
+import { CreditsBadge } from '@/components/layout/CreditsBadge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import Link from 'next/link'
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { useToast } from '@/hooks/use-toast'
+
+export default function AdminPage() {
+    const { user, isLoaded } = useUser()
+    const { resolvedTheme } = useTheme()
+    const { toast } = useToast()
+    const userEmail = user?.emailAddresses[0]?.emailAddress || ''
+
+    // Queries
+    const stats = useQuery(api.admin.getDashboardStats, { admin_email: userEmail })
+    const users = useQuery(api.admin.listUsers, { admin_email: userEmail })
+    const settings = useQuery(api.admin.getSettings, { admin_email: userEmail })
+    const recentTransactions = useQuery(api.admin.getRecentTransactions, { admin_email: userEmail, limit: 20 })
+    const betaRequests = useQuery(api.admin.listBetaRequests, { admin_email: userEmail })
+
+    // Mutations
+    const activateUser = useMutation(api.admin.activateUser)
+    const suspendUser = useMutation(api.admin.suspendUser)
+    const adjustCredits = useMutation(api.admin.adjustCredits)
+    const updateSetting = useMutation(api.admin.updateSetting)
+    const initializeSettings = useMutation(api.admin.initializeSettings)
+    const approveBetaRequest = useMutation(api.admin.approveBetaRequest)
+    const rejectBetaRequest = useMutation(api.admin.rejectBetaRequest)
+    const deleteBetaRequest = useMutation(api.admin.deleteBetaRequest)
+
+    // Local state
+    const [adjustDialogOpen, setAdjustDialogOpen] = useState(false)
+    const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | null>(null)
+    const [creditAmount, setCreditAmount] = useState('')
+    const [creditReason, setCreditReason] = useState('')
+    const [isProcessing, setIsProcessing] = useState(false)
+
+    // Settings state
+    const [editingSettings, setEditingSettings] = useState<Record<string, number>>({})
+
+    // Initialize settings on first load
+    useEffect(() => {
+        if (settings && settings.length === 0 && userEmail) {
+            initializeSettings({ admin_email: userEmail })
+        }
+    }, [settings, userEmail])
+
+    // Update local settings state when server data changes
+    useEffect(() => {
+        if (settings) {
+            const settingsMap: Record<string, number> = {}
+            settings.forEach(s => {
+                settingsMap[s.key] = s.value
+            })
+            setEditingSettings(settingsMap)
+        }
+    }, [settings])
+
+    if (!isLoaded) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+        )
+    }
+
+    // Check if current user is admin (we rely on backend validation, but show UI accordingly)
+    const ADMIN_EMAILS = ['juanfranbrv@gmail.com']
+    if (!ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen gap-4">
+                <X className="w-16 h-16 text-destructive" />
+                <h1 className="text-2xl font-bold">Acceso Denegado</h1>
+                <p className="text-muted-foreground">No tienes permisos de administrador.</p>
+            </div>
+        )
+    }
+
+    const handleActivate = async (userId: Id<"users">) => {
+        setIsProcessing(true)
+        try {
+            await activateUser({ admin_email: userEmail, user_id: userId })
+            toast({ title: 'Usuario activado', description: 'Se le asignaron los créditos iniciales.' })
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' })
+        }
+        setIsProcessing(false)
+    }
+
+    const handleSuspend = async (userId: Id<"users">) => {
+        setIsProcessing(true)
+        try {
+            await suspendUser({ admin_email: userEmail, user_id: userId })
+            toast({ title: 'Usuario suspendido' })
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' })
+        }
+        setIsProcessing(false)
+    }
+
+    const handleAdjustCredits = async () => {
+        if (!selectedUserId || !creditAmount) return
+        setIsProcessing(true)
+        try {
+            await adjustCredits({
+                admin_email: userEmail,
+                user_id: selectedUserId,
+                amount: parseInt(creditAmount),
+                reason: creditReason || undefined
+            })
+            toast({ title: 'Créditos ajustados' })
+            setAdjustDialogOpen(false)
+            setCreditAmount('')
+            setCreditReason('')
+            setSelectedUserId(null)
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' })
+        }
+        setIsProcessing(false)
+    }
+
+    const handleSaveSetting = async (key: string, value: number) => {
+        try {
+            await updateSetting({ admin_email: userEmail, key, value })
+            toast({ title: 'Configuración guardada' })
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' })
+        }
+    }
+
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'active':
+                return <Badge variant="default" className="bg-green-500">Activo</Badge>
+            case 'waitlist':
+                return <Badge variant="secondary">Waitlist</Badge>
+            case 'suspended':
+                return <Badge variant="destructive">Suspendido</Badge>
+            default:
+                return <Badge variant="outline">{status}</Badge>
+        }
+    }
+
+    return (
+        <div className="min-h-screen bg-background">
+            <div className="container mx-auto py-8 px-4">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                        <Link href="/studio">
+                            <Button variant="ghost" size="icon" title="Volver al Studio">
+                                <ArrowLeft className="h-5 w-5" />
+                            </Button>
+                        </Link>
+                        <div>
+                            <h1 className="text-3xl font-bold">Panel de Administración</h1>
+                            <p className="text-muted-foreground">Gestión de usuarios y créditos</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <CreditsBadge />
+                        <UserButton
+                            appearance={{
+                                baseTheme: resolvedTheme === 'dark' ? dark : undefined
+                            }}
+                        />
+                    </div>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats?.totalUsers ?? '-'}</div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium">Activos</CardTitle>
+                            <Check className="h-4 w-4 text-green-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-green-500">{stats?.activeUsers ?? '-'}</div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium">Waitlist</CardTitle>
+                            <RefreshCw className="h-4 w-4 text-yellow-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-yellow-500">{stats?.waitlistUsers ?? '-'}</div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium">Créditos Totales</CardTitle>
+                            <Coins className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats?.totalCreditsInCirculation ?? '-'}</div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <Tabs defaultValue="requests" className="space-y-4">
+                    <TabsList>
+                        <TabsTrigger value="requests" className="gap-2">
+                            <Mail className="h-4 w-4" /> Solicitudes
+                            {(stats?.pendingBetaRequests ?? 0) > 0 && (
+                                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                                    {stats?.pendingBetaRequests}
+                                </Badge>
+                            )}
+                        </TabsTrigger>
+                        <TabsTrigger value="users" className="gap-2">
+                            <Users className="h-4 w-4" /> Usuarios
+                        </TabsTrigger>
+                        <TabsTrigger value="transactions" className="gap-2">
+                            <Activity className="h-4 w-4" /> Transacciones
+                        </TabsTrigger>
+                        <TabsTrigger value="settings" className="gap-2">
+                            <Settings className="h-4 w-4" /> Configuración
+                        </TabsTrigger>
+                    </TabsList>
+
+                    {/* Beta Requests Tab */}
+                    <TabsContent value="requests">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Solicitudes de Acceso Beta</CardTitle>
+                                <CardDescription>Usuarios que quieren acceso a la beta privada</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Email</TableHead>
+                                            <TableHead>Estado</TableHead>
+                                            <TableHead>Fecha</TableHead>
+                                            <TableHead className="text-right">Acciones</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {betaRequests?.filter(r => r.status === 'pending').map((request) => (
+                                            <TableRow key={request._id}>
+                                                <TableCell className="font-medium">{request.email}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant="secondary">Pendiente</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground">
+                                                    {new Date(request.created_at).toLocaleDateString('es-ES')}
+                                                </TableCell>
+                                                <TableCell className="text-right space-x-2">
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={async () => {
+                                                            try {
+                                                                await approveBetaRequest({
+                                                                    admin_email: userEmail,
+                                                                    request_id: request._id
+                                                                })
+                                                                toast({ title: '✅ Acceso aprobado', description: `${request.email} ahora puede acceder` })
+                                                            } catch (e: any) {
+                                                                toast({ title: 'Error', description: e.message, variant: 'destructive' })
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Check className="h-4 w-4 mr-1" /> Aprobar
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="destructive"
+                                                        onClick={async () => {
+                                                            try {
+                                                                await rejectBetaRequest({
+                                                                    admin_email: userEmail,
+                                                                    request_id: request._id
+                                                                })
+                                                                toast({ title: 'Rechazado', description: `${request.email} ha sido rechazado` })
+                                                            } catch (e: any) {
+                                                                toast({ title: 'Error', description: e.message, variant: 'destructive' })
+                                                            }
+                                                        }}
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {(!betaRequests || betaRequests.filter(r => r.status === 'pending').length === 0) && (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                                                    No hay solicitudes pendientes
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+
+                                {/* Processed requests section */}
+                                {betaRequests && betaRequests.filter(r => r.status !== 'pending').length > 0 && (
+                                    <div className="mt-8">
+                                        <h4 className="font-medium mb-4 text-muted-foreground">Historial de Solicitudes</h4>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Email</TableHead>
+                                                    <TableHead>Estado</TableHead>
+                                                    <TableHead>Procesado</TableHead>
+                                                    <TableHead className="text-right">Acciones</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {betaRequests.filter(r => r.status !== 'pending').map((request) => (
+                                                    <TableRow key={request._id}>
+                                                        <TableCell>{request.email}</TableCell>
+                                                        <TableCell>
+                                                            <Badge variant={request.status === 'approved' ? 'default' : 'destructive'}>
+                                                                {request.status === 'approved' ? 'Aprobado' : 'Rechazado'}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-muted-foreground">
+                                                            {request.processed_at ? new Date(request.processed_at).toLocaleDateString('es-ES') : '-'}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        await deleteBetaRequest({
+                                                                            admin_email: userEmail,
+                                                                            request_id: request._id
+                                                                        })
+                                                                    } catch (e: any) {
+                                                                        toast({ title: 'Error', description: e.message, variant: 'destructive' })
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Users Tab */}
+                    <TabsContent value="users">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Gestión de Usuarios</CardTitle>
+                                <CardDescription>Activa, suspende y ajusta créditos de usuarios</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Email</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Créditos</TableHead>
+                                            <TableHead>Registro</TableHead>
+                                            <TableHead className="text-right">Acciones</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {users?.map((u) => (
+                                            <TableRow key={u._id}>
+                                                <TableCell className="font-medium">{u.email}</TableCell>
+                                                <TableCell>{getStatusBadge(u.status)}</TableCell>
+                                                <TableCell>
+                                                    <span className="font-mono">{u.credits}</span>
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground text-sm">
+                                                    {new Date(u.created_at).toLocaleDateString()}
+                                                </TableCell>
+                                                <TableCell className="text-right space-x-2">
+                                                    {u.status === 'waitlist' && (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => handleActivate(u._id)}
+                                                            disabled={isProcessing}
+                                                        >
+                                                            <Check className="h-4 w-4 mr-1" /> Activar
+                                                        </Button>
+                                                    )}
+                                                    {u.status === 'active' && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="destructive"
+                                                            onClick={() => handleSuspend(u._id)}
+                                                            disabled={isProcessing}
+                                                        >
+                                                            <X className="h-4 w-4 mr-1" /> Suspender
+                                                        </Button>
+                                                    )}
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            setSelectedUserId(u._id)
+                                                            setAdjustDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Coins className="h-4 w-4 mr-1" /> Créditos
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {(!users || users.length === 0) && (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                                    No hay usuarios registrados
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Transactions Tab */}
+                    <TabsContent value="transactions">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Historial de Transacciones</CardTitle>
+                                <CardDescription>Últimas 20 transacciones de créditos</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Usuario</TableHead>
+                                            <TableHead>Tipo</TableHead>
+                                            <TableHead>Cantidad</TableHead>
+                                            <TableHead>Balance</TableHead>
+                                            <TableHead>Fecha</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {recentTransactions?.map((tx) => (
+                                            <TableRow key={tx._id}>
+                                                <TableCell className="font-medium">{tx.user_email}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant={tx.amount > 0 ? 'default' : 'secondary'}>
+                                                        {tx.type}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className={tx.amount > 0 ? 'text-green-500' : 'text-red-500'}>
+                                                    {tx.amount > 0 ? '+' : ''}{tx.amount}
+                                                </TableCell>
+                                                <TableCell className="font-mono">{tx.balance_after}</TableCell>
+                                                <TableCell className="text-muted-foreground text-sm">
+                                                    {new Date(tx.created_at).toLocaleString()}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {(!recentTransactions || recentTransactions.length === 0) && (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                                    No hay transacciones
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Settings Tab */}
+                    <TabsContent value="settings">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Configuración del Sistema</CardTitle>
+                                <CardDescription>Valores configurables para créditos</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {settings?.map((setting) => (
+                                    <div key={setting.key} className="flex items-center justify-between gap-4">
+                                        <div className="flex-1">
+                                            <Label className="text-base">{setting.key}</Label>
+                                            <p className="text-sm text-muted-foreground">{setting.description}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="number"
+                                                className="w-24"
+                                                value={editingSettings[setting.key] ?? setting.value}
+                                                onChange={(e) => setEditingSettings(prev => ({
+                                                    ...prev,
+                                                    [setting.key]: parseInt(e.target.value) || 0
+                                                }))}
+                                            />
+                                            <Button
+                                                size="sm"
+                                                onClick={() => handleSaveSetting(setting.key, editingSettings[setting.key])}
+                                                disabled={editingSettings[setting.key] === setting.value}
+                                            >
+                                                Guardar
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {(!settings || settings.length === 0) && (
+                                    <div className="text-center py-8">
+                                        <p className="text-muted-foreground mb-4">No hay configuración. Inicializar valores por defecto:</p>
+                                        <Button onClick={() => initializeSettings({ admin_email: userEmail })}>
+                                            Inicializar Configuración
+                                        </Button>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+            </div>
+
+            {/* Adjust Credits Dialog */}
+            <Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Ajustar Créditos</DialogTitle>
+                        <DialogDescription>
+                            Ingresa un número positivo para añadir o negativo para quitar créditos.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Cantidad</Label>
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => setCreditAmount(prev => String((parseInt(prev) || 0) - 10))}
+                                >
+                                    <Minus className="h-4 w-4" />
+                                </Button>
+                                <Input
+                                    type="number"
+                                    value={creditAmount}
+                                    onChange={(e) => setCreditAmount(e.target.value)}
+                                    placeholder="ej: 50 o -10"
+                                    className="text-center"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => setCreditAmount(prev => String((parseInt(prev) || 0) + 10))}
+                                >
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Razón (opcional)</Label>
+                            <Input
+                                value={creditReason}
+                                onChange={(e) => setCreditReason(e.target.value)}
+                                placeholder="ej: Bonus por feedback"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setAdjustDialogOpen(false)}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleAdjustCredits} disabled={!creditAmount || isProcessing}>
+                            {isProcessing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            Aplicar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
+    )
+}

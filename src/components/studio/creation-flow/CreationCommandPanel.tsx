@@ -116,17 +116,38 @@ export function CreationCommandPanel({
 
         setIsSavingPreset(true)
         try {
+            // Save complete state snapshot with correct field names
             await createPreset({
                 userId: user.id,
                 name,
                 description,
                 state: {
-                    platform: state.selectedPlatform,
-                    format: state.selectedFormat,
-                    intent: state.selectedIntent,
-                    layout: state.selectedLayout || undefined,
-                    styles: state.selectedStyles,
-                    customTexts: state.customTexts
+                    // Platform & Format
+                    selectedPlatform: state.selectedPlatform,
+                    selectedFormat: state.selectedFormat,
+                    // Intent
+                    selectedGroup: state.selectedGroup,
+                    selectedIntent: state.selectedIntent,
+                    selectedSubMode: state.selectedSubMode,
+                    // Image/Input
+                    uploadedImage: state.uploadedImage,
+                    selectedTheme: state.selectedTheme,
+                    imageSourceMode: state.imageSourceMode,
+                    selectedBrandKitImageId: state.selectedBrandKitImageId,
+                    aiImageDescription: state.aiImageDescription,
+                    // Styles & Layout
+                    selectedStyles: state.selectedStyles,
+                    selectedLayout: state.selectedLayout,
+                    // Branding
+                    selectedLogoId: state.selectedLogoId,
+                    headline: state.headline,
+                    cta: state.cta,
+                    customTexts: state.customTexts,
+                    selectedBrandColors: state.selectedBrandColors,
+                    rawMessage: state.rawMessage,
+                    additionalInstructions: state.additionalInstructions,
+                    customStyle: state.customStyle,
+                    selectedTextAssets: state.selectedTextAssets,
                 }
             })
             toast({ title: "Preset guardado", description: "Tu configuración se ha guardado en favoritos." })
@@ -255,6 +276,7 @@ export function CreationCommandPanel({
                     <div className="px-6 pb-4">
                         <PresetsCarousel
                             onSelectPreset={loadPreset}
+                            onReset={reset}
                             userId={user?.id}
                         />
                     </div>

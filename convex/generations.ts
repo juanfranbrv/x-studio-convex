@@ -7,14 +7,7 @@ export const saveGeneration = mutation({
         prompt_snapshot: v.any(),
         image_url: v.string(),
         annotations: v.optional(v.any()),
-        state: v.object({
-            platform: v.string(),
-            format: v.string(),
-            intent: v.string(),
-            layout: v.optional(v.string()),
-            styles: v.optional(v.array(v.string())),
-            customTexts: v.optional(v.any()),
-        }),
+        state: v.any(), // Complete GenerationState snapshot
     },
     handler: async (ctx, args) => {
         return await ctx.db.insert("generations", {

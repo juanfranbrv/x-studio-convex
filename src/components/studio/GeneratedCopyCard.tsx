@@ -34,7 +34,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
 
     // Update local state when prop changes
     React.useEffect(() => {
-        if (copy) setEditedCopy(copy)
+        setEditedCopy(copy || '')
     }, [copy])
 
     const handleCopy = () => {

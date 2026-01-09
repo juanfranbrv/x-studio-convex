@@ -1,11 +1,143 @@
-import Link from 'next/link'
-import { Bot, ArrowRight, Sparkles, Palette, Layers, Zap } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { auth } from '@clerk/nextjs/server'
-import { UserButton } from '@clerk/nextjs'
+'use client'
 
-export default async function HomePage() {
-  const { userId } = await auth()
+import { useState } from 'react'
+import { useAuth, useUser } from '@clerk/nextjs'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '@/../convex/_generated/api'
+import { useRouter } from 'next/navigation'
+import { Bot, Sparkles, Palette, Layers, Zap, Loader2, CheckCircle, Clock, Mail } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+export default function HomePage() {
+  const { isSignedIn, isLoaded } = useAuth()
+  const { user } = useUser()
+  const router = useRouter()
+  const userEmail = user?.emailAddresses[0]?.emailAddress || ''
+
+  // Check beta access for logged in users
+  const betaAccess = useQuery(
+    api.admin.checkBetaAccess,
+    userEmail ? { email: userEmail } : 'skip'
+  )
+
+  // If user is logged in and has access, redirect to studio
+  if (isLoaded && isSignedIn && betaAccess?.hasAccess) {
+    router.push('/studio')
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    )
+  }
+
+  // If user is logged in but pending/rejected, show status screen
+  if (isLoaded && isSignedIn && betaAccess && !betaAccess.hasAccess) {
+    return <PendingAccessScreen status={betaAccess.status} email={userEmail} />
+  }
+
+  // Not logged in - show landing with beta form
+  return <BetaLandingPage />
+}
+
+// Screen for users who are logged in but don't have access yet
+function PendingAccessScreen({ status, email }: { status: string; email: string }) {
+  const { signOut } = useAuth()
+
+  if (status === 'pending') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <Card className="max-w-md w-full text-center">
+          <CardHeader>
+            <div className="mx-auto w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4">
+              <Clock className="w-8 h-8 text-yellow-500" />
+            </div>
+            <CardTitle className="text-2xl">Solicitud Pendiente</CardTitle>
+            <CardDescription className="text-base">
+              Tu solicitud de acceso está siendo revisada
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              Recibirás un email en <strong>{email}</strong> cuando tu acceso sea aprobado.
+            </p>
+            <Button variant="outline" onClick={() => signOut()}>
+              Cerrar sesión
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (status === 'rejected') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <Card className="max-w-md w-full text-center">
+          <CardHeader>
+            <CardTitle className="text-2xl text-destructive">Acceso Denegado</CardTitle>
+            <CardDescription>
+              Tu solicitud no fue aprobada en esta ocasión.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => signOut()}>
+              Cerrar sesión
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // status === 'none' - user logged in but never requested access
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-8">
+      <Card className="max-w-md w-full text-center">
+        <CardHeader>
+          <CardTitle className="text-2xl">Acceso Beta Privada</CardTitle>
+          <CardDescription>
+            Tu email ({email}) no tiene acceso a la beta.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground text-sm">
+            Contacta con el administrador para solicitar acceso.
+          </p>
+          <Button variant="outline" onClick={() => signOut()}>
+            Cerrar sesión
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Landing page with beta request form
+function BetaLandingPage() {
+  const [email, setEmail] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [message, setMessage] = useState('')
+
+  const submitRequest = useMutation(api.admin.submitBetaRequest)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim()) return
+
+    setIsSubmitting(true)
+    try {
+      const result = await submitRequest({ email: email.trim() })
+      setSubmitted(true)
+      setMessage(result.message)
+    } catch (error: any) {
+      setMessage('Error al enviar solicitud')
+    }
+    setIsSubmitting(false)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -19,36 +151,13 @@ export default async function HomePage() {
             <Bot className="w-8 h-8 text-primary" />
             <span className="text-xl font-bold font-heading">X Studio</span>
           </div>
-          <div className="flex items-center gap-4">
-            {userId ? (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link href="/brand-kit">
-                    Ir al Dashboard
-                  </Link>
-                </Button>
-                <UserButton afterSignOutUrl="/" />
-              </>
-            ) : (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link href="/sign-in">
-                    Iniciar sesión
-                  </Link>
-                </Button>
-                <Button className="btn-gradient" asChild>
-                  <Link href="/sign-up">
-                    Comenzar gratis
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Link>
-                </Button>
-              </>
-            )}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30">
+            <span className="text-xs text-yellow-500 font-medium">Beta Privada</span>
           </div>
         </nav>
 
         {/* Hero Content */}
-        <div className="relative z-10 max-w-5xl mx-auto px-8 py-24 text-center">
+        <div className="relative z-10 max-w-5xl mx-auto px-8 py-20 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-sm text-primary">Motor de Diseño Inteligente</span>
@@ -62,24 +171,60 @@ export default async function HomePage() {
             </span>
           </h1>
 
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
             Genera assets de marketing visual que respetan el ADN de tu marca.
             Colores, logotipos, tipografía y tono — siempre coherentes.
           </p>
 
-          <div className="flex items-center justify-center gap-4">
-            <Button size="lg" className="btn-gradient text-lg px-8 py-6 glow-primary" asChild>
-              <Link href="/sign-up">
-                Empezar ahora
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6" asChild>
-              <Link href="#features">
-                Ver demo
-              </Link>
-            </Button>
-          </div>
+          {/* Beta Request Form */}
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle className="text-lg">
+                {submitted ? '¡Solicitud Recibida!' : 'Solicita Acceso a la Beta'}
+              </CardTitle>
+              <CardDescription>
+                {submitted
+                  ? 'Te notificaremos cuando tu acceso sea aprobado.'
+                  : 'Estamos aceptando un número limitado de usuarios.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {submitted ? (
+                <div className="flex flex-col items-center gap-4 py-4">
+                  <CheckCircle className="w-12 h-12 text-green-500" />
+                  <p className="text-muted-foreground">{message}</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="email"
+                      placeholder="tu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" disabled={isSubmitting} className="btn-gradient">
+                    {isSubmitting ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Solicitar'
+                    )}
+                  </Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Link for existing users */}
+          <p className="mt-4 text-center">
+            <a href="/sign-in" className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4">
+              Ya tengo cuenta, llévame al dashboard
+            </a>
+          </p>
         </div>
       </header>
 

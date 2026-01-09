@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { UserButton } from '@clerk/nextjs'
+import { UserButton, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
 import { dark } from '@clerk/themes'
-import { Bot, Bell, ChevronDown, Trash2, Plus } from 'lucide-react'
+import { Bot, Bell, ChevronDown, Trash2, Plus, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { CreditsBadge } from './CreditsBadge'
+import Link from 'next/link'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -38,8 +40,13 @@ interface HeaderProps {
 export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete, onNewBrandKit }: HeaderProps) {
     const { t } = useTranslation()
     const { resolvedTheme } = useTheme()
+    const { user } = useUser()
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [brandToDelete, setBrandToDelete] = useState<BrandKitSummary | BrandDNA | null>(null)
+
+    // Admin check
+    const ADMIN_EMAILS = ['juanfranbrv@gmail.com']
+    const isAdmin = user?.emailAddresses?.some(e => ADMIN_EMAILS.includes(e.emailAddress.toLowerCase()))
 
     const getBrandInitial = (name?: string) => {
         return name?.charAt(0).toUpperCase() || '?'
@@ -122,8 +129,18 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     )}
                 </div>
 
-                {/* Right: Theme Toggle, Notifications and User */}
+                {/* Right: Credits, Theme Toggle, Notifications and User */}
                 <div className="flex items-center gap-2">
+                    <CreditsBadge />
+
+                    {isAdmin && (
+                        <Link href="/admin">
+                            <Button variant="ghost" size="icon" title="Panel Admin">
+                                <Settings className="h-4 w-4" />
+                            </Button>
+                        </Link>
+                    )}
+
                     <ThemeToggle />
 
                     <Button variant="ghost" size="icon" className="relative">

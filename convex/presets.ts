@@ -93,14 +93,7 @@ export const create = mutation({
         name: v.string(),
         description: v.optional(v.string()),
         icon: v.optional(v.string()),
-        state: v.object({
-            platform: v.string(),
-            format: v.string(),
-            intent: v.string(),
-            layout: v.optional(v.string()),
-            styles: v.optional(v.array(v.string())),
-            customTexts: v.optional(v.any()),
-        }),
+        state: v.any(), // Complete GenerationState snapshot
     },
     handler: async (ctx, args) => {
         const presetId = await ctx.db.insert("presets", {
@@ -115,5 +108,28 @@ export const create = mutation({
             lastUsed: new Date().toISOString(),
         });
         return presetId;
+    },
+});
+
+export const remove = mutation({
+    args: {
+        presetId: v.id("presets"),
+        userId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const preset = await ctx.db.get(args.presetId);
+        if (!preset) {
+            throw new Error("Preset not found");
+        }
+        // Only allow deletion of own presets
+        if (preset.userId !== args.userId) {
+            throw new Error("Unauthorized");
+        }
+        // Don't allow deleting system presets
+        if (preset.isSystem) {
+            throw new Error("Cannot delete system presets");
+        }
+        await ctx.db.delete(args.presetId);
+        return { success: true };
     },
 });
