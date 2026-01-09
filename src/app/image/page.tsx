@@ -18,6 +18,7 @@ import { Loader2, Plus, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
+import { buildEditPrompt } from '@/lib/prompts/image-edit'
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
@@ -213,6 +214,66 @@ export default function ImagePage() {
         }
     }
 
+    // Handle editing the current image with a prompt
+    const handleEditImage = async (editPrompt: string) => {
+        if (!activeBrandKit || !currentImage) return
+
+        setIsGenerating(true)
+        try {
+            // Build context with current image as reference
+            const editContext = [
+                {
+                    id: 'edit-reference',
+                    type: 'image' as const,
+                    value: currentImage,
+                    label: 'Imagen a editar'
+                }
+            ]
+
+            // Build edit prompt from template
+            const fullPrompt = buildEditPrompt(editPrompt)
+
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: fullPrompt,
+                    brandDNA: activeBrandKit,
+                    context: editContext,
+                    model: selectedModel,
+                    aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio
+                }),
+            })
+
+            if (response.ok) {
+                const result = await response.json()
+                const newGeneration: Generation = {
+                    id: Math.random().toString(36).substring(7),
+                    image_url: result.imageUrl,
+                    created_at: new Date().toISOString()
+                }
+                setCurrentImage(result.imageUrl)
+                setGenerations(prev => [newGeneration, ...prev])
+            } else {
+                const errorData = await response.json().catch(() => ({ error: 'Error al editar la imagen' }))
+                toast({
+                    title: "Error de edición",
+                    description: errorData.error || 'Error al editar la imagen',
+                    variant: "destructive",
+                })
+            }
+        } catch (error: any) {
+            console.error('Edit failed:', error)
+            toast({
+                title: "Error de edición",
+                description: error.message || 'No se pudo editar la imagen.',
+                variant: "destructive",
+            })
+        } finally {
+            setIsGenerating(false)
+        }
+    }
+
     // Check if current user is admin
     const isAdmin = user?.emailAddresses?.some(
         email => email.emailAddress === ADMIN_EMAIL
@@ -302,6 +363,7 @@ export default function ImagePage() {
                         aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio}
                         generations={generations}
                         onSelectGeneration={(gen) => setCurrentImage(gen.image_url)}
+                        onEditImage={handleEditImage}
                     />
 
                     {/* Center: Canvas */}

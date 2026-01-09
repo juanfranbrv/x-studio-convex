@@ -39,6 +39,8 @@ interface CreationCommandPanelProps {
     // Mobile history props
     generations?: Generation[]
     onSelectGeneration?: (gen: Generation) => void
+    // Edit image handler
+    onEditImage?: (editPrompt: string) => Promise<void>
 }
 
 const StepSection = ({
@@ -83,6 +85,7 @@ export function CreationCommandPanel({
     aspectRatio = "1:1",
     generations = [],
     onSelectGeneration,
+    onEditImage,
 }: CreationCommandPanelProps) {
     const {
         state,
@@ -119,6 +122,7 @@ export function CreationCommandPanel({
     const [isMagicParsing, setIsMagicParsing] = useState(false)
     const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
     const [isMobile, setIsMobile] = useState(false)
+    const [editPromptText, setEditPromptText] = useState('')
 
     // Detect mobile viewport
     useEffect(() => {
@@ -609,14 +613,22 @@ export function CreationCommandPanel({
                                 <div className="mt-3 pt-3 border-t border-border/30 pb-20">
                                     <div className="flex gap-2 items-end">
                                         <textarea
-                                            placeholder="Describe los cambios que quieres aplicar..."
+                                            placeholder="Escribe cambios para tu imagen: 'hazla más oscura', 'añade texto X', 'cambia el fondo'..."
                                             className="flex-1 min-h-[44px] max-h-[100px] text-sm p-2.5 rounded-xl border border-border/50 bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary/30"
                                             rows={1}
+                                            value={editPromptText}
+                                            onChange={(e) => setEditPromptText(e.target.value)}
                                         />
                                         <Button
                                             size="icon"
                                             className="h-11 w-11 rounded-xl btn-gradient shrink-0"
-                                            onClick={() => {/* TODO: handle prompt submit */ }}
+                                            disabled={!editPromptText.trim() || isGenerating || !currentImage}
+                                            onClick={async () => {
+                                                if (onEditImage && editPromptText.trim()) {
+                                                    await onEditImage(editPromptText.trim())
+                                                    setEditPromptText('')
+                                                }
+                                            }}
                                         >
                                             <Sparkles className="w-4 h-4" />
                                         </Button>
