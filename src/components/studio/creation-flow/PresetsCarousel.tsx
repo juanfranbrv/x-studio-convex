@@ -31,7 +31,10 @@ interface PresetsCarouselProps {
 
 export function PresetsCarousel({ onSelectPreset, onReset, userId, className }: PresetsCarouselProps) {
     const { activeBrandKit } = useBrandKit()
-    const presets = useQuery(api.presets.list, { userId })
+    const presets = useQuery(api.presets.list, {
+        userId,
+        brandId: activeBrandKit?.id as any
+    })
     const deletePreset = useMutation(api.presets.remove)
 
     const recents = useQuery(api.generations.getRecents,

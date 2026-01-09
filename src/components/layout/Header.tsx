@@ -9,6 +9,7 @@ import { Bot, Bell, ChevronDown, Trash2, Plus, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { CreditsBadge } from './CreditsBadge'
+import { MobileMenu } from './MobileMenu'
 import Link from 'next/link'
 import {
     DropdownMenu,
@@ -68,19 +69,28 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
 
     return (
         <>
-            <header className="h-16 border-b border-border bg-background/80 backdrop-blur-sm flex items-center justify-between px-4">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-semibold font-heading">X Studio</h1>
+            <header className="h-16 border-b border-border bg-background/80 backdrop-blur-sm flex items-center justify-between px-2 md:px-4">
+                <div className="flex items-center gap-2 md:gap-3">
+                    {/* Mobile Menu Trigger */}
+                    <MobileMenu />
+
+                    {/* Logo / Robot Icon */}
+                    <div className="flex items-center gap-2">
+                        <Bot className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+                        <h1 className="text-2xl font-semibold font-heading hidden md:block">X Studio</h1>
+                    </div>
 
                     {brands.length > 0 && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-2 w-72 justify-between">
-                                    {('brand_name' in (currentBrand || {})) ? (currentBrand as any).brand_name : t('common.switchBrand')}
-                                    <ChevronDown className="h-4 w-4" />
+                                <Button variant="outline" size="sm" className="gap-2 w-[140px] md:w-72 justify-between px-2 md:px-4">
+                                    <span className="truncate block text-left">
+                                        {('brand_name' in (currentBrand || {})) ? (currentBrand as any).brand_name : t('common.switchBrand')}
+                                    </span>
+                                    <ChevronDown className="h-4 w-4 shrink-0" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-72">
+                            <DropdownMenuContent align="start" className="w-[200px] md:w-72">
                                 {brands.map((brand) => (
                                     <DropdownMenuItem
                                         key={brand.id}
@@ -100,7 +110,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                                 </span>
                                             )}
                                         </div>
-                                        <span className="flex-1">{brand.brand_name}</span>
+                                        <span className="flex-1 truncate">{brand.brand_name}</span>
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -122,7 +132,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     )}
 
                     {onNewBrandKit && (
-                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="gap-2">
+                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="gap-2 hidden md:flex">
                             <Plus className="h-4 w-4" />
                             Nuevo Brand Kit
                         </Button>
@@ -130,12 +140,14 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                 </div>
 
                 {/* Right: Credits, Theme Toggle, Notifications and User */}
-                <div className="flex items-center gap-2">
-                    <CreditsBadge />
+                <div className="flex items-center gap-1 md:gap-2">
+                    <div className="scale-90 md:scale-100 origin-right">
+                        <CreditsBadge />
+                    </div>
 
                     {isAdmin && (
                         <Link href="/admin">
-                            <Button variant="ghost" size="icon" title="Panel Admin">
+                            <Button variant="ghost" size="icon" title="Panel Admin" className="hidden md:flex">
                                 <Settings className="h-4 w-4" />
                             </Button>
                         </Link>
@@ -143,7 +155,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
 
                     <ThemeToggle />
 
-                    <Button variant="ghost" size="icon" className="relative">
+                    <Button variant="ghost" size="icon" className="relative hidden md:flex">
                         <Bell className="h-4 w-4" />
                         <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full" />
                     </Button>
@@ -153,7 +165,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                         appearance={{
                             baseTheme: resolvedTheme === 'dark' ? dark : undefined,
                             elements: {
-                                avatarBox: 'w-8 h-8',
+                                avatarBox: 'w-7 h-7 md:w-8 md:h-8',
                             },
                         }}
                     />

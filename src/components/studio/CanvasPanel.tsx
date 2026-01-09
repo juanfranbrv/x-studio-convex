@@ -43,7 +43,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
-import { ContextElement } from '@/app/studio/page'
+import { ContextElement } from '@/app/image/page'
 import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -107,10 +107,14 @@ export function CanvasPanel({
     const [isDraggingOver, setIsDraggingOver] = useState(false)
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
     const [viewportHeight, setViewportHeight] = useState(800) // Default fallback
+    const [isMobile, setIsMobile] = useState(false)
 
     // Track viewport height for responsive canvas
     useEffect(() => {
-        const updateHeight = () => setViewportHeight(window.innerHeight)
+        const updateHeight = () => {
+            setViewportHeight(window.innerHeight)
+            setIsMobile(window.innerWidth < 768)
+        }
         updateHeight()
         window.addEventListener('resize', updateHeight)
         return () => window.removeEventListener('resize', updateHeight)
@@ -120,22 +124,30 @@ export function CanvasPanel({
     const effectiveZoom = useMemo(() => {
         const [w, h] = aspectRatio.split(':').map(Number);
         const ratio = w / h;
-        const baseHeight = 600; // Reference height at 100%
+        const baseHeight = 600;
 
-        const availableHeight = Math.max(200, viewportHeight - 400);
-        const availableWidth = 600;
+        // Smarter dimension calculation matching the container style
+        // We use the same offsets to ensure indicator matches reality
+        const footerOffset = isMobile
+            ? (currentImage ? 180 : 120)
+            : (currentImage ? 700 : 400);
+        const availableHeight = Math.max(200, viewportHeight - footerOffset);
+        const padding = isMobile ? 0 : 48;
+        const availableWidth = (containerRef.current?.parentElement?.clientWidth
+            ? containerRef.current.parentElement.clientWidth - padding
+            : (isMobile ? window.innerWidth : 800));
 
         let canvasHeight;
         if (ratio >= 1) {
-            const canvasWidth = Math.min(availableWidth, availableHeight * ratio);
-            canvasHeight = canvasWidth / ratio;
+            const maxWidth = Math.min(availableWidth, availableHeight * ratio);
+            canvasHeight = maxWidth / ratio;
         } else {
             canvasHeight = Math.min(availableHeight, availableWidth / ratio);
         }
 
         const baseScale = (canvasHeight / baseHeight) * 100;
         return Math.round(baseScale * (zoom / 100));
-    }, [aspectRatio, viewportHeight, zoom])
+    }, [aspectRatio, viewportHeight, zoom, currentImage, isMobile])
 
     // Animation & Reveal States
     const [isRevealing, setIsRevealing] = useState(false)
@@ -170,6 +182,7 @@ export function CanvasPanel({
 
             await createPreset({
                 userId: userId,
+                brandId: activeBrandKit?.id as any,
                 name: presetName,
                 description: presetDescription,
                 icon: creationState.selectedIntent ? creationState.selectedIntent : "Sparkles", // Use intent ID as icon reference or default
@@ -284,7 +297,7 @@ export function CanvasPanel({
         if (!currentImage) return
         const link = document.createElement('a')
         link.href = currentImage
-        link.download = `x-studio-generation-${Date.now()}.png`
+        link.download = `x-image-generation-${Date.now()}.png`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
@@ -302,7 +315,7 @@ export function CanvasPanel({
     }
 
     const handleDragOver = (e: React.DragEvent) => {
-        if (e.dataTransfer.types.includes('application/x-studio-context')) {
+        if (e.dataTransfer.types.includes('application/x-image-context')) {
             e.preventDefault()
             e.dataTransfer.dropEffect = 'copy'
             setIsDraggingOver(true)
@@ -318,7 +331,7 @@ export function CanvasPanel({
         setIsDraggingOver(false)
 
         try {
-            const data = e.dataTransfer.getData('application/x-studio-context')
+            const data = e.dataTransfer.getData('application/x-image-context')
             if (data) {
                 const element = JSON.parse(data) as ContextElement
                 if (!selectedContext.some(c => c.id === element.id)) {
@@ -352,8 +365,8 @@ export function CanvasPanel({
                     </Badge>
                 </div>
 
-                {/* Right: Actions */}
-                <div className="pointer-events-auto flex items-center gap-1 bg-background/80 backdrop-blur-sm p-1 rounded-lg border border-border shadow-sm">
+                {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}
+                <div className="hidden md:flex pointer-events-auto items-center gap-1 bg-background/80 backdrop-blur-sm p-1 rounded-lg border border-border shadow-sm">
                     <Dialog open={isSavePresetOpen} onOpenChange={setIsSavePresetOpen}>
                         <DialogTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-7 w-7" title={t('canvas.savePreset') || "Guardar Preset"}>
@@ -423,7 +436,10 @@ export function CanvasPanel({
                 </div>
             </div>
 
-            <div className="flex-1 relative flex flex-col items-center justify-start pt-16 p-8 pb-24 overflow-auto bg-zinc-100 dark:bg-zinc-900 scrollbar-hide bg-[url('/grid-pattern.svg')]">
+            <div className={cn(
+                "flex-1 relative flex flex-col items-center justify-start pt-16 pb-8 overflow-auto bg-zinc-100 dark:bg-zinc-900 scrollbar-hide bg-[url('/grid-pattern.svg')]",
+                isMobile ? "p-0" : "p-2"
+            )}>
 
                 {/* Canvas Container - constrained to available space */}
                 <div
@@ -432,20 +448,37 @@ export function CanvasPanel({
                     style={(() => {
                         const [w, h] = aspectRatio.split(':').map(Number);
                         const ratio = w / h;
-                        // Calculate maximum dimensions that fit within the container
-                        const availableHeight = Math.max(200, viewportHeight - 400);
-                        const availableWidth = 600; // Max width to not push panels
+
+                        // Smarter dimension calculation:
+                        // 1. More vertical space if we don't have a copy card yet
+                        // 2. Increase offset significantly to ensure zoom buttons (mt-4) 
+                        //    and copy card are visible without scroll
+                        const footerOffset = isMobile
+                            ? (currentImage ? 180 : 120)
+                            : (currentImage ? 700 : 400);
+                        const availableHeight = Math.max(200, viewportHeight - footerOffset);
+
+                        // 2. Use real container width if available
+                        const padding = isMobile ? 0 : 48;
+                        const availableWidth = (containerRef.current?.parentElement?.clientWidth
+                            ? containerRef.current.parentElement.clientWidth - padding
+                            : (isMobile ? window.innerWidth : 1000));
 
                         let canvasWidth, canvasHeight;
 
-                        if (ratio >= 1) {
-                            // Horizontal or square - constrain by width
-                            canvasWidth = Math.min(availableWidth, availableHeight * ratio);
+                        if (isMobile) {
+                            // Mobile: Always prioritize full width, ignore height constraints (let it scroll)
+                            canvasWidth = availableWidth;
                             canvasHeight = canvasWidth / ratio;
                         } else {
-                            // Vertical - constrain by height
-                            canvasHeight = Math.min(availableHeight, availableWidth / ratio);
-                            canvasWidth = canvasHeight * ratio;
+                            // Desktop: Contain within viewport
+                            if (ratio >= 1) {
+                                canvasWidth = Math.min(availableWidth, availableHeight * ratio);
+                                canvasHeight = canvasWidth / ratio;
+                            } else {
+                                canvasHeight = Math.min(availableHeight, availableWidth / ratio);
+                                canvasWidth = canvasHeight * ratio;
+                            }
                         }
 
                         return {
@@ -589,7 +622,7 @@ export function CanvasPanel({
                 </div>
 
                 {currentImage && (
-                    <div className="w-full max-w-[600px] mt-4 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10">
+                    <div className="w-full max-w-[800px] mt-4 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10">
                         <GeneratedCopyCard
                             copy={generatedCopy}
                             hashtags={generatedHashtags}
@@ -604,8 +637,8 @@ export function CanvasPanel({
 
 
 
-            {/* Footer Area: History & Prompt */}
-            <div className="border-t-2 border-border bg-muted/20">
+            {/* Footer Area: History & Prompt - Hidden on mobile (now in CreationCommandPanel) */}
+            <div className="hidden md:block border-t-2 border-border bg-muted/20">
                 {/* Version History Row */}
                 <div className="px-4 py-2 border-b-2 border-border/50">
                     <ScrollArea className="w-full">
@@ -810,7 +843,7 @@ export function CanvasPanel({
 
                         <div className="flex items-center gap-2 mb-1">
                             {(selectedModel && onModelChange) && (
-                                <div className="flex gap-1">
+                                <div className="hidden md:flex gap-1">
                                     <Select value={selectedModel} onValueChange={onModelChange}>
                                         <SelectTrigger className="w-[140px] h-9 text-[10px] bg-background/50 border-border/50 shadow-none focus:ring-1 focus:ring-primary/30 rounded-xl">
                                             <SelectValue placeholder="Modelo Imagen" />

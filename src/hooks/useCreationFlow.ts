@@ -913,7 +913,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         if (hasSelectedColors) {
             colorsToUse = state.selectedBrandColors
         } else if (activeBrandKit?.colors) {
-            // Default to brand kit colors if nothing explicitly selected in Studio
+            // Default to brand kit colors if nothing explicitly selected in Imagen
             // Map legacy brand colors to SelectedColor format
             colorsToUse = (activeBrandKit.colors as any[]).map(c => ({
                 color: c.color || c.hex || (typeof c === 'string' ? c : ''),

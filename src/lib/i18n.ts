@@ -8,7 +8,7 @@ const resources = {
             // Navigation
             nav: {
                 home: 'Inicio',
-                studio: 'Estudio',
+                studio: 'Imagen',
                 brands: 'Marcas',
                 settings: 'Config',
             },

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "debug": "powershell -ExecutionPolicy Bypass -File ./debug-chrome.ps1",
-    "kill-chrome": "powershell -ExecutionPolicy Bypass -File ./kill-chrome.ps1"
+    "kill-chrome": "powershell -ExecutionPolicy Bypass -File ./kill-chrome.ps1",
+    "dev:mobile": "node scripts/dev-mobile.js"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.1",
@@ -45,7 +46,7 @@
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "convex": "^1.11.3",
+    "convex": "^1.31.3",
     "framer-motion": "^12.23.26",
     "i18next": "^25.7.3",
     "lucide-react": "^0.562.0",

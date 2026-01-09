@@ -9,6 +9,7 @@ import { Bot, Sparkles, Palette, Layers, Zap, Loader2, CheckCircle, Clock, Mail 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
 
 export default function HomePage() {
   const { isSignedIn, isLoaded } = useAuth()
@@ -22,23 +23,14 @@ export default function HomePage() {
     userEmail ? { email: userEmail } : 'skip'
   )
 
-  // If user is logged in and has access, redirect to studio
-  if (isLoaded && isSignedIn && betaAccess?.hasAccess) {
-    router.push('/studio')
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    )
-  }
-
-  // If user is logged in but pending/rejected, show status screen
+  // No automatic redirect anymore - let user stay on home page
+  // We still handle pending/rejected states to inform the user
   if (isLoaded && isSignedIn && betaAccess && !betaAccess.hasAccess) {
     return <PendingAccessScreen status={betaAccess.status} email={userEmail} />
   }
 
-  // Not logged in - show landing with beta form
-  return <BetaLandingPage />
+  // Not logged in or logged in and approved - show landing
+  return <BetaLandingPage hasAccess={betaAccess?.hasAccess ?? false} />
 }
 
 // Screen for users who are logged in but don't have access yet
@@ -115,7 +107,7 @@ function PendingAccessScreen({ status, email }: { status: string; email: string 
 }
 
 // Landing page with beta request form
-function BetaLandingPage() {
+function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -146,7 +138,7 @@ function BetaLandingPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-background to-pink-900/20" />
 
         {/* Navigation */}
-        <nav className="relative z-10 flex items-center justify-between px-8 py-6">
+        <nav className="relative z-10 flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <Bot className="w-8 h-8 text-primary" />
             <span className="text-xl font-bold font-heading">X Studio</span>
@@ -157,13 +149,9 @@ function BetaLandingPage() {
         </nav>
 
         {/* Hero Content */}
-        <div className="relative z-10 max-w-5xl mx-auto px-8 py-20 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm text-primary">Motor de Diseño Inteligente</span>
-          </div>
+        <div className="relative z-10 max-w-5xl mx-auto px-8 py-4 text-center">
 
-          <h1 className="text-5xl md:text-7xl font-bold font-heading mb-6 leading-tight">
+          <h1 className="text-4xl md:text-6xl font-bold font-heading mb-4 leading-tight">
             Tu Director Creativo
             <br />
             <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
@@ -171,60 +159,78 @@ function BetaLandingPage() {
             </span>
           </h1>
 
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
             Genera assets de marketing visual que respetan el ADN de tu marca.
             Colores, logotipos, tipografía y tono — siempre coherentes.
           </p>
 
-          {/* Beta Request Form */}
+          {/* Beta Request Form or Imagen Link */}
           <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle className="text-lg">
-                {submitted ? '¡Solicitud Recibida!' : 'Solicita Acceso a la Beta'}
-              </CardTitle>
-              <CardDescription>
-                {submitted
-                  ? 'Te notificaremos cuando tu acceso sea aprobado.'
-                  : 'Estamos aceptando un número limitado de usuarios.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {submitted ? (
-                <div className="flex flex-col items-center gap-4 py-4">
-                  <CheckCircle className="w-12 h-12 text-green-500" />
-                  <p className="text-muted-foreground">{message}</p>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="email"
-                      placeholder="tu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                  <Button type="submit" disabled={isSubmitting} className="btn-gradient">
-                    {isSubmitting ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      'Solicitar'
-                    )}
+            {hasAccess ? (
+              <CardHeader className="text-center py-10">
+                <CardTitle className="text-2xl mb-4">¡Ya tienes acceso!</CardTitle>
+                <CardDescription className="text-base mb-6">
+                  Tu cuenta está activa. Puedes empezar a crear ahora mismo.
+                </CardDescription>
+                <Link href="/image">
+                  <Button className="w-full btn-gradient py-6 text-lg">
+                    Entrar a Imagen <Sparkles className="ml-2 w-5 h-5" />
                   </Button>
-                </form>
-              )}
-            </CardContent>
+                </Link>
+              </CardHeader>
+            ) : (
+              <>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    {submitted ? '¡Solicitud Recibida!' : 'Solicita Acceso a la Beta'}
+                  </CardTitle>
+                  <CardDescription>
+                    {submitted
+                      ? 'Te notificaremos cuando tu acceso sea aprobado.'
+                      : 'Estamos aceptando un número limitado de usuarios.'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {submitted ? (
+                    <div className="flex flex-col items-center gap-4 py-4">
+                      <CheckCircle className="w-12 h-12 text-green-500" />
+                      <p className="text-muted-foreground">{message}</p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSubmit} className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          type="email"
+                          placeholder="tu@email.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                      <Button type="submit" disabled={isSubmitting} className="btn-gradient">
+                        {isSubmitting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          'Solicitar'
+                        )}
+                      </Button>
+                    </form>
+                  )}
+                </CardContent>
+              </>
+            )}
           </Card>
 
-          {/* Link for existing users */}
-          <p className="mt-4 text-center">
-            <a href="/sign-in" className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4">
-              Ya tengo cuenta, llévame al dashboard
-            </a>
-          </p>
+          {/* Link for existing users - only show if not already approved */}
+          {!hasAccess && (
+            <p className="mt-4 text-center">
+              <a href="/sign-in" className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4">
+                Ya tengo cuenta, llévame al dashboard
+              </a>
+            </p>
+          )}
         </div>
       </header>
 

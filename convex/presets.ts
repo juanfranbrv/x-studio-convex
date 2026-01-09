@@ -3,19 +3,27 @@ import { v } from "convex/values";
 
 export const list = query({
     args: {
-        userId: v.optional(v.string())
+        userId: v.optional(v.string()),
+        brandId: v.optional(v.id("brand_dna")),
     },
     handler: async (ctx, args) => {
-        // 1. Get System Presets
+        // 1. Get System Presets (Global)
         const systemPresets = await ctx.db
             .query("presets")
             .withIndex("by_system", (q) => q.eq("isSystem", true))
             .order("desc")
             .collect();
 
-        // 2. Get User Presets (if userId provided)
+        // 2. Get User Presets scoped to Brand Kit (if brandId provided)
         let userPresets: any[] = [];
-        if (args.userId) {
+        if (args.brandId) {
+            userPresets = await ctx.db
+                .query("presets")
+                .withIndex("by_brand", (q) => q.eq("brandId", args.brandId))
+                .order("desc")
+                .collect();
+        } else if (args.userId) {
+            // Fallback: if no brandId but userId (though we prefer brand scoping now)
             userPresets = await ctx.db
                 .query("presets")
                 .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -24,7 +32,7 @@ export const list = query({
         }
 
         // Default System Presets (Mock data for UI visualization)
-        const DEFAULT_PRESETS = [
+        const DEFAULT_PRESETS: any[] = [
             {
                 _id: "sys_1",
                 name: "Meme Viral",
@@ -75,13 +83,8 @@ export const list = query({
             }
         ];
 
-        // Combine DB presets with defaults, avoiding duplicates by name if necessary
-        // For now, prioritising DB but ensuring we have list
-        // FORCE: Returning defaults to ensure UI gets 6 items as requested by user
-        const effectiveSystemPresets = DEFAULT_PRESETS;
-
         return {
-            system: effectiveSystemPresets,
+            system: (systemPresets.length > 0 ? systemPresets : DEFAULT_PRESETS) as any[],
             user: userPresets
         };
     },
@@ -90,6 +93,7 @@ export const list = query({
 export const create = mutation({
     args: {
         userId: v.string(),
+        brandId: v.optional(v.id("brand_dna")),
         name: v.string(),
         description: v.optional(v.string()),
         icon: v.optional(v.string()),
@@ -98,6 +102,7 @@ export const create = mutation({
     handler: async (ctx, args) => {
         const presetId = await ctx.db.insert("presets", {
             userId: args.userId,
+            brandId: args.brandId,
             name: args.name,
             description: args.description,
             icon: args.icon || "Sparkles", // Default icon

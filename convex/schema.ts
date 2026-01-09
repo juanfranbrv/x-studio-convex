@@ -112,6 +112,7 @@ export default defineSchema({
 
   presets: defineTable({
     userId: v.optional(v.string()), // clerk_id, optional for system presets
+    brandId: v.optional(v.id("brand_dna")), // Scoped to a specific brand kit
     isSystem: v.boolean(),
     name: v.string(),
     description: v.optional(v.string()),
@@ -122,5 +123,6 @@ export default defineSchema({
     lastUsed: v.optional(v.string()),
     created_at: v.string(),
   }).index("by_user", ["userId"])
+    .index("by_brand", ["brandId"])
     .index("by_system", ["isSystem"]),
 });

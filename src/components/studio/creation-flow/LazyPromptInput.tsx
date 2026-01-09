@@ -62,7 +62,7 @@ export function LazyPromptInput({
 
     return (
         <div className={cn(
-            "relative rounded-xl border-2 transition-all duration-300 bg-background",
+            "relative rounded-xl border-2 transition-all duration-300 bg-background mb-8",
             isFocused ? "border-primary shadow-lg ring-2 ring-primary/20" : "border-muted shadow-sm hover:border-primary/50"
         )}>
             <div className="absolute top-3 left-3">

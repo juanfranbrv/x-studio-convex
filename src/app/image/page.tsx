@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useUser } from '@clerk/nextjs'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
@@ -18,6 +19,9 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 
+// Admin email for debug modal access
+const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
+
 interface Generation {
     id: string
     image_url: string
@@ -33,8 +37,9 @@ export interface ContextElement {
     label?: string
 }
 
-export default function StudioPage() {
+export default function ImagePage() {
     const router = useRouter()
+    const { user } = useUser()
     const { activeBrandKit, brandKits, loading, setActiveBrandKit, updateActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const [isGenerating, setIsGenerating] = useState(false)
     const { toast } = useToast()
@@ -208,7 +213,12 @@ export default function StudioPage() {
         }
     }
 
-    // Wrapped handleGenerate with debug modal intercept
+    // Check if current user is admin
+    const isAdmin = user?.emailAddresses?.some(
+        email => email.emailAddress === ADMIN_EMAIL
+    ) ?? false
+
+    // Wrapped handleGenerate with debug modal intercept (admin only)
     const handleGenerateWithDebug = async (data: {
         platform?: string
         headline?: string
@@ -216,7 +226,13 @@ export default function StudioPage() {
         prompt: string
         model?: string
     }) => {
-        // Build debug data
+        // If not admin, skip debug modal and generate directly
+        if (!isAdmin) {
+            await handleGenerate(data)
+            return
+        }
+
+        // Build debug data (admin only)
         const selectedLogo = logoInclusion && creationFlow.state.selectedLogoId
             ? activeBrandKit?.logos?.find((l, idx) =>
                 (l as any).id === creationFlow.state.selectedLogoId || `logo-${idx}` === creationFlow.state.selectedLogoId
@@ -261,7 +277,7 @@ export default function StudioPage() {
         return (
             <div className="flex items-center justify-center h-screen">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <span className="ml-3 text-lg font-medium">Cargando Studio...</span>
+                <span className="ml-3 text-lg font-medium">Cargando Imagen...</span>
             </div>
         )
     }
@@ -276,34 +292,43 @@ export default function StudioPage() {
             isFixed={true}
         >
             {activeBrandKit ? (
-                <div className="flex-1 flex overflow-hidden min-h-0">
+                <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden min-h-0">
                     {/* Left: Creation Command Panel (Cascade Interface) */}
                     <CreationCommandPanel
                         onGenerate={async (prompt) => handleGenerateWithDebug({ prompt })}
                         isGenerating={isGenerating}
                         creationFlow={creationFlow}
+                        currentImage={currentImage}
+                        aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio}
+                        generations={generations}
+                        onSelectGeneration={(gen) => setCurrentImage(gen.image_url)}
                     />
 
                     {/* Center: Canvas */}
-                    <CanvasPanel
-                        currentImage={currentImage}
-                        isAnnotating={isAnnotating}
-                        onAnnotate={() => setIsAnnotating(!isAnnotating)}
-                        generations={generations}
-                        onSelectGeneration={(gen) => setCurrentImage(gen.image_url)}
-                        selectedContext={selectedContext}
-                        onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
-                        onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
-                        draggedElement={draggedElement}
-                        onGenerate={(prompt, model) => handleGenerateWithDebug({ prompt, model })}
-                        isGenerating={isGenerating}
-                        selectedModel={selectedModel}
-                        onModelChange={setSelectedModel}
-                        selectedTextModel={selectedTextModel}
-                        onTextModelChange={setSelectedTextModel}
-                        aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio}
-                        creationState={creationFlow.state}
-                    />
+                    <div className={cn(
+                        "md:flex-1 h-auto md:h-auto min-h-0 order-2 md:order-2 flex-col relative z-0",
+                        (!currentImage && !isGenerating) ? "hidden md:flex" : "flex"
+                    )}>
+                        <CanvasPanel
+                            currentImage={currentImage}
+                            isAnnotating={isAnnotating}
+                            onAnnotate={() => setIsAnnotating(!isAnnotating)}
+                            generations={generations}
+                            onSelectGeneration={(gen) => setCurrentImage(gen.image_url)}
+                            selectedContext={selectedContext}
+                            onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
+                            onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
+                            draggedElement={draggedElement}
+                            onGenerate={(prompt, model) => handleGenerateWithDebug({ prompt, model })}
+                            isGenerating={isGenerating}
+                            selectedModel={selectedModel}
+                            onModelChange={setSelectedModel}
+                            selectedTextModel={selectedTextModel}
+                            onTextModelChange={setSelectedTextModel}
+                            aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio}
+                            creationState={creationFlow.state}
+                        />
+                    </div>
 
                     {/* Brand Drawer Toggle - Fixed on Right Edge */}
                     <Button
@@ -312,18 +337,20 @@ export default function StudioPage() {
                         onClick={() => setIsBrandDrawerOpen(!isBrandDrawerOpen)}
                         title={isBrandDrawerOpen ? "Cerrar Brand Kit" : "Abrir Brand Kit"}
                         className={cn(
-                            "fixed z-50 top-[400px] h-12 w-10 rounded-l-xl rounded-r-none border-r-0 border-2 shadow-2xl transition-all duration-300",
+                            "fixed z-50 top-[400px] rounded-l-xl rounded-r-none border-r-0 border-2 shadow-2xl transition-all duration-300",
+                            // Smaller on mobile, larger on desktop
+                            "h-8 w-6 md:h-12 md:w-10",
                             isBrandDrawerOpen
-                                ? "right-[360px] bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
+                                ? "right-[85vw] sm:right-[360px] bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
                                 : "right-0 bg-primary text-primary-foreground border-primary hover:bg-primary/90"
                         )}
                     >
-                        {isBrandDrawerOpen ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
+                        {isBrandDrawerOpen ? <PanelRightClose className="w-3 h-3 md:w-5 md:h-5" /> : <PanelRightOpen className="w-3 h-3 md:w-5 md:h-5" />}
                     </Button>
 
                     {/* Right: Brand DNA Panel (Drawer) */}
                     <div className={cn(
-                        "fixed inset-y-0 right-0 w-[360px] z-40 transition-transform duration-300 ease-out shadow-2xl",
+                        "fixed inset-y-0 right-0 w-[85vw] sm:w-[360px] z-40 transition-transform duration-300 ease-out shadow-2xl",
                         isBrandDrawerOpen ? "translate-x-0" : "translate-x-full"
                     )}>
                         <BrandDNAPanel
@@ -350,7 +377,7 @@ export default function StudioPage() {
                         </div>
                         <h2 className="text-2xl font-semibold">Selecciona un Brand Kit</h2>
                         <p className="text-muted-foreground">
-                            Para empezar a diseñar en el Studio, necesitas seleccionar un Brand Kit.
+                            Para empezar a diseñar en el panel de Imagen, necesitas seleccionar un Brand Kit.
                             Si aún no tienes uno, créalo en la sección "Brand Kit".
                         </p>
                     </div>

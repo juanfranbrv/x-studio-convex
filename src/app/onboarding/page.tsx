@@ -97,7 +97,7 @@ export default function OnboardingPage() {
                 clerk_user_id: user?.id
             })
 
-            router.push('/studio')
+            router.push('/image')
         } catch (error) {
             console.error('Save failed:', error)
         } finally {
@@ -142,7 +142,7 @@ export default function OnboardingPage() {
                                     <AutoAwesomeIcon sx={{ width: 32, height: 32 }} className="text-primary" />
                                 </div>
                                 <CardTitle className="text-2xl font-heading">
-                                    ¡Bienvenido a x-Studio!
+                                    ¡Bienvenido a X Imagen!
                                 </CardTitle>
                                 <CardDescription>
                                     Vamos a configurar tu primera marca. Solo necesitamos un poco de información.
@@ -335,7 +335,7 @@ export default function OnboardingPage() {
                                             </>
                                         ) : (
                                             <>
-                                                Ir al Estudio
+                                                Ir a Imagen
                                                 <AutoAwesomeIcon fontSize="small" className="ml-2" />
                                             </>
                                         )}

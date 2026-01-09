@@ -328,7 +328,7 @@ function BrandKitPageContent() {
                             </motion.div>
 
                             <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                                {brandKits.length === 0 ? '¡Bienvenido a X Studio!' : 'Crear Nuevo Brand Kit'}
+                                {brandKits.length === 0 ? '¡Bienvenido a X Imagen!' : 'Crear Nuevo Brand Kit'}
                             </h2>
                             <p className="text-muted-foreground mb-8 max-w-lg mx-auto text-lg">
                                 {brandKits.length === 0

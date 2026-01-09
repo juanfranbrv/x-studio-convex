@@ -30,11 +30,11 @@ export function DashboardLayout({
     return (
         <I18nProvider>
             <div className="flex h-screen bg-background text-foreground overflow-hidden">
-                {/* Lateral Navigation (Fixed) */}
-                <Sidebar />
+                {/* Lateral Navigation (Desktop Only) */}
+                <Sidebar className="hidden md:flex" />
 
                 {/* Main Content Area */}
-                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                     {/* Top Bar (Fixed) */}
                     <Header
                         brands={brands}
@@ -46,11 +46,13 @@ export function DashboardLayout({
 
                     {/* Scrollable Content Container */}
                     <div className={cn(
-                        "flex-1 min-w-0 overflow-x-hidden scrollbar-hide flex flex-col min-h-0",
+                        "flex-1 min-w-0 overflow-x-hidden scrollbar-hide flex flex-col min-h-0 md:pb-0",
                         isFixed ? "overflow-hidden" : "overflow-y-auto"
                     )}>
                         {children}
                     </div>
+
+                    {/* Mobile Navigation (Bottom Fixed) - Deprecated, moved to Header Menu */}
                 </div>
             </div>
         </I18nProvider>

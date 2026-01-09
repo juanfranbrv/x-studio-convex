@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { type ContextElement } from "@/app/studio/page";
+import { type ContextElement } from "@/app/image/page";
 import { cn } from '@/lib/utils';
 
 import { Palette, Info, RotateCcw, X, Pipette, Check, Plus } from 'lucide-react';

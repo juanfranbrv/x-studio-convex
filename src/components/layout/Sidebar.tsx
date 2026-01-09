@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
-import { Bot, Home, Palette, GalleryHorizontal, Play, Settings, FileSpreadsheet } from 'lucide-react'
+import { Bot, Home, Image, GalleryHorizontal, Play, Settings, FileSpreadsheet } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -14,9 +14,9 @@ interface SidebarProps {
 const navItems = [
     { icon: Home, label: 'nav.home', href: '/' },
     { icon: FileSpreadsheet, label: 'Brand Kit', href: '/brand-kit' },
-    { icon: Palette, label: 'nav.studio', href: '/studio' },
-    { icon: GalleryHorizontal, label: 'Carrusel', href: '/studio' },
-    { icon: Play, label: 'Video', href: '/studio' },
+    { icon: Image, label: 'nav.studio', href: '/image' },
+    { icon: GalleryHorizontal, label: 'Carrusel', href: '/image' },
+    { icon: Play, label: 'Video', href: '/image' },
 ]
 
 export function Sidebar({ className }: SidebarProps) {

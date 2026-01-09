@@ -312,7 +312,7 @@ export function BrandAssets({
                         <Type className="w-5 h-5 text-primary" />
                         Estilos Visuales
                     </CardTitle>
-                    <p className="text-xs text-muted-foreground">Para generación de imágenes en el Studio</p>
+                    <p className="text-xs text-muted-foreground">Para generación de imágenes en el panel Imagen</p>
                 </CardHeader>
                 <CardContent className="space-y-2">
                     {aesthetic.map((v, i) => (

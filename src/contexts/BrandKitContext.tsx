@@ -1,7 +1,9 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react'
 import { useUser } from '@clerk/nextjs'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../../convex/_generated/api'
 import { getAllUserBrandKits, getUserBrandKitById } from '@/app/actions/get-user-brand-kit'
 import { deleteBrandKit } from '@/app/actions/delete-brand-kit'
 import { updateUserBrandKit } from '@/app/actions/update-user-brand-kit'
@@ -29,6 +31,13 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
     const [brandKits, setBrandKits] = useState<BrandKitSummary[]>([])
     const [loading, setLoading] = useState(true)
 
+    // Convex hooks
+    const userRecord = useQuery(api.users.getUser, user?.id ? { clerk_id: user.id } : "skip")
+    const updateLastBrand = useMutation(api.users.setCurrentBrand)
+
+    // Track if we have already attempted initial load
+    const initialLoadAttempted = useRef(false)
+
     // Cargar todos los Brand Kits del usuario
     const loadBrandKits = async (isSilent = false) => {
         if (!user?.id) return
@@ -39,9 +48,17 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
             if (result.success && result.data) {
                 setBrandKits(result.data)
 
-                // Si hay Brand Kits y no hay uno activo, cargar el primero
+                // Preference: 
+                // 1. Current Active (if already set)
+                // 2. Persisted Last Brand (from userRecord)
+                // 3. First from list
                 if (result.data.length > 0 && !activeBrandKit) {
-                    await setActiveBrandKit(result.data[0].id)
+                    const lastBrandId = userRecord?.current_brand_id
+                    const brandToSelect = (lastBrandId && result.data.find(b => b.id === lastBrandId))
+                        ? lastBrandId
+                        : result.data[0].id
+
+                    await setActiveBrandKit(brandToSelect, false) // false = don't re-persist what we just loaded
                 }
             }
         } catch (error) {
@@ -52,13 +69,19 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
     }
 
     // Cambiar el Brand Kit activo
-    const setActiveBrandKit = async (id: string) => {
-        console.log('[CONTEXT] Setting active brand kit:', id);
+    const setActiveBrandKit = async (id: string, shouldPersist = true) => {
+        console.log(`[CONTEXT] Setting active brand kit: ${id} (persist: ${shouldPersist})`);
         try {
             const result = await getUserBrandKitById(id)
             if (result.success && result.data) {
                 console.log('[CONTEXT] Brand kit loaded successfully:', result.data.brand_name);
                 setActiveBrandKitState(result.data)
+
+                // Persist choice in Convex if requested and user exists
+                if (shouldPersist && user?.id) {
+                    updateLastBrand({ clerk_id: user.id, brandId: id })
+                        .catch(err => console.error('[CONTEXT] Failed to persist last brand:', err))
+                }
             } else {
                 console.error('[CONTEXT] Failed to load brand kit:', id, result.error);
             }
@@ -116,12 +139,13 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         setActiveBrandKitState(data)
     }
 
-    // Cargar Brand Kits cuando el usuario esté disponible
+    // Cargar Brand Kits cuando el usuario y sus datos de Convex estén disponibles
     useEffect(() => {
-        if (isLoaded && user) {
+        if (isLoaded && user && userRecord !== undefined && !initialLoadAttempted.current) {
+            initialLoadAttempted.current = true
             loadBrandKits()
         }
-    }, [isLoaded, user])
+    }, [isLoaded, user, userRecord])
 
     const value: BrandKitContextType = {
         activeBrandKit,

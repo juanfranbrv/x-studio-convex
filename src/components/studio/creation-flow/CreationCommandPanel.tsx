@@ -13,20 +13,32 @@ import { LazyPromptInput } from './LazyPromptInput'
 import { UnifiedContentSection } from './UnifiedContentSection'
 import { IntentCategory } from '@/lib/creation-flow-types'
 import { SavePresetDialog } from './SavePresetDialog'
-import { BookmarkPlus, RotateCcw, Sparkles } from 'lucide-react'
+import { BookmarkPlus, RotateCcw, Sparkles, Download, Share2, Pencil } from 'lucide-react'
 import { useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { useUser } from '@clerk/nextjs'
 import { parseLazyIntentAction } from '@/app/actions/parse-intent'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { useBrandKit } from '@/contexts/BrandKitContext'
+
+interface Generation {
+    id: string
+    image_url: string
+    created_at: string
+}
 
 interface CreationCommandPanelProps {
     onGenerate?: (prompt: string) => Promise<void>
     isGenerating?: boolean
     creationFlow: ReturnType<typeof useCreationFlow>
+    // Mobile-only preview props
+    currentImage?: string | null
+    aspectRatio?: string
+    // Mobile history props
+    generations?: Generation[]
+    onSelectGeneration?: (gen: Generation) => void
 }
 
 const StepSection = ({
@@ -67,6 +79,10 @@ export function CreationCommandPanel({
     onGenerate,
     isGenerating = false,
     creationFlow,
+    currentImage,
+    aspectRatio = "1:1",
+    generations = [],
+    onSelectGeneration,
 }: CreationCommandPanelProps) {
     const {
         state,
@@ -102,6 +118,15 @@ export function CreationCommandPanel({
     const { toast } = useToast()
     const [isMagicParsing, setIsMagicParsing] = useState(false)
     const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
+    const [isMobile, setIsMobile] = useState(false)
+
+    // Detect mobile viewport
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
 
     // Save Preset State
     const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
@@ -119,6 +144,7 @@ export function CreationCommandPanel({
             // Save complete state snapshot with correct field names
             await createPreset({
                 userId: user.id,
+                brandId: activeBrandKit?.id as any,
                 name,
                 description,
                 state: {
@@ -250,9 +276,9 @@ export function CreationCommandPanel({
     }
 
     // Determine what level is visible based on NEW flow
-    const showIntentAndLayout = true // Always show (step 2)
-    const showPlatformSelector = state.selectedIntent !== null // Show after intent (step 3)
-    const showImageAndContent = state.selectedPlatform !== null && state.selectedFormat !== null // Show after platform (step 4)
+    const showIntentAndLayout = state.selectedIntent !== null
+    const showPlatformSelector = state.selectedIntent !== null && state.selectedLayout !== null
+    const showImageAndContent = showPlatformSelector && state.selectedPlatform !== null && state.selectedFormat !== null
     const showVisuals = showImageAndContent && (
         state.visionAnalysis !== null ||
         (state.imageSourceMode === 'generate' && state.aiImageDescription?.trim() !== '') ||
@@ -267,9 +293,9 @@ export function CreationCommandPanel({
     )
 
     return (
-        <div className="w-[450px] h-full bg-card border-r border-border flex flex-col shadow-md relative z-10 hidden md:flex">
+        <div className="w-full md:w-[450px] h-auto md:h-full bg-card border-r border-border flex flex-col shadow-md relative z-10 order-1 md:order-1">
             {/* Scrollable Content Container */}
-            <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide">
+            <div className="flex-1 md:overflow-y-auto min-h-0 scrollbar-hide pb-24 md:pb-0">
                 <div className="pt-4 pb-12">
 
                     {/* PHASE 0: PRESETS (Quick Start) */}
@@ -296,22 +322,24 @@ export function CreationCommandPanel({
                                 onAnalyze={handleSmartAnalyze}
                                 isAnalyzing={isMagicParsing}
                             />
-                            <div className="mt-4">
-                                <UnifiedContentSection
-                                    intentRequiredFields={currentIntent?.requiredFields || []}
-                                    fieldsToRender={selectedLayoutMeta?.textFields || []}
-                                    customTexts={state.customTexts}
-                                    headline={state.headline}
-                                    cta={state.cta}
-                                    onHeadlineChange={setHeadline}
-                                    onCtaChange={setCta}
-                                    onCustomTextChange={setCustomText}
-                                    onToggleNoText={creationFlow.toggleNoText}
-                                    onGenerateAICopy={creationFlow.generateFieldCopy}
-                                    onGenerateCustomFieldCopy={onGenerateCustomFieldCopy}
-                                    highlightedFields={highlightedFields}
-                                />
-                            </div>
+                            {state.selectedIntent && (
+                                <div className="mt-4">
+                                    <UnifiedContentSection
+                                        intentRequiredFields={currentIntent?.requiredFields || []}
+                                        fieldsToRender={selectedLayoutMeta?.textFields || []}
+                                        customTexts={state.customTexts}
+                                        headline={state.headline}
+                                        cta={state.cta}
+                                        onHeadlineChange={setHeadline}
+                                        onCtaChange={setCta}
+                                        onCustomTextChange={setCustomText}
+                                        onToggleNoText={creationFlow.toggleNoText}
+                                        onGenerateAICopy={creationFlow.generateFieldCopy}
+                                        onGenerateCustomFieldCopy={onGenerateCustomFieldCopy}
+                                        highlightedFields={highlightedFields}
+                                    />
+                                </div>
+                            )}
                         </StepSection>
                     </div>
 
@@ -477,14 +505,134 @@ export function CreationCommandPanel({
                             </div>
                         </>
                     )}
+
+                    {/* MOBILE-ONLY: Image Preview Section */}
+                    {isMobile && currentImage && (
+                        <>
+                            <div className="border-t border-border/40 mt-4"></div>
+                            <div className="px-4 pt-3 pb-6">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold border border-green-500/20 shadow-sm">
+                                            ✓
+                                        </span>
+                                        <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">RESULTADO</h3>
+                                    </div>
+                                    {/* Action buttons - associated with image */}
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-lg"
+                                            onClick={() => {
+                                                // TODO: Implement edit functionality
+                                            }}
+                                            title="Editar"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-lg"
+                                            onClick={() => {
+                                                const link = document.createElement('a')
+                                                link.href = currentImage
+                                                link.download = `x-image-${Date.now()}.png`
+                                                document.body.appendChild(link)
+                                                link.click()
+                                                document.body.removeChild(link)
+                                            }}
+                                            title="Descargar"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-lg"
+                                            onClick={() => {
+                                                if (navigator.share) {
+                                                    navigator.share({
+                                                        title: 'Mi diseño',
+                                                        url: currentImage
+                                                    })
+                                                }
+                                            }}
+                                            title="Compartir"
+                                        >
+                                            <Share2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                                {/* Image Preview */}
+                                <div
+                                    className="w-full rounded-xl overflow-hidden shadow-lg ring-1 ring-black/10 bg-white"
+                                    style={{
+                                        aspectRatio: aspectRatio.replace(':', '/'),
+                                    }}
+                                >
+                                    <img
+                                        src={currentImage}
+                                        alt="Generated design"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+
+                                {/* History Row - Subtle style, no label */}
+                                {generations.length > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-border/30">
+                                        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+                                            {generations.map((gen) => (
+                                                <button
+                                                    key={gen.id}
+                                                    onClick={() => onSelectGeneration?.(gen)}
+                                                    className={`relative flex-shrink-0 transition-all duration-150 ${currentImage === gen.image_url
+                                                        ? 'ring-1 ring-primary'
+                                                        : 'opacity-60 hover:opacity-100'
+                                                        }`}
+                                                >
+                                                    <div className="w-11 h-11 rounded overflow-hidden bg-muted">
+                                                        <img
+                                                            src={gen.image_url}
+                                                            alt=""
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Prompt Input for edits */}
+                                <div className="mt-3 pt-3 border-t border-border/30 pb-20">
+                                    <div className="flex gap-2 items-end">
+                                        <textarea
+                                            placeholder="Describe los cambios que quieres aplicar..."
+                                            className="flex-1 min-h-[44px] max-h-[100px] text-sm p-2.5 rounded-xl border border-border/50 bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary/30"
+                                            rows={1}
+                                        />
+                                        <Button
+                                            size="icon"
+                                            className="h-11 w-11 rounded-xl btn-gradient shrink-0"
+                                            onClick={() => {/* TODO: handle prompt submit */ }}
+                                        >
+                                            <Sparkles className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
-            {/* Footer: Generate Button */}
-            <div className="p-3 pt-2 border-t-2 border-border bg-muted/20 z-20 flex gap-2 items-center">
+            {/* Footer: Generate Button - Fixed at bottom on Mobile, relative on Desktop */}
+            <div className="fixed bottom-0 left-0 right-0 p-3 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 flex gap-2 items-center md:relative md:bg-muted/20 md:border-t-2">
                 <Button
                     variant="outline"
-                    className="h-[50px] w-[50px] rounded-xl p-0 flex-none border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-muted-foreground hover:text-primary transition-all"
+                    className="h-[50px] w-[50px] rounded-xl p-0 flex-none border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-muted-foreground hover:text-primary transition-all md:bg-background"
                     onClick={() => setIsSaveDialogOpen(true)}
                     disabled={!canGenerate}
                     title="Guardar como Preset"
@@ -496,7 +644,7 @@ export function CreationCommandPanel({
                     isGenerating={isGenerating || state.isGenerating}
                     isDisabled={!canGenerate}
                     onClick={handleGenerate}
-                    className="h-[50px]"
+                    className="h-[50px] shadow-lg md:shadow-none"
                 />
             </div>
 

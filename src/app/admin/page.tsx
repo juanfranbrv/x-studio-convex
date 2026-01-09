@@ -7,7 +7,7 @@ import { dark } from '@clerk/themes'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
-import { Loader2, Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail } from 'lucide-react'
+import { Loader2, Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink } from 'lucide-react'
 import { CreditsBadge } from '@/components/layout/CreditsBadge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -175,8 +175,8 @@ export default function AdminPage() {
             <div className="container mx-auto py-8 px-4">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
-                        <Link href="/studio">
-                            <Button variant="ghost" size="icon" title="Volver al Studio">
+                        <Link href="/image">
+                            <Button variant="ghost" size="icon" title="Volver a Imagen">
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
                         </Link>
@@ -253,6 +253,9 @@ export default function AdminPage() {
                         </TabsTrigger>
                         <TabsTrigger value="settings" className="gap-2">
                             <Settings className="h-4 w-4" /> Configuración
+                        </TabsTrigger>
+                        <TabsTrigger value="links" className="gap-2">
+                            <ExternalLink className="h-4 w-4" /> Enlaces
                         </TabsTrigger>
                     </TabsList>
 
@@ -549,6 +552,41 @@ export default function AdminPage() {
                                         </Button>
                                     </div>
                                 )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Links Tab */}
+                    <TabsContent value="links">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Enlaces de Gestión</CardTitle>
+                                <CardDescription>Accesos directos a las plataformas de control de la aplicación</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {[
+                                        { name: 'Vercel', url: 'https://vercel.com/juanfranbrvs-projects/x-studio-convex', desc: 'Despliegues, logs y dominios' },
+                                        { name: 'Convex', url: 'https://dashboard.convex.dev', desc: 'Base de datos y funciones backend' },
+                                        { name: 'Clerk', url: 'https://dashboard.clerk.com', desc: 'Autenticación y usuarios' },
+                                        { name: 'Google AI Studio', url: 'https://aistudio.google.com', desc: 'API Keys y modelos Gemini' },
+                                        { name: 'GitHub', url: 'https://github.com/juanfranbrv/x-studio-convex', desc: 'Repositorio de código fuente' }
+                                    ].map((link) => (
+                                        <a
+                                            key={link.name}
+                                            href={link.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex flex-col p-4 rounded-lg border bg-card hover:bg-accent transition-colors group"
+                                        >
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="font-semibold">{link.name}</span>
+                                                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                            </div>
+                                            <span className="text-xs text-muted-foreground">{link.desc}</span>
+                                        </a>
+                                    ))}
+                                </div>
                             </CardContent>
                         </Card>
                     </TabsContent>

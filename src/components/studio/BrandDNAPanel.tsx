@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Trash2 } from 'lucide-react'
 import { ARTISTIC_STYLE_CATALOG } from '@/lib/creation-flow-types'
 
-import { ContextElement, ContextType } from '@/app/studio/page'
+import { ContextElement, ContextType } from '@/app/image/page'
 
 // Extracted DraggableChip component to avoid re-creation on parent re-renders
 interface DraggableChipProps {
@@ -149,7 +149,7 @@ export function BrandDNAPanel({
             await updateActiveBrandKit(data)
             setHasUnsavedChanges(false)
         } catch (error) {
-            console.error('Error auto-saving from Studio:', error)
+            console.error('Error auto-saving from Imagen:', error)
         } finally {
             setIsSaving(false)
         }
@@ -457,7 +457,7 @@ export function BrandDNAPanel({
 
     const handleDragStart = (e: React.DragEvent, element: ContextElement) => {
         const jsonData = JSON.stringify(element)
-        e.dataTransfer.setData('application/x-studio-context', jsonData)
+        e.dataTransfer.setData('application/x-image-context', jsonData)
         e.dataTransfer.setData('text/plain', element.label || element.value)
         e.dataTransfer.effectAllowed = 'copy'
         onSetDraggedElement?.(element)

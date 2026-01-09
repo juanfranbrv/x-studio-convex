@@ -20,6 +20,19 @@ export const getUser = query({
     },
 });
 
+export const setCurrentBrand = mutation({
+    args: { clerk_id: v.string(), brandId: v.string() },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
+            .first();
+        if (!user) throw new Error("User not found");
+        await ctx.db.patch(user._id, { current_brand_id: args.brandId });
+        return { success: true };
+    },
+});
+
 // Query: get user's credit balance and status
 export const getCredits = query({
     args: { clerk_id: v.string() },

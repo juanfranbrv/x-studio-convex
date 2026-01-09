@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "X Studio | Motor de Diseño Inteligente",
+  title: "X Imagen | Motor de Diseño Inteligente",
   description: "Plataforma de generación de assets de marketing visual con IA que respeta el ADN de tu marca",
   keywords: ["IA", "diseño", "marketing", "branding", "generación de imágenes"],
   icons: {
