@@ -613,7 +613,7 @@ export function CreationCommandPanel({
                                 <div className="mt-3 pt-3 border-t border-border/30 pb-20">
                                     <div className="flex gap-2 items-end">
                                         <textarea
-                                            placeholder="Escribe cambios para tu imagen: 'hazla más oscura', 'añade texto X', 'cambia el fondo'..."
+                                            placeholder="Indica qué cambios quieres realizar: 'hazla más oscura', 'cambia el fondo', 'añade un objeto'... El prompt aplicará ediciones locales sobre la imagen actual."
                                             className="flex-1 min-h-[44px] max-h-[100px] text-sm p-2.5 rounded-xl border border-border/50 bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary/30"
                                             rows={1}
                                             value={editPromptText}

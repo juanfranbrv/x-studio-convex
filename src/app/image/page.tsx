@@ -157,11 +157,27 @@ export default function ImagePage() {
                 }
             }
 
+            // 3. Add current image as edit reference if it exists
+            if (currentImage) {
+                const hasReference = finalContext.some(c => c.id === 'edit-reference')
+                if (!hasReference) {
+                    finalContext.push({
+                        id: 'edit-reference',
+                        type: 'image',
+                        value: currentImage,
+                        label: 'Imagen actual'
+                    })
+                }
+            }
+
+            const effectivePrompt = currentImage ? buildEditPrompt(data.prompt) : data.prompt
+
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...data,
+                    prompt: effectivePrompt,
                     brandDNA: {
                         ...activeBrandKit,
                         images: selectedImages

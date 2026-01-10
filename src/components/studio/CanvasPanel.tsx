@@ -825,7 +825,7 @@ export function CanvasPanel({
                             <Textarea
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
-                                placeholder="Describe la imagen que quieres generar..."
+                                placeholder={currentImage ? "Indica qué cambios quieres realizar: 'hazla más oscura', 'cambia el fondo', 'añade un objeto'... El prompt aplicará ediciones locales sobre la imagen actual." : "Describe la imagen que quieres generar..."}
                                 className="pr-12 min-h-[50px] max-h-[120px] py-3 resize-none bg-background/80 border-border/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all rounded-xl shadow-inner text-sm"
                             />
                             <div className="absolute right-3 bottom-3 flex items-center gap-2">
