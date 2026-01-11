@@ -58,7 +58,7 @@ export const buildSocialManagerPrompt = (brand: BrandDNA, topic?: string) => {
     BRAND_CONTEXT(
       brand.brand_values?.join(', ') || 'No definidos',
       brand.tone_of_voice?.join(', ') || 'Profesional',
-      brand.target_audience || 'General'
+      Array.isArray(brand.target_audience) ? brand.target_audience.join(', ') : (brand.target_audience || 'General')
     ),
     topic ? `TEMA/INTENCIÓN DEL POST: "${topic}"` : '',
     LANGUAGE_REQUERIMENT(languageName),
