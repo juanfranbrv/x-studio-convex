@@ -9,7 +9,7 @@ export function ComunicadoOficial({ texts, brandColors, logoId }: LayoutProps) {
     const date = texts['effective_date'] || '15 MARZO 2024'
 
     return (
-        <div className="w-full h-full relative bg-white flex flex-col p-8 border-[12px] border-double" style={{ borderColor: mainColor }}>
+        <div className="w-full h-full relative flex flex-col p-8 border-[12px] border-double" style={{ borderColor: mainColor }}>
             {/* Header */}
             <div className="border-b border-black/10 pb-6 mb-6 flex flex-col items-center justify-center text-center">
                 {logoId && (

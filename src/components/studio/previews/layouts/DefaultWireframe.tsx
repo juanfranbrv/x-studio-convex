@@ -12,13 +12,8 @@ export function DefaultWireframe({ image, texts, intent, brandColors }: DefaultW
     const cta = texts['cta'] || 'DESCUBRIR MAS'
 
     return (
-        <div className="w-full h-full relative bg-white p-6 flex flex-col items-center justify-center text-center">
-            <div className="absolute inset-0 opacity-5 pointer-events-none"
-                style={{
-                    backgroundImage: `radial-gradient(circle at center, ${mainColor} 1px, transparent 1px)`,
-                    backgroundSize: '20px 20px'
-                }}
-            />
+        <div className="w-full h-full relative p-6 flex flex-col items-center justify-center text-center">
+
 
             {/* Dynamic Content Center */}
             <div className="relative z-10 space-y-6 max-w-[80%]">

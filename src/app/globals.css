@@ -235,6 +235,12 @@
     background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
   }
 
+  /* Dot Grid Pattern */
+  .bg-dot {
+    background-image: radial-gradient(circle, hsl(var(--foreground)/0.15) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
   /* Magic Flash Highlight for AI Updates */
   @keyframes flash-highlight {
     0% {

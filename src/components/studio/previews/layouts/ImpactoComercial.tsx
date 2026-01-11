@@ -13,7 +13,7 @@ export function ImpactoComercial({ image, texts, brandColors, aspectRatio }: Lay
     const footer = texts['footer'] || 'www.tienda.com'
 
     return (
-        <div className="w-full h-full relative overflow-hidden bg-white flex flex-col pointer-events-none select-none">
+        <div className="w-full h-full relative overflow-hidden flex flex-col pointer-events-none select-none">
             {/* Background Diagonal Split */}
             <div
                 className="absolute inset-0 z-0"

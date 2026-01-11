@@ -461,7 +461,7 @@ export function CanvasPanel({
                 {/* Canvas Container - constrained to available space */}
                 <div
                     ref={containerRef}
-                    className="relative shadow-aero-lg ring-1 ring-black/5 dark:ring-white/10 transition-all duration-300 ease-out flex items-center justify-center bg-white dark:bg-zinc-900 group shrink-0 rounded-aero overflow-hidden"
+                    className="relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-white dark:bg-zinc-900 bg-dot group shrink-0 rounded-aero overflow-hidden"
                     style={(() => {
                         const [w, h] = aspectRatio.split(':').map(Number);
                         const ratio = w / h;
@@ -881,7 +881,7 @@ export function CanvasPanel({
                             isGenerating={isGenerating}
                             label={currentImage && editPrompt.trim() ? "EDITAR IMAGEN" : "Generar"}
                             isDisabled={!canGenerate && !editPrompt.trim()}
-                            className="h-12 px-8 rounded-xl font-bold shadow-lg hover:shadow-primary/25 bg-brand-gradient text-white border-0 shrink-0 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                            className="h-14 px-8 rounded-xl font-bold shadow-lg hover:shadow-primary/25 bg-primary text-primary-foreground border-0 shrink-0 transition-all hover:scale-[1.02] active:scale-[0.98]"
                         />
                     </div>
                 </div>

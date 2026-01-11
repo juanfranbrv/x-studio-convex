@@ -9,7 +9,7 @@ export function HeroProducto({ image, texts, brandColors }: LayoutProps) {
     const tagline = texts['tagline'] || 'Calidad Premium'
 
     return (
-        <div className="w-full h-full relative bg-white flex flex-col">
+        <div className="w-full h-full relative flex flex-col">
             {/* Top 75%: Image */}
             <div className="flex-1 relative flex items-center justify-center p-8">
                 {image ? (

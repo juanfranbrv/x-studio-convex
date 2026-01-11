@@ -532,8 +532,8 @@ export default function ImagePage() {
                         }}
                         isGenerating={isGenerating}
                         isDisabled={!creationFlow.canGenerate && (!creationFlow.state.generatedImage || !editPrompt.trim())}
-                        label={creationFlow.state.generatedImage && editPrompt.trim() ? "Aplicar Edición" : "Generar Imagen"}
-                        className="w-full h-14 text-lg shadow-aero bg-brand-gradient hover:bg-brand-gradient/90 text-white font-bold border-0 rounded-2xl"
+                        label={creationFlow.state.generatedImage && editPrompt.trim() ? "Aplicar Edición" : "Generar"}
+                        className="w-full h-14 text-lg shadow-aero bg-primary hover:bg-primary/90 text-primary-foreground font-bold border-0 rounded-xl"
                     />
                 </div>
             )}

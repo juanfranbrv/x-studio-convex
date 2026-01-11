@@ -105,16 +105,16 @@ export function LazyPromptInput({
                     onClick={() => onAnalyze()}
                     disabled={isAnalyzing || !rawMessage.trim()}
                     className={cn(
-                        "bg-brand-gradient p-3 rounded-full transition-all flex items-center justify-center group shrink-0 mt-1",
+                        "bg-primary text-primary-foreground p-3 rounded-full transition-all flex items-center justify-center group shrink-0 mt-1",
                         rawMessage.trim() && !isAnalyzing
                             ? "opacity-100 shadow-aero-glow hover:scale-110 active:scale-95"
                             : "opacity-50 cursor-not-allowed"
                     )}
                 >
                     {isAnalyzing ? (
-                        <Loader2 className="h-5 w-5 text-white animate-spin" />
+                        <Loader2 className="h-5 w-5 text-primary-foreground animate-spin" />
                     ) : (
-                        <ArrowUp className="h-5 w-5 text-white group-hover:scale-110 transition-transform" />
+                        <ArrowUp className="h-5 w-5 text-primary-foreground group-hover:scale-110 transition-transform" />
                     )}
                     <span className="sr-only">Generar</span>
                 </button>

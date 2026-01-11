@@ -18,7 +18,7 @@ export function PromoMovil({ image, texts, brandColors }: LayoutProps) {
             {/* Phone Frame */}
             <div className="relative z-10 w-[45%] aspect-[9/19] bg-black rounded-[2rem] p-3 shadow-2xl rotate-[-5deg] border-4 border-zinc-800">
                 {/* Screen Content */}
-                <div className="w-full h-full bg-white rounded-2xl overflow-hidden relative flex flex-col">
+                <div className="w-full h-full rounded-2xl overflow-hidden relative flex flex-col">
                     {/* Header Bar */}
                     <div
                         className="h-12 w-full flex items-center justify-center"

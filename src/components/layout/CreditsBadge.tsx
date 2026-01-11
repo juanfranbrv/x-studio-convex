@@ -92,8 +92,8 @@ export function CreditsBadge() {
         <Tooltip>
             <TooltipTrigger asChild>
                 <Badge
-                    variant={isLow ? 'destructive' : 'secondary'}
-                    className="gap-1.5 cursor-help"
+                    variant={isLow ? 'destructive' : 'default'}
+                    className={`gap-1.5 cursor-help ${!isLow ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
                 >
                     {isLow && <AlertTriangle className="h-3 w-3" />}
                     <Coins className="h-3 w-3" />
