@@ -29,7 +29,7 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
     return (
         <I18nProvider>
-            <div className="flex h-screen bg-background text-foreground overflow-hidden">
+            <div className="flex h-screen bg-mesh text-foreground overflow-hidden">
                 {/* Lateral Navigation (Desktop Only) */}
                 <Sidebar className="hidden md:flex" />
 

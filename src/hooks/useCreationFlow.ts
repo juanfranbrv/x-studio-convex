@@ -27,6 +27,7 @@ import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 
 // Priority-based prompt construction imports
+import * as P12 from '@/lib/prompts/priorities/p12-preferred-language'
 import * as P11 from '@/lib/prompts/priorities/p11-system-persona'
 import * as P10 from '@/lib/prompts/priorities/p10-logo-integrity'
 import * as P09 from '@/lib/prompts/priorities/p09-brand-dna'
@@ -167,6 +168,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // -------------------------------------------------------------------------
     // STEP 2: Image Upload or Theme Selection
     // -------------------------------------------------------------------------
+
+    const setUploadedImage = useCallback((url: string | null) => {
+        setState(prev => ({ ...prev, uploadedImage: url }))
+    }, [])
 
     const uploadImage = useCallback(async (file: File) => {
         setState(prev => ({ ...prev, isAnalyzing: true, error: null }))
@@ -674,7 +679,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
     // PROMPT CONSTRUCTION
     // -------------------------------------------------------------------------
 
-    const constructFinalPrompt = useCallback((): string => {
+    const buildGenerationPrompt = useCallback((): string => {
         const sections: string[] = []
 
         // ═══════════════════════════════════════════════════════════════
@@ -684,6 +689,17 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             P11.PRIORITY_HEADER,
             ``,
             P11.SYSTEM_PERSONA_INSTRUCTION,
+            ``
+        )
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 12 - PREFERRED LANGUAGE ENFORCEMENT
+        // ═══════════════════════════════════════════════════════════════
+        const preferredLanguage = activeBrandKit?.preferred_language || 'es'
+        sections.push(
+            P12.PRIORITY_HEADER,
+            ``,
+            P12.LANGUAGE_ENFORCEMENT_INSTRUCTION(preferredLanguage),
             ``
         )
 
@@ -1013,6 +1029,15 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         return sections.join('\n')
     }, [state, currentIntent, availableStyles, selectedLayoutMeta, activeBrandKit])
 
+    const canGenerate = useMemo(() => {
+        // Basic requirement: must have an intent
+        if (!state.selectedIntent) return false;
+        // Must have some form of image source or a detailed description
+        const hasImageSource = !!state.uploadedImage || !!state.selectedBrandKitImageId;
+        const hasEnoughVisualInfo = hasImageSource || (state.aiImageDescription && state.aiImageDescription.length > 10);
+        return !!hasEnoughVisualInfo;
+    }, [state.selectedIntent, state.uploadedImage, state.selectedBrandKitImageId, state.aiImageDescription])
+
     // -------------------------------------------------------------------------
     // GENERATION (stub for now)
     // -------------------------------------------------------------------------
@@ -1021,7 +1046,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         setState(prev => ({ ...prev, isGenerating: true, error: null }))
 
         try {
-            const prompt = constructFinalPrompt()
+            const prompt = buildGenerationPrompt()
             console.log('[CREATION FLOW] Final Prompt:\n', prompt)
 
             // TODO: Call actual generation API
@@ -1065,12 +1090,9 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                     selectedTextAssets: state.selectedTextAssets,
                 }
 
-                await saveGeneration({
-                    brand_id: activeBrandKit.id as any, // ID type casting
-                    prompt_snapshot: { prompt }, // simplified for now
-                    image_url: state.generatedImage || "https://placehold.co/600x400?text=Generated+Image",
-                    state: stateSnapshot
-                })
+                // Persistence is handled at the page/component level (e.g. ImagePage.tsx)
+                // after the actual generation is complete and we have the final URL.
+                // This prevents double-saves and document size conflicts.
             }
 
             return prompt
@@ -1082,11 +1104,15 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             }))
             return null
         }
-    }, [constructFinalPrompt])
+    }, [buildGenerationPrompt])
 
     // -------------------------------------------------------------------------
     // RESET
     // -------------------------------------------------------------------------
+
+    const setGeneratedImage = useCallback((url: string | null) => {
+        setState(prev => ({ ...prev, generatedImage: url }))
+    }, [])
 
     const reset = useCallback(() => {
         setState(INITIAL_GENERATION_STATE)
@@ -1114,20 +1140,65 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
     // RETURN
     // -------------------------------------------------------------------------
 
+    const getStateSnapshot = useCallback(() => {
+        const snapshot = {
+            selectedPlatform: state.selectedPlatform,
+            selectedFormat: state.selectedFormat,
+            selectedGroup: state.selectedGroup,
+            selectedIntent: state.selectedIntent,
+            selectedSubMode: state.selectedSubMode,
+            uploadedImage: state.uploadedImage,
+            selectedTheme: state.selectedTheme,
+            imageSourceMode: state.imageSourceMode,
+            selectedBrandKitImageId: state.selectedBrandKitImageId,
+            aiImageDescription: state.aiImageDescription,
+            selectedStyles: state.selectedStyles,
+            selectedLayout: state.selectedLayout,
+            selectedLogoId: state.selectedLogoId,
+            headline: state.headline,
+            cta: state.cta,
+            customTexts: state.customTexts,
+            selectedBrandColors: state.selectedBrandColors,
+            rawMessage: state.rawMessage,
+            additionalInstructions: state.additionalInstructions,
+            customStyle: state.customStyle,
+            selectedTextAssets: state.selectedTextAssets,
+            generatedImage: state.generatedImage,
+        }
+
+        // Safety: Strip large base64 strings (over ~50KB) to avoid Convex 1MB limit.
+        // These snapshots are for restoring state; we want URLs here, not blobs.
+        const stripIfLargeBase64 = (val: any) => {
+            if (typeof val === 'string' && val.startsWith('data:') && val.length > 50000) {
+                return null
+            }
+            return val
+        }
+
+        snapshot.uploadedImage = stripIfLargeBase64(snapshot.uploadedImage)
+        snapshot.generatedImage = stripIfLargeBase64(snapshot.generatedImage)
+
+        return snapshot
+    }, [state])
+
     return {
         // State
         state,
+        getStateSnapshot,
         // Computed
         currentIntent,
         requiresImage,
         availableStyles,
         availableLayouts,
         selectedLayoutMeta,
+        canGenerate,
         // Actions
         selectGroup,
+        setGeneratedImage,
         selectIntent,
         selectSubMode,
         uploadImage,
+        setUploadedImage,
         setImageFromUrl,
         clearImage,
         setImageSourceMode,
@@ -1156,7 +1227,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         removeTextAsset,
         updateTextAsset,
         generateTextForField,
-        constructFinalPrompt,
+        buildGenerationPrompt,
         generate,
         reset,
         loadPreset,

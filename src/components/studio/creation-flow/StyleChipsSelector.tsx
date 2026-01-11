@@ -50,7 +50,7 @@ export function StyleChipsSelector({
                                     "px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-300 flex items-center gap-2",
                                     "border-2",
                                     isSelected
-                                        ? "border-primary bg-primary/10 text-primary shadow-[0_0_15px_rgba(var(--primary),0.15)] ring-1 ring-primary/20"
+                                        ? "border-primary bg-primary/10 text-primary shadow-[0_0_15px] shadow-primary/15 ring-1 ring-primary/20"
                                         : isSuggested
                                             ? "border-indigo-500/30 bg-indigo-500/10 text-indigo-700 hover:border-indigo-500/60 hover:bg-indigo-500/20" // Highlight AI suggestions
                                             : "border-border bg-muted/20 text-muted-foreground hover:border-primary/40 hover:bg-muted/40 hover:text-foreground"

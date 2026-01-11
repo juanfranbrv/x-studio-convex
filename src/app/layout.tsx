@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { DynamicThemeProvider } from "@/components/providers/DynamicThemeProvider";
 import { BrandKitProvider } from "@/contexts/BrandKitContext";
 import { Toaster } from "@/components/ui/toaster";
+import { cn } from "@/lib/utils";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+// Plus Jakarta Sans: more geometric and friendly than Inter
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
@@ -31,19 +34,32 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body
-        className={`${inter.variable} font-sans antialiased`}
+        className={cn(
+          "min-h-screen font-sans antialiased overflow-x-hidden",
+          "bg-mesh", // Animated mesh gradient background
+          jakarta.variable
+        )}
       >
         <ConvexClientProvider>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
-            enableSystem
+            defaultTheme="light"
+            enableSystem={false}
             disableTransitionOnChange
           >
-            <BrandKitProvider>
-              {children}
-              <Toaster />
-            </BrandKitProvider>
+            <DynamicThemeProvider>
+              <BrandKitProvider>
+                {/* Main container with floating elements support */}
+                <div className="relative flex min-h-screen flex-col">
+                  {/* Decorative glow in top-left corner */}
+                  <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 bg-primary/10 blur-[100px] rounded-full" />
+                  <main className="flex-1">
+                    {children}
+                  </main>
+                </div>
+                <Toaster />
+              </BrandKitProvider>
+            </DynamicThemeProvider>
           </ThemeProvider>
         </ConvexClientProvider>
       </body>

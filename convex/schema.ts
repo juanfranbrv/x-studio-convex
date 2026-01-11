@@ -4,8 +4,8 @@ import { v } from "convex/values";
 export default defineSchema({
   // App-wide configurable settings (editable via admin panel)
   app_settings: defineTable({
-    key: v.string(),           // "beta_initial_credits", "low_credits_threshold", "credits_per_generation"
-    value: v.number(),
+    key: v.string(),           // "beta_initial_credits", "low_credits_threshold", "credits_per_generation", "theme_primary", "theme_secondary"
+    value: v.any(),            // number | string
     description: v.optional(v.string()),
     updated_at: v.string(),
     updated_by: v.optional(v.string()), // admin email
@@ -93,6 +93,7 @@ export default defineSchema({
     emails: v.optional(v.array(v.string())),
     phones: v.optional(v.array(v.string())),
     addresses: v.optional(v.array(v.string())),
+    preferred_language: v.optional(v.string()), // 'es' | 'en' | 'fr' | 'de' | 'pt' | 'it' | 'ca'
     api_trace: v.optional(v.any()), // Array of trace objects
     debug: v.optional(v.any()), // JSON
     clerk_user_id: v.optional(v.string()),
@@ -107,8 +108,10 @@ export default defineSchema({
     annotations: v.optional(v.any()), // JSON
     // Snapshot of GenerationState for "Recents" functionality
     state: v.any(), // Complete GenerationState snapshot
+    isLatest: v.optional(v.boolean()), // Marks the most recent generation for this brand
     created_at: v.string(),
-  }).index("by_brand", ["brand_id"]),
+  }).index("by_brand", ["brand_id"])
+    .index("by_brand_latest", ["brand_id", "isLatest"]),
 
   presets: defineTable({
     userId: v.optional(v.string()), // clerk_id, optional for system presets

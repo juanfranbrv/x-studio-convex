@@ -36,12 +36,11 @@ interface ScreenshotCardProps {
 }
 
 interface ImageGalleryProps {
-    images: { url: string; selected?: boolean }[];
+    images: { url: string }[];
     isUploading: boolean;
     onUpload: (files: FileList | File[]) => void;
     onRemoveImage: (index: number) => void;
     onOpenLightbox: (url: string) => void;
-    onToggleSelection?: (index: number) => void;
 }
 
 // --- Components ---
@@ -59,7 +58,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, is
     };
 
     return (
-        <Card className="h-full bg-card border-border shadow-sm flex flex-col">
+        <Card className="h-full glass-panel border-0 shadow-none flex flex-col">
             <CardHeader className="pb-2 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground justify-between">
                     <div className="flex items-center gap-2">
@@ -109,7 +108,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, is
                                     className="w-full h-full object-contain p-1"
                                 />
                                 {logo.selected !== false && (
-                                    <div className="absolute top-1 left-1 bg-primary text-primary-foreground rounded-full p-0.5 shadow-sm">
+                                    <div className="absolute top-1 left-1 bg-primary text-white rounded-full p-0.5 shadow-sm">
                                         <Check className="w-2 h-2" />
                                     </div>
                                 )}
@@ -162,7 +161,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, is
 
 export function FaviconCard({ faviconUrl }: FaviconCardProps) {
     return (
-        <Card className="h-full bg-card border-border shadow-sm">
+        <Card className="h-full glass-panel border-0 shadow-none">
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <Sparkles className="w-5 h-5 text-primary" />
@@ -189,7 +188,7 @@ export function FaviconCard({ faviconUrl }: FaviconCardProps) {
 
 export function ScreenshotCard({ screenshotUrl }: ScreenshotCardProps) {
     return (
-        <Card className="h-full overflow-hidden bg-card border-border shadow-sm flex flex-col">
+        <Card className="h-full overflow-hidden glass-panel border-0 shadow-none flex flex-col">
             <CardHeader className="pb-3 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <Monitor className="w-5 h-5 text-primary" />
@@ -221,8 +220,7 @@ export function ImageGallery({
     isUploading,
     onUpload,
     onRemoveImage,
-    onOpenLightbox,
-    onToggleSelection
+    onOpenLightbox
 }: ImageGalleryProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -239,72 +237,62 @@ export function ImageGallery({
         e.stopPropagation();
     };
 
+    // Bento Grid pattern: some cards are larger
+    const getBentoClass = (index: number) => {
+        // Every 5th and 6th item is larger (spans 2 columns)
+        if ((index % 7 === 4) || (index % 7 === 5)) {
+            return "md:col-span-2";
+        }
+        return "col-span-1";
+    };
+
     return (
-        <Card className="bg-card border-border shadow-sm h-full">
+        <Card className="glass-panel border-0 shadow-aero">
             <CardHeader className="pb-3 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <Image className="w-5 h-5 text-primary" />
-                    Galería de imágenes analizadas
+                    Galería de imágenes
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {/* Bento Grid Layout */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[200px]">
                     {images.map((item, idx) => (
                         <div
                             key={idx}
                             className={cn(
-                                "group relative aspect-square rounded-lg overflow-hidden bg-muted border border-border cursor-pointer shadow-sm hover:shadow-md transition-all duration-300 transparency-grid",
-                                item.selected === false && "grayscale-[0.5] opacity-80 hover:grayscale-0 hover:opacity-100"
+                                "group relative rounded-2xl overflow-hidden bg-muted border border-border cursor-pointer shadow-aero hover:shadow-aero-glow transition-all duration-300 transparency-grid",
+                                getBentoClass(idx)
                             )}
                             onClick={() => onOpenLightbox(item.url)}
                         >
                             <img
                                 src={item.url}
-                                alt={`Brand image ${idx + 1} `}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                alt={`Brand image ${idx + 1}`}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
 
-                            {/* Selection Toggle */}
-                            {onToggleSelection && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onToggleSelection(idx);
-                                    }}
-                                    className={cn(
-                                        "absolute top-2 left-2 flex items-center justify-center transition-all duration-200 z-30",
-                                        item.selected !== false
-                                            ? "text-primary drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] scale-110 opacity-100"
-                                            : "text-white/20 scale-90 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:scale-110"
-                                    )}
-                                >
-                                    <div className={cn(
-                                        "p-1 rounded-full",
-                                        item.selected !== false ? "bg-white shadow-sm" : "bg-black/20"
-                                    )}>
-                                        <Check className={cn("w-3.5 h-3.5", item.selected !== false ? "text-primary" : "text-white")} />
-                                    </div>
-                                </button>
-                            )}
 
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                <Maximize2 className="w-7 h-7 text-white" />
+                                <Maximize2 className="w-8 h-8 text-white drop-shadow-lg" />
                             </div>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onRemoveImage(idx);
                                 }}
-                                className="absolute top-2 right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:scale-110 shadow-lg z-10"
+                                className="absolute top-3 right-3 w-7 h-7 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:scale-110 shadow-aero-lg z-10"
                             >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-4 h-4" />
                             </button>
                         </div>
                     ))}
-                    {images.length < 20 && (
+
+                    {/* Upload Card */}
+                    {images.length < 50 && (
                         <div
                             className={cn(
-                                "aspect-square border-2 border-dashed border-border hover:border-sidebar-primary hover:bg-sidebar-primary/5 rounded-lg transition-all cursor-pointer flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-sidebar-primary",
+                                "border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 rounded-2xl transition-all cursor-pointer flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary",
                                 isUploading && "opacity-50 pointer-events-none"
                             )}
                             onDrop={handleDrop}
@@ -322,20 +310,23 @@ export function ImageGallery({
                                 }}
                             />
                             {isUploading ? (
-                                <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
+                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
                             ) : (
                                 <>
-                                    <Upload className="w-7 h-7" />
-                                    <span className="text-xs font-medium">Subir</span>
+                                    <Upload className="w-8 h-8" />
+                                    <span className="text-xs font-medium">Subir imágenes</span>
                                 </>
                             )}
                         </div>
                     )}
                 </div>
                 {images.length === 0 && !isUploading && (
-                    <p className="text-center text-sm text-[var(--text-secondary)] py-8 italic opacity-60">
-                        No se encontraron imágenes adicionales en el sitio.
-                    </p>
+                    <div className="text-center py-12">
+                        <Image className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-20" />
+                        <p className="text-sm text-muted-foreground italic opacity-60">
+                            No se encontraron imágenes adicionales en el sitio.
+                        </p>
+                    </div>
                 )}
             </CardContent>
         </Card>

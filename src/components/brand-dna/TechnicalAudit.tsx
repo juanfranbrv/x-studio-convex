@@ -113,7 +113,7 @@ export function TechnicalAudit({ trace = [], isVisible }: TechnicalAuditProps) {
     };
 
     return (
-        <Card className="mt-8 bg-card border-border shadow-lg">
+        <Card className="mt-8 glass-panel border-0 shadow-lg">
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <div>

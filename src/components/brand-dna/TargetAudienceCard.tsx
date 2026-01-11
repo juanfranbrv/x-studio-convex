@@ -11,7 +11,7 @@ export function TargetAudienceCard({ audience = [] }: TargetAudienceCardProps) {
     if (audience.length === 0) return null;
 
     return (
-        <Card className="bg-card border-border overflow-hidden">
+        <Card className="glass-panel border-0 overflow-hidden">
             <CardHeader className="pb-2 border-b border-border/50 bg-muted/5">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground font-semibold">
                     <Target className="w-5 h-5 text-primary" />

@@ -15,6 +15,7 @@ import { buildBrandAnalysisPrompt } from '@/lib/prompts/actions/brand-analyst';
 import { BrandDNASchema } from '@/lib/prompts/schemas/brand-dna-schema';
 import { WEIGHTED_DOM_SCRIPT } from '@/lib/prompts/automation/weighted-dom';
 import { SYSTEM_FONTS } from '@/lib/prompts/data/system-fonts';
+import { detectLanguage } from '@/lib/language-detection';
 
 function logDebug(message: string, data?: any) {
     const timestamp = new Date().toISOString();
@@ -2794,7 +2795,14 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         console.log('Images Count:', result.images.length);
         console.groupEnd();
 
-        // 5. Guardar en Supabase - Usamos UPSERT para actualizar registros existentes
+        // Detect language from content
+        console.log('🌐 Detecting content language...');
+        const textForDetection = `${result.brand_name} ${result.tagline} ${result.business_overview} ${result.brand_values.join(' ')} ${result.tone_of_voice.join(' ')}`;
+        const detectedLanguage = detectLanguage(textForDetection);
+        result.preferred_language = detectedLanguage;
+        console.log(`✅ Language detected: ${detectedLanguage}`);
+
+        // 5. Guardar en Convex - Usamos UPSERT para actualizar registros existentes
         console.log('💾 [DEBUG] Guardando en Convex...');
         try {
             const upsertPayload = {
@@ -2818,6 +2826,7 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
                 emails: result.emails,
                 phones: result.phones,
                 addresses: result.addresses,
+                preferred_language: result.preferred_language,
                 api_trace: result.api_trace,
                 debug: result.debug,
                 clerk_user_id: clerkUserId || undefined, // Assuming clerkUserId is defined elsewhere, or user.id is passed

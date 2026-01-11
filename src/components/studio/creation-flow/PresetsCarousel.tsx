@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { GenerationState } from '@/lib/creation-flow-types'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Clock, RotateCcw, X } from 'lucide-react'
+import { RotateCcw, X } from 'lucide-react'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -17,7 +17,6 @@ import {
     AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
-    AlertDialogMedia,
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
@@ -37,61 +36,14 @@ export function PresetsCarousel({ onSelectPreset, onReset, userId, className }: 
     })
     const deletePreset = useMutation(api.presets.remove)
 
-    const recents = useQuery(api.generations.getRecents,
-        activeBrandKit?.id
-            ? { brand_id: activeBrandKit.id as any, limit: 2 }
-            : "skip"
-    )
-
     if (presets === undefined) {
         return <PresetsSkeleton />
     }
 
     const userPresets = (presets.user || []).slice(0, 4)
-    // Only show user presets, ignore system presets for now to avoid clutter for new users
-    // const systemPresets = presets.system || []
-
-    // Combine for the main list - actually just user presets now
-    const mainListPresets = [...userPresets]
 
     return (
         <div className={cn("space-y-4", className)}>
-
-            {/* RECENTS SECTION */}
-            {recents && recents.length > 0 && (
-                <div className="space-y-2">
-                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                        <Clock className="w-3 h-3" />
-                        Recientes
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
-                        {recents.map((recent: any) => (
-                            <button
-                                key={recent._id}
-                                onClick={() => onSelectPreset(recent.state)}
-                                className="w-full text-left focus:outline-none group"
-                            >
-                                <Card className="h-full p-2 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 border-border/40 bg-card/30">
-                                    <div className="flex items-start gap-2">
-                                        <div className="flex-none p-1 rounded-md bg-muted text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors duration-200 mt-0.5">
-                                            <Clock className="w-3.5 h-3.5" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-[11px] leading-tight truncate group-hover:text-primary transition-colors">
-                                                {recent.state.intent ? recent.state.intent.charAt(0).toUpperCase() + recent.state.intent.slice(1) : 'Generación'}
-                                            </p>
-                                            <p className="text-[10px] text-muted-foreground/70 mt-0.5 line-clamp-1 leading-tight">
-                                                {new Date(recent.created_at).toLocaleDateString()}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </Card>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
             {/* PRESETS SECTION - Always show header if onReset is available */}
             {(userPresets.length > 0 || onReset) && (
                 <div className="space-y-2">

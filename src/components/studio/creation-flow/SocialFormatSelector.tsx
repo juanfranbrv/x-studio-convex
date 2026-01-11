@@ -97,7 +97,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
                                     <div className="flex items-center justify-between w-full mb-2">
                                         <div className={cn(
                                             "p-1.5 rounded-lg transition-colors",
-                                            isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                                            isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground"
                                         )}>
                                             <FormatIcon className="w-3.5 h-3.5" />
                                         </div>

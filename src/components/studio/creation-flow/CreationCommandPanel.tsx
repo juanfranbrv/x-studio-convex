@@ -7,13 +7,16 @@ import { StyleChipsSelector } from './StyleChipsSelector'
 import { LayoutSelector } from './LayoutSelector'
 import { BrandingConfigurator } from './BrandingConfigurator'
 import { SocialFormatSelector } from './SocialFormatSelector'
-import { GenerateButton } from './GenerateButton'
+
 import { PresetsCarousel } from './PresetsCarousel'
 import { LazyPromptInput } from './LazyPromptInput'
 import { UnifiedContentSection } from './UnifiedContentSection'
 import { IntentCategory } from '@/lib/creation-flow-types'
 import { SavePresetDialog } from './SavePresetDialog'
-import { BookmarkPlus, RotateCcw, Sparkles, Download, Share2, Pencil } from 'lucide-react'
+import { GenerateButton } from './GenerateButton'
+import { BookmarkPlus, RotateCcw, Sparkles, Download, Share2, Pencil, ChevronDown, ChevronRight, Check, X, ArrowUp } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { DigitalStaticLoader } from '@/components/studio/DigitalStaticLoader'
 import { useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import { Button } from '@/components/ui/button'
@@ -41,6 +44,9 @@ interface CreationCommandPanelProps {
     onSelectGeneration?: (gen: Generation) => void
     // Edit image handler
     onEditImage?: (editPrompt: string) => Promise<void>
+    // Unified button - controlled edit prompt from CanvasPanel
+    editPrompt?: string
+    onEditPromptChange?: (prompt: string) => void
 }
 
 const StepSection = ({
@@ -59,15 +65,15 @@ const StepSection = ({
     if (!show) return null;
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="space-y-1 mb-2">
+            <div className="space-y-1 mb-3">
                 <div className="flex items-center gap-2">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold border border-primary/20 shadow-sm">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-xl bg-brand-gradient text-white text-[10px] font-bold shadow-aero">
                         {number}
                     </span>
-                    <h3 className="text-[11px] font-bold text-foreground uppercase tracking-wider">{title}</h3>
+                    <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">{title}</h3>
                 </div>
                 {description && (
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    <p className="text-[10px] text-muted-foreground leading-relaxed ml-8">
                         {description}
                     </p>
                 )}
@@ -86,6 +92,8 @@ export function CreationCommandPanel({
     generations = [],
     onSelectGeneration,
     onEditImage,
+    editPrompt = '',
+    onEditPromptChange,
 }: CreationCommandPanelProps) {
     const {
         state,
@@ -108,7 +116,7 @@ export function CreationCommandPanel({
         toggleBrandColor,
         selectPlatform,
         selectFormat,
-        constructFinalPrompt,
+        buildGenerationPrompt,
         reset,
         loadPreset,
         selectedLayoutMeta,
@@ -123,6 +131,25 @@ export function CreationCommandPanel({
     const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
     const [isMobile, setIsMobile] = useState(false)
     const [editPromptText, setEditPromptText] = useState('')
+
+    // Animation states
+    const [isRevealing, setIsRevealing] = useState(false)
+    const [wasJustGenerated, setWasJustGenerated] = useState(false)
+
+    useEffect(() => {
+        if (isGenerating) {
+            setWasJustGenerated(true)
+            setIsRevealing(false)
+        } else if (wasJustGenerated) {
+            // Generation just finished, start reveal
+            setIsRevealing(true)
+            const timer = setTimeout(() => {
+                setIsRevealing(false)
+                setWasJustGenerated(false)
+            }, 3500) // Match the total duration of filters
+            return () => clearTimeout(timer)
+        }
+    }, [isGenerating])
 
     // Detect mobile viewport
     useEffect(() => {
@@ -190,14 +217,7 @@ export function CreationCommandPanel({
         }
     }
 
-    const handleGenerate = async () => {
-        const prompt = constructFinalPrompt()
-        console.log('[CREATION FLOW] Final Prompt:\n', prompt)
 
-        if (onGenerate) {
-            await onGenerate(prompt)
-        }
-    }
 
     const handleSmartAnalyze = async () => {
         if (!state.rawMessage.trim()) return // Only require message now
@@ -297,10 +317,10 @@ export function CreationCommandPanel({
     )
 
     return (
-        <div className="w-full md:w-[450px] h-auto md:h-full bg-card border-r border-border flex flex-col shadow-md relative z-10 order-1 md:order-1">
+        <div className="w-full md:w-80 h-auto md:h-full bg-white/30 dark:bg-zinc-900/30 backdrop-blur-xl border-l border-white/20 flex flex-col shrink-0 relative z-10 order-1 md:order-1">
             {/* Scrollable Content Container */}
-            <div className="flex-1 md:overflow-y-auto min-h-0 scrollbar-hide pb-24 md:pb-0">
-                <div className="pt-4 pb-12">
+            <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide pb-24 md:pb-0">
+                <div className="pt-4 pb-4">
 
                     {/* PHASE 0: PRESETS (Quick Start) */}
                     <div className="px-6 pb-4">
@@ -510,6 +530,8 @@ export function CreationCommandPanel({
                         </>
                     )}
 
+
+
                     {/* MOBILE-ONLY: Image Preview Section */}
                     {isMobile && currentImage && (
                         <>
@@ -571,16 +593,57 @@ export function CreationCommandPanel({
                                 </div>
                                 {/* Image Preview */}
                                 <div
-                                    className="w-full rounded-xl overflow-hidden shadow-lg ring-1 ring-black/10 bg-white"
+                                    className="w-full rounded-xl overflow-hidden shadow-lg ring-1 ring-black/10 bg-white relative"
                                     style={{
                                         aspectRatio: aspectRatio.replace(':', '/'),
                                     }}
                                 >
-                                    <img
-                                        src={currentImage}
-                                        alt="Generated design"
-                                        className="w-full h-full object-cover"
-                                    />
+                                    <AnimatePresence mode="wait">
+                                        {(isGenerating || isRevealing) && (
+                                            <motion.div
+                                                key="loader"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 0.8 }}
+                                                className="absolute inset-0 z-50 overflow-hidden rounded-lg bg-background/50 backdrop-blur-sm flex items-center justify-center"
+                                            >
+                                                <DigitalStaticLoader />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    {currentImage ? (
+                                        <motion.div
+                                            key={currentImage}
+                                            initial={wasJustGenerated ? { opacity: 0, filter: 'blur(80px) saturate(0.2)' } : { opacity: 1, filter: 'blur(0px) saturate(1)' }}
+                                            animate={{
+                                                opacity: 1,
+                                                filter: 'blur(0px) saturate(1)',
+                                            }}
+                                            transition={wasJustGenerated ? {
+                                                duration: 3.5,
+                                                ease: [0.22, 1, 0.36, 1],
+                                                filter: { duration: 4, ease: "linear" },
+                                                opacity: { duration: 1.5 }
+                                            } : {
+                                                duration: 0.15
+                                            }}
+                                            className="w-full h-full"
+                                        >
+                                            <img
+                                                src={currentImage}
+                                                alt="Generated design"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </motion.div>
+                                    ) : (
+                                        <div className="flex items-center justify-center w-full h-full bg-muted/20">
+                                            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                                                <span className="text-2xl opacity-50">🎨</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* History Row - Subtle style, no label */}
@@ -611,53 +674,23 @@ export function CreationCommandPanel({
 
                                 {/* Prompt Input for edits */}
                                 <div className="mt-3 pt-3 border-t border-border/30 pb-20">
-                                    <div className="flex gap-2 items-end">
+                                    <div className="relative">
                                         <textarea
-                                            placeholder="Indica qué cambios quieres realizar: 'hazla más oscura', 'cambia el fondo', 'añade un objeto'... El prompt aplicará ediciones locales sobre la imagen actual."
-                                            className="flex-1 min-h-[44px] max-h-[100px] text-sm p-2.5 rounded-xl border border-border/50 bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary/30"
-                                            rows={1}
-                                            value={editPromptText}
-                                            onChange={(e) => setEditPromptText(e.target.value)}
+                                            placeholder="Indica qué cambios quieres realizar: 'hazla más oscura', 'cambia el fondo', 'añade un objeto'..."
+                                            className="w-full min-h-[56px] max-h-[120px] text-sm p-4 rounded-2xl border border-white/20 bg-background/80 backdrop-blur-xl shadow-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/70"
+                                            rows={2}
+                                            value={editPrompt}
+                                            onChange={(e) => onEditPromptChange?.(e.target.value)}
                                         />
-                                        <Button
-                                            size="icon"
-                                            className="h-11 w-11 rounded-xl btn-gradient shrink-0"
-                                            disabled={!editPromptText.trim() || isGenerating || !currentImage}
-                                            onClick={async () => {
-                                                if (onEditImage && editPromptText.trim()) {
-                                                    await onEditImage(editPromptText.trim())
-                                                    setEditPromptText('')
-                                                }
-                                            }}
-                                        >
-                                            <Sparkles className="w-4 h-4" />
-                                        </Button>
+                                        <div className="absolute right-3 bottom-3 pointer-events-none">
+                                            <ArrowUp className="w-4 h-4 text-primary/70" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </>
                     )}
                 </div>
-            </div>
-
-            {/* Footer: Generate Button - Fixed at bottom on Mobile, relative on Desktop */}
-            <div className="fixed bottom-0 left-0 right-0 p-3 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 flex gap-2 items-center md:relative md:bg-muted/20 md:border-t-2">
-                <Button
-                    variant="outline"
-                    className="h-[50px] w-[50px] rounded-xl p-0 flex-none border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-muted-foreground hover:text-primary transition-all md:bg-background"
-                    onClick={() => setIsSaveDialogOpen(true)}
-                    disabled={!canGenerate}
-                    title="Guardar como Preset"
-                >
-                    <BookmarkPlus className="w-5 h-5" />
-                </Button>
-
-                <GenerateButton
-                    isGenerating={isGenerating || state.isGenerating}
-                    isDisabled={!canGenerate}
-                    onClick={handleGenerate}
-                    className="h-[50px] shadow-lg md:shadow-none"
-                />
             </div>
 
             <SavePresetDialog

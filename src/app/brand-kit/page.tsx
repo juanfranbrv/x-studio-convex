@@ -311,7 +311,7 @@ function BrandKitPageContent() {
                         exit={{ opacity: 0, y: -20 }}
                         className="max-w-3xl mx-auto text-center py-12"
                     >
-                        <div className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm rounded-2xl p-10 mb-8 border border-border/50 relative overflow-hidden shadow-2xl">
+                        <div className="glass-panel p-10 mb-8 rounded-3xl relative overflow-hidden">
                             {/* Decorative elements */}
                             <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl -z-10" />
                             <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl -z-10" />

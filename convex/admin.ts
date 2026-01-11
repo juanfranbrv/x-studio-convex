@@ -37,7 +37,7 @@ export const updateSetting = mutation({
     args: {
         admin_email: v.string(),
         key: v.string(),
-        value: v.number(),
+        value: v.any(),
         description: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
@@ -140,7 +140,7 @@ export const activateUser = mutation({
                 .query("app_settings")
                 .withIndex("by_key", (q) => q.eq("key", "beta_initial_credits"))
                 .first();
-            creditsToGrant = setting?.value ?? 100;
+            creditsToGrant = (setting?.value as number) ?? 100;
         }
 
         const newBalance = user.credits + creditsToGrant;

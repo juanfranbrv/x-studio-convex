@@ -28,6 +28,7 @@ export interface BrandDNA {
     emails?: string[];
     phones?: string[];
     addresses?: string[];
+    preferred_language?: string; // 'es' | 'en' | 'fr' | 'de' | 'pt' | 'it' | 'ca'
     api_trace?: { action: string; status: 'pending' | 'success' | 'fail' | 'highlight'; timestamp: number; details?: string; duration?: number; }[];
     text_assets?: TextAssets;
     created_at?: string;

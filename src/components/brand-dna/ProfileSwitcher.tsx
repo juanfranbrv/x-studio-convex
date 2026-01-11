@@ -87,7 +87,7 @@ export function ProfileSwitcher({
             {isOpen && (
                 <div className={cn(
                     "absolute top-full left-0 mt-2 w-72 z-50",
-                    "bg-card border border-border rounded-xl shadow-xl",
+                    "glass-panel border-0 shadow-xl",
                     "animate-in fade-in slide-in-from-top-2 duration-200"
                 )}>
                     {/* Profile List */}

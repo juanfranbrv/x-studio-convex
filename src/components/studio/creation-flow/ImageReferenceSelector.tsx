@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { Upload, Image as ImageIcon, Loader2, X, Sparkles, Palette } from 'lucide-react'
+import { Upload, Image as ImageIcon, Loader2, X, Sparkles, Palette, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
@@ -205,7 +205,7 @@ export function ImageReferenceSelector({
                                 className={cn(
                                     "relative rounded-lg overflow-hidden border-2 transition-all aspect-square",
                                     selectedBrandKitImageId === img.id
-                                        ? "border-primary ring-2 ring-primary/20"
+                                        ? "border-primary border-[3px] ring-2 ring-primary/20 scale-[0.98]"
                                         : "border-border hover:border-primary/50"
                                 )}
                             >
@@ -215,9 +215,9 @@ export function ImageReferenceSelector({
                                     className="w-full h-full object-cover"
                                 />
                                 {selectedBrandKitImageId === img.id && (
-                                    <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                                        <div className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                                            <X className="w-3 h-3 rotate-45" />
+                                    <div className="absolute inset-0 bg-primary/40 flex items-center justify-center backdrop-blur-[1px]">
+                                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg transform scale-110">
+                                            <Check className="w-5 h-5 stroke-[3]" />
                                         </div>
                                     </div>
                                 )}

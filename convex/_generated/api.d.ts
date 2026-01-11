@@ -14,6 +14,7 @@ import type * as brands from "../brands.js";
 import type * as generations from "../generations.js";
 import type * as initPresets from "../initPresets.js";
 import type * as presets from "../presets.js";
+import type * as settings from "../settings.js";
 import type * as users from "../users.js";
 
 import type {
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   generations: typeof generations;
   initPresets: typeof initPresets;
   presets: typeof presets;
+  settings: typeof settings;
   users: typeof users;
 }>;
 

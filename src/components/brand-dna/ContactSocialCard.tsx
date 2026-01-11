@@ -283,7 +283,7 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
     };
 
     return (
-        <Card className="bg-card border-border relative overflow-visible shadow-lg">
+        <Card className="glass-panel border-0 shadow-none relative overflow-visible">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-full blur-3xl -z-10" />
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground font-bold">

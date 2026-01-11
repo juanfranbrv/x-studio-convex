@@ -128,6 +128,7 @@ function CustomColorPicker({ onAdd }: { onAdd: (color: string) => void }) {
                                 value={value}
                                 onChange={(e) => setValue(e.target.value.toUpperCase())}
                                 placeholder="#000000"
+
                                 className="h-9 text-xs font-mono bg-muted/30 border-border/40 focus:border-primary/50"
                                 onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                             />
@@ -348,7 +349,8 @@ export function BrandingConfigurator({
                         </button>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* Text Assets Section */}
             <div className="space-y-3">
@@ -400,91 +402,93 @@ export function BrandingConfigurator({
             </div>
 
             {/* Brand Colors */}
-            {showColors && (
-                <div className="space-y-3">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                        <Palette className="w-3 h-3 text-primary" />
-                        Paleta Cromática
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                        {colors.map((colorObj, idx) => {
-                            const color = colorObj.color
-                            const selection = selectedBrandColors.find(s => s.color === color)
-                            const isSelected = !!selection
-                            const role = selection?.role || (colorObj as any).role || 'Neutral'
+            {
+                showColors && (
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                            <Palette className="w-3 h-3 text-primary" />
+                            Paleta Cromática
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {colors.map((colorObj, idx) => {
+                                const color = colorObj.color
+                                const selection = selectedBrandColors.find(s => s.color === color)
+                                const isSelected = !!selection
+                                const role = selection?.role || (colorObj as any).role || 'Neutral'
 
-                            // Helper for contrast
-                            const getContrastColor = (hex: string) => {
-                                const r = parseInt(hex.slice(1, 3), 16)
-                                const g = parseInt(hex.slice(3, 5), 16)
-                                const b = parseInt(hex.slice(5, 7), 16)
-                                const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000
-                                return yiq >= 128 ? 'text-black' : 'text-white'
-                            }
+                                // Helper for contrast
+                                const getContrastColor = (hex: string) => {
+                                    const r = parseInt(hex.slice(1, 3), 16)
+                                    const g = parseInt(hex.slice(3, 5), 16)
+                                    const b = parseInt(hex.slice(5, 7), 16)
+                                    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000
+                                    return yiq >= 128 ? 'text-black' : 'text-white'
+                                }
 
-                            return (
-                                <div
-                                    key={idx}
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={() => onToggleBrandColor(color)}
-                                    className={cn(
-                                        "relative aspect-video rounded-lg border-2 transition-all shadow-sm flex items-center justify-center group/swatch cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
-                                        isSelected
-                                            ? "border-primary ring-2 ring-primary/30 scale-105"
-                                            : "border-border hover:border-primary/50"
-                                    )}
-                                    style={{
-                                        backgroundColor: color,
-                                        boxShadow: isSelected ? `0 0 12px ${color}40` : 'inset 0 1px 1px rgba(255,255,255,0.1)'
-                                    }}
-                                    title={`${color}${role ? ` - Rol: ${role}` : ''}`}
-                                >
-                                    {/* Light color visibility assurance */}
-                                    <div className="absolute inset-0 rounded-md border border-black/5 pointer-events-none" />
-
-                                    {/* Role Label */}
-                                    <span
+                                return (
+                                    <div
+                                        key={idx}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => onToggleBrandColor(color)}
                                         className={cn(
-                                            "text-[10px] font-bold uppercase tracking-wide select-none transition-colors duration-200 z-10",
-                                            getContrastColor(color)
+                                            "relative aspect-video rounded-lg border-2 transition-all shadow-sm flex items-center justify-center group/swatch cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                                            isSelected
+                                                ? "border-primary ring-2 ring-primary/30 scale-105"
+                                                : "border-border hover:border-primary/50"
                                         )}
+                                        style={{
+                                            backgroundColor: color,
+                                            boxShadow: isSelected ? `0 0 12px ${color}40` : 'inset 0 1px 1px rgba(255,255,255,0.1)'
+                                        }}
+                                        title={`${color}${role ? ` - Rol: ${role}` : ''}`}
                                     >
-                                        {role}
-                                    </span>
+                                        {/* Light color visibility assurance */}
+                                        <div className="absolute inset-0 rounded-md border border-black/5 pointer-events-none" />
 
-                                    {isSelected && (
-                                        <div className="absolute top-1 left-1">
-                                            <div className={cn("rounded-full p-0.5 bg-white/20 backdrop-blur-sm", getContrastColor(color))}>
-                                                <Check className="w-3 h-3 stroke-[3]" />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Quick Remove Button */}
-                                    {isSelected && onRemoveBrandColor && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                onRemoveBrandColor(color)
-                                            }}
-                                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center opacity-0 group-hover/swatch:opacity-100 transition-all hover:scale-110 z-20"
-                                            title="Eliminar color"
+                                        {/* Role Label */}
+                                        <span
+                                            className={cn(
+                                                "text-[10px] font-bold uppercase tracking-wide select-none transition-colors duration-200 z-10",
+                                                getContrastColor(color)
+                                            )}
                                         >
-                                            <X className="w-3 h-3" />
-                                        </button>
-                                    )}
-                                </div>
-                            )
-                        })}
+                                            {role}
+                                        </span>
 
-                        {/* Custom Color Adder */}
-                        <CustomColorPicker onAdd={onAddCustomColor} />
+                                        {isSelected && (
+                                            <div className="absolute top-1 left-1">
+                                                <div className={cn("rounded-full p-0.5 bg-white/20 backdrop-blur-sm", getContrastColor(color))}>
+                                                    <Check className="w-3 h-3 stroke-[3]" />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Quick Remove Button */}
+                                        {isSelected && onRemoveBrandColor && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    onRemoveBrandColor(color)
+                                                }}
+                                                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center opacity-0 group-hover/swatch:opacity-100 transition-all hover:scale-110 z-20"
+                                                title="Eliminar color"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        )}
+                                    </div>
+                                )
+                            })}
+
+                            {/* Custom Color Adder */}
+                            <CustomColorPicker onAdd={onAddCustomColor} />
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
 
-        </div>
+        </div >
     )
 }

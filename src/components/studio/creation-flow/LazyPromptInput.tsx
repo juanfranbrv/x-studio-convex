@@ -1,9 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { Sparkles, Wand2, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import React, { useState, useEffect, useRef } from 'react'
+import { Sparkles, Wand2, Loader2, ArrowUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { IntentCategory } from '@/lib/creation-flow-types'
 
@@ -24,34 +22,47 @@ export function LazyPromptInput({
 }: LazyPromptInputProps) {
     const [isFocused, setIsFocused] = useState(false)
     const [placeholder, setPlaceholder] = useState("Describe lo que quieres crear...")
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
 
     useEffect(() => {
         if (!intent) {
-            setPlaceholder("Describe lo que quieres crear... La IA detectará el tipo de publicación automáticamente ✨")
+            setPlaceholder("Describe tu visión creativa... ✨")
             return
         }
 
         // Dynamic placeholders based on intent
         switch (intent) {
             case 'oferta':
-                setPlaceholder("Ej: Oferta de verano 50% en zapatillas running. Título: REBAJAS. CTA: Compra ya.")
+                setPlaceholder("Ej: Oferta de verano 50% en zapatillas running...")
                 break
             case 'evento':
-                setPlaceholder("Ej: Webinar sobre IA este Jueves a las 19h con Juan Pérez.")
+                setPlaceholder("Ej: Webinar sobre IA este Jueves a las 19h...")
                 break
             case 'cita':
-                setPlaceholder("Ej: La creatividad es la inteligencia divirtiéndose. - Albert Einstein")
+                setPlaceholder("Ej: La creatividad es la inteligencia divirtiéndose...")
                 break
             case 'comunicado':
-                setPlaceholder("Ej: Aviso importante: Nuestras oficinas cerrarán por vacaciones en Agosto.")
+                setPlaceholder("Ej: Aviso importante: Nuestras oficinas cerrarán...")
                 break
             case 'reto':
-                setPlaceholder("Ej: ¿Puedes encontrar las 3 diferencias? Comenta si lo logras.")
+                setPlaceholder("Ej: ¿Puedes encontrar las 3 diferencias?...")
                 break
             default:
                 setPlaceholder("Describe tu idea y la IA rellenará los campos...")
         }
     }, [intent])
+
+    // Auto-resize textarea
+    useEffect(() => {
+        const textarea = textareaRef.current
+        if (textarea) {
+            // Reset height to auto to get the correct scrollHeight
+            textarea.style.height = 'auto'
+            // Set height to scrollHeight (content height)
+            const newHeight = Math.max(72, Math.min(textarea.scrollHeight, 192)) // min 4.5rem (72px), max 12rem (192px)
+            textarea.style.height = `${newHeight}px`
+        }
+    }, [rawMessage])
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -61,57 +72,62 @@ export function LazyPromptInput({
     }
 
     return (
-        <div className={cn(
-            "relative rounded-xl border-2 transition-all duration-300 bg-background mb-8",
-            isFocused ? "border-primary shadow-lg ring-2 ring-primary/20" : "border-muted shadow-sm hover:border-primary/50"
-        )}>
-            <div className="absolute top-3 left-3">
-                <div className={cn(
-                    "p-1.5 rounded-lg transition-colors",
-                    isAnalyzing ? "bg-primary/20 animate-pulse" : "bg-primary/10"
-                )}>
-                    {isAnalyzing ? (
-                        <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                    ) : (
-                        <Sparkles className="w-4 h-4 text-primary" />
-                    )}
-                </div>
-            </div>
+        <div className="w-full max-w-2xl mx-auto mb-6">
+            {/* Floating Capsule Container */}
+            <div className={cn(
+                "glass-panel rounded-3xl p-3 pl-5 flex items-start gap-3 transition-all duration-300",
+                isFocused
+                    ? "shadow-aero-glow ring-2 ring-primary/30"
+                    : "shadow-aero hover:shadow-aero-lg"
+            )}>
 
-            <Textarea
-                value={rawMessage}
-                onChange={(e) => onMessageChange(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                onKeyDown={handleKeyDown}
-                placeholder={placeholder}
-                className="w-full min-h-[100px] pl-12 pr-12 py-3 bg-transparent border-none resize-none focus-visible:ring-0 text-sm leading-relaxed placeholder:text-muted-foreground/70"
-                disabled={isAnalyzing}
-            />
 
-            <div className="absolute bottom-3 right-3">
-                <Button
-                    size="icon"
-                    className={cn(
-                        "h-8 w-8 rounded-lg transition-all",
-                        rawMessage.trim() ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-                    )}
-                    onClick={() => onAnalyze()}
+                {/* Text Input - Textarea with auto-grow */}
+                <textarea
+                    ref={textareaRef}
+                    value={rawMessage}
+                    onChange={(e) => onMessageChange(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={placeholder}
                     disabled={isAnalyzing}
+                    rows={4}
+                    className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/60 text-sm font-medium min-w-0 resize-none scrollbar-hide overflow-hidden"
+                    style={{
+                        minHeight: '4.5rem',
+                        maxHeight: '12rem'
+                    }}
+                />
+
+                {/* Generate Button */}
+                <button
+                    onClick={() => onAnalyze()}
+                    disabled={isAnalyzing || !rawMessage.trim()}
+                    className={cn(
+                        "bg-brand-gradient p-3 rounded-full transition-all flex items-center justify-center group shrink-0 mt-1",
+                        rawMessage.trim() && !isAnalyzing
+                            ? "opacity-100 shadow-aero-glow hover:scale-110 active:scale-95"
+                            : "opacity-50 cursor-not-allowed"
+                    )}
                 >
-                    <Wand2 className="w-4 h-4" />
-                </Button>
+                    {isAnalyzing ? (
+                        <Loader2 className="h-5 w-5 text-white animate-spin" />
+                    ) : (
+                        <ArrowUp className="h-5 w-5 text-white group-hover:scale-110 transition-transform" />
+                    )}
+                    <span className="sr-only">Generar</span>
+                </button>
             </div>
 
-            {/* Helper Text */}
-            {isFocused && (
-                <div className="absolute -bottom-6 left-0 text-[10px] text-primary/80 font-medium animate-in fade-in slide-in-from-top-1">
-                    {intent
-                        ? "Presiona Enter para autocompletar el formulario ✨"
-                        : "Presiona Enter para que la IA detecte la intención y complete los campos ✨"
-                    }
-                </div>
-            )}
+            {/* Micro-text hint */}
+            <p className={cn(
+                "text-[10px] text-center mt-3 text-muted-foreground/60 font-medium tracking-wider uppercase transition-opacity duration-300",
+                isFocused ? "opacity-100" : "opacity-0"
+            )}>
+                Presiona <kbd className="bg-white/40 dark:bg-white/10 px-1.5 py-0.5 rounded text-[9px]">Enter</kbd> para generar con IA
+            </p>
         </div>
     )
 }
+

@@ -170,7 +170,7 @@ export function SmartImageDropzone({
                 />
 
                 <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                    "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
                     isDragging ? "bg-primary text-primary-foreground" : "bg-muted"
                 )}>
                     {isDragging ? (

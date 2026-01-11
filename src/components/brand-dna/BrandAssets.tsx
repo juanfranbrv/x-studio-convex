@@ -241,7 +241,7 @@ export function BrandAssets({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {/* Tagline */}
-            <Card className="md:col-span-2 bg-card border-border">
+            <Card className="md:col-span-2 glass-panel border-0 shadow-none">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Quote className="w-5 h-5 text-primary" />
@@ -287,7 +287,7 @@ export function BrandAssets({
             </Card>
 
             {/* Values */}
-            <Card className="bg-card border-border">
+            <Card className="glass-panel border-0 shadow-none">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Sparkles className="w-5 h-5 text-primary" />
@@ -306,7 +306,7 @@ export function BrandAssets({
             </Card>
 
             {/* Visual Styles (unified for image generation) */}
-            <Card className="bg-card border-border">
+            <Card className="glass-panel border-0 shadow-none">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Type className="w-5 h-5 text-primary" />
@@ -326,7 +326,7 @@ export function BrandAssets({
             </Card>
 
             {/* Tone */}
-            <Card className="bg-card border-border">
+            <Card className="glass-panel border-0 shadow-none">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <MessageCircle className="w-5 h-5 text-primary" />

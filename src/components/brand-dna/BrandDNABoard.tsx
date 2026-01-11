@@ -13,6 +13,7 @@ import { BrandContextCard } from './BrandContextCard';
 import { TechnicalAudit } from './TechnicalAudit';
 import { ContactSocialCard } from './ContactSocialCard';
 import { TargetAudienceCard } from './TargetAudienceCard';
+import { LanguageCard } from './LanguageCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBrandKit } from '@/contexts/BrandKitContext';
@@ -140,14 +141,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         }));
     };
 
-    const handleToggleImageSelection = (index: number) => {
-        updateData(prev => ({
-            ...prev,
-            images: prev.images?.map((img, i) =>
-                i === index ? { ...img, selected: !img.selected } : img
-            ) || []
-        }));
-    };
+
 
     const handleUploadFiles = async (files: FileList | File[]) => {
         if (!user) return;
@@ -164,7 +158,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                 if (result.success && result.url) {
                     updateData(prev => ({
                         ...prev,
-                        images: [...(prev.images || []), { url: result.url!, selected: true }]
+                        images: [...(prev.images || []), { url: result.url! }]
                     }));
                 } else {
                     throw new Error(result.error || 'Error al subir imagen');
@@ -290,7 +284,8 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
     return (
         <div className="space-y-8 pb-12">
             {/* Header / Save Status */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border shadow-sm sticky top-0 z-50 backdrop-blur-md bg-opacity-80">
+            {/* Header / Save Status */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl glass-panel transition-all duration-200 mb-6">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center text-accent-foreground shadow-sm">
                         {data.logo_url ? (
@@ -398,7 +393,12 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                         <Download className="w-4 h-4" />
                         Exportar
                     </Button>
-                    <Button size="sm" onClick={() => handleSave(false)} disabled={!hasUnsavedChanges || isSaving} className="gap-2 h-9">
+                    <Button
+                        size="sm"
+                        onClick={() => handleSave(false)}
+                        disabled={!hasUnsavedChanges || isSaving}
+                        className="gap-2 h-9 bg-brand-gradient hover:opacity-90 text-white border-0"
+                    >
                         {isSaving ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Guardar Ahora
                     </Button>
@@ -460,6 +460,12 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 {/* Left Column: All Content/Info Cards */}
                 <div className="space-y-6">
+                    {/* Language Selection */}
+                    <LanguageCard
+                        selectedLanguage={data.preferred_language || 'es'}
+                        onLanguageChange={(lang) => updateData(prev => ({ ...prev, preferred_language: lang }))}
+                    />
+
                     {/* Contact & Audience */}
                     <TargetAudienceCard audience={data.target_audience} />
                     <ContactSocialCard
@@ -520,7 +526,6 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                         isUploading={isUploading}
                         onUpload={handleUploadFiles}
                         onRemoveImage={(idx) => updateData(prev => ({ ...prev, images: prev.images?.filter((_, i) => i !== idx) }))}
-                        onToggleSelection={handleToggleImageSelection}
                         onOpenLightbox={setLightboxImage}
                     />
                 </div>

@@ -21,7 +21,7 @@ export function BrandContextCard({ context, onUpdate }: BrandContextCardProps) {
     };
 
     return (
-        <Card className="bg-card border-border">
+        <Card className="glass-panel border-0 shadow-none">
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <FileText className="w-5 h-5 text-primary" />

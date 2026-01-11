@@ -49,7 +49,7 @@ export function VisualAssets({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Screenshot */}
             <div className="lg:col-span-1">
-                <Card className="h-full overflow-hidden bg-card border-border">
+                <Card className="h-full overflow-hidden glass-panel border-0 shadow-none">
                     <CardHeader className="pb-2">
                         <CardTitle className="flex items-center gap-2 text-base text-foreground">
                             <Monitor className="w-5 h-5 text-[var(--accent)]" />
@@ -82,7 +82,7 @@ export function VisualAssets({
             <div className="lg:col-span-2 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {/* Logo */}
-                    <Card className="bg-card border-border">
+                    <Card className="glass-panel border-0 shadow-none">
                         <CardHeader className="pb-2">
                             <CardTitle className="flex items-center gap-2 text-base text-foreground">
                                 <Building2 className="w-5 h-5 text-primary" />
@@ -106,7 +106,7 @@ export function VisualAssets({
                     </Card>
 
                     {/* Favicon */}
-                    <Card className="bg-card border-border">
+                    <Card className="glass-panel border-0 shadow-none">
                         <CardHeader className="pb-2">
                             <CardTitle className="flex items-center gap-2 text-base text-foreground">
                                 <Sparkles className="w-5 h-5 text-primary" />
@@ -131,7 +131,7 @@ export function VisualAssets({
                 </div>
 
                 {/* Gallery & Upload */}
-                <Card className="bg-card border-border">
+                <Card className="glass-panel border-0 shadow-none">
                     <CardHeader className="pb-2">
                         <CardTitle className="flex items-center gap-2 text-base text-foreground">
                             <Image className="w-5 h-5 text-[var(--accent)]" />

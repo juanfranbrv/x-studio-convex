@@ -6,77 +6,85 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
+  /* Aero-Vibrant: Light mode with depth for Glassmorphism */
+  --background: 210 40% 98%;
+  --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+  --card-foreground: 222.2 84% 4.9%;
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
+  --popover-foreground: 222.2 84% 4.9%;
+  /* Primary based on Indigo vibrante */
+  --primary: 243.4 75.4% 58.6%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 10% 3.9%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 243.4 75.4% 58.6%;
   --chart-1: 12 76% 61%;
   --chart-2: 173 58% 39%;
   --chart-3: 197 37% 24%;
   --chart-4: 43 74% 66%;
   --chart-5: 27 87% 67%;
-  --radius: 0.5rem;
+  /* Aero radius: more rounded */
+  --radius: 1.25rem;
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 240 5.3% 26.1%;
-  --sidebar-primary: 240 5.9% 10%;
+  --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 240 4.8% 95.9%;
-  --sidebar-accent-foreground: 240 5.9% 10%;
-  --sidebar-border: 220 13% 91%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  --sidebar-accent: 210 40% 96.1%;
+  --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+  --sidebar-border: 214.3 31.8% 91.4%;
+  --sidebar-ring: var(--ring);
 
   /* Font variables */
   --font-sans: var(--font-inter);
+
+  /* Dynamic Theme Defaults (Indigo & Pink) */
+  --theme-primary: #6366f1;
+  --theme-secondary: #ec4899;
 }
 
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 5.9% 10%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
+  /* Aero-Vibrant: Dark mode with blue/purple tint for depth */
+  --background: 222.2 47% 6%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 47% 8%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 47% 8%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 243.4 75.4% 58.6%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 217.2 32.6% 12.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
   --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 243.4 75.4% 58.6%;
   --chart-1: 220 70% 50%;
   --chart-2: 160 60% 45%;
   --chart-3: 30 80% 55%;
   --chart-4: 280 65% 60%;
   --chart-5: 340 75% 55%;
-  --sidebar-background: 240 5.9% 10%;
-  --sidebar-foreground: 240 4.8% 95.9%;
-  --sidebar-primary: 224.3 76.3% 48%;
+  --sidebar-background: 222.2 47% 8%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 243.4 75.4% 58.6%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 240 3.7% 15.9%;
-  --sidebar-accent-foreground: 240 4.8% 95.9%;
-  --sidebar-border: 240 3.7% 15.9%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  --sidebar-accent: 217.2 32.6% 17.5%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217.2 32.6% 17.5%;
+  --sidebar-ring: 243.4 75.4% 58.6%;
 }
 
 @theme inline {
@@ -119,6 +127,46 @@
 
   --font-sans: var(--font-sans);
   --font-heading: var(--font-heading);
+
+  /* ============================================
+     AERO-VIBRANT DESIGN SYSTEM TOKENS
+     ============================================ */
+
+  /* Brand Colors - Dynamic */
+  --color-brand-primary: var(--theme-primary);
+  --color-brand-secondary: var(--theme-secondary);
+  --color-brand-accent: #D9F99D;
+  --color-brand-vibrant: #8B5CF6;
+
+  --color-brand-primary-foreground: #FFFFFF;
+  --color-brand-secondary-foreground: #FFFFFF;
+  --color-brand-accent-foreground: #1a1a1a;
+  --color-brand-vibrant-foreground: #FFFFFF;
+
+  /* Aero Shadow (soft, diffuse glassmorphism shadow) */
+  --shadow-aero: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --shadow-aero-lg: 0 16px 48px 0 rgba(31, 38, 135, 0.12);
+  --shadow-aero-glow: 0 0 40px 0 rgba(99, 102, 241, 0.15);
+
+  /* Aero Border Radius */
+  --radius-aero: 1.5rem;
+  --radius-3xl: 2rem;
+
+  /* Brand Gradient (primary to secondary) */
+  --background-image-brand-gradient: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
+
+  /* Mesh Gradient (soft blue-violet-pink blend) */
+  /* Mesh Gradient (Dynamic) */
+  --background-image-mesh-gradient: radial-gradient(ellipse at 20% 0%,
+      hsl(var(--primary) / 0.15) 0%,
+      transparent 50%),
+    radial-gradient(ellipse at 80% 0%,
+      hsl(var(--primary) / 0.10) 0%,
+      transparent 50%),
+    radial-gradient(ellipse at 50% 100%,
+      hsl(var(--primary) / 0.05) 0%,
+      transparent 50%),
+    linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--background)) 100%);
 }
 
 @layer base {
@@ -128,6 +176,45 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+
+  /* Glass panel - the master glassmorphism class */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: var(--shadow-aero);
+  }
+
+  .dark .glass-panel {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+  }
+
+  /* Animated mesh gradient background */
+  .bg-mesh {
+    background-image: var(--background-image-mesh-gradient);
+    background-attachment: fixed;
+    background-size: 200% 200%;
+    animation: mesh-flow 20s ease infinite;
+  }
+
+  @keyframes mesh-flow {
+    0% {
+      background-position: 0% 0%;
+    }
+
+    50% {
+      background-position: 100% 100%;
+    }
+
+    100% {
+      background-position: 0% 0%;
+    }
   }
 }
 
@@ -176,5 +263,69 @@
     /* IE and Edge */
     scrollbar-width: none;
     /* Firefox */
+  }
+
+  /* ============================================
+     AERO-VIBRANT UTILITIES
+     ============================================ */
+
+  /* Glassmorphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Mesh gradient background */
+  .bg-mesh-gradient {
+    background-image: var(--background-image-mesh-gradient);
+  }
+
+  /* Brand gradient background */
+  .bg-brand-gradient {
+    background-image: var(--background-image-brand-gradient);
+  }
+
+  /* Aero shadow utilities */
+  .shadow-aero {
+    box-shadow: var(--shadow-aero);
+  }
+
+  .shadow-aero-lg {
+    box-shadow: var(--shadow-aero-lg);
+  }
+
+  .shadow-aero-glow {
+    box-shadow: var(--shadow-aero-glow);
+  }
+
+  /* Vibrant glow effect */
+  .glow-vibrant {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+
+  /* Aero card preset */
+  .card-aero {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-aero);
+    box-shadow: var(--shadow-aero);
   }
 }

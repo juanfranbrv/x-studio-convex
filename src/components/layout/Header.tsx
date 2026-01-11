@@ -69,28 +69,27 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
 
     return (
         <>
-            <header className="h-16 border-b border-border bg-background/80 backdrop-blur-sm flex items-center justify-between px-2 md:px-4">
+            <header className="h-16 border-b border-white/20 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 shrink-0">
                 <div className="flex items-center gap-2 md:gap-3">
                     {/* Mobile Menu Trigger */}
                     <MobileMenu />
 
                     {/* Logo / Robot Icon */}
                     <div className="flex items-center gap-2">
-                        <Bot className="w-6 h-6 md:w-8 md:h-8 text-primary" />
                         <h1 className="text-2xl font-semibold font-heading hidden md:block">X Studio</h1>
                     </div>
 
                     {brands.length > 0 && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-2 w-[140px] md:w-72 justify-between px-2 md:px-4">
+                                <Button variant="outline" size="sm" className="gap-2 w-[140px] md:w-72 justify-between px-2 md:px-4 bg-white/50 dark:bg-white/10 border-white/30 hover:bg-white/80 hover:border-primary/50 rounded-xl">
                                     <span className="truncate block text-left">
                                         {('brand_name' in (currentBrand || {})) ? (currentBrand as any).brand_name : t('common.switchBrand')}
                                     </span>
                                     <ChevronDown className="h-4 w-4 shrink-0" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-[200px] md:w-72">
+                            <DropdownMenuContent align="start" className="w-[200px] md:w-72 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-white/30 shadow-aero-lg rounded-xl">
                                 {brands.map((brand) => (
                                     <DropdownMenuItem
                                         key={brand.id}
@@ -132,43 +131,42 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     )}
 
                     {onNewBrandKit && (
-                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="gap-2 hidden md:flex">
+                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="gap-2 hidden md:flex bg-white/50 dark:bg-white/10 border-white/30 hover:bg-white/80 hover:border-primary/50 rounded-xl">
                             <Plus className="h-4 w-4" />
                             Nuevo Brand Kit
                         </Button>
                     )}
                 </div>
 
-                {/* Right: Credits, Theme Toggle, Notifications and User */}
-                <div className="flex items-center gap-1 md:gap-2">
-                    <div className="scale-90 md:scale-100 origin-right">
+                {/* Right: Credits, Theme Toggle, Notifications */}
+                <div className="flex items-center gap-2">
+                    <div className="scale-90 md:scale-100 origin-right mr-2">
                         <CreditsBadge />
                     </div>
 
                     {isAdmin && (
                         <Link href="/admin">
-                            <Button variant="ghost" size="icon" title="Panel Admin" className="hidden md:flex">
-                                <Settings className="h-4 w-4" />
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Panel Admin"
+                                className="hidden md:flex rounded-full w-9 h-9 hover:bg-white/60 dark:hover:bg-white/10"
+                            >
+                                <Settings className="h-4.5 w-4.5" />
                             </Button>
                         </Link>
                     )}
 
-                    <ThemeToggle />
+                    <ThemeToggle className="rounded-full w-9 h-9 hover:bg-white/60 dark:hover:bg-white/10" />
 
-                    <Button variant="ghost" size="icon" className="relative hidden md:flex">
-                        <Bell className="h-4 w-4" />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full" />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="relative hidden md:flex rounded-full w-9 h-9 hover:bg-white/60 dark:hover:bg-white/10"
+                    >
+                        <Bell className="h-4.5 w-4.5" />
+                        <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-brand-secondary rounded-full border border-white dark:border-zinc-900 animate-pulse" />
                     </Button>
-
-                    <UserButton
-                        afterSignOutUrl="/"
-                        appearance={{
-                            baseTheme: resolvedTheme === 'dark' ? dark : undefined,
-                            elements: {
-                                avatarBox: 'w-7 h-7 md:w-8 md:h-8',
-                            },
-                        }}
-                    />
                 </div>
             </header>
 

@@ -108,8 +108,8 @@ export function ColorPalette({
     return (
         <TooltipProvider delayDuration={400}>
             <Card className={cn(
-                "relative overflow-visible z-40 bg-card border-border",
-                hideHeader && "border-none shadow-none bg-transparent"
+                "relative overflow-visible z-40 glass-panel border-0 shadow-none",
+                hideHeader && "bg-transparent backdrop-blur-0 border-none shadow-none"
             )}>
                 {!hideHeader && (
                     <>
@@ -273,7 +273,7 @@ export function ColorPalette({
                                         >
                                             {item.color.toUpperCase()}
                                             {copiedColor === item.color && (
-                                                <span className="absolute inset-0 flex items-center justify-center bg-primary text-primary-foreground rounded text-[10px] font-bold">
+                                                <span className="absolute inset-0 flex items-center justify-center bg-primary text-white rounded text-[10px] font-bold">
                                                     <Check className="w-2.5 h-2.5 mr-1" />
                                                 </span>
                                             )}
