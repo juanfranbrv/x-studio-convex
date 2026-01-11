@@ -45,13 +45,13 @@ export function Sidebar({ className }: SidebarProps) {
                             className={cn(
                                 'flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 group gap-1.5',
                                 isActive
-                                    ? 'bg-brand-gradient text-white shadow-lg'
+                                    ? 'bg-primary text-primary-foreground shadow-lg'
                                     : 'hover:bg-white/60 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground'
                             )}
                         >
                             <item.icon className={cn(
                                 'h-6 w-6 shrink-0',
-                                isActive ? 'text-white' : 'text-primary'
+                                isActive ? 'text-primary-foreground' : 'text-primary'
                             )} />
                             <span className="text-xs font-medium leading-tight text-center">
                                 {item.label}
@@ -69,13 +69,13 @@ export function Sidebar({ className }: SidebarProps) {
                     className={cn(
                         'flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 group gap-1.5 w-full',
                         pathname === '/settings'
-                            ? 'bg-brand-gradient text-white shadow-lg'
+                            ? 'bg-primary text-primary-foreground shadow-lg'
                             : 'hover:bg-white/60 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground'
                     )}
                 >
                     <Settings className={cn(
                         'h-6 w-6 shrink-0',
-                        pathname === '/settings' ? 'text-white' : 'text-primary'
+                        pathname === '/settings' ? 'text-primary-foreground' : 'text-primary'
                     )} />
                     <span className="text-xs font-medium">Ajustes</span>
                 </Link>
