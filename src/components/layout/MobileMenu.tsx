@@ -22,7 +22,7 @@ export function MobileMenu() {
 
     const navItems = [
         { icon: Home, label: 'nav.home', href: '/' },
-        { icon: FileSpreadsheet, label: 'Brand Kit', href: '/brand-kit' },
+        { icon: FileSpreadsheet, label: 'Kit de Marca', href: '/brand-kit' },
         { icon: Image, label: 'nav.studio', href: '/image' },
         { icon: Settings, label: 'nav.settings', href: '/settings' },
     ]

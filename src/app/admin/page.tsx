@@ -7,7 +7,7 @@ import { dark } from '@clerk/themes'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
-import { Loader2, Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink } from 'lucide-react'
+import { Loader2, Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink, Trash2 } from 'lucide-react'
 import { CreditsBadge } from '@/components/layout/CreditsBadge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -107,6 +107,7 @@ export default function AdminPage() {
     // Mutations
     const activateUser = useMutation(api.admin.activateUser)
     const suspendUser = useMutation(api.admin.suspendUser)
+    const deleteUser = useMutation(api.admin.deleteUser)
     const adjustCredits = useMutation(api.admin.adjustCredits)
     const updateSetting = useMutation(api.admin.updateSetting)
     const initializeSettings = useMutation(api.admin.initializeSettings)
@@ -188,6 +189,20 @@ export default function AdminPage() {
         try {
             await suspendUser({ admin_email: userEmail, user_id: userId })
             toast({ title: 'Usuario suspendido' })
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' })
+        }
+        setIsProcessing(false)
+    }
+
+    const handleDeleteUser = async (userId: Id<"users">, email: string) => {
+        if (!confirm(`¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE al usuario ${email}?\n\nEsta acción no se puede deshacer.`)) {
+            return
+        }
+        setIsProcessing(true)
+        try {
+            await deleteUser({ admin_email: userEmail, user_id: userId })
+            toast({ title: '🗑️ Usuario eliminado', description: `${email} ha sido eliminado permanentemente` })
         } catch (error: any) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' })
         }
@@ -502,6 +517,15 @@ export default function AdminPage() {
                                                             <X className="h-4 w-4 mr-1" /> Suspender
                                                         </Button>
                                                     )}
+                                                    {u.status === 'suspended' && (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => handleActivate(u._id)}
+                                                            disabled={isProcessing}
+                                                        >
+                                                            <Check className="h-4 w-4 mr-1" /> Reactivar
+                                                        </Button>
+                                                    )}
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
@@ -511,6 +535,16 @@ export default function AdminPage() {
                                                         }}
                                                     >
                                                         <Coins className="h-4 w-4 mr-1" /> Créditos
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => handleDeleteUser(u._id, u.email)}
+                                                        disabled={isProcessing || u.email.toLowerCase() === userEmail.toLowerCase()}
+                                                        title="Eliminar usuario permanentemente"
+                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>

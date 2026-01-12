@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { analyzeBrandDNA } from '@/app/actions/analyze-brand-dna';
 import { useBrandKit } from '@/contexts/BrandKitContext';
 import type { BrandDNA } from '@/lib/brand-types';
+import { cn } from '@/lib/utils';
 import { fetchQuery } from 'convex/nextjs';
 import { api } from '../../../convex/_generated/api';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ import {
     Pencil
 } from 'lucide-react';
 import { BrandDNABoard } from '@/components/brand-dna/BrandDNABoard';
+import { BrandKitProgress } from '@/components/brand-dna/BrandKitProgress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import {
@@ -83,6 +85,7 @@ function BrandKitPageContent() {
     const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
     const [progress, setProgress] = useState(0);
     const [loadingScreenshot, setLoadingScreenshot] = useState<string | null>(null);
+    const [isSocialUrl, setIsSocialUrl] = useState(false);
 
     // Multi-profile state
     const [showNewKitForm, setShowNewKitForm] = useState(false);
@@ -91,6 +94,90 @@ function BrandKitPageContent() {
     // Brand name editing
     const [isEditingBrandName, setIsEditingBrandName] = useState(false);
     const [brandNameEdit, setBrandNameEdit] = useState('');
+
+    // Social media domains that we cannot scan
+    const SOCIAL_DOMAINS = [
+        'instagram.com', 'facebook.com', 'twitter.com', 'x.com',
+        'tiktok.com', 'linkedin.com', 'pinterest.com', 'youtube.com',
+        'snapchat.com', 'threads.net', 'wa.me', 'whatsapp.com'
+    ];
+
+    // Check if URL is a social media URL
+    const checkSocialUrl = (inputUrl: string): boolean => {
+        try {
+            const urlLower = inputUrl.toLowerCase().trim();
+            return SOCIAL_DOMAINS.some(domain =>
+                urlLower.includes(domain) || urlLower.includes(domain.replace('.com', ''))
+            );
+        } catch {
+            return false;
+        }
+    };
+
+    // Handle URL change with social detection
+    const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newUrl = e.target.value;
+        setUrl(newUrl);
+        setIsSocialUrl(checkSocialUrl(newUrl));
+    };
+
+    // Navigate to manual brand kit creation - creates an empty brand kit
+    const handleManualCreation = async () => {
+        if (!user?.id) return;
+
+        setLoading(true);
+        setError('');
+
+        try {
+            // Extract brand name from social URL if available
+            let brandName = 'Mi Marca';
+            if (url && isSocialUrl) {
+                try {
+                    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+                    const pathParts = urlObj.pathname.split('/').filter(Boolean);
+                    if (pathParts.length > 0) {
+                        brandName = pathParts[0].replace(/[_-]/g, ' ');
+                        // Capitalize first letter of each word
+                        brandName = brandName.split(' ').map(word =>
+                            word.charAt(0).toUpperCase() + word.slice(1)
+                        ).join(' ');
+                    }
+                } catch {
+                    // Keep default name
+                }
+            }
+
+            // Create empty brand kit via API
+            const response = await fetch('/api/brand-kit/create-empty', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clerk_user_id: user.id,
+                    brand_name: brandName,
+                    source_url: isSocialUrl ? url : undefined,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.data?.id) {
+                setShowNewKitForm(false);
+
+                // Wait for Convex propagation
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Navigate to the new brand kit
+                window.location.href = `/brand-kit?id=${result.data.id}`;
+            } else {
+                setError(result.error || 'No se pudo crear el Brand Kit manual.');
+            }
+        } catch (err) {
+            console.error('Error creating manual brand kit:', err);
+            setError('Ocurrió un error al crear el Brand Kit.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
     // Efecto para animar progreso y mensajes
@@ -338,21 +425,27 @@ function BrandKitPageContent() {
 
                             {/* URL Input */}
                             <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-                                <div className="flex items-center gap-3 bg-background/80 backdrop-blur-sm rounded-2xl border-2 border-border/50 p-2 shadow-lg transition-all focus-within:border-primary/50 focus-within:shadow-xl hover:shadow-lg group">
+                                <div className={cn(
+                                    "flex items-center gap-3 bg-background/80 backdrop-blur-sm rounded-2xl border-2 p-2 shadow-lg transition-all focus-within:shadow-xl hover:shadow-lg group",
+                                    isSocialUrl ? "border-amber-500/50" : "border-border/50 focus-within:border-primary/50"
+                                )}>
                                     <div className="pl-4">
-                                        <Globe className="w-6 h-6 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                        <Globe className={cn(
+                                            "w-6 h-6 transition-colors",
+                                            isSocialUrl ? "text-amber-500" : "text-muted-foreground group-focus-within:text-primary"
+                                        )} />
                                     </div>
                                     <Input
                                         placeholder="ejemplo.com o https://ejemplo.com"
                                         className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-lg h-14 placeholder:text-muted-foreground/40 font-medium"
                                         value={url}
-                                        onChange={(e) => setUrl(e.target.value)}
+                                        onChange={handleUrlChange}
                                         disabled={loading}
                                         autoFocus
                                     />
                                     <Button
                                         type="submit"
-                                        disabled={loading || !url}
+                                        disabled={loading || !url || isSocialUrl}
                                         size="lg"
                                         className="btn-gradient rounded-xl px-8 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mr-1"
                                     >
@@ -366,14 +459,51 @@ function BrandKitPageContent() {
                                         )}
                                     </Button>
                                 </div>
+
+                                {/* Social URL Warning */}
+                                {isSocialUrl && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-600 dark:text-amber-400"
+                                    >
+                                        <p className="text-sm font-medium mb-2">
+                                            📱 Las redes sociales no se pueden analizar automáticamente
+                                        </p>
+                                        <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mb-3">
+                                            Las URLs de Instagram, Facebook, TikTok y otras redes sociales no permiten la extracción automática de estilos.
+                                        </p>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleManualCreation}
+                                            className="border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                                        >
+                                            <Pencil className="w-4 h-4 mr-2" />
+                                            Construir Kit de Marca manualmente
+                                        </Button>
+                                    </motion.div>
+                                )}
                             </form>
+
+                            {/* Manual creation link */}
+                            <p className="text-center text-sm text-muted-foreground mt-6">
+                                <button
+                                    type="button"
+                                    onClick={handleManualCreation}
+                                    className="underline underline-offset-4 hover:text-foreground transition-colors"
+                                >
+                                    No tengo URL, construiré mi Kit de Marca manualmente
+                                </button>
+                            </p>
 
                             {/* Cancel button when creating new (and has existing profiles) */}
                             {brandKits.length > 0 && showNewKitForm && (
                                 <Button
                                     variant="ghost"
                                     size="lg"
-                                    className="mt-8 text-muted-foreground hover:text-foreground transition-colors"
+                                    className="mt-4 text-muted-foreground hover:text-foreground transition-colors"
                                     onClick={() => {
                                         setShowNewKitForm(false);
                                         setUrl('');
@@ -660,7 +790,10 @@ function BrandKitPageContent() {
                 )}
                 {/* Result State */}
                 {!loading && activeBrandKit && !showNewKitForm && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6">
+                        {/* Brand Kit Progress */}
+                        <BrandKitProgress brandKit={activeBrandKit} />
+
                         <BrandDNABoard
                             key={activeBrandKit.id || 'new'}
                             data={activeBrandKit}

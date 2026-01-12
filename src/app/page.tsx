@@ -23,19 +23,26 @@ export default function HomePage() {
     userEmail ? { email: userEmail } : 'skip'
   )
 
-  // No automatic redirect anymore - let user stay on home page
-  // We still handle pending/rejected states to inform the user
+  // Show pending/rejected screens only for those specific states
+  // Users with 'none' status or not logged in should see the landing page
   if (isLoaded && isSignedIn && betaAccess && !betaAccess.hasAccess) {
-    return <PendingAccessScreen status={betaAccess.status} email={userEmail} />
+    // Only show blocking screen for pending or rejected - not for 'none'
+    if (betaAccess.status === 'pending' || betaAccess.status === 'rejected') {
+      return <PendingAccessScreen status={betaAccess.status} email={userEmail} />
+    }
   }
 
-  // Not logged in or logged in and approved - show landing
+  // Not logged in, logged in with no request, or logged in and approved - show landing
   return <BetaLandingPage hasAccess={betaAccess?.hasAccess ?? false} />
 }
 
 // Screen for users who are logged in but don't have access yet
 function PendingAccessScreen({ status, email }: { status: string; email: string }) {
   const { signOut } = useAuth()
+
+  const handleGoHome = () => {
+    signOut({ redirectUrl: '/' })
+  }
 
   if (status === 'pending') {
     return (
@@ -54,8 +61,8 @@ function PendingAccessScreen({ status, email }: { status: string; email: string 
             <p className="text-muted-foreground">
               Recibirás un email en <strong>{email}</strong> cuando tu acceso sea aprobado.
             </p>
-            <Button variant="outline" onClick={() => signOut()}>
-              Cerrar sesión
+            <Button variant="outline" onClick={handleGoHome}>
+              Volver a la página principal
             </Button>
           </CardContent>
         </Card>
@@ -74,8 +81,8 @@ function PendingAccessScreen({ status, email }: { status: string; email: string 
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" onClick={() => signOut()}>
-              Cerrar sesión
+            <Button variant="outline" onClick={handleGoHome}>
+              Volver a la página principal
             </Button>
           </CardContent>
         </Card>
@@ -83,7 +90,7 @@ function PendingAccessScreen({ status, email }: { status: string; email: string 
     )
   }
 
-  // status === 'none' - user logged in but never requested access
+  // status === 'none' - this should not happen anymore, but fallback to home
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-8">
       <Card className="max-w-md w-full text-center">

@@ -51,14 +51,22 @@ const SECTION_TOOLTIPS = {
 };
 
 export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
-    const [assets, setAssets] = useState<TextAssets>(data || DEFAULT_DATA);
+    // Merge incoming data with defaults to ensure all arrays exist
+    const mergeWithDefaults = (incoming?: TextAssets): TextAssets => ({
+        marketing_hooks: incoming?.marketing_hooks ?? DEFAULT_DATA.marketing_hooks,
+        visual_keywords: incoming?.visual_keywords ?? DEFAULT_DATA.visual_keywords,
+        ctas: incoming?.ctas ?? DEFAULT_DATA.ctas,
+        brand_context: incoming?.brand_context ?? DEFAULT_DATA.brand_context,
+    });
+
+    const [assets, setAssets] = useState<TextAssets>(mergeWithDefaults(data));
     const [editingItem, setEditingItem] = useState<{ section: keyof TextAssets; index: number } | null>(null);
     const [editValue, setEditValue] = useState('');
 
     // Sincronizar estado interno cuando cambian los props (para edición bidireccional)
     useEffect(() => {
         if (data) {
-            setAssets(data);
+            setAssets(mergeWithDefaults(data));
         }
     }, [data]);
 

@@ -150,3 +150,23 @@ export const upsertUser = mutation({
         throw new Error("No tienes acceso a la beta. Solicita acceso en la página principal.");
     },
 });
+
+// Mutation: mark onboarding as completed
+export const completeOnboarding = mutation({
+    args: { clerk_id: v.string() },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
+            .first();
+
+        if (!user) throw new Error("User not found");
+
+        await ctx.db.patch(user._id, {
+            onboarding_completed: true,
+            onboarding_completed_at: new Date().toISOString(),
+        });
+
+        return { success: true };
+    },
+});

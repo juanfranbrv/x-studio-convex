@@ -192,14 +192,14 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
                     <DropdownMenuTrigger asChild>
                         <button
                             className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 hover:text-primary transition-colors text-muted-foreground/50 hover:text-muted-foreground"
-                            title="Usar texto del Brand Kit"
+                            title="Usar texto del Kit de Marca"
                         >
                             <Fingerprint className="w-4 h-4" />
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 max-h-60 overflow-y-auto">
                         <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                            Textos del Brand Kit
+                            Textos del Kit de Marca
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {textResources.length === 0 ? (

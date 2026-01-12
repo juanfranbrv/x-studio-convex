@@ -496,7 +496,7 @@ export const STYLE_CHIPS_BY_SUBJECT: Record<DetectedSubject, StyleChip[]> = {
 // -----------------------------------------------------------------------------
 
 export const ARTISTIC_STYLE_GROUPS = [
-    { id: 'brand', label: '💼 Tu Marca', description: 'Estilos de tu Brand Kit' },
+    { id: 'brand', label: '💼 Tu Marca', description: 'Estilos de tu Kit de Marca' },
     { id: 'suggested', label: '⭐ Sugeridos', description: 'Basados en tu imagen' },
     { id: 'design', label: '🎨 Diseño & Mockups', description: 'Editorial y Comercial' },
     { id: 'artistic', label: '🎭 Arte & Retro', description: 'Estilos clásicos y vintage' },

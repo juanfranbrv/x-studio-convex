@@ -15,7 +15,7 @@ const resources = {
             // Brand DNA Panel
             brandDNA: {
                 title: 'Brand DNA',
-                brandKit: 'Brand Kit',
+                brandKit: 'Kit de Marca',
                 colorPalette: 'Paleta de colores',
                 typography: 'Tipografía',
                 logoInclusion: 'Inclusión de logo',

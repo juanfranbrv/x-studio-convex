@@ -145,7 +145,7 @@ export function ProfileSwitcher({
                             }}
                         >
                             <Plus className="w-4 h-4" />
-                            Nuevo Brand Kit
+                            Nuevo Kit de Marca
                         </Button>
                     </div>
                 </div>

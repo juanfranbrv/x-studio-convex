@@ -249,3 +249,32 @@ export const deleteBrandDNA = mutation({
         await ctx.db.delete(args.id);
     },
 });
+
+export const createEmptyBrandKit = mutation({
+    args: {
+        clerk_user_id: v.string(),
+        brand_name: v.string(),
+        source_url: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const now = new Date().toISOString();
+
+        // Create a minimal brand_dna record with empty defaults
+        const brandId = await ctx.db.insert("brand_dna", {
+            url: args.source_url || `manual-${Date.now()}`,
+            brand_name: args.brand_name,
+            tagline: "",
+            business_overview: "",
+            brand_values: [],
+            tone_of_voice: [],
+            visual_aesthetic: [],
+            colors: [],
+            fonts: [],
+            text_assets: [],
+            clerk_user_id: args.clerk_user_id,
+            updated_at: now,
+        });
+
+        return brandId;
+    },
+});

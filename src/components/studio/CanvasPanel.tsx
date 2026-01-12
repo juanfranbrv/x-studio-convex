@@ -855,8 +855,9 @@ export function CanvasPanel({
                                     }
                                 }
                             }}
-                            placeholder={currentImage ? "Describe los cambios que quieres..." : "Describe la imagen que quieres generar..."}
-                            className="flex-1 min-h-[50px] max-h-[120px] py-3 bg-transparent border-0 focus-visible:ring-0 resize-none shadow-none text-base placeholder:text-muted-foreground/60 leading-relaxed scrollbar-hide"
+                            disabled={!currentImage}
+                            placeholder={currentImage ? "Describe los cambios que quieres..." : "Genera una imagen primero para poder editarla..."}
+                            className="flex-1 min-h-[50px] max-h-[120px] py-3 bg-transparent border-0 focus-visible:ring-0 resize-none shadow-none text-base placeholder:text-muted-foreground/60 leading-relaxed scrollbar-hide disabled:opacity-50 disabled:cursor-not-allowed"
                         />
 
                         {/* Model Selector */}

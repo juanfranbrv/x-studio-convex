@@ -183,6 +183,65 @@ export const suspendUser = mutation({
     },
 });
 
+// Mutation: delete user (permanent)
+export const deleteUser = mutation({
+    args: {
+        admin_email: v.string(),
+        user_id: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        if (!isAdmin(args.admin_email)) throw new Error("Unauthorized");
+
+        const user = await ctx.db.get(args.user_id);
+        if (!user) throw new Error("User not found");
+
+        // Prevent deleting yourself (admin)
+        if (user.email.toLowerCase() === args.admin_email.toLowerCase()) {
+            throw new Error("No puedes eliminarte a ti mismo");
+        }
+
+        // Revoke beta access - update beta_request to "rejected" to prevent re-login
+        const emailLower = user.email.toLowerCase().trim();
+        const betaRequest = await ctx.db
+            .query("beta_requests")
+            .withIndex("by_email", (q) => q.eq("email", emailLower))
+            .first();
+
+        if (betaRequest) {
+            await ctx.db.patch(betaRequest._id, {
+                status: "rejected",
+                processed_at: new Date().toISOString(),
+                processed_by: args.admin_email,
+            });
+        }
+
+        // Delete all credit transactions for this user
+        const transactions = await ctx.db
+            .query("credit_transactions")
+            .withIndex("by_user", (q) => q.eq("user_id", args.user_id))
+            .collect();
+
+        for (const tx of transactions) {
+            await ctx.db.delete(tx._id);
+        }
+
+        // Delete all brands for this user (use clerk_id as owner_id)
+        const brands = await ctx.db
+            .query("brands")
+            .withIndex("by_owner", (q) => q.eq("owner_id", user.clerk_id))
+            .collect();
+
+        for (const brand of brands) {
+            await ctx.db.delete(brand._id);
+        }
+
+        // Delete the user
+        await ctx.db.delete(args.user_id);
+
+        return { success: true, deletedEmail: user.email, betaRevoked: !!betaRequest };
+    },
+});
+
 // Mutation: adjust user credits (add or remove)
 export const adjustCredits = mutation({
     args: {

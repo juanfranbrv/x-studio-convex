@@ -32,6 +32,9 @@ export default defineSchema({
     role: v.string(),                         // "user" | "beta" | "admin"
     plan_id: v.optional(v.string()),          // null for beta, later "free" | "pro" | etc.
     credits_reset_at: v.optional(v.string()), // For future monthly plans
+    // Onboarding
+    onboarding_completed: v.optional(v.boolean()),
+    onboarding_completed_at: v.optional(v.string()),
   }).index("by_clerk_id", ["clerk_id"]),
 
   // Credit transaction audit log

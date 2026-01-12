@@ -1,10 +1,19 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
-import { Bot, Home, Image, GalleryHorizontal, Play, Settings, FileSpreadsheet, Zap } from 'lucide-react'
+import { useUser, useClerk } from '@clerk/nextjs'
+import { Bot, Home, Image, GalleryHorizontal, Play, Settings, FileSpreadsheet, LogOut, User, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface SidebarProps {
     className?: string
@@ -12,7 +21,7 @@ interface SidebarProps {
 
 const navItems = [
     { icon: Home, label: 'Inicio', href: '/' },
-    { icon: FileSpreadsheet, label: 'Brand Kit', href: '/brand-kit' },
+    { icon: FileSpreadsheet, label: 'Kit de Marca', href: '/brand-kit' },
     { icon: Image, label: 'Imagen', href: '/image' },
     { icon: GalleryHorizontal, label: 'Carrusel', href: '/carousel' },
     { icon: Play, label: 'Video', href: '/video' },
@@ -21,6 +30,18 @@ const navItems = [
 export function Sidebar({ className }: SidebarProps) {
     const pathname = usePathname()
     const { user } = useUser()
+    const { signOut } = useClerk()
+    const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+    const handleLogout = async () => {
+        setIsLoggingOut(true)
+        try {
+            await signOut({ redirectUrl: '/' })
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error)
+            setIsLoggingOut(false)
+        }
+    }
 
     return (
         <aside
@@ -80,23 +101,62 @@ export function Sidebar({ className }: SidebarProps) {
                     <span className="text-xs font-medium">Ajustes</span>
                 </Link>
 
-                {/* User Profile - Avatar Only */}
-                <div className="h-10 w-10 shrink-0 rounded-full border-2 border-brand-secondary overflow-hidden shadow-sm bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
-                    {user?.imageUrl ? (
-                        <img
-                            src={user.imageUrl}
-                            alt={user.firstName || 'User'}
-                            className="w-full h-full object-cover"
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm font-bold">
-                            {user?.firstName?.[0] || 'U'}
-                        </div>
-                    )}
-                </div>
+                {/* User Profile - Avatar with Dropdown */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button className="h-10 w-10 shrink-0 rounded-full border-2 border-brand-secondary overflow-hidden shadow-sm bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50">
+                            {user?.imageUrl ? (
+                                <img
+                                    src={user.imageUrl}
+                                    alt={user.firstName || 'User'}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm font-bold">
+                                    {user?.firstName?.[0] || 'U'}
+                                </div>
+                            )}
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" align="end" className="w-56">
+                        <DropdownMenuLabel className="font-normal">
+                            <div className="flex flex-col space-y-1">
+                                <p className="text-sm font-medium leading-none">
+                                    {user?.fullName || user?.firstName || 'Usuario'}
+                                </p>
+                                <p className="text-xs leading-none text-muted-foreground">
+                                    {user?.primaryEmailAddress?.emailAddress || ''}
+                                </p>
+                            </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link href="/settings" className="cursor-pointer">
+                                <User className="mr-2 h-4 w-4" />
+                                <span>Mi cuenta</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            className="text-destructive focus:text-destructive cursor-pointer"
+                        >
+                            {isLoggingOut ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <span>Cerrando...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <span>Cerrar sesión</span>
+                                </>
+                            )}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </aside>
     )
 }
-
-

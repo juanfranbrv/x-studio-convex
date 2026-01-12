@@ -89,7 +89,7 @@ export function ImageReferenceSelector({
                 </TabsTrigger>
                 <TabsTrigger value="brandkit" className="text-[10px] h-7">
                     <Palette className="w-3 h-3 mr-1" />
-                    Brand Kit
+                    Kit de Marca
                 </TabsTrigger>
                 <TabsTrigger value="generate" className="text-[10px] h-7">
                     <Sparkles className="w-3 h-3 mr-1" />
@@ -227,7 +227,7 @@ export function ImageReferenceSelector({
                 ) : (
                     <div className="h-24 rounded-lg border-2 border-dashed border-border flex items-center justify-center">
                         <p className="text-[10px] text-muted-foreground">
-                            No hay imágenes en el Brand Kit
+                            No hay imágenes en el Kit de Marca
                         </p>
                     </div>
                 )}

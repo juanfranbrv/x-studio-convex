@@ -133,7 +133,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     {onNewBrandKit && (
                         <Button variant="outline" size="sm" onClick={onNewBrandKit} className="gap-2 hidden md:flex bg-white/50 dark:bg-white/10 border-white/30 hover:bg-white/80 hover:border-primary/50 rounded-xl">
                             <Plus className="h-4 w-4" />
-                            Nuevo Brand Kit
+                            Nuevo Kit de Marca
                         </Button>
                     )}
                 </div>
@@ -179,7 +179,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                         </AlertDialogTitle>
                         <AlertDialogDescription asChild>
                             <div className="text-muted-foreground">
-                                Se perderán permanentemente todos los datos de este Brand Kit:
+                                Se perderán permanentemente todos los datos de este Kit de Marca:
                                 <ul className="list-disc list-inside mt-2 space-y-1">
                                     <li>Colores y paletas</li>
                                     <li>Tipografías</li>
@@ -196,7 +196,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                             onClick={handleConfirmDelete}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                            Eliminar Brand Kit
+                            Eliminar Kit de Marca
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
