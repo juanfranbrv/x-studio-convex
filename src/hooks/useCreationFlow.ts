@@ -23,6 +23,7 @@ import {
     TextAsset,
 } from '@/lib/creation-flow-types'
 import { useBrandKit } from '@/contexts/BrandKitContext'
+import { resizeImage } from '@/lib/image-utils'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 
@@ -177,8 +178,13 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => ({ ...prev, isAnalyzing: true, error: null }))
 
         try {
-            // Convert to base64
-            const base64 = await fileToBase64(file)
+            // Resize and compress image on client side to avoid 10MB payload limit
+            const base64 = await resizeImage(file, {
+                maxWidth: 1536,
+                maxHeight: 1536,
+                quality: 0.8,
+                format: 'image/jpeg'
+            })
 
             setState(prev => ({
                 ...prev,
@@ -244,7 +250,14 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             const response = await fetch(url)
             const blob = await response.blob()
             const file = new File([blob], 'image_from_kit.png', { type: blob.type })
-            const base64 = await fileToBase64(file)
+
+            // Resize and compress fetched image
+            const base64 = await resizeImage(file, {
+                maxWidth: 1536,
+                maxHeight: 1536,
+                quality: 0.8,
+                format: 'image/jpeg'
+            })
 
             setState(prev => ({
                 ...prev,
