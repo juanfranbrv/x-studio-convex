@@ -10,6 +10,8 @@ export interface ParsedIntentResult {
     confidence?: number      // Confidence score 0-1
     headline?: string
     cta?: string
+    caption?: string         // NEW: Social media caption
+    imageTexts?: Record<string, string> // NEW: Consolidated image texts
     customTexts?: Record<string, string>
     error?: string
 }

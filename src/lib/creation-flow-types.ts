@@ -1867,6 +1867,7 @@ export interface GenerationState {
     selectedLogoId: string | null
     headline: string
     cta: string
+    caption: string // NEW: Social media caption
     customTexts: Record<string, string>
     selectedBrandColors: SelectedColor[]
     rawMessage: string // User's raw message for AI to use as context
@@ -1904,6 +1905,7 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     selectedLogoId: null,
     headline: '',
     cta: '',
+    caption: '', // NEW: Init caption
     customTexts: {},
     selectedBrandColors: [],
     rawMessage: '',

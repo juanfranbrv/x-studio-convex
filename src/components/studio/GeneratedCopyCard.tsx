@@ -12,6 +12,7 @@ interface GeneratedCopyCardProps {
     copy?: string | null
     hashtags?: string[]
     onCopy?: (text: string) => void
+    onCopyChange?: (text: string) => void // New prop for syncing edits
     onRegenerate?: () => void
     className?: string
     isLoading?: boolean
@@ -27,7 +28,8 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
     className,
     isLoading = false,
     isLocked = false,
-    onToggleLock
+    onToggleLock,
+    onCopyChange
 }) => {
     const { activeBrandKit: brand } = useBrandKit()
     const [editedCopy, setEditedCopy] = React.useState(copy || '')
@@ -65,7 +67,10 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                 ) : (
                     <Textarea
                         value={editedCopy}
-                        onChange={(e) => setEditedCopy(e.target.value)}
+                        onChange={(e) => {
+                            setEditedCopy(e.target.value)
+                            onCopyChange?.(e.target.value)
+                        }}
                         className="min-h-[80px] border-none bg-transparent p-0 resize-none focus-visible:ring-0 text-sm leading-relaxed"
                         placeholder="Tu copy generado aparecerá aquí..."
                     />

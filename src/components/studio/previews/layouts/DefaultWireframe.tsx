@@ -8,7 +8,7 @@ interface DefaultWireframeProps extends LayoutProps {
 
 export function DefaultWireframe({ image, texts, intent, brandColors }: DefaultWireframeProps) {
     const mainColor = brandColors[0] || '#000000'
-    const headline = texts['headline'] || intent.toUpperCase()
+    const headline = texts['headline']
     const cta = texts['cta'] || 'DESCUBRIR MAS'
 
     return (

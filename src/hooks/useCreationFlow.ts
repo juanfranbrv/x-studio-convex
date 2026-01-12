@@ -393,6 +393,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         })
     }, [currentIntent])
 
+    const setCaption = useCallback((caption: string) => {
+        setState(prev => ({ ...prev, caption }))
+    }, [])
+
     const setAdditionalInstructions = useCallback((instructions: string) => {
         setState(prev => ({ ...prev, additionalInstructions: instructions }))
     }, [])
@@ -430,6 +434,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
             if (id === 'headline') return { ...prev, headline: isNoText ? '' : NO_TEXT_TOKEN }
             if (id === 'cta') return { ...prev, cta: isNoText ? '' : NO_TEXT_TOKEN }
+            if (id === 'caption') return { ...prev, caption: isNoText ? '' : NO_TEXT_TOKEN } // NEW: Handle caption
 
             return {
                 ...prev,
@@ -459,12 +464,13 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 // Determine if it's a standard or custom field
                 if (field.id === 'headline') setHeadline(result.text)
                 else if (field.id === 'cta') setCta(result.text)
+                else if (field.id === 'caption') setCaption(result.text) // NEW: Handle caption
                 else setCustomText(field.id, result.text)
             }
         } catch (error) {
             console.error('Error in generateFieldCopy:', error)
         }
-    }, [activeBrandKit, state.selectedIntent, state.visionAnalysis, state.rawMessage, setHeadline, setCta, setCustomText])
+    }, [activeBrandKit, state.selectedIntent, state.visionAnalysis, state.rawMessage, setHeadline, setCta, setCaption, setCustomText])
 
     const generateCustomFieldCopy = useCallback(async (fieldId: string) => {
         if (!activeBrandKit || !state.selectedIntent || !currentIntent?.requiredFields) return
@@ -594,6 +600,7 @@ URL: ${activeBrandKit.url || 'No disponible'}
             'tagline': 'Genera un tagline memorable y conciso (máximo 6-8 palabras) que capture la esencia de la propuesta.',
             'url': 'Sugiere un texto descriptivo corto para acompañar la URL (ej: "Visita nuestra web", "Descubre más").',
             'headline': 'Genera un titular impactante y atractivo (máximo 8-10 palabras).',
+            'caption': 'Genera un pie de foto o descripción corta para redes sociales (máximo 20 palabras).', // NEW: Caption prompt
             'custom': 'Genera un texto de marketing corto y relevante (máximo 10 palabras).',
         }
 
@@ -630,7 +637,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             console.error('Error generating text:', error)
             return ''
         }
-    }, [activeBrandKit])
+    }, [activeBrandKit, state.rawMessage])
 
     // -------------------------------------------------------------------------
     // COMPUTED VALUES
@@ -767,6 +774,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         const ctaValue = state.cta?.trim()
         if (ctaValue && ctaValue !== NO_TEXT_TOKEN) {
             textParts.push(`• CTA: "${ctaValue}"`)
+        }
+
+        const captionValue = state.caption?.trim() // NEW: Add caption to prompt
+        if (captionValue && captionValue !== NO_TEXT_TOKEN) {
+            textParts.push(`• CAPTION: "${captionValue}"`)
         }
 
         Object.entries(state.customTexts).forEach(([id, val]) => {
@@ -1095,6 +1107,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                     selectedLogoId: state.selectedLogoId,
                     headline: state.headline,
                     cta: state.cta,
+                    caption: state.caption, // NEW
                     customTexts: state.customTexts,
                     selectedBrandColors: state.selectedBrandColors,
                     rawMessage: state.rawMessage,
@@ -1128,7 +1141,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
     }, [])
 
     const reset = useCallback(() => {
-        setState(INITIAL_GENERATION_STATE)
+        setState({ ...INITIAL_GENERATION_STATE, caption: '' }) // NEW: Reset caption
         options?.onReset?.()
     }, [options])
 
@@ -1139,6 +1152,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
     const loadPreset = useCallback((presetState: Partial<GenerationState>) => {
         setState(prev => ({
             ...INITIAL_GENERATION_STATE,
+            caption: '', // NEW: Ensure caption is reset for presets
             ...presetState,
             // Ensure clean technical state
             isGenerating: false,
@@ -1170,6 +1184,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             selectedLogoId: state.selectedLogoId,
             headline: state.headline,
             cta: state.cta,
+            caption: state.caption, // NEW
             customTexts: state.customTexts,
             selectedBrandColors: state.selectedBrandColors,
             rawMessage: state.rawMessage,
@@ -1225,6 +1240,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         selectLogo,
         setHeadline,
         setCta,
+        setCaption, // NEW
         setAdditionalInstructions,
         setRawMessage,
         setCustomStyle,

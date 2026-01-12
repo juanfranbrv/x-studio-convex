@@ -29,9 +29,11 @@ export function WireframeRenderer({ state, aspectRatio }: WireframeRendererProps
         brandColors: state.selectedBrandColors.map(c => c.color),
         logoId: state.selectedLogoId,
         texts: {
-            headline: state.headline,
-            cta: state.cta,
-            ...state.customTexts
+            // Hiding text in wireframe because we now have the TextLayersEditor overlay
+            headline: '',
+            cta: '',
+            // Also hide custom texts from the wireframe
+            ...Object.keys(state.customTexts).reduce((acc, k) => ({ ...acc, [k]: '' }), {})
         },
         aspectRatio
     }

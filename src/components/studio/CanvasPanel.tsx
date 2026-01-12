@@ -54,13 +54,14 @@ import { generateSocialPost } from '@/app/actions/generate-social-post'
 import { WireframeRenderer } from './previews/WireframeRenderer'
 import { GenerationState } from '@/lib/creation-flow-types'
 
-interface Generation {
+export interface Generation {
     id: string
     image_url: string
     created_at: string
 }
 
 import { GenerateButton } from './creation-flow/GenerateButton'
+import { TextLayersEditor } from './TextLayersEditor'
 
 export interface CanvasPanelProps {
     currentImage: string | null
@@ -80,6 +81,11 @@ export interface CanvasPanelProps {
     onEditPromptChange: (value: string) => void
     canGenerate: boolean
     onUnifiedAction: () => Promise<void>
+    // New unified setters
+    onCaptionChange?: (value: string) => void
+    onHeadlineChange?: (value: string) => void
+    onCtaChange?: (value: string) => void
+    onCustomTextChange?: (id: string, value: string) => void
     // Original props that were not removed but are still used
     aspectRatio?: string
     selectedTextModel?: string
@@ -109,6 +115,10 @@ export function CanvasPanel({
     onTextModelChange,
     selectedModel,
     onModelChange,
+    onCaptionChange,
+    onHeadlineChange,
+    onCtaChange,
+    onCustomTextChange
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const { activeBrandKit } = useBrandKit()
@@ -287,13 +297,15 @@ export function CanvasPanel({
 
     // Trigger Copy Generation when image changes
     useEffect(() => {
-        if (currentImage && activeBrandKit) {
+        // Only auto-generate copy if we don't have one from the unified flow
+        if (currentImage && activeBrandKit && !creationState.caption) {
             handleGenerateCopy()
         } else if (!currentImage) {
             // Clear copy when image is removed (e.g. on reset)
             setGeneratedCopy(null)
             setGeneratedHashtags([])
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentImage])
 
     const handleDownload = () => {
@@ -306,7 +318,7 @@ export function CanvasPanel({
         document.body.removeChild(link)
     }
 
-    // -- End of Logic --
+
 
     const handleSelectTemplate = (template: Template) => {
         // Assuming 'template' is a valid type for ContextElement
@@ -612,6 +624,27 @@ export function CanvasPanel({
                             )}
                         </>
                     )}
+
+                    {/* TEXT LAYERS EDITOR - Overlay on Canvas (Only visible when no image is generated) */}
+                    {!currentImage && (creationState.headline || creationState.cta || Object.keys(creationState.customTexts).length > 0 || creationState.selectedIntent) && (
+                        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none">
+                            <div className="w-full h-full">
+                                <TextLayersEditor
+                                    headline={creationState.headline}
+                                    cta={creationState.cta}
+                                    customTexts={creationState.customTexts}
+                                    onHeadlineChange={(val) => onHeadlineChange?.(val)}
+                                    onCtaChange={(val) => onCtaChange?.(val)}
+                                    onCustomTextChange={(id, val) => onCustomTextChange?.(id, val)}
+                                    onDeleteLayer={(id, type) => {
+                                        if (type === 'headline') onHeadlineChange?.('')
+                                        if (type === 'cta') onCtaChange?.('')
+                                        if (type === 'custom') onCustomTextChange?.(id, '')
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Zoom Controls - Aero style */}
@@ -627,15 +660,19 @@ export function CanvasPanel({
                     </Button>
                 </div>
 
-                {currentImage && (
-                    <div className="w-full max-w-[800px] mt-4 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10">
+
+
+                {/* CAPTION CARD - Shows below texts */}
+                {(creationState.caption || isGeneratingCopy || creationState.selectedIntent) && (
+                    <div className="w-full max-w-[800px] mt-4 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-10">
                         <GeneratedCopyCard
-                            copy={generatedCopy}
+                            copy={creationState.caption || generatedCopy}
                             hashtags={generatedHashtags}
                             isLoading={isGeneratingCopy}
                             onRegenerate={handleGenerateCopy}
                             isLocked={isCopyLocked}
                             onToggleLock={() => setIsCopyLocked(!isCopyLocked)}
+                            onCopyChange={(val) => onCaptionChange?.(val)}
                         />
                     </div>
                 )}

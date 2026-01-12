@@ -458,6 +458,10 @@ export default function ImagePage() {
                                     await handleGenerateWithDebug({ prompt })
                                 }
                             }}
+                            onCaptionChange={creationFlow.setCaption}
+                            onHeadlineChange={creationFlow.setHeadline}
+                            onCtaChange={creationFlow.setCta}
+                            onCustomTextChange={creationFlow.setCustomText}
                         />
                     </div>
 

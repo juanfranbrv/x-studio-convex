@@ -10,7 +10,7 @@ import { SocialFormatSelector } from './SocialFormatSelector'
 
 import { PresetsCarousel } from './PresetsCarousel'
 import { LazyPromptInput } from './LazyPromptInput'
-import { UnifiedContentSection } from './UnifiedContentSection'
+// import { UnifiedContentSection } from './UnifiedContentSection' 
 import { IntentCategory } from '@/lib/creation-flow-types'
 import { SavePresetDialog } from './SavePresetDialog'
 import { GenerateButton } from './GenerateButton'
@@ -108,6 +108,7 @@ export function CreationCommandPanel({
         selectLogo,
         setHeadline,
         setCta,
+        setCaption, // NEW
         setAdditionalInstructions,
         setRawMessage,
         setCustomStyle,
@@ -199,6 +200,7 @@ export function CreationCommandPanel({
                     selectedLogoId: state.selectedLogoId,
                     headline: state.headline,
                     cta: state.cta,
+                    caption: state.caption, // NEW
                     customTexts: state.customTexts,
                     selectedBrandColors: state.selectedBrandColors,
                     rawMessage: state.rawMessage,
@@ -275,6 +277,29 @@ export function CreationCommandPanel({
                 })
             }
 
+            // NEW: Handle Caption
+            if (result.caption) {
+                setCaption(result.caption)
+                newHighlights.add('caption')
+            }
+
+            // NEW: Handle Consolidated Image Texts (Overrides specific fields if present)
+            if (result.imageTexts) {
+                Object.entries(result.imageTexts).forEach(([key, value]) => {
+                    if (key === 'headline') {
+                        setHeadline(value)
+                        newHighlights.add('headline')
+                    } else if (key === 'cta') {
+                        setCta(value)
+                        newHighlights.add('cta')
+                    } else {
+                        // All other texts go to customTexts
+                        setCustomText(key, value)
+                        newHighlights.add(key)
+                    }
+                })
+            }
+
             setHighlightedFields(newHighlights)
 
             // Remove highlights after animation duration (2s)
@@ -348,20 +373,7 @@ export function CreationCommandPanel({
                             />
                             {state.selectedIntent && (
                                 <div className="mt-4">
-                                    <UnifiedContentSection
-                                        intentRequiredFields={currentIntent?.requiredFields || []}
-                                        fieldsToRender={selectedLayoutMeta?.textFields || []}
-                                        customTexts={state.customTexts}
-                                        headline={state.headline}
-                                        cta={state.cta}
-                                        onHeadlineChange={setHeadline}
-                                        onCtaChange={setCta}
-                                        onCustomTextChange={setCustomText}
-                                        onToggleNoText={creationFlow.toggleNoText}
-                                        onGenerateAICopy={creationFlow.generateFieldCopy}
-                                        onGenerateCustomFieldCopy={onGenerateCustomFieldCopy}
-                                        highlightedFields={highlightedFields}
-                                    />
+                                    {/* UNIFIED CONTENT SECTION REMOVED - MOVED TO PREVIEW */}
                                 </div>
                             )}
                         </StepSection>

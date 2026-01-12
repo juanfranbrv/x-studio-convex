@@ -47,10 +47,11 @@ ENGAGEMENT (Interaction):
 PHASE 2: FIELD EXTRACTION
 Once intent is detected, extract relevant information to populate the form fields for that specific intent.
 
-GREEDY EXTRACTION RULES:
-1. Capture EVERY significant piece of information provided by the user.
-2. If the user provides details that do not fit into the standard "headline", "cta", or predefined custom fields, you MUST create new entries in "customTexts" using descriptive, lowercase snake_case keys (e.g., "extra_location", "price_details", "contact_info").
-3. DO NOT discard any user-provided content. If in doubt, add it as a custom field.
+
+SELECTIVE EXTRACTION RULES:
+1. Capture ONLY text that is intended to be visible ON THE IMAGE design (e.g., Headline, CTA, Subheadline).
+2. DO NOT extract metadata (e.g., "audience", "category", "url", "highlight") as custom text fields unless they are explicitly meant to appear in the visual design.
+3. If the user provides context (like "for beginners", "about robotics"), use it to inform the intent and caption, but DO NOT add it as a text layer unless it's a tagline.
 
 OUTPUT FORMAT:
 Return ONLY valid JSON with this structure:
@@ -59,7 +60,14 @@ Return ONLY valid JSON with this structure:
   "confidence": 0.95,              // 0-1 confidence score
   "headline": "string",
   "cta": "string", 
-  "customTexts": {
+  "caption": "string",             // NEW: Social media post caption (include hashtags)
+  "imageTexts": {                  // NEW: Visual text elements ONLY
+    "headline": "string",
+    "subheadline": "string",       // Optional
+    "cta": "string",
+    "extra_text": "string"         // Optional: Only if a 4th visual element is strictly needed
+  },
+  "customTexts": {                 // Legacy compatibility - keep empty unless needed for Template-specific fields
     "field_id": "value"
   }
 }
@@ -67,9 +75,11 @@ Return ONLY valid JSON with this structure:
 RULES:
 1. "detectedIntent": MUST be one of the 20 intent IDs listed above
 2. "confidence": How confident you are in the intent detection (0-1)
-3. "headline": The main title extracted or inferred
-4. "cta": Call to Action (e.g., "Shop Now", "Link in Bio")
-5. "customTexts": Map intent-specific fields to extracted values. Include ALL additional information detected as ad-hoc fields.
-6. Tone: Professional, persuasive, aligned with detected intent
-7. Language: Match the user's language (mostly Spanish)
+3. "headline": The main title for the image (max 6-8 words)
+4. "cta": Short, actionable button text (e.g., "Sign Up", "Learn More")
+5. "caption": A complete social media caption. Include emojis and hashtags here.
+6. "imageTexts": Consolidated object for VISUAL text layers only. Do NOT include metadata here.
+7. "customTexts": Use sparingly only for specific template slots.
+8. Tone: Professional, persuasive, aligned with detected intent
+9. Language: Match the user's language (mostly Spanish)
 `
