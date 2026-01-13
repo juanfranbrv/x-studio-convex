@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, MousePointerClick } from 'lucide-react'
+import { X, MousePointerClick, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface TextLayersEditorProps {
@@ -80,6 +80,22 @@ export function TextLayersEditor({
                             </Button>
                         </div>
                     ))}
+
+                    {/* Add New Text Button */}
+                    <div className="pt-2 pointer-events-auto">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                const newId = `custom_text_${Object.keys(customTexts).length + 1}`
+                                onCustomTextChange(newId, '')
+                            }}
+                            className="text-xs text-muted-foreground hover:text-foreground transition-colors h-7 gap-1"
+                        >
+                            <Plus className="w-3 h-3" />
+                            Añadir texto
+                        </Button>
+                    </div>
                 </div>
             </div>
 

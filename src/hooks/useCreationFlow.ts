@@ -776,10 +776,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             textParts.push(`• CTA: "${ctaValue}"`)
         }
 
-        const captionValue = state.caption?.trim() // NEW: Add caption to prompt
-        if (captionValue && captionValue !== NO_TEXT_TOKEN) {
-            textParts.push(`• CAPTION: "${captionValue}"`)
-        }
+
 
         Object.entries(state.customTexts).forEach(([id, val]) => {
             // Support strings or arrays (greedy parser sometimes returns arrays)
