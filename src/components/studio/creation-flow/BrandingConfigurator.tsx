@@ -352,54 +352,7 @@ export function BrandingConfigurator({
             )
             }
 
-            {/* Text Assets Section */}
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                        <Type className="w-3 h-3 text-primary" />
-                        Textos para Prompt
-                    </label>
-                    <button
-                        onClick={() => {
-                            const newId = `custom-${Date.now()}`
-                            onAddTextAsset?.({ id: newId, type: 'custom', label: 'Texto', value: '' })
-                        }}
-                        className="p-0.5 hover:text-primary transition-colors"
-                        title="Añadir texto"
-                    >
-                        <Plus className="w-3 h-3 text-muted-foreground" />
-                    </button>
-                </div>
-                <div className="space-y-2">
-                    {textAssets.length === 0 ? (
-                        <p className="text-[10px] text-muted-foreground/60 italic text-center py-2">
-                            No hay textos configurados
-                        </p>
-                    ) : (
-                        textAssets.map((asset) => {
-                            // Compute textResources inside the parent scope, not in map
-                            const textResources = [
-                                ...(activeBrandKit?.text_assets?.ctas || []).map((t: string) => ({ label: 'CTA', value: t })),
-                                ...(activeBrandKit?.text_assets?.marketing_hooks || []).map((t: string) => ({ label: 'Hook', value: t })),
-                                activeBrandKit?.tagline ? { label: 'Tagline', value: activeBrandKit.tagline } : null,
-                                activeBrandKit?.url ? { label: 'URL', value: activeBrandKit.url } : null,
-                            ].filter(Boolean) as { label: string; value: string }[]
-
-                            return (
-                                <TextAssetRow
-                                    key={asset.id}
-                                    asset={asset}
-                                    textResources={textResources}
-                                    rawMessage={rawMessage}
-                                    onUpdate={onUpdateTextAsset || (() => { })}
-                                    onRemove={onRemoveTextAsset || (() => { })}
-                                    onGenerateText={onGenerateText}
-                                />
-                            )
-                        })
-                    )}
-                </div>
-            </div>
+            {/* Text Assets Section - REMOVED: Moved to TextLayersEditor (Canvas Preview Overlay) */}
 
             {/* Brand Colors */}
             {

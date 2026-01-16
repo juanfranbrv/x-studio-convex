@@ -540,58 +540,7 @@ export function BrandDNAPanel({
             )}
 
             <div className="p-4 flex flex-col gap-3 overflow-y-auto scrollbar-thin flex-1">
-                {/* TEXT PROMPTS SECTION */}
-                <Collapsible open={openSections.textPrompts} onOpenChange={() => toggleSection('textPrompts')}>
-                    <div className="space-y-0.5">
-                        <SectionHeader
-                            icon={FileText}
-                            title="Textos para Prompt"
-                            count={textAssets.length}
-                            isOpen={openSections.textPrompts}
-                            extra={
-                                <button
-                                    className="cursor-pointer hover:text-primary transition-colors p-0.5"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        const newId = `custom-${Date.now()}`
-                                        onAddTextAsset?.({ id: newId, type: 'custom', label: 'Texto', value: '' })
-                                    }}
-                                >
-                                    <Plus className="w-3 h-3 text-muted-foreground/60" />
-                                </button>
-                            }
-                        />
-                        <CollapsibleContent>
-                            <div className="space-y-2 p-3 bg-white/40 dark:bg-white/10 rounded-2xl border border-white/30">
-                                {textAssets.length === 0 ? (
-                                    <p className="text-[10px] text-muted-foreground/60 italic text-center py-2">
-                                        No hay textos. Añade CTA, Tagline o URL.
-                                    </p>
-                                ) : (
-                                    textAssets.map((asset) => (
-                                        <div key={asset.id} className="flex items-center gap-1.5 group">
-                                            <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-4 shrink-0">
-                                                {asset.label}
-                                            </Badge>
-                                            <Input
-                                                value={asset.value}
-                                                onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
-                                                className="h-6 text-[10px] flex-1 bg-background/50"
-                                                placeholder={`Valor para ${asset.label}...`}
-                                            />
-                                            <button
-                                                onClick={() => onRemoveTextAsset?.(asset.id)}
-                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-destructive"
-                                            >
-                                                <X className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </CollapsibleContent>
-                    </div>
-                </Collapsible>
+                {/* TEXT PROMPTS SECTION - REMOVED: Moved to TextLayersEditor (Canvas Preview Overlay) */}
 
                 <hr className="border-t-2 border-border/50 my-1 -mx-2" />
 

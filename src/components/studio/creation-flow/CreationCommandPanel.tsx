@@ -147,7 +147,7 @@ export function CreationCommandPanel({
             const timer = setTimeout(() => {
                 setIsRevealing(false)
                 setWasJustGenerated(false)
-            }, 3500) // Match the total duration of filters
+            }, 500)
             return () => clearTimeout(timer)
         }
     }, [isGenerating])
@@ -344,7 +344,7 @@ export function CreationCommandPanel({
     return (
         <div className="w-full md:w-80 h-auto md:h-full bg-white/30 dark:bg-zinc-900/30 backdrop-blur-xl border-l border-white/20 flex flex-col shrink-0 relative z-10 order-1 md:order-1">
             {/* Scrollable Content Container */}
-            <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide pb-24 md:pb-0">
+            <div className="flex-1 overflow-y-auto min-h-0 thin-scrollbar pb-24 md:pb-0">
                 <div className="pt-4 pb-4">
 
                     {/* PHASE 0: PRESETS (Quick Start) */}
@@ -628,16 +628,16 @@ export function CreationCommandPanel({
                                     {currentImage ? (
                                         <motion.div
                                             key={currentImage}
-                                            initial={wasJustGenerated ? { opacity: 0, filter: 'blur(80px) saturate(0.2)' } : { opacity: 1, filter: 'blur(0px) saturate(1)' }}
+                                            initial={wasJustGenerated ? { opacity: 0, filter: 'blur(20px)' } : { opacity: 1, filter: 'blur(0px)' }}
                                             animate={{
                                                 opacity: 1,
-                                                filter: 'blur(0px) saturate(1)',
+                                                filter: 'blur(0px)',
                                             }}
                                             transition={wasJustGenerated ? {
-                                                duration: 3.5,
-                                                ease: [0.22, 1, 0.36, 1],
-                                                filter: { duration: 4, ease: "linear" },
-                                                opacity: { duration: 1.5 }
+                                                duration: 0.3,
+                                                ease: "easeOut",
+                                                filter: { duration: 0.4 },
+                                                opacity: { duration: 0.2 }
                                             } : {
                                                 duration: 0.15
                                             }}

@@ -462,6 +462,12 @@ export default function ImagePage() {
                             onHeadlineChange={creationFlow.setHeadline}
                             onCtaChange={creationFlow.setCta}
                             onCustomTextChange={creationFlow.setCustomText}
+                            onAddTextAsset={() => {
+                                const newId = `custom-${Date.now()}`
+                                creationFlow.addTextAsset({ id: newId, type: 'custom', label: 'Texto', value: '' })
+                            }}
+                            onRemoveTextAsset={creationFlow.removeTextAsset}
+                            onUpdateTextAsset={creationFlow.updateTextAsset}
                         />
                     </div>
 

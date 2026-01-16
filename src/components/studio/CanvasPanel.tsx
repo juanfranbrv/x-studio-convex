@@ -86,6 +86,10 @@ export interface CanvasPanelProps {
     onHeadlineChange?: (value: string) => void
     onCtaChange?: (value: string) => void
     onCustomTextChange?: (id: string, value: string) => void
+    // New handlers for text assets
+    onAddTextAsset?: () => void
+    onRemoveTextAsset?: (id: string) => void
+    onUpdateTextAsset?: (id: string, value: string) => void
     // Original props that were not removed but are still used
     aspectRatio?: string
     selectedTextModel?: string
@@ -118,7 +122,10 @@ export function CanvasPanel({
     onCaptionChange,
     onHeadlineChange,
     onCtaChange,
-    onCustomTextChange
+    onCustomTextChange,
+    onAddTextAsset,
+    onRemoveTextAsset,
+    onUpdateTextAsset
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const { activeBrandKit } = useBrandKit()
@@ -256,6 +263,7 @@ export function CanvasPanel({
     // Handle Generation Reveal Effect
     useEffect(() => {
         if (isGenerating) {
+            setWasJustGenerated(true)
             setIsRevealing(true)
         } else if (currentImage && currentImage !== prevImage) {
             setPrevImage(currentImage)
@@ -264,7 +272,7 @@ export function CanvasPanel({
             if (wasJustGenerated) {
                 const timer = setTimeout(() => {
                     setWasJustGenerated(false)
-                }, 4000)
+                }, 500)
                 return () => clearTimeout(timer)
             }
         }
@@ -466,7 +474,7 @@ export function CanvasPanel({
             </div>
 
             <div className={cn(
-                "flex-1 relative flex flex-col items-center justify-start pb-8 overflow-auto scrollbar-hide",
+                "flex-1 relative flex flex-col items-center justify-start pb-8 overflow-auto thin-scrollbar",
                 isMobile ? "px-0 pt-20" : "px-6 pt-20"
             )}>
 
@@ -538,16 +546,16 @@ export function CanvasPanel({
                             <div className="w-full h-full flex items-center justify-center">
                                 <motion.div
                                     key={currentImage}
-                                    initial={wasJustGenerated ? { opacity: 0, filter: 'blur(80px) saturate(0.2)' } : { opacity: 1, filter: 'blur(0px) saturate(1)' }}
+                                    initial={wasJustGenerated ? { opacity: 0, filter: 'blur(20px)' } : { opacity: 1, filter: 'blur(0px)' }}
                                     animate={{
                                         opacity: 1,
-                                        filter: 'blur(0px) saturate(1)',
+                                        filter: 'blur(0px)',
                                     }}
                                     transition={wasJustGenerated ? {
-                                        duration: 3.5,
-                                        ease: [0.22, 1, 0.36, 1],
-                                        filter: { duration: 4, ease: "linear" },
-                                        opacity: { duration: 1.5 }
+                                        duration: 0.3,
+                                        ease: "easeOut",
+                                        filter: { duration: 0.4 },
+                                        opacity: { duration: 0.2 }
                                     } : {
                                         duration: 0.15
                                     }}
@@ -633,13 +641,17 @@ export function CanvasPanel({
                                     headline={creationState.headline}
                                     cta={creationState.cta}
                                     customTexts={creationState.customTexts}
+                                    textAssets={creationState.selectedTextAssets}
                                     onHeadlineChange={(val) => onHeadlineChange?.(val)}
                                     onCtaChange={(val) => onCtaChange?.(val)}
                                     onCustomTextChange={(id, val) => onCustomTextChange?.(id, val)}
+                                    onAddTextAsset={onAddTextAsset}
+                                    onUpdateTextAsset={onUpdateTextAsset}
                                     onDeleteLayer={(id, type) => {
                                         if (type === 'headline') onHeadlineChange?.('')
                                         if (type === 'cta') onCtaChange?.('')
                                         if (type === 'custom') onCustomTextChange?.(id, '')
+                                        if (type === 'asset') onRemoveTextAsset?.(id)
                                     }}
                                 />
                             </div>

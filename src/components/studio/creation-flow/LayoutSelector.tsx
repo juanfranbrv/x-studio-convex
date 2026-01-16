@@ -1,7 +1,10 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { Zap, Smartphone, AlertCircle, Hash, BarChart3, Box, Sparkles } from 'lucide-react'
+import {
+    Zap, Smartphone, AlertCircle, Hash, BarChart3, Box, Sparkles, Grid, Heart, CreditCard, List, ShieldCheck,
+    Clock, Users, User, Award, TrendingUp, Gift, Briefcase, Book, BookOpen, Tag, Medal, Target, Mic, Music, Palette, Activity
+} from 'lucide-react'
 import type { LayoutOption } from '@/lib/creation-flow-types'
 
 interface LayoutSelectorProps {
@@ -189,6 +192,27 @@ const WireframeIcons: Record<string, React.FC<{ className?: string }>> = {
     Hash: ({ className }) => <Hash className={className} />,
     BarChart3: ({ className }) => <BarChart3 className={className} />,
     Box: ({ className }) => <Box className={className} />,
+    Grid: ({ className }) => <Grid className={className} />,
+    Heart: ({ className }) => <Heart className={className} />,
+    CreditCard: ({ className }) => <CreditCard className={className} />,
+    List: ({ className }) => <List className={className} />,
+    ShieldCheck: ({ className }) => <ShieldCheck className={className} />,
+    Clock: ({ className }) => <Clock className={className} />,
+    Users: ({ className }) => <Users className={className} />,
+    User: ({ className }) => <User className={className} />,
+    Award: ({ className }) => <Award className={className} />,
+    TrendingUp: ({ className }) => <TrendingUp className={className} />,
+    Gift: ({ className }) => <Gift className={className} />,
+    Briefcase: ({ className }) => <Briefcase className={className} />,
+    Book: ({ className }) => <Book className={className} />,
+    BookOpen: ({ className }) => <BookOpen className={className} />,
+    Tag: ({ className }) => <Tag className={className} />,
+    Medal: ({ className }) => <Medal className={className} />,
+    Target: ({ className }) => <Target className={className} />,
+    Mic: ({ className }) => <Mic className={className} />,
+    Music: ({ className }) => <Music className={className} />,
+    Palette: ({ className }) => <Palette className={className} />,
+    Activity: ({ className }) => <Activity className={className} />,
 }
 
 export function LayoutSelector({

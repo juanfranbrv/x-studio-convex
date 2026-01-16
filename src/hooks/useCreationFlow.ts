@@ -367,7 +367,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     const setHeadline = useCallback((headline: string) => {
         setState(prev => {
-            const newState = { ...prev, headline }
+            const newState = { ...prev, headline: headline || '' }
             // Sync with mapped intent fields
             if (currentIntent?.requiredFields) {
                 const mappedField = currentIntent.requiredFields.find(f => f.mapsTo === 'headline')
@@ -381,7 +381,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     const setCta = useCallback((cta: string) => {
         setState(prev => {
-            const newState = { ...prev, cta }
+            const newState = { ...prev, cta: cta || '' }
             // Sync with mapped intent fields
             if (currentIntent?.requiredFields) {
                 const mappedField = currentIntent.requiredFields.find(f => f.mapsTo === 'cta')
@@ -394,7 +394,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [currentIntent])
 
     const setCaption = useCallback((caption: string) => {
-        setState(prev => ({ ...prev, caption }))
+        setState(prev => ({ ...prev, caption: caption || '' }))
     }, [])
 
     const setAdditionalInstructions = useCallback((instructions: string) => {
@@ -413,7 +413,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => {
             const newState = {
                 ...prev,
-                customTexts: { ...prev.customTexts, [id]: value }
+                customTexts: { ...prev.customTexts, [id]: value || '' }
             }
 
             // Sync back to global headline/cta if mapped

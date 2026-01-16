@@ -640,6 +640,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Evolution timeline from left to right.',
             structuralPrompt: COMPARATIVA_EVOLUTION_PROMPT,
         },
+        {
+            id: 'comparativa-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
     lista: [
         {
@@ -695,6 +704,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'center',
             promptInstruction: 'Handwritten note or sticky note aesthetic.',
             structuralPrompt: LISTA_NOTE_PROMPT,
+        },
+        {
+            id: 'lista-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
         },
     ],
     cita: [
@@ -752,6 +770,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Half image, half quote text.',
             structuralPrompt: CITA_SPLIT_PROMPT,
         },
+        {
+            id: 'cita-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
     equipo: [
         {
@@ -807,6 +834,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'center',
             promptInstruction: 'Clean ID card style profile.',
             structuralPrompt: EQUIPO_MINIMAL_PROMPT,
+        },
+        {
+            id: 'equipo-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
         },
     ],
     logro: [
@@ -864,6 +900,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Milestone on a path or timeline.',
             structuralPrompt: LOGRO_JOURNEY_PROMPT,
         },
+        {
+            id: 'logro-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
     lanzamiento: [
         {
@@ -919,6 +964,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'center',
             promptInstruction: 'Floating 3D calendar page.',
             structuralPrompt: LANZAMIENTO_CALENDAR_PROMPT,
+        },
+        {
+            id: 'lanzamiento-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
         },
     ],
     reto: [
@@ -976,6 +1030,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Step-by-step contest rules.',
             structuralPrompt: RETO_RULES_PROMPT,
         },
+        {
+            id: 'reto-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
     servicio: [
         {
@@ -1031,6 +1094,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'center',
             promptInstruction: 'Large 3D trust badge or guarantee.',
             structuralPrompt: SERVICIO_TRUST_PROMPT,
+        },
+        {
+            id: 'servicio-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
         },
     ],
     talento: [
@@ -1088,6 +1160,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Atmospheric office space shot.',
             structuralPrompt: TALENTO_OFFICE_PROMPT,
         },
+        {
+            id: 'talento-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
     definicion: [
         {
@@ -1143,6 +1224,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'center',
             promptInstruction: 'Code editor syntax definition.',
             structuralPrompt: DEFINICION_TECH_PROMPT,
+        },
+        {
+            id: 'definicion-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
         },
     ],
     efemeride: [
@@ -1200,6 +1290,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Floral or seasonal border frame.',
             structuralPrompt: EFEMERIDE_SEASONAL_PROMPT,
         },
+        {
+            id: 'efemeride-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
     pasos: [
         {
@@ -1255,6 +1354,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'left',
             promptInstruction: 'Vertical timeline progress.',
             structuralPrompt: PASOS_TIMELINE_PROMPT,
+        },
+        {
+            id: 'pasos-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
         },
     ],
     bts: [
@@ -1312,6 +1420,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Image with extracted color swatches.',
             structuralPrompt: BTS_PALETTE_PROMPT,
         },
+        {
+            id: 'bts-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
     catalogo: [
         {
@@ -1367,6 +1484,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'center',
             promptInstruction: 'Zoom bubbles showing texture.',
             structuralPrompt: CATALOGO_DETAIL_PROMPT,
+        },
+        {
+            id: 'catalogo-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
         },
     ],
     oferta: [
@@ -1424,6 +1550,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Seasonal decorations framing the product.',
             structuralPrompt: OFERTA_SEASONAL_PROMPT,
         },
+        {
+            id: 'oferta-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
     escaparate: [
         {
@@ -1479,6 +1614,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'bottom',
             promptInstruction: 'Product on a stylized podium with thematic props.',
             structuralPrompt: ESCAPARATE_THEMED_PROMPT,
+        },
+        {
+            id: 'escaparate-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
         },
     ],
     comunicado: [
@@ -1542,6 +1686,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Stark, minimal layout with rigid grid.',
             structuralPrompt: COMUNICADO_MINIMAL_PROMPT,
         },
+        {
+            id: 'comunicado-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
     pregunta: [
         {
@@ -1597,6 +1750,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'center',
             promptInstruction: 'Abstract thought bubble layout.',
             structuralPrompt: PREGUNTA_THOUGHT_PROMPT,
+        },
+        {
+            id: 'pregunta-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
         },
     ],
     dato: [
@@ -1654,6 +1816,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Circular chart or ring visualization.',
             structuralPrompt: DATO_PIE_PROMPT,
         },
+        {
+            id: 'dato-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
     evento: [
         {
@@ -1710,6 +1881,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Elegant minimal save the date layout.',
             structuralPrompt: EVENTO_MINIMAL_PROMPT,
         },
+        {
+            id: 'evento-free',
+            name: 'Compo Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
     ],
 
 
@@ -1720,6 +1900,15 @@ export const DEFAULT_LAYOUTS: LayoutOption[] = [
     { id: 'clean', name: 'Limpio', description: 'Espacio para texto', svgIcon: 'Layout', textZone: 'bottom', promptInstruction: 'Clean composition with ample negative space at bottom 25% for text overlay.' },
     { id: 'full-bleed', name: 'Full Bleed', description: 'Imagen completa', svgIcon: 'Maximize', textZone: 'overlay', promptInstruction: 'Full bleed image with semi-transparent text overlay capability.' },
     { id: 'frame', name: 'Con Marco', description: 'Borde visual', svgIcon: 'Frame', textZone: 'overlay', promptInstruction: 'Image with decorative frame or border.' },
+    {
+        id: 'default-free',
+        name: 'Compo Libre',
+        description: 'Sin indicación',
+        svgIcon: 'Sparkles',
+        textZone: 'center',
+        promptInstruction: 'Natural composition without structural constraints.',
+        structuralPrompt: '',
+    },
 ]
 
 // -----------------------------------------------------------------------------
