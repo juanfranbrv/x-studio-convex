@@ -24,7 +24,7 @@ import {
 } from '@/lib/creation-flow-types'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { resizeImage } from '@/lib/image-utils'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 
 // Priority-based prompt construction imports
@@ -53,6 +53,7 @@ export interface UseCreationFlowOptions {
 export function useCreationFlow(options?: UseCreationFlowOptions) {
     const { activeBrandKit } = useBrandKit()
     const saveGeneration = useMutation(api.generations.saveGeneration)
+    const aiConfig = useQuery(api.settings.getAIConfig)
     const [state, setState] = useState<GenerationState>(INITIAL_GENERATION_STATE)
 
     // -------------------------------------------------------------------------
@@ -64,6 +65,17 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [state.selectedIntent])
 
     const requiresImage = currentIntent?.requiresImage ?? false
+
+    // Initialize defaults from Brand Kit & AI Config
+    useEffect(() => {
+        if (aiConfig) {
+            setState(prev => ({
+                ...prev,
+                selectedImageModel: aiConfig.imageModel,
+                selectedIntelligenceModel: aiConfig.intelligenceModel
+            }))
+        }
+    }, [aiConfig])
 
     // Initialize defaults from Brand Kit
     useEffect(() => {

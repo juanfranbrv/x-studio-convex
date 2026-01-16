@@ -166,16 +166,26 @@ export function ControlsPanel({
                         <div className="glass-card p-4">
                             <div className="flex items-center justify-between mb-2">
                                 <SectionHeader icon={Star} title="Favoritos" />
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setIsSaveDialogOpen(true)}
-                                    disabled={!state.selectedIntent}
-                                    className="h-7 text-[10px] text-muted-foreground hover:text-primary gap-1"
-                                >
-                                    <Bookmark className="w-3 h-3" />
-                                    Guardar
-                                </Button>
+                                <div className="flex items-center gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={reset}
+                                        className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground gap-1"
+                                    >
+                                        Nueva generación
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setIsSaveDialogOpen(true)}
+                                        disabled={!state.selectedIntent}
+                                        className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                                    >
+                                        <Bookmark className="w-3 h-3" />
+                                        Guardar
+                                    </Button>
+                                </div>
                             </div>
                             <PresetsCarousel
                                 onSelectPreset={loadPreset}

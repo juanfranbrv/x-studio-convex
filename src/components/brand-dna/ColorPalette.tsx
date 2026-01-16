@@ -147,8 +147,8 @@ export function ColorPalette({
                 )}
                 <CardContent className={cn("relative space-y-1 overflow-visible", hideHeader && "p-0")}>
                     <div className={cn(
-                        "grid gap-3",
-                        hideHeader ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
+                        "grid gap-4",
+                        "grid-cols-5"
                     )}>
                         {colors.map((item, idx) => (
                             <div key={idx} className="group relative">
@@ -168,58 +168,39 @@ export function ColorPalette({
                                                         id: `color-${idx}`,
                                                         type: 'color',
                                                         value: item.color,
-                                                        label: `Color ${idx + 1}`
+                                                        label: item.role || `Color ${idx + 1}`
                                                     })}
                                                     onDragEnd={onDragEnd}
                                                     className={cn(
-                                                        "aspect-video rounded-xl cursor-grab active:cursor-grabbing transition-all duration-300", // Widen to aspect-video
-                                                        "hover:scale-105 hover:shadow-xl border-2 border-border",
-                                                        "hover:border-primary relative overflow-visible flex items-center justify-center", // Centered content
+                                                        "aspect-square rounded-full cursor-grab active:cursor-grabbing transition-all duration-300",
+                                                        "hover:scale-110 hover:shadow-xl border-2",
+                                                        "relative overflow-visible flex items-center justify-center",
                                                         colorPickerOpen === idx ? 'border-primary ring-2 ring-primary/20' : '',
                                                         selectedColorIds.includes(`color-${idx}`)
-                                                            ? "border-primary shadow-sm"
-                                                            : "border-transparent hover:border-border"
+                                                            ? "border-primary shadow-md"
+                                                            : "border-white/30 dark:border-white/20 hover:border-primary/50"
                                                     )}
                                                     style={{ backgroundColor: item.color }}
                                                     onClick={(e) => {
-                                                        // Toggle role on click if not dragging or using eyedropper
-                                                        if (!colorPickerOpen) {
+                                                        // Toggle role on double-click
+                                                        if (e.detail === 2 && !colorPickerOpen) {
                                                             const roles = ['Texto', 'Fondo', 'Acento 1', 'Acento 2'];
                                                             const currentIndex = roles.indexOf(item.role || 'Texto');
-                                                            // Initialize to 'Texto' if undefined or not in list
                                                             const nextRole = roles[(currentIndex + 1) % roles.length];
                                                             onUpdateRole(idx, nextRole);
                                                         }
                                                     }}
                                                 >
-                                                    {/* Role Label INSIDE */}
-                                                    <span
-                                                        className={cn(
-                                                            "text-xs font-bold uppercase tracking-wide select-none transition-colors duration-200",
-                                                            getContrastColor(item.color)
-                                                        )}
-                                                    >
-                                                        {item.role || 'Texto'}
-                                                    </span>
-
-
                                                     {/* Toggle Selection Checkmark */}
-                                                    {onToggleSelection && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                onToggleSelection(idx);
-                                                            }}
+                                                    {onToggleSelection && selectedColorIds.includes(`color-${idx}`) && (
+                                                        <div
                                                             className={cn(
-                                                                "absolute top-1.5 left-1.5 flex items-center justify-center transition-all duration-200 z-30",
-                                                                selectedColorIds.includes(`color-${idx}`)
-                                                                    ? `${getContrastColor(item.color)} drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] scale-110 opacity-100`
-                                                                    : "text-white/20 scale-90 opacity-0 group-hover:opacity-100 hover:text-white/60 hover:scale-110"
+                                                                "absolute inset-0 flex items-center justify-center z-30",
+                                                                getContrastColor(item.color)
                                                             )}
-                                                            title={selectedColorIds.includes(`color-${idx}`) ? "Deseleccionar para IA" : "Seleccionar para IA"}
                                                         >
-                                                            <Check className="w-4 h-4 stroke-[3.5px]" />
-                                                        </button>
+                                                            <Check className="w-4 h-4 stroke-[3px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
+                                                        </div>
                                                     )}
 
                                                     {/* Remove Button */}
@@ -228,9 +209,9 @@ export function ColorPalette({
                                                             e.stopPropagation();
                                                             onRemoveColor(idx);
                                                         }}
-                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:scale-110 shadow-lg z-50"
+                                                        className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:scale-110 shadow-lg z-50"
                                                     >
-                                                        <X className="w-3.5 h-3.5" />
+                                                        <X className="w-2.5 h-2.5" />
                                                     </button>
                                                 </div>
                                             </PopoverTrigger>
@@ -260,8 +241,9 @@ export function ColorPalette({
                                         </PopoverContent>
                                     </Popover>
                                     <TooltipContent side="bottom" className="flex flex-col gap-1 p-2 bg-popover border-border shadow-md z-[110]">
-                                        <p className="text-xs font-mono font-bold text-foreground">HEX: {item.color.toUpperCase()}</p>
-                                        <p className="text-[10px] text-muted-foreground">Click para cambiar rol</p>
+                                        <p className="text-xs font-bold text-foreground">{item.role || 'Sin rol'}</p>
+                                        <p className="text-[10px] font-mono text-muted-foreground">{item.color.toUpperCase()}</p>
+                                        <p className="text-[9px] text-muted-foreground/60">Doble clic para cambiar rol</p>
                                     </TooltipContent>
                                 </Tooltip>
 
@@ -286,7 +268,7 @@ export function ColorPalette({
                         {colors.length < 10 && (
                             <div
                                 onClick={onAddColor}
-                                className="aspect-video rounded-xl border-2 border-dashed border-border hover:border-primary flex items-center justify-center transition-colors group bg-muted/50 cursor-pointer w-full"
+                                className="aspect-square rounded-full border-2 border-dashed border-border hover:border-primary flex items-center justify-center transition-colors group bg-muted/50 cursor-pointer w-full"
                             >
                                 <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                             </div>

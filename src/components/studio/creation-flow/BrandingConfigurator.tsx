@@ -83,7 +83,7 @@ function CustomColorPicker({ onAdd }: { onAdd: (color: string) => void }) {
         <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
                 <button
-                    className="w-9 h-9 rounded-lg border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center text-muted-foreground hover:text-primary group"
+                    className="aspect-square rounded-full border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center text-muted-foreground hover:text-primary group"
                     title="Añadir color personalizado"
                 >
                     <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -362,8 +362,8 @@ export function BrandingConfigurator({
                             <Palette className="w-3 h-3 text-primary" />
                             Paleta Cromática
                         </label>
-                        <div className="grid grid-cols-3 gap-2">
-                            {colors.map((colorObj, idx) => {
+                        <div className="grid grid-cols-5 gap-2">
+                            {colors.slice(0, 10).map((colorObj, idx) => {
                                 const color = colorObj.color
                                 const selection = selectedBrandColors.find(s => s.color === color)
                                 const isSelected = !!selection
@@ -385,35 +385,24 @@ export function BrandingConfigurator({
                                         tabIndex={0}
                                         onClick={() => onToggleBrandColor(color)}
                                         className={cn(
-                                            "relative aspect-video rounded-lg border-2 transition-all shadow-sm flex items-center justify-center group/swatch cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                                            "relative aspect-square rounded-full border-2 transition-all shadow-sm flex items-center justify-center group/swatch cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
                                             isSelected
                                                 ? "border-primary ring-2 ring-primary/30 scale-105"
-                                                : "border-border hover:border-primary/50"
+                                                : "border-white/30 dark:border-white/20 hover:border-primary/50"
                                         )}
                                         style={{
                                             backgroundColor: color,
                                             boxShadow: isSelected ? `0 0 12px ${color}40` : 'inset 0 1px 1px rgba(255,255,255,0.1)'
                                         }}
-                                        title={`${color}${role ? ` - Rol: ${role}` : ''}`}
+                                        title={`${color}${role ? ` - ${role}` : ''}`}
                                     >
                                         {/* Light color visibility assurance */}
-                                        <div className="absolute inset-0 rounded-md border border-black/5 pointer-events-none" />
+                                        <div className="absolute inset-0 rounded-full border border-black/5 pointer-events-none" />
 
-                                        {/* Role Label */}
-                                        <span
-                                            className={cn(
-                                                "text-[10px] font-bold uppercase tracking-wide select-none transition-colors duration-200 z-10",
-                                                getContrastColor(color)
-                                            )}
-                                        >
-                                            {role}
-                                        </span>
-
+                                        {/* Selected Checkmark */}
                                         {isSelected && (
-                                            <div className="absolute top-1 left-1">
-                                                <div className={cn("rounded-full p-0.5 bg-white/20 backdrop-blur-sm", getContrastColor(color))}>
-                                                    <Check className="w-3 h-3 stroke-[3]" />
-                                                </div>
+                                            <div className={cn("z-10", getContrastColor(color))}>
+                                                <Check className="w-4 h-4 stroke-[3] drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
                                             </div>
                                         )}
 
@@ -424,18 +413,18 @@ export function BrandingConfigurator({
                                                     e.stopPropagation()
                                                     onRemoveBrandColor(color)
                                                 }}
-                                                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center opacity-0 group-hover/swatch:opacity-100 transition-all hover:scale-110 z-20"
+                                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center opacity-0 group-hover/swatch:opacity-100 transition-all hover:scale-110 z-20"
                                                 title="Eliminar color"
                                             >
-                                                <X className="w-3 h-3" />
+                                                <X className="w-2.5 h-2.5" />
                                             </button>
                                         )}
                                     </div>
                                 )
                             })}
 
-                            {/* Custom Color Adder */}
-                            <CustomColorPicker onAdd={onAddCustomColor} />
+                            {/* Custom Color Adder - only show if less than 10 colors */}
+                            {colors.length < 10 && <CustomColorPicker onAdd={onAddCustomColor} />}
                         </div>
                     </div>
                 )

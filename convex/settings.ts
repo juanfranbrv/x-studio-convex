@@ -20,3 +20,23 @@ export const getThemeSettings = query({
         };
     },
 });
+
+export const getAIConfig = query({
+    args: {},
+    handler: async (ctx) => {
+        const imageModel = await ctx.db
+            .query("app_settings")
+            .withIndex("by_key", (q) => q.eq("key", "model_image_generation"))
+            .first();
+
+        const intelligenceModel = await ctx.db
+            .query("app_settings")
+            .withIndex("by_key", (q) => q.eq("key", "model_intelligence"))
+            .first();
+
+        return {
+            imageModel: (imageModel?.value as string) || "wisdom/gemini-3-pro-image-preview",
+            intelligenceModel: (intelligenceModel?.value as string) || "gemini-pro",
+        };
+    },
+});

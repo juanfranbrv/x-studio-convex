@@ -588,7 +588,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     comparativa: [
         {
             id: 'comp-split',
-            name: 'Split Vertical',
+            name: 'Split',
             description: 'División Clásica',
             svgIcon: 'SplitVertical',
             textZone: 'center',
@@ -606,7 +606,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'comp-before-after',
-            name: 'Antes/Después',
+            name: 'Cambio',
             description: 'Transformación',
             svgIcon: 'ArrowRight',
             textZone: 'bottom',
@@ -615,7 +615,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'comp-grid',
-            name: 'Grid Features',
+            name: 'Grid',
             description: 'Pros/Contras',
             svgIcon: 'CheckCircle',
             textZone: 'center',
@@ -624,7 +624,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'comp-slider',
-            name: 'Slider Effect',
+            name: 'Slider',
             description: 'Interactivo',
             svgIcon: 'MoveHorizontal',
             textZone: 'center',
@@ -642,7 +642,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'comparativa-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -707,7 +707,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'lista-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -763,7 +763,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'cita-split',
-            name: 'Split Mood',
+            name: 'Split',
             description: 'Imagen/Texto',
             svgIcon: 'SplitHorizontal',
             textZone: 'right',
@@ -772,7 +772,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'cita-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -783,7 +783,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     equipo: [
         {
             id: 'equipo-portrait',
-            name: 'Retrato Hero',
+            name: 'Retrato',
             description: 'Perfil Profesional',
             svgIcon: 'User',
             textZone: 'bottom',
@@ -801,7 +801,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'equipo-collage',
-            name: 'Collage',
+            name: 'Full',
             description: 'Grid Caras',
             svgIcon: 'Grid',
             textZone: 'center',
@@ -819,7 +819,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'equipo-action',
-            name: 'En Acción',
+            name: 'Acción',
             description: 'BTS Candid',
             svgIcon: 'Camera',
             textZone: 'bottom',
@@ -828,7 +828,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'equipo-minimal',
-            name: 'Tarjeta ID',
+            name: 'Ficha',
             description: 'Minimalista',
             svgIcon: 'CreditCard',
             textZone: 'center',
@@ -837,7 +837,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'equipo-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -848,7 +848,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     logro: [
         {
             id: 'logro-number',
-            name: 'Cifra Hero',
+            name: 'Cifra',
             description: 'Dato Gigante',
             svgIcon: 'Hash',
             textZone: 'bottom',
@@ -875,7 +875,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'logro-team',
-            name: 'Éxito Equipo',
+            name: 'Grupo',
             description: 'Celebración',
             svgIcon: 'Users',
             textZone: 'bottom',
@@ -893,7 +893,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'logro-journey',
-            name: 'Hito Camino',
+            name: 'Hito',
             description: 'Timeline',
             svgIcon: 'MapPin',
             textZone: 'left',
@@ -902,7 +902,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'logro-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -913,7 +913,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     lanzamiento: [
         {
             id: 'lanzamiento-countdown',
-            name: 'Cuenta Atrás',
+            name: 'Cuenta',
             description: 'Timer 03:00',
             svgIcon: 'Timer',
             textZone: 'center',
@@ -949,7 +949,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'lanzamiento-torn',
-            name: 'Papel Rasgado',
+            name: 'Rasgado',
             description: 'Teaser',
             svgIcon: 'FileMinus',
             textZone: 'center',
@@ -958,7 +958,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'lanzamiento-calendar',
-            name: 'Save Date',
+            name: 'Fecha',
             description: 'Calendario 3D',
             svgIcon: 'Calendar',
             textZone: 'center',
@@ -967,7 +967,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'lanzamiento-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -978,7 +978,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     reto: [
         {
             id: 'reto-vs',
-            name: 'Versus / VS',
+            name: 'Versus',
             description: 'Batalla',
             svgIcon: 'Swords',
             textZone: 'center',
@@ -1032,7 +1032,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'reto-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1043,7 +1043,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     servicio: [
         {
             id: 'servicio-grid',
-            name: 'Grid Features',
+            name: 'Grid',
             description: 'Bento Cards',
             svgIcon: 'Grid',
             textZone: 'center',
@@ -1079,7 +1079,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'servicio-list',
-            name: 'Lista Servicios',
+            name: 'Lista',
             description: 'Catálogo',
             svgIcon: 'List',
             textZone: 'left',
@@ -1097,7 +1097,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'servicio-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1108,7 +1108,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     talento: [
         {
             id: 'talento-hiring',
-            name: 'Hiring Hero',
+            name: 'Hiring',
             description: 'Post Reclutamiento',
             svgIcon: 'Briefcase',
             textZone: 'center',
@@ -1162,7 +1162,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'talento-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1191,7 +1191,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'def-map',
-            name: 'Mapa Mental',
+            name: 'Mapa',
             description: 'Conexiones',
             svgIcon: 'GitBranch',
             textZone: 'center',
@@ -1227,7 +1227,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'definicion-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1265,7 +1265,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'efemeride-history',
-            name: 'Histórico',
+            name: 'Historia',
             description: 'Vintage',
             svgIcon: 'Clock',
             textZone: 'bottom',
@@ -1283,7 +1283,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'efemeride-seasonal',
-            name: 'Estacional',
+            name: 'Estación',
             description: 'Naturaleza',
             svgIcon: 'Sun',
             textZone: 'center',
@@ -1292,7 +1292,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'efemeride-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1303,7 +1303,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     pasos: [
         {
             id: 'pasos-zigzag',
-            name: 'Zig Zag',
+            name: 'ZigZag',
             description: 'Camino Sinuoso',
             svgIcon: 'TrendingUp',
             textZone: 'center',
@@ -1321,7 +1321,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'pasos-split',
-            name: 'Guía Visual',
+            name: 'Guía',
             description: 'Foto + Lista',
             svgIcon: 'Layout',
             textZone: 'right',
@@ -1330,7 +1330,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'pasos-floating',
-            name: 'Pasos 3D',
+            name: 'Pasos3D',
             description: 'Números 3D',
             svgIcon: 'Layers',
             textZone: 'center',
@@ -1348,7 +1348,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'pasos-timeline',
-            name: 'Cronología',
+            name: 'Timeline',
             description: 'Vertical',
             svgIcon: 'MoreVertical',
             textZone: 'left',
@@ -1357,7 +1357,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'pasos-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1368,7 +1368,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     bts: [
         {
             id: 'bts-wip',
-            name: 'En Proceso',
+            name: 'Proceso',
             description: 'Work in Progress',
             svgIcon: 'Tool',
             textZone: 'center',
@@ -1422,7 +1422,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'bts-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1460,7 +1460,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'catalogo-shelf',
-            name: 'Estantería',
+            name: 'Estante',
             description: 'Retail',
             svgIcon: 'Package',
             textZone: 'center',
@@ -1487,7 +1487,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'catalogo-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1498,7 +1498,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     oferta: [
         {
             id: 'retail-classic',
-            name: 'Clásico Impacto',
+            name: 'Impacto',
             description: 'Oferta estándar, texto gigante',
             svgIcon: 'Tag',
             textZone: 'center',
@@ -1507,7 +1507,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'flash-sale',
-            name: 'Flash / Rayo',
+            name: 'Flash',
             description: 'Energía y velocidad alta',
             svgIcon: 'Zap',
             textZone: 'center',
@@ -1516,7 +1516,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'minimal-lux',
-            name: 'Minimal Lujo',
+            name: 'Minimal',
             description: 'Sofisticado y limpio',
             svgIcon: 'Sparkles',
             textZone: 'bottom',
@@ -1525,7 +1525,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'bundle-grid',
-            name: 'Pack / Grid',
+            name: 'Pack',
             description: 'Colección o 2x1',
             svgIcon: 'Grid2x2',
             textZone: 'center',
@@ -1552,7 +1552,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'oferta-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1617,7 +1617,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'escaparate-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1688,7 +1688,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'comunicado-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1699,7 +1699,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     pregunta: [
         {
             id: 'pregunta-big',
-            name: 'Gran Texto',
+            name: 'Texto',
             description: 'Impacto Puro',
             svgIcon: 'Type',
             textZone: 'center',
@@ -1708,7 +1708,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'pregunta-poll',
-            name: 'Encuesta / VS',
+            name: 'Encuesta',
             description: 'Comparativo',
             svgIcon: 'GitCompare',
             textZone: 'center',
@@ -1717,7 +1717,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'pregunta-conversation',
-            name: 'Conversación',
+            name: 'Chat',
             description: 'Chat / Social',
             svgIcon: 'MessageCircle',
             textZone: 'center',
@@ -1726,7 +1726,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'pregunta-quiz',
-            name: 'Quiz / Trivia',
+            name: 'Quiz',
             description: 'Opciones GRID',
             svgIcon: 'Grid',
             textZone: 'center',
@@ -1744,7 +1744,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'pregunta-thought',
-            name: 'Reflexión',
+            name: 'Idea',
             description: 'Abstracto',
             svgIcon: 'Cloud',
             textZone: 'center',
@@ -1753,7 +1753,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'pregunta-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1764,7 +1764,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     dato: [
         {
             id: 'dato-big',
-            name: 'Dato Hero',
+            name: 'Dato',
             description: 'Número Gigante',
             svgIcon: 'Hash',
             textZone: 'center',
@@ -1791,7 +1791,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'dato-infographic',
-            name: 'Infografía',
+            name: 'Info',
             description: 'Grid de Datos',
             svgIcon: 'LayoutGrid',
             textZone: 'center',
@@ -1800,7 +1800,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'dato-metric',
-            name: 'Métrica UI',
+            name: 'Métrica',
             description: 'Dashboard Card',
             svgIcon: 'Activity',
             textZone: 'center',
@@ -1809,7 +1809,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'dato-pie',
-            name: 'Gráfico Circular',
+            name: 'Circular',
             description: 'Porcentajes',
             svgIcon: 'PieChart',
             textZone: 'center',
@@ -1818,7 +1818,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'dato-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1829,7 +1829,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     evento: [
         {
             id: 'evento-conference',
-            name: 'Conferencia',
+            name: 'Speaker',
             description: 'Profesional / Speaker',
             svgIcon: 'Mic',
             textZone: 'right',
@@ -1838,7 +1838,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'evento-party',
-            name: 'Fiesta / Live',
+            name: 'Fiesta',
             description: 'Noche y Energía',
             svgIcon: 'Music',
             textZone: 'center',
@@ -1847,7 +1847,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'evento-workshop',
-            name: 'Workshop',
+            name: 'Taller',
             description: 'Educativo / Curso',
             svgIcon: 'BookOpen',
             textZone: 'left',
@@ -1874,7 +1874,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'evento-minimal',
-            name: 'Save the Date',
+            name: 'Fecha',
             description: 'Minimalista',
             svgIcon: 'Calendar',
             textZone: 'center',
@@ -1883,7 +1883,7 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
         },
         {
             id: 'evento-free',
-            name: 'Compo Libre',
+            name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
             textZone: 'center',
@@ -1902,7 +1902,7 @@ export const DEFAULT_LAYOUTS: LayoutOption[] = [
     { id: 'frame', name: 'Con Marco', description: 'Borde visual', svgIcon: 'Frame', textZone: 'overlay', promptInstruction: 'Image with decorative frame or border.' },
     {
         id: 'default-free',
-        name: 'Compo Libre',
+        name: 'Libre',
         description: 'Sin indicación',
         svgIcon: 'Sparkles',
         textZone: 'center',
@@ -2042,8 +2042,12 @@ export interface GenerationState {
     uploadedImageFile: File | null
     selectedTheme: SeasonalTheme | null
 
-    // Step 3: Vision Analysis
-    visionAnalysis: VisionAnalysis | null
+    // Step 3:    // AI Configuration
+    selectedImageModel?: string
+    selectedIntelligenceModel?: string
+
+    // Analysis
+    visionAnalysis?: VisionAnalysis | null
     isAnalyzing: boolean
 
     // Step 4: Style

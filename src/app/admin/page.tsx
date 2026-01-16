@@ -619,7 +619,7 @@ export default function AdminPage() {
                                 <CardDescription>Valores configurables para créditos</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                {settings?.filter(s => s.key !== 'theme_primary' && s.key !== 'theme_secondary').map((setting) => (
+                                {settings?.filter(s => s.key !== 'theme_primary' && s.key !== 'theme_secondary' && s.key !== 'model_image_generation' && s.key !== 'model_intelligence').map((setting) => (
                                     <div key={setting.key} className="flex items-center justify-between gap-4">
                                         <div className="flex-1">
                                             <Label className="text-base">{setting.key}</Label>
@@ -645,6 +645,62 @@ export default function AdminPage() {
                                         </div>
                                     </div>
                                 ))}
+
+                                <div className="pt-6 border-t">
+                                    <h3 className="text-lg font-medium mb-4">Configuración de Modelos AI</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Image Generation Model */}
+                                        <div className="space-y-3">
+                                            <Label>Modelo de Generación de Imagen</Label>
+                                            <div className="flex gap-2">
+                                                <select
+                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    value={editingSettings['model_image_generation'] ?? settings?.find(s => s.key === 'model_image_generation')?.value ?? "wisdom/gemini-3-pro-image-preview"}
+                                                    onChange={(e) => setEditingSettings(prev => ({ ...prev, model_image_generation: e.target.value }))}
+                                                >
+                                                    <option value="wisdom/gemini-3-pro-image-preview">Gemini 3 Pro Image (Wisdom)</option>
+                                                    <option value="wisdom/qwen-image">Qwen Image (Wisdom)</option>
+                                                    <option value="wisdom/seedream-4">Seedream 4.0 (Wisdom)</option>
+                                                    <option value="google/gemini-3-pro">Gemini 3 Pro (Google Legacy)</option>
+                                                    <option value="google/gemini-2.5-flash">Gemini 2.5 Flash (Google Legacy)</option>
+                                                    <option value="google/imagen-3-fast">Imagen 3 Fast</option>
+                                                </select>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleSaveSetting('model_image_generation', editingSettings['model_image_generation'] as string)}
+                                                >
+                                                    Guardar
+                                                </Button>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">Modelo utilizado para generar las imágenes finales.</p>
+                                        </div>
+
+                                        {/* Intelligence/Logic Model */}
+                                        <div className="space-y-3">
+                                            <Label>Modelo de Inteligencia (Parsing)</Label>
+                                            <div className="flex gap-2">
+                                                <select
+                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    value={editingSettings['model_intelligence'] ?? settings?.find(s => s.key === 'model_intelligence')?.value ?? "wisdom/gemini-2.5-flash"}
+                                                    onChange={(e) => setEditingSettings(prev => ({ ...prev, model_intelligence: e.target.value }))}
+                                                >
+                                                    <option value="wisdom/gemini-3-pro">Gemini 3 Pro (Wisdom)</option>
+                                                    <option value="wisdom/gemini-3-flash">Gemini 3 Flash (Wisdom)</option>
+                                                    <option value="wisdom/gemini-2.5-flash">Gemini 2.5 Flash (Wisdom)</option>
+                                                    <option value="gemini-flash-latest">Gemini 1.5 Flash (Google Official)</option>
+                                                    <option value="gemini-pro">Gemini Pro (Legacy)</option>
+                                                </select>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleSaveSetting('model_intelligence', editingSettings['model_intelligence'] as string)}
+                                                >
+                                                    Guardar
+                                                </Button>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">Modelo utilizado para refinar prompts y extraer entidades.</p>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div className="pt-6 border-t">
                                     <h3 className="text-lg font-medium mb-4">Personalizar Interfaz</h3>
