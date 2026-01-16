@@ -33,12 +33,12 @@ export function TextLayersEditor({
 }: TextLayersEditorProps) {
 
     return (
-        <div className="w-full h-full flex flex-col justify-between py-12 px-8 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto thin-scrollbar">
+        <div className="w-full h-full flex flex-col justify-between py-12 px-8 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto overflow-x-hidden thin-scrollbar">
 
             {/* TOP: HEADLINE & CUSTOM TEXTS (Required by Intent) */}
             <div className="flex-none flex flex-col items-center justify-start pt-4 space-y-6">
                 {/* Headline */}
-                <div className="group relative w-full max-w-2xl pointer-events-auto">
+                <div className="group relative w-full max-w-2xl px-12 pointer-events-auto">
                     <textarea
                         value={headline || ''}
                         onChange={(e) => onHeadlineChange(e.target.value)}
@@ -62,7 +62,7 @@ export function TextLayersEditor({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDeleteLayer('headline', 'headline')}
-                            className="absolute -right-8 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            className="absolute right-4 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive z-10"
                         >
                             <X className="w-4 h-4" />
                         </Button>
@@ -72,7 +72,7 @@ export function TextLayersEditor({
                 {/* Intent-based Custom Texts */}
                 <div className="w-full flex flex-col items-center gap-4">
                     {Object.entries(customTexts).map(([key, value]) => (
-                        <div key={key} className="group relative w-full max-w-3xl pointer-events-auto">
+                        <div key={key} className="group relative w-full max-w-3xl px-12 pointer-events-auto">
                             <textarea
                                 value={value || ''}
                                 onChange={(e) => onCustomTextChange(key, e.target.value)}
@@ -95,7 +95,7 @@ export function TextLayersEditor({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer(key, 'custom')}
-                                className="absolute -right-10 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive z-10"
                             >
                                 <X className="w-5 h-5" />
                             </Button>
@@ -114,9 +114,9 @@ export function TextLayersEditor({
                                     <input
                                         value={asset.value || ''}
                                         onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
-                                        className="bg-transparent border-none text-sm font-medium text-foreground focus:ring-0 p-0 text-center min-w-[50px]"
+                                        className="bg-transparent border-none text-sm font-medium text-foreground focus:ring-0 p-0 text-center min-w-[50px] max-w-[200px]"
                                         placeholder={`Valor para ${asset.label}...`}
-                                        style={{ width: `${Math.max(80, (asset.value?.length || 0) * 8)}px` }}
+                                        style={{ width: `${Math.min(200, Math.max(80, (asset.value?.length || 0) * 8))}px` }}
                                     />
                                     <Button
                                         variant="ghost"
@@ -161,7 +161,7 @@ export function TextLayersEditor({
 
             {/* BOTTOM: CTA (Dynamic Width) */}
             <div className="flex-none flex items-center justify-center pb-8 pointer-events-auto">
-                <div className="group relative">
+                <div className="group relative px-12">
                     <div className="relative inline-flex items-center justify-center">
                         {/* Hidden span to measure width - matches input styling exactly */}
                         <div className="invisible whitespace-pre px-14 py-3 font-bold text-lg md:text-xl border border-transparent select-none">
@@ -187,7 +187,7 @@ export function TextLayersEditor({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDeleteLayer('cta', 'cta')}
-                            className="absolute -right-10 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive z-10"
                         >
                             <X className="w-5 h-5" />
                         </Button>

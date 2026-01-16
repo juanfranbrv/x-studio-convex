@@ -8,6 +8,7 @@ import ShareIcon from '@mui/icons-material/Share'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
+import AspectRatioOutlinedIcon from '@mui/icons-material/AspectRatioOutlined'
 import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { Button } from '@/components/ui/button'
@@ -95,6 +96,8 @@ export interface CanvasPanelProps {
     aspectRatio?: string
     // Hide prompt area (when using external PromptCard)
     hidePromptArea?: boolean
+    onSelectLogo?: (id: string | null) => void
+    onClearUploadedImage?: () => void
 }
 
 export function CanvasPanel({
@@ -122,7 +125,9 @@ export function CanvasPanel({
     onAddTextAsset,
     onRemoveTextAsset,
     onUpdateTextAsset,
-    hidePromptArea = false
+    hidePromptArea = false,
+    onSelectLogo,
+    onClearUploadedImage
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const { activeBrandKit } = useBrandKit()
@@ -251,9 +256,53 @@ export function CanvasPanel({
 
 
 
-    const handleZoomIn = () => setZoom((z) => Math.min(z + 25, 200))
-    const handleZoomOut = () => setZoom((z) => Math.max(z - 25, 50))
+    const handleZoomIn = () => setZoom((z) => Math.min(z + 25, 300))
+    const handleZoomOut = () => setZoom((z) => Math.max(z - 25, 25))
     const handleResetZoom = () => setZoom(100)
+
+    const handleMaximizeZoom = () => {
+        const [w, h] = aspectRatio.split(':').map(Number);
+        const ratio = w / h;
+
+        // 1. Get current available space with buffers
+        // Margin/Padding buffer
+        const hBuffer = isMobile ? 20 : 60;
+        const availableWidth = (containerRef.current?.parentElement?.clientWidth
+            ? containerRef.current.parentElement.clientWidth - hBuffer
+            : (isMobile ? window.innerWidth - 20 : 800));
+
+        // Target vertical space
+        // Accounting for: Header (64), Container Top (80), Bottom Pad (48), Gap (48), and Buffer (40)
+        const vOffset = isMobile ? 180 : 280;
+        const targetHeight = viewportHeight - vOffset;
+
+        // 2. Calculate the "Base" dimensions (zoom=100%)
+        // We MUST match the component logic
+        const footerOffset = isMobile ? (currentImage ? 180 : 120) : (currentImage ? 700 : 400);
+        const availableHeight = Math.max(200, viewportHeight - footerOffset);
+
+        let baseWidth, baseHeight;
+        if (isMobile) {
+            baseWidth = availableWidth;
+            baseHeight = baseWidth / ratio;
+        } else {
+            if (ratio >= 1) {
+                baseWidth = Math.min(availableWidth, availableHeight * ratio);
+                baseHeight = baseWidth / ratio;
+            } else {
+                baseHeight = Math.min(availableHeight, availableWidth / ratio);
+                baseWidth = baseHeight * ratio;
+            }
+        }
+
+        // 3. Calculate zooms for both dimensions using a safety multiplier (0.95)
+        const zoomW = (availableWidth / baseWidth) * 100 * 0.95;
+        const zoomH = (targetHeight / baseHeight) * 100 * 0.95;
+
+        // 4. Take the smaller to fit completely
+        const newZoom = Math.min(Math.round(Math.min(zoomW, zoomH)), 300);
+        setZoom(newZoom);
+    }
 
     // Handle Generation Reveal Effect - simplified, no longer wraps generation
 
@@ -383,7 +432,7 @@ export function CanvasPanel({
     }
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-background relative isolate">
+        <div className="flex-1 flex flex-col h-full bg-background relative isolate overflow-x-hidden">
             {/* Header Overlay */}
             <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between p-4 z-40 pointer-events-none">
 
@@ -409,12 +458,17 @@ export function CanvasPanel({
                 <div className="hidden md:flex pointer-events-auto items-center gap-1 glass-panel rounded-full px-3 py-1.5 text-muted-foreground transition-all duration-300 hover:text-foreground">
                     {/* Zoom Controls */}
                     <div className="flex items-center gap-1 mr-2 border-r border-white/10 pr-2">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut} title="Zoom out">
                             <ZoomOutIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
-                        <span className="text-[10px] font-mono w-8 text-center">{effectiveZoom}%</span>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn}>
+                        <span className="text-[10px] font-mono w-8 text-center" onClick={handleResetZoom} style={{ cursor: 'pointer' }} title="Reset zoom">
+                            {effectiveZoom}%
+                        </span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn} title="Zoom in">
                             <ZoomInIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 ml-1" onClick={handleMaximizeZoom} title="Ajustar al alto (Maximizar)">
+                            <AspectRatioOutlinedIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
                     </div>
 
@@ -483,12 +537,12 @@ export function CanvasPanel({
             </div>
 
             <div className={cn(
-                "flex-1 relative flex flex-col items-center justify-start pb-8 overflow-y-auto overflow-x-hidden thin-scrollbar",
+                "flex-1 relative flex flex-col items-center justify-start pb-12 overflow-y-auto overflow-x-hidden thin-scrollbar gap-12",
                 isMobile ? "px-0 pt-20" : "px-6 pt-20"
             )}>
                 {/* Canvas Wrapper - reserves correct space and prevents overflow */}
                 <div
-                    className="shrink-0 flex items-center justify-center w-full"
+                    className="shrink-0 flex items-start justify-center w-full"
                     style={(() => {
                         const [w, h] = aspectRatio.split(':').map(Number);
                         const ratio = w / h;
@@ -511,10 +565,10 @@ export function CanvasPanel({
                             }
                         }
 
-                        // Only expand height when zoom > 100%
+                        // Strictly follow scaled height to maintain fixed gap below
                         const scaledHeight = canvasHeight * (zoom / 100);
                         return {
-                            height: `${Math.max(canvasHeight, scaledHeight)}px`
+                            height: `${scaledHeight}px`
                         };
                     })()}
                 >
@@ -555,7 +609,7 @@ export function CanvasPanel({
                                 width: `${canvasWidth}px`,
                                 height: `${canvasHeight}px`,
                                 transform: `scale(${zoom / 100})`,
-                                transformOrigin: 'center center',
+                                transformOrigin: 'top center',
                             };
                         })()}
                     >
@@ -638,22 +692,32 @@ export function CanvasPanel({
                                 {/* Reference Image (Top Left) */}
                                 {creationState.uploadedImage && (
                                     <div className="absolute top-4 left-4 z-20 group/ref">
-                                        <div className="w-20 h-20 rounded-lg overflow-hidden ring-2 ring-white shadow-lg bg-white relative">
+                                        <div className="relative group">
                                             <img
                                                 src={creationState.uploadedImage}
-                                                alt="Ref"
-                                                className="w-full h-full object-cover opacity-90 group-hover/ref:opacity-100 transition-opacity"
+                                                alt="Referencia"
+                                                className="w-24 h-32 object-cover rounded-lg ring-1 ring-white/20 shadow-xl"
                                             />
                                             <div className="absolute bottom-0 inset-x-0 bg-black/50 text-[8px] text-white text-center py-0.5 backdrop-blur-sm">
                                                 REFERENCIA
                                             </div>
+                                            {onClearUploadedImage && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={onClearUploadedImage}
+                                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Logo (Top Right) */}
                                 {creationState.selectedLogoId && activeBrandKit?.logos && (
-                                    <div className="absolute top-4 right-4 z-20">
+                                    <div className="absolute top-4 right-4 z-20 group">
                                         <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
                                             <img
                                                 src={activeBrandKit.logos.find((l: any, idx: number) => l._id === creationState.selectedLogoId || `logo-${idx}` === creationState.selectedLogoId)?.url}
@@ -661,6 +725,16 @@ export function CanvasPanel({
                                                 className="w-full h-full object-contain drop-shadow"
                                             />
                                         </div>
+                                        {onSelectLogo && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => onSelectLogo(null)}
+                                                className="absolute -top-2 -left-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </Button>
+                                        )}
                                     </div>
                                 )}
                             </>
@@ -697,7 +771,7 @@ export function CanvasPanel({
 
                 {/* CAPTION CARD - Shows below texts */}
                 {(creationState.caption || isGeneratingCopy || creationState.selectedIntent) && (
-                    <div className="w-full max-w-[800px] mt-4 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-10">
+                    <div className="w-full max-w-[800px] shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-20">
                         <GeneratedCopyCard
                             copy={creationState.caption || generatedCopy}
                             hashtags={generatedHashtags}

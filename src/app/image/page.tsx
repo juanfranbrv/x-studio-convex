@@ -449,9 +449,9 @@ export default function ImagePage() {
                     {/* TOP AREA: 2 Columns */}
                     < div className="flex-1 flex flex-row overflow-hidden min-h-0" >
                         {/* LEFT COLUMN (Main Canvas) */}
-                        < div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto min-w-0" >
+                        < div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto overflow-x-hidden min-w-0" >
                             {/* Canvas Preview */}
-                            < div className="flex-1 min-h-[500px] flex flex-col" >
+                            < div className="flex-1 min-h-[500px] flex flex-col overflow-x-hidden" >
                                 <CanvasPanel
                                     currentImage={creationFlow.state.generatedImage}
                                     isAnnotating={isAnnotating}
@@ -480,6 +480,8 @@ export default function ImagePage() {
                                     onRemoveTextAsset={creationFlow.removeTextAsset}
                                     onUpdateTextAsset={creationFlow.updateTextAsset}
                                     hidePromptArea={true}
+                                    onSelectLogo={creationFlow.selectLogo}
+                                    onClearUploadedImage={creationFlow.clearImage}
                                 />
                             </div>
 
