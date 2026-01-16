@@ -531,7 +531,7 @@ export function CanvasPanel({
                             width: `${canvasWidth}px`,
                             height: `${canvasHeight}px`,
                             transform: `scale(${zoom / 100})`,
-                            transformOrigin: 'top center',
+                            transformOrigin: 'center center',
                         };
                     })()}
                 >

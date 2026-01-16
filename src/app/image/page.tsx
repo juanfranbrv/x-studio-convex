@@ -463,6 +463,7 @@ export default function ImagePage() {
                                     onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
                                     draggedElement={null}
                                     isGenerating={isGenerating}
+                                    aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio || "1:1"}
                                     creationState={creationFlow.state}
                                     editPrompt=""
                                     onEditPromptChange={() => { }}
