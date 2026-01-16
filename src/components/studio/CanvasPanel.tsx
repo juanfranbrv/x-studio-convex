@@ -486,26 +486,20 @@ export function CanvasPanel({
                 "flex-1 relative flex flex-col items-center justify-start pb-8 overflow-auto thin-scrollbar",
                 isMobile ? "px-0 pt-20" : "px-6 pt-20"
             )}>
-                {/* Canvas Container - constrained to available space */}
+                {/* Canvas Wrapper - reserves correct space and prevents overflow */}
                 <div
-                    ref={containerRef}
-                    className="relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-white dark:bg-zinc-900 bg-dot group shrink-0 rounded-aero overflow-hidden"
+                    className="shrink-0 flex items-center justify-center overflow-hidden"
                     style={(() => {
                         const [w, h] = aspectRatio.split(':').map(Number);
                         const ratio = w / h;
-
-                        const footerOffset = isMobile
-                            ? (currentImage ? 180 : 120)
-                            : (currentImage ? 700 : 400);
+                        const footerOffset = isMobile ? (currentImage ? 180 : 120) : (currentImage ? 700 : 400);
                         const availableHeight = Math.max(200, viewportHeight - footerOffset);
-
                         const padding = isMobile ? 0 : 48;
                         const availableWidth = (containerRef.current?.parentElement?.clientWidth
                             ? containerRef.current.parentElement.clientWidth - padding
                             : (isMobile ? window.innerWidth : 1000));
 
                         let canvasWidth, canvasHeight;
-
                         if (isMobile) {
                             canvasWidth = availableWidth;
                             canvasHeight = canvasWidth / ratio;
@@ -519,150 +513,194 @@ export function CanvasPanel({
                             }
                         }
 
+                        // Calculate scaled dimensions
+                        const scaledHeight = canvasHeight * (zoom / 100);
+                        const scaledWidth = canvasWidth * (zoom / 100);
+
+                        // Always use base dimensions as minimum, expand when zoom > 100%
                         return {
-                            width: `${canvasWidth}px`,
-                            height: `${canvasHeight}px`,
-                            transform: `scale(${zoom / 100})`,
-                            transformOrigin: 'center center',
+                            height: `${Math.max(canvasHeight, scaledHeight)}px`,
+                            width: `${Math.max(canvasWidth, scaledWidth)}px`,
+                            maxWidth: '100%'
                         };
                     })()}
                 >
-                    <AnimatePresence mode="wait">
-                        {(isGenerating || isRevealing) && (
-                            <motion.div
-                                key="loader"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.8 }}
-                                className="absolute inset-0 z-50 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/10"
-                            >
-                                <DigitalStaticLoader />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    {/* Canvas Container */}
+                    <div
+                        ref={containerRef}
+                        className="relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-white dark:bg-zinc-900 bg-dot group shrink-0 rounded-aero overflow-hidden"
+                        style={(() => {
+                            const [w, h] = aspectRatio.split(':').map(Number);
+                            const ratio = w / h;
 
-                    {currentImage ? (
-                        <div className="relative w-full h-full overflow-hidden rounded-lg bg-background/50">
-                            <div className="w-full h-full flex items-center justify-center">
+                            const footerOffset = isMobile
+                                ? (currentImage ? 180 : 120)
+                                : (currentImage ? 700 : 400);
+                            const availableHeight = Math.max(200, viewportHeight - footerOffset);
+
+                            const padding = isMobile ? 0 : 48;
+                            const availableWidth = (containerRef.current?.parentElement?.clientWidth
+                                ? containerRef.current.parentElement.clientWidth - padding
+                                : (isMobile ? window.innerWidth : 1000));
+
+                            let canvasWidth, canvasHeight;
+
+                            if (isMobile) {
+                                canvasWidth = availableWidth;
+                                canvasHeight = canvasWidth / ratio;
+                            } else {
+                                if (ratio >= 1) {
+                                    canvasWidth = Math.min(availableWidth, availableHeight * ratio);
+                                    canvasHeight = canvasWidth / ratio;
+                                } else {
+                                    canvasHeight = Math.min(availableHeight, availableWidth / ratio);
+                                    canvasWidth = canvasHeight * ratio;
+                                }
+                            }
+
+                            return {
+                                width: `${canvasWidth}px`,
+                                height: `${canvasHeight}px`,
+                                transform: `scale(${zoom / 100})`,
+                                transformOrigin: 'center center',
+                            };
+                        })()}
+                    >
+                        <AnimatePresence mode="wait">
+                            {(isGenerating || isRevealing) && (
                                 <motion.div
-                                    key={currentImage}
-                                    initial={wasJustGenerated ? { opacity: 0, filter: 'blur(20px)' } : { opacity: 1, filter: 'blur(0px)' }}
-                                    animate={{
-                                        opacity: 1,
-                                        filter: 'blur(0px)',
-                                    }}
-                                    transition={wasJustGenerated ? {
-                                        duration: 0.3,
-                                        ease: "easeOut",
-                                        filter: { duration: 0.4 },
-                                        opacity: { duration: 0.2 }
-                                    } : {
-                                        duration: 0.15
-                                    }}
-                                    className="w-full h-full flex items-center justify-center"
+                                    key="loader"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.8 }}
+                                    className="absolute inset-0 z-50 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/10"
                                 >
-                                    <img
-                                        src={currentImage}
-                                        alt="Generated design"
-                                        className="w-full h-full object-contain"
-                                    />
-                                    {isAnnotating && (
-                                        <div className="absolute top-1/4 right-1/4 w-24 h-24 annotation-ring flex items-center justify-center">
-                                            <div className="bg-primary rounded-full p-1">
-                                                <EditIcon fontSize="small" className="text-primary-foreground" style={{ width: 12, height: 12 }} />
-                                            </div>
-                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover px-2 py-1 rounded text-xs whitespace-nowrap">
-                                                Add red accent stitching to laces.
-                                            </div>
-                                        </div>
-                                    )}
+                                    <DigitalStaticLoader />
                                 </motion.div>
-                            </div>
-                        </div>
-                    ) : creationState ? (
-                        <WireframeRenderer
-                            state={creationState}
-                            aspectRatio={(() => {
-                                const [w, h] = aspectRatio.split(':').map(Number);
-                                return w / h;
-                            })()}
-                        />
-                    ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
-                            <div className="w-16 h-16 rounded-2xl bg-white/50 dark:bg-zinc-800/50 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm">
-                                <span className="text-3xl opacity-70">🎨</span>
-                            </div>
-                            <p className="text-sm font-medium text-muted-foreground/70">{t('canvas.noImage')}</p>
-                            <div className="mt-4 px-3 py-1 rounded-full bg-muted/50 text-[10px] uppercase tracking-wider font-mono text-muted-foreground/60 border border-border/30">
-                                {aspectRatio}
-                            </div>
-                        </div>
-                    )}
+                            )}
+                        </AnimatePresence>
 
-                    {/* PREVIEW OVERLAYS (Reference Image & Logo) */}
-                    {!currentImage && creationState && (
-                        <>
-                            {/* Reference Image (Top Left) */}
-                            {creationState.uploadedImage && (
-                                <div className="absolute top-4 left-4 z-20 group/ref">
-                                    <div className="w-20 h-20 rounded-lg overflow-hidden ring-2 ring-white shadow-lg bg-white relative">
+                        {currentImage ? (
+                            <div className="relative w-full h-full overflow-hidden rounded-lg bg-background/50">
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <motion.div
+                                        key={currentImage}
+                                        initial={wasJustGenerated ? { opacity: 0, filter: 'blur(20px)' } : { opacity: 1, filter: 'blur(0px)' }}
+                                        animate={{
+                                            opacity: 1,
+                                            filter: 'blur(0px)',
+                                        }}
+                                        transition={wasJustGenerated ? {
+                                            duration: 0.3,
+                                            ease: "easeOut",
+                                            filter: { duration: 0.4 },
+                                            opacity: { duration: 0.2 }
+                                        } : {
+                                            duration: 0.15
+                                        }}
+                                        className="w-full h-full flex items-center justify-center"
+                                    >
                                         <img
-                                            src={creationState.uploadedImage}
-                                            alt="Ref"
-                                            className="w-full h-full object-cover opacity-90 group-hover/ref:opacity-100 transition-opacity"
+                                            src={currentImage}
+                                            alt="Generated design"
+                                            className="w-full h-full object-contain"
                                         />
-                                        <div className="absolute bottom-0 inset-x-0 bg-black/50 text-[8px] text-white text-center py-0.5 backdrop-blur-sm">
-                                            REFERENCIA
+                                        {isAnnotating && (
+                                            <div className="absolute top-1/4 right-1/4 w-24 h-24 annotation-ring flex items-center justify-center">
+                                                <div className="bg-primary rounded-full p-1">
+                                                    <EditIcon fontSize="small" className="text-primary-foreground" style={{ width: 12, height: 12 }} />
+                                                </div>
+                                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover px-2 py-1 rounded text-xs whitespace-nowrap">
+                                                    Add red accent stitching to laces.
+                                                </div>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                </div>
+                            </div>
+                        ) : creationState ? (
+                            <WireframeRenderer
+                                state={creationState}
+                                aspectRatio={(() => {
+                                    const [w, h] = aspectRatio.split(':').map(Number);
+                                    return w / h;
+                                })()}
+                            />
+                        ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
+                                <div className="w-16 h-16 rounded-2xl bg-white/50 dark:bg-zinc-800/50 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm">
+                                    <span className="text-3xl opacity-70">🎨</span>
+                                </div>
+                                <p className="text-sm font-medium text-muted-foreground/70">{t('canvas.noImage')}</p>
+                                <div className="mt-4 px-3 py-1 rounded-full bg-muted/50 text-[10px] uppercase tracking-wider font-mono text-muted-foreground/60 border border-border/30">
+                                    {aspectRatio}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* PREVIEW OVERLAYS (Reference Image & Logo) */}
+                        {!currentImage && creationState && (
+                            <>
+                                {/* Reference Image (Top Left) */}
+                                {creationState.uploadedImage && (
+                                    <div className="absolute top-4 left-4 z-20 group/ref">
+                                        <div className="w-20 h-20 rounded-lg overflow-hidden ring-2 ring-white shadow-lg bg-white relative">
+                                            <img
+                                                src={creationState.uploadedImage}
+                                                alt="Ref"
+                                                className="w-full h-full object-cover opacity-90 group-hover/ref:opacity-100 transition-opacity"
+                                            />
+                                            <div className="absolute bottom-0 inset-x-0 bg-black/50 text-[8px] text-white text-center py-0.5 backdrop-blur-sm">
+                                                REFERENCIA
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {/* Logo (Top Right) */}
-                            {creationState.selectedLogoId && activeBrandKit?.logos && (
-                                <div className="absolute top-4 right-4 z-20">
-                                    <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
-                                        <img
-                                            src={activeBrandKit.logos.find((l: any, idx: number) => l._id === creationState.selectedLogoId || `logo-${idx}` === creationState.selectedLogoId)?.url}
-                                            alt="Logo"
-                                            className="w-full h-full object-contain drop-shadow"
-                                        />
+                                {/* Logo (Top Right) */}
+                                {creationState.selectedLogoId && activeBrandKit?.logos && (
+                                    <div className="absolute top-4 right-4 z-20">
+                                        <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
+                                            <img
+                                                src={activeBrandKit.logos.find((l: any, idx: number) => l._id === creationState.selectedLogoId || `logo-${idx}` === creationState.selectedLogoId)?.url}
+                                                alt="Logo"
+                                                className="w-full h-full object-contain drop-shadow"
+                                            />
+                                        </div>
                                     </div>
+                                )}
+                            </>
+                        )}
+
+                        {/* TEXT LAYERS EDITOR - Overlay on Canvas (Only visible when no image is generated) */}
+                        {!currentImage && (creationState.headline || creationState.cta || Object.keys(creationState.customTexts).length > 0 || creationState.selectedIntent) && (
+                            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none">
+                                <div className="w-full h-full">
+                                    <TextLayersEditor
+                                        headline={creationState.headline}
+                                        cta={creationState.cta}
+                                        customTexts={creationState.customTexts}
+                                        textAssets={creationState.selectedTextAssets}
+                                        onHeadlineChange={(val) => onHeadlineChange?.(val)}
+                                        onCtaChange={(val) => onCtaChange?.(val)}
+                                        onCustomTextChange={(id, val) => onCustomTextChange?.(id, val)}
+                                        onAddTextAsset={onAddTextAsset}
+                                        onUpdateTextAsset={onUpdateTextAsset}
+                                        onDeleteLayer={(id, type) => {
+                                            if (type === 'headline') onHeadlineChange?.('')
+                                            if (type === 'cta') onCtaChange?.('')
+                                            if (type === 'custom') onCustomTextChange?.(id, '')
+                                            if (type === 'asset') onRemoveTextAsset?.(id)
+                                        }}
+                                    />
                                 </div>
-                            )}
-                        </>
-                    )}
-
-                    {/* TEXT LAYERS EDITOR - Overlay on Canvas (Only visible when no image is generated) */}
-                    {!currentImage && (creationState.headline || creationState.cta || Object.keys(creationState.customTexts).length > 0 || creationState.selectedIntent) && (
-                        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none">
-                            <div className="w-full h-full">
-                                <TextLayersEditor
-                                    headline={creationState.headline}
-                                    cta={creationState.cta}
-                                    customTexts={creationState.customTexts}
-                                    textAssets={creationState.selectedTextAssets}
-                                    onHeadlineChange={(val) => onHeadlineChange?.(val)}
-                                    onCtaChange={(val) => onCtaChange?.(val)}
-                                    onCustomTextChange={(id, val) => onCustomTextChange?.(id, val)}
-                                    onAddTextAsset={onAddTextAsset}
-                                    onUpdateTextAsset={onUpdateTextAsset}
-                                    onDeleteLayer={(id, type) => {
-                                        if (type === 'headline') onHeadlineChange?.('')
-                                        if (type === 'cta') onCtaChange?.('')
-                                        if (type === 'custom') onCustomTextChange?.(id, '')
-                                        if (type === 'asset') onRemoveTextAsset?.(id)
-                                    }}
-                                />
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
+
+                    {/* Close Canvas Wrapper */}
                 </div>
-
-                {/* Zoom Controls moved to header */}
-
-
 
                 {/* CAPTION CARD - Shows below texts */}
                 {(creationState.caption || isGeneratingCopy || creationState.selectedIntent) && (
