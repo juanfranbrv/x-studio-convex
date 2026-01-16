@@ -483,7 +483,7 @@ export function CanvasPanel({
             </div>
 
             <div className={cn(
-                "flex-1 relative flex flex-col items-center justify-start pb-8 overflow-auto thin-scrollbar",
+                "flex-1 relative flex flex-col items-center justify-start pb-8 overflow-y-auto overflow-x-hidden thin-scrollbar",
                 isMobile ? "px-0 pt-20" : "px-6 pt-20"
             )}>
                 {/* Canvas Wrapper - reserves correct space and prevents overflow */}
