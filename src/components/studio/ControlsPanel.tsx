@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { PresetsCarousel } from './creation-flow/PresetsCarousel'
 import { SavePresetDialog } from './creation-flow/SavePresetDialog'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
 import { useState } from 'react'
@@ -70,6 +70,13 @@ export function ControlsPanel({
     const [isSavingPreset, setIsSavingPreset] = useState(false)
     const createPreset = useMutation(api.presets.create)
     const { activeBrandKit } = useBrandKit()
+
+    // Check if there are any presets for this user/brand
+    const presetsData = useQuery(api.presets.list, userId ? {
+        userId,
+        brandId: activeBrandKit?.id as any
+    } : 'skip')
+    const hasPresets = (presetsData?.user?.length ?? 0) > 0
 
     const {
         state,
@@ -154,8 +161,8 @@ export function ControlsPanel({
             <div className="flex-1 overflow-y-auto thin-scrollbar">
                 <div className="p-4 space-y-6">
 
-                    {/* SECTION: Presets (Quick Start) */}
-                    {userId && (
+                    {/* SECTION: Presets (Quick Start) - Only show if user has presets */}
+                    {hasPresets && (
                         <div className="glass-card p-4">
                             <div className="flex items-center justify-between mb-2">
                                 <SectionHeader icon={Star} title="Favoritos" />

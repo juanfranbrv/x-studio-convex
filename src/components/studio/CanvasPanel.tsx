@@ -91,11 +91,10 @@ export interface CanvasPanelProps {
     onRemoveTextAsset?: (id: string) => void
     onUpdateTextAsset?: (id: string, value: string) => void
     // Original props that were not removed but are still used
+
     aspectRatio?: string
-    selectedTextModel?: string
-    onTextModelChange?: (model: string) => void
-    selectedModel?: string
-    onModelChange?: (model: string) => void
+    // Hide prompt area (when using external PromptCard)
+    hidePromptArea?: boolean
 }
 
 export function CanvasPanel({
@@ -115,17 +114,15 @@ export function CanvasPanel({
     onEditPromptChange,
     canGenerate,
     onUnifiedAction,
-    selectedTextModel,
-    onTextModelChange,
-    selectedModel,
-    onModelChange,
+
     onCaptionChange,
     onHeadlineChange,
     onCtaChange,
     onCustomTextChange,
     onAddTextAsset,
     onRemoveTextAsset,
-    onUpdateTextAsset
+    onUpdateTextAsset,
+    hidePromptArea = false
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const { activeBrandKit } = useBrandKit()
@@ -289,7 +286,7 @@ export function CanvasPanel({
             const result = await generateSocialPost({
                 brand: activeBrandKit,
                 imageBase64: currentImage,
-                model: selectedTextModel
+                model: creationState.selectedIntelligenceModel
             })
 
             if (result.success && result.data) {
@@ -408,7 +405,19 @@ export function CanvasPanel({
                 </div>
 
                 {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}
+                {/* Zoom Controls & Actions */}
                 <div className="hidden md:flex pointer-events-auto items-center gap-1 glass-panel rounded-full px-3 py-1.5 text-muted-foreground transition-all duration-300 hover:text-foreground">
+                    {/* Zoom Controls */}
+                    <div className="flex items-center gap-1 mr-2 border-r border-white/10 pr-2">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut}>
+                            <ZoomOutIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
+                        </Button>
+                        <span className="text-[10px] font-mono w-8 text-center">{effectiveZoom}%</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn}>
+                            <ZoomInIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
+                        </Button>
+                    </div>
+
                     <Dialog open={isSavePresetOpen} onOpenChange={setIsSavePresetOpen}>
                         <DialogTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-7 w-7" title={t('canvas.savePreset') || "Guardar Preset"}>
@@ -519,10 +528,8 @@ export function CanvasPanel({
                         }
 
                         return {
-                            width: `${canvasWidth}px`,
-                            height: `${canvasHeight}px`,
-                            transform: `scale(${zoom / 100})`,
-                            transformOrigin: 'center center',
+                            width: `${canvasWidth * (zoom / 100)}px`,
+                            height: `${canvasHeight * (zoom / 100)}px`,
                         };
                     })()}
                 >
@@ -564,7 +571,7 @@ export function CanvasPanel({
                                     <img
                                         src={currentImage}
                                         alt="Generated design"
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-contain"
                                     />
                                     {isAnnotating && (
                                         <div className="absolute top-1/4 right-1/4 w-24 h-24 annotation-ring flex items-center justify-center">
@@ -659,18 +666,7 @@ export function CanvasPanel({
                     )}
                 </div>
 
-                {/* Zoom Controls - Aero style */}
-                <div className="flex items-center gap-2 glass-panel rounded-full px-4 py-2 z-20 mt-6 mb-2">
-
-
-                    <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomOut}>
-                        <ZoomOutIcon fontSize="small" />
-                    </Button>
-                    <span className="text-xs font-mono w-12 text-center">{effectiveZoom}%</span>
-                    <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleZoomIn}>
-                        <ZoomInIcon fontSize="small" />
-                    </Button>
-                </div>
+                {/* Zoom Controls moved to header */}
 
 
 
@@ -692,118 +688,81 @@ export function CanvasPanel({
 
 
 
-            {/* Footer Area: History & Prompt - Aero Glass */}
-            <div className="hidden md:block border-t border-white/10 bg-background/30 backdrop-blur-md">
-                {/* Version History Row */}
-                <div className="px-4 py-3 border-b border-white/5">
-                    <ScrollArea className="w-full">
-                        <div className="flex gap-2 min-h-[70px] py-1">
-                            {generations.map((gen) => (
-                                <button
-                                    key={gen.id}
-                                    onClick={() => onSelectGeneration?.(gen)}
-                                    className={cn(
-                                        "relative group flex-shrink-0 transition-all duration-300",
-                                        currentImage === gen.image_url
-                                            ? "ring-2 ring-primary shadow-aero-glow scale-105"
-                                            : "hover:scale-105 opacity-70 hover:opacity-100"
-                                    )}
-                                >
-                                    <div className="w-16 h-16 rounded-xl overflow-hidden shadow-aero bg-background border border-white/20">
+            {/* Staging Area / Context Drawer */}
+            {selectedContext.length > 0 && (
+                <div
+                    className="px-4 py-2 bg-background"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
+                    <div className="flex flex-wrap gap-2">
+                        {selectedContext.map((item) => (
+                            <div
+                                key={item.id}
+                                className={cn(
+                                    "flex items-center gap-2 bg-background border border-border/50 rounded-lg shadow-sm group animate-in fade-in slide-in-from-bottom-1 transition-all overflow-hidden",
+                                    (item.type === 'image' || item.type === 'logo') ? "p-0 pr-1.5" : "px-2 py-1"
+                                )}
+                            >
+                                {item.type === 'color' && (
+                                    <div className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: item.value }} />
+                                )}
+                                {item.type === 'template' && (
+                                    <Layout className="w-3.5 h-3.5 text-primary shrink-0" />
+                                )}
+                                {(item.type === 'logo' || item.type === 'image') && (
+                                    <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
                                         <img
-                                            src={gen.image_url}
-                                            alt={`Version ${gen.id}`}
-                                            className="w-full h-full object-cover"
+                                            src={item.value}
+                                            className={cn(
+                                                "w-full h-full",
+                                                item.type === 'logo' ? "object-contain p-1" : "object-cover"
+                                            )}
+                                            alt={item.label}
                                         />
                                     </div>
-                                </button>
-                            ))}
+                                )}
 
-                            {/* Empty slots placeholders */}
-                            {Array.from({ length: Math.max(0, 5 - generations.length) }).map((_, i) => (
-                                <div
-                                    key={`empty-${i}`}
-                                    className="w-16 h-16 rounded-xl border border-dashed border-white/20 bg-white/5 flex-shrink-0"
-                                />
-                            ))}
-                        </div>
-                        <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
-                </div>
+                                {/* Font */}
+                                {item.type === 'font' && (
+                                    <Type className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                                )}
 
-                {/* Staging Area / Context Drawer */}
-                {selectedContext.length > 0 && (
-                    <div
-                        className="px-4 py-2 bg-background"
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={handleDrop}
-                    >
-                        <div className="flex flex-wrap gap-2">
-                            {selectedContext.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className={cn(
-                                        "flex items-center gap-2 bg-background border border-border/50 rounded-lg shadow-sm group animate-in fade-in slide-in-from-bottom-1 transition-all overflow-hidden",
-                                        (item.type === 'image' || item.type === 'logo') ? "p-0 pr-1.5" : "px-2 py-1"
-                                    )}
+                                {/* Text assets */}
+                                {item.type === 'text' && (
+                                    <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                )}
+
+                                {/* Links */}
+                                {item.type === 'link' && (
+                                    <Link2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                )}
+
+                                {/* Contact */}
+                                {item.type === 'contact' && (
+                                    <AtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                                )}
+
+                                {(item.type === 'color' || item.type === 'template' || item.type === 'font' || item.type === 'text' || item.type === 'link' || item.type === 'contact') && (
+                                    <span className="text-[11px] font-medium max-w-[120px] truncate">
+                                        {item.label || item.value}
+                                    </span>
+                                )}
+
+                                <button
+                                    onClick={() => onRemoveContext?.(item.id, 'style')}
+                                    className="p-0.5 hover:bg-muted rounded text-muted-foreground hover:text-destructive transition-colors ml-auto"
                                 >
-                                    {item.type === 'color' && (
-                                        <div className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: item.value }} />
-                                    )}
-                                    {item.type === 'template' && (
-                                        <Layout className="w-3.5 h-3.5 text-primary shrink-0" />
-                                    )}
-                                    {(item.type === 'logo' || item.type === 'image') && (
-                                        <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
-                                            <img
-                                                src={item.value}
-                                                className={cn(
-                                                    "w-full h-full",
-                                                    item.type === 'logo' ? "object-contain p-1" : "object-cover"
-                                                )}
-                                                alt={item.label}
-                                            />
-                                        </div>
-                                    )}
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        ))
+                        }
 
-                                    {/* Font */}
-                                    {item.type === 'font' && (
-                                        <Type className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                                    )}
-
-                                    {/* Text assets */}
-                                    {item.type === 'text' && (
-                                        <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                                    )}
-
-                                    {/* Links */}
-                                    {item.type === 'link' && (
-                                        <Link2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
-                                    )}
-
-                                    {/* Contact */}
-                                    {item.type === 'contact' && (
-                                        <AtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                                    )}
-
-                                    {(item.type === 'color' || item.type === 'template' || item.type === 'font' || item.type === 'text' || item.type === 'link' || item.type === 'contact') && (
-                                        <span className="text-[11px] font-medium max-w-[120px] truncate">
-                                            {item.label || item.value}
-                                        </span>
-                                    )}
-
-                                    <button
-                                        onClick={() => onRemoveContext?.(item.id, 'style')}
-                                        className="p-0.5 hover:bg-muted rounded text-muted-foreground hover:text-destructive transition-colors ml-auto"
-                                    >
-                                        <X className="w-3.5 h-3.5" />
-                                    </button>
-                                </div>
-                            ))}
-
-                            {/* Preview Chip while dragging */}
-                            {isDraggingOver && draggedElement && !selectedContext.some(c => c.id === draggedElement.id) && (
+                        {/* Preview Chip while dragging */}
+                        {
+                            isDraggingOver && draggedElement && !selectedContext.some(c => c.id === draggedElement.id) && (
                                 <div
                                     className={cn(
                                         "flex items-center gap-2 bg-primary/5 border border-primary/30 border-dashed rounded-lg shadow-sm animate-pulse overflow-hidden opacity-80",
@@ -855,87 +814,79 @@ export function CanvasPanel({
                                         </span>
                                     )}
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                )}
+                            )
+                        }
+                    </div >
+                </div >
+            )}
 
-                {/* Prompt Input Area */}
-                <div
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    className={cn(
-                        "transition-all duration-300 relative mx-auto w-full max-w-[98%] mb-2 pointer-events-auto",
-                        isDraggingOver ? "scale-[1.01]" : ""
-                    )}
-                >
-                    {isDraggingOver && (
-                        <div className="absolute inset-x-0 -top-12 flex justify-center pointer-events-none animate-bounce z-50">
-                            <div className="bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-bold shadow-lg ring-2 ring-background">
-                                Suelta para añadir al contexto
+            {/* Prompt Input Area - Hidden when using external PromptCard */}
+            {
+                !hidePromptArea && (
+                    <div
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        className={cn(
+                            "transition-all duration-300 relative mx-auto w-full max-w-[98%] mb-2 pointer-events-auto",
+                            isDraggingOver ? "scale-[1.01]" : ""
+                        )}
+                    >
+                        {isDraggingOver && (
+                            <div className="absolute inset-x-0 -top-12 flex justify-center pointer-events-none animate-bounce z-50">
+                                <div className="bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-bold shadow-lg ring-2 ring-background">
+                                    Suelta para añadir al contexto
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    <div className={cn(
-                        "flex items-center gap-2 p-2 pl-4 bg-background/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-[32px] transition-all duration-300",
-                        isDraggingOver ? "ring-2 ring-primary ring-offset-2 bg-background" : "hover:bg-background/90"
-                    )}>
-                        {/* Add Image Icon */}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="shrink-0 h-10 w-10 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                            title="Añadir imagen de referencia (Próximamente)"
-                        >
-                            <ImagePlus className="w-5 h-5" />
-                        </Button>
+                        <div className={cn(
+                            "flex items-center gap-2 p-2 pl-4 bg-background/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-[32px] transition-all duration-300",
+                            isDraggingOver ? "ring-2 ring-primary ring-offset-2 bg-background" : "hover:bg-background/90"
+                        )}>
+                            {/* Add Image Icon */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="shrink-0 h-10 w-10 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                title="Añadir imagen de referencia (Próximamente)"
+                            >
+                                <ImagePlus className="w-5 h-5" />
+                            </Button>
 
-                        {/* Input */}
-                        <Textarea
-                            value={editPrompt}
-                            onChange={(e) => onEditPromptChange?.(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault()
-                                    if (canGenerate || editPrompt.trim()) {
-                                        onUnifiedAction()
+                            {/* Input */}
+                            <Textarea
+                                value={editPrompt}
+                                onChange={(e) => onEditPromptChange?.(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault()
+                                        if (canGenerate || editPrompt.trim()) {
+                                            onUnifiedAction()
+                                        }
                                     }
-                                }
-                            }}
-                            disabled={!currentImage}
-                            placeholder={currentImage ? "Describe los cambios que quieres..." : "Genera una imagen primero para poder editarla..."}
-                            className="flex-1 min-h-[50px] max-h-[120px] py-3 bg-transparent border-0 focus-visible:ring-0 resize-none shadow-none text-base placeholder:text-muted-foreground/60 leading-relaxed scrollbar-hide disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
+                                }}
+                                disabled={!currentImage}
+                                placeholder={currentImage ? "Describe los cambios que quieres..." : "Genera una imagen primero para poder editarla..."}
+                                className="flex-1 min-h-[50px] max-h-[120px] py-3 bg-transparent border-0 focus-visible:ring-0 resize-none shadow-none text-base placeholder:text-muted-foreground/60 leading-relaxed scrollbar-hide disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
 
-                        {/* Model Selector */}
-                        <div className="shrink-0 hidden sm:block border-l border-border/40 pl-2">
-                            <Select value={selectedModel} onValueChange={onModelChange}>
-                                <SelectTrigger className="h-9 border-0 bg-transparent focus:ring-0 w-[240px] text-muted-foreground font-medium hover:text-foreground text-right px-2">
-                                    <SelectValue placeholder="Modelo" />
-                                </SelectTrigger>
-                                <SelectContent align="end" className="w-[280px]">
-                                    <SelectItem value="wisdom/gemini-3-pro-image-preview">Gemini 3 Pro Image (Wisdom)</SelectItem>
-                                    <SelectItem value="wisdom/qwen-image">Qwen Image (Wisdom)</SelectItem>
-                                    <SelectItem value="wisdom/seedream-4">Seedream 4.0 (Wisdom)</SelectItem>
-                                    <SelectItem value="google/gemini-3-pro">Gemini 3 Pro (Google Legacy)</SelectItem>
-                                    <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash (Google Legacy)</SelectItem>
-                                </SelectContent>
-                            </Select>
+
+
+                            {/* Generate Button */}
+                            <GenerateButton
+                                onClick={onUnifiedAction}
+                                isGenerating={isGenerating}
+
+                                label={currentImage && editPrompt.trim() ? "EDITAR IMAGEN" : "Generar"}
+                                isDisabled={!canGenerate && !editPrompt.trim()}
+                                className="h-14 px-8 rounded-xl font-bold shadow-lg hover:shadow-primary/25 bg-primary text-primary-foreground border-0 shrink-0 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                            />
                         </div>
-
-                        {/* Generate Button */}
-                        <GenerateButton
-                            onClick={onUnifiedAction}
-                            isGenerating={isGenerating}
-                            label={currentImage && editPrompt.trim() ? "EDITAR IMAGEN" : "Generar"}
-                            isDisabled={!canGenerate && !editPrompt.trim()}
-                            className="h-14 px-8 rounded-xl font-bold shadow-lg hover:shadow-primary/25 bg-primary text-primary-foreground border-0 shrink-0 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                        />
                     </div>
-                </div>
-            </div>
+                )
+            }
+
 
             <TemplateSelectorModal
                 isOpen={isTemplateModalOpen}
@@ -943,6 +894,6 @@ export function CanvasPanel({
                 onSelect={handleSelectTemplate}
                 selectedTemplateId={selectedContext.find(c => c.type === 'template')?.id}
             />
-        </div>
+        </div >
     )
 }
