@@ -6,20 +6,22 @@ import { useUser } from '@clerk/nextjs'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
-import { BrandDNAPanel } from '@/components/studio/BrandDNAPanel'
 import { CanvasPanel } from '@/components/studio/CanvasPanel'
-import { CampaignBriefPanel } from '@/components/studio/CampaignBriefPanel'
-import { CreationCommandPanel } from '@/components/studio/creation-flow'
+import { ControlsPanel } from '@/components/studio/ControlsPanel'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { PromptCard } from '@/components/studio/PromptCard'
+import { CaptionCard } from '@/components/studio/CaptionCard'
+import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
 import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow'
 import { uploadBrandImage } from '@/app/actions/upload-image'
-import type { BrandDNA } from '@/lib/brand-types'
 import { SOCIAL_FORMATS, type DebugPromptData } from '@/lib/creation-flow-types'
-import { Loader2, Plus, PanelRightClose, PanelRightOpen } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Loader2, Plus, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 import { buildEditPrompt } from '@/lib/prompts/image-edit'
-import { GenerateButton } from '@/components/studio/creation-flow/GenerateButton'
+import { parseLazyIntentAction } from '@/app/actions/parse-intent'
+import { IntentCategory } from '@/lib/creation-flow-types'
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
@@ -46,14 +48,14 @@ export default function ImagePage() {
     const [isGenerating, setIsGenerating] = useState(false)
     const { toast } = useToast()
     const [selectedContext, setSelectedContext] = useState<ContextElement[]>([])
-    const [draggedElement, setDraggedElement] = useState<ContextElement | null>(null)
     const [isAnnotating, setIsAnnotating] = useState(false)
     const [logoInclusion, setLogoInclusion] = useState(true)
-    const [selectedModel, setSelectedModel] = useState("wisdom/gemini-3-pro-image-preview")
-    const [selectedTextModel, setSelectedTextModel] = useState('wisdom/gemini-2.5-flash')
-    const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false)
+
+    const [promptValue, setPromptValue] = useState('')
     const [editPrompt, setEditPrompt] = useState('')
     const [isMobile, setIsMobile] = useState(false)
+    const [isMagicParsing, setIsMagicParsing] = useState(false)
+    const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
 
     // Detect mobile viewport
     useEffect(() => {
@@ -61,13 +63,12 @@ export default function ImagePage() {
         checkMobile()
         window.addEventListener('resize', checkMobile)
         return () => window.removeEventListener('resize', checkMobile)
-    }, [])  // Prompt for local edits
+    }, [])
 
     // Debug Modal States
     const [showDebugModal, setShowDebugModal] = useState(false)
     const [debugPromptData, setDebugPromptData] = useState<DebugPromptData | null>(null)
     const [pendingGenerationData, setPendingGenerationData] = useState<any>(null)
-
 
     // Local session history
     const [sessionGenerations, setSessionGenerations] = useState<any[]>([])
@@ -85,7 +86,7 @@ export default function ImagePage() {
                 formData.append('file', file)
                 const result = await uploadBrandImage(formData)
                 if (result.success && result.url) {
-                    creationFlow.setUploadedImage(result.url) // Replace base64 with URL for persistence
+                    creationFlow.setUploadedImage(result.url)
                     const updatedImages = [...(activeBrandKit.images || []), { url: result.url, selected: true }]
                     await updateActiveBrandKit({
                         images: updatedImages
@@ -104,7 +105,7 @@ export default function ImagePage() {
             setIsAnnotating(false)
             setDebugPromptData(null)
             setSelectedContext([])
-            setEditPrompt('')  // Clear edit prompt on reset
+            setPromptValue('')
         }
     } as UseCreationFlowOptions)
 
@@ -113,15 +114,85 @@ export default function ImagePage() {
         if (activeBrandKit?.id) {
             setSelectedContext([])
             creationFlow.reset()
-            // Optional: Reset other states if needed
             setIsAnnotating(false)
             setDebugPromptData(null)
-            setEditPrompt('')  // Clear edit prompt on brand change
+            setPromptValue('')
         }
     }, [activeBrandKit?.id])
 
     const handleNewBrandKit = () => {
         router.push('/brand-kit?action=new')
+    }
+
+    // Smart analyze prompt
+    const handleSmartAnalyze = async () => {
+        if (!promptValue.trim()) return
+
+        setIsMagicParsing(true)
+        setHighlightedFields(new Set())
+
+        try {
+            creationFlow.setRawMessage(promptValue)
+
+            const result = await parseLazyIntentAction(
+                promptValue,
+                activeBrandKit?.brand_name || "My Brand",
+                creationFlow.currentIntent || undefined,
+                creationFlow.selectedLayoutMeta || undefined
+            )
+
+            if (result.error) {
+                toast({
+                    title: "Error analyzing prompt",
+                    description: "Could not parse intent. Please fill manually.",
+                    variant: "destructive"
+                })
+                return
+            }
+
+            const newHighlights = new Set<string>()
+
+            // Auto-detect intent
+            if (result.detectedIntent && !creationFlow.state.selectedIntent) {
+                creationFlow.selectIntent(result.detectedIntent as IntentCategory)
+                toast({
+                    title: "✨ Intención detectada",
+                    description: `Detectamos que quieres crear: ${result.detectedIntent}`,
+                })
+            }
+
+            // Populate fields
+            if (result.headline) {
+                creationFlow.setHeadline(result.headline)
+                newHighlights.add('headline')
+            }
+            if (result.cta) {
+                creationFlow.setCta(result.cta)
+                newHighlights.add('cta')
+            }
+            if (result.caption) {
+                creationFlow.setCaption(result.caption)
+                newHighlights.add('caption')
+            }
+
+            setHighlightedFields(newHighlights)
+            setTimeout(() => setHighlightedFields(new Set()), 2500)
+
+            toast({
+                title: "Magic Applied! ✨",
+                description: "Your fields have been auto-filled based on your description.",
+            })
+
+        } catch (error) {
+            console.error(error)
+            toast({
+                title: "Error",
+                description: "Something went wrong with the magic analysis.",
+                variant: "destructive"
+            })
+        } finally {
+            setIsMagicParsing(false)
+        }
     }
 
     const handleGenerate = async (data: {
@@ -135,15 +206,12 @@ export default function ImagePage() {
 
         setIsGenerating(true)
         try {
-            // Selected images from kit
             const selectedImages = (activeBrandKit.images || [])
                 .filter(img => img.selected !== false)
-                .map(img => img.url);
+                .map(img => img.url)
 
-            // MERGE: Combine elements from the "Mesa" with elements from the "Creation Flow"
             const finalContext: ContextElement[] = [...selectedContext]
 
-            // 1. Add uploaded product image from flow (if exists and not already in context)
             if (creationFlow.state.uploadedImage) {
                 const hasProduct = finalContext.some(c => c.type === 'image' && c.label === 'Producto')
                 if (!hasProduct) {
@@ -156,7 +224,6 @@ export default function ImagePage() {
                 }
             }
 
-            // 2. Add selected logo from flow (if logoInclusion is true and not already in context)
             if (logoInclusion && creationFlow.state.selectedLogoId) {
                 const logo = activeBrandKit.logos?.find((l, idx) =>
                     (l as any).id === creationFlow.state.selectedLogoId || `logo-${idx}` === creationFlow.state.selectedLogoId
@@ -175,7 +242,6 @@ export default function ImagePage() {
                 }
             }
 
-            // 3. Add current image as edit reference if it exists
             if (creationFlow.state.generatedImage) {
                 const hasReference = finalContext.some(c => c.id === 'edit-reference')
                 if (!hasReference) {
@@ -202,7 +268,7 @@ export default function ImagePage() {
                     },
                     logoInclusion,
                     context: finalContext,
-                    model: data.model || selectedModel,
+                    model: data.model || creationFlow.state.selectedImageModel || "wisdom/gemini-3-pro-image-preview",
                     layoutReference: creationFlow.selectedLayoutMeta?.referenceImage,
                     aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio
                 }),
@@ -210,62 +276,45 @@ export default function ImagePage() {
 
             if (response.ok) {
                 const result = await response.json()
-                creationFlow.setGeneratedImage(result.imageUrl) // Sync state
+                creationFlow.setGeneratedImage(result.imageUrl)
 
-                // Add to session history
                 setSessionGenerations(prev => [{
                     id: Date.now().toString(),
                     image_url: result.imageUrl,
                     created_at: new Date().toISOString()
                 }, ...prev])
             } else {
-                // Handle API error with user-friendly message
                 const errorData = await response.json().catch(() => ({ error: 'Error al generar la imagen' }))
-                const errorMessage = errorData.error || 'Error al generar la imagen'
-
-                console.error('API Error:', errorMessage)
-                console.log('Calling toast with error message:', errorMessage)
-
                 toast({
                     title: "Error de generación",
-                    description: errorMessage,
+                    description: errorData.error || 'Error al generar la imagen',
                     variant: "destructive",
                 })
             }
         } catch (error: any) {
             console.error('Generation failed:', error)
-
-            // Display user-friendly error message
-            const errorMessage = error.message || 'No se pudo generar la imagen. Inténtalo de nuevo en unos momentos.'
-
             toast({
                 title: "Error de generación",
-                description: errorMessage,
+                description: error.message || 'No se pudo generar la imagen.',
                 variant: "destructive",
             })
         } finally {
-            console.log('Resetting isGenerating to false')
             setIsGenerating(false)
         }
     }
 
-    // Handle editing the current image with a prompt
     const handleEditImage = async (editPrompt: string) => {
         if (!activeBrandKit || !creationFlow.state.generatedImage) return
 
         setIsGenerating(true)
         try {
-            // Build context with current image as reference
-            const editContext = [
-                {
-                    id: 'edit-reference',
-                    type: 'image' as const,
-                    value: creationFlow.state.generatedImage,
-                    label: 'Imagen a editar'
-                }
-            ]
+            const editContext = [{
+                id: 'edit-reference',
+                type: 'image' as const,
+                value: creationFlow.state.generatedImage,
+                label: 'Imagen a editar'
+            }]
 
-            // Build edit prompt from template
             const fullPrompt = buildEditPrompt(editPrompt)
 
             const response = await fetch('/api/generate', {
@@ -275,16 +324,15 @@ export default function ImagePage() {
                     prompt: fullPrompt,
                     brandDNA: activeBrandKit,
                     context: editContext,
-                    model: selectedModel,
+                    model: creationFlow.state.selectedImageModel || "wisdom/gemini-3-pro-image-preview",
                     aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio
                 }),
             })
 
             if (response.ok) {
                 const result = await response.json()
-                creationFlow.setGeneratedImage(result.imageUrl) // Sync state
+                creationFlow.setGeneratedImage(result.imageUrl)
 
-                // Add to session history
                 setSessionGenerations(prev => [{
                     id: Date.now().toString(),
                     image_url: result.imageUrl,
@@ -315,24 +363,16 @@ export default function ImagePage() {
         email => email.emailAddress === ADMIN_EMAIL
     ) ?? false
 
-    // Calculate canGenerate state (logic moved from CreationCommandPanel)
-    const { state, requiresImage } = creationFlow
-
-    // Determine visibility levels to calculate readiness
-    const showIntentAndLayout = state.selectedIntent !== null
-    const showPlatformSelector = state.selectedIntent !== null && state.selectedLayout !== null
-    const showImageAndContent = showPlatformSelector && state.selectedPlatform !== null && state.selectedFormat !== null
-    const showVisuals = showImageAndContent && (
-        state.visionAnalysis !== null ||
-        (state.imageSourceMode === 'generate' && state.aiImageDescription?.trim() !== '') ||
-        !requiresImage
-    )
-
-    const canGenerate = showVisuals && (
+    // Simplified canGenerate logic for the new 2-column layout
+    // Button should be enabled if there's an intent OR any content configured
+    const { state } = creationFlow
+    const canGenerate = Boolean(
+        state.selectedIntent !== null ||
         state.selectedStyles.length > 0 ||
         state.customStyle.trim() !== '' ||
         state.headline ||
-        state.cta
+        state.cta ||
+        state.uploadedImage
     )
 
     // Wrapped handleGenerate with debug modal intercept (admin only)
@@ -343,38 +383,25 @@ export default function ImagePage() {
         prompt: string
         model?: string
     }) => {
-        // If not admin, skip debug modal and generate directly
         if (!isAdmin) {
             await handleGenerate(data)
             return
         }
 
-        // Build debug data (admin only)
-        const selectedLogo = logoInclusion && creationFlow.state.selectedLogoId
-            ? activeBrandKit?.logos?.find((l, idx) =>
-                (l as any).id === creationFlow.state.selectedLogoId || `logo-${idx}` === creationFlow.state.selectedLogoId
-            )
-            : null
-
-        const debugData: DebugPromptData = {
+        setDebugPromptData({
             finalPrompt: data.prompt,
-            logoUrl: selectedLogo ? ((selectedLogo as any).url || selectedLogo) : undefined,
-            referenceImageUrl: creationFlow.state.uploadedImage || undefined,
-            selectedStyles: creationFlow.state.selectedStyles,
-            headline: data.headline,
-            cta: data.cta,
-            platform: data.platform,
-            format: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.name,
-            intent: creationFlow.state.selectedIntent || undefined
-        }
-
-        // Show modal and store pending data
-        setDebugPromptData(debugData)
+            logoUrl: activeBrandKit?.logos?.[0]?.url,
+            selectedStyles: state.selectedStyles,
+            headline: state.headline,
+            cta: state.cta,
+            platform: state.selectedPlatform || undefined,
+            format: state.selectedFormat || undefined,
+            intent: state.selectedIntent || undefined,
+        })
         setPendingGenerationData(data)
         setShowDebugModal(true)
     }
 
-    // Actual generation after modal confirmation
     const confirmGeneration = async () => {
         setShowDebugModal(false)
         if (pendingGenerationData) {
@@ -383,11 +410,20 @@ export default function ImagePage() {
         }
     }
 
-    // Cancel generation
     const cancelGeneration = () => {
         setShowDebugModal(false)
         setPendingGenerationData(null)
         setDebugPromptData(null)
+    }
+
+    const handleUnifiedAction = async () => {
+        if (creationFlow.state.generatedImage && editPrompt.trim()) {
+            await handleEditImage(editPrompt)
+            setEditPrompt('')
+        } else {
+            const prompt = creationFlow.buildGenerationPrompt()
+            await handleGenerateWithDebug({ prompt })
+        }
     }
 
     if (loading) {
@@ -409,105 +445,106 @@ export default function ImagePage() {
             isFixed={true}
         >
             {activeBrandKit ? (
-                <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden min-h-0">
-                    {/* Left: Creation Command Panel (Cascade Interface) */}
-                    <CreationCommandPanel
-                        onGenerate={async (prompt) => handleGenerateWithDebug({ prompt })}
-                        isGenerating={isGenerating}
-                        creationFlow={creationFlow}
-                        currentImage={creationFlow.state.generatedImage}
-                        aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio}
-                        generations={displayGenerations}
-                        onSelectGeneration={(gen) => creationFlow.setGeneratedImage(gen.image_url)}
-                        onEditImage={handleEditImage}
-                        editPrompt={editPrompt}
-                        onEditPromptChange={setEditPrompt}
-                    />
+                <div className="flex-1 flex flex-col overflow-hidden bg-mesh">
+                    {/* TOP AREA: 2 Columns */}
+                    < div className="flex-1 flex flex-row overflow-hidden min-h-0" >
+                        {/* LEFT COLUMN (Main Canvas) */}
+                        < div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto min-w-0" >
+                            {/* Canvas Preview */}
+                            < div className="flex-1 min-h-[500px] flex flex-col" >
+                                <CanvasPanel
+                                    currentImage={creationFlow.state.generatedImage}
+                                    isAnnotating={isAnnotating}
+                                    onAnnotate={() => setIsAnnotating(!isAnnotating)}
+                                    generations={[]}
+                                    onSelectGeneration={() => { }}
+                                    selectedContext={selectedContext}
+                                    onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
+                                    onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
+                                    draggedElement={null}
+                                    isGenerating={isGenerating}
+                                    creationState={creationFlow.state}
+                                    editPrompt=""
+                                    onEditPromptChange={() => { }}
+                                    canGenerate={Boolean(canGenerate)}
+                                    onUnifiedAction={handleUnifiedAction}
+                                    onCaptionChange={creationFlow.setCaption}
+                                    onHeadlineChange={creationFlow.setHeadline}
+                                    onCtaChange={creationFlow.setCta}
+                                    onCustomTextChange={creationFlow.setCustomText}
+                                    onAddTextAsset={() => {
+                                        const newId = `custom-${Date.now()}`
+                                        creationFlow.addTextAsset({ id: newId, type: 'custom', label: 'Texto', value: '' })
+                                    }}
+                                    onRemoveTextAsset={creationFlow.removeTextAsset}
+                                    onUpdateTextAsset={creationFlow.updateTextAsset}
+                                    hidePromptArea={true}
+                                />
+                            </div>
 
-                    {/* Center: Canvas */}
-                    <div className={cn(
-                        "md:flex-1 h-auto md:h-auto min-h-0 order-2 md:order-2 flex-col relative z-0",
-                        (!creationFlow.state.generatedImage && !isGenerating) ? "hidden md:flex" : "flex"
-                    )}>
-                        <CanvasPanel
-                            currentImage={creationFlow.state.generatedImage}
-                            isAnnotating={isAnnotating}
-                            onAnnotate={() => setIsAnnotating(!isAnnotating)}
-                            generations={displayGenerations}
-                            onSelectGeneration={(gen) => creationFlow.setGeneratedImage(gen.image_url)}
-                            selectedContext={selectedContext}
-                            onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
-                            onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
-                            draggedElement={draggedElement}
+                            {/* Thumbnail History (Moved below Canvas) */}
+                            <div className="flex-shrink-0">
+                                <ThumbnailHistory
+                                    generations={displayGenerations}
+                                    currentImageUrl={creationFlow.state.generatedImage}
+                                    onSelectGeneration={(gen) => creationFlow.setGeneratedImage(gen.image_url)}
+                                />
+                            </div>
+                        </div >
+
+                        {/* RIGHT COLUMN - Controls Panel */}
+                        <ControlsPanel
+                            creationFlow={creationFlow}
+                            highlightedFields={highlightedFields}
+                            promptValue={promptValue}
+                            onPromptChange={setPromptValue}
+                            isMagicParsing={isMagicParsing}
                             isGenerating={isGenerating}
-                            selectedModel={selectedModel}
-                            onModelChange={setSelectedModel}
-                            selectedTextModel={selectedTextModel}
-                            onTextModelChange={setSelectedTextModel}
-                            aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio}
-                            creationState={creationFlow.state}
-                            editPrompt={editPrompt}
-                            onEditPromptChange={setEditPrompt}
                             canGenerate={Boolean(canGenerate)}
-                            onUnifiedAction={async () => {
-                                if (creationFlow.state.generatedImage && editPrompt.trim()) {
-                                    await handleEditImage(editPrompt)
-                                    setEditPrompt('')
-                                } else {
-                                    const prompt = creationFlow.buildGenerationPrompt()
-                                    await handleGenerateWithDebug({ prompt })
-                                }
-                            }}
-                            onCaptionChange={creationFlow.setCaption}
-                            onHeadlineChange={creationFlow.setHeadline}
-                            onCtaChange={creationFlow.setCta}
-                            onCustomTextChange={creationFlow.setCustomText}
-                            onAddTextAsset={() => {
-                                const newId = `custom-${Date.now()}`
-                                creationFlow.addTextAsset({ id: newId, type: 'custom', label: 'Texto', value: '' })
-                            }}
-                            onRemoveTextAsset={creationFlow.removeTextAsset}
-                            onUpdateTextAsset={creationFlow.updateTextAsset}
+                            onUnifiedAction={handleUnifiedAction}
+                            userId={user?.id}
                         />
                     </div>
 
-                    {/* Brand Drawer Toggle - Fixed on Right Edge */}
-                    <Button
-                        variant="secondary"
-                        size="icon"
-                        onClick={() => setIsBrandDrawerOpen(!isBrandDrawerOpen)}
-                        title={isBrandDrawerOpen ? "Cerrar Brand Kit" : "Abrir Brand Kit"}
-                        className={cn(
-                            "fixed z-50 top-[400px] rounded-l-xl rounded-r-none border-2 shadow-2xl transition-all duration-300",
-                            // Smaller on mobile, larger on desktop
-                            "h-8 w-6 md:h-12 md:w-10",
-                            isBrandDrawerOpen
-                                ? "right-[85vw] sm:right-[360px] bg-background border-border text-primary hover:bg-muted"
-                                : "right-0 bg-primary text-white border-primary hover:opacity-90"
-                        )}
-                    >
-                        {isBrandDrawerOpen ? <PanelRightClose className="w-3 h-3 md:w-5 md:h-5" /> : <PanelRightOpen className="w-3 h-3 md:w-5 md:h-5" />}
-                    </Button>
+                    {/* BOTTOM BAR: Local Edits & Generate */}
+                    <div className="flex-none flex flex-row border-t border-white/10 bg-background/50 backdrop-blur-md min-h-[80px]">
+                        {/* Left: Text Area (Matches Canvas width) */}
+                        <div className="flex-1 p-4 flex items-end">
+                            <Textarea
+                                placeholder={creationFlow.state.generatedImage ? "Describe los cambios para editar la imagen..." : "Configura tu imagen en el panel derecho..."}
+                                value={editPrompt}
+                                onChange={(e) => setEditPrompt(e.target.value)}
+                                disabled={!creationFlow.state.generatedImage}
+                                className="w-full min-h-[44px] max-h-[120px] resize-none bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault()
+                                        handleUnifiedAction()
+                                    }
+                                }}
+                            />
+                        </div>
 
-                    {/* Right: Brand DNA Panel (Drawer) */}
-                    <div className={cn(
-                        "fixed inset-y-0 right-0 w-[85vw] sm:w-[360px] z-40 transition-transform duration-300 ease-out shadow-2xl",
-                        isBrandDrawerOpen ? "translate-x-0" : "translate-x-full"
-                    )}>
-                        <BrandDNAPanel
-                            brandDNA={activeBrandKit}
-                            logoInclusion={logoInclusion}
-                            onLogoInclusionChange={setLogoInclusion}
-                            selectedContext={selectedContext}
-                            onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
-                            onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
-                            onSetDraggedElement={setDraggedElement}
-                            onImageClick={(url) => creationFlow.setImageFromUrl(url)}
-                            textAssets={creationFlow.state.selectedTextAssets}
-                            onAddTextAsset={creationFlow.addTextAsset}
-                            onRemoveTextAsset={creationFlow.removeTextAsset}
-                            onUpdateTextAsset={creationFlow.updateTextAsset}
-                        />
+                        {/* Right: Generate Button (Matches ControlsPanel width) */}
+                        <div className="w-full md:w-[27%] p-4 flex flex-col justify-end border-l border-white/5">
+                            <Button
+                                onClick={handleUnifiedAction}
+                                disabled={isGenerating || (!canGenerate && !creationFlow.state.generatedImage)}
+                                className="w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                        Generando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-5 h-5 mr-2" />
+                                        {creationFlow.state.generatedImage ? 'Refinar Imagen' : 'Generar Imagen'}
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             ) : (
@@ -525,28 +562,6 @@ export default function ImagePage() {
                 </div>
             )}
 
-            {/* Debug Modal */}
-            {/* Mobile Action Button (Unified) */}
-            {isMobile && activeBrandKit && (
-                <div className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-background/95 backdrop-blur-2xl border-t border-white/20 z-[100] shadow-[0_-8px_32px_rgba(0,0,0,0.1)] safe-p-b">
-                    <GenerateButton
-                        onClick={() => {
-                            if (creationFlow.state.generatedImage && editPrompt.trim()) {
-                                handleEditImage(editPrompt.trim())
-                                setEditPrompt('')
-                            } else {
-                                handleGenerateWithDebug({
-                                    prompt: creationFlow.buildGenerationPrompt()
-                                })
-                            }
-                        }}
-                        isGenerating={isGenerating}
-                        isDisabled={!creationFlow.canGenerate && (!creationFlow.state.generatedImage || !editPrompt.trim())}
-                        label={creationFlow.state.generatedImage && editPrompt.trim() ? "Aplicar Edición" : "Generar"}
-                        className="w-full h-14 text-lg shadow-aero bg-primary hover:bg-primary/90 text-primary-foreground font-bold border-0 rounded-xl"
-                    />
-                </div>
-            )}
 
             <PromptDebugModal
                 open={showDebugModal}
@@ -554,6 +569,6 @@ export default function ImagePage() {
                 onConfirm={confirmGeneration}
                 promptData={debugPromptData}
             />
-        </DashboardLayout>
+        </DashboardLayout >
     )
 }
