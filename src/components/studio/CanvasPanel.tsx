@@ -486,216 +486,178 @@ export function CanvasPanel({
                 "flex-1 relative flex flex-col items-center justify-start pb-8 overflow-auto thin-scrollbar",
                 isMobile ? "px-0 pt-20" : "px-6 pt-20"
             )}>
-                {/* Canvas Wrapper - reserves scaled space for proper layout */}
+                {/* Canvas Container - constrained to available space */}
                 <div
-                    className="shrink-0 flex items-start justify-center"
+                    ref={containerRef}
+                    className="relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-white dark:bg-zinc-900 bg-dot group shrink-0 rounded-aero overflow-hidden"
                     style={(() => {
                         const [w, h] = aspectRatio.split(':').map(Number);
                         const ratio = w / h;
-                        const footerOffset = isMobile ? (currentImage ? 180 : 120) : (currentImage ? 700 : 400);
+
+                        const footerOffset = isMobile
+                            ? (currentImage ? 180 : 120)
+                            : (currentImage ? 700 : 400);
                         const availableHeight = Math.max(200, viewportHeight - footerOffset);
+
                         const padding = isMobile ? 0 : 48;
                         const availableWidth = (containerRef.current?.parentElement?.clientWidth
                             ? containerRef.current.parentElement.clientWidth - padding
                             : (isMobile ? window.innerWidth : 1000));
 
-                        let canvasHeight;
+                        let canvasWidth, canvasHeight;
+
                         if (isMobile) {
-                            canvasHeight = availableWidth / ratio;
+                            canvasWidth = availableWidth;
+                            canvasHeight = canvasWidth / ratio;
                         } else {
                             if (ratio >= 1) {
-                                const maxWidth = Math.min(availableWidth, availableHeight * ratio);
-                                canvasHeight = maxWidth / ratio;
+                                canvasWidth = Math.min(availableWidth, availableHeight * ratio);
+                                canvasHeight = canvasWidth / ratio;
                             } else {
                                 canvasHeight = Math.min(availableHeight, availableWidth / ratio);
+                                canvasWidth = canvasHeight * ratio;
                             }
                         }
-                        // Reserve space for the scaled canvas
-                        // Only add extra space when zoom > 100%, otherwise use base height
-                        const effectiveHeight = zoom > 100
-                            ? canvasHeight * (zoom / 100)
-                            : canvasHeight;
+
                         return {
-                            minHeight: `${effectiveHeight}px`,
-                            width: '100%'
+                            width: `${canvasWidth}px`,
+                            height: `${canvasHeight}px`,
+                            transform: `scale(${zoom / 100})`,
+                            transformOrigin: 'center center',
                         };
                     })()}
                 >
-                    {/* Canvas Container - constrained to available space */}
-                    <div
-                        ref={containerRef}
-                        className="relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-white dark:bg-zinc-900 bg-dot group shrink-0 rounded-aero overflow-hidden"
-                        style={(() => {
-                            const [w, h] = aspectRatio.split(':').map(Number);
-                            const ratio = w / h;
+                    <AnimatePresence mode="wait">
+                        {(isGenerating || isRevealing) && (
+                            <motion.div
+                                key="loader"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.8 }}
+                                className="absolute inset-0 z-50 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/10"
+                            >
+                                <DigitalStaticLoader />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                            const footerOffset = isMobile
-                                ? (currentImage ? 180 : 120)
-                                : (currentImage ? 700 : 400);
-                            const availableHeight = Math.max(200, viewportHeight - footerOffset);
-
-                            const padding = isMobile ? 0 : 48;
-                            const availableWidth = (containerRef.current?.parentElement?.clientWidth
-                                ? containerRef.current.parentElement.clientWidth - padding
-                                : (isMobile ? window.innerWidth : 1000));
-
-                            let canvasWidth, canvasHeight;
-
-                            if (isMobile) {
-                                canvasWidth = availableWidth;
-                                canvasHeight = canvasWidth / ratio;
-                            } else {
-                                if (ratio >= 1) {
-                                    canvasWidth = Math.min(availableWidth, availableHeight * ratio);
-                                    canvasHeight = canvasWidth / ratio;
-                                } else {
-                                    canvasHeight = Math.min(availableHeight, availableWidth / ratio);
-                                    canvasWidth = canvasHeight * ratio;
-                                }
-                            }
-
-                            return {
-                                width: `${canvasWidth}px`,
-                                height: `${canvasHeight}px`,
-                                transform: `scale(${zoom / 100})`,
-                                transformOrigin: 'top center',
-                            };
-                        })()}
-                    >
-                        <AnimatePresence mode="wait">
-                            {(isGenerating || isRevealing) && (
+                    {currentImage ? (
+                        <div className="relative w-full h-full overflow-hidden rounded-lg bg-background/50">
+                            <div className="w-full h-full flex items-center justify-center">
                                 <motion.div
-                                    key="loader"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.8 }}
-                                    className="absolute inset-0 z-50 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/10"
+                                    key={currentImage}
+                                    initial={wasJustGenerated ? { opacity: 0, filter: 'blur(20px)' } : { opacity: 1, filter: 'blur(0px)' }}
+                                    animate={{
+                                        opacity: 1,
+                                        filter: 'blur(0px)',
+                                    }}
+                                    transition={wasJustGenerated ? {
+                                        duration: 0.3,
+                                        ease: "easeOut",
+                                        filter: { duration: 0.4 },
+                                        opacity: { duration: 0.2 }
+                                    } : {
+                                        duration: 0.15
+                                    }}
+                                    className="w-full h-full flex items-center justify-center"
                                 >
-                                    <DigitalStaticLoader />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        {currentImage ? (
-                            <div className="relative w-full h-full overflow-hidden rounded-lg bg-background/50">
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <motion.div
-                                        key={currentImage}
-                                        initial={wasJustGenerated ? { opacity: 0, filter: 'blur(20px)' } : { opacity: 1, filter: 'blur(0px)' }}
-                                        animate={{
-                                            opacity: 1,
-                                            filter: 'blur(0px)',
-                                        }}
-                                        transition={wasJustGenerated ? {
-                                            duration: 0.3,
-                                            ease: "easeOut",
-                                            filter: { duration: 0.4 },
-                                            opacity: { duration: 0.2 }
-                                        } : {
-                                            duration: 0.15
-                                        }}
-                                        className="w-full h-full flex items-center justify-center"
-                                    >
-                                        <img
-                                            src={currentImage}
-                                            alt="Generated design"
-                                            className="w-full h-full object-contain"
-                                        />
-                                        {isAnnotating && (
-                                            <div className="absolute top-1/4 right-1/4 w-24 h-24 annotation-ring flex items-center justify-center">
-                                                <div className="bg-primary rounded-full p-1">
-                                                    <EditIcon fontSize="small" className="text-primary-foreground" style={{ width: 12, height: 12 }} />
-                                                </div>
-                                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover px-2 py-1 rounded text-xs whitespace-nowrap">
-                                                    Add red accent stitching to laces.
-                                                </div>
-                                            </div>
-                                        )}
-                                    </motion.div>
-                                </div>
-                            </div>
-                        ) : creationState ? (
-                            <WireframeRenderer
-                                state={creationState}
-                                aspectRatio={(() => {
-                                    const [w, h] = aspectRatio.split(':').map(Number);
-                                    return w / h;
-                                })()}
-                            />
-                        ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
-                                <div className="w-16 h-16 rounded-2xl bg-white/50 dark:bg-zinc-800/50 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm">
-                                    <span className="text-3xl opacity-70">🎨</span>
-                                </div>
-                                <p className="text-sm font-medium text-muted-foreground/70">{t('canvas.noImage')}</p>
-                                <div className="mt-4 px-3 py-1 rounded-full bg-muted/50 text-[10px] uppercase tracking-wider font-mono text-muted-foreground/60 border border-border/30">
-                                    {aspectRatio}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* PREVIEW OVERLAYS (Reference Image & Logo) */}
-                        {!currentImage && creationState && (
-                            <>
-                                {/* Reference Image (Top Left) */}
-                                {creationState.uploadedImage && (
-                                    <div className="absolute top-4 left-4 z-20 group/ref">
-                                        <div className="w-20 h-20 rounded-lg overflow-hidden ring-2 ring-white shadow-lg bg-white relative">
-                                            <img
-                                                src={creationState.uploadedImage}
-                                                alt="Ref"
-                                                className="w-full h-full object-cover opacity-90 group-hover/ref:opacity-100 transition-opacity"
-                                            />
-                                            <div className="absolute bottom-0 inset-x-0 bg-black/50 text-[8px] text-white text-center py-0.5 backdrop-blur-sm">
-                                                REFERENCIA
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Logo (Top Right) */}
-                                {creationState.selectedLogoId && activeBrandKit?.logos && (
-                                    <div className="absolute top-4 right-4 z-20">
-                                        <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
-                                            <img
-                                                src={activeBrandKit.logos.find((l: any, idx: number) => l._id === creationState.selectedLogoId || `logo-${idx}` === creationState.selectedLogoId)?.url}
-                                                alt="Logo"
-                                                className="w-full h-full object-contain drop-shadow"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                            </>
-                        )}
-
-                        {/* TEXT LAYERS EDITOR - Overlay on Canvas (Only visible when no image is generated) */}
-                        {!currentImage && (creationState.headline || creationState.cta || Object.keys(creationState.customTexts).length > 0 || creationState.selectedIntent) && (
-                            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none">
-                                <div className="w-full h-full">
-                                    <TextLayersEditor
-                                        headline={creationState.headline}
-                                        cta={creationState.cta}
-                                        customTexts={creationState.customTexts}
-                                        textAssets={creationState.selectedTextAssets}
-                                        onHeadlineChange={(val) => onHeadlineChange?.(val)}
-                                        onCtaChange={(val) => onCtaChange?.(val)}
-                                        onCustomTextChange={(id, val) => onCustomTextChange?.(id, val)}
-                                        onAddTextAsset={onAddTextAsset}
-                                        onUpdateTextAsset={onUpdateTextAsset}
-                                        onDeleteLayer={(id, type) => {
-                                            if (type === 'headline') onHeadlineChange?.('')
-                                            if (type === 'cta') onCtaChange?.('')
-                                            if (type === 'custom') onCustomTextChange?.(id, '')
-                                            if (type === 'asset') onRemoveTextAsset?.(id)
-                                        }}
+                                    <img
+                                        src={currentImage}
+                                        alt="Generated design"
+                                        className="w-full h-full object-contain"
                                     />
-                                </div>
+                                    {isAnnotating && (
+                                        <div className="absolute top-1/4 right-1/4 w-24 h-24 annotation-ring flex items-center justify-center">
+                                            <div className="bg-primary rounded-full p-1">
+                                                <EditIcon fontSize="small" className="text-primary-foreground" style={{ width: 12, height: 12 }} />
+                                            </div>
+                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover px-2 py-1 rounded text-xs whitespace-nowrap">
+                                                Add red accent stitching to laces.
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    ) : creationState ? (
+                        <WireframeRenderer
+                            state={creationState}
+                            aspectRatio={(() => {
+                                const [w, h] = aspectRatio.split(':').map(Number);
+                                return w / h;
+                            })()}
+                        />
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
+                            <div className="w-16 h-16 rounded-2xl bg-white/50 dark:bg-zinc-800/50 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm">
+                                <span className="text-3xl opacity-70">🎨</span>
+                            </div>
+                            <p className="text-sm font-medium text-muted-foreground/70">{t('canvas.noImage')}</p>
+                            <div className="mt-4 px-3 py-1 rounded-full bg-muted/50 text-[10px] uppercase tracking-wider font-mono text-muted-foreground/60 border border-border/30">
+                                {aspectRatio}
+                            </div>
+                        </div>
+                    )}
 
-                    {/* Close Canvas Wrapper */}
+                    {/* PREVIEW OVERLAYS (Reference Image & Logo) */}
+                    {!currentImage && creationState && (
+                        <>
+                            {/* Reference Image (Top Left) */}
+                            {creationState.uploadedImage && (
+                                <div className="absolute top-4 left-4 z-20 group/ref">
+                                    <div className="w-20 h-20 rounded-lg overflow-hidden ring-2 ring-white shadow-lg bg-white relative">
+                                        <img
+                                            src={creationState.uploadedImage}
+                                            alt="Ref"
+                                            className="w-full h-full object-cover opacity-90 group-hover/ref:opacity-100 transition-opacity"
+                                        />
+                                        <div className="absolute bottom-0 inset-x-0 bg-black/50 text-[8px] text-white text-center py-0.5 backdrop-blur-sm">
+                                            REFERENCIA
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Logo (Top Right) */}
+                            {creationState.selectedLogoId && activeBrandKit?.logos && (
+                                <div className="absolute top-4 right-4 z-20">
+                                    <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
+                                        <img
+                                            src={activeBrandKit.logos.find((l: any, idx: number) => l._id === creationState.selectedLogoId || `logo-${idx}` === creationState.selectedLogoId)?.url}
+                                            alt="Logo"
+                                            className="w-full h-full object-contain drop-shadow"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* TEXT LAYERS EDITOR - Overlay on Canvas (Only visible when no image is generated) */}
+                    {!currentImage && (creationState.headline || creationState.cta || Object.keys(creationState.customTexts).length > 0 || creationState.selectedIntent) && (
+                        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none">
+                            <div className="w-full h-full">
+                                <TextLayersEditor
+                                    headline={creationState.headline}
+                                    cta={creationState.cta}
+                                    customTexts={creationState.customTexts}
+                                    textAssets={creationState.selectedTextAssets}
+                                    onHeadlineChange={(val) => onHeadlineChange?.(val)}
+                                    onCtaChange={(val) => onCtaChange?.(val)}
+                                    onCustomTextChange={(id, val) => onCustomTextChange?.(id, val)}
+                                    onAddTextAsset={onAddTextAsset}
+                                    onUpdateTextAsset={onUpdateTextAsset}
+                                    onDeleteLayer={(id, type) => {
+                                        if (type === 'headline') onHeadlineChange?.('')
+                                        if (type === 'cta') onCtaChange?.('')
+                                        if (type === 'custom') onCustomTextChange?.(id, '')
+                                        if (type === 'asset') onRemoveTextAsset?.(id)
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Zoom Controls moved to header */}
@@ -721,136 +683,138 @@ export function CanvasPanel({
 
 
             {/* Staging Area / Context Drawer */}
-            {selectedContext.length > 0 && (
-                <div
-                    className="px-4 py-2 bg-background"
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                >
-                    <div className="flex flex-wrap gap-2">
-                        {selectedContext.map((item) => (
-                            <div
-                                key={item.id}
-                                className={cn(
-                                    "flex items-center gap-2 bg-background border border-border/50 rounded-lg shadow-sm group animate-in fade-in slide-in-from-bottom-1 transition-all overflow-hidden",
-                                    (item.type === 'image' || item.type === 'logo') ? "p-0 pr-1.5" : "px-2 py-1"
-                                )}
-                            >
-                                {item.type === 'color' && (
-                                    <div className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: item.value }} />
-                                )}
-                                {item.type === 'template' && (
-                                    <Layout className="w-3.5 h-3.5 text-primary shrink-0" />
-                                )}
-                                {(item.type === 'logo' || item.type === 'image') && (
-                                    <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
-                                        <img
-                                            src={item.value}
-                                            className={cn(
-                                                "w-full h-full",
-                                                item.type === 'logo' ? "object-contain p-1" : "object-cover"
-                                            )}
-                                            alt={item.label}
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Font */}
-                                {item.type === 'font' && (
-                                    <Type className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                                )}
-
-                                {/* Text assets */}
-                                {item.type === 'text' && (
-                                    <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                                )}
-
-                                {/* Links */}
-                                {item.type === 'link' && (
-                                    <Link2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
-                                )}
-
-                                {/* Contact */}
-                                {item.type === 'contact' && (
-                                    <AtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                                )}
-
-                                {(item.type === 'color' || item.type === 'template' || item.type === 'font' || item.type === 'text' || item.type === 'link' || item.type === 'contact') && (
-                                    <span className="text-[11px] font-medium max-w-[120px] truncate">
-                                        {item.label || item.value}
-                                    </span>
-                                )}
-
-                                <button
-                                    onClick={() => onRemoveContext?.(item.id, 'style')}
-                                    className="p-0.5 hover:bg-muted rounded text-muted-foreground hover:text-destructive transition-colors ml-auto"
-                                >
-                                    <X className="w-3.5 h-3.5" />
-                                </button>
-                            </div>
-                        ))
-                        }
-
-                        {/* Preview Chip while dragging */}
-                        {
-                            isDraggingOver && draggedElement && !selectedContext.some(c => c.id === draggedElement.id) && (
+            {
+                selectedContext.length > 0 && (
+                    <div
+                        className="px-4 py-2 bg-background"
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                    >
+                        <div className="flex flex-wrap gap-2">
+                            {selectedContext.map((item) => (
                                 <div
+                                    key={item.id}
                                     className={cn(
-                                        "flex items-center gap-2 bg-primary/5 border border-primary/30 border-dashed rounded-lg shadow-sm animate-pulse overflow-hidden opacity-80",
-                                        (draggedElement.type === 'image' || draggedElement.type === 'logo') ? "p-0 pr-1.5" : "px-2 py-1"
+                                        "flex items-center gap-2 bg-background border border-border/50 rounded-lg shadow-sm group animate-in fade-in slide-in-from-bottom-1 transition-all overflow-hidden",
+                                        (item.type === 'image' || item.type === 'logo') ? "p-0 pr-1.5" : "px-2 py-1"
                                     )}
                                 >
-                                    {draggedElement.type === 'color' && (
-                                        <div className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: draggedElement.value }} />
+                                    {item.type === 'color' && (
+                                        <div className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: item.value }} />
                                     )}
-                                    {draggedElement.type === 'template' && (
+                                    {item.type === 'template' && (
                                         <Layout className="w-3.5 h-3.5 text-primary shrink-0" />
                                     )}
-                                    {(draggedElement.type === 'logo' || draggedElement.type === 'image') && (
+                                    {(item.type === 'logo' || item.type === 'image') && (
                                         <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
                                             <img
-                                                src={draggedElement.value}
+                                                src={item.value}
                                                 className={cn(
                                                     "w-full h-full",
-                                                    draggedElement.type === 'logo' ? "object-contain p-1" : "object-cover"
+                                                    item.type === 'logo' ? "object-contain p-1" : "object-cover"
                                                 )}
-                                                alt="Preview"
+                                                alt={item.label}
                                             />
                                         </div>
                                     )}
 
                                     {/* Font */}
-                                    {draggedElement.type === 'font' && (
+                                    {item.type === 'font' && (
                                         <Type className="w-3.5 h-3.5 text-purple-500 shrink-0" />
                                     )}
 
                                     {/* Text assets */}
-                                    {draggedElement.type === 'text' && (
+                                    {item.type === 'text' && (
                                         <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                                     )}
 
                                     {/* Links */}
-                                    {draggedElement.type === 'link' && (
+                                    {item.type === 'link' && (
                                         <Link2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
                                     )}
 
                                     {/* Contact */}
-                                    {draggedElement.type === 'contact' && (
+                                    {item.type === 'contact' && (
                                         <AtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                                     )}
 
-                                    {(draggedElement.type === 'color' || draggedElement.type === 'template' || draggedElement.type === 'font' || draggedElement.type === 'text' || draggedElement.type === 'link' || draggedElement.type === 'contact') && (
-                                        <span className="text-[11px] font-medium opacity-50">
-                                            {draggedElement.label}
+                                    {(item.type === 'color' || item.type === 'template' || item.type === 'font' || item.type === 'text' || item.type === 'link' || item.type === 'contact') && (
+                                        <span className="text-[11px] font-medium max-w-[120px] truncate">
+                                            {item.label || item.value}
                                         </span>
                                     )}
+
+                                    <button
+                                        onClick={() => onRemoveContext?.(item.id, 'style')}
+                                        className="p-0.5 hover:bg-muted rounded text-muted-foreground hover:text-destructive transition-colors ml-auto"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
                                 </div>
-                            )
-                        }
+                            ))
+                            }
+
+                            {/* Preview Chip while dragging */}
+                            {
+                                isDraggingOver && draggedElement && !selectedContext.some(c => c.id === draggedElement.id) && (
+                                    <div
+                                        className={cn(
+                                            "flex items-center gap-2 bg-primary/5 border border-primary/30 border-dashed rounded-lg shadow-sm animate-pulse overflow-hidden opacity-80",
+                                            (draggedElement.type === 'image' || draggedElement.type === 'logo') ? "p-0 pr-1.5" : "px-2 py-1"
+                                        )}
+                                    >
+                                        {draggedElement.type === 'color' && (
+                                            <div className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: draggedElement.value }} />
+                                        )}
+                                        {draggedElement.type === 'template' && (
+                                            <Layout className="w-3.5 h-3.5 text-primary shrink-0" />
+                                        )}
+                                        {(draggedElement.type === 'logo' || draggedElement.type === 'image') && (
+                                            <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
+                                                <img
+                                                    src={draggedElement.value}
+                                                    className={cn(
+                                                        "w-full h-full",
+                                                        draggedElement.type === 'logo' ? "object-contain p-1" : "object-cover"
+                                                    )}
+                                                    alt="Preview"
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Font */}
+                                        {draggedElement.type === 'font' && (
+                                            <Type className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                                        )}
+
+                                        {/* Text assets */}
+                                        {draggedElement.type === 'text' && (
+                                            <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                        )}
+
+                                        {/* Links */}
+                                        {draggedElement.type === 'link' && (
+                                            <Link2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                        )}
+
+                                        {/* Contact */}
+                                        {draggedElement.type === 'contact' && (
+                                            <AtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                                        )}
+
+                                        {(draggedElement.type === 'color' || draggedElement.type === 'template' || draggedElement.type === 'font' || draggedElement.type === 'text' || draggedElement.type === 'link' || draggedElement.type === 'contact') && (
+                                            <span className="text-[11px] font-medium opacity-50">
+                                                {draggedElement.label}
+                                            </span>
+                                        )}
+                                    </div>
+                                )
+                            }
+                        </div >
                     </div >
-                </div >
-            )}
+                )
+            }
 
             {/* Prompt Input Area - Hidden when using external PromptCard */}
             {
