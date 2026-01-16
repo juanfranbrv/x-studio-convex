@@ -511,8 +511,12 @@ export function CanvasPanel({
                             }
                         }
                         // Reserve space for the scaled canvas
+                        // Only add extra space when zoom > 100%, otherwise use base height
+                        const effectiveHeight = zoom > 100
+                            ? canvasHeight * (zoom / 100)
+                            : canvasHeight;
                         return {
-                            minHeight: `${canvasHeight * (zoom / 100)}px`,
+                            minHeight: `${effectiveHeight}px`,
                             width: '100%'
                         };
                     })()}
