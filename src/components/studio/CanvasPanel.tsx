@@ -488,7 +488,7 @@ export function CanvasPanel({
             )}>
                 {/* Canvas Wrapper - reserves correct space and prevents overflow */}
                 <div
-                    className="shrink-0 flex items-center justify-center overflow-hidden"
+                    className="shrink-0 flex items-center justify-center w-full"
                     style={(() => {
                         const [w, h] = aspectRatio.split(':').map(Number);
                         const ratio = w / h;
@@ -499,29 +499,22 @@ export function CanvasPanel({
                             ? containerRef.current.parentElement.clientWidth - padding
                             : (isMobile ? window.innerWidth : 1000));
 
-                        let canvasWidth, canvasHeight;
+                        let canvasHeight;
                         if (isMobile) {
-                            canvasWidth = availableWidth;
-                            canvasHeight = canvasWidth / ratio;
+                            canvasHeight = availableWidth / ratio;
                         } else {
                             if (ratio >= 1) {
-                                canvasWidth = Math.min(availableWidth, availableHeight * ratio);
+                                const canvasWidth = Math.min(availableWidth, availableHeight * ratio);
                                 canvasHeight = canvasWidth / ratio;
                             } else {
                                 canvasHeight = Math.min(availableHeight, availableWidth / ratio);
-                                canvasWidth = canvasHeight * ratio;
                             }
                         }
 
-                        // Calculate scaled dimensions
+                        // Only expand height when zoom > 100%
                         const scaledHeight = canvasHeight * (zoom / 100);
-                        const scaledWidth = canvasWidth * (zoom / 100);
-
-                        // Always use base dimensions as minimum, expand when zoom > 100%
                         return {
-                            height: `${Math.max(canvasHeight, scaledHeight)}px`,
-                            width: `${Math.max(canvasWidth, scaledWidth)}px`,
-                            maxWidth: '100%'
+                            height: `${Math.max(canvasHeight, scaledHeight)}px`
                         };
                     })()}
                 >
