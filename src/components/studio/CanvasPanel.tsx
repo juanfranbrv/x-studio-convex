@@ -528,8 +528,10 @@ export function CanvasPanel({
                         }
 
                         return {
-                            width: `${canvasWidth * (zoom / 100)}px`,
-                            height: `${canvasHeight * (zoom / 100)}px`,
+                            width: `${canvasWidth}px`,
+                            height: `${canvasHeight}px`,
+                            transform: `scale(${zoom / 100})`,
+                            transformOrigin: 'top center',
                         };
                     })()}
                 >
