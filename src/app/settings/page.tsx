@@ -20,11 +20,15 @@ import {
     Zap,
     Save,
     Loader2,
-    LogOut
+    LogOut,
+    Layout
 } from 'lucide-react';
+import { useUI } from '@/contexts/UIContext';
+import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
     const { brandKits, activeBrandKit, setActiveBrandKit } = useBrandKit();
+    const { panelPosition, setPanelPosition } = useUI();
     const { signOut } = useClerk();
     const { user } = useUser();
     const [isSaving, setIsSaving] = useState(false);
@@ -237,6 +241,49 @@ export default function SettingsPage() {
                                     <Button variant="outline" className="justify-start">
                                         Sistema
                                     </Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* UI Preferences */}
+                    <Card className="glass-panel border-0 shadow-aero border-primary/20 bg-primary/5">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-foreground">
+                                <Layout className="w-5 h-5 text-primary" />
+                                Interfaz (X Studio)
+                            </CardTitle>
+                            <CardDescription>
+                                Personaliza la disposición de los controles en el editor
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="panel-position">Posición del Panel de Controles</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Mueve el panel de controles a la izquierda o derecha
+                                    </p>
+                                </div>
+                                <div className="flex bg-muted p-1 rounded-lg">
+                                    <button
+                                        onClick={() => setPanelPosition('left')}
+                                        className={cn(
+                                            "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                                            panelPosition === 'left' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                    >
+                                        Izquierda
+                                    </button>
+                                    <button
+                                        onClick={() => setPanelPosition('right')}
+                                        className={cn(
+                                            "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                                            panelPosition === 'right' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                                        )}
+                                    >
+                                        Derecha
+                                    </button>
                                 </div>
                             </div>
                         </CardContent>

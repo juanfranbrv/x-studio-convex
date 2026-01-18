@@ -81,10 +81,23 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     useEffect(() => {
         // Initialize with default colors if brand kit is available
         if (activeBrandKit?.colors && state.selectedBrandColors.length === 0) {
-            const defaultColors = (activeBrandKit.colors as any[]).map(c => ({
-                color: c.color || c.hex || (typeof c === 'string' ? c : ''),
-                role: (c.role as ColorRole) || 'Principal'
-            })).filter(c => c.color)
+            const defaultColors = (activeBrandKit.colors as any[]).map(c => {
+                const rawRole = ((c.role as string) || 'Acento').trim().toUpperCase()
+                let role: ColorRole = 'Acento'
+
+                if (rawRole.includes('TEXT')) {
+                    role = 'Texto'
+                } else if (rawRole.includes('FOND')) {
+                    role = 'Fondo'
+                } else if (rawRole.includes('ACENT')) {
+                    role = 'Acento'
+                }
+
+                return {
+                    color: c.color || c.hex || (typeof c === 'string' ? c : ''),
+                    role
+                }
+            }).filter(c => c.color)
 
             if (defaultColors.length > 0) {
                 setState(prev => ({ ...prev, selectedBrandColors: defaultColors }))
@@ -127,12 +140,13 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => ({
             ...prev,
             selectedPlatform: platform,
-            selectedFormat: firstFormat?.id || null
+            selectedFormat: firstFormat?.id || null,
+            generatedImage: null
         }))
     }, [])
 
     const selectFormat = useCallback((formatId: string) => {
-        setState(prev => ({ ...prev, selectedFormat: formatId }))
+        setState(prev => ({ ...prev, selectedFormat: formatId, generatedImage: null }))
     }, [])
 
     // -------------------------------------------------------------------------
@@ -171,11 +185,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             visionAnalysis: null,
             selectedStyles: [],
             selectedLayout: null,
+            generatedImage: null,
         }))
     }, [])
 
     const selectSubMode = useCallback((subMode: string) => {
-        setState(prev => ({ ...prev, selectedSubMode: subMode }))
+        setState(prev => ({ ...prev, selectedSubMode: subMode, generatedImage: null }))
     }, [])
 
     // -------------------------------------------------------------------------
@@ -187,7 +202,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     const uploadImage = useCallback(async (file: File) => {
-        setState(prev => ({ ...prev, isAnalyzing: true, error: null }))
+        setState(prev => ({ ...prev, isAnalyzing: true, error: null, generatedImage: null }))
 
         try {
             // Resize and compress image on client side to avoid 10MB payload limit
@@ -243,6 +258,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => ({
             ...prev,
             selectedTheme: theme,
+            generatedImage: null,
             // Create a pseudo VisionAnalysis from theme
             visionAnalysis: themeMeta ? {
                 subject: 'abstract',
@@ -256,7 +272,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     const setImageFromUrl = useCallback(async (url: string) => {
-        setState(prev => ({ ...prev, isAnalyzing: true, error: null }))
+        setState(prev => ({ ...prev, isAnalyzing: true, error: null, generatedImage: null }))
         try {
             // Fetch image and convert to blob then to base64
             const response = await fetch(url)
@@ -325,18 +341,18 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // -------------------------------------------------------------------------
 
     const setImageSourceMode = useCallback((mode: 'upload' | 'brandkit' | 'generate') => {
-        setState(prev => ({ ...prev, imageSourceMode: mode }))
+        setState(prev => ({ ...prev, imageSourceMode: mode, generatedImage: null }))
     }, [])
 
     const selectBrandKitImage = useCallback(async (imageUrl: string) => {
-        setState(prev => ({ ...prev, selectedBrandKitImageId: imageUrl }))
+        setState(prev => ({ ...prev, selectedBrandKitImageId: imageUrl, generatedImage: null }))
 
         // Use the image URL directly
         await setImageFromUrl(imageUrl)
     }, [setImageFromUrl])
 
     const setAiImageDescription = useCallback((description: string) => {
-        setState(prev => ({ ...prev, aiImageDescription: description }))
+        setState(prev => ({ ...prev, aiImageDescription: description, generatedImage: null }))
     }, [])
 
     // -------------------------------------------------------------------------
@@ -351,6 +367,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             return {
                 ...prev,
                 selectedStyles: isSelected ? [] : [styleId],
+                generatedImage: null, // Invalidate to force new generation
             }
         })
     }, [])
@@ -360,7 +377,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // -------------------------------------------------------------------------
 
     const selectLayout = useCallback((layoutId: string) => {
-        setState(prev => ({ ...prev, selectedLayout: layoutId }))
+        setState(prev => ({ ...prev, selectedLayout: layoutId, generatedImage: null }))
     }, [])
 
     // -------------------------------------------------------------------------
@@ -374,7 +391,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // -------------------------------------------------------------------------
 
     const selectLogo = useCallback((logoId: string | null) => {
-        setState(prev => ({ ...prev, selectedLogoId: logoId }))
+        setState(prev => ({ ...prev, selectedLogoId: logoId, generatedImage: null }))
     }, [])
 
     const setHeadline = useCallback((headline: string) => {
@@ -409,6 +426,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => ({ ...prev, caption: caption || '' }))
     }, [])
 
+    const setCtaUrl = useCallback((url: string) => {
+        setState(prev => ({ ...prev, ctaUrl: url || '' }))
+    }, [])
+
     const setAdditionalInstructions = useCallback((instructions: string) => {
         setState(prev => ({ ...prev, additionalInstructions: instructions }))
     }, [])
@@ -418,7 +439,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     const setCustomStyle = useCallback((style: string) => {
-        setState(prev => ({ ...prev, customStyle: style }))
+        setState(prev => ({ ...prev, customStyle: style, generatedImage: null }))
     }, [])
 
     const setCustomText = useCallback((id: string, value: string) => {
@@ -453,7 +474,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 customTexts: {
                     ...prev.customTexts,
                     [id]: isNoText ? '' : NO_TEXT_TOKEN
-                }
+                },
+                generatedImage: null,
             }
         })
     }, [])
@@ -511,25 +533,28 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     const toggleBrandColor = useCallback((color: string) => {
         setState(prev => {
+            // Sequence: Acento -> Texto -> Fondo -> Deseleccionar (Remove)
+            const roles: ColorRole[] = ['Acento', 'Texto', 'Fondo']
             const index = prev.selectedBrandColors.findIndex(c => c.color.toLowerCase() === color.toLowerCase())
-            const roles: ColorRole[] = ['Principal', 'Secundario', 'Texto', 'Fondo', 'Acento', 'Neutral']
 
             if (index === -1) {
-                // Not selected: add with default role (Principal)
+                // First click: Add as Acento
                 return {
                     ...prev,
-                    selectedBrandColors: [...prev.selectedBrandColors, { color, role: 'Principal' }]
+                    selectedBrandColors: [...prev.selectedBrandColors, { color, role: 'Acento' }],
+                    generatedImage: null
                 }
             } else {
-                // Already selected: cycle roles or remove if it was neutral
+                // Already selected: cycle roles or remove
                 const currentRole = prev.selectedBrandColors[index].role
                 const roleIndex = roles.indexOf(currentRole)
 
-                if (roleIndex === roles.length - 1) {
-                    // It was neutral, remove it
+                // If it's the last role in our sequence (Fondo), or if it has an unknown/old role, remove it
+                if (roleIndex === roles.length - 1 || roleIndex === -1) {
                     return {
                         ...prev,
-                        selectedBrandColors: prev.selectedBrandColors.filter(c => c.color.toLowerCase() !== color.toLowerCase())
+                        selectedBrandColors: prev.selectedBrandColors.filter(c => c.color.toLowerCase() !== color.toLowerCase()),
+                        generatedImage: null
                     }
                 } else {
                     // Cycle to next role
@@ -537,7 +562,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                     newColors[index] = { ...newColors[index], role: roles[roleIndex + 1] }
                     return {
                         ...prev,
-                        selectedBrandColors: newColors
+                        selectedBrandColors: newColors,
+                        generatedImage: null
                     }
                 }
             }
@@ -547,7 +573,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const removeBrandColor = useCallback((color: string) => {
         setState(prev => ({
             ...prev,
-            selectedBrandColors: prev.selectedBrandColors.filter(c => c.color.toLowerCase() !== color.toLowerCase())
+            selectedBrandColors: prev.selectedBrandColors.filter(c => c.color.toLowerCase() !== color.toLowerCase()),
+            generatedImage: null
         }))
     }, [])
 
@@ -560,7 +587,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             if (exists) return prev
             return {
                 ...prev,
-                selectedBrandColors: [...prev.selectedBrandColors, { color, role: 'Principal' }]
+                selectedBrandColors: [...prev.selectedBrandColors, { color, role: 'Principal' }],
+                generatedImage: null
             }
         })
     }, [])
@@ -711,7 +739,12 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
     // PROMPT CONSTRUCTION
     // -------------------------------------------------------------------------
 
-    const buildGenerationPrompt = useCallback((): string => {
+    const buildGenerationPrompt = useCallback((overrides?: Partial<GenerationState>): string => {
+        const activeState = overrides ? { ...state, ...overrides } : state
+        const activeIntent = overrides?.selectedIntent
+            ? INTENT_CATALOG.find(i => i.id === overrides.selectedIntent)
+            : currentIntent
+
         const sections: string[] = []
 
         // ═══════════════════════════════════════════════════════════════
@@ -738,9 +771,9 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 10 - ABSOLUTE OVERRIDE (Logo Integrity)
         // ═══════════════════════════════════════════════════════════════
-        if (state.selectedLogoId && activeBrandKit?.logos) {
+        if (activeState.selectedLogoId && activeBrandKit?.logos) {
             const logo = activeBrandKit.logos.find((l, idx) =>
-                (l as any)._id === state.selectedLogoId || `logo-${idx}` === state.selectedLogoId
+                (l as any)._id === activeState.selectedLogoId || `logo-${idx}` === activeState.selectedLogoId
             )
             if (logo) {
                 sections.push(
@@ -778,26 +811,32 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
         // TEXT CONTENT (Part of P9 - Mandatory)
         const textParts: string[] = []
-        const headlineValue = state.headline?.trim()
+        const headlineValue = activeState.headline?.trim()
         if (headlineValue && headlineValue !== NO_TEXT_TOKEN) {
             textParts.push(`• HEADLINE: "${headlineValue}"`)
         }
 
-        const ctaValue = state.cta?.trim()
+        const ctaValue = activeState.cta?.trim()
+        const ctaUrl = activeState.ctaUrl?.trim()
         if (ctaValue && ctaValue !== NO_TEXT_TOKEN) {
-            textParts.push(`• CTA: "${ctaValue}"`)
+            if (ctaUrl) {
+                // Unified CTA Prompt - Explicitly linking them
+                textParts.push(`• CTA VISUAL ELEMENT: Main Button "${ctaValue}" WITH INTEGRATED URL TEXT "${ctaUrl}" (e.g., as a subtitle or directly under the button text within the same visual unit)`)
+            } else {
+                textParts.push(`• CTA BUTTON TEXT: "${ctaValue}"`)
+            }
         }
 
 
 
-        Object.entries(state.customTexts).forEach(([id, val]) => {
+        Object.entries(activeState.customTexts).forEach(([id, val]) => {
             // Support strings or arrays (greedy parser sometimes returns arrays)
             const stringVal = Array.isArray(val) ? val.join(', ') : String(val ?? '')
             const cleanVal = stringVal.trim()
 
             if (cleanVal && cleanVal !== 'undefined' && cleanVal !== 'null') {
                 // Filter out what is already mapped to headline/cta
-                const fieldMeta = currentIntent?.requiredFields?.find(f => f.id === id)
+                const fieldMeta = activeIntent?.requiredFields?.find(f => f.id === id)
                 if (fieldMeta?.mapsTo) return
 
                 const displayLabel = fieldMeta?.label || id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
@@ -806,22 +845,26 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         })
 
         // Add selected text assets from Brand DNA Panel
-        state.selectedTextAssets.forEach(asset => {
+        activeState.selectedTextAssets.forEach(asset => {
             if (asset.value?.trim()) {
                 textParts.push(`• ${asset.label.toUpperCase()}: "${asset.value.trim()}"`)
             }
         })
 
         if (textParts.length > 0) {
-            brandDNA.push(P09.MANDATORY_TEXT_HEADER, ...textParts, ``)
-        } else if (state.rawMessage) {
+            brandDNA.push(P09.MANDATORY_TEXT_HEADER)
+            if (activeState.ctaUrl?.trim()) {
+                brandDNA.push(`⚠️ CRITICAL REQT: The URL must be VISIBLY WRITTEN on the image composition below the CTA.`)
+            }
+            brandDNA.push(...textParts, ``)
+        } else if (activeState.rawMessage) {
             brandDNA.push(P09.MANDATORY_TEXT_HEADER, `(No explícitos, extraer de la INTENCIÓN ORIGINAL)`, ``)
         } else {
             brandDNA.push(P09.NO_TEXT_WARNING, ``)
         }
 
-        if (state.rawMessage) {
-            brandDNA.push(`USER ORIGINAL INTENTION / RAW CONTEXT:`, `"${state.rawMessage}"`, ``)
+        if (activeState.rawMessage) {
+            brandDNA.push(`USER ORIGINAL INTENTION / RAW CONTEXT:`, `"${activeState.rawMessage}"`, ``)
         }
 
         if (brandDNA.length > 0) {
@@ -831,11 +874,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 8 - CUSTOM DIRECTOR INSTRUCTIONS
         // ═══════════════════════════════════════════════════════════════
-        if (state.additionalInstructions) {
+        if (activeState.additionalInstructions) {
             sections.push(
                 P08.PRIORITY_HEADER,
                 ``,
-                `"${state.additionalInstructions}"`,
+                `"${activeState.additionalInstructions}"`,
                 ``,
                 P08.OVERRIDE_NOTE,
                 ``
@@ -904,29 +947,29 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         const subjectParts: string[] = []
 
-        if (state.visionAnalysis || (state.imageSourceMode === 'generate' && state.aiImageDescription.trim())) {
+        if (activeState.visionAnalysis || (activeState.imageSourceMode === 'generate' && activeState.aiImageDescription.trim())) {
             subjectParts.push(
                 P06.PRIORITY_HEADER,
                 ``
             )
 
             // Prioritize AI Description if we are explicitly in 'generate' mode
-            const useAiDescription = state.imageSourceMode === 'generate' && state.aiImageDescription.trim()
+            const useAiDescription = activeState.imageSourceMode === 'generate' && activeState.aiImageDescription.trim()
 
             if (useAiDescription) {
                 subjectParts.push(
                     P06.AI_GENERATED_REFERENCE_HEADER,
-                    P06.AI_GENERATED_REFERENCE_INSTRUCTION(state.aiImageDescription.trim()),
+                    P06.AI_GENERATED_REFERENCE_INSTRUCTION(activeState.aiImageDescription.trim()),
                     ``
                 )
             }
             // Fallback to vision analysis (from upload or brand kit) if available
-            else if (state.visionAnalysis) {
-                subjectParts.push(`SUBJECT: ${state.visionAnalysis.subjectLabel}`)
-                if (state.visionAnalysis.keywords.length > 0) {
-                    subjectParts.push(`KEYWORDS: ${state.visionAnalysis.keywords.join(', ')}`)
+            else if (activeState.visionAnalysis) {
+                subjectParts.push(`SUBJECT: ${activeState.visionAnalysis.subjectLabel}`)
+                if (activeState.visionAnalysis.keywords.length > 0) {
+                    subjectParts.push(`KEYWORDS: ${activeState.visionAnalysis.keywords.join(', ')}`)
                 }
-                subjectParts.push(`LIGHTING: ${state.visionAnalysis.lighting}`, ``)
+                subjectParts.push(`LIGHTING: ${activeState.visionAnalysis.lighting}`, ``)
             }
         }
 
@@ -937,11 +980,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 5 - VISUAL STYLE & AESTHETIC
         // ═══════════════════════════════════════════════════════════════
-        if (state.selectedStyles.length > 0 || state.customStyle) {
-            const selectedChips = availableStyles.filter(s => state.selectedStyles.includes(s.id))
+        if (activeState.selectedStyles.length > 0 || activeState.customStyle) {
+            const selectedChips = availableStyles.filter(s => activeState.selectedStyles.includes(s.id))
             const styleKeywords = selectedChips.flatMap(c => c.keywords)
             const allStyles = [...styleKeywords]
-            if (state.customStyle) allStyles.push(state.customStyle)
+            if (activeState.customStyle) allStyles.push(activeState.customStyle)
 
             sections.push(
                 P05.PRIORITY_HEADER,
@@ -956,12 +999,12 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 4 - BRAND COLOR PALETTE (with explicit roles)
         // ═══════════════════════════════════════════════════════════════
-        const hasSelectedColors = state.selectedBrandColors.length > 0
+        const hasSelectedColors = activeState.selectedBrandColors.length > 0
 
         let colorsToUse: SelectedColor[] = []
 
         if (hasSelectedColors) {
-            colorsToUse = state.selectedBrandColors
+            colorsToUse = activeState.selectedBrandColors
         } else if (activeBrandKit?.colors) {
             // Default to brand kit colors if nothing explicitly selected in Imagen
             // Map legacy brand colors to SelectedColor format
@@ -1058,6 +1101,19 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                     ``
                 )
             }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // FINAL COMPOSITION CHECK - URL VISIBILITY
+        // ═══════════════════════════════════════════════════════════════
+        if (activeState.ctaUrl?.trim()) {
+            sections.push(
+                ``,
+                `!!! CRITICAL LAYOUT INSTRUCTION !!!`,
+                `The URL "${activeState.ctaUrl.trim()}" MUST BE VISIBLE in the final image composition.`,
+                `It should be rendered as small text, typically positioned below the main Call to Action button.`,
+                ``
+            )
         }
 
         return sections.join('\n')
@@ -1249,6 +1305,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         selectLogo,
         setHeadline,
         setCta,
+        setCtaUrl,
         setCaption, // NEW
         setAdditionalInstructions,
         setRawMessage,

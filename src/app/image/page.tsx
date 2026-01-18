@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { CanvasPanel } from '@/components/studio/CanvasPanel'
 import { ControlsPanel } from '@/components/studio/ControlsPanel'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { PromptCard } from '@/components/studio/PromptCard'
@@ -22,6 +24,7 @@ import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 import { buildEditPrompt } from '@/lib/prompts/image-edit'
 import { parseLazyIntentAction } from '@/app/actions/parse-intent'
 import { IntentCategory } from '@/lib/creation-flow-types'
+import { useUI } from '@/contexts/UIContext'
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
@@ -45,6 +48,7 @@ export default function ImagePage() {
     const router = useRouter()
     const { user } = useUser()
     const { activeBrandKit, brandKits, loading, setActiveBrandKit, updateActiveBrandKit, deleteBrandKitById } = useBrandKit()
+    const { panelPosition } = useUI()
     const [isGenerating, setIsGenerating] = useState(false)
     const { toast } = useToast()
     const [selectedContext, setSelectedContext] = useState<ContextElement[]>([])
@@ -56,6 +60,9 @@ export default function ImagePage() {
     const [isMobile, setIsMobile] = useState(false)
     const [isMagicParsing, setIsMagicParsing] = useState(false)
     const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
+
+    // AI Configuration
+    const aiConfig = useQuery(api.settings.getAIConfig)
 
     // Detect mobile viewport
     useEffect(() => {
@@ -125,8 +132,8 @@ export default function ImagePage() {
     }
 
     // Smart analyze prompt
-    const handleSmartAnalyze = async () => {
-        if (!promptValue.trim()) return
+    const handleSmartAnalyze = async (autoModel?: string) => {
+        if (!promptValue.trim()) return null
 
         setIsMagicParsing(true)
         setHighlightedFields(new Set())
@@ -134,12 +141,14 @@ export default function ImagePage() {
         try {
             creationFlow.setRawMessage(promptValue)
 
-            const result = await parseLazyIntentAction(
-                promptValue,
-                activeBrandKit?.brand_name || "My Brand",
-                creationFlow.currentIntent || undefined,
-                creationFlow.selectedLayoutMeta || undefined
-            )
+            const result = await parseLazyIntentAction({
+                userText: promptValue,
+                brandDNA: activeBrandKit,
+                brandWebsite: activeBrandKit?.url,
+                intelligenceModel: autoModel || aiConfig?.intelligenceModel || 'gemini-flash-latest',
+                intentId: creationFlow.currentIntent?.id,
+                layoutId: creationFlow.selectedLayoutMeta?.id
+            })
 
             if (result.error) {
                 toast({
@@ -147,7 +156,7 @@ export default function ImagePage() {
                     description: "Could not parse intent. Please fill manually.",
                     variant: "destructive"
                 })
-                return
+                return null
             }
 
             const newHighlights = new Set<string>()
@@ -170,6 +179,10 @@ export default function ImagePage() {
                 creationFlow.setCta(result.cta)
                 newHighlights.add('cta')
             }
+            if (result.ctaUrl) {
+                creationFlow.setCtaUrl(result.ctaUrl)
+                newHighlights.add('ctaUrl')
+            }
             if (result.caption) {
                 creationFlow.setCaption(result.caption)
                 newHighlights.add('caption')
@@ -183,6 +196,8 @@ export default function ImagePage() {
                 description: "Your fields have been auto-filled based on your description.",
             })
 
+            return result
+
         } catch (error) {
             console.error(error)
             toast({
@@ -190,6 +205,7 @@ export default function ImagePage() {
                 description: "Something went wrong with the magic analysis.",
                 variant: "destructive"
             })
+            return null
         } finally {
             setIsMagicParsing(false)
         }
@@ -417,13 +433,16 @@ export default function ImagePage() {
     }
 
     const handleUnifiedAction = async () => {
+        // Mode 1: Edit existing image
         if (creationFlow.state.generatedImage && editPrompt.trim()) {
             await handleEditImage(editPrompt)
             setEditPrompt('')
-        } else {
-            const prompt = creationFlow.buildGenerationPrompt()
-            await handleGenerateWithDebug({ prompt })
+            return
         }
+
+        // Mode 2: Generate new image
+        const prompt = creationFlow.buildGenerationPrompt()
+        await handleGenerateWithDebug({ prompt })
     }
 
     if (loading) {
@@ -447,7 +466,10 @@ export default function ImagePage() {
             {activeBrandKit ? (
                 <div className="flex-1 flex flex-col overflow-hidden bg-mesh">
                     {/* TOP AREA: 2 Columns */}
-                    < div className="flex-1 flex flex-row overflow-hidden min-h-0" >
+                    < div className={cn(
+                        "flex-1 flex overflow-hidden min-h-0",
+                        panelPosition === 'right' ? "flex-row" : "flex-row-reverse"
+                    )} >
                         {/* LEFT COLUMN (Main Canvas) */}
                         < div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto overflow-x-hidden min-w-0" >
                             {/* Canvas Preview */}
@@ -472,6 +494,7 @@ export default function ImagePage() {
                                     onCaptionChange={creationFlow.setCaption}
                                     onHeadlineChange={creationFlow.setHeadline}
                                     onCtaChange={creationFlow.setCta}
+                                    onCtaUrlChange={creationFlow.setCtaUrl}
                                     onCustomTextChange={creationFlow.setCustomText}
                                     onAddTextAsset={() => {
                                         const newId = `custom-${Date.now()}`
@@ -505,12 +528,16 @@ export default function ImagePage() {
                             isGenerating={isGenerating}
                             canGenerate={Boolean(canGenerate)}
                             onUnifiedAction={handleUnifiedAction}
+                            onAnalyze={() => handleSmartAnalyze()}
                             userId={user?.id}
                         />
                     </div>
 
                     {/* BOTTOM BAR: Local Edits & Generate */}
-                    <div className="flex-none flex flex-row border-t border-white/10 bg-background/50 backdrop-blur-md min-h-[80px]">
+                    <div className={cn(
+                        "flex-none flex border-t border-white/10 bg-background/50 backdrop-blur-md min-h-[80px]",
+                        panelPosition === 'right' ? "flex-row" : "flex-row-reverse"
+                    )}>
                         {/* Left: Text Area (Matches Canvas width) */}
                         <div className="flex-1 p-4 flex items-end">
                             <Textarea
@@ -529,7 +556,10 @@ export default function ImagePage() {
                         </div>
 
                         {/* Right: Generate Button (Matches ControlsPanel width) */}
-                        <div className="w-full md:w-[27%] p-4 flex flex-col justify-end border-l border-white/5">
+                        <div className={cn(
+                            "w-full md:w-[27%] p-4 flex flex-col justify-end",
+                            panelPosition === 'right' ? "border-l border-white/5" : "border-r border-white/5"
+                        )}>
                             <Button
                                 onClick={handleUnifiedAction}
                                 disabled={isGenerating || (!canGenerate && !creationFlow.state.generatedImage)}

@@ -2,7 +2,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { BrandDNA } from '@/lib/brand-types'
-import { VisionAnalysis, IntentCategory } from '@/lib/creation-flow-types'
+import { VisionAnalysis, IntentCategory, INTENT_CATALOG } from '@/lib/creation-flow-types'
 import { buildCopywriterPrompt } from '@/lib/prompts/actions/copywriter'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -20,6 +20,9 @@ export async function generateFieldCopy(params: {
 }) {
     const { brandName, brandDNA, intent, visionAnalysis, fieldLabel, fieldDescription, rawMessage } = params
 
+    // Find intent metadata
+    const intentMeta = INTENT_CATALOG.find(i => i.id === intent)
+
     // DEBUG LOGGING
     console.log('--- generateFieldCopy call ---')
     console.log('Params:', { fieldLabel, rawMessage, intent })
@@ -28,6 +31,8 @@ export async function generateFieldCopy(params: {
         brandName,
         brandDNA,
         visionAnalysis,
+        intent: intentMeta?.name || intent,
+        intentDescription: intentMeta?.extendedDescription || intentMeta?.description,
         fieldLabel,
         fieldDescription,
         rawMessage

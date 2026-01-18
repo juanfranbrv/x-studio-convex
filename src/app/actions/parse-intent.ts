@@ -3,57 +3,66 @@
 import { generateTextUnified } from '@/lib/gemini'
 import { buildBrandDirectorPrompt } from '@/lib/prompts/system/brand-director'
 import { buildIntentParserPrompt } from '@/lib/prompts/intents/parser'
-import { IntentMeta, LayoutOption } from '@/lib/creation-flow-types'
+import { IntentMeta, LayoutOption, INTENT_CATALOG, LAYOUTS_BY_INTENT } from '@/lib/creation-flow-types'
+import { INTENT_PARSER_SYSTEM_PROMPT } from '@/lib/prompts/intents/parser-system-prompt'
 
 export interface ParsedIntentResult {
     detectedIntent?: string // Auto-detected intent ID
     confidence?: number      // Confidence score 0-1
     headline?: string
     cta?: string
+    ctaUrl?: string          // NEW: Separate field for the URL
     caption?: string         // NEW: Social media caption
     imageTexts?: Record<string, string> // NEW: Consolidated image texts
     customTexts?: Record<string, string>
     error?: string
 }
 
-export async function parseLazyIntentAction(
-    userText: string,
-    brandName: string,
-    intent?: IntentMeta, // Now optional - if not provided, will auto-detect
-    layout?: LayoutOption
-): Promise<ParsedIntentResult> {
+export async function parseLazyIntentAction({
+    userText,
+    brandDNA,
+    brandWebsite,
+    intentId,
+    layoutId,
+    intelligenceModel
+}: {
+    userText: string
+    brandDNA: any
+    brandWebsite?: string
+    intentId?: string
+    layoutId?: string
+    intelligenceModel?: string
+}): Promise<ParsedIntentResult> {
     try {
-        console.log(`[LazyPrompt] Parsing ${intent ? `for intent: ${intent.name}` : 'with auto-detection'}`)
+        // 1. Prepare Metadata
+        const intent = intentId ? INTENT_CATALOG.find(i => i.id === intentId) : undefined
+        const allLayouts = Object.values(LAYOUTS_BY_INTENT).flat()
+        const layout = layoutId ? allLayouts.find(l => l.id === layoutId) : undefined
+        const modelToUse = intelligenceModel || 'gemini-flash-latest'
+        console.log(`[LazyPrompt] Parsing with model ${modelToUse} ${intent ? `for intent: ${intent.name}` : 'with auto-detection'}`)
 
-        // 1. Build Prompt
-        const prompt = buildIntentParserPrompt(userText, intent, layout)
+        // 2. Build Prompt Parts (Include system prompt in body for maximum adherence across all models)
+        const prompt = buildIntentParserPrompt(userText, brandWebsite, brandDNA, intent, layout, true)
 
-        // 2. Mock Brand DNA for system prompt (minimal context needed for parser)
-        const mockBrandContext = {
+        // 3. Prepare Brand Context
+        const brandName = brandDNA?.brand_name || brandDNA?.name || 'la marca'
+        const brandContextForAI = {
             name: brandName,
-            brand_dna: {
-                name: brandName,
-                mission: '',
-                values: [],
-                voice: [],
-                visual_style: [],
-                target_audience: [],
-                colors: [],
-                fonts: [],
-                tone_of_voice: []
-            }
+            brand_dna: brandDNA || {}
         }
 
-        // 3. Call AI
-        // We use the unified generator but with JSON expectation
+        // 4. Call AI with specialized System Instruction (Empty override to avoid persona blending)
         const jsonResponse = await generateTextUnified(
-            // @ts-ignore - Minimal mock is fine here
-            mockBrandContext,
+            brandContextForAI as any,
             prompt,
-            'wisdom/gemini-2.5-flash' // Fast model is sufficient
+            modelToUse,
+            [], // No images for intent parsing
+            "" // SILENCE generic persona to avoid hallucinations
         )
 
-        // 4. Parse Response
+        console.log(`[LazyPrompt] Received JSON: ${jsonResponse.substring(0, 500)}...`)
+
+        // 5. Parse Response
         const cleanJson = jsonResponse.replace(/```json/g, '').replace(/```/g, '').trim()
         const parsed = JSON.parse(cleanJson)
 
@@ -63,3 +72,4 @@ export async function parseLazyIntentAction(
         return { error: `Failed to parse intent: ${error instanceof Error ? error.message : String(error)}` }
     }
 }
+

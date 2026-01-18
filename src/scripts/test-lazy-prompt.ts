@@ -49,12 +49,11 @@ async function runTests() {
             console.log(`   Input: "${test.text}"`)
 
             try {
-                const result = await parseLazyIntentAction(
-                    test.text,
-                    "Acme Corp", // Brand name
-                    intent,      // Intent (optional)
-                    undefined    // Layout
-                )
+                const result = await parseLazyIntentAction({
+                    userText: test.text,
+                    brandDNA: { brand_name: "Acme Corp" } as any,
+                    intentId: intent.id,
+                })
 
                 if (result.error) {
                     console.error(`   ❌ Error: ${result.error}`)

@@ -367,6 +367,20 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                                     Sincronizado
                                 </div>
                             )}
+                            {/* Website URL display */}
+                            {data.url && (
+                                <>
+                                    <span className="text-muted-foreground/40">·</span>
+                                    <a
+                                        href={data.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-primary/70 hover:text-primary transition-colors truncate max-w-[200px]"
+                                    >
+                                        {data.url.replace(/^https?:\/\//, '')}
+                                    </a>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

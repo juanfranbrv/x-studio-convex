@@ -2060,6 +2060,7 @@ export interface GenerationState {
     selectedLogoId: string | null
     headline: string
     cta: string
+    ctaUrl: string // NEW: URL for the CTA
     caption: string // NEW: Social media caption
     customTexts: Record<string, string>
     selectedBrandColors: SelectedColor[]
@@ -2098,6 +2099,7 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     selectedLogoId: null,
     headline: '',
     cta: '',
+    ctaUrl: '', // NEW: Init ctaUrl
     caption: '', // NEW: Init caption
     customTexts: {},
     selectedBrandColors: [],

@@ -1,54 +1,66 @@
 import { IntentMeta, LayoutOption } from '@/lib/creation-flow-types'
+import { BrandDNA } from '@/lib/brand-types'
 import { INTENT_PARSER_SYSTEM_PROMPT } from './parser-system-prompt'
+import {
+  INTENT_PARSER_AUTO_TASK,
+  INTENT_PARSER_MANUAL_HEADER,
+  INTENT_PARSER_CUSTOM_FIELDS_HEADER,
+  INTENT_PARSER_FOOTER,
+  BRAND_WEBSITE_CONTEXT
+} from './parser-templates'
+import { buildBrandContextBlock } from './brand-context-template'
 
 export function buildIntentParserPrompt(
   userRequest: string,
+  brandWebsite?: string,
+  brandDNA?: BrandDNA | null,
   intent?: IntentMeta,
-  layout?: LayoutOption
+  layout?: LayoutOption,
+  includeSystemPrompt: boolean = true
 ): string {
-  let schemaDescription = ''
+  const websiteContext = brandWebsite ? BRAND_WEBSITE_CONTEXT(brandWebsite) : ''
+  const brandContext = buildBrandContextBlock(brandDNA)
 
   // AUTO-DETECTION MODE: No intent provided
   if (!intent) {
-    return `
-${INTENT_PARSER_SYSTEM_PROMPT}
+    const body = `
+${brandContext}
 
-USER REQUEST:
-"${userRequest}"
+${websiteContext}
 
-TASK:
-Analyze the request above and determine the best matching intent from the 20 categories, then extract the relevant fields.
-
-JSON OUTPUT:
+${INTENT_PARSER_AUTO_TASK.replace('{{userRequest}}', userRequest)}
 `
+    return includeSystemPrompt ? `${INTENT_PARSER_SYSTEM_PROMPT}\n\n${body}` : body
   }
 
-  // MANUAL MODE: Intent already selected
-  schemaDescription = `TARGET INTENT: "${intent.name}" (${intent.description})\n\nREQUIRED FIELDS:\n`
+  // ... (MANUAL MODE schema description build)
+  let schemaDescription = INTENT_PARSER_MANUAL_HEADER
+    .replace('{{intentName}}', intent.name)
+    .replace('{{intentDescription}}', intent.description)
 
-  // Standard fields
-  schemaDescription += `- headline: Main title (Short, punchy)\n`
-  schemaDescription += `- cta: Call to action button text\n`
+  schemaDescription += '\n'
 
   // Custom fields from Intent or Layout
   const textFields = layout?.textFields || intent.requiredFields || []
 
   if (textFields.length > 0) {
-    schemaDescription += `\nCUSTOM FIELDS (map to "customTexts" object):\n`
+    schemaDescription += `${INTENT_PARSER_CUSTOM_FIELDS_HEADER}\n`
     textFields.forEach(field => {
       schemaDescription += `- "${field.id}": ${field.label} (Context: ${field.aiContext || 'No context'})\n`
     })
   }
 
   // 2. Build Prompt
-  return `
-${INTENT_PARSER_SYSTEM_PROMPT}
+  const body = `
+${brandContext}
+
+${websiteContext}
 
 ${schemaDescription}
 
-USER REQUEST:
-"${userRequest}"
-
-JSON OUTPUT:
+${INTENT_PARSER_FOOTER.replace('{{userRequest}}', userRequest)}
 `
+  return includeSystemPrompt ? `${INTENT_PARSER_SYSTEM_PROMPT}\n\n${body}` : body
 }
+
+

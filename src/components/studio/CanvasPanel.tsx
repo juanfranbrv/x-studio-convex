@@ -86,6 +86,7 @@ export interface CanvasPanelProps {
     onCaptionChange?: (value: string) => void
     onHeadlineChange?: (value: string) => void
     onCtaChange?: (value: string) => void
+    onCtaUrlChange?: (value: string) => void
     onCustomTextChange?: (id: string, value: string) => void
     // New handlers for text assets
     onAddTextAsset?: () => void
@@ -121,6 +122,7 @@ export function CanvasPanel({
     onCaptionChange,
     onHeadlineChange,
     onCtaChange,
+    onCtaUrlChange,
     onCustomTextChange,
     onAddTextAsset,
     onRemoveTextAsset,
@@ -341,6 +343,8 @@ export function CanvasPanel({
             if (result.success && result.data) {
                 setGeneratedCopy(result.data.copy)
                 setGeneratedHashtags(result.data.hashtags)
+                // Also update global state to ensure UI updates if creationState.caption is being used
+                onCaptionChange?.(result.data.copy)
             }
         } catch (error) {
             console.error('Failed to generate copy:', error)
@@ -747,10 +751,12 @@ export function CanvasPanel({
                                     <TextLayersEditor
                                         headline={creationState.headline}
                                         cta={creationState.cta}
+                                        ctaUrl={creationState.ctaUrl}
                                         customTexts={creationState.customTexts}
                                         textAssets={creationState.selectedTextAssets}
                                         onHeadlineChange={(val) => onHeadlineChange?.(val)}
                                         onCtaChange={(val) => onCtaChange?.(val)}
+                                        onCtaUrlChange={(val) => onCtaUrlChange?.(val)}
                                         onCustomTextChange={(id, val) => onCustomTextChange?.(id, val)}
                                         onAddTextAsset={onAddTextAsset}
                                         onUpdateTextAsset={onUpdateTextAsset}

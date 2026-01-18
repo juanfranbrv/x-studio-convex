@@ -17,7 +17,7 @@ import { GenerateButton } from './GenerateButton'
 import { BookmarkPlus, RotateCcw, Sparkles, Download, Share2, Pencil, ChevronDown, ChevronRight, Check, X, ArrowUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from '@/components/studio/DigitalStaticLoader'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { useUser } from '@clerk/nextjs'
@@ -108,6 +108,7 @@ export function CreationCommandPanel({
         selectLogo,
         setHeadline,
         setCta,
+        setCtaUrl,
         setCaption, // NEW
         setAdditionalInstructions,
         setRawMessage,
@@ -127,6 +128,7 @@ export function CreationCommandPanel({
 
     const { user } = useUser()
     const { activeBrandKit } = useBrandKit()
+    const aiConfig = useQuery(api.settings.getAIConfig)
     const { toast } = useToast()
     const [isMagicParsing, setIsMagicParsing] = useState(false)
     const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
@@ -165,7 +167,7 @@ export function CreationCommandPanel({
     const [isSavingPreset, setIsSavingPreset] = useState(false)
     const createPreset = useMutation(api.presets.create)
 
-    const handleSavePreset = async (name: string, description: string) => {
+    const handleSavePreset = async (name: string) => {
         if (!user?.id || !state.selectedPlatform || !state.selectedFormat || !state.selectedIntent) {
             toast({ title: "Error", description: "Faltan datos para guardar el preset.", variant: "destructive" })
             return
@@ -178,7 +180,6 @@ export function CreationCommandPanel({
                 userId: user.id,
                 brandId: activeBrandKit?.id as any,
                 name,
-                description,
                 state: {
                     // Platform & Format
                     selectedPlatform: state.selectedPlatform,
@@ -200,7 +201,7 @@ export function CreationCommandPanel({
                     selectedLogoId: state.selectedLogoId,
                     headline: state.headline,
                     cta: state.cta,
-                    caption: state.caption, // NEW
+                    caption: state.caption,
                     customTexts: state.customTexts,
                     selectedBrandColors: state.selectedBrandColors,
                     rawMessage: state.rawMessage,
@@ -209,7 +210,7 @@ export function CreationCommandPanel({
                     selectedTextAssets: state.selectedTextAssets,
                 }
             })
-            toast({ title: "Preset guardado", description: "Tu configuración se ha guardado en favoritos." })
+            toast({ title: "Guardado", description: "Tu configuración se ha guardado." })
             setIsSaveDialogOpen(false)
         } catch (e) {
             console.error(e)
@@ -231,12 +232,14 @@ export function CreationCommandPanel({
             console.log("Analyzing lazy prompt:", state.rawMessage)
 
             // Call Server Action with new parameter order
-            const result = await parseLazyIntentAction(
-                state.rawMessage,
-                activeBrandKit?.brand_name || "My Brand",
-                currentIntent || undefined, // Optional - will auto-detect if not provided
-                selectedLayoutMeta || undefined
-            )
+            const result = await parseLazyIntentAction({
+                userText: state.rawMessage,
+                brandDNA: activeBrandKit,
+                brandWebsite: activeBrandKit?.url,
+                intentId: currentIntent?.id,
+                layoutId: selectedLayoutMeta?.id,
+                intelligenceModel: aiConfig?.intelligenceModel
+            })
 
             if (result.error) {
                 toast({
@@ -244,7 +247,7 @@ export function CreationCommandPanel({
                     description: "Could not parse intent. Please fill manually.",
                     variant: "destructive"
                 })
-                return
+                return null
             }
 
             const newHighlights = new Set<string>()
@@ -283,6 +286,11 @@ export function CreationCommandPanel({
                 newHighlights.add('caption')
             }
 
+            if (result.ctaUrl) {
+                setCtaUrl(result.ctaUrl)
+                newHighlights.add('ctaUrl')
+            }
+
             // NEW: Handle Consolidated Image Texts (Overrides specific fields if present)
             if (result.imageTexts) {
                 Object.entries(result.imageTexts).forEach(([key, value]) => {
@@ -312,6 +320,8 @@ export function CreationCommandPanel({
                 description: "Your fields have been auto-filled based on your description.",
             })
 
+            return result
+
         } catch (error) {
             console.error(error)
             toast({
@@ -319,6 +329,7 @@ export function CreationCommandPanel({
                 description: "Something went wrong with the magic analysis.",
                 variant: "destructive"
             })
+            return null
         } finally {
             setIsMagicParsing(false)
         }
@@ -368,7 +379,7 @@ export function CreationCommandPanel({
                                 intent={state.selectedIntent}
                                 rawMessage={state.rawMessage}
                                 onMessageChange={setRawMessage}
-                                onAnalyze={handleSmartAnalyze}
+                                onAnalyze={async () => { await handleSmartAnalyze() }}
                                 isAnalyzing={isMagicParsing}
                             />
                             {state.selectedIntent && (
@@ -470,7 +481,7 @@ export function CreationCommandPanel({
                                             </p>
                                             <ImageReferenceSelector
                                                 uploadedImage={state.uploadedImage}
-                                                visionAnalysis={state.visionAnalysis}
+                                                visionAnalysis={state.visionAnalysis || null}
                                                 isAnalyzing={state.isAnalyzing}
                                                 error={state.error}
                                                 onUpload={uploadImage}

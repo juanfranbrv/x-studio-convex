@@ -5,16 +5,16 @@ import { useAuth, useUser } from '@clerk/nextjs'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import { useRouter } from 'next/navigation'
-import { Bot, Sparkles, Palette, Layers, Zap, Loader2, CheckCircle, Clock, Mail } from 'lucide-react'
+import { Bot, Sparkles, Palette, Layers, Zap, Loader2, CheckCircle, Clock, Mail, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 
 export default function HomePage() {
   const { isSignedIn, isLoaded } = useAuth()
   const { user } = useUser()
-  const router = useRouter()
   const userEmail = user?.emailAddresses[0]?.emailAddress || ''
 
   // Check beta access for logged in users
@@ -24,19 +24,15 @@ export default function HomePage() {
   )
 
   // Show pending/rejected screens only for those specific states
-  // Users with 'none' status or not logged in should see the landing page
   if (isLoaded && isSignedIn && betaAccess && !betaAccess.hasAccess) {
-    // Only show blocking screen for pending or rejected - not for 'none'
     if (betaAccess.status === 'pending' || betaAccess.status === 'rejected') {
       return <PendingAccessScreen status={betaAccess.status} email={userEmail} />
     }
   }
 
-  // Not logged in, logged in with no request, or logged in and approved - show landing
   return <BetaLandingPage hasAccess={betaAccess?.hasAccess ?? false} />
 }
 
-// Screen for users who are logged in but don't have access yet
 function PendingAccessScreen({ status, email }: { status: string; email: string }) {
   const { signOut } = useAuth()
 
@@ -44,76 +40,42 @@ function PendingAccessScreen({ status, email }: { status: string; email: string 
     signOut({ redirectUrl: '/' })
   }
 
-  if (status === 'pending') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-8">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <div className="mx-auto w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4">
-              <Clock className="w-8 h-8 text-yellow-500" />
-            </div>
-            <CardTitle className="text-2xl">Solicitud Pendiente</CardTitle>
-            <CardDescription className="text-base">
-              Tu solicitud de acceso está siendo revisada
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              Recibirás un email en <strong>{email}</strong> cuando tu acceso sea aprobado.
-            </p>
-            <Button variant="outline" onClick={handleGoHome}>
-              Volver a la página principal
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  if (status === 'rejected') {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-8">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <CardTitle className="text-2xl text-destructive">Acceso Denegado</CardTitle>
-            <CardDescription>
-              Tu solicitud no fue aprobada en esta ocasión.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" onClick={handleGoHome}>
-              Volver a la página principal
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  // status === 'none' - this should not happen anymore, but fallback to home
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-8">
-      <Card className="max-w-md w-full text-center">
-        <CardHeader>
-          <CardTitle className="text-2xl">Acceso Beta Privada</CardTitle>
-          <CardDescription>
-            Tu email ({email}) no tiene acceso a la beta.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground text-sm">
-            Contacta con el administrador para solicitar acceso.
-          </p>
-          <Button variant="outline" onClick={() => signOut()}>
-            Cerrar sesión
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen flex items-center justify-center p-8 relative overflow-hidden">
+      {/* Decorative glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="glass-card max-w-md w-full p-8 text-center relative z-10 border border-white/20 shadow-2xl">
+        <div className="mb-6 mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center shadow-inner border border-white/10">
+          {status === 'pending' ? (
+            <Clock className="w-10 h-10 text-primary animate-pulse" />
+          ) : (
+            <Bot className="w-10 h-10 text-destructive" />
+          )}
+        </div>
+
+        <h2 className="text-3xl font-bold font-heading mb-2 tracking-tight">
+          {status === 'pending' ? 'Solicitud Pendiente' : 'Acceso Denegado'}
+        </h2>
+
+        <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
+          {status === 'pending'
+            ? `Tu solicitud para ${email} está siendo revisada por nuestro equipo.`
+            : 'Tu solicitud no fue aprobada en esta ocasión.'}
+        </p>
+
+        <Button
+          variant="outline"
+          onClick={handleGoHome}
+          className="w-full glass hover:bg-white/10 border-white/20 h-12 text-base font-medium transition-all duration-300"
+        >
+          Volver a la página principal
+        </Button>
+      </div>
     </div>
   )
 }
 
-// Landing page with beta request form
 function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -138,165 +100,182 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <header className="relative overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-background to-pink-900/20" />
-
-        {/* Navigation */}
-        <nav className="relative z-10 flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Bot className="w-8 h-8 text-primary" />
-            <span className="text-xl font-bold font-heading">X Studio</span>
+    <div className="relative min-h-screen flex flex-col">
+      {/* Header / Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between glass-card px-6 py-3 border-white/10 shadow-sm transition-all duration-300 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-gradient flex items-center justify-center shadow-lg transform rotate-3">
+              <Bot className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-xl font-bold font-heading tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              X Studio
+            </span>
           </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30">
-            <span className="text-xs text-yellow-500 font-medium">Beta Privada</span>
+
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+              <span className="text-[10px] uppercase tracking-wider text-primary font-bold">Beta Privada</span>
+            </div>
+            {!hasAccess && (
+              <Link href="/sign-in">
+                <Button variant="ghost" className="text-sm font-medium hover:bg-primary/5 transition-colors">
+                  Login
+                </Button>
+              </Link>
+            )}
           </div>
-        </nav>
+        </div>
+      </nav>
 
-        {/* Hero Content */}
-        <div className="relative z-10 max-w-5xl mx-auto px-8 py-4 text-center">
+      <main className="flex-1 pt-32 pb-20 px-6 relative">
+        {/* Abstract Background elements */}
+        <div className="absolute top-40 right-10 w-96 h-96 bg-primary/20 blur-[120px] rounded-full pointer-events-none -z-10" />
+        <div className="absolute bottom-20 left-10 w-[500px] h-[500px] bg-secondary/15 blur-[150px] rounded-full pointer-events-none -z-10" />
 
-          <h1 className="text-4xl md:text-6xl font-bold font-heading mb-4 leading-tight">
-            Tu Director Creativo
-            <br />
-            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Potenciado por IA
+        <div className="max-w-4xl mx-auto py-12 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-fade-in border-white/10 shadow-sm">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-xs font-semibold tracking-wide uppercase">El Futuro del Diseño de Marca</span>
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-bold font-heading mb-6 leading-[1.1] tracking-tight text-balance text-foreground">
+            Tu Director Creativo <br />
+            <span className="bg-brand-gradient bg-clip-text text-transparent italic px-2">
+              con Inteligencia de Marca
             </span>
           </h1>
 
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
-            Genera assets de marketing visual que respetan el ADN de tu marca.
-            Colores, logotipos, tipografía y tono — siempre coherentes.
+          <p className="text-xl md:text-2xl text-muted-foreground/80 max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
+            Genera assets de marketing que respetan tu ADN sin esfuerzo.
+            Coherencia visual total impulsada por un motor inteligente.
           </p>
 
-          {/* Beta Request Form or Imagen Link */}
-          <Card className="max-w-md mx-auto">
-            {hasAccess ? (
-              <CardHeader className="text-center py-10">
-                <CardTitle className="text-2xl mb-4">¡Ya tienes acceso!</CardTitle>
-                <CardDescription className="text-base mb-6">
-                  Tu cuenta está activa. Puedes empezar a crear ahora mismo.
-                </CardDescription>
-                <Link href="/image">
-                  <Button className="w-full btn-gradient py-6 text-lg">
-                    Entrar a Imagen <Sparkles className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-              </CardHeader>
-            ) : (
-              <>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    {submitted ? '¡Solicitud Recibida!' : 'Solicita Acceso a la Beta'}
-                  </CardTitle>
-                  <CardDescription>
-                    {submitted
-                      ? 'Te notificaremos cuando tu acceso sea aprobado.'
-                      : 'Estamos aceptando un número limitado de usuarios.'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+          <div className="max-w-xl mx-auto relative group">
+            <div className="absolute -inset-1 bg-brand-gradient rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+            <div className="glass-card relative p-8 md:p-10 border-white/20 shadow-2xl backdrop-blur-xl">
+              {hasAccess ? (
+                <div className="space-y-6">
+                  <div className="flex flex-col items-center gap-2">
+                    <CheckCircle className="w-12 h-12 text-primary" />
+                    <h2 className="text-2xl font-bold">Acceso Confirmado</h2>
+                  </div>
+                  <p className="text-muted-foreground">Tu cuenta está lista para empezar a crear assets de impacto.</p>
+                  <Link href="/image" className="block">
+                    <Button className="w-full bg-brand-gradient text-white h-14 text-lg font-bold rounded-2xl shadow-lg hover:shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-all">
+                      Entrar al Studio <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="text-left mb-6">
+                    <h2 className="text-2xl font-bold mb-1">
+                      {submitted ? '¡Estas en la lista!' : 'Únete a la Beta Privada'}
+                    </h2>
+                    <p className="text-muted-foreground font-medium">
+                      {submitted
+                        ? 'Te avisaremos en cuanto tu acceso esté habilitado.'
+                        : 'Acceso exclusivo y limitado para creadores y marcas.'}
+                    </p>
+                  </div>
+
                   {submitted ? (
-                    <div className="flex flex-col items-center gap-4 py-4">
-                      <CheckCircle className="w-12 h-12 text-green-500" />
-                      <p className="text-muted-foreground">{message}</p>
+                    <div className="flex flex-col items-center gap-4 py-6 bg-primary/5 rounded-2xl border border-primary/10">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <CheckCircle className="w-8 h-8 text-primary" />
+                      </div>
+                      <p className="text-primary font-bold text-lg">{message || "Registro completado"}</p>
                     </div>
                   ) : (
-                    <form onSubmit={handleSubmit} className="flex gap-2">
+                    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
                       <div className="relative flex-1">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                         <Input
                           type="email"
                           placeholder="tu@email.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="pl-10"
+                          className="pl-12 h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg transition-all"
                           required
                         />
                       </div>
-                      <Button type="submit" disabled={isSubmitting} className="btn-gradient">
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="bg-brand-gradient text-white h-14 px-8 text-lg font-bold rounded-2xl shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-50"
+                      >
                         {isSubmitting ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-6 h-6 animate-spin" />
                         ) : (
-                          'Solicitar'
+                          'Solicitar Invitación'
                         )}
                       </Button>
                     </form>
                   )}
-                </CardContent>
-              </>
-            )}
-          </Card>
-
-          {/* Link for existing users - only show if not already approved */}
-          {!hasAccess && (
-            <p className="mt-4 text-center">
-              <a href="/sign-in" className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4">
-                Ya tengo cuenta, llévame al dashboard
-              </a>
-            </p>
-          )}
-        </div>
-      </header>
-
-      {/* Features Section */}
-      <section id="features" className="py-24 px-8">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold font-heading text-center mb-16">
-            ¿Por qué X Studio?
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center mb-6">
-                <Palette className="w-7 h-7 text-purple-400" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Brand DNA</h3>
-              <p className="text-muted-foreground">
-                Define tu paleta, tipografías y tono. La IA genera siempre respetando tu identidad.
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-pink-500/10 flex items-center justify-center mb-6">
-                <Layers className="w-7 h-7 text-pink-400" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Multi-Marca</h3>
-              <p className="text-muted-foreground">
-                Gestiona múltiples marcas desde una sola cuenta. Cambio de contexto instantáneo.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center mb-6">
-                <Zap className="w-7 h-7 text-blue-400" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Iteración Visual</h3>
-              <p className="text-muted-foreground">
-                Anota directamente sobre la imagen. La IA entiende tus correcciones espaciales.
-              </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </section>
+
+        {/* Features Section */}
+        <div className="max-w-7xl mx-auto mt-32">
+          <div className="grid md:grid-cols-3 gap-8">
+            <FeatureCard
+              icon={<Palette className="w-8 h-8 text-primary" />}
+              title="Brand DNA"
+              description="Define tu identidad una vez y deja que la IA se encargue de aplicarla en cada píxel."
+              delay="delay-0"
+            />
+            <FeatureCard
+              icon={<Layers className="w-8 h-8 text-secondary" />}
+              title="Multi-Brand"
+              description="Gestiona infinitos universos visuales con coherencia absoluta desde un solo lugar."
+              delay="delay-100"
+            />
+            <FeatureCard
+              icon={<Zap className="w-8 h-8 text-primary" />}
+              title="Visual Iteration"
+              description="Edición semántica y espacial. Habla con la IA como si fuera tu diseñador senior."
+              delay="delay-200"
+            />
+          </div>
+        </div>
+      </main>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 px-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <footer className="py-12 px-8 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 glass-card p-8 border-white/5">
+          <div className="flex items-center gap-3">
             <Bot className="w-6 h-6 text-primary" />
-            <span className="font-semibold">X Studio</span>
+            <span className="font-bold text-lg tracking-tight">X Studio</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © 2024 X Studio. Todos los derechos reservados.
+          <p className="text-sm text-muted-foreground/60 font-medium text-center md:text-left">
+            © 2024 X Studio Engine. Powered by Creative AI.
           </p>
+          <div className="flex gap-6">
+            <a href="#" className="text-xs font-bold text-muted-foreground/40 hover:text-primary transition-colors uppercase tracking-widest leading-none">Privacy</a>
+            <a href="#" className="text-xs font-bold text-muted-foreground/40 hover:text-primary transition-colors uppercase tracking-widest leading-none">Terms</a>
+          </div>
         </div>
       </footer>
+    </div>
+  )
+}
+
+function FeatureCard({ icon, title, description, delay }: { icon: React.ReactNode, title: string, description: string, delay: string }) {
+  return (
+    <div className={cn(
+      "glass-card p-10 border-white/10 hover:border-primary/30 transition-all duration-500 hover:scale-[1.03] group relative overflow-hidden",
+      delay
+    )}>
+      <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all duration-500" />
+      <div className="mb-8 w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center shadow-inner group-hover:bg-primary/10 transition-all border border-white/5">
+        {icon}
+      </div>
+      <h3 className="text-2xl font-bold mb-4 tracking-tight">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed text-lg">{description}</p>
     </div>
   )
 }

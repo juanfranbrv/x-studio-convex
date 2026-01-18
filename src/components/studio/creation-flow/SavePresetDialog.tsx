@@ -10,7 +10,7 @@ import { BookmarkPlus, Loader2 } from 'lucide-react'
 interface SavePresetDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
-    onSave: (name: string, description: string) => Promise<void>
+    onSave: (name: string) => Promise<void>
     isSaving?: boolean
 }
 
@@ -21,50 +21,42 @@ export function SavePresetDialog({
     isSaving = false
 }: SavePresetDialogProps) {
     const [name, setName] = useState('')
-    const [description, setDescription] = useState('')
 
     const handleSave = async () => {
         if (!name.trim()) return
-        await onSave(name, description)
+        await onSave(name.trim())
         setName('')
-        setDescription('')
         onOpenChange(false)
     }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[380px]">
                 <DialogHeader>
                     <div className="flex items-center gap-2">
                         <div className="p-2 rounded-lg bg-primary/10 text-primary">
                             <BookmarkPlus className="w-5 h-5" />
                         </div>
-                        <DialogTitle>Guardar como Preset</DialogTitle>
+                        <DialogTitle>Guardar como Favorito</DialogTitle>
                     </div>
                     <DialogDescription>
-                        Guarda esta configuración para reutilizarla más tarde.
-                        Aparecerá en tu lista de "Favoritos".
+                        Guarda esta configuración para reutilizarla.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+                <div className="py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Nombre del Preset</Label>
+                        <Label htmlFor="name">Nombre</Label>
                         <Input
                             id="name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="Ej: Oferta de Verano, Meme Viral..."
-                            className="col-span-3"
-                        />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="description">Breve descripción (opcional)</Label>
-                        <Input
-                            id="description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Para qué sirve este estilo..."
-                            className="col-span-3"
+                            placeholder="Ej: Oferta Verano, Meme Viral..."
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && name.trim()) {
+                                    handleSave()
+                                }
+                            }}
+                            autoFocus
                         />
                     </div>
                 </div>
@@ -79,7 +71,7 @@ export function SavePresetDialog({
                                 Guardando...
                             </>
                         ) : (
-                            'Guardar Preset'
+                            'Guardar'
                         )}
                     </Button>
                 </DialogFooter>
@@ -87,3 +79,4 @@ export function SavePresetDialog({
         </Dialog>
     )
 }
+

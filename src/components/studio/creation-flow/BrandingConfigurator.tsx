@@ -32,6 +32,15 @@ import {
 
 import { type LayoutOption, type SelectedColor, type TextAsset } from '@/lib/creation-flow-types'
 
+const getContrastColor = (hex: string) => {
+    if (!hex || hex.length < 7) return 'text-white'
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000
+    return yiq >= 128 ? 'text-black' : 'text-white'
+}
+
 interface BrandingConfiguratorProps {
     selectedLayout: LayoutOption | null
     selectedLogoId: string | null
@@ -365,18 +374,9 @@ export function BrandingConfigurator({
                         <div className="grid grid-cols-5 gap-2">
                             {colors.slice(0, 10).map((colorObj, idx) => {
                                 const color = colorObj.color
-                                const selection = selectedBrandColors.find(s => s.color === color)
+                                const selection = selectedBrandColors.find(s => s.color.toLowerCase() === color.toLowerCase())
                                 const isSelected = !!selection
                                 const role = selection?.role || (colorObj as any).role || 'Neutral'
-
-                                // Helper for contrast
-                                const getContrastColor = (hex: string) => {
-                                    const r = parseInt(hex.slice(1, 3), 16)
-                                    const g = parseInt(hex.slice(3, 5), 16)
-                                    const b = parseInt(hex.slice(5, 7), 16)
-                                    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000
-                                    return yiq >= 128 ? 'text-black' : 'text-white'
-                                }
 
                                 return (
                                     <div
@@ -399,10 +399,13 @@ export function BrandingConfigurator({
                                         {/* Light color visibility assurance */}
                                         <div className="absolute inset-0 rounded-full border border-black/5 pointer-events-none" />
 
-                                        {/* Selected Checkmark */}
+                                        {/* role label */}
                                         {isSelected && (
-                                            <div className={cn("z-10", getContrastColor(color))}>
-                                                <Check className="w-4 h-4 stroke-[3] drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
+                                            <div className={cn(
+                                                "z-10 font-bold text-[7.5px] leading-none tracking-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] select-none pointer-events-none uppercase",
+                                                getContrastColor(color)
+                                            )}>
+                                                {role}
                                             </div>
                                         )}
 

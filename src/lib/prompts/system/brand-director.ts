@@ -1,4 +1,5 @@
 import { BrandDNA } from '../../brand-types'
+import { BRAND_DIRECTOR_TEMPLATE } from './brand-director-template'
 
 export function buildBrandDirectorPrompt(brand: { name: string; brand_dna: BrandDNA }): string {
     const { name, brand_dna } = brand
@@ -7,20 +8,13 @@ export function buildBrandDirectorPrompt(brand: { name: string; brand_dna: Brand
     const tone = tone_of_voice?.join(', ') || 'Sin definir'
     const headingFont = fonts?.[0] || 'Sin definir'
     const bodyFont = fonts?.[1] || 'Sin definir'
+    const colorList = colors?.map(c => c.color).join(', ') || 'Sin definir'
 
-    return `Eres un director creativo experto trabajando para la marca "${name}".
-
-DIRECTRICES DE MARCA OBLIGATORIAS:
-- Paleta de colores: ${colors.map(c => c.color).join(', ') || 'Sin definir'}
-- Tono de comunicación: ${tone}
-- Tipografía principal: ${headingFont}
-- Tipografía secundaria: ${bodyFont}
-
-REGLAS DE DISEÑO:
-1. Siempre incorpora sutilmente la identidad de marca
-2. Los colores primarios deben ser dominantes
-3. Mantén coherencia con el tono de marca
-4. Evita elementos que contradigan la personalidad de marca
-
-Responde siempre en español.`
+    return BRAND_DIRECTOR_TEMPLATE
+        .replace('{{name}}', name)
+        .replace('{{colors}}', colorList)
+        .replace('{{tone}}', tone)
+        .replace('{{headingFont}}', headingFont)
+        .replace('{{bodyFont}}', bodyFont)
 }
+

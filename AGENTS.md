@@ -118,3 +118,4 @@ Cuando Juanfran diga **"sincroniza"**, ejecuta automáticamente:
 - **Texto**: Cuando necesites un modelo de texto, **USA SIEMPRE** el mismo que se utiliza en el resto del proyecto.
 - **Modelo Oficial**: `gemini-flash-latest` (o la exportación `flashModel` de `@/lib/gemini`).
 - **Prohibido**: No inventes nombres de modelos ni instancies clientes nuevos si ya existe uno centralizado. MANTÉN LA COHERENCIA.
+- **Configuración de Admin**: Los modelos de IA (texto e imagen) deben obtenerse siempre de la configuración del panel de Admin (`app_settings` en Convex) y pasarse desde el cliente. PROHIBIDO hardcodear strings de modelos en acciones o componentes.

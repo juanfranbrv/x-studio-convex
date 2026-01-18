@@ -235,17 +235,10 @@ async function generateWisdomText(prompt: string, model: string, systemPrompt?: 
 
                     if (isSystemBusy && attempt < maxRetries) {
                         const delay = retryDelays[attempt]
-                        console.warn(`[Text ${attempt + 1}/${maxRetries + 1}] Wisdom Gate busy, retrying in ${delay}ms...`)
+                        console.warn(`[Text Attempt ${attempt + 1}] Wisdom Gate busy, retrying in ${delay}ms...`)
                         lastError = new Error(errorMessage)
                         await new Promise(resolve => setTimeout(resolve, delay))
                         continue
-                    }
-
-                    // Fallback to gemini-2.5-flash for other errors or exhausted retries
-                    const FALLBACK_MODEL = 'gemini-2.5-flash'
-                    if (model !== FALLBACK_MODEL && attempt === maxRetries) {
-                        console.warn(`⚠️ Primary model ${model} failed. Falling back to ${FALLBACK_MODEL}...`)
-                        return await generateWisdomText(prompt, FALLBACK_MODEL, systemPrompt, images)
                     }
 
                     console.error(`Wisdom Text API failed: ${errorMessage}`)
@@ -253,7 +246,7 @@ async function generateWisdomText(prompt: string, model: string, systemPrompt?: 
                 }
 
                 // Success
-                console.log(`[Text ${attempt + 1}/${maxRetries + 1}] Wisdom Gate API call succeeded`)
+                console.log(`[Text Attempt ${attempt + 1}] Wisdom Gate API call succeeded`)
                 const data = await response.json()
 
                 // Extract text from Gemini response candidates
@@ -401,10 +394,11 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
 export async function generateTextUnified(
     brand: { name: string; brand_dna: BrandDNA },
     prompt: string,
-    model: string = 'wisdom/gemini-2.5-flash', // Default to Wisdom
-    images?: string[]
+    model: string = 'gemini-flash-latest', // Default to native Google
+    images?: string[],
+    systemPromptOverride?: string // NEW: Allow specialized tasks to set their own persona
 ): Promise<string> {
-    const systemPrompt = buildBrandSystemPrompt(brand)
+    const systemPrompt = typeof systemPromptOverride === 'string' ? systemPromptOverride : buildBrandSystemPrompt(brand)
 
     if (model.startsWith('wisdom/')) {
         const wisdomModel = model.replace('wisdom/', '')

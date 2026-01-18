@@ -5,6 +5,8 @@ interface CopywriterPromptParams {
    brandName: string
    brandDNA: BrandDNA
    visionAnalysis?: VisionAnalysis | null
+   intent?: string
+   intentDescription?: string
    fieldLabel: string
    fieldDescription?: string
    rawMessage?: string
@@ -37,6 +39,12 @@ const BRAND_CONTEXT = (brandDNA: BrandDNA) => `
    - Público: ${brandDNA.target_audience || 'General'}
 `
 
+const INTENT_CONTEXT = (intent?: string, intentDescription?: string) => intent ? `
+3. INTENCIÓN DE MARKETING:
+   - Tipo de Creatividad: ${intent}
+   ${intentDescription ? `- Objetivo: ${intentDescription}` : ''}
+` : ''
+
 const USER_INPUT = (rawMessage?: string) => `
 === INPUT DEL USUARIO (LA ORDEN PRINCIPAL) ===
 "${rawMessage || 'Genera un texto atractivo'}"
@@ -67,6 +75,8 @@ export const buildCopywriterPrompt = ({
    brandName,
    brandDNA,
    visionAnalysis,
+   intent,
+   intentDescription,
    fieldLabel,
    fieldDescription,
    rawMessage
@@ -78,6 +88,7 @@ export const buildCopywriterPrompt = ({
       SYSTEM_INSTRUCTIONS(brandName),
       VERSION_CONTEXT(visionAnalysis),
       BRAND_CONTEXT(brandDNA),
+      INTENT_CONTEXT(intent, intentDescription),
       USER_INPUT(rawMessage),
       TASK_SPECIFICS(fieldLabel, fieldDescription),
       LANGUAGE_ENFORCEMENT(languageName),

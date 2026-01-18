@@ -1,17 +1,19 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, MousePointerClick, Plus, Fingerprint } from 'lucide-react'
+import { X, MousePointerClick, Plus, Fingerprint, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { TextAsset } from '@/lib/creation-flow-types'
 
 interface TextLayersEditorProps {
     headline: string
     cta: string
+    ctaUrl?: string
     customTexts: Record<string, string>
     textAssets?: TextAsset[]
     onHeadlineChange: (value: string) => void
     onCtaChange: (value: string) => void
+    onCtaUrlChange?: (value: string) => void
     onCustomTextChange: (id: string, value: string) => void
     onDeleteLayer: (id: string, type: 'headline' | 'cta' | 'custom' | 'asset') => void
     // New handlers for text assets
@@ -22,10 +24,12 @@ interface TextLayersEditorProps {
 export function TextLayersEditor({
     headline,
     cta,
+    ctaUrl = '',
     customTexts,
     textAssets = [],
     onHeadlineChange,
     onCtaChange,
+    onCtaUrlChange,
     onCustomTextChange,
     onDeleteLayer,
     onAddTextAsset,
@@ -159,37 +163,54 @@ export function TextLayersEditor({
                 </div>
             </div>
 
-            {/* BOTTOM: CTA (Dynamic Width) */}
-            <div className="flex-none flex items-center justify-center pb-8 pointer-events-auto">
-                <div className="group relative px-12">
-                    <div className="relative inline-flex items-center justify-center">
-                        {/* Hidden span to measure width - matches input styling exactly */}
-                        <div className="invisible whitespace-pre px-14 py-3 font-bold text-lg md:text-xl border border-transparent select-none">
-                            {cta || "BOTÓN DE ACCIÓN"}
-                        </div>
+            {/* BOTTOM: CTA Button with integrated URL */}
+            <div className="flex-none flex flex-col items-center justify-center pb-8 pointer-events-auto">
+                {/* UNIFIED CTA CONTAINER */}
+                <div className="group relative flex flex-col items-center bg-black/5 dark:bg-white/10 backdrop-blur-md rounded-[2rem] p-1.5 border border-white/10 hover:border-primary/20 transition-all hover:bg-black/10 dark:hover:bg-white/15 gap-0.5">
 
-                        <MousePointerClick className="absolute left-5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-primary-foreground/70 pointer-events-none z-10" />
-
+                    {/* 1. CTA Button (Primary Visual) */}
+                    <div className="relative z-10 flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-6 py-3 transition-transform group-hover:scale-[1.02]">
+                        <MousePointerClick className="w-4.5 h-4.5 text-primary-foreground/70 flex-shrink-0" />
                         <input
                             value={cta || ''}
                             onChange={(e) => onCtaChange(e.target.value)}
-                            className={cn(
-                                "absolute inset-0 w-full h-full rounded-full text-center font-bold shadow-lg transition-all",
-                                "bg-primary text-primary-foreground border-none placeholder:text-primary-foreground/40",
-                                "hover:scale-105 hover:bg-primary/90 focus-visible:ring-offset-2 focus:ring-2 focus:ring-primary/50 outline-none",
-                                "text-lg md:text-xl leading-none px-12"
-                            )}
-                            placeholder="BOTÓN DE ACCIÓN"
+                            className="bg-transparent text-primary-foreground font-bold text-lg border-none placeholder:text-primary-foreground/40 focus:ring-0 focus:outline-none min-w-[100px] text-center"
+                            placeholder="Inscríbete"
+                            style={{ width: `${Math.max(100, (cta?.length || 10) * 12)}px` }}
                         />
                     </div>
-                    {cta && (
+
+                    {/* 2. URL Input (Integrated Footer) */}
+                    <div className="relative z-0 flex items-center justify-center gap-1.5 px-4 py-1 w-full rounded-b-2xl transition-colors group/url">
+                        <Link2 className={`w-3 h-3 ${ctaUrl ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <input
+                            type="text"
+                            value={ctaUrl || ''}
+                            onChange={(e) => onCtaUrlChange?.(e.target.value)}
+                            className="bg-transparent text-[10px] text-muted-foreground group-hover:text-foreground font-medium border-none focus:ring-0 focus:outline-none min-w-[120px] text-center font-mono placeholder:text-muted-foreground/50"
+                            placeholder="bauset.es/..."
+                            style={{ width: `${Math.max(120, (ctaUrl?.length || 15) * 6)}px` }}
+                        />
+                        {ctaUrl && (
+                            <button
+                                aria-label="Clear URL"
+                                onClick={() => onCtaUrlChange?.('')}
+                                className="text-muted-foreground hover:text-destructive transition-colors p-0.5"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Global Delete Button (Floating Top Right) */}
+                    {(cta || ctaUrl) && (
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => onDeleteLayer('cta', 'cta')}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive z-10"
+                            className="absolute -right-10 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive bg-background/50 hover:bg-destructive/10 rounded-full"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-4 h-4" />
                         </Button>
                     )}
                 </div>
