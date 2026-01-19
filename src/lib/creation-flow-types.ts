@@ -81,6 +81,11 @@ import {
     SERVICIO_PROCESS_PROMPT,
     SERVICIO_LIST_PROMPT,
     SERVICIO_TRUST_PROMPT,
+    SERVICIO_ECOSYSTEM_PROMPT,
+    SERVICIO_STAT_PROMPT,
+    SERVICIO_MINIMAL_PROMPT,
+    SERVICIO_INTERACTION_PROMPT,
+    SERVICIO_WORKSHOP_PROMPT,
     SERVICIO_DESCRIPTION,
 } from './prompts/intents/servicio'
 import {
@@ -1096,6 +1101,33 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             structuralPrompt: SERVICIO_TRUST_PROMPT,
         },
         {
+            id: 'servicio-ecosystem',
+            name: 'Ecosistema',
+            description: 'Hub & Spoke',
+            svgIcon: 'Share2',
+            textZone: 'center',
+            promptInstruction: 'Central hub with connected spokes.',
+            structuralPrompt: SERVICIO_ECOSYSTEM_PROMPT,
+        },
+        {
+            id: 'servicio-stat',
+            name: 'Cifra',
+            description: 'Cifra Gigante',
+            svgIcon: 'BarChart2', // or PieChart
+            textZone: 'center',
+            promptInstruction: 'Massive typographic statistic display.',
+            structuralPrompt: SERVICIO_STAT_PROMPT,
+        },
+        {
+            id: 'servicio-minimal',
+            name: 'Minimal',
+            description: 'Pedestal',
+            svgIcon: 'Box',
+            textZone: 'center',
+            promptInstruction: 'Abstract object on a clean pedestal.',
+            structuralPrompt: SERVICIO_MINIMAL_PROMPT,
+        },
+        {
             id: 'servicio-free',
             name: 'Libre',
             description: 'Sin indicación',
@@ -1103,6 +1135,24 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'center',
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
+        },
+        {
+            id: 'servicio-interaction',
+            name: 'En Acción',
+            description: 'Interacción Humana',
+            svgIcon: 'Users',
+            textZone: 'center',
+            promptInstruction: 'Professional human interaction and consultation.',
+            structuralPrompt: SERVICIO_INTERACTION_PROMPT,
+        },
+        {
+            id: 'servicio-workshop',
+            name: 'Herramientas',
+            description: 'Knolling / Proceso',
+            svgIcon: 'Wrench', // or Hammer, or PenTool
+            textZone: 'center',
+            promptInstruction: 'Organized tools and workspace focus.',
+            structuralPrompt: SERVICIO_WORKSHOP_PROMPT,
         },
     ],
     talento: [

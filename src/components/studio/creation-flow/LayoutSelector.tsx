@@ -6,7 +6,7 @@ import {
     Clock, Users, User, Award, TrendingUp, Gift, Briefcase, Book, BookOpen, Tag, Medal, Target, Mic, Music, Palette, Activity,
     Columns2, Rows2, ArrowRight, AlignCenter, ArrowDownToLine, Frame, Star, Type, Square, Grid2x2, Image, Calendar,
     RectangleVertical, PartyPopper, Trophy, Layout, Maximize, MessageSquare, FileText, RectangleHorizontal, LayoutTemplate,
-    MessageSquareQuote, Split, SplitSquareHorizontal
+    MessageSquareQuote, Split, SplitSquareHorizontal, Wrench
 } from 'lucide-react'
 import type { LayoutOption } from '@/lib/creation-flow-types'
 
@@ -75,6 +75,7 @@ const WireframeIcons: Record<string, React.FC<{ className?: string }>> = {
     Music: ({ className }) => <Music className={className} />,
     Palette: ({ className }) => <Palette className={className} />,
     Activity: ({ className }) => <Activity className={className} />,
+    Wrench: ({ className }) => <Wrench className={className} />,
 }
 
 export function LayoutSelector({
@@ -88,7 +89,7 @@ export function LayoutSelector({
 
     return (
         <div className="space-y-2">
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                 {availableLayouts.map(layout => {
                     const isSelected = selectedLayout === layout.id
                     const IconComponent = WireframeIcons[layout.svgIcon] || WireframeIcons.Layout
@@ -98,19 +99,32 @@ export function LayoutSelector({
                             key={layout.id}
                             onClick={() => onSelectLayout(layout.id)}
                             className={cn(
-                                "flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all",
-                                "border-2",
+                                "group relative flex flex-col items-center justify-center gap-2 p-3 rounded-2xl transition-all duration-300",
+                                "border backdrop-blur-md overflow-hidden",
                                 isSelected
-                                    ? "border-primary bg-primary/10"
-                                    : "border-border hover:border-primary/50 bg-muted/30 hover:bg-muted/50"
+                                    ? "border-blue-500/50 bg-blue-50/50 dark:bg-blue-500/20 dark:border-blue-400/50 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                                    : "border-slate-200 bg-white/50 hover:bg-white/80 hover:border-slate-300 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:border-white/20 hover:-translate-y-0.5"
                             )}
                             title={layout.description}
                         >
-                            <IconComponent className={cn(
-                                "w-5 h-5",
-                                isSelected ? "text-primary" : "text-muted-foreground"
+                            {/* Glass Reflection Gradient */}
+                            <div className={cn(
+                                "absolute inset-0 bg-gradient-to-br from-white/60 to-transparent dark:from-white/10 opacity-0 pointer-events-none transition-opacity duration-300",
+                                isSelected ? "opacity-40" : "group-hover:opacity-100"
                             )} />
-                            <span className="text-[10px] font-medium text-center leading-tight">
+
+                            <IconComponent className={cn(
+                                "w-6 h-6 z-10 transition-all duration-300",
+                                isSelected
+                                    ? "text-blue-600 dark:text-blue-400 scale-110 drop-shadow-sm"
+                                    : "text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-200 group-hover:scale-110"
+                            )} />
+                            <span className={cn(
+                                "text-[11px] font-medium text-center z-10 transition-colors duration-200 tracking-wide",
+                                isSelected
+                                    ? "text-blue-700 dark:text-blue-300"
+                                    : "text-slate-600 group-hover:text-slate-900 dark:text-slate-400 dark:group-hover:text-slate-200"
+                            )}>
                                 {layout.name}
                             </span>
                         </button>
