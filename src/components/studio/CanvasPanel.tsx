@@ -436,7 +436,7 @@ export function CanvasPanel({
     }
 
     return (
-        <div className="flex-1 flex flex-col h-full bg-background relative isolate overflow-x-hidden">
+        <div className="flex-1 flex flex-col h-full relative isolate overflow-x-hidden">
             {/* Header Overlay */}
             <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between p-4 z-40 pointer-events-none">
 

@@ -102,7 +102,7 @@ export function LayoutSelector({
                                 "group relative flex flex-col items-center justify-center gap-2 p-3 rounded-2xl transition-all duration-300",
                                 "border backdrop-blur-md overflow-hidden",
                                 isSelected
-                                    ? "border-blue-500/50 bg-blue-50/50 dark:bg-blue-500/20 dark:border-blue-400/50 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                                    ? "border-primary/50 bg-primary/5 dark:bg-primary/10 dark:border-primary/50 shadow-[0_0_15px_hsl(var(--primary)/0.15)]"
                                     : "border-slate-200 bg-white/50 hover:bg-white/80 hover:border-slate-300 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:border-white/20 hover:-translate-y-0.5"
                             )}
                             title={layout.description}
@@ -116,13 +116,13 @@ export function LayoutSelector({
                             <IconComponent className={cn(
                                 "w-6 h-6 z-10 transition-all duration-300",
                                 isSelected
-                                    ? "text-blue-600 dark:text-blue-400 scale-110 drop-shadow-sm"
+                                    ? "text-primary scale-110 drop-shadow-sm"
                                     : "text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-200 group-hover:scale-110"
                             )} />
                             <span className={cn(
                                 "text-[11px] font-medium text-center z-10 transition-colors duration-200 tracking-wide",
                                 isSelected
-                                    ? "text-blue-700 dark:text-blue-300"
+                                    ? "text-primary"
                                     : "text-slate-600 group-hover:text-slate-900 dark:text-slate-400 dark:group-hover:text-slate-200"
                             )}>
                                 {layout.name}

@@ -48,9 +48,9 @@ export function StyleChipsSelector({
                                     "px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-300 flex items-center gap-2",
                                     "border backdrop-blur-md",
                                     isSelected
-                                        ? "border-blue-500/50 bg-blue-50/50 text-blue-700 dark:bg-blue-500/20 dark:text-blue-100 dark:border-blue-400/50 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                                        ? "border-primary/50 bg-primary/20 text-primary dark:text-primary-foreground dark:border-primary/50 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
                                         : isSuggested
-                                            ? "border-indigo-500/30 bg-indigo-50/50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 hover:border-indigo-500/60 hover:bg-indigo-100/50 dark:hover:bg-indigo-500/20"
+                                            ? "border-primary/30 bg-primary/10 text-primary dark:bg-primary/10 dark:text-primary hover:border-primary/50 hover:bg-primary/20 dark:hover:bg-primary/20"
                                             : "border-slate-200 bg-white/50 text-slate-600 hover:bg-white/80 hover:border-slate-300 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:border-white/20 dark:hover:text-white hover:-translate-y-0.5"
                                 )}
                             >
@@ -63,8 +63,8 @@ export function StyleChipsSelector({
                                     <span className={cn(
                                         "ml-1 text-[9px] uppercase tracking-wider px-1 rounded-sm border",
                                         isSelected
-                                            ? "border-blue-200/50 text-blue-600 dark:text-blue-200 dark:border-blue-400/30"
-                                            : "border-indigo-200 text-indigo-600 dark:text-indigo-300 dark:border-indigo-500/30"
+                                            ? "border-primary/30 text-primary dark:text-primary-foreground dark:border-primary/30"
+                                            : "border-primary/30 text-primary dark:text-primary dark:border-primary/30"
                                     )}>
                                         IA
                                     </span>
@@ -91,7 +91,7 @@ export function StyleChipsSelector({
                             "w-full h-11 px-4 rounded-xl bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10",
                             "backdrop-blur-md text-sm transition-all duration-300",
                             "placeholder:text-slate-400 dark:placeholder:text-slate-500",
-                            "focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 focus:bg-white/80 dark:focus:bg-black/40",
+                            "focus:ring-2 focus:ring-primary/20 focus:border-primary/50 focus:bg-white/80 dark:focus:bg-black/40",
                             "hover:border-slate-300 dark:hover:border-white/20"
                         )}
                     />

@@ -25,6 +25,7 @@ import { buildEditPrompt } from '@/lib/prompts/image-edit'
 import { parseLazyIntentAction } from '@/app/actions/parse-intent'
 import { IntentCategory } from '@/lib/creation-flow-types'
 import { useUI } from '@/contexts/UIContext'
+import { hexToHslString } from '@/lib/color-utils'
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
@@ -464,12 +465,12 @@ export default function ImagePage() {
             isFixed={true}
         >
             {activeBrandKit ? (
-                <div className="flex-1 flex flex-col overflow-hidden bg-mesh">
+                <div className="flex-1 flex flex-col overflow-hidden">
                     {/* TOP AREA: 2 Columns */}
-                    < div className={cn(
+                    <div className={cn(
                         "flex-1 flex overflow-hidden min-h-0",
                         panelPosition === 'right' ? "flex-row" : "flex-row-reverse"
-                    )} >
+                    )}>
                         {/* LEFT COLUMN (Main Canvas) */}
                         < div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto overflow-x-hidden min-w-0" >
                             {/* Canvas Preview */}

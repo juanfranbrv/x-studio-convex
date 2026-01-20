@@ -57,14 +57,14 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
                             className={cn(
                                 "relative flex items-center justify-center p-3 rounded-full transition-all duration-300",
                                 isSelected
-                                    ? "bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] scale-110 ring-1 ring-black/5 dark:bg-white/10 dark:ring-white/20"
+                                    ? "bg-primary/10 shadow-[0_4px_12px_hsl(var(--primary)/0.2)] scale-110 ring-1 ring-primary/30 dark:bg-primary/20 dark:ring-primary/40"
                                     : "bg-transparent hover:bg-black/5 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                             )}
                         >
                             <Icon className={cn(
                                 "w-5 h-5 transition-colors",
                                 isSelected
-                                    ? "text-slate-900 dark:text-white"
+                                    ? "text-primary transition-all duration-300"
                                     : "currentColor"
                             )} />
                         </button>
@@ -93,7 +93,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
                                     "group relative flex flex-col items-start p-4 rounded-2xl transition-all duration-300 text-left overflow-hidden",
                                     "border backdrop-blur-md",
                                     isSelected
-                                        ? "border-blue-500/50 bg-blue-50/50 dark:bg-blue-500/20 dark:border-blue-400/50 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                                        ? "border-primary/50 bg-primary/5 dark:bg-primary/10 dark:border-primary/50 shadow-[0_0_15px_hsl(var(--primary)/0.15)]"
                                         : "border-slate-200 bg-white/50 hover:bg-white/80 hover:border-slate-300 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:border-white/20 hover:-translate-y-0.5"
                                 )}
                             >
@@ -107,7 +107,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
                                     <div className={cn(
                                         "p-2 rounded-xl transition-colors duration-300",
                                         isSelected
-                                            ? "bg-blue-100 text-blue-600 dark:bg-blue-500/30 dark:text-blue-300"
+                                            ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
                                             : "bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-slate-700 dark:bg-white/5 dark:text-slate-400 dark:group-hover:text-slate-200"
                                     )}>
                                         <FormatIcon className="w-5 h-5" />
@@ -115,7 +115,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
                                     <span className={cn(
                                         "text-[10px] font-bold px-2 py-1 rounded-full border transition-colors",
                                         isSelected
-                                            ? "border-blue-200 bg-blue-100/50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-300"
+                                            ? "border-primary/20 bg-primary/10 text-primary dark:border-primary/30 dark:bg-primary/20 dark:text-primary"
                                             : "border-slate-200 bg-white/50 text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-500"
                                     )}>
                                         {format.aspectRatio}
@@ -126,7 +126,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
                                     <p className={cn(
                                         "text-sm font-semibold leading-none transition-colors",
                                         isSelected
-                                            ? "text-blue-900 dark:text-blue-100"
+                                            ? "text-primary dark:text-primary"
                                             : "text-slate-700 group-hover:text-slate-900 dark:text-slate-300 dark:group-hover:text-white"
                                     )}>
                                         {format.name}
@@ -134,7 +134,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
                                     <p className={cn(
                                         "text-xs leading-tight transition-colors",
                                         isSelected
-                                            ? "text-blue-700/80 dark:text-blue-200/70"
+                                            ? "text-primary/80 dark:text-primary/80"
                                             : "text-slate-500 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-400"
                                     )}>
                                         {format.description}
