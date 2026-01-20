@@ -101,28 +101,27 @@ export const SERVICIO_PROCESS_PROMPT = `
 </structural_instruction>
 `
 
-// 5. SERVICE LIST - Vertical Rhythm
+// 5. SERVICE LIST - Vertical Rhythm (PRUEBA: Versión Markdown vs XML)
 export const SERVICIO_LIST_PROMPT = `
-<structural_instruction>
-    <composition_type>Rhythmic Vertical Stacks</composition_type>
-    <visual_hierarchy>
-        <primary>Repeating high-quality [SERVICE_ICONS] acting as visual anchors on the left</primary>
-        <secondary>Clean, readable [SERVICE_TEXT] blocks paired with each anchor</secondary>
-        <tertiary>Subtle horizontal dividers or alternating depth planes</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_rhythm>Consistent vertical spacing creating a musical visual rhythm</zone_rhythm>
-        <zone_margin>Generous left margin for iconography</zone_margin>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Premium app interface, whitespace dominance, clean typography feel</texture>
-        <lighting>Diffused ambient light, no harsh shadows</lighting>
-        <palette>Trustworthy, professional, high-contrast text on light background</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Wall of text, messy spacing, inconsistent icon styles</avoid>
-    </negative_constraints>
-</structural_instruction>
+## Composición: Lista Vertical de Servicios
+
+**Estilo general:** Diseño tipo app premium con mucho espacio en blanco y tipografía limpia.
+
+### Jerarquía visual:
+1. **Protagonista:** Iconos de alta calidad alineados a la izquierda, actuando como anclas visuales
+2. **Secundario:** Bloques de texto claros y legibles junto a cada icono
+3. **Detalle:** Líneas divisorias sutiles o planos alternados para separar elementos
+
+### Composición:
+- Espaciado vertical consistente, creando un ritmo visual armonioso
+- Margen izquierdo generoso para la iconografía
+- Luz difusa y ambiental, sin sombras duras
+
+### Paleta:
+Colores profesionales y de confianza. Alto contraste del texto sobre fondo claro.
+
+### Evitar:
+Muros de texto, espaciado desordenado, estilos de iconos inconsistentes.
 `
 
 // 6. TRUST / GUARANTEE - Radial Authority
