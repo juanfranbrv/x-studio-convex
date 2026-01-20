@@ -182,25 +182,26 @@ export function ColorPalette({
                                                             : "border-white/30 dark:border-white/20 hover:border-primary/50"
                                                     )}
                                                     style={{ backgroundColor: item.color }}
-                                                    onClick={(e) => {
-                                                        // Toggle role on double-click
-                                                        if (e.detail === 2 && !colorPickerOpen) {
-                                                            const roles = ['Texto', 'Fondo', 'Acento 1', 'Acento 2'];
-                                                            const currentIndex = roles.indexOf(item.role || 'Texto');
-                                                            const nextRole = roles[(currentIndex + 1) % roles.length];
-                                                            onUpdateRole(idx, nextRole);
-                                                        }
-                                                    }}
                                                 >
-                                                    {/* Toggle Selection Checkmark */}
+                                                    {/* Role Indicator Letter */}
+                                                    {item.role && (
+                                                        <span className={cn(
+                                                            "text-[12px] font-black select-none pointer-events-none uppercase tracking-tight leading-none text-center",
+                                                            getContrastColor(item.color)
+                                                        )}>
+                                                            {item.role.replace(/\d+$/, '').trim()}
+                                                        </span>
+                                                    )}
+
+                                                    {/* Toggle Selection Checkmark Overlay */}
                                                     {onToggleSelection && selectedColorIds.includes(`color-${idx}`) && (
                                                         <div
                                                             className={cn(
-                                                                "absolute inset-0 flex items-center justify-center z-30",
-                                                                getContrastColor(item.color)
+                                                                "absolute -bottom-1 -right-1 flex items-center justify-center z-30 w-5 h-5 rounded-full bg-primary border-2 border-background shadow-md",
+                                                                "text-primary-foreground"
                                                             )}
                                                         >
-                                                            <Check className="w-4 h-4 stroke-[3px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
+                                                            <Check className="w-3 h-3 stroke-[3px]" />
                                                         </div>
                                                     )}
 
@@ -218,26 +219,54 @@ export function ColorPalette({
                                             </PopoverTrigger>
                                         </TooltipTrigger>
                                         <PopoverContent className="w-[240px] p-3 border-border bg-popover z-[100]" side="right" align="start">
-                                            <HexColorPicker
-                                                color={localColor?.index === idx ? localColor.color : item.color}
-                                                onChange={(newColor) => {
-                                                    setLocalColor({ index: idx, color: newColor });
-                                                }}
-                                                style={{ width: '100%' }}
-                                            />
-                                            <div className="mt-3 flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => handleEyedropper(idx)}
-                                                    className="flex-1 gap-1 h-8 text-xs font-medium"
-                                                >
-                                                    <Pipette className="w-4 h-4" />
-                                                    Capturar
-                                                </Button>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setColorPickerOpen(null)}>
-                                                    <X className="w-4 h-4" />
-                                                </Button>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-bold text-muted-foreground/60 mb-2 px-1">Color de Marca</p>
+                                                    <HexColorPicker
+                                                        color={localColor?.index === idx ? localColor.color : item.color}
+                                                        onChange={(newColor) => {
+                                                            setLocalColor({ index: idx, color: newColor });
+                                                        }}
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <p className="text-[10px] uppercase font-bold text-muted-foreground/60 px-1">Rol del Color</p>
+                                                    <div className="flex gap-1 bg-muted/30 p-1 rounded-xl border border-white/10">
+                                                        {(['Texto', 'Fondo', 'Acento'] as const).map(role => (
+                                                            <Button
+                                                                key={role}
+                                                                variant={item.role === role ? "secondary" : "ghost"}
+                                                                size="sm"
+                                                                className={cn(
+                                                                    "flex-1 h-7 text-[10px] px-0 rounded-lg transition-all",
+                                                                    item.role === role
+                                                                        ? "bg-white dark:bg-zinc-800 shadow-sm text-primary font-bold"
+                                                                        : "hover:bg-white/50 dark:hover:bg-white/5 text-muted-foreground"
+                                                                )}
+                                                                onClick={() => onUpdateRole(idx, role)}
+                                                            >
+                                                                {role}
+                                                            </Button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex gap-2 pt-2 border-t border-border/40">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => handleEyedropper(idx)}
+                                                        className="flex-1 gap-1 h-8 text-xs font-medium rounded-lg"
+                                                    >
+                                                        <Pipette className="w-4 h-4" />
+                                                        Capturar
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => setColorPickerOpen(null)}>
+                                                        <X className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </PopoverContent>
                                     </Popover>

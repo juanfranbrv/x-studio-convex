@@ -282,17 +282,15 @@ export function BrandingConfigurator({
     const { activeBrandKit } = useBrandKit()
 
     const logos = activeBrandKit?.logos || []
-    const brandKitColors = activeBrandKit?.colors?.filter(c => c.selected !== false) || []
-
-    // Combine Brand Kit colors with any custom selected colors that are NOT in the brand kit
+    // Base colors for the grid: All colors from Brand Kit + any custom colors added in session
+    const brandKitColors = activeBrandKit?.colors || []
     const colors = [
         ...brandKitColors,
         ...selectedBrandColors
-            .filter((sc: SelectedColor) => !brandKitColors.some(bc => bc.color.toLowerCase() === sc.color.toLowerCase()))
-            .map((sc: SelectedColor) => ({ color: sc.color }))
+            .filter((sc: SelectedColor) => !brandKitColors.some(bc => (bc.color || (bc as any).hex || '').toLowerCase() === sc.color.toLowerCase()))
+            .map((sc: SelectedColor) => ({ color: sc.color, role: sc.role }))
     ]
 
-    // Ensure first logo is selected by default if none is selected and logos exist
     // Ensure first logo is selected by default if none is selected and logos exist
     const hasAutoSelected = useRef(false)
     useEffect(() => {
@@ -358,82 +356,76 @@ export function BrandingConfigurator({
                         </button>
                     </div>
                 </div>
-            )
-            }
-
-            {/* Text Assets Section - REMOVED: Moved to TextLayersEditor (Canvas Preview Overlay) */}
+            )}
 
             {/* Brand Colors */}
-            {
-                showColors && (
-                    <div className="space-y-3">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                            <Palette className="w-3 h-3 text-primary" />
-                            Paleta Cromática
-                        </label>
-                        <div className="grid grid-cols-5 gap-2">
-                            {colors.slice(0, 10).map((colorObj, idx) => {
-                                const color = colorObj.color
-                                const selection = selectedBrandColors.find(s => s.color.toLowerCase() === color.toLowerCase())
-                                const isSelected = !!selection
-                                const role = selection?.role || (colorObj as any).role || 'Neutral'
+            {showColors && (
+                <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                        <Palette className="w-3 h-3 text-primary" />
+                        Paleta Cromática
+                    </label>
+                    <div className="grid grid-cols-5 gap-2">
+                        {colors.slice(0, 10).map((colorObj, idx) => {
+                            const color = (colorObj as any).color || (colorObj as any).hex || (typeof colorObj === 'string' ? colorObj : '')
+                            const selection = selectedBrandColors.find(s => s.color.toLowerCase() === color.toLowerCase())
+                            const isSelected = !!selection
+                            const role = (colorObj as any).role || selection?.role || 'Acento'
 
-                                return (
-                                    <div
-                                        key={idx}
-                                        role="button"
-                                        tabIndex={0}
-                                        onClick={() => onToggleBrandColor(color)}
-                                        className={cn(
-                                            "relative aspect-square rounded-full border-2 transition-all shadow-sm flex items-center justify-center group/swatch cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
-                                            isSelected
-                                                ? "border-primary ring-2 ring-primary/30 scale-105"
-                                                : "border-white/30 dark:border-white/20 hover:border-primary/50"
-                                        )}
-                                        style={{
-                                            backgroundColor: color,
-                                            boxShadow: isSelected ? `0 0 12px ${color}40` : 'inset 0 1px 1px rgba(255,255,255,0.1)'
-                                        }}
-                                        title={`${color}${role ? ` - ${role}` : ''}`}
-                                    >
-                                        {/* Light color visibility assurance */}
-                                        <div className="absolute inset-0 rounded-full border border-black/5 pointer-events-none" />
+                            return (
+                                <div
+                                    key={idx}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => onToggleBrandColor(color)}
+                                    className={cn(
+                                        "relative aspect-square rounded-full border-2 transition-all shadow-sm flex items-center justify-center group/swatch cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                                        isSelected
+                                            ? "border-primary ring-2 ring-primary/30 scale-105"
+                                            : "border-white/30 dark:border-white/20 hover:border-primary/50"
+                                    )}
+                                    style={{
+                                        backgroundColor: color,
+                                        boxShadow: isSelected ? `0 0 12px ${color}40` : 'inset 0 1px 1px rgba(255,255,255,0.1)'
+                                    }}
+                                    title={`${color}${role ? ` - ${role}` : ''}`}
+                                >
+                                    {/* Light color visibility assurance */}
+                                    <div className="absolute inset-0 rounded-full border border-black/5 pointer-events-none" />
 
-                                        {/* role label */}
-                                        {isSelected && (
-                                            <div className={cn(
-                                                "z-10 font-bold text-[7.5px] leading-none tracking-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] select-none pointer-events-none uppercase",
-                                                getContrastColor(color)
-                                            )}>
-                                                {role}
-                                            </div>
-                                        )}
+                                    {/* role label - show always if role exists */}
+                                    {role && (
+                                        <div className={cn(
+                                            "z-10 font-black text-[9px] leading-none tracking-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] select-none pointer-events-none uppercase text-center px-1",
+                                            getContrastColor(color),
+                                            !isSelected && "opacity-60"
+                                        )}>
+                                            {role.replace(/\d+$/, '').replace(/Color\s*/i, '').trim()}
+                                        </div>
+                                    )}
 
-                                        {/* Quick Remove Button */}
-                                        {isSelected && onRemoveBrandColor && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    onRemoveBrandColor(color)
-                                                }}
-                                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center opacity-0 group-hover/swatch:opacity-100 transition-all hover:scale-110 z-20"
-                                                title="Eliminar color"
-                                            >
-                                                <X className="w-2.5 h-2.5" />
-                                            </button>
-                                        )}
-                                    </div>
-                                )
-                            })}
+                                    {/* Quick Remove Button */}
+                                    {isSelected && onRemoveBrandColor && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                onRemoveBrandColor(color)
+                                            }}
+                                            className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center opacity-0 group-hover/swatch:opacity-100 transition-all hover:scale-110 z-20"
+                                            title="Eliminar color"
+                                        >
+                                            <X className="w-2.5 h-2.5" />
+                                        </button>
+                                    )}
+                                </div>
+                            )
+                        })}
 
-                            {/* Custom Color Adder - only show if less than 10 colors */}
-                            {colors.length < 10 && <CustomColorPicker onAdd={onAddCustomColor} />}
-                        </div>
+                        {/* Custom Color Adder - only show if less than 10 colors */}
+                        {colors.length < 10 && <CustomColorPicker onAdd={onAddCustomColor} />}
                     </div>
-                )
-            }
-
-
-        </div >
+                </div>
+            )}
+        </div>
     )
 }

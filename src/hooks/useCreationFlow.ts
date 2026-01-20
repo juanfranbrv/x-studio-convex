@@ -77,58 +77,61 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
     }, [aiConfig])
 
-    // Initialize defaults from Brand Kit
+    // Track last initialized brand kit to allow re-syncing when it changes
+    const [lastInitBrandId, setLastInitBrandId] = useState<string | null>(null)
+
+    // Initialize defaults from Brand Kit (Colors and Text Assets)
     useEffect(() => {
-        // Initialize with default colors if brand kit is available
-        if (activeBrandKit?.colors && state.selectedBrandColors.length === 0) {
+        const brandId = activeBrandKit?.id || (activeBrandKit as any)?._id
+        if (!activeBrandKit || !brandId) return
+
+        // Initialize if it's a different brand kit than last time
+        const nextState: Partial<GenerationState> = {}
+        let hasChanges = false
+
+        // 1. Initialize Colors - Refresh whenever the brand kit changes
+        if (activeBrandKit.colors) {
             const defaultColors = (activeBrandKit.colors as any[]).map(c => {
                 const rawRole = ((c.role as string) || 'Acento').trim().toUpperCase()
                 let role: ColorRole = 'Acento'
 
-                if (rawRole.includes('TEXT')) {
-                    role = 'Texto'
-                } else if (rawRole.includes('FOND')) {
-                    role = 'Fondo'
-                } else if (rawRole.includes('ACENT')) {
-                    role = 'Acento'
-                }
+                if (rawRole.includes('TEXT')) role = 'Texto'
+                else if (rawRole.includes('FOND')) role = 'Fondo'
+                else if (rawRole.includes('ACENT')) role = 'Acento'
+
+                const hex = (c.color || c.hex || (typeof c === 'string' ? c : '')).toLowerCase()
 
                 return {
-                    color: c.color || c.hex || (typeof c === 'string' ? c : ''),
+                    color: hex,
                     role
                 }
             }).filter(c => c.color)
 
             if (defaultColors.length > 0) {
-                setState(prev => ({ ...prev, selectedBrandColors: defaultColors }))
+                nextState.selectedBrandColors = defaultColors
+                hasChanges = true
             }
         }
 
-        // Initialize text assets from Brand Kit (CTA, Tagline, URL)
-        if (activeBrandKit && state.selectedTextAssets.length === 0) {
+        // 2. Initialize Text Assets
+        if (state.selectedTextAssets.length === 0) {
             const defaultTextAssets: TextAsset[] = []
-
-            // Add CTA if available
             const cta = (activeBrandKit.text_assets as any)?.ctas?.[0] || ''
-            if (cta) {
-                defaultTextAssets.push({ id: 'cta', type: 'cta', label: 'CTA', value: cta })
-            }
-
-            // Add Tagline if available
-            if (activeBrandKit.tagline) {
-                defaultTextAssets.push({ id: 'tagline', type: 'tagline', label: 'Tagline', value: activeBrandKit.tagline })
-            }
-
-            // Add URL if available
-            if (activeBrandKit.url) {
-                defaultTextAssets.push({ id: 'url', type: 'url', label: 'URL', value: activeBrandKit.url })
-            }
+            if (cta) defaultTextAssets.push({ id: 'cta', type: 'cta', label: 'CTA', value: cta })
+            if (activeBrandKit.tagline) defaultTextAssets.push({ id: 'tagline', type: 'tagline', label: 'Tagline', value: activeBrandKit.tagline })
+            if (activeBrandKit.url) defaultTextAssets.push({ id: 'url', type: 'url', label: 'URL', value: activeBrandKit.url })
 
             if (defaultTextAssets.length > 0) {
-                setState(prev => ({ ...prev, selectedTextAssets: defaultTextAssets }))
+                nextState.selectedTextAssets = defaultTextAssets
+                hasChanges = true
             }
         }
-    }, [activeBrandKit])
+
+        if (hasChanges) {
+            setState(prev => ({ ...prev, ...nextState }))
+        }
+        setLastInitBrandId(brandId)
+    }, [activeBrandKit, lastInitBrandId, state.selectedBrandColors.length, state.selectedTextAssets.length])
 
     // -------------------------------------------------------------------------
     // STEP 0: Platform and Format Selection
@@ -535,25 +538,34 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
     }, [activeBrandKit, state.selectedIntent, currentIntent, state.visionAnalysis, state.rawMessage, setCustomText])
 
-    const toggleBrandColor = useCallback((color: string) => {
+    const toggleBrandColor = useCallback((color: string, forceRole?: ColorRole) => {
         setState(prev => {
-            // Sequence: Acento -> Texto -> Fondo -> Deseleccionar (Remove)
+            // Sequence: Acento -> Texto -> Fondo -> Deseleccionar
             const roles: ColorRole[] = ['Acento', 'Texto', 'Fondo']
             const index = prev.selectedBrandColors.findIndex(c => c.color.toLowerCase() === color.toLowerCase())
 
             if (index === -1) {
-                // First click: Add as Acento
+                // First click: Add as Acento (or forced role if provided)
                 return {
                     ...prev,
-                    selectedBrandColors: [...prev.selectedBrandColors, { color, role: 'Acento' }],
+                    selectedBrandColors: [...prev.selectedBrandColors, { color, role: forceRole || 'Acento' }],
                     generatedImage: null
                 }
             } else {
                 // Already selected: cycle roles or remove
                 const currentRole = prev.selectedBrandColors[index].role
+
+                // If forceRole is provided and it's the same, it means we might want to deselect or just keep it.
+                // But for now, let's keep the cycling logic if no forceRole is given.
+                if (forceRole) {
+                    const newColors = [...prev.selectedBrandColors]
+                    newColors[index] = { ...newColors[index], role: forceRole }
+                    return { ...prev, selectedBrandColors: newColors, generatedImage: null }
+                }
+
                 const roleIndex = roles.indexOf(currentRole)
 
-                // If it's the last role in our sequence (Fondo), or if it has an unknown/old role, remove it
+                // Sequence: Acento (0) -> Texto (1) -> Fondo (2) -> Remove
                 if (roleIndex === roles.length - 1 || roleIndex === -1) {
                     return {
                         ...prev,
@@ -591,7 +603,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             if (exists) return prev
             return {
                 ...prev,
-                selectedBrandColors: [...prev.selectedBrandColors, { color, role: 'Principal' }],
+                selectedBrandColors: [...prev.selectedBrandColors, { color, role: 'Acento' }],
                 generatedImage: null
             }
         })
@@ -918,13 +930,13 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             P07.PRIORITY_HEADER,
             ``
         ]
-
+     
         if (selectedLayoutMeta) {
             // If there's a reference template image for this layout, mention it
             if (selectedLayoutMeta.referenceImage) {
                 layoutParts.push(P07.REFERENCE_TEMPLATE_NOTE)
             }
-
+     
             if (selectedLayoutMeta.structuralPrompt) {
                 layoutParts.push(
                     ``,
@@ -942,7 +954,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 ``
             )
         }
-
+     
         sections.push(...layoutParts)
         */
 
@@ -1014,7 +1026,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             // Map legacy brand colors to SelectedColor format
             colorsToUse = (activeBrandKit.colors as any[]).map(c => ({
                 color: c.color || c.hex || (typeof c === 'string' ? c : ''),
-                role: (c.role as ColorRole) || 'Principal'
+                role: (['Texto', 'Fondo', 'Acento'].includes(c.role as string) ? c.role : 'Acento') as ColorRole
             })).filter(c => c.color)
         }
 
@@ -1024,7 +1036,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             sections.push(``)
 
             // Group by role for better AI clarity
-            const roles: ColorRole[] = ['Principal', 'Secundario', 'Texto', 'Fondo', 'Acento', 'Neutral']
+            const roles: ColorRole[] = ['Texto', 'Fondo', 'Acento']
             roles.forEach(role => {
                 const group = colorsToUse.filter(c => c.role === role)
                 if (group.length > 0) {

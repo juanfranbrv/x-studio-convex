@@ -149,7 +149,7 @@ import {
 
 export type IntentGroup = 'vender' | 'informar' | 'conectar' | 'educar' | 'engagement'
 
-export type ColorRole = 'Principal' | 'Secundario' | 'Texto' | 'Fondo' | 'Acento' | 'Neutral'
+export type ColorRole = 'Texto' | 'Fondo' | 'Acento'
 
 export interface SelectedColor {
     color: string
@@ -510,9 +510,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     evento: EVENTO_LAYOUTS as LayoutOption[],
     comparativa: COMPARATIVA_LAYOUTS as LayoutOption[],
     lista: LISTA_LAYOUTS as LayoutOption[],
-
-    servicio: SERVICIO_LAYOUTS as LayoutOption[],
-
 }
 
 // Default layouts for intents not in the map

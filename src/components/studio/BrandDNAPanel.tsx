@@ -169,7 +169,7 @@ export function BrandDNAPanel({
     const handleAddColor = () => {
         updateData(prev => ({
             ...prev,
-            colors: [...(prev.colors || []), { color: '#cccccc', sources: ['user'], score: 1, role: 'Neutral', selected: true }]
+            colors: [...(prev.colors || []), { color: '#cccccc', sources: ['user'], score: 1, role: 'Acento', selected: true }]
         }))
     }
 

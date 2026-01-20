@@ -54,10 +54,6 @@ export function StyleChipsSelector({
                                             : "border-slate-200 bg-white/50 text-slate-600 hover:bg-white/80 hover:border-slate-300 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:border-white/20 dark:hover:text-white hover:-translate-y-0.5"
                                 )}
                             >
-                                <span className={cn(
-                                    "text-sm",
-                                    isSelected ? "opacity-100" : "opacity-70 group-hover:opacity-100"
-                                )}>{style.icon}</span>
                                 {style.label}
                                 {isSuggested && (
                                     <span className={cn(
