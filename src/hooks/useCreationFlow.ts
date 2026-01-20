@@ -165,6 +165,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     const selectIntent = useCallback((intent: IntentCategory) => {
         const intentMeta = INTENT_CATALOG.find(i => i.id === intent)
+        // Auto-select the first layout (Libre) for this intent
+        const intentLayouts = LAYOUTS_BY_INTENT[intent] || DEFAULT_LAYOUTS
+        const defaultLayoutId = intentLayouts.length > 0 ? intentLayouts[0].id : null
+
         setState(prev => ({
             ...prev,
             selectedIntent: intent,
@@ -184,7 +188,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             selectedTheme: null,
             visionAnalysis: null,
             selectedStyles: [],
-            selectedLayout: null,
+            selectedLayout: defaultLayoutId, // Auto-select first layout (Libre)
             generatedImage: null,
         }))
     }, [])
