@@ -1,271 +1,333 @@
-export const SERVICIO_DESCRIPTION = 'Features, benefits, pricing tables, and service lists.'
-export const SERVICIO_EXTENDED_DESCRIPTION = 'Showcase services, features, pricing options, and value propositions clearly.'
+import type { LayoutOption } from '@/lib/creation-flow-types'
+
+export const SERVICIO_DESCRIPTION = 'Promociona servicios intangibles con claridad y profesionalismo.'
+export const SERVICIO_EXTENDED_DESCRIPTION = 'Presenta servicios, características, precios y propuestas de valor de forma clara y atractiva.'
 
 export const SERVICIO_REQUIRED_FIELDS = ['headline', 'service_list', 'cta']
 
-// 1. FEATURE GRID - Modern Bento Layout
-export const SERVICIO_GRID_PROMPT = `
-<structural_instruction>
-    <composition_type>Modular Bento Grid</composition_type>
-    <visual_hierarchy>
-        <primary>A structured [BENTO_GRID] layout with varied cell sizes (1x1, 2x1, 1x2)</primary>
-        <secondary>Floating 3D micro-elements or glass icons anchored within specific cells</secondary>
-        <tertiary>Unified subtle background mesh connecting the modules</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_grid>Asymmetrical grid layout following a loose Golden Rectangle division</zone_grid>
-        <zone_focal>Largest module (top-left or center) holds the key value proposition</zone_focal>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Frosted glass, soft inner glow, premium acrylic borders</texture>
-        <lighting>Softbox studio lighting, diffused global illumination</lighting>
-        <palette>Monochromatic brand base with one vibrant accent color for active elements</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Traditional spreadsheet look, rigid symmetry, visual clutter</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+// =============================================================================
+// LAYOUTS DE SERVICIO - Composiciones estructurales (sin color, solo distribución)
+// =============================================================================
 
-// 2. BENEFIT HERO - Asymmetrical Split
-export const SERVICIO_BENEFIT_PROMPT = `
-<structural_instruction>
-    <composition_type>Asymmetrical Split Screen</composition_type>
-    <visual_hierarchy>
-        <primary>High-fidelity visual metaphor of the [KEY_BENEFIT] occupying 60% of the canvas</primary>
-        <secondary>Bold typography occupying the remaining 40% negative space</secondary>
-        <tertiary>Subtle directional lines pointing from text to visual</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_visual>Right or Bottom-Right sector (heavy visual weight)</zone_visual>
-        <zone_text>Left or Top-Left sector (clean negative space for copy)</zone_text>
-        <vector_flow>Diagonal eye movement intended from Headline -> Visual Detail</vector_flow>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Smooth 3D render, subsurface scattering on hero objects</texture>
-        <lighting>Golden hour warm rim light vs cool fill light (complementary contrast)</lighting>
-        <palette>Rich, optimistic hues (greens, oranges, or brand warmth)</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>50/50 boring split, flat 2D illustration, overlapping text on busy backgrounds</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+export const SERVICIO_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
+    // 0. LIBRE - Sin restricciones
+    {
+        id: 'servicio-free',
+        name: 'Libre',
+        description: 'Sin indicación',
+        svgIcon: 'Sparkles',
+        textZone: 'center',
+        promptInstruction: 'Natural composition without structural constraints.',
+        structuralPrompt: '',
+    },
 
-// 3. PRICING TABLE - Central Hierarchy
-export const SERVICIO_PRICING_PROMPT = `
-<structural_instruction>
-    <composition_type>Central Triptych Focus</composition_type>
-    <visual_hierarchy>
-        <primary>Central [PRICING_CARD] elevated, 1.2x scale, brightest illumination</primary>
-        <secondary>Flanking cards (Basic/Enterprise) pushed slightly back in Z-depth</secondary>
-        <tertiary>crown or ribbon element distinguishing the "Best Value" center</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_foreground>Center column, sharp focus, high contrast</zone_foreground>
-        <zone_midground>Side columns, slightly lower contrast</zone_midground>
-        <zone_background>Abstract depth cues to show separation</zone_background>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Clean UI layers, subtle drop shadows, cards floating in space</texture>
-        <lighting>Top-down spotlight highlighting the center, ambient fill for sides</lighting>
-        <palette>Desaturated sides, fully saturated brand primary color for center</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Flat alignment, equal weight for all options, hard grids</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+    // 1. BENTO GRID - Modular
+    {
+        id: 'servicio-grid',
+        name: 'Bento Grid',
+        description: 'Modular',
+        svgIcon: 'Grid3x3',
+        textZone: 'center',
+        promptInstruction: 'Modern bento grid layout with varied cell sizes.',
+        structuralPrompt: `
+## Composición: Bento Grid Modular
 
-// 4. STEP FLOW - Z-Pattern Journey
-export const SERVICIO_PROCESS_PROMPT = `
-<structural_instruction>
-    <composition_type>Z-Pattern Process Flow</composition_type>
-    <visual_hierarchy>
-        <primary>A clear fluid path or "pipeline" connecting steps [STEP_1] -> [STEP_2] -> [STEP_3]</primary>
-        <secondary>Floating milestones (spheres, cubes, or icons) at key turns of the path</secondary>
-        <tertiary>Motion lines or particles indicating forward momentum</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <vector_path>Visual flow starting Top-Left, moving through center, ending Bottom-Right</vector_path>
-        <zone_steps>Evenly distributed waypoints along the Z-curve</zone_steps>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Matte 3D shapes, smooth gradients on flow lines</texture>
-        <lighting>Volumetric lighting shafts, dynamic energy</lighting>
-        <palette>Progressive color shift (e.g., Blue to Purple to Pink)</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Static vertical list, disconnected floating islands, confusing direction</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Grid asimétrico tipo Bento con celdas de tamaños variados (1x1, 2x1, 1x2).
 
-// 5. SERVICE LIST - Vertical Rhythm (PRUEBA: Versión Markdown vs XML)
-export const SERVICIO_LIST_PROMPT = `
+### Jerarquía visual:
+1. **Protagonista:** La celda más grande (esquina superior izquierda o centro) contiene la propuesta de valor principal
+2. **Secundario:** Elementos 3D flotantes o iconos de cristal anclados en celdas específicas
+3. **Detalle:** Malla de fondo sutil conectando los módulos
+
+### Distribución:
+- Grid asimétrico siguiendo división de Rectángulo Áureo
+- Módulos con bordes de vidrio esmerilado y brillo interior suave
+- Iluminación de estudio difusa
+
+### Evitar:
+Aspecto de hoja de cálculo, simetría rígida, desorden visual.
+`,
+    },
+
+    // 2. BENEFICIO HERO - Split asimétrico
+    {
+        id: 'servicio-benefit',
+        name: 'Beneficio',
+        description: 'Split Hero',
+        svgIcon: 'SeparatorHorizontal',
+        textZone: 'left',
+        promptInstruction: 'Asymmetrical split screen with benefit hero.',
+        structuralPrompt: `
+## Composición: Split Asimétrico de Beneficio
+
+**Estructura:** Pantalla dividida asimétrica 60/40.
+
+### Jerarquía visual:
+1. **Protagonista:** Metáfora visual del beneficio clave ocupando el 60% del canvas
+2. **Secundario:** Tipografía bold en el 40% restante (espacio negativo limpio)
+3. **Detalle:** Líneas direccionales sutiles apuntando del texto al visual
+
+### Distribución:
+- Visual: sector derecho o inferior-derecho (peso visual pesado)
+- Texto: sector izquierdo o superior-izquierdo (espacio negativo limpio)
+- Flujo diagonal del ojo: Headline → Detalle Visual
+
+### Evitar:
+División aburrida 50/50, ilustración plana 2D, texto superpuesto sobre fondos ocupados.
+`,
+    },
+
+    // 3. PRECIOS - Tríptíco central
+    {
+        id: 'servicio-pricing',
+        name: 'Precios',
+        description: 'Comparativa',
+        svgIcon: 'DollarSign',
+        textZone: 'center',
+        promptInstruction: 'Central pricing triptych with emphasis on best value.',
+        structuralPrompt: `
+## Composición: Tríptico de Precios
+
+**Estructura:** Tres columnas con énfasis central.
+
+### Jerarquía visual:
+1. **Protagonista:** Tarjeta central elevada, escala 1.2x, iluminación más brillante
+2. **Secundario:** Tarjetas laterales (Básico/Enterprise) retrocedidas en profundidad Z
+3. **Detalle:** Corona o cinta distinguiendo el "Mejor Valor" central
+
+### Distribución:
+- Primer plano: columna central, enfoque nítido, alto contraste
+- Plano medio: columnas laterales, contraste ligeramente menor
+- Fondo: señales abstractas de profundidad para mostrar separación
+
+### Evitar:
+Alineación plana, peso igual para todas las opciones, grids rígidos.
+`,
+    },
+
+    // 4. PROCESO - Flujo Z-Pattern
+    {
+        id: 'servicio-process',
+        name: 'Proceso',
+        description: 'Z-Pattern',
+        svgIcon: 'ArrowRight',
+        textZone: 'center',
+        promptInstruction: 'Z-pattern process flow with connected steps.',
+        structuralPrompt: `
+## Composición: Flujo de Proceso en Z
+
+**Estructura:** Camino fluido conectando pasos en patrón Z.
+
+### Jerarquía visual:
+1. **Protagonista:** Pipeline o camino claro conectando Paso 1 → Paso 2 → Paso 3
+2. **Secundario:** Hitos flotantes (esferas, cubos o iconos) en los giros clave del camino
+3. **Detalle:** Líneas de movimiento o partículas indicando momentum hacia adelante
+
+### Distribución:
+- Flujo visual comenzando arriba-izquierda, pasando por centro, terminando abajo-derecha
+- Puntos de paso distribuidos uniformemente a lo largo de la curva Z
+- Iluminación volumétrica, energía dinámica
+
+### Evitar:
+Lista vertical estática, islas flotantes desconectadas, dirección confusa.
+`,
+    },
+
+    // 5. LISTA - Ritmo vertical
+    {
+        id: 'servicio-list',
+        name: 'Lista',
+        description: 'Vertical',
+        svgIcon: 'List',
+        textZone: 'left',
+        promptInstruction: 'Rhythmic vertical service list with icons.',
+        structuralPrompt: `
 ## Composición: Lista Vertical de Servicios
 
-**Estilo general:** Diseño tipo app premium con mucho espacio en blanco y tipografía limpia.
+**Estructura:** Diseño tipo app premium con mucho espacio en blanco y tipografía limpia.
 
 ### Jerarquía visual:
 1. **Protagonista:** Iconos de alta calidad alineados a la izquierda, actuando como anclas visuales
 2. **Secundario:** Bloques de texto claros y legibles junto a cada icono
 3. **Detalle:** Líneas divisorias sutiles o planos alternados para separar elementos
 
-### Composición:
+### Distribución:
 - Espaciado vertical consistente, creando un ritmo visual armonioso
 - Margen izquierdo generoso para la iconografía
 - Luz difusa y ambiental, sin sombras duras
 
-### Paleta:
-Colores profesionales y de confianza. Alto contraste del texto sobre fondo claro.
-
 ### Evitar:
 Muros de texto, espaciado desordenado, estilos de iconos inconsistentes.
-`
+`,
+    },
 
-// 6. TRUST / GUARANTEE - Radial Authority
-export const SERVICIO_TRUST_PROMPT = `
-<structural_instruction>
-    <composition_type>Radial Central Focus</composition_type>
-    <visual_hierarchy>
-        <primary>Massive, detailed [TRUST_SEAL] or Shield centered in the frame</primary>
-        <secondary>Concentric rings of light, laurels, or particles radiating outward</secondary>
-        <tertiary>Blurred contextual office or handshake elements in deep background</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_center>The "Bullseye" - extreme detail and focus</zone_center>
-        <zone_periphery>Rapid fall-off in focus (Depth of Field effect) to frame the center</zone_periphery>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Metallics (Gold/Silver/Platinum), glass caustics, embossed details</texture>
-        <lighting>Cinematic rim lighting, starburst reflections</lighting>
-        <palette>Precious metals, deep royal background colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Cartoonish badge, flat sticker look, cluttered background</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+    // 6. GARANTÍA - Foco radial
+    {
+        id: 'servicio-trust',
+        name: 'Garantía',
+        description: 'Sello Trust',
+        svgIcon: 'ShieldCheck',
+        textZone: 'center',
+        promptInstruction: 'Radial trust seal with authority elements.',
+        structuralPrompt: `
+## Composición: Sello de Garantía Radial
 
-// 7. ECOSYSTEM - Hub & Spoke Connectivity
-export const SERVICIO_ECOSYSTEM_PROMPT = `
-<structural_instruction>
-    <composition_type>Radial Hub & Spoke</composition_type>
-    <visual_hierarchy>
-        <primary>Central Core Sphere representing the [MAIN_PLATFORM]</primary>
-        <secondary>Orbiting satellites or nodes connected by glowing data filaments</secondary>
-        <tertiary>Data flowing through the connections (particles/light pulses)</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_nucleus>Center of canvas, highest density and brightness</zone_nucleus>
-        <zone_orbit>Circular arrangement of feature icons around the nucleus</zone_orbit>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Holographic projections, wireframes, cybernetic slickness</texture>
-        <lighting>Internal glow, dark void background with neon highlights</lighting>
-        <palette>Cyberpunk neons (Cyan, Magenta) on deep void blacks</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Messy spiderweb, disconnected dots, flat 2D network chart</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Foco central con anillos concéntricos.
 
-// 8. DATA STAT - Typography Hero
-export const SERVICIO_STAT_PROMPT = `
-<structural_instruction>
-    <composition_type>Typographic Hero</composition_type>
-    <visual_hierarchy>
-        <primary>Massive, architectural 3D Typography for the [KEY_STAT] (e.g. "99%")</primary>
-        <secondary>A trend line or growth graph weaving through the 3D text numbers</secondary>
-        <tertiary>Small caption text sitting on the "ledge" of the giant numbers</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_hero>Fills 80% of the vertical space, centered or slightly left-heavy</zone_hero>
-        <zone_context>Remaining negative space for explanation</zone_context>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Concrete, matte plastic, or monumental stone</texture>
-        <lighting>High-contrast architectural lighting (long shadows)</lighting>
-        <palette>Bold monochrome or high-contrast duotone</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Thin unreadable fonts, standard Excel charts, boring white paper look</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía visual:
+1. **Protagonista:** Sello de confianza o escudo masivo y detallado centrado en el frame
+2. **Secundario:** Anillos concéntricos de luz, laureles o partículas radiando hacia afuera
+3. **Detalle:** Elementos contextuales difuminados en el fondo profundo (oficina, apretón de manos)
 
-// 9. MINIMAL HERO - Productization
-export const SERVICIO_MINIMAL_PROMPT = `
-<structural_instruction>
-    <composition_type>Studio Pedestal</composition_type>
-    <visual_hierarchy>
-        <primary>A single, pristine abstract object symbolizing the service on a podium</primary>
-        <secondary>Soft reflection on the floor/surface</secondary>
-        <tertiary>Atmospheric fog or mist (extremely subtle)</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_subject>Dead center, floating slightly above the pedestal</zone_subject>
-        <zone_negative>Vast empty space around the subject for elegance</zone_negative>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Porcelain, polished ceramic, or super-matte rubber</texture>
-        <lighting>Softbox top-down, minimalist museum lighting</lighting>
-        <palette>Pastels, white-on-white, or single punchy color pop</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Busy background, multiple objects, text overlay on the object</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución:
+- Centro: el "Bullseye" con detalle y enfoque extremo
+- Periferia: caída rápida de enfoque (efecto profundidad de campo)
+- Texturas metálicas, causticas de vidrio, detalles en relieve
 
-// 10. INTERACTION - Human Connection
-export const SERVICIO_INTERACTION_PROMPT = `
-<structural_instruction>
-    <composition_type>Over-the-Shoulder / Two-Shot</composition_type>
-    <visual_hierarchy>
-        <primary>Authentic human interaction moment (consultation, handshake, explanation) [SERVICE_ACTION]</primary>
-        <secondary>Professional environment context blurred in the background (depth of field)</secondary>
-        <tertiary>Subtle props indicating the specific industry (documents, tablet, tools)</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_focus>The point of connection (eyes, hands, or shared screen) at the Golden Intersection</zone_focus>
-        <zone_foreground>Blurred shoulder or element framing the subject (Voyeuristic perspective)</zone_foreground>
-        <vector_lines>Sight lines directing attention between the service provider and client</vector_lines>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Natural skin tones, soft fabric textures, premium office materials</texture>
-        <lighting>Window natural light + warm practical lamps (Rembrandt style)</lighting>
-        <palette>Professional neutrals (Navy, Grey) with warm skin tone accents</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Stiff stock photo handshake, forced smiles, looking directly at camera, flat lighting</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar:
+Insignia caricaturesca, aspecto de sticker plano, fondo desordenado.
+`,
+    },
 
-// 11. WORKSHOP - Tools & Process
-export const SERVICIO_WORKSHOP_PROMPT = `
-<structural_instruction>
-    <composition_type>Knolling / Organized Workspace</composition_type>
-    <visual_hierarchy>
-        <primary>Key professional tools arranged with obsessive precision [SERVICE_TOOLS]</primary>
-        <secondary>Hands of the expert interacting with the central tool or material</secondary>
-        <tertiary>Textured work surface (wood, cutting mat, marble, blueprint)</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_grid>Strict geometric alignment of objects (90-degree angles)</zone_grid>
-        <zone_center>The "Hero Tool" or finished result in the exact center</zone_center>
-        <zone_negative>Clean spacing between objects to allow the eye to rest</zone_negative>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Tactile materials, metallic reflections, worn leather, matte plastic</texture>
-        <lighting>Top-down flat lay lighting, minimal shadows, high clarity</lighting>
-        <palette>Material-truth colors (wood is wood, metal is metal) + Brand Color background</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Messy clutter, random angles, perspective distortion, dirty tools (unless artistic)</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+    // 7. ECOSISTEMA - Hub & Spoke
+    {
+        id: 'servicio-ecosystem',
+        name: 'Ecosistema',
+        description: 'Hub Spoke',
+        svgIcon: 'Network',
+        textZone: 'center',
+        promptInstruction: 'Hub and spoke connectivity diagram.',
+        structuralPrompt: `
+## Composición: Ecosistema Hub & Spoke
+
+**Estructura:** Núcleo central con satélites orbitando.
+
+### Jerarquía visual:
+1. **Protagonista:** Esfera central representando la plataforma principal
+2. **Secundario:** Nodos satélite orbitando conectados por filamentos de datos brillantes
+3. **Detalle:** Flujo de datos a través de las conexiones (partículas/pulsos de luz)
+
+### Distribución:
+- Centro del canvas: mayor densidad y brillo
+- Órbita: disposición circular de iconos de características alrededor del núcleo
+- Proyecciones holográficas, wireframes, estética cibernética
+
+### Evitar:
+Telaraña desordenada, puntos desconectados, gráfico de red 2D plano.
+`,
+    },
+
+    // 8. ESTADÍSTICA - Tipografía Hero
+    {
+        id: 'servicio-stat',
+        name: 'Estadística',
+        description: 'Dato Hero',
+        svgIcon: 'BarChart3',
+        textZone: 'center',
+        promptInstruction: 'Typography hero with massive key statistic.',
+        structuralPrompt: `
+## Composición: Estadística Tipográfica Hero
+
+**Estructura:** Número gigante como protagonista arquitectónico.
+
+### Jerarquía visual:
+1. **Protagonista:** Tipografía 3D masiva y arquitectónica para el dato clave (ej: "99%")
+2. **Secundario:** Línea de tendencia o gráfico de crecimiento entrelazado con los números 3D
+3. **Detalle:** Texto de caption pequeño "sentado" en el borde de los números gigantes
+
+### Distribución:
+- Hero: ocupa 80% del espacio vertical, centrado o ligeramente a la izquierda
+- Contexto: espacio negativo restante para explicación
+- Iluminación arquitectónica de alto contraste (sombras largas)
+
+### Evitar:
+Fuentes finas ilegibles, gráficos estándar de Excel, aspecto de documento aburrido.
+`,
+    },
+
+    // 9. MINIMAL - Pedestal de estudio
+    {
+        id: 'servicio-minimal',
+        name: 'Minimal',
+        description: 'Pedestal',
+        svgIcon: 'Box',
+        textZone: 'center',
+        promptInstruction: 'Minimal studio pedestal with single object.',
+        structuralPrompt: `
+## Composición: Pedestal Minimal de Estudio
+
+**Estructura:** Objeto único sobre podio en espacio vacío.
+
+### Jerarquía visual:
+1. **Protagonista:** Un solo objeto abstracto prístino simbolizando el servicio, sobre un podio
+2. **Secundario:** Reflejo suave en el suelo/superficie
+3. **Detalle:** Niebla o bruma atmosférica (extremadamente sutil)
+
+### Distribución:
+- Sujeto: exactamente centrado, flotando ligeramente sobre el pedestal
+- Espacio negativo: vasto espacio vacío alrededor del sujeto para elegancia
+- Texturas: porcelana, cerámica pulida o goma super-mate
+- Iluminación de museo minimalista desde arriba
+
+### Evitar:
+Fondo ocupado, múltiples objetos, texto superpuesto sobre el objeto.
+`,
+    },
+
+    // 10. CONEXIÓN - Interacción humana
+    {
+        id: 'servicio-interaction',
+        name: 'Conexión',
+        description: 'Humano',
+        svgIcon: 'Users',
+        textZone: 'bottom',
+        promptInstruction: 'Human interaction moment with professional context.',
+        structuralPrompt: `
+## Composición: Conexión Humana
+
+**Estructura:** Plano over-the-shoulder o two-shot.
+
+### Jerarquía visual:
+1. **Protagonista:** Momento de interacción humana auténtica (consulta, apretón de manos, explicación)
+2. **Secundario:** Contexto de entorno profesional desenfocado en el fondo (profundidad de campo)
+3. **Detalle:** Props sutiles indicando la industria específica (documentos, tablet, herramientas)
+
+### Distribución:
+- Foco: el punto de conexión (ojos, manos o pantalla compartida) en la Intersección Áurea
+- Primer plano: hombro o elemento desenfocado enmarcando al sujeto (perspectiva voyeurística)
+- Líneas de mirada dirigiendo atención entre proveedor de servicio y cliente
+
+### Evitar:
+Apretón de manos de stock photo rígido, sonrisas forzadas, mirar directamente a cámara, iluminación plana.
+`,
+    },
+
+    // 11. TALLER - Knolling workspace
+    {
+        id: 'servicio-workshop',
+        name: 'Taller',
+        description: 'Knolling',
+        svgIcon: 'Wrench',
+        textZone: 'center',
+        promptInstruction: 'Organized knolling workspace layout.',
+        structuralPrompt: `
+## Composición: Taller Knolling
+
+**Estructura:** Vista cenital de herramientas organizadas con precisión obsesiva.
+
+### Jerarquía visual:
+1. **Protagonista:** Herramientas profesionales clave dispuestas con precisión obsesiva
+2. **Secundario:** Manos del experto interactuando con la herramienta o material central
+3. **Detalle:** Superficie de trabajo texturizada (madera, cutting mat, mármol, plano técnico)
+
+### Distribución:
+- Grid: alineación geométrica estricta de objetos (ángulos de 90 grados)
+- Centro: la "Herramienta Hero" o resultado terminado exactamente en el centro
+- Espacio negativo: espaciado limpio entre objetos para que el ojo descanse
+- Iluminación flat lay desde arriba, sombras mínimas, alta claridad
+
+### Evitar:
+Desorden caótico, ángulos aleatorios, distorsión de perspectiva, herramientas sucias (a menos que sea artístico).
+`,
+    },
+]
