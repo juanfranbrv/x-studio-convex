@@ -683,6 +683,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
 
     cita: [
         {
+            id: 'cita-free',
+            name: 'Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
+        {
             id: 'cita-minimal',
             name: 'Minimalista',
             description: 'Texto Limpio',
@@ -781,8 +790,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Floating 3D quote text.',
             structuralPrompt: CITA_FLOTANTE_PROMPT,
         },
+    ],
+    equipo: [
         {
-            id: 'cita-free',
+            id: 'equipo-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -790,8 +801,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    equipo: [
         {
             id: 'equipo-portrait',
             name: 'Retrato',
@@ -891,8 +900,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Candid office culture shot.',
             structuralPrompt: EQUIPO_CULTURA_PROMPT,
         },
+    ],
+    logro: [
         {
-            id: 'equipo-free',
+            id: 'logro-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -900,8 +911,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    logro: [
         {
             id: 'logro-number',
             name: 'Cifra',
@@ -1001,8 +1010,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Company or milestone anniversary.',
             structuralPrompt: LOGRO_ANIVERSARIO_PROMPT,
         },
+    ],
+    lanzamiento: [
         {
-            id: 'logro-free',
+            id: 'lanzamiento-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -1010,8 +1021,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    lanzamiento: [
         {
             id: 'lanzamiento-countdown',
             name: 'Cuenta',
@@ -1111,8 +1120,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Giant question mark as hero.',
             structuralPrompt: LANZAMIENTO_MISTERIO_PROMPT,
         },
+    ],
+    reto: [
         {
-            id: 'lanzamiento-free',
+            id: 'reto-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -1120,8 +1131,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    reto: [
         {
             id: 'reto-vs',
             name: 'Versus',
@@ -1176,8 +1185,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Step-by-step contest rules.',
             structuralPrompt: RETO_REGLAS_PROMPT,
         },
+    ],
+    servicio: [
         {
-            id: 'reto-free',
+            id: 'servicio-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -1185,8 +1196,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    servicio: [
         {
             id: 'servicio-grid',
             name: 'Grid',
@@ -1287,8 +1296,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Organized tools and workspace focus.',
             structuralPrompt: SERVICIO_WORKSHOP_PROMPT,
         },
+    ],
+    talento: [
         {
-            id: 'servicio-free',
+            id: 'talento-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -1296,8 +1307,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    talento: [
         {
             id: 'talento-hiring',
             name: 'Hiring',
@@ -1397,8 +1406,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Inclusive diverse team representation.',
             structuralPrompt: TALENTO_DIVERSIDAD_PROMPT,
         },
+    ],
+    definicion: [
         {
-            id: 'talento-free',
+            id: 'definicion-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -1406,8 +1417,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    definicion: [
         {
             id: 'def-classic',
             name: 'Diccionario',
@@ -1507,8 +1516,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Large emoji visual dictionary.',
             structuralPrompt: DEFINICION_EMOJI_PROMPT,
         },
+    ],
+    efemeride: [
         {
-            id: 'definicion-free',
+            id: 'efemeride-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -1516,8 +1527,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    efemeride: [
         {
             id: 'efemeride-calendar',
             name: 'Calendario',
@@ -1617,8 +1626,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Simple elegant greeting card.',
             structuralPrompt: EFEMERIDE_MENSAJE_PROMPT,
         },
+    ],
+    pasos: [
         {
-            id: 'efemeride-free',
+            id: 'pasos-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -1626,8 +1637,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    pasos: [
         {
             id: 'pasos-zigzag',
             name: 'ZigZag',
@@ -1727,8 +1736,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Quick tips or steps layout.',
             structuralPrompt: PASOS_RAPIDO_PROMPT,
         },
+    ],
+    bts: [
         {
-            id: 'pasos-free',
+            id: 'bts-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -1736,8 +1747,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    bts: [
         {
             id: 'bts-wip',
             name: 'Proceso',
@@ -1837,8 +1846,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Close up detail of work.',
             structuralPrompt: BTS_DETALLE_PROMPT,
         },
+    ],
+    catalogo: [
         {
-            id: 'bts-free',
+            id: 'catalogo-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -1846,8 +1857,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    catalogo: [
         {
             id: 'catalogo-grid',
             name: 'Grid',
@@ -1947,8 +1956,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Single hero product spotlight.',
             structuralPrompt: CATALOGO_HERO_PROMPT,
         },
+    ],
+    oferta: [
         {
-            id: 'catalogo-free',
+            id: 'oferta-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -1956,8 +1967,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    oferta: [
         {
             id: 'retail-classic',
             name: 'Impacto',
@@ -2056,15 +2065,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'center',
             promptInstruction: 'Premium exclusive offer layout.',
             structuralPrompt: OFERTA_EXCLUSIVO_PROMPT,
-        },
-        {
-            id: 'oferta-free',
-            name: 'Libre',
-            description: 'Sin indicación',
-            svgIcon: 'Sparkles',
-            textZone: 'center',
-            promptInstruction: 'Natural composition without structural constraints.',
-            structuralPrompt: '',
         },
     ],
     escaparate: [
@@ -2179,6 +2179,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     ],
     comunicado: [
         {
+            id: 'comunicado-free',
+            name: 'Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
+        {
             id: 'comunicado-oficial',
             name: 'Oficial',
             description: 'Autoridad y Claridad',
@@ -2283,8 +2292,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Timeline progression for dates or phases.',
             structuralPrompt: COMUNICADO_TIMELINE_PROMPT,
         },
+    ],
+    pregunta: [
         {
-            id: 'comunicado-free',
+            id: 'pregunta-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -2292,8 +2303,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    pregunta: [
         {
             id: 'pregunta-big',
             name: 'Texto',
@@ -2393,8 +2402,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Hot take controversial question.',
             structuralPrompt: PREGUNTA_CONTROVERSIAL_PROMPT,
         },
+    ],
+    dato: [
         {
-            id: 'pregunta-free',
+            id: 'dato-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -2402,8 +2413,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    dato: [
         {
             id: 'dato-big',
             name: 'Dato',
@@ -2503,8 +2512,10 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Data map visualization.',
             structuralPrompt: DATO_MAPA_PROMPT,
         },
+    ],
+    evento: [
         {
-            id: 'dato-free',
+            id: 'evento-free',
             name: 'Libre',
             description: 'Sin indicación',
             svgIcon: 'Sparkles',
@@ -2512,8 +2523,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             promptInstruction: 'Natural composition without structural constraints.',
             structuralPrompt: '',
         },
-    ],
-    evento: [
         {
             id: 'evento-conference',
             name: 'Speaker',
@@ -2612,15 +2621,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'left',
             promptInstruction: 'Event agenda or schedule.',
             structuralPrompt: EVENTO_AGENDA_PROMPT,
-        },
-        {
-            id: 'evento-free',
-            name: 'Libre',
-            description: 'Sin indicación',
-            svgIcon: 'Sparkles',
-            textZone: 'center',
-            promptInstruction: 'Natural composition without structural constraints.',
-            structuralPrompt: '',
         },
     ],
     comparativa: [
@@ -2735,6 +2735,15 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
     ],
     lista: [
         {
+            id: 'lista-free',
+            name: 'Libre',
+            description: 'Sin indicación',
+            svgIcon: 'Sparkles',
+            textZone: 'center',
+            promptInstruction: 'Natural composition without structural constraints.',
+            structuralPrompt: '',
+        },
+        {
             id: 'lista-checklist',
             name: 'Checklist',
             description: 'Productividad',
@@ -2832,15 +2841,6 @@ export const LAYOUTS_BY_INTENT: Partial<Record<IntentCategory, LayoutOption[]>> 
             textZone: 'center',
             promptInstruction: 'Pros and cons split list.',
             structuralPrompt: LISTA_PROS_CONS_PROMPT,
-        },
-        {
-            id: 'lista-free',
-            name: 'Libre',
-            description: 'Sin indicación',
-            svgIcon: 'Sparkles',
-            textZone: 'center',
-            promptInstruction: 'Natural composition without structural constraints.',
-            structuralPrompt: '',
         },
     ],
 
