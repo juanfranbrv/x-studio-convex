@@ -65,6 +65,7 @@ export function ColorPalette({
     const getContrastColor = (hex: string) => {
         try {
             const rgb = hexToRgb(hex);
+            if (!rgb) return 'text-white';
             const lab = rgbToLab(rgb);
             return lab.l > 60 ? (isDark ? 'text-zinc-900' : 'text-primary') : 'text-white';
         } catch (e) {
