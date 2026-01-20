@@ -109,24 +109,35 @@ export function TextLayersEditor({
 
                 {/* Brand-based Text Assets (PROMPT TEXTS moved from Panel) */}
                 {textAssets.length > 0 && (
-                    <div className="w-full flex flex-col items-center gap-2 pt-4 border-t border-dashed border-foreground/10">
+                    <div className="w-full flex flex-col items-center gap-3 pt-4 border-t border-dashed border-foreground/10">
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Textos Adicionales</p>
                         {textAssets.map((asset) => (
-                            <div key={asset.id} className="group relative w-full max-w-xl pointer-events-auto flex items-center justify-center gap-2">
-                                <div className="flex items-center gap-2 px-3 py-1 bg-foreground/5 rounded-full ring-1 ring-foreground/10 hover:ring-foreground/20 transition-all">
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mr-1 opacity-70">{asset.label}</span>
-                                    <input
+                            <div key={asset.id} className="group relative w-full max-w-2xl pointer-events-auto flex items-start justify-center gap-2 px-4">
+                                <div className="flex-1 flex items-start gap-3 px-4 py-2 bg-foreground/5 rounded-2xl ring-1 ring-foreground/10 hover:ring-foreground/20 transition-all">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground opacity-70 pt-1 flex-shrink-0">{asset.label}</span>
+                                    <textarea
                                         value={asset.value || ''}
                                         onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
-                                        className="bg-transparent border-none text-sm font-medium text-foreground focus:ring-0 p-0 text-center min-w-[50px] max-w-[200px]"
+                                        className="flex-1 bg-transparent border-none text-sm font-medium text-foreground focus:ring-0 resize-none overflow-hidden min-h-[1.4em] leading-relaxed"
                                         placeholder={`Valor para ${asset.label}...`}
-                                        style={{ width: `${Math.min(200, Math.max(80, (asset.value?.length || 0) * 8))}px` }}
+                                        rows={1}
+                                        onInput={(e) => {
+                                            const target = e.target as HTMLTextAreaElement;
+                                            target.style.height = 'auto';
+                                            target.style.height = target.scrollHeight + 'px';
+                                        }}
+                                        ref={(el) => {
+                                            if (el) {
+                                                el.style.height = 'auto';
+                                                el.style.height = el.scrollHeight + 'px';
+                                            }
+                                        }}
                                     />
                                     <Button
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => onDeleteLayer(asset.id, 'asset')}
-                                        className="h-4 w-4 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                                        className="h-5 w-5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                                     >
                                         <X className="w-3 h-3" />
                                     </Button>
