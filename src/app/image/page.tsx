@@ -189,6 +189,35 @@ export default function ImagePage() {
                 newHighlights.add('caption')
             }
 
+            // Process imageTexts (subheadline and other visual texts)
+            if (result.imageTexts) {
+                // Subheadline goes as a text asset
+                if (result.imageTexts.subheadline) {
+                    creationFlow.addTextAsset({
+                        id: `ai-subheadline-${Date.now()}`,
+                        type: 'custom',
+                        label: 'Subtítulo',
+                        value: result.imageTexts.subheadline
+                    })
+                    newHighlights.add('subheadline')
+                }
+            }
+
+            // Process customTexts (additional extracted fields)
+            if (result.customTexts) {
+                Object.entries(result.customTexts).forEach(([key, value]) => {
+                    if (value && typeof value === 'string' && value.trim()) {
+                        creationFlow.addTextAsset({
+                            id: `ai-${key}-${Date.now()}`,
+                            type: 'custom',
+                            label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+                            value: value.trim()
+                        })
+                        newHighlights.add(key)
+                    }
+                })
+            }
+
             setHighlightedFields(newHighlights)
             setTimeout(() => setHighlightedFields(new Set()), 2500)
 
