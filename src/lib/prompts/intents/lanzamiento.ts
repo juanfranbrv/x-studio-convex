@@ -6,7 +6,7 @@
  * Genera anticipación y misterio antes del lanzamiento.
  */
 
-import type { IntentRequiredField } from '@/lib/creation-flow-types'
+import type { IntentRequiredField, LayoutOption } from '@/lib/creation-flow-types'
 
 export const LANZAMIENTO_EXTENDED_DESCRIPTION = `
 Para teasers, countdowns, reveals y product drops.
@@ -40,279 +40,369 @@ export const LANZAMIENTO_REQUIRED_FIELDS: IntentRequiredField[] = [
     }
 ]
 
-// 1. COUNTDOWN - Timer Display
-export const LANZAMIENTO_COUNTDOWN_PROMPT = `
-<structural_instruction>
-    <composition_type>Countdown Timer</composition_type>
-    <visual_hierarchy>
-        <primary>Massive countdown numbers (03:00, 10 DAYS) dominating center</primary>
-        <secondary>Product silhouette or teaser glimpse in mysterious background</secondary>
-        <tertiary>Release date and "Notify Me" CTA at bottom</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_header>"Coming Soon" teaser text at top</zone_header>
-        <zone_timer>THE NUMBERS as hero element in center</zone_timer>
-        <zone_cta>Date and notification button at bottom</zone_cta>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Digital glitch, neon glow, or metallic 3D render</texture>
-        <lighting>Cinematic backlighting, rim light on numbers</lighting>
-        <palette>Dark mode with neon accents (cyan, magenta) or gold/black</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Cluttered background, small numbers, fully visible product</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+export const LANZAMIENTO_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
+    // 0. LIBRE
+    {
+        id: 'lanzamiento-free',
+        name: 'Libre',
+        description: 'Sin indicación',
+        svgIcon: 'Sparkles',
+        textZone: 'center',
+        promptInstruction: 'Natural composition without structural constraints.',
+        structuralPrompt: '',
+    },
+    // 1. COUNTDOWN - Timer Display
+    {
+        id: 'lanzamiento-countdown',
+        name: 'Cuenta',
+        description: 'Timer 03:00',
+        svgIcon: 'Timer',
+        textZone: 'center',
+        promptInstruction: 'Massive countdown timer digits.',
+        structuralPrompt: `
+## Composición: Countdown Timer
 
-// 2. CORTINA - Reveal with Cloth/Smoke
-export const LANZAMIENTO_CORTINA_PROMPT = `
-<structural_instruction>
-    <composition_type>Product Reveal Curtain</composition_type>
-    <visual_hierarchy>
-        <primary>Object partially covered by silk cloth or emerging from dense smoke</primary>
-        <secondary>Dramatic shaft of light revealing a specific detail</secondary>
-        <tertiary>Minimal "Unveiling..." text floating in negative space</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_mystery>Center-weighted mysterious covered object</zone_mystery>
-        <zone_reveal>Partially visible product detail</zone_reveal>
-        <zone_text>Subtle text overlay</zone_text>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Velvet, silk, smoke, shadows</texture>
-        <lighting>Spotlight, chiaroscuro, high contrast drama</lighting>
-        <palette>Monochrome with one accent color, luxury darks</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Full product visibility, flat lighting, bright cheerful colors</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Temporizador de cuenta atrás.
 
-// 3. SILUETA - Backlit Silhouette
-export const LANZAMIENTO_SILUETA_PROMPT = `
-<structural_instruction>
-    <composition_type>Silhouette Teaser</composition_type>
-    <visual_hierarchy>
-        <primary>Strong backlit silhouette of the new product/feature</primary>
-        <secondary>Glowing rim light defining the shape</secondary>
-        <tertiary>Bold headline text overlay centered</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_silhouette>Central dark shape with glowing edge</zone_silhouette>
-        <zone_text>Typography interweaving with the shape</zone_text>
-        <zone_glow>Atmospheric light behind</zone_glow>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Atmospheric fog, gradients, sleek mystery</texture>
-        <lighting>Strong backlighting, volumetric light rays</lighting>
-        <palette>Deep blues, purples, or stark black and white</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Frontal flat lighting, visible details, plain white background</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía Visual
+1. **Principal:** Números de cuenta regresiva masivos (03:00, 10 DIAS) dominando el centro
+2. **Secundario:** Silueta de producto o vistazo teaser en fondo misterioso
+3. **Terciario:** Fecha de lanzamiento y CTA "Notificarme" abajo
 
-// 4. GLITCH - Tech Digital
-export const LANZAMIENTO_GLITCH_PROMPT = `
-<structural_instruction>
-    <composition_type>Tech Glitch Reveal</composition_type>
-    <visual_hierarchy>
-        <primary>Product image with digital glitch effect or pixel sorting</primary>
-        <secondary>Cyberpunk UI elements, loading bars, data streams</secondary>
-        <tertiary>Monospaced typography "LOADING..." or "System Update"</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_distortion>Glitched visual field</zone_distortion>
-        <zone_ui>Loading bar or progress indicator</zone_ui>
-        <zone_text>Clear tech text layer</zone_text>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Scanlines, pixels, chromatic aberration</texture>
-        <lighting>Neon screens, HUD glow</lighting>
-        <palette>Cyberpunk, matrix green, synthetic digital colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Organic shapes, vintage style, soft lighting</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución
+- Texto teaser "Próximamente" arriba
+- LOS NÚMEROS como elemento héroe en el centro
+- Fecha y botón de notificación abajo
 
-// 5. RASGADO - Torn Paper Reveal
-export const LANZAMIENTO_RASGADO_PROMPT = `
-<structural_instruction>
-    <composition_type>Torn Paper Reveal</composition_type>
-    <visual_hierarchy>
-        <primary>Layer of paper/texture ripped open in the center</primary>
-        <secondary>New product visible INSIDE the tear</secondary>
-        <tertiary>"Secret" or old version text on outer paper layer</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_outer>Textured paper surface as mask</zone_outer>
-        <zone_tear>The ripped opening hole</zone_tear>
-        <zone_inner>The reveal inside the tear</zone_inner>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Paper fiber, cardboard, realistic shadows on edges</texture>
-        <lighting>Hard shadows from paper edge depth</lighting>
-        <palette>Neutral outer paper, vibrant inner reveal</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Flat digital look, fake-looking shadows, no depth</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Estilo
+- **Textura:** Glitch digital, brillo neón o render metálico 3D
+- **Iluminación:** Contraluz cinemático, luz de borde en números
+- **Paleta:** Modo oscuro con acentos neón (cian, magenta) u oro/negro
 
-// 6. CALENDARIO - Save the Date
-export const LANZAMIENTO_CALENDARIO_PROMPT = `
-<structural_instruction>
-    <composition_type>Save The Date Calendar</composition_type>
-    <visual_hierarchy>
-        <primary>Stylized 3D calendar page or date block floating</primary>
-        <secondary>Confetti or particles frozen around it</secondary>
-        <tertiary>Event name or product title below the date</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_date>Floating date element as hero</zone_date>
-        <zone_celebration>Particles and atmosphere around</zone_celebration>
-        <zone_title>Event or product name below</zone_title>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Matte plastic, soft shadows, airy feeling</texture>
-        <lighting>Softbox studio lighting, pastel tones</lighting>
-        <palette>Brand colors, high key brightness</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Traditional grid calendar, office vibes, boring</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar
+Fondo desordenado, números pequeños, producto totalmente visible.
+`.trim(),
+    },
+    // 2. CORTINA - Reveal with Cloth/Smoke
+    {
+        id: 'lanzamiento-reveal',
+        name: 'Revelación',
+        description: 'Cortina/Humo',
+        svgIcon: 'Eye',
+        textZone: 'center',
+        promptInstruction: 'Product emerging from smoke or curtain.',
+        structuralPrompt: `
+## Composición: Product Reveal Curtain
 
-// 7. APERTURA - Box Opening
-export const LANZAMIENTO_APERTURA_PROMPT = `
-<structural_instruction>
-    <composition_type>Mystery Box Opening</composition_type>
-    <visual_hierarchy>
-        <primary>Partially open box with light glowing from inside</primary>
-        <secondary>Hands lifting the lid or box in mid-open state</secondary>
-        <tertiary>"What's Inside?" or reveal teaser text</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_box>Premium packaging, partially open</zone_box>
-        <zone_glow>Light source emanating from within</zone_glow>
-        <zone_mystery>Hidden contents, not yet visible</zone_mystery>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Premium packaging, unboxing experience</texture>
-        <lighting>Dramatic inner glow, spotlight on box</lighting>
-        <palette>Dark background, golden light from box</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Visible contents, cheap packaging, flat lighting</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Cortina de revelación de producto.
 
-// 8. BLUR - Gradual Focus
-export const LANZAMIENTO_BLUR_PROMPT = `
-<structural_instruction>
-    <composition_type>Blurred Mystery Reveal</composition_type>
-    <visual_hierarchy>
-        <primary>Heavily blurred product image suggesting shape but hiding detail</primary>
-        <secondary>"Coming into focus soon" or sharpness metaphor</secondary>
-        <tertiary>Date or countdown when full clarity arrives</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_blur>Central blurred product form</zone_blur>
-        <zone_hint>Slight hints of color or shape</zone_hint>
-        <zone_date>When clarity/reveal happens</zone_date>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Heavy gaussian blur, depth of field effect</texture>
-        <lighting>Suggests studio lighting through blur</lighting>
-        <palette>Muted by blur, hints of product colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Recognizable product, too much clarity, no mystery</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía Visual
+1. **Principal:** Objeto parcialmente cubierto por tela de seda o emergiendo de humo denso
+2. **Secundario:** Rayo de luz dramático revelando un detalle específico
+3. **Terciario:** Texto minimalista "Revelando..." flotando en espacio negativo
 
-// 9. FRAGMENTADO - Puzzle Pieces
-export const LANZAMIENTO_FRAGMENTADO_PROMPT = `
-<structural_instruction>
-    <composition_type>Puzzle Piece Reveal</composition_type>
-    <visual_hierarchy>
-        <primary>Product image fragmented into jigsaw or shattered pieces</primary>
-        <secondary>Some pieces assembled, others floating into place</secondary>
-        <tertiary>"Piece by piece" or assembly teaser messaging</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_assembled>Partially visible completed sections</zone_assembled>
-        <zone_floating>Missing pieces moving toward center</zone_floating>
-        <zone_message>Coming together teaser text</zone_message>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>3D puzzle pieces, shattered fragments</texture>
-        <lighting>Studio lighting on complete sections</lighting>
-        <palette>Product colors emerging from neutral fragments</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Complete image visible, flat 2D puzzle, no motion feel</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución
+- Objeto misterioso cubierto en el centro
+- Detalle de producto parcialmente visible
+- Superposición de texto sutil
 
-// 10. ESPIRAL - Vortex Energy
-export const LANZAMIENTO_ESPIRAL_PROMPT = `
-<structural_instruction>
-    <composition_type>Energy Vortex Emergence</composition_type>
-    <visual_hierarchy>
-        <primary>Spiral or vortex of energy converging on center</primary>
-        <secondary>Product or logo emerging from the energy center</secondary>
-        <tertiary>"Something powerful is coming" messaging</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_vortex>Spinning energy spiral filling frame</zone_vortex>
-        <zone_center>Emergence point for product/reveal</zone_center>
-        <zone_energy>Particles and light trails</zone_energy>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Particle effects, energy streams, cosmic</texture>
-        <lighting>Self-luminous energy, core glow</lighting>
-        <palette>Electric blues, purples, energy colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Static composition, no movement feel, boring center</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Estilo
+- **Textura:** Terciopelo, seda, humo, sombras
+- **Iluminación:** Foco, claroscuro, drama de alto contraste
+- **Paleta:** Monocromo con un color de acento, oscuros de lujo
 
-// 11. MISTERIO - Question Mark Focus
-export const LANZAMIENTO_MISTERIO_PROMPT = `
-<structural_instruction>
-    <composition_type>Mystery Question</composition_type>
-    <visual_hierarchy>
-        <primary>Large stylized question mark (?) as main visual</primary>
-        <secondary>Teaser text hints about what's coming</secondary>
-        <tertiary>Date or "Find out soon" call to action</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_question>Large ? symbol as hero</zone_question>
-        <zone_hints>Subtle clues or teaser text</zone_hints>
-        <zone_date>Reveal date or CTA</zone_date>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Premium 3D ? mark, or neon typography</texture>
-        <lighting>Dramatic spotlight on the question mark</lighting>
-        <palette>Dark mystery backdrop, glowing question</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Revealed answers, too many clues, boring typography</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar
+Visibilidad total del producto, iluminación plana, colores alegres brillantes.
+`.trim(),
+    },
+    // 3. SILUETA - Backlit Silhouette
+    {
+        id: 'lanzamiento-silhouette',
+        name: 'Silueta',
+        description: 'Misterio Backlit',
+        svgIcon: 'Moon',
+        textZone: 'center',
+        promptInstruction: 'Backlit silhouette of the product.',
+        structuralPrompt: `
+## Composición: Silhouette Teaser
+
+**Estructura:** Teaser de silueta.
+
+### Jerarquía Visual
+1. **Principal:** Fuerte silueta a contraluz del nuevo producto/feature
+2. **Secundario:** Luz de borde brillante definiendo la forma
+3. **Terciario:** Título audaz superpuesto centrado
+
+### Distribución
+- Forma oscura central con borde brillante
+- Tipografía entrelazada con la forma
+- Luz atmosférica detrás
+
+### Estilo
+- **Textura:** Niebla atmosférica, degradados, misterio elegante
+- **Iluminación:** Fuerte contraluz, rayos de luz volumétricos
+- **Paleta:** Azules profundos, morados o blanco y negro crudo
+
+### Evitar
+Iluminación plana frontal, detalles visibles, fondo blanco liso.
+`.trim(),
+    },
+    // 4. GLITCH - Tech Digital
+    {
+        id: 'lanzamiento-glitch',
+        name: 'Glitch Tech',
+        description: 'Distorsión Digital',
+        svgIcon: 'Activity',
+        textZone: 'center',
+        promptInstruction: 'Cyberpunk glitch style reveal.',
+        structuralPrompt: `
+## Composición: Tech Glitch Reveal
+
+**Estructura:** Revelación glitch tecnológico.
+
+### Jerarquía Visual
+1. **Principal:** Imagen de producto con efecto glitch digital o pixel sorting
+2. **Secundario:** Elementos UI cyberpunk, barras de carga, flujos de datos
+3. **Terciario:** Tipografía monoespaciada "LOADING..." o "Actualización Sistema"
+
+### Distribución
+- Campo visual con glitch
+- Barra de carga o indicador de progreso
+- Capa de texto tech clara
+
+### Estilo
+- **Textura:** Scanlines, píxeles, aberración cromática
+- **Iluminación:** Pantallas neón, brillo HUD
+- **Paleta:** Cyberpunk, verde matrix, colores digitales sintéticos
+
+### Evitar
+Formas orgánicas, estilo vintage, iluminación suave.
+`.trim(),
+    },
+    // 5. RASGADO - Torn Paper Reveal
+    {
+        id: 'lanzamiento-torn',
+        name: 'Rasgado',
+        description: 'Teaser',
+        svgIcon: 'FileMinus',
+        textZone: 'center',
+        promptInstruction: 'Ripped paper revealing content inside.',
+        structuralPrompt: `
+## Composición: Torn Paper Reveal
+
+**Estructura:** Revelación papel rasgado.
+
+### Jerarquía Visual
+1. **Principal:** Capa de papel/textura rasgada abierta en el centro
+2. **Secundario:** Nuevo producto visible DENTRO de la rasgadura
+3. **Terciario:** Texto "Secreto" o versión antigua en capa de papel exterior
+
+### Distribución
+- Superficie de papel texturizado como máscara
+- Agujero rasgado
+- La revelación dentro de la rasgadura
+
+### Estilo
+- **Textura:** Fibra de papel, cartón, sombras realistas en bordes
+- **Iluminación:** Sombras duras de profundidad de borde de papel
+- **Paleta:** Papel exterior neutral, revelación interior vibrante
+
+### Evitar
+Look digital plano, sombras falsas, sin profundidad.
+`.trim(),
+    },
+    // 6. CALENDARIO - Save the Date
+    {
+        id: 'lanzamiento-calendar',
+        name: 'Fecha',
+        description: 'Calendario 3D',
+        svgIcon: 'Calendar',
+        textZone: 'center',
+        promptInstruction: 'Floating 3D calendar page.',
+        structuralPrompt: `
+## Composición: Save The Date Calendar
+
+**Estructura:** Calendario Save The Date.
+
+### Jerarquía Visual
+1. **Principal:** Página de calendario 3D estilizada o bloque de fecha flotando
+2. **Secundario:** Confeti o partículas congeladas alrededor
+3. **Terciario:** Nombre de evento o título de producto debajo de la fecha
+
+### Distribución
+- Elemento de fecha flotante como héroe
+- Partículas y atmósfera alrededor
+- Nombre de evento o producto abajo
+
+### Estilo
+- **Textura:** Plástico mate, sombras suaves, sensación aireada
+- **Iluminación:** Iluminación de estudio softbox, tonos pastel
+- **Paleta:** Colores de marca, brillo high key
+
+### Evitar
+Calendario de cuadrícula tradicional, vibras de oficina, aburrido.
+`.trim(),
+    },
+    // 7. APERTURA - Box Opening
+    {
+        id: 'lanzamiento-apertura',
+        name: 'Apertura',
+        description: 'Unboxing',
+        svgIcon: 'PackageOpen',
+        textZone: 'center',
+        promptInstruction: 'Box partially opening with inner glow.',
+        structuralPrompt: `
+## Composición: Mystery Box Opening
+
+**Estructura:** Apertura de caja misteriosa.
+
+### Jerarquía Visual
+1. **Principal:** Caja parcialmente abierta con luz brillando desde dentro
+2. **Secundario:** Manos levantando la tapa o caja en estado semi-abierto
+3. **Terciario:** "¿Qué hay dentro?" o texto teaser de revelación
+
+### Distribución
+- Packaging premium, parcialmente abierto
+- Fuente de luz emanando desde dentro
+- Contenidos ocultos, aún no visibles
+
+### Estilo
+- **Textura:** Packaging premium, experiencia unboxing
+- **Iluminación:** Brillo interior dramático, foco en caja
+- **Paleta:** Fondo oscuro, luz dorada desde la caja
+
+### Evitar
+Contenidos visibles, packaging barato, iluminación plana.
+`.trim(),
+    },
+    // 8. BLUR - Gradual Focus
+    {
+        id: 'lanzamiento-blur',
+        name: 'Blur',
+        description: 'Desenfocado',
+        svgIcon: 'Cloud',
+        textZone: 'center',
+        promptInstruction: 'Heavily blurred object coming into focus.',
+        structuralPrompt: `
+## Composición: Blurred Mystery Reveal
+
+**Estructura:** Revelación misteriosa desenfocada.
+
+### Jerarquía Visual
+1. **Principal:** Imagen de producto muy desenfocada sugiriendo forma pero ocultando detalle
+2. **Secundario:** "Enfocando pronto" o metáfora de nitidez
+3. **Terciario:** Fecha o cuenta atrás para claridad total
+
+### Distribución
+- Forma de producto desenfocada central
+- Ligeras pistas de color o forma
+- Fecha de cuando ocurre la claridad/revelación
+
+### Estilo
+- **Textura:** Desenfoque gaussiano pesado, efecto profundidad de campo
+- **Iluminación:** Sugiere iluminación de estudio a través del desenfoque
+- **Paleta:** Apagada por el desenfoque, pistas de colores de producto
+
+### Evitar
+Producto reconocible, demasiada claridad, sin misterio.
+`.trim(),
+    },
+    // 9. FRAGMENTADO - Puzzle Pieces
+    {
+        id: 'lanzamiento-fragmentado',
+        name: 'Puzzle',
+        description: 'Piezas',
+        svgIcon: 'Puzzle',
+        textZone: 'center',
+        promptInstruction: 'Object fragmented into flying pieces.',
+        structuralPrompt: `
+## Composición: Puzzle Piece Reveal
+
+**Estructura:** Revelación pieza de puzzle.
+
+### Jerarquía Visual
+1. **Principal:** Imagen de producto fragmentada en piezas de rompecabezas o fragmentos rotos
+2. **Secundario:** Algunas piezas ensambladas, otras flotando hacia su lugar
+3. **Terciario:** "Pieza a pieza" o mensaje teaser de ensamblaje
+
+### Distribución
+- Secciones completadas parcialmente visibles
+- Piezas faltantes moviéndose hacia el centro
+- Texto teaser uniendo todo
+
+### Estilo
+- **Textura:** Piezas de puzzle 3D, fragmentos rotos
+- **Iluminación:** Iluminación de estudio en secciones completas
+- **Paleta:** Colores de producto emergiendo de fragmentos neutrales
+
+### Evitar
+Imagen completa visible, puzzle 2D plano, sin sensación de movimiento.
+`.trim(),
+    },
+    // 10. ESPIRAL - Vortex Energy
+    {
+        id: 'lanzamiento-espiral',
+        name: 'Vórtice',
+        description: 'Energía',
+        svgIcon: 'Tornado',
+        textZone: 'center',
+        promptInstruction: 'Energy vortex spiraling around center.',
+        structuralPrompt: `
+## Composición: Energy Vortex Emergence
+
+**Estructura:** Emergencia de vórtice de energía.
+
+### Jerarquía Visual
+1. **Principal:** Espiral o vórtice de energía convergiendo en el centro
+2. **Secundario:** Producto o logo emergiendo del centro de energía
+3. **Terciario:** Mensaje "Algo poderoso viene"
+
+### Distribución
+- Espiral de energía giratoria llenando el encuadre
+- Punto de emergencia para producto/revelación
+- Partículas y estelas de luz
+
+### Estilo
+- **Textura:** Efectos de partículas, corrientes de energía, cósmico
+- **Iluminación:** Energía auto-luminosa, brillo central
+- **Paleta:** Azules eléctricos, morados, colores de energía
+
+### Evitar
+Composición estática, sin sensación de movimiento, centro aburrido.
+`.trim(),
+    },
+    // 11. MISTERIO - Question Mark Focus
+    {
+        id: 'lanzamiento-misterio',
+        name: 'Misterio',
+        description: 'Incógnita',
+        svgIcon: 'HelpCircle',
+        textZone: 'center',
+        promptInstruction: 'Giant question mark as hero.',
+        structuralPrompt: `
+## Composición: Mystery Question
+
+**Estructura:** Pregunta misteriosa.
+
+### Jerarquía Visual
+1. **Principal:** Gran signo de interrogación (?) estilizado como visual principal
+2. **Secundario:** Texto teaser pistas sobre lo que viene
+3. **Terciario:** Fecha o llamada a la acción "Descúbrelo pronto"
+
+### Distribución
+- Símbolo ? grande como héroe
+- Pistas sutiles o texto teaser
+- Fecha de revelación o CTA
+
+### Estilo
+- **Textura:** Signo ? 3D premium, o tipografía neón
+- **Iluminación:** Foco dramático sobre el signo de interrogación
+- **Paleta:** Fondo de misterio oscuro, pregunta brillante
+
+### Evitar
+Respuestas reveladas, demasiadas pistas, tipografía aburrida.
+`.trim(),
+    },
+]
 
 export const LANZAMIENTO_DESCRIPTION = 'Teasers, countdowns y reveals. 11 composiciones para generar anticipación.'

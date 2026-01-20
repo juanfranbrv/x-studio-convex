@@ -6,7 +6,7 @@
  * Facilita la lectura rápida de varios puntos.
  */
 
-import type { IntentRequiredField } from '@/lib/creation-flow-types'
+import type { IntentRequiredField, LayoutOption } from '@/lib/creation-flow-types'
 
 export const LISTA_EXTENDED_DESCRIPTION = `
 Diseño estructurado para enumeraciones, check-lists o rankings. 
@@ -43,277 +43,402 @@ export const LISTA_REQUIRED_FIELDS: IntentRequiredField[] = [
 
 // 1. CHECKLIST - Productivity UI
 export const LISTA_CHECKLIST_PROMPT = `
-<structural_instruction>
-    <composition_type>Interactive Checklist UI</composition_type>
-    <visual_hierarchy>
-        <primary>Vertical stack of items with checkbox icons (circles/squares) on left</primary>
-        <secondary>Mixed check states showing progress (some checked, some pending)</secondary>
-        <tertiary>Motivational header title at top</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_header>Title and context at top</zone_header>
-        <zone_list>Vertical stack of checklist items</zone_list>
-        <zone_progress>Optional progress indicator at bottom</zone_progress>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Productivity app, task manager aesthetic</texture>
-        <lighting>Clean UI lighting, no drama</lighting>
-        <palette>Clean whites, greens for completion, brand accents</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Cramped items, inconsistent spacing, unclear states</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Interactive Checklist UI
+
+# Visual Hierarchy
+- **Primary**: Vertical stack of items with checkbox icons (circles/squares) on left
+- **Secondary**: Mixed check states showing progress (some checked, some pending)
+- **Tertiary**: Motivational header title at top
+
+# Zoning Guide
+- **Zone Header**: Title and context at top
+- **Zone List**: Vertical stack of checklist items
+- **Zone Progress**: Optional progress indicator at bottom
+
+# Style Modifiers
+- **Texture**: Productivity app, task manager aesthetic
+- **Lighting**: Clean UI lighting, no drama
+- **Palette**: Clean whites, greens for completion, brand accents
+
+# Negative Constraints
+- **Avoid**: Cramped items, inconsistent spacing, unclear states
+`.trim()
 
 // 2. RANKING - Leaderboard
 export const LISTA_RANKING_PROMPT = `
-<structural_instruction>
-    <composition_type>Top Ranking Leaderboard</composition_type>
-    <visual_hierarchy>
-        <primary>#1 item large and highlighted with crown/gold treatment</primary>
-        <secondary>#2-#5 items progressively smaller below</secondary>
-        <tertiary>Prominent rank numbers (1, 2, 3) as visual anchors</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_winner>Top/center for #1 with maximum emphasis</zone_winner>
-        <zone_runner_ups>Stacked list for remaining ranks</zone_runner_ups>
-        <zone_badges>Medal or ranking badge indicators</zone_badges>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Leaderboard, competition, trophy shelf aesthetic</texture>
-        <lighting>Spotlight on #1, progressive dimming below</lighting>
-        <palette>Gold #1, Silver #2, Bronze #3, then neutral</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Equal sizing for all ranks, buried winner, no hierarchy</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Top Ranking Leaderboard
+
+# Visual Hierarchy
+- **Primary**: #1 item large and highlighted with crown/gold treatment
+- **Secondary**: #2-#5 items progressively smaller below
+- **Tertiary**: Prominent rank numbers (1, 2, 3) as visual anchors
+
+# Zoning Guide
+- **Zone Winner**: Top/center for #1 with maximum emphasis
+- **Zone Runner Ups**: Stacked list for remaining ranks
+- **Zone Badges**: Medal or ranking badge indicators
+
+# Style Modifiers
+- **Texture**: Leaderboard, competition, trophy shelf aesthetic
+- **Lighting**: Spotlight on #1, progressive dimming below
+- **Palette**: Gold #1, Silver #2, Bronze #3, then neutral
+
+# Negative Constraints
+- **Avoid**: Equal sizing for all ranks, buried winner, no hierarchy
+`.trim()
 
 // 3. PASOS - Step by Step Path
 export const LISTA_PASOS_PROMPT = `
-<structural_instruction>
-    <composition_type>Step-by-Step Journey Path</composition_type>
-    <visual_hierarchy>
-        <primary>Winding path or connected line between numbered steps</primary>
-        <secondary>Numbered nodes (1 → 2 → 3) along the path</secondary>
-        <tertiary>Icons or brief text at each waypoint</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_path>Visual journey line connecting all steps</zone_path>
-        <zone_nodes>Step markers at each junction</zone_nodes>
-        <zone_labels>Brief text or icons at each step</zone_labels>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Roadmap, journey map, game board aesthetic</texture>
-        <lighting>Clear, instructional clarity</lighting>
-        <palette>Progressive color scheme along the path</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unclear direction, disconnected steps, crowded text</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Step-by-Step Journey Path
+
+# Visual Hierarchy
+- **Primary**: Winding path or connected line between numbered steps
+- **Secondary**: Numbered nodes (1 → 2 → 3) along the path
+- **Tertiary**: Icons or brief text at each waypoint
+
+# Zoning Guide
+- **Zone Path**: Visual journey line connecting all steps
+- **Zone Nodes**: Step markers at each junction
+- **Zone Labels**: Brief text or icons at each step
+
+# Style Modifiers
+- **Texture**: Roadmap, journey map, game board aesthetic
+- **Lighting**: Clear, instructional clarity
+- **Palette**: Progressive color scheme along the path
+
+# Negative Constraints
+- **Avoid**: Unclear direction, disconnected steps, crowded text
+`.trim()
 
 // 4. REJILLA - Grid Collection
 export const LISTA_REJILLA_PROMPT = `
-<structural_instruction>
-    <composition_type>Grid Card Collection</composition_type>
-    <visual_hierarchy>
-        <primary>2x2 or 2x3 grid of uniform cards</primary>
-        <secondary>Each card contains icon/image and short text key</secondary>
-        <tertiary>Consistent shape repetition creating visual rhythm</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_grid>Evenly distributed card matrix</zone_grid>
-        <zone_cards>Individual cells with icon + text</zone_cards>
-        <zone_header>Optional title spanning the grid top</zone_header>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Collection catalog, resource library aesthetic</texture>
-        <lighting>Even, consistent across all cards</lighting>
-        <palette>Unified color system across all cards</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Inconsistent card sizes, broken grid, varying styles</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Grid Card Collection
+
+# Visual Hierarchy
+- **Primary**: 2x2 or 2x3 grid of uniform cards
+- **Secondary**: Each card contains icon/image and short text key
+- **Tertiary**: Consistent shape repetition creating visual rhythm
+
+# Zoning Guide
+- **Zone Grid**: Evenly distributed card matrix
+- **Zone Cards**: Individual cells with icon + text
+- **Zone Header**: Optional title spanning the grid top
+
+# Style Modifiers
+- **Texture**: Collection catalog, resource library aesthetic
+- **Lighting**: Even, consistent across all cards
+- **Palette**: Unified color system across all cards
+
+# Negative Constraints
+- **Avoid**: Inconsistent card sizes, broken grid, varying styles
+`.trim()
 
 // 5. TIMELINE - Vertical History
 export const LISTA_TIMELINE_PROMPT = `
-<structural_instruction>
-    <composition_type>Vertical Timeline</composition_type>
-    <visual_hierarchy>
-        <primary>Central or left-aligned vertical line spine</primary>
-        <secondary>Nodes/dots on the line for each event or item</secondary>
-        <tertiary>Text blocks alternating or aligned to one side</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_spine>Vertical timeline line</zone_spine>
-        <zone_nodes>Event markers along the spine</zone_nodes>
-        <zone_content>Text blocks at each node</zone_content>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>History, schedule, progression visualization</texture>
-        <lighting>Clean, chronological clarity</lighting>
-        <palette>Progressive colors or consistent themed palette</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Confusing chronology, disconnected nodes, crowded labels</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Vertical Timeline
+
+# Visual Hierarchy
+- **Primary**: Central or left-aligned vertical line spine
+- **Secondary**: Nodes/dots on the line for each event or item
+- **Tertiary**: Text blocks alternating or aligned to one side
+
+# Zoning Guide
+- **Zone Spine**: Vertical timeline line
+- **Zone Nodes**: Event markers along the spine
+- **Zone Content**: Text blocks at each node
+
+# Style Modifiers
+- **Texture**: History, schedule, progression visualization
+- **Lighting**: Clean, chronological clarity
+- **Palette**: Progressive colors or consistent themed palette
+
+# Negative Constraints
+- **Avoid**: Confusing chronology, disconnected nodes, crowded labels
+`.trim()
 
 // 6. NOTA - Handwritten Note
 export const LISTA_NOTA_PROMPT = `
-<structural_instruction>
-    <composition_type>Handwritten Note Style</composition_type>
-    <visual_hierarchy>
-        <primary>Paper texture background with notebook lines or sticky note shape</primary>
-        <secondary>Handwritten-style list with organic alignment</secondary>
-        <tertiary>Doodles, arrows, or underlines as personal touches</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_paper>Textured paper or sticky note surface</zone_paper>
-        <zone_list>Items in list form with handwritten feel</zone_list>
-        <zone_doodles>Organic arrows, circles, underlines</zone_doodles>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Handdrawn, organic, personal, sketch feel</texture>
-        <lighting>Soft, paper-like, natural</lighting>
-        <palette>Paper tones, pen/marker colors (blue, black, red)</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Digital perfection, clinical alignment, cold typography</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Handwritten Note Style
+
+# Visual Hierarchy
+- **Primary**: Paper texture background with notebook lines or sticky note shape
+- **Secondary**: Handwritten-style list with organic alignment
+- **Tertiary**: Doodles, arrows, or underlines as personal touches
+
+# Zoning Guide
+- **Zone Paper**: Textured paper or sticky note surface
+- **Zone List**: Items in list form with handwritten feel
+- **Zone Doodles**: Organic arrows, circles, underlines
+
+# Style Modifiers
+- **Texture**: Handdrawn, organic, personal, sketch feel
+- **Lighting**: Soft, paper-like, natural
+- **Palette**: Paper tones, pen/marker colors (blue, black, red)
+
+# Negative Constraints
+- **Avoid**: Digital perfection, clinical alignment, cold typography
+`.trim()
 
 // 7. BULLETS - Clean Bullet Points
 export const LISTA_BULLETS_PROMPT = `
-<structural_instruction>
-    <composition_type>Clean Bullet Point List</composition_type>
-    <visual_hierarchy>
-        <primary>Clear bullet markers (dots, dashes, or icons) preceding each item</primary>
-        <secondary>Well-spaced text entries in readable hierarchy</secondary>
-        <tertiary>Headline title establishing the list topic</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_title>Header or headline at top</zone_title>
-        <zone_bullets>Left-aligned bullet column</zone_bullets>
-        <zone_text>Text content for each bullet</zone_text>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Clean, professional, presentation-ready</texture>
-        <lighting>Even, document-style clarity</lighting>
-        <palette>Minimal colors, high contrast text</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Crowded text, inconsistent spacing, hard to scan</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Clean Bullet Point List
+
+# Visual Hierarchy
+- **Primary**: Clear bullet markers (dots, dashes, or icons) preceding each item
+- **Secondary**: Well-spaced text entries in readable hierarchy
+- **Tertiary**: Headline title establishing the list topic
+
+# Zoning Guide
+- **Zone Title**: Header or headline at top
+- **Zone Bullets**: Left-aligned bullet column
+- **Zone Text**: Text content for each bullet
+
+# Style Modifiers
+- **Texture**: Clean, professional, presentation-ready
+- **Lighting**: Even, document-style clarity
+- **Palette**: Minimal colors, high contrast text
+
+# Negative Constraints
+- **Avoid**: Crowded text, inconsistent spacing, hard to scan
+`.trim()
 
 // 8. ICONS - Icon-Led List
 export const LISTA_ICONOS_PROMPT = `
-<structural_instruction>
-    <composition_type>Icon-Led Visual List</composition_type>
-    <visual_hierarchy>
-        <primary>Large, expressive icons representing each list item</primary>
-        <secondary>Brief text labels beside or below each icon</secondary>
-        <tertiary>Consistent icon style creating visual unity</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_icons>Prominent icon display (horizontal or vertical)</zone_icons>
-        <zone_labels>Text identifiers for each icon</zone_labels>
-        <zone_header>Title or category at top</zone_header>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Bold iconography, visual shorthand</texture>
-        <lighting>Clean, flat icon rendering</lighting>
-        <palette>Colorful icons or monochrome with brand accent</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Text-heavy, small icons, inconsistent icon styles</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Icon-Led Visual List
+
+# Visual Hierarchy
+- **Primary**: Large, expressive icons representing each list item
+- **Secondary**: Brief text labels beside or below each icon
+- **Tertiary**: Consistent icon style creating visual unity
+
+# Zoning Guide
+- **Zone Icons**: Prominent icon display (horizontal or vertical)
+- **Zone Labels**: Text identifiers for each icon
+- **Zone Header**: Title or category at top
+
+# Style Modifiers
+- **Texture**: Bold iconography, visual shorthand
+- **Lighting**: Clean, flat icon rendering
+- **Palette**: Colorful icons or monochrome with brand accent
+
+# Negative Constraints
+- **Avoid**: Text-heavy, small icons, inconsistent icon styles
+`.trim()
 
 // 9. CAROUSEL - Swipeable Cards
 export const LISTA_CAROUSEL_PROMPT = `
-<structural_instruction>
-    <composition_type>Carousel Swipe Preview</composition_type>
-    <visual_hierarchy>
-        <primary>Main card in focus with peeking cards on sides</primary>
-        <secondary>Page indicator dots at bottom</secondary>
-        <tertiary>"Swipe" or slide count indicator</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_main>Central visible card (current item)</zone_main>
-        <zone_peek>Partial edges of adjacent cards</zone_peek>
-        <zone_nav>Pagination dots or slide counter</zone_nav>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Mobile-native, swipeable, Stories/carousel aesthetic</texture>
-        <lighting>Spotlight on main, dimmed on sides</lighting>
-        <palette>Consistent card design, varying content</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Static single card, no carousel suggestion, equal visibility</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Carousel Swipe Preview
+
+# Visual Hierarchy
+- **Primary**: Main card in focus with peeking cards on sides
+- **Secondary**: Page indicator dots at bottom
+- **Tertiary**: "Swipe" or slide count indicator
+
+# Zoning Guide
+- **Zone Main**: Central visible card (current item)
+- **Zone Peek**: Partial edges of adjacent cards
+- **Zone Nav**: Pagination dots or slide counter
+
+# Style Modifiers
+- **Texture**: Mobile-native, swipeable, Stories/carousel aesthetic
+- **Lighting**: Spotlight on main, dimmed on sides
+- **Palette**: Consistent card design, varying content
+
+# Negative Constraints
+- **Avoid**: Static single card, no carousel suggestion, equal visibility
+`.trim()
 
 // 10. NUMERADO - Number-Led List
 export const LISTA_NUMERADO_PROMPT = `
-<structural_instruction>
-    <composition_type>Bold Numbered List</composition_type>
-    <visual_hierarchy>
-        <primary>Large circled or stylized numbers (1, 2, 3, 4, 5) as visual anchors</primary>
-        <secondary>Item text aligned to each number</secondary>
-        <tertiary>Headline establishing what's being listed</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_numbers>Prominent number column or circles</zone_numbers>
-        <zone_items>Text content for each numbered item</zone_items>
-        <zone_title>Header explaining the list</zone_title>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Bold, magazine, listicle aesthetic</texture>
-        <lighting>High contrast on numbers</lighting>
-        <palette>Brand colors on numbers, neutral on text</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Small numbers, lost hierarchy, buried ranking</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Bold Numbered List
+
+# Visual Hierarchy
+- **Primary**: Large circled or stylized numbers (1, 2, 3, 4, 5) as visual anchors
+- **Secondary**: Item text aligned to each number
+- **Tertiary**: Headline establishing what's being listed
+
+# Zoning Guide
+- **Zone Numbers**: Prominent number column or circles
+- **Zone Items**: Text content for each numbered item
+- **Zone Title**: Header explaining the list
+
+# Style Modifiers
+- **Texture**: Bold, magazine, listicle aesthetic
+- **Lighting**: High contrast on numbers
+- **Palette**: Brand colors on numbers, neutral on text
+
+# Negative Constraints
+- **Avoid**: Small numbers, lost hierarchy, buried ranking
+`.trim()
 
 // 11. PROS_CONS - Split Comparison
 export const LISTA_PROS_CONS_PROMPT = `
-<structural_instruction>
-    <composition_type>Pros and Cons Split List</composition_type>
-    <visual_hierarchy>
-        <primary>Two-column split: green pros/benefits vs red cons/drawbacks</primary>
-        <secondary>Checkmarks and X marks as visual indicators</secondary>
-        <tertiary>Central dividing line or "VS" element</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_pros>Left column with positive items (green/check)</zone_pros>
-        <zone_cons>Right column with negative items (red/X)</zone_cons>
-        <zone_divider>Central separator element</zone_divider>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Decision-making, comparison chart aesthetic</texture>
-        <lighting>Even across both columns</lighting>
-        <palette>Green for pros, red for cons, neutral divider</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unbalanced columns, unclear which is positive/negative, missing icons</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Composition Type
+Pros and Cons Split List
 
-export const LISTA_DESCRIPTION = 'Diseño para enumeraciones, rankings, tips y notas. 11 composiciones estructuradas.'
+# Visual Hierarchy
+- **Primary**: Two-column split: green pros/benefits vs red cons/drawbacks
+- **Secondary**: Checkmarks and X marks as visual indicators
+- **Tertiary**: Central dividing line or "VS" element
+
+# Zoning Guide
+- **Zone Pros**: Left column with positive items (green/check)
+- **Zone Cons**: Right column with negative items (red/X)
+- **Zone Divider**: Central separator element
+
+# Style Modifiers
+- **Texture**: Decision-making, comparison chart aesthetic
+- **Lighting**: Even across both columns
+- **Palette**: Green for pros, red for cons, neutral divider
+
+# Negative Constraints
+- **Avoid**: Unbalanced columns, unclear which is positive/negative, missing icons
+`.trim()
+
+// 12. AGENDA - Schedule List
+export const LISTA_AGENDA_PROMPT = `
+# Composition Type
+Daily Agenda Schedule
+
+# Visual Hierarchy
+- **Primary**: Time slots on the left (e.g., 09:00, 10:00)
+- **Secondary**: Event details aligned with time slots
+- **Tertiary**: Current time marker or active slot highlight
+
+# Zoning Guide
+- **Zone Time**: Column for time indicators
+- **Zone Event**: Column for event descriptions and locations
+- **Zone Current**: Visual indicator for "now" or next event
+
+# Style Modifiers
+- **Texture**: Calendar app, digital planner, organizational
+- **Lighting**: Clean, functional, high legibility
+- **Palette**: Professional neutrals, color-coded categories
+
+# Negative Constraints
+- **Avoid**: Cluttered text, unclear time alignment, missing hierarchy
+`.trim()
+
+export const LISTA_DESCRIPTION = 'Diseño para enumeraciones, rankings, tips y notas. 12 composiciones estructuradas.'
+
+export const LISTA_LAYOUTS: LayoutOption[] = [
+    {
+        id: 'checklist',
+        name: 'Checklist Interactivo',
+        description: 'Lista de tareas con estados',
+        svgIcon: 'List',
+        textZone: 'left',
+        promptInstruction: LISTA_CHECKLIST_PROMPT,
+        structuralPrompt: LISTA_CHECKLIST_PROMPT
+    },
+    {
+        id: 'ranking',
+        name: 'Ranking Top',
+        description: 'Liderazgo y ganadores',
+        svgIcon: 'Trophy',
+        textZone: 'center',
+        promptInstruction: LISTA_RANKING_PROMPT,
+        structuralPrompt: LISTA_RANKING_PROMPT
+    },
+    {
+        id: 'pasos',
+        name: 'Pasos a Seguir',
+        description: 'Camino paso a paso',
+        svgIcon: 'Footprints',
+        textZone: 'center',
+        promptInstruction: LISTA_PASOS_PROMPT,
+        structuralPrompt: LISTA_PASOS_PROMPT
+    },
+    {
+        id: 'rejilla',
+        name: 'Colección Rejilla',
+        description: 'Tarjetas organizadas',
+        svgIcon: 'LayoutGrid',
+        textZone: 'center',
+        promptInstruction: LISTA_REJILLA_PROMPT,
+        structuralPrompt: LISTA_REJILLA_PROMPT
+    },
+    {
+        id: 'timeline',
+        name: 'Línea Temporal',
+        description: 'Eventos en el tiempo',
+        svgIcon: 'History',
+        textZone: 'left',
+        promptInstruction: LISTA_TIMELINE_PROMPT,
+        structuralPrompt: LISTA_TIMELINE_PROMPT
+    },
+    {
+        id: 'nota',
+        name: 'Nota a Mano',
+        description: 'Estilo post-it personal',
+        svgIcon: 'StickyNote',
+        textZone: 'center',
+        promptInstruction: LISTA_NOTA_PROMPT,
+        structuralPrompt: LISTA_NOTA_PROMPT
+    },
+    {
+        id: 'bullets',
+        name: 'Puntos Clave',
+        description: 'Lista limpia y clara',
+        svgIcon: 'ListOrdered',
+        textZone: 'left',
+        promptInstruction: LISTA_BULLETS_PROMPT,
+        structuralPrompt: LISTA_BULLETS_PROMPT
+    },
+    {
+        id: 'iconos',
+        name: 'Lista Visual',
+        description: 'Iconos expresivos',
+        svgIcon: 'Image',
+        textZone: 'center',
+        promptInstruction: LISTA_ICONOS_PROMPT,
+        structuralPrompt: LISTA_ICONOS_PROMPT
+    },
+    {
+        id: 'carousel',
+        name: 'Carrusel Swipe',
+        description: 'Tarjetas deslizables',
+        svgIcon: 'GalleryHorizontal',
+        textZone: 'center',
+        promptInstruction: LISTA_CAROUSEL_PROMPT,
+        structuralPrompt: LISTA_CAROUSEL_PROMPT
+    },
+    {
+        id: 'numerado',
+        name: 'Lista Numerada',
+        description: 'Números grandes',
+        svgIcon: 'ListOrdered',
+        textZone: 'left',
+        promptInstruction: LISTA_NUMERADO_PROMPT,
+        structuralPrompt: LISTA_NUMERADO_PROMPT
+    },
+    {
+        id: 'pros_cons',
+        name: 'Pros y Contras',
+        description: 'Comparativa positiva/negativa',
+        svgIcon: 'Scale',
+        textZone: 'center',
+        promptInstruction: LISTA_PROS_CONS_PROMPT,
+        structuralPrompt: LISTA_PROS_CONS_PROMPT
+    },
+    {
+        id: 'agenda',
+        name: 'Agenda Diaria',
+        description: 'Horarios y eventos',
+        svgIcon: 'Calendar',
+        textZone: 'left',
+        promptInstruction: LISTA_AGENDA_PROMPT,
+        structuralPrompt: LISTA_AGENDA_PROMPT
+    }
+]
+

@@ -1,13 +1,11 @@
 /**
  * EFEMERIDE - La Efeméride (Fechas especiales y celebraciones)
  * Grupo: Conectar
- * 
- * Para celebrar ocasiones especiales, festivos y fechas históricas.
- * Saludos estacionales y conmemoraciones.
  */
 
-import type { IntentRequiredField } from '@/lib/creation-flow-types'
+import type { LayoutOption, IntentRequiredField } from '@/lib/creation-flow-types'
 
+export const EFEMERIDE_DESCRIPTION = 'Fechas especiales y celebraciones. 12 composiciones para conmemoraciones.'
 export const EFEMERIDE_EXTENDED_DESCRIPTION = `
 Para celebrar ocasiones especiales, festivos y fechas históricas.
 Saludos estacionales y conmemoraciones.
@@ -42,277 +40,375 @@ export const EFEMERIDE_REQUIRED_FIELDS: IntentRequiredField[] = [
 
 // 1. CALENDARIO - Classic Tear-Off
 export const EFEMERIDE_CALENDARIO_PROMPT = `
-<structural_instruction>
-    <composition_type>Calendar Leaf Page</composition_type>
-    <visual_hierarchy>
-        <primary>Realistic tear-off calendar page showing the date prominently</primary>
-        <secondary>Month name in classic red bold font</secondary>
-        <tertiary>Textured background surface (wood desk or wall)</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_calendar>The calendar page as hero element</zone_calendar>
-        <zone_date>Large date numbers</zone_date>
-        <zone_background>Blurred context surface</zone_background>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Paper texture, torn edges at top</texture>
-        <lighting>Morning sunlight casting soft shadows</lighting>
-        <palette>White paper, red and black ink</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Digital calendar UI, abstract shapes, flat design</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Calendar Leaf Page
+
+# Visual Hierarchy
+- **Primary**: Realistic tear-off calendar page showing the date prominently
+- **Secondary**: Month name in classic red bold font
+- **Tertiary**: Textured background surface (wood desk or wall)
+
+# Zoning Guide
+- **Zone Calendar**: The calendar page as hero element
+- **Zone Date**: Large date numbers
+- **Zone Background**: Blurred context surface
+
+# Style Modifiers
+- **Texture**: Paper texture, torn edges at top
+- **Lighting**: Morning sunlight casting soft shadows
+- **Palette**: White paper, red and black ink
+
+# Negative Constraints
+- **Avoid**: Digital calendar UI, abstract shapes, flat design
 `
 
 // 2. TIPOGRAFÍA - Giant Date Numbers
 export const EFEMERIDE_TIPOGRAFIA_PROMPT = `
-<structural_instruction>
-    <composition_type>Date Typography Hero</composition_type>
-    <visual_hierarchy>
-        <primary>Date numbers filling the entire screen (e.g. "25")</primary>
-        <secondary>Occasion name intertwined with the numbers</secondary>
-        <tertiary>Confetti or decorative elements floating around</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_numbers>Giant date numerals as hero</zone_numbers>
-        <zone_occasion>Overlapping occasion text</zone_occasion>
-        <zone_decoration>Festive elements surrounding</zone_decoration>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>3D glossy lettering, gold foil, or balloon style</texture>
-        <lighting>Studio lighting with reflections</lighting>
-        <palette>Festive gold, silver, or brand celebration colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Small text, standard fonts, boring layouts</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Date Typography Hero
+
+# Visual Hierarchy
+- **Primary**: Date numbers filling the entire screen (e.g. "25")
+- **Secondary**: Occasion name intertwined with the numbers
+- **Tertiary**: Confetti or decorative elements floating around
+
+# Zoning Guide
+- **Zone Numbers**: Giant date numerals as hero
+- **Zone Occasion**: Overlapping occasion text
+- **Zone Decoration**: Festive elements surrounding
+
+# Style Modifiers
+- **Texture**: 3D glossy lettering, gold foil, or balloon style
+- **Lighting**: Studio lighting with reflections
+- **Palette**: Festive gold, silver, or brand celebration colors
+
+# Negative Constraints
+- **Avoid**: Small text, standard fonts, boring layouts
 `
 
 // 3. FIESTA - Party Celebration
 export const EFEMERIDE_FIESTA_PROMPT = `
-<structural_instruction>
-    <composition_type>Party Celebration Frame</composition_type>
-    <visual_hierarchy>
-        <primary>Explosion of confetti and balloons framing the center</primary>
-        <secondary>Central white/clear space for greeting text</secondary>
-        <tertiary>Gift box, cake, or celebration element at bottom</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_frame>Festive elements creating border</zone_frame>
-        <zone_message>Clear center for text</zone_message>
-        <zone_props>Celebration objects at edges</zone_props>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Shiny plastic balloons, matte paper confetti</texture>
-        <lighting>Bright high-key party lighting</lighting>
-        <palette>Rainbow, vibrant pastels, party colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Dark spooky lighting, sad muted colors</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Party Celebration Frame
+
+# Visual Hierarchy
+- **Primary**: Explosion of confetti and balloons framing the center
+- **Secondary**: Central white/clear space for greeting text
+- **Tertiary**: Gift box, cake, or celebration element at bottom
+
+# Zoning Guide
+- **Zone Frame**: Festive elements creating border
+- **Zone Message**: Clear center for text
+- **Zone Props**: Celebration objects at edges
+
+# Style Modifiers
+- **Texture**: Shiny plastic balloons, matte paper confetti
+- **Lighting**: Bright high-key party lighting
+- **Palette**: Rainbow, vibrant pastels, party colors
+
+# Negative Constraints
+- **Avoid**: Dark spooky lighting, sad muted colors
 `
 
 // 4. HISTÓRICO - Vintage Memory
 export const EFEMERIDE_HISTORICO_PROMPT = `
-<structural_instruction>
-    <composition_type>Historical Memory Frame</composition_type>
-    <visual_hierarchy>
-        <primary>Antique frame holding a relevant historical image or year</primary>
-        <secondary>Elegant script text for the anniversary name</secondary>
-        <tertiary>Vintage ornaments, laurels, or flowers</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_frame>Ornate frame containing image</zone_frame>
-        <zone_image>Historical or commemorative visual</zone_image>
-        <zone_text>Anniversary label below</zone_text>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Aged paper, sepia tones, dust and scratches</texture>
-        <lighting>Candlelight or museum spot lighting</lighting>
-        <palette>Sepia, gold, black, burgundy</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Modern tech, neon, bright white paper</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Historical Memory Frame
+
+# Visual Hierarchy
+- **Primary**: Antique frame holding a relevant historical image or year
+- **Secondary**: Elegant script text for the anniversary name
+- **Tertiary**: Vintage ornaments, laurels, or flowers
+
+# Zoning Guide
+- **Zone Frame**: Ornate frame containing image
+- **Zone Image**: Historical or commemorative visual
+- **Zone Text**: Anniversary label below
+
+# Style Modifiers
+- **Texture**: Aged paper, sepia tones, dust and scratches
+- **Lighting**: Candlelight or museum spot lighting
+- **Palette**: Sepia, gold, black, burgundy
+
+# Negative Constraints
+- **Avoid**: Modern tech, neon, bright white paper
 `
 
 // 5. NEON - New Year Night Style
 export const EFEMERIDE_NEON_PROMPT = `
-<structural_instruction>
-    <composition_type>Neon Sign Celebration</composition_type>
-    <visual_hierarchy>
-        <primary>Glowing neon sign spelling the year or occasion</primary>
-        <secondary>Dark brick wall or night sky background</secondary>
-        <tertiary>Sparklers or fireworks effects around</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_neon>Glowing text as hero</zone_neon>
-        <zone_dark>Dark atmospheric backdrop</zone_dark>
-        <zone_effects>Sparkle and light effects</zone_effects>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Glass tubes, light bloom, brick texture</texture>
-        <lighting>Emissive light source in dark environment</lighting>
-        <palette>Cyberpunk pink, blue, purple on black</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Daylight, flat colors, print aesthetics</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Neon Sign Celebration
+
+# Visual Hierarchy
+- **Primary**: Glowing neon sign spelling the year or occasion
+- **Secondary**: Dark brick wall or night sky background
+- **Tertiary**: Sparklers or fireworks effects around
+
+# Zoning Guide
+- **Zone Neon**: Glowing text as hero
+- **Zone Dark**: Dark atmospheric backdrop
+- **Zone Effects**: Sparkle and light effects
+
+# Style Modifiers
+- **Texture**: Glass tubes, light bloom, brick texture
+- **Lighting**: Emissive light source in dark environment
+- **Palette**: Cyberpunk pink, blue, purple on black
+
+# Negative Constraints
+- **Avoid**: Daylight, flat colors, print aesthetics
 `
 
 // 6. ESTACIONAL - Seasonal Natural Frame
 export const EFEMERIDE_ESTACIONAL_PROMPT = `
-<structural_instruction>
-    <composition_type>Seasonal Flora Frame</composition_type>
-    <visual_hierarchy>
-        <primary>Natural border of seasonal flora (flowers, leaves, snow)</primary>
-        <secondary>Central elegant card for the message</secondary>
-        <tertiary>Soft background texture or pattern</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_border>Organic flora frame elements</zone_border>
-        <zone_card>Central message area</zone_card>
-        <zone_texture>Subtle background pattern</zone_texture>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Organic natural textures, watercolor style</texture>
-        <lighting>Soft diffuse natural light</lighting>
-        <palette>Seasonal colors (Spring pastel, Autumn orange, Winter white)</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Industrial materials, sharp geometry, plastic feel</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Seasonal Flora Frame
+
+# Visual Hierarchy
+- **Primary**: Natural border of seasonal flora (flowers, leaves, snow)
+- **Secondary**: Central elegant card for the message
+- **Tertiary**: Soft background texture or pattern
+
+# Zoning Guide
+- **Zone Border**: Organic flora frame elements
+- **Zone Card**: Central message area
+- **Zone Texture**: Subtle background pattern
+
+# Style Modifiers
+- **Texture**: Organic natural textures, watercolor style
+- **Lighting**: Soft diffuse natural light
+- **Palette**: Seasonal colors (Spring pastel, Autumn orange, Winter white)
+
+# Negative Constraints
+- **Avoid**: Industrial materials, sharp geometry, plastic feel
 `
 
 // 7. BANDERA - Patriotic Flag
 export const EFEMERIDE_BANDERA_PROMPT = `
-<structural_instruction>
-    <composition_type>Patriotic Flag Display</composition_type>
-    <visual_hierarchy>
-        <primary>National or regional flag as dominant visual element</primary>
-        <secondary>Holiday or commemoration name overlaid</secondary>
-        <tertiary>Patriotic symbols (eagles, shields, stars)</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_flag>Waving or draped flag as backdrop</zone_flag>
-        <zone_text>Commemorative text overlay</zone_text>
-        <zone_symbols>National symbols integrated</zone_symbols>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Fabric flag texture, waving motion</texture>
-        <lighting>Heroic, patriotic lighting</lighting>
-        <palette>National colors in full saturation</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Disrespectful treatment, faded colors, torn flags</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Patriotic Flag Display
+
+# Visual Hierarchy
+- **Primary**: National or regional flag as dominant visual element
+- **Secondary**: Holiday or commemoration name overlaid
+- **Tertiary**: Patriotic symbols (eagles, shields, stars)
+
+# Zoning Guide
+- **Zone Flag**: Waving or draped flag as backdrop
+- **Zone Text**: Commemorative text overlay
+- **Zone Symbols**: National symbols integrated
+
+# Style Modifiers
+- **Texture**: Fabric flag texture, waving motion
+- **Lighting**: Heroic, patriotic lighting
+- **Palette**: National colors in full saturation
+
+# Negative Constraints
+- **Avoid**: Disrespectful treatment, faded colors, torn flags
 `
 
 // 8. RELIGIOSO - Sacred Celebration
 export const EFEMERIDE_RELIGIOSO_PROMPT = `
-<structural_instruction>
-    <composition_type>Sacred Holiday Design</composition_type>
-    <visual_hierarchy>
-        <primary>Religious iconography appropriate to the holiday</primary>
-        <secondary>Blessing or traditional greeting text</secondary>
-        <tertiary>Candles, light rays, or spiritual elements</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_icon>Religious symbol or imagery</zone_icon>
-        <zone_blessing>Traditional greeting text</zone_blessing>
-        <zone_atmosphere>Spiritual atmosphere elements</zone_atmosphere>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Traditional art styles, stained glass, iconography</texture>
-        <lighting>Reverent, warm candlelight or divine rays</lighting>
-        <palette>Traditional religious colors (gold, white, purple)</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Commercial feel, inappropriate imagery, disrespect</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Sacred Holiday Design
+
+# Visual Hierarchy
+- **Primary**: Religious iconography appropriate to the holiday
+- **Secondary**: Blessing or traditional greeting text
+- **Tertiary**: Candles, light rays, or spiritual elements
+
+# Zoning Guide
+- **Zone Icon**: Religious symbol or imagery
+- **Zone Blessing**: Traditional greeting text
+- **Zone Atmosphere**: Spiritual atmosphere elements
+
+# Style Modifiers
+- **Texture**: Traditional art styles, stained glass, iconography
+- **Lighting**: Reverent, warm candlelight or divine rays
+- **Palette**: Traditional religious colors (gold, white, purple)
+
+# Negative Constraints
+- **Avoid**: Commercial feel, inappropriate imagery, disrespect
 `
 
 // 9. COUNTDOWN - Days Until
 export const EFEMERIDE_COUNTDOWN_PROMPT = `
-<structural_instruction>
-    <composition_type>Countdown to Event</composition_type>
-    <visual_hierarchy>
-        <primary>Large countdown number (X days/hours until...)</primary>
-        <secondary>Event or holiday name being counted down to</secondary>
-        <tertiary>Excitement building visual elements (arrows, energy)</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_countdown>Large countdown number</zone_countdown>
-        <zone_event>Event name and date</zone_event>
-        <zone_energy>Anticipation elements</zone_energy>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Digital display, flip clock, or calendar style</texture>
-        <lighting>Anticipation glow, building excitement</lighting>
-        <palette>Event-appropriate celebration colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Past-tense messaging, boring static feel</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Countdown to Event
+
+# Visual Hierarchy
+- **Primary**: Large countdown number (X days/hours until...)
+- **Secondary**: Event or holiday name being counted down to
+- **Tertiary**: Excitement building visual elements (arrows, energy)
+
+# Zoning Guide
+- **Zone Countdown**: Large countdown number
+- **Zone Event**: Event name and date
+- **Zone Energy**: Anticipation elements
+
+# Style Modifiers
+- **Texture**: Digital display, flip clock, or calendar style
+- **Lighting**: Anticipation glow, building excitement
+- **Palette**: Event-appropriate celebration colors
+
+# Negative Constraints
+- **Avoid**: Past-tense messaging, boring static feel
 `
 
 // 10. COLLAGE - Multi-Moment Memory
 export const EFEMERIDE_COLLAGE_PROMPT = `
-<structural_instruction>
-    <composition_type>Memory Collage</composition_type>
-    <visual_hierarchy>
-        <primary>Multiple photos from past celebrations of this event</primary>
-        <secondary>Central title or logo for the occasion</secondary>
-        <tertiary>Decorative tape, stickers, or scrapbook elements</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_photos>Scattered overlapping photos</zone_photos>
-        <zone_title>Central occasion branding</zone_title>
-        <zone_decoration>Scrapbook styling elements</zone_decoration>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Polaroid frames, washi tape, scrapbook aesthetic</texture>
-        <lighting>Mixed natural lighting from photos</lighting>
-        <palette>Warm nostalgic tones, celebration colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Single image, clinical grid, cold feel</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Memory Collage
+
+# Visual Hierarchy
+- **Primary**: Multiple photos from past celebrations of this event
+- **Secondary**: Central title or logo for the occasion
+- **Tertiary**: Decorative tape, stickers, or scrapbook elements
+
+# Zoning Guide
+- **Zone Photos**: Scattered overlapping photos
+- **Zone Title**: Central occasion branding
+- **Zone Decoration**: Scrapbook styling elements
+
+# Style Modifiers
+- **Texture**: Polaroid frames, washi tape, scrapbook aesthetic
+- **Lighting**: Mixed natural lighting from photos
+- **Palette**: Warm nostalgic tones, celebration colors
+
+# Negative Constraints
+- **Avoid**: Single image, clinical grid, cold feel
 `
 
 // 11. MENSAJE - Simple Greeting
 export const EFEMERIDE_MENSAJE_PROMPT = `
-<structural_instruction>
-    <composition_type>Simple Greeting Card</composition_type>
-    <visual_hierarchy>
-        <primary>Large, elegant greeting text ("¡Feliz Navidad!")</primary>
-        <secondary>Subtle decorative backdrop or pattern</secondary>
-        <tertiary>Brand signature or from line</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_greeting>Central message as hero</zone_greeting>
-        <zone_pattern>Background subtle decoration</zone_pattern>
-        <zone_signature>Brand or sender identification</zone_signature>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Elegant card stock, subtle texture</texture>
-        <lighting>Soft, warm, inviting</lighting>
-        <palette>Occasion-appropriate colors with elegance</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Busy overwhelming design, hard to read text</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Simple Greeting Card
+
+# Visual Hierarchy
+- **Primary**: Large, elegant greeting text ("¡Feliz Navidad!")
+- **Secondary**: Subtle decorative backdrop or pattern
+- **Tertiary**: Brand signature or from line
+
+# Zoning Guide
+- **Zone Greeting**: Central message as hero
+- **Zone Pattern**: Background subtle decoration
+- **Zone Signature**: Brand or sender identification
+
+# Style Modifiers
+- **Texture**: Elegant card stock, subtle texture
+- **Lighting**: Soft, warm, inviting
+- **Palette**: Occasion-appropriate colors with elegance
+
+# Negative Constraints
+- **Avoid**: Busy overwhelming design, hard to read text
 `
 
-export const EFEMERIDE_DESCRIPTION = 'Fechas especiales y celebraciones. 11 composiciones para conmemoraciones.'
+export const EFEMERIDE_LAYOUTS: LayoutOption[] = [
+    {
+        id: 'efemeride-free',
+        name: 'Libre',
+        description: 'Sin indicación',
+        svgIcon: 'Sparkles',
+        textZone: 'center',
+        promptInstruction: 'Natural composition without structural constraints.',
+        structuralPrompt: '',
+    },
+    {
+        id: 'efemeride-calendar',
+        name: 'Calendario',
+        description: 'Hoja Clásica',
+        svgIcon: 'Calendar',
+        textZone: 'center',
+        promptInstruction: 'Classic tear-off calendar page.',
+        structuralPrompt: EFEMERIDE_CALENDARIO_PROMPT,
+    },
+    {
+        id: 'efemeride-hero',
+        name: 'Fecha',
+        description: 'Tipografía',
+        svgIcon: 'Hash',
+        textZone: 'center',
+        promptInstruction: 'Giant date numbers 3D typography.',
+        structuralPrompt: EFEMERIDE_TIPOGRAFIA_PROMPT,
+    },
+    {
+        id: 'efemeride-party',
+        name: 'Fiesta',
+        description: 'Confetti',
+        svgIcon: 'PartyPopper',
+        textZone: 'center',
+        promptInstruction: 'Explosion of confetti and balloons.',
+        structuralPrompt: EFEMERIDE_FIESTA_PROMPT,
+    },
+    {
+        id: 'efemeride-history',
+        name: 'Historia',
+        description: 'Vintage',
+        svgIcon: 'Clock',
+        textZone: 'bottom',
+        promptInstruction: 'Antique frame with historical feel.',
+        structuralPrompt: EFEMERIDE_HISTORICO_PROMPT,
+    },
+    {
+        id: 'efemeride-neon',
+        name: 'Neon',
+        description: 'Noche',
+        svgIcon: 'Zap',
+        textZone: 'center',
+        promptInstruction: 'Glowing neon sign date.',
+        structuralPrompt: EFEMERIDE_NEON_PROMPT,
+    },
+    {
+        id: 'efemeride-seasonal',
+        name: 'Estación',
+        description: 'Naturaleza',
+        svgIcon: 'Sun',
+        textZone: 'center',
+        promptInstruction: 'Floral or seasonal border frame.',
+        structuralPrompt: EFEMERIDE_ESTACIONAL_PROMPT,
+    },
+    {
+        id: 'efemeride-bandera',
+        name: 'Bandera',
+        description: 'Patriótico',
+        svgIcon: 'Flag',
+        textZone: 'center',
+        promptInstruction: 'National flag waving background.',
+        structuralPrompt: EFEMERIDE_BANDERA_PROMPT,
+    },
+    {
+        id: 'efemeride-religioso',
+        name: 'Religioso',
+        description: 'Solemne',
+        svgIcon: 'Moon',
+        textZone: 'center',
+        promptInstruction: 'Sacred or religious iconography.',
+        structuralPrompt: EFEMERIDE_RELIGIOSO_PROMPT,
+    },
+    {
+        id: 'efemeride-countdown',
+        name: 'Cuenta',
+        description: 'Días Para...',
+        svgIcon: 'Timer',
+        textZone: 'center',
+        promptInstruction: 'Days remaining countdown.',
+        structuralPrompt: EFEMERIDE_COUNTDOWN_PROMPT,
+    },
+    {
+        id: 'efemeride-collage',
+        name: 'Collage',
+        description: 'Recuerdos',
+        svgIcon: 'Layout',
+        textZone: 'center',
+        promptInstruction: 'Photo collage of past events.',
+        structuralPrompt: EFEMERIDE_COLLAGE_PROMPT,
+    },
+    {
+        id: 'efemeride-mensaje',
+        name: 'Carta',
+        description: 'Saludo',
+        svgIcon: 'Mail',
+        textZone: 'center',
+        promptInstruction: 'Simple elegant greeting card.',
+        structuralPrompt: EFEMERIDE_MENSAJE_PROMPT,
+    },
+]

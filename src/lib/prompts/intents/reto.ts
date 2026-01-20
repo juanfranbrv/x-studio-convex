@@ -6,7 +6,7 @@
  * Diseño que genera participación y viralidad.
  */
 
-import type { IntentRequiredField } from '@/lib/creation-flow-types'
+import type { IntentRequiredField, LayoutOption } from '@/lib/creation-flow-types'
 
 export const RETO_EXTENDED_DESCRIPTION = `
 Diseño para retos virales, concursos, sorteos y competiciones.
@@ -40,279 +40,369 @@ export const RETO_REQUIRED_FIELDS: IntentRequiredField[] = [
     }
 ]
 
-// 1. VERSUS - Battle Split
-export const RETO_VERSUS_PROMPT = `
-<structural_instruction>
-    <composition_type>Versus Battle Layout</composition_type>
-    <visual_hierarchy>
-        <primary>Dynamic diagonal split dividing two opponents or options</primary>
-        <secondary>Large "VS" badge or lightning bolt at center intersection</secondary>
-        <tertiary>Voting UI elements or poll bars at bottom</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_left>Contender A (cool tones: blue, teal)</zone_left>
-        <zone_right>Contender B (warm tones: red, orange)</zone_right>
-        <zone_center>Explosive "VS" typography</zone_center>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Grunge, halftone, comic book energy</texture>
-        <lighting>Clashing colored rim lights per side</lighting>
-        <palette>High contrast complementary colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Peaceful static layout, monochrome, small VS text</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+export const RETO_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
+    // 0. LIBRE
+    {
+        id: 'reto-free',
+        name: 'Libre',
+        description: 'Sin indicación',
+        svgIcon: 'Sparkles',
+        textZone: 'center',
+        promptInstruction: 'Natural composition without structural constraints.',
+        structuralPrompt: '',
+    },
+    // 1. VERSUS - Battle Split
+    {
+        id: 'reto-vs',
+        name: 'Versus',
+        description: 'Batalla',
+        svgIcon: 'Swords',
+        textZone: 'center',
+        promptInstruction: 'Diagonal split screen battle.',
+        structuralPrompt: `
+## Composición: Versus Battle Layout
 
-// 2. SORTEO - Giveaway Prize
-export const RETO_SORTEO_PROMPT = `
-<structural_instruction>
-    <composition_type>Giveaway Prize Hero</composition_type>
-    <visual_hierarchy>
-        <primary>The [PRIZE] floating in center with magical glow effect</primary>
-        <secondary>"SORTEO" or "GIVEAWAY" bold 3D typography around it</secondary>
-        <tertiary>Sparkles, gift box icons, and confetti as atmosphere</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_prize>Central floating prize object as hero</zone_prize>
-        <zone_text>Orbiting announcement text</zone_text>
-        <zone_particles>Celebration elements surrounding</zone_particles>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Glossy, gold foil, celebration luxury</texture>
-        <lighting>Jewelry lighting with starburst highlights</lighting>
-        <palette>Gold, purple, celebratory luxury tones</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Dark gloomy atmosphere, hidden prize, cheap feel</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Batalla Versus Diagonal.
 
-// 3. BRACKET - Tournament Tree
-export const RETO_BRACKET_PROMPT = `
-<structural_instruction>
-    <composition_type>Tournament Bracket Structure</composition_type>
-    <visual_hierarchy>
-        <primary>Stylized bracket/tournament tree with connecting lines</primary>
-        <secondary>Empty or filled slots for participant names/avatars</secondary>
-        <tertiary>Trophy icon at the final convergence point</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_structure>Branching bracket connection lines</zone_structure>
-        <zone_slots>Card placeholders for participants</zone_slots>
-        <zone_winner>Final winner spot with trophy</zone_winner>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Tech grid, sports broadcast, esports graphics</texture>
-        <lighting>Stadium or broadcast lighting aesthetic</lighting>
-        <palette>Sports league colors, clean on dark</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Chaotic random placement, thin unreadable lines</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía Visual
+1. **Principal:** División diagonal dinámica separando dos oponentes u opciones
+2. **Secundario:** Insignia grande "VS" o rayo en la intersección central
+3. **Terciario:** Elementos de votación o barras de encuesta abajo
 
-// 4. RETO - Bold Dare Typography
-export const RETO_ATREVETE_PROMPT = `
-<structural_instruction>
-    <composition_type>Bold Challenge Dare</composition_type>
-    <visual_hierarchy>
-        <primary>Aggressive screen-filling typography with the challenge</primary>
-        <secondary>Gritty textures, distress marks, street art elements</secondary>
-        <tertiary>"Accept Challenge" button or badge graphic</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_typography>Full canvas bold challenge text</zone_typography>
-        <zone_texture>Street art, graffiti overlays</zone_texture>
-        <zone_cta>Challenge acceptance button</zone_cta>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Street art, torn poster, concrete, urban</texture>
-        <lighting>Hard flash, vigilante mood</lighting>
-        <palette>Black, white, neon warning colors (yellow, orange)</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Elegant soft fonts, floral patterns, gentle feel</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución
+- **Zona Izquierda:** Contendiente A (tonos fríos: azul, turquesa)
+- **Zona Derecha:** Contendiente B (tonos cálidos: rojo, naranja)
+- **Centro:** Tipografía explosiva "VS"
 
-// 5. PODIO - Winners Display
-export const RETO_PODIO_PROMPT = `
-<structural_instruction>
-    <composition_type>Winner Podium Layout</composition_type>
-    <visual_hierarchy>
-        <primary>Three-tiered victory podium structure (1st, 2nd, 3rd)</primary>
-        <secondary>Spotlights beaming down on the #1 position</secondary>
-        <tertiary>Confetti and celebration elements raining down</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_podium>Classic podium blocks (1, 2, 3 heights)</zone_podium>
-        <zone_winners>Space for winner avatars/names on each tier</zone_winners>
-        <zone_celebration>Confetti and spotlights from above</zone_celebration>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Marble, gold plating, velvet carpet luxury</texture>
-        <lighting>Stage lighting, volumetric fog</lighting>
-        <palette>Gold #1, Silver #2, Bronze #3 medals</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Flat 2D graphics, boring grey boxes, no excitement</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Estilo
+- **Textura:** Grunge, semitono, energía de cómic
+- **Iluminación:** Luces de borde coloreadas chocando por lado
+- **Paleta:** Colores complementarios de alto contraste
 
-// 6. REGLAS - Contest Rules
-export const RETO_REGLAS_PROMPT = `
-<structural_instruction>
-    <composition_type>Contest Rules Checklist</composition_type>
-    <visual_hierarchy>
-        <primary>Numbered steps 1-2-3 with large decorative numerals</primary>
-        <secondary>Icons for each action (Like, Share, Tag, Comment)</secondary>
-        <tertiary>Dotted lines or arrows connecting the steps</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_header>"How to Win" or "Cómo Participar" title</zone_header>
-        <zone_steps>Vertical or horizontal flow of participation steps</zone_steps>
-        <zone_icons>Action icons per step</zone_icons>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Clean vector, soft shadows, rounded UI cards</texture>
-        <lighting>Soft, even, friendly illumination</lighting>
-        <palette>Friendly, trustworthy, inviting colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Wall of text, confusing path, hard to follow</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar
+Diseño estático pacífico, monocromo, texto VS pequeño.
+`.trim(),
+    },
+    // 2. SORTEO - Giveaway Prize
+    {
+        id: 'reto-giveaway',
+        name: 'Sorteo',
+        description: 'Premio 3D',
+        svgIcon: 'Gift',
+        textZone: 'center',
+        promptInstruction: 'Floating 3D prize hero shot.',
+        structuralPrompt: `
+## Composición: Giveaway Prize Hero
 
-// 7. COUNTDOWN - Time Limited
-export const RETO_COUNTDOWN_PROMPT = `
-<structural_instruction>
-    <composition_type>Countdown Timer Urgency</composition_type>
-    <visual_hierarchy>
-        <primary>Large countdown timer display (days/hours/minutes)</primary>
-        <secondary>Challenge or prize visible behind/around timer</secondary>
-        <tertiary>"Time is running out" urgency messaging</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_timer>Central countdown clock display</zone_timer>
-        <zone_context>Challenge or prize context around timer</zone_context>
-        <zone_urgency>Urgency message at bottom</zone_urgency>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Digital display, flip clock, LED countdown</texture>
-        <lighting>Self-luminous timer, urgent glow</lighting>
-        <palette>High energy urgency colors (red, orange)</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Static feel, no urgency, missing deadline context</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Héroe de Sorteo.
 
-// 8. VIRAL - Social Challenge
-export const RETO_VIRAL_PROMPT = `
-<structural_instruction>
-    <composition_type>Viral Social Challenge</composition_type>
-    <visual_hierarchy>
-        <primary>Hashtag prominently displayed as main graphic element</primary>
-        <secondary>Example participation visual (person doing the challenge)</secondary>
-        <tertiary>Social platform icons and "Join the challenge" CTA</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_hashtag>Large # trend tag as hero</zone_hashtag>
-        <zone_example>Visual showing participation example</zone_example>
-        <zone_social>Platform icons and call to action</zone_social>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>TikTok/Instagram native, trend aesthetic</texture>
-        <lighting>Ring light, creator lighting</lighting>
-        <palette>Platform colors, trendy color schemes</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Dated aesthetics, unclear participation, missing hashtag</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía Visual
+1. **Principal:** El [PREMIO] flotando en el centro con efecto de brillo mágico
+2. **Secundario:** Tipografía 3D audaz "SORTEO" o "GIVEAWAY" alrededor
+3. **Terciario:** Destellos, iconos de cajas de regalo y confeti como atmósfera
 
-// 9. QUIZ - Trivia Challenge
-export const RETO_QUIZ_PROMPT = `
-<structural_instruction>
-    <composition_type>Quiz Trivia Challenge</composition_type>
-    <visual_hierarchy>
-        <primary>Quiz question prominently displayed</primary>
-        <secondary>Multiple choice answer options (A, B, C, D)</secondary>
-        <tertiary>"Test your knowledge" or prize indication</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_question>Main quiz question at top</zone_question>
-        <zone_options>Grid or list of answer choices</zone_options>
-        <zone_cta>Participation or prize information</zone_cta>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Game show, trivia night, knowledge competition</texture>
-        <lighting>Bright game show lighting</lighting>
-        <palette>Question show colors, distinct option colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Boring presentation, unclear options, missing game element</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución
+- Objeto de premio central flotante como héroe
+- Texto de anuncio orbitando
+- Elementos de celebración rodeando
 
-// 10. GANADOR - Winner Announcement
-export const RETO_GANADOR_PROMPT = `
-<structural_instruction>
-    <composition_type>Winner Announcement</composition_type>
-    <visual_hierarchy>
-        <primary>Winner's name or avatar with spotlight/crown treatment</primary>
-        <secondary>"CONGRATULATIONS" or "WINNER" headline</secondary>
-        <tertiary>Prize image and celebration elements</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_winner>Spotlit winner identification (name/photo)</zone_winner>
-        <zone_celebration>Congratulations headline and confetti</zone_celebration>
-        <zone_prize>What they won displayed below</zone_prize>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Award ceremony, lottery winner, celebration glory</texture>
-        <lighting>Winner spotlight, golden glow</lighting>
-        <palette>Gold, celebration colors, victory themes</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unclear winner, missing celebration, low energy</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Estilo
+- **Textura:** Brillante, lámina de oro, lujo de celebración
+- **Iluminación:** Iluminación de joyería con brillos estelares
+- **Paleta:** Oro, morado, tonos de lujo celebratorio
 
-// 11. PARTICIPANTES - Entries Showcase
-export const RETO_PARTICIPANTES_PROMPT = `
-<structural_instruction>
-    <composition_type>Participant Entries Showcase</composition_type>
-    <visual_hierarchy>
-        <primary>Grid or mosaic of participant entries/submissions</primary>
-        <secondary>Counter or stats (X participants, X entries)</secondary>
-        <tertiary>"Join the movement" or participation encouragement</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_grid>Mosaic of participant content</zone_grid>
-        <zone_stats>Participation count or progress</zone_stats>
-        <zone_cta>Encouragement to join</zone_cta>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Community collage, UGC showcase</texture>
-        <lighting>Varied (from participants) unified with overlay</lighting>
-        <palette>Diverse entries with brand accent unification</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Empty grid, missing community feel, solo focus</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar
+Atmósfera oscura y triste, premio oculto, sensación barata.
+`.trim(),
+    },
+    // 3. BRACKET - Tournament Tree
+    {
+        id: 'reto-bracket',
+        name: 'Torneo',
+        description: 'Bracket Tree',
+        svgIcon: 'Trophy',
+        textZone: 'center',
+        promptInstruction: 'Tournament bracket structure.',
+        structuralPrompt: `
+## Composición: Tournament Bracket Structure
 
-export const RETO_DESCRIPTION = 'Diseño para retos, concursos y sorteos. 11 composiciones gamificadas para engagement.'
+**Estructura:** Estructura de torneo (Bracket).
+
+### Jerarquía Visual
+1. **Principal:** Árbol de torneo/bracket estilizado con líneas conectoras
+2. **Secundario:** Espacios vacíos o llenos para nombres/avatares de participantes
+3. **Terciario:** Icono de trofeo en el punto de convergencia final
+
+### Distribución
+- Líneas de conexión de bracket ramificadas
+- Marcadores de posición tipo tarjeta para participantes
+- Punto ganador final con trofeo
+
+### Estilo
+- **Textura:** Rejilla tecnológica, transmisión deportiva, gráficos esports
+- **Iluminación:** Estética de iluminación de estadio o broadcast
+- **Paleta:** Colores de liga deportiva, limpio sobre oscuro
+
+### Evitar
+Colocación aleatoria caótica, líneas finas ilegibles.
+`.trim(),
+    },
+    // 4. RETO - Bold Dare
+    {
+        id: 'reto-dare',
+        name: 'Reto',
+        description: 'Tipografía Bold',
+        svgIcon: 'AlertOctagon',
+        textZone: 'center',
+        promptInstruction: 'Aggressive dare typography.',
+        structuralPrompt: `
+## Composición: Bold Challenge Dare
+
+**Estructura:** Reto Tipográfico Audaz.
+
+### Jerarquía Visual
+1. **Principal:** Tipografía agresiva llenando la pantalla con el reto
+2. **Secundario:** Texturas granulosas, marcas de desgaste, elementos de arte callejero
+3. **Terciario:** Botón o insignia gráfica "Accept Challenge"
+
+### Distribución
+- Texto de reto audaz en todo el lienzo
+- Superposiciones de graffiti o arte callejero
+- Botón de aceptación del reto
+
+### Estilo
+- **Textura:** Arte callejero, póster rasgado, hormigón, urbano
+- **Iluminación:** Flash duro, humor justiciero
+- **Paleta:** Negro, blanco, colores de advertencia neón (amarillo, naranja)
+
+### Evitar
+Fuentes suaves elegantes, patrones florales, sensación suave.
+`.trim(),
+    },
+    // 5. PODIO - Winners Display
+    {
+        id: 'reto-podium',
+        name: 'Ganadores',
+        description: 'Podio 1-2-3',
+        svgIcon: 'Medal',
+        textZone: 'bottom',
+        promptInstruction: 'Three-tiered winner podium.',
+        structuralPrompt: `
+## Composición: Winner Podium Layout
+
+**Estructura:** Podio de Ganadores.
+
+### Jerarquía Visual
+1. **Principal:** Estructura de podio de victoria de tres niveles (1º, 2º, 3º)
+2. **Secundario:** Focos iluminando la posición #1
+3. **Terciario:** Confeti y elementos de celebración lloviendo
+
+### Distribución
+- Bloques de podio clásicos (alturas 1, 2, 3)
+- Espacio para avatares/nombres de ganadores en cada nivel
+- Confeti y focos desde arriba
+
+### Estilo
+- **Textura:** Mármol, chapado en oro, lujo de alfombra de terciopelo
+- **Iluminación:** Iluminación de escenario, niebla volumétrica
+- **Paleta:** Oro #1, Plata #2, Bronce #3 medallas
+
+### Evitar
+Gráficos 2D planos, cajas grises aburridas, sin emoción.
+`.trim(),
+    },
+    // 6. REGLAS - Steps
+    {
+        id: 'reto-rules',
+        name: 'Reglas',
+        description: 'Pasos 1-2-3',
+        svgIcon: 'ListChecks',
+        textZone: 'left',
+        promptInstruction: 'Step-by-step contest rules.',
+        structuralPrompt: `
+## Composición: Contest Rules Checklist
+
+**Estructura:** Reglas del Concurso.
+
+### Jerarquía Visual
+1. **Principal:** Pasos numerados 1-2-3 con numerales decorativos grandes
+2. **Secundario:** Iconos para cada acción (Like, Share, Tag, Comment)
+3. **Terciario:** Líneas punteadas o flechas conectando los pasos
+
+### Distribución
+- Título "Cómo Ganar" o "Cómo Participar"
+- Flujo vertical u horizontal de pasos de participación
+- Iconos de acción por paso
+
+### Estilo
+- **Textura:** Vector limpio, sombras suaves, tarjetas UI redondeadas
+- **Iluminación:** Iluminación suave, uniforme y amigable
+- **Paleta:** Colores amigables, confiables y atractivos
+
+### Evitar
+Muro de texto, camino confuso, difícil de seguir.
+`.trim(),
+    },
+    // 7. COUNTDOWN - Time Limited
+    {
+        id: 'reto-countdown',
+        name: 'Limitado',
+        description: 'Tiempo Límite',
+        svgIcon: 'Timer',
+        textZone: 'center',
+        promptInstruction: 'Countdown timer urgency.',
+        structuralPrompt: `
+## Composición: Countdown Timer Urgency
+
+**Estructura:** Urgencia de Cuenta Regresiva.
+
+### Jerarquía Visual
+1. **Principal:** Gran visualización de cuenta regresiva (días/horas/minutos)
+2. **Secundario:** Reto o premio visible detrás/alrededor del temporizador
+3. **Terciario:** Mensaje de urgencia "El tiempo se acaba"
+
+### Distribución
+- Reloj de cuenta regresiva central
+- Contexto de reto o premio alrededor
+- Mensaje de urgencia abajo
+
+### Estilo
+- **Textura:** Pantalla digital, reloj flip, cuenta atrás LED
+- **Iluminación:** Temporizador auto-luminoso, brillo urgente
+- **Paleta:** Colores de urgencia de alta energía (rojo, naranja)
+
+### Evitar
+Sensación estática, sin urgencia, contexto de fecha límite faltante.
+`.trim(),
+    },
+    // 8. VIRAL - Social
+    {
+        id: 'reto-viral',
+        name: 'Viral',
+        description: 'Trend #',
+        svgIcon: 'Hash',
+        textZone: 'center',
+        promptInstruction: 'Viral hashtag challenge visual.',
+        structuralPrompt: `
+## Composición: Viral Social Challenge
+
+**Estructura:** Reto Social Viral.
+
+### Jerarquía Visual
+1. **Principal:** Hashtag mostrado prominentemente como elemento gráfico principal
+2. **Secundario:** Visual de ejemplo de participación (persona haciendo el reto)
+3. **Terciario:** Iconos de plataforma social y CTA "Únete al reto"
+
+### Distribución
+- Tag de tendencia # grande como héroe
+- Visual mostrando ejemplo de participación
+- Iconos de plataforma y llamada a la acción
+
+### Estilo
+- **Textura:** Nativo de TikTok/Instagram, estética de tendencia
+- **Iluminación:** Anillo de luz, iluminación de creador
+- **Paleta:** Colores de plataforma, esquemas de color de moda
+
+### Evitar
+Estética anticuada, participación poco clara, falta de hashtag.
+`.trim(),
+    },
+    // 9. QUIZ - Trivia
+    {
+        id: 'reto-quiz',
+        name: 'Quiz',
+        description: 'Trivia',
+        svgIcon: 'HelpCircle',
+        textZone: 'center',
+        promptInstruction: 'Quiz question card.',
+        structuralPrompt: `
+## Composición: Quiz Trivia Challenge
+
+**Estructura:** Desafío de Trivia Quiz.
+
+### Jerarquía Visual
+1. **Principal:** Pregunta del quiz mostrada prominentemente
+2. **Secundario:** Opciones de respuesta de opción múltiple (A, B, C, D)
+3. **Terciario:** "Pon a prueba tu conocimiento" o indicación de premio
+
+### Distribución
+- Pregunta principal de quiz arriba
+- Cuadrícula o lista de opciones de respuesta
+- Información de participación o premio
+
+### Estilo
+- **Textura:** Concurso de televisión, noche de trivia, competición de conocimiento
+- **Iluminación:** Iluminación brillante de concurso
+- **Paleta:** Colores de show de preguntas, colores de opción distintos
+
+### Evitar
+Presentación aburrida, opciones poco claras, falta de elemento de juego.
+`.trim(),
+    },
+    // 10. GANADOR - Winner Announcement
+    {
+        id: 'reto-winner',
+        name: 'Ganador',
+        description: 'Anuncio',
+        svgIcon: 'Crown',
+        textZone: 'center',
+        promptInstruction: 'Winner spotlight announcement.',
+        structuralPrompt: `
+## Composición: Winner Announcement
+
+**Estructura:** Anuncio de Ganador.
+
+### Jerarquía Visual
+1. **Principal:** Nombre o avatar del ganador con tratamiento de foco/corona
+2. **Secundario:** Titular "FELICIDADES" o "GANADOR"
+3. **Terciario:** Imagen del premio y elementos de celebración
+
+### Distribución
+- Identificación de ganador iluminada (nombre/foto)
+- Titular de felicitaciones y confeti
+- Lo que ganaron mostrado abajo
+
+### Estilo
+- **Textura:** Ceremonia de premios, ganador de lotería, gloria de celebración
+- **Iluminación:** Foco de ganador, brillo dorado
+- **Paleta:** Oro, colores de celebración, temas de victoria
+
+### Evitar
+Ganador poco claro, falta de celebración, baja energía.
+`.trim(),
+    },
+    // 11. PARTICIPANTES - Entries
+    {
+        id: 'reto-participants',
+        name: 'Participantes',
+        description: 'Mosaico',
+        svgIcon: 'Grid',
+        textZone: 'center',
+        promptInstruction: 'Grid of participant entries.',
+        structuralPrompt: `
+## Composición: Participant Entries Showcase
+
+**Estructura:** Exhibición de Entradas de Participantes.
+
+### Jerarquía Visual
+1. **Principal:** Cuadrícula o mosaico de entradas/envíos de participantes
+2. **Secundario:** Contador o estadísticas (X participantes, X entradas)
+3. **Terciario:** "Únete al movimiento" o estímulo de participación
+
+### Distribución
+- Mosaico de contenido de participantes
+- Conteo de participación o progreso
+- Estímulo para unirse
+
+### Estilo
+- **Textura:** Collage comunitario, exhibición UGC
+- **Iluminación:** Variada (de participantes) unificada con superposición
+- **Paleta:** Entradas diversas con unificación de acento de marca
+
+### Evitar
+Cuadrícula vacía, falta de sentimiento comunitario, foco solitario.
+`.trim(),
+    },
+]
+
+export const RETO_DESCRIPTION = 'Retos virales, sorteos y juegos. 11 composiciones para maximizar participación.'

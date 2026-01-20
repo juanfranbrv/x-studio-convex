@@ -6,7 +6,7 @@
  * relevante. El número es protagonista con contexto visual de apoyo.
  */
 
-import type { IntentRequiredField } from '@/lib/creation-flow-types'
+import type { IntentRequiredField, LayoutOption } from '@/lib/creation-flow-types'
 
 export const DATO_EXTENDED_DESCRIPTION = `
 Para compartir estadísticas, datos curiosos o información numérica 
@@ -41,279 +41,369 @@ export const DATO_REQUIRED_FIELDS: IntentRequiredField[] = [
     }
 ]
 
-// 1. HÉROE - Big Stat Hero
-export const DATO_HEROE_PROMPT = `
-<structural_instruction>
-    <composition_type>Big Number Hero</composition_type>
-    <visual_hierarchy>
-        <primary>Massive [STATISTIC] number dominating 60%+ of canvas</primary>
-        <secondary>Context explanation text anchored below or beside</secondary>
-        <tertiary>Source citation in discrete footer position</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_number>Center-dominating statistical figure</zone_number>
-        <zone_context>Explanatory text in supporting position</zone_context>
-        <zone_source>Small source attribution at bottom</zone_source>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Bold, authoritative, direct impact</texture>
-        <lighting>High contrast spotlight on the number</lighting>
-        <palette>Clean background, brand accent on number</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Small numbers, hidden statistics, buried data</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+export const DATO_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
+    // 0. LIBRE
+    {
+        id: 'dato-free',
+        name: 'Libre',
+        description: 'Sin indicación',
+        svgIcon: 'Sparkles',
+        textZone: 'center',
+        promptInstruction: 'Natural composition without structural constraints.',
+        structuralPrompt: '',
+    },
+    // 1. HÉROE - Big Stat Hero
+    {
+        id: 'dato-big',
+        name: 'Dato',
+        description: 'Número Gigante',
+        svgIcon: 'Hash',
+        textZone: 'center',
+        promptInstruction: 'Layout focusing on a single massive number.',
+        structuralPrompt: `
+## Composición: Big Number Hero
 
-// 2. COMPARACIÓN - Side by Side
-export const DATO_COMPARACION_PROMPT = `
-<structural_instruction>
-    <composition_type>Comparative Data Visualization</composition_type>
-    <visual_hierarchy>
-        <primary>Side-by-side or stacked comparison of two data points</primary>
-        <secondary>Visual size difference (bar height, circle size) showing relationship</secondary>
-        <tertiary>Clear labels identifying what each value represents</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_a>First data point with its visualization</zone_a>
-        <zone_b>Second data point for comparison</zone_b>
-        <zone_labels>Clear labeling for each entity</zone_labels>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Analytical, precise, infographic quality</texture>
-        <lighting>Even, informational, no drama</lighting>
-        <palette>Distinct colors for each data series</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unclear comparison, equal sizing when values differ, misleading visuals</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Héroe de número grande.
 
-// 3. PROCESO - Sequential Flow
-export const DATO_PROCESO_PROMPT = `
-<structural_instruction>
-    <composition_type>Sequential Process Flow</composition_type>
-    <visual_hierarchy>
-        <primary>Linear progression of 3-4 data points or steps</primary>
-        <secondary>Connecting arrows, lines, or flow indicators</secondary>
-        <tertiary>Icons or numbers marking each stage</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_flow>Left-to-right or top-to-bottom progression</zone_flow>
-        <zone_steps>Individual step or data point zones</zone_steps>
-        <zone_connections>Visual connectors between stages</zone_connections>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Instructional, logical, process-oriented</texture>
-        <lighting>Clear, even educational lighting</lighting>
-        <palette>Progressive color scheme or numbered hierarchy</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unclear flow direction, missing connections, chaotic layout</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía Visual
+1. **Principal:** Figura estadística masiva [STATISTIC] dominando el 60%+ del lienzo
+2. **Secundario:** Texto de contexto explicativo anclado debajo o al lado
+3. **Terciario:** Cita de fuente en posición discreta al pie
 
-// 4. REJILLA - Multi-Stat Grid
-export const DATO_REJILLA_PROMPT = `
-<structural_instruction>
-    <composition_type>Multi-Statistic Grid</composition_type>
-    <visual_hierarchy>
-        <primary>2x2 or 3x2 grid of key data points</primary>
-        <secondary>Icons accompanying each statistic</secondary>
-        <tertiary>Summary title spanning the composition top</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_header>Overall topic or summary title</zone_header>
-        <zone_grid>Organized grid of stat cells</zone_grid>
-        <zone_icons>Icon alongside each data point</zone_icons>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Rich, informative, dashboard density</texture>
-        <lighting>Even distribution, no single focal point</lighting>
-        <palette>Consistent color system across all cells</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Cramped cells, inconsistent sizing, missing context</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución
+- Figura estadística dominando el centro
+- Texto explicativo en posición de soporte
+- Atribución de fuente pequeña al final
 
-// 5. DASHBOARD - Tech Metrics
-export const DATO_DASHBOARD_PROMPT = `
-<structural_instruction>
-    <composition_type>Performance Dashboard Card</composition_type>
-    <visual_hierarchy>
-        <primary>Data displayed within stylized UI card element</primary>
-        <secondary>Trend indicators (up arrow, growth sparkline)</secondary>
-        <tertiary>Period context ("vs last month") and brand watermark</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_card>Floating card containing the metric</zone_card>
-        <zone_trend>Visual growth or decline indicator</zone_trend>
-        <zone_context>Time period or comparison reference</zone_context>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>SaaS, analytics, tech dashboard aesthetic</texture>
-        <lighting>Screen glow, digital interface feel</lighting>
-        <palette>Clean UI colors, green for growth, red for decline</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Print-only layouts, no trend context, static presentation</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Estilo
+- **Textura:** Audaz, autoritaria, impacto directo
+- **Iluminación:** Foco de alto contraste sobre el número
+- **Paleta:** Fondo limpio, acento de marca en el número
 
-// 6. CIRCULAR - Pie/Donut Chart
-export const DATO_CIRCULAR_PROMPT = `
-<structural_instruction>
-    <composition_type>Circular Data Visualization</composition_type>
-    <visual_hierarchy>
-        <primary>Large donut, pie, or ring chart as central graphic</primary>
-        <secondary>Key percentage or total displayed in ring center</secondary>
-        <tertiary>Floating legend labels pointing to segments</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_ring>Circular chart dominating center</zone_ring>
-        <zone_center>Summary stat inside the donut</zone_center>
-        <zone_labels>Segment legends around the chart</zone_labels>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Geometric, modern, abstract data art</texture>
-        <lighting>Clean, even, infographic clarity</lighting>
-        <palette>Distinct segment colors, harmonious scheme</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Too many segments, unclear percentages, cluttered center</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar
+Números pequeños, estadísticas ocultas, datos enterrados.
+`.trim(),
+    },
+    // 2. COMPARACIÓN - Side by Side
+    {
+        id: 'dato-comparison',
+        name: 'Comparativa',
+        description: 'Barras / VS',
+        svgIcon: 'BarChart2',
+        textZone: 'center',
+        promptInstruction: 'Comparison layout with charts or side-by-side.',
+        structuralPrompt: `
+## Composición: Comparative Data Visualization
 
-// 7. BARRA - Bar Chart Style
-export const DATO_BARRA_PROMPT = `
-<structural_instruction>
-    <composition_type>Bar Chart Visualization</composition_type>
-    <visual_hierarchy>
-        <primary>Horizontal or vertical bars showing comparative values</primary>
-        <secondary>Value labels at end of each bar</secondary>
-        <tertiary>Category labels identifying each bar</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_bars>Main area for bar chart display</zone_bars>
-        <zone_values>Number labels on or near bars</zone_values>
-        <zone_categories>Axis labels for categories</zone_categories>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Clean chart graphics, professional data viz</texture>
-        <lighting>Even, readable, no artistic effects</lighting>
-        <palette>Distinct bar colors or gradient within category</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Misleading proportions, missing labels, crowded bars</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Visualización de datos comparativa.
 
-// 8. ICONO - Icon-Led Stats
-export const DATO_ICONO_PROMPT = `
-<structural_instruction>
-    <composition_type>Icon-Driven Statistic</composition_type>
-    <visual_hierarchy>
-        <primary>Large representative icon as visual anchor (💰, 📈, 🌍)</primary>
-        <secondary>Statistic number positioned prominently near icon</secondary>
-        <tertiary>Context text explaining what the icon+number means</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_icon>Large icon or illustration as visual center</zone_icon>
-        <zone_stat>Number displayed in relation to icon</zone_stat>
-        <zone_explain>Brief context beneath or beside</zone_explain>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Bold illustration, clear iconography</texture>
-        <lighting>Clean, icon-focused presentation</lighting>
-        <palette>Icon colors integrated with brand palette</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Small icons, disconnected number and icon, confusing symbols</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía Visual
+1. **Principal:** Comparación lado a lado o apilada de dos puntos de datos
+2. **Secundario:** Diferencia visual de tamaño (altura de barra, tamaño de círculo) mostrando relación
+3. **Terciario:** Etiquetas claras identificando lo que representa cada valor
 
-// 9. TIMELINE - Historical Data
-export const DATO_TIMELINE_PROMPT = `
-<structural_instruction>
-    <composition_type>Historical Timeline Data</composition_type>
-    <visual_hierarchy>
-        <primary>Horizontal timeline with data points at key dates</primary>
-        <secondary>Visual markers showing progression or change over time</secondary>
-        <tertiary>Date labels and milestone values</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_line>Central timeline spine</zone_line>
-        <zone_points>Data markers at specific dates</zone_points>
-        <zone_labels>Date and value annotations</zone_labels>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Historical progression, growth story visualization</texture>
-        <lighting>Even, documentary clarity</lighting>
-        <palette>Progressive or chronological color scheme</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Confusing time flow, crowded points, unclear progression</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución
+- Primer punto de datos con su visualización
+- Segundo punto de datos para comparación
+- Etiquetado claro para cada entidad
 
-// 10. MAPA - Geographic Data
-export const DATO_MAPA_PROMPT = `
-<structural_instruction>
-    <composition_type>Geographic Data Map</composition_type>
-    <visual_hierarchy>
-        <primary>Map outline with highlighted regions or marked locations</primary>
-        <secondary>Data callouts or heat intensity showing regional values</secondary>
-        <tertiary>Legend explaining the color/mark meanings</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_map>Geographic map as main visual</zone_map>
-        <zone_highlights>Colored regions or location pins</zone_highlights>
-        <zone_legend>Color/symbol legend for interpretation</zone_legend>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Cartographic, geographic data visualization</texture>
-        <lighting>Flat, map-appropriate, no 3D effects</lighting>
-        <palette>Heat map gradients or categorical region colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Cluttered maps, missing legend, unreada ble labels</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Estilo
+- **Textura:** Analítica, precisa, calidad infográfica
+- **Iluminación:** Uniforme, informativa, sin drama
+- **Paleta:** Colores distintos para cada serie de datos
 
-// 11. CONTADOR - Counter/Ticker
-export const DATO_CONTADOR_PROMPT = `
-<structural_instruction>
-    <composition_type>Live Counter Display</composition_type>
-    <visual_hierarchy>
-        <primary>Digital counter or ticker-style number display</primary>
-        <secondary>Animated feel with number segments or flip display</secondary>
-        <tertiary>Context label explaining what's being counted</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_counter>Central counter number display</zone_counter>
-        <zone_digits>Individual digit segments or flip panels</zone_digits>
-        <zone_label>Metric label below counter</zone_label>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>LED display, flip clock, scoreboard aesthetic</texture>
-        <lighting>Self-luminous digits, backlit panels</lighting>
-        <palette>Digital display colors (red LED, green, amber)</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Static feel, non-counter typography, no animation suggestion</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar
+Comparación poco clara, tamaño igual cuando los valores difieren, visuales engañosos.
+`.trim(),
+    },
+    // 3. PROCESO - Sequential Flow
+    {
+        id: 'dato-process',
+        name: 'Proceso',
+        description: 'Pasos 1-2-3',
+        svgIcon: 'ListOrdered',
+        textZone: 'left',
+        promptInstruction: 'Step-by-step process flow layout.',
+        structuralPrompt: `
+## Composición: Sequential Process Flow
+
+**Estructura:** Flujo de proceso secuencial.
+
+### Jerarquía Visual
+1. **Principal:** Progresión lineal de 3-4 puntos de datos o pasos
+2. **Secundario:** Flechas, líneas o indicadores de flujo conectando
+3. **Terciario:** Iconos o números marcando cada etapa
+
+### Distribución
+- Progresión de izquierda a derecha o de arriba a abajo
+- Zonas de paso o punto de datos individual
+- Conectores visuales entre etapas
+
+### Estilo
+- **Textura:** Instruccional, lógica, orientada al proceso
+- **Iluminación:** Clara, iluminación educativa uniforme
+- **Paleta:** Esquema de color progresivo o jerarquía numerada
+
+### Evitar
+Dirección de flujo poco clara, conexiones faltantes, diseño caótico.
+`.trim(),
+    },
+    // 4. REJILLA - Multi-Stat Grid
+    {
+        id: 'dato-infographic',
+        name: 'Info',
+        description: 'Grid de Datos',
+        svgIcon: 'LayoutGrid',
+        textZone: 'center',
+        promptInstruction: 'Structured grid infographic layout.',
+        structuralPrompt: `
+## Composición: Multi-Statistic Grid
+
+**Estructura:** Cuadrícula multi-estadística.
+
+### Jerarquía Visual
+1. **Principal:** Cuadrícula de 2x2 o 3x2 de puntos de datos clave
+2. **Secundario:** Iconos acompañando cada estadística
+3. **Terciario:** Título de resumen abarcando la parte superior de la composición
+
+### Distribución
+- Título de resumen o tema general
+- Cuadrícula organizada de celdas estadísticas
+- Icono junto a cada punto de datos
+
+### Estilo
+- **Textura:** Rica, informativa, densidad de tablero
+- **Iluminación:** Distribución uniforme, sin punto focal único
+- **Paleta:** Sistema de color consistente en todas las celdas
+
+### Evitar
+Celdas apretadas, tamaño inconsistente, contexto faltante.
+`.trim(),
+    },
+    // 5. CONTADOR - Metric (Mapped to 'dato-metric' in types)
+    {
+        id: 'dato-metric',
+        name: 'Métrica',
+        description: 'Dashboard Card',
+        svgIcon: 'Activity',
+        textZone: 'center',
+        promptInstruction: 'UI Card style for key performance metric.',
+        structuralPrompt: `
+## Composición: Live Counter Display
+
+**Estructura:** Pantalla de contador en vivo.
+
+### Jerarquía Visual
+1. **Principal:** Pantalla de número digital o estilo ticker
+2. **Secundario:** Sensación animada con segmentos de número o pantalla flip
+3. **Terciario:** Etiqueta de contexto explicando lo que se cuenta
+
+### Distribución
+- Pantalla de número de contador central
+- Segmentos de dígitos individuales o paneles flip
+- Etiqueta de métrica debajo del contador
+
+### Estilo
+- **Textura:** Pantalla LED, reloj flip, estética de marcador
+- **Iluminación:** Dígitos auto-luminosos, paneles retroiluminados
+- **Paleta:** Colores de pantalla digital (LED rojo, verde, ámbar)
+
+### Evitar
+Sensación estática, tipografía no de contador, sin sugerencia de animación.
+`.trim(),
+    },
+    // 6. CIRCULAR - Pie/Donut Chart
+    {
+        id: 'dato-pie',
+        name: 'Circular',
+        description: 'Porcentajes',
+        svgIcon: 'PieChart',
+        textZone: 'center',
+        promptInstruction: 'Circular chart or ring visualization.',
+        structuralPrompt: `
+## Composición: Circular Data Visualization
+
+**Estructura:** Visualización de datos circular.
+
+### Jerarquía Visual
+1. **Principal:** Gráfico de dona, pastel o anillo grande como gráfico central
+2. **Secundario:** Porcentaje clave o total mostrado en el centro del anillo
+3. **Terciario:** Etiquetas de leyenda flotantes apuntando a segmentos
+
+### Distribución
+- Gráfico circular dominando el centro
+- Estadística de resumen dentro de la dona
+- Leyendas de segmento alrededor del gráfico
+
+### Estilo
+- **Textura:** Geométrica, moderna, arte de datos abstracto
+- **Iluminación:** Clara, uniforme, claridad infográfica
+- **Paleta:** Colores de segmento distintos, esquema armonioso
+
+### Evitar
+Demasiados segmentos, porcentajes poco claros, centro desordenado.
+`.trim(),
+    },
+    // 7. DASHBOARD - Tech Metrics
+    {
+        id: 'dato-dashboard',
+        name: 'Dashboard',
+        description: 'UI',
+        svgIcon: 'Layout',
+        textZone: 'center',
+        promptInstruction: 'Analytics dashboard view.',
+        structuralPrompt: `
+## Composición: Performance Dashboard Card
+
+**Estructura:** Tarjeta de tablero de rendimiento.
+
+### Jerarquía Visual
+1. **Principal:** Datos mostrados dentro de elemento de tarjeta UI estilizada
+2. **Secundario:** Indicadores de tendencia (flecha arriba, minigráfico de crecimiento)
+3. **Terciario:** Contexto de período ("vs mes pasado") y marca de agua de marca
+
+### Distribución
+- Tarjeta flotante conteniendo la métrica
+- Indicador visual de crecimiento o declive
+- Referencia de período de tiempo o comparación
+
+### Estilo
+- **Textura:** SaaS, analítica, estética de tablero tech
+- **Iluminación:** Brillo de pantalla, sensación de interfaz digital
+- **Paleta:** Colores UI limpios, verde para crecimiento, rojo para declive
+
+### Evitar
+Diseños solo de impresión, sin contexto de tendencia, presentación estática.
+`.trim(),
+    },
+    // 8. BARRA - Bar Chart Style
+    {
+        id: 'dato-bar',
+        name: 'Barras',
+        description: 'Gráfico',
+        svgIcon: 'BarChart',
+        textZone: 'center',
+        promptInstruction: 'Bar chart visualization.',
+        structuralPrompt: `
+## Composición: Bar Chart Visualization
+
+**Estructura:** Visualización de gráfico de barras.
+
+### Jerarquía Visual
+1. **Principal:** Barras horizontales o verticales mostrando valores comparativos
+2. **Secundario:** Etiquetas de valor al final de cada barra
+3. **Terciario:** Etiquetas de categoría identificando cada barra
+
+### Distribución
+- Área principal para visualización de gráfico de barras
+- Etiquetas de número en o cerca de las barras
+- Etiquetas de eje para categorías
+
+### Estilo
+- **Textura:** Gráficos de carta limpios, visualización de datos profesional
+- **Iluminación:** Uniforme, legible, sin efectos artísticos
+- **Paleta:** Colores de barra distintos o degradado dentro de categoría
+
+### Evitar
+Proporciones engañosas, etiquetas faltantes, barras abarrotadas.
+`.trim(),
+    },
+    // 9. ICONO - Icon-Led Stats
+    {
+        id: 'dato-icon',
+        name: 'Icono',
+        description: 'Símbolo',
+        svgIcon: 'Hexagon',
+        textZone: 'center',
+        promptInstruction: 'Large icon with data point.',
+        structuralPrompt: `
+## Composición: Icon-Driven Statistic
+
+**Estructura:** Estadística impulsada por icono.
+
+### Jerarquía Visual
+1. **Principal:** Icono representativo grande como ancla visual (💰, 📈, 🌍)
+2. **Secundario:** Número estadístico posicionado prominentemente cerca del icono
+3. **Terciario:** Texto de contexto explicando lo que significa el icono+número
+
+### Distribución
+- Icono o ilustración grande como centro visual
+- Número mostrado en relación al icono
+- Breve contexto debajo o al lado
+
+### Estilo
+- **Textura:** Ilustración audaz, iconografía clara
+- **Iluminación:** Limpia, presentación centrada en icono
+- **Paleta:** Colores de icono integrados con paleta de marca
+
+### Evitar
+Iconos pequeños, número e icono desconectados, símbolos confusos.
+`.trim(),
+    },
+    // 10. TIMELINE - Historical Data
+    {
+        id: 'dato-timeline',
+        name: 'Timeline',
+        description: 'Histórico',
+        svgIcon: 'Clock',
+        textZone: 'left',
+        promptInstruction: 'Data timeline evolution.',
+        structuralPrompt: `
+## Composición: Historical Timeline Data
+
+**Estructura:** Datos de línea de tiempo histórica.
+
+### Jerarquía Visual
+1. **Principal:** Línea de tiempo horizontal con puntos de datos en fechas clave
+2. **Secundario:** Marcadores visuales mostrando progresión o cambio a lo largo del tiempo
+3. **Terciario:** Etiquetas de fecha y valores de hito
+
+### Distribución
+- Columna vertebral central de línea de tiempo
+- Marcadores de datos en fechas específicas
+- Anotaciones de fecha y valor
+
+### Estilo
+- **Textura:** Progresión histórica, visualización de historia de crecimiento
+- **Iluminación:** Uniforme, claridad documental
+- **Paleta:** Esquema de color progresivo o cronológico
+
+### Evitar
+Flujo de tiempo confuso, puntos abarrotados, progresión poco clara.
+`.trim(),
+    },
+    // 11. MAPA - Geographic Data
+    {
+        id: 'dato-map',
+        name: 'Mapa',
+        description: 'Geográfico',
+        svgIcon: 'Map',
+        textZone: 'center',
+        promptInstruction: 'Data map visualization.',
+        structuralPrompt: `
+## Composición: Geographic Data Map
+
+**Estructura:** Mapa de datos geográficos.
+
+### Jerarquía Visual
+1. **Principal:** Contorno de mapa con regiones resaltadas o ubicaciones marcadas
+2. **Secundario:** Llamadas de datos o intensidad de calor mostrando valores regionales
+3. **Terciario:** Leyenda explicando los significados de color/marca
+
+### Distribución
+- Mapa geográfico como visual principal
+- Regiones coloreadas o pines de ubicación
+- Leyenda de color/símbolo para interpretación
+
+### Estilo
+- **Textura:** Cartográfica, visualización de datos geográficos
+- **Iluminación:** Plana, apropiada para mapa, sin efectos 3D
+- **Paleta:** Degradados de mapa de calor o colores de región categóricos
+
+### Evitar
+Mapas desordenados, leyenda faltante, etiquetas ilegibles.
+`.trim(),
+    },
+]
 
 export const DATO_DESCRIPTION = 'Infografía para destacar números, estadísticas o procesos. 11 composiciones de visualización de datos.'

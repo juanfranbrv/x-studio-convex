@@ -6,7 +6,7 @@
  * el diseño, invitando a la audiencia a participar.
  */
 
-import type { IntentRequiredField } from '@/lib/creation-flow-types'
+import type { IntentRequiredField, LayoutOption } from '@/lib/creation-flow-types'
 
 export const PREGUNTA_EXTENDED_DESCRIPTION = `
 Diseñado para provocar interacción y comentarios. La pregunta domina 
@@ -45,279 +45,369 @@ export const PREGUNTA_REQUIRED_FIELDS: IntentRequiredField[] = [
     }
 ]
 
-// 1. IMPACTO - Big Type Question
-export const PREGUNTA_IMPACTO_PROMPT = `
-<structural_instruction>
-    <composition_type>Typographic Impact Question</composition_type>
-    <visual_hierarchy>
-        <primary>The [QUESTION] text as absolute visual dominant (70%+ of canvas)</primary>
-        <secondary>Solid vibrant background color or subtle abstract pattern</secondary>
-        <tertiary>Small anchored CTA "Reply below" or comment icon</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_question>Center-dominating massive question text</zone_question>
-        <zone_background>Bold color field or gradient</zone_background>
-        <zone_cta>Bottom corner call-to-action element</zone_cta>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Bold, clean, high impact typography</texture>
-        <lighting>Even, no shadows, poster-like clarity</lighting>
-        <palette>High contrast brand colors, impossible to ignore</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Small question text, busy backgrounds, buried message</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+export const PREGUNTA_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
+    // 0. LIBRE
+    {
+        id: 'pregunta-free',
+        name: 'Libre',
+        description: 'Sin indicación',
+        svgIcon: 'Sparkles',
+        textZone: 'center',
+        promptInstruction: 'Natural composition without structural constraints.',
+        structuralPrompt: '',
+    },
+    // 1. IMPACTO - Big Type Question
+    {
+        id: 'pregunta-big',
+        name: 'Texto',
+        description: 'Impacto Puro',
+        svgIcon: 'Type',
+        textZone: 'center',
+        promptInstruction: 'Typographic impact layout dominated by the question.',
+        structuralPrompt: `
+## Composición: Typographic Impact Question
 
-// 2. VERSUS - This vs That
-export const PREGUNTA_VERSUS_PROMPT = `
-<structural_instruction>
-    <composition_type>Visual Comparison Poll</composition_type>
-    <visual_hierarchy>
-        <primary>Split screen with two distinct options (A vs B)</primary>
-        <secondary>Central "VS" badge or dividing element</secondary>
-        <tertiary>Clear labels for each option ("Coffee" vs "Tea")</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_left>Option A with its visual and label</zone_left>
-        <zone_right>Option B with its visual and label</zone_right>
-        <zone_center>"VS" or conflict indicator at the junction</zone_center>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Gamified, competitive, high contrast between options</texture>
-        <lighting>Equal dramatic lighting on both options</lighting>
-        <palette>Contrasting colors for each option, clear differentiation</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unclear options, biased visuals, hidden second choice</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Pregunta de impacto tipográfico.
 
-// 3. CHAT - Conversation Bubble
-export const PREGUNTA_CHAT_PROMPT = `
-<structural_instruction>
-    <composition_type>Digital Conversation Aesthetic</composition_type>
-    <visual_hierarchy>
-        <primary>Message bubble containing the question in chat interface style</primary>
-        <secondary>Avatar or asker identity placeholder</secondary>
-        <tertiary>Visual "text input field" or typing indicator suggesting response</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_bubble>Speech bubble with question text</zone_bubble>
-        <zone_avatar>Small profile picture or icon of asker</zone_avatar>
-        <zone_input>Bottom suggestion of "type your answer" interface</zone_input>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Social media native, messaging app aesthetic</texture>
-        <lighting>Screen-like glow, digital clarity</lighting>
-        <palette>iOS/Android message colors or brand equivalent</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Old-school graphics, non-digital feel, static layout</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía Visual
+1. **Principal:** El texto [QUESTION] como dominante visual absoluto (70%+ del lienzo)
+2. **Secundario:** Color de fondo sólido vibrante o patrón abstracto sutil
+3. **Terciario:** Pequeña llamada a la acción anclada "Responde abajo" o icono de comentario
 
-// 4. QUIZ - Multiple Choice
-export const PREGUNTA_QUIZ_PROMPT = `
-<structural_instruction>
-    <composition_type>Quiz Show Interface</composition_type>
-    <visual_hierarchy>
-        <primary>Question header prominently at top</primary>
-        <secondary>Grid of 3-4 answer option cards or buttons</secondary>
-        <tertiary>One option potentially highlighted (hover state) or all equal</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_question>Top header with quiz question</zone_question>
-        <zone_options>Grid layout for answer choices (A, B, C, D)</zone_options>
-        <zone_highlight>Visual emphasis on selectable nature</zone_highlight>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Game show, trivia night, playful educational</texture>
-        <lighting>Studio game lighting, bright and engaging</lighting>
-        <palette>Colorful option differentiation, quiz show energy</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Cramped options, unclear reading order, boring presentation</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución
+- Texto de pregunta masivo dominando el centro
+- Campo de color o degradado audaz de fondo
+- Elemento de llamada a la acción en esquina inferior
 
-// 5. DEBATE - Thought Provoking
-export const PREGUNTA_DEBATE_PROMPT = `
-<structural_instruction>
-    <composition_type>Serious Discussion Layout</composition_type>
-    <visual_hierarchy>
-        <primary>Provocative or thematic imagery filling background</primary>
-        <secondary>Semi-transparent overlay containing the question</secondary>
-        <tertiary>"What do you think?" or "Share your opinion" prompt</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_image>Full-bleed atmospheric or controversial imagery</zone_image>
-        <zone_overlay>Readable text area with contrast from image</zone_overlay>
-        <zone_prompt>Footer invitation to share thoughts</zone_prompt>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Editorial, opinion piece, magazine quality</texture>
-        <lighting>Moody, thought-provoking ambiance</lighting>
-        <palette>Deeper, sophisticated colors, intellectual feel</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Frivolous aesthetics, party vibes, lighthearted treatment</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Estilo
+- **Textura:** Tipografía audaz, limpia, de alto impacto
+- **Iluminación:** Uniforme, sin sombras, claridad tipo póster
+- **Paleta:** Colores de marca de alto contraste, imposibles de ignorar
 
-// 6. PENSAMIENTO - Introspective
-export const PREGUNTA_PENSAMIENTO_PROMPT = `
-<structural_instruction>
-    <composition_type>Introspective Thought Layout</composition_type>
-    <visual_hierarchy>
-        <primary>Abstract "thinking" shapes: lightbulb, brain, thought cloud, head silhouette</primary>
-        <secondary>Question text floating in open "thought space"</secondary>
-        <tertiary>Subtle particles or connections suggesting mental activity</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_symbol>Abstract thinking icon or illustration</zone_symbol>
-        <zone_space>Open canvas area for contemplation</zone_space>
-        <zone_question>Question integrated into the ethereal space</zone_question>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Abstract, soft, intellectual, philosophical</texture>
-        <lighting>Soft diffused, dreamlike, cerebral</lighting>
-        <palette>Soft colors, light airy tones, spacious feel</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Loud graphics, urgent aesthetics, action-oriented</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar
+Texto de pregunta pequeño, fondos recargados, mensaje oculto.
+`.trim(),
+    },
+    // 2. VERSUS - This vs That (Originalmente #7 en types, #2 en prompt file)
+    {
+        id: 'pregunta-versus',
+        name: 'Versus',
+        description: 'Opciones',
+        svgIcon: 'GitCompare',
+        textZone: 'center',
+        promptInstruction: 'Split screen comparison for two options.',
+        structuralPrompt: `
+## Composición: Visual Comparison Poll
 
-// 7. ENCUESTA - Poll Bars
-export const PREGUNTA_ENCUESTA_PROMPT = `
-<structural_instruction>
-    <composition_type>Poll Results Bar Layout</composition_type>
-    <visual_hierarchy>
-        <primary>Horizontal progress bars showing poll options</primary>
-        <secondary>Question text at top establishing the poll</secondary>
-        <tertiary>Percentage or vote count labels on each bar</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_question>Header area with the poll question</zone_question>
-        <zone_bars>Stacked horizontal bars for each option</zone_bars>
-        <zone_results>Percentage or count display per option</zone_zone>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Data visualization, Instagram/Twitter poll aesthetic</texture>
-        <lighting>Clean, UI-style, dashboard clarity</lighting>
-        <palette>Gradient bars, result visualization colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>No visual hierarchy between options, confusing charts</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Encuesta de comparación visual.
 
-// 8. EMOJI - Reaction Scale
-export const PREGUNTA_EMOJI_PROMPT = `
-<structural_instruction>
-    <composition_type>Emoji Reaction Scale</composition_type>
-    <visual_hierarchy>
-        <primary>Row of emoji faces representing scale (😢 to 🤩)</primary>
-        <secondary>Question about rating or feeling at top</secondary>
-        <tertiary>Labels or numbers below each emoji option</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_question>Top area with "How do you feel about..."</zone_question>
-        <zone_emojis>Horizontal emoji scale from negative to positive</zone_emoji>
-        <zone_labels>Scale indicators (1-5 or descriptive labels)</zone_labels>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Playful, Gen-Z friendly, approachable</texture>
-        <lighting>Bright, fun, social media native</lighting>
-        <palette>Colorful emoji colors, fun gradient backgrounds</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Text-only scales, serious corporate feel, complex interface</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía Visual
+1. **Principal:** Pantalla dividida con dos opciones distintas (A vs B)
+2. **Secundario:** Insignia central "VS" o elemento divisor
+3. **Terciario:** Etiquetas claras para cada opción ("Café" vs "Té")
 
-// 9. RELLENO - Fill in the Blank
-export const PREGUNTA_RELLENO_PROMPT = `
-<structural_instruction>
-    <composition_type>Fill in the Blank Game</composition_type>
-    <visual_hierarchy>
-        <primary>Statement with visible blank line or underscore for audience to complete</primary>
-        <secondary>Visual cues suggesting writing/filling (pen, cursor)</secondary>
-        <tertiary>Example answer or hint if appropriate</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_statement>Sentence with prominent blank space "_____"</zone_statement>
-        <zone_blank>Highlighted empty field inviting completion</zone_blank>
-        <zone_hint>Optional small hint or example answer</zone_hint>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Worksheet, Mad Libs, interactive exercise feel</texture>
-        <lighting>Clean, classroom-friendly brightness</lighting>
-        <palette>Paper/pen colors or playful fills</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Completed answers visible, no blank space, closed question</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución
+- Opción A con su visual y etiqueta a un lado
+- Opción B con su visual y etiqueta al otro
+- Indicador de "VS" o conflicto en la intersección central
 
-// 10. SLIDER - Rate Scale
-export const PREGUNTA_SLIDER_PROMPT = `
-<structural_instruction>
-    <composition_type>Slider Rating Interface</composition_type>
-    <visual_hierarchy>
-        <primary>Horizontal slider bar with draggable indicator</primary>
-        <secondary>Scale endpoints with extreme labels ("Never" to "Always")</secondary>
-        <tertiary>Question prompting the rating above the slider</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_question>Rating question at top of composition</zone_question>
-        <zone_slider>Interactive-looking slider bar in center</zone_slider>
-        <zone_labels>Extreme labels at each end of the scale</zone_labels>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>UI design, app interface, Stories slider aesthetic</texture>
-        <lighting>Screen-like glow, interactive element highlight</lighting>
-        <palette>Gradient slider tracks, branded thumb/indicator</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Static appearance, non-interactive feel, confusing scale</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Estilo
+- **Textura:** Gamificada, competitiva, alto contraste entre opciones
+- **Iluminación:** Iluminación dramática igual en ambas opciones
+- **Paleta:** Colores contrastantes para cada opción, diferenciación clara
 
-// 11. CONTROVERSIAL - Hot Take
-export const PREGUNTA_CONTROVERSIAL_PROMPT = `
-<structural_instruction>
-    <composition_type>Hot Take Controversial Statement</composition_type>
-    <visual_hierarchy>
-        <primary>Bold controversial statement or unpopular opinion as main text</primary>
-        <secondary>Fire, hot, or heated visual elements suggesting controversy</secondary>
-        <tertiary>"Agree or Disagree?" or "Fight me in comments" prompt</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_statement>Central bold statement meant to provoke</zone_statement>
-        <zone_heat>Fire, flames, hot graphics around edges</zone_heat>
-        <zone_challenge>Call to action challenging audience response</zone_challenge>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Bold, aggressive, attention-grabbing</texture>
-        <lighting>Dramatic, high contrast, intense</lighting>
-        <palette>Hot colors (red, orange), angry emoji vibes</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Mild statements, calm aesthetics, polite framing</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar
+Opciones poco claras, visuales sesgados, segunda opción oculta.
+`.trim(),
+    },
+    // 3. CHAT - Conversation Bubble
+    {
+        id: 'pregunta-conversation',
+        name: 'Chat',
+        description: 'Chat / Social',
+        svgIcon: 'MessageCircle',
+        textZone: 'center',
+        promptInstruction: 'Digital conversation bubble aesthetic.',
+        structuralPrompt: `
+## Composición: Digital Conversation Aesthetic
+
+**Estructura:** Estética de conversación digital.
+
+### Jerarquía Visual
+1. **Principal:** Burbuja de mensaje conteniendo la pregunta en estilo de interfaz de chat
+2. **Secundario:** Avatar o marcador de identidad del preguntador
+3. **Terciario:** Visual de "campo de entrada de texto" o indicador de escritura sugiriendo respuesta
+
+### Distribución
+- Burbuja de diálogo con texto de pregunta
+- Pequeña foto de perfil o icono del preguntador
+- Sugerencia inferior de interfaz "escribe tu respuesta"
+
+### Estilo
+- **Textura:** Nativa de redes sociales, estética de app de mensajería
+- **Iluminación:** Brillo tipo pantalla, claridad digital
+- **Paleta:** Colores de mensajes iOS/Android o equivalente de marca
+
+### Evitar
+Gráficos de vieja escuela, sensación no digital, diseño estático.
+`.trim(),
+    },
+    // 4. QUIZ - Multiple Choice
+    {
+        id: 'pregunta-quiz',
+        name: 'Quiz',
+        description: 'Opciones GRID',
+        svgIcon: 'Grid',
+        textZone: 'center',
+        promptInstruction: 'Game show quiz interface with options.',
+        structuralPrompt: `
+## Composición: Quiz Show Interface
+
+**Estructura:** Interfaz de concurso de preguntas.
+
+### Jerarquía Visual
+1. **Principal:** Encabezado de pregunta prominentemente en la parte superior
+2. **Secundario:** Cuadrícula de 3-4 tarjetas o botones de opciones de respuesta
+3. **Terciario:** Una opción potencialmente resaltada (estado hover) o todas iguales
+
+### Distribución
+- Encabezado superior con pregunta del quiz
+- Diseño de cuadrícula para opciones de respuesta (A, B, C, D)
+- Énfasis visual en la naturaleza seleccionable
+
+### Estilo
+- **Textura:** Concurso de juegos, noche de trivia, educativo lúdico
+- **Iluminación:** Iluminación de estudio de juegos, brillante y atractiva
+- **Paleta:** Diferenciación colorida de opciones, energía de concurso
+
+### Evitar
+Opciones apretadas, orden de lectura poco claro, presentación aburrida.
+`.trim(),
+    },
+    // 5. DEBATE - Thought Provoking
+    {
+        id: 'pregunta-debate',
+        name: 'Debate',
+        description: 'Opinión Seria',
+        svgIcon: 'Users',
+        textZone: 'left',
+        promptInstruction: 'Serious discussion overlay on evocative background.',
+        structuralPrompt: `
+## Composición: Serious Discussion Layout
+
+**Estructura:** Diseño de discusión seria.
+
+### Jerarquía Visual
+1. **Principal:** Imágenes provocativas o temáticas llenando el fondo
+2. **Secundario:** Superposición semitransparente conteniendo la pregunta
+3. **Terciario:** Indicación "¿Qué opinas?" o "Comparte tu opinión"
+
+### Distribución
+- Imagen atmosférica o controversial a sangre completa
+- Área de texto legible con contraste sobre la imagen
+- Invitación al pie para compartir pensamientos
+
+### Estilo
+- **Textura:** Editorial, artículo de opinión, calidad de revista
+- **Iluminación:** Ambiente temperamental, que invita a la reflexión
+- **Paleta:** Colores más profundos y sofisticados, sensación intelectual
+
+### Evitar
+Estética frívola, vibras de fiesta, tratamiento ligero.
+`.trim(),
+    },
+    // 6. PENSAMIENTO - Introspective
+    {
+        id: 'pregunta-thought',
+        name: 'Idea',
+        description: 'Abstracto',
+        svgIcon: 'Cloud',
+        textZone: 'center',
+        promptInstruction: 'Abstract thinking shapes and ethereal space.',
+        structuralPrompt: `
+## Composición: Introspective Thought Layout
+
+**Estructura:** Diseño de pensamiento introspectivo.
+
+### Jerarquía Visual
+1. **Principal:** Formas abstractas de "pensamiento": bombilla, cerebro, nube de ideas, silueta de cabeza
+2. **Secundario:** Texto de pregunta flotando en "espacio de pensamiento" abierto
+3. **Terciario:** Partículas sutiles o conexiones sugiriendo actividad mental
+
+### Distribución
+- Símbolo abstracto de pensamiento o ilustración
+- Área de lienzo abierto para contemplación
+- Pregunta integrada en el espacio etéreo
+
+### Estilo
+- **Textura:** Abstracta, suave, intelectual, filosófica
+- **Iluminación:** Difusa suave, onírica, cerebral
+- **Paleta:** Tonos suaves, colores aireados, sensación espaciosa
+
+### Evitar
+Gráficos ruidosos, estética urgente, orientada a la acción.
+`.trim(),
+    },
+    // 7. ENCUESTA - Poll Bars (Originalmente #2 en types, #7 en prompt file)
+    {
+        id: 'pregunta-poll',
+        name: 'Encuesta',
+        description: 'Comparativo',
+        svgIcon: 'BarChart2',
+        textZone: 'top',
+        promptInstruction: 'Visual representation of poll results.',
+        structuralPrompt: `
+## Composición: Poll Results Bar Layout
+
+**Estructura:** Diseño de barras de resultados de encuesta.
+
+### Jerarquía Visual
+1. **Principal:** Barras de progreso horizontales mostrando opciones de encuesta
+2. **Secundario:** Texto de pregunta en la parte superior estableciendo la encuesta
+3. **Terciario:** Etiquetas de porcentaje o recuento de votos en cada barra
+
+### Distribución
+- Área de encabezado con la pregunta de la encuesta
+- Barras horizontales apiladas para cada opción
+- Visualización de porcentaje o recuento por opción
+
+### Estilo
+- **Textura:** Visualización de datos, estética de encuesta Instagram/Twitter
+- **Iluminación:** Limpia, estilo UI, claridad de tablero
+- **Paleta:** Barras de degradado, colores de visualización de resultados
+
+### Evitar
+Sin jerarquía visual entre opciones, gráficos confusos.
+`.trim(),
+    },
+    // 8. EMOJI - Reaction Scale
+    {
+        id: 'pregunta-emoji',
+        name: 'Emoji',
+        description: 'Visual',
+        svgIcon: 'Smile',
+        textZone: 'center',
+        promptInstruction: 'Scale of emojis from negative to positive.',
+        structuralPrompt: `
+## Composición: Emoji Reaction Scale
+
+**Estructura:** Escala de reacción con emojis.
+
+### Jerarquía Visual
+1. **Principal:** Fila de caras emoji representando una escala (de triste a emocionado)
+2. **Secundario:** Pregunta sobre calificación o sentimiento en la parte superior
+3. **Terciario:** Etiquetas o números debajo de cada opción de emoji
+
+### Distribución
+- Área superior con "¿Cómo teientes sobre...?"
+- Escala horizontal de emojis de negativo a positivo
+- Indicadores de escala (1-5 o etiquetas descriptivas)
+
+### Estilo
+- **Textura:** Jueguetona, amigable para Gen-Z, accesible
+- **Iluminación:** Brillante, divertida, nativa de redes sociales
+- **Paleta:** Colores coloridos de emoji, fondos degradados divertidos
+
+### Evitar
+Escalas solo de texto, sensación corporativa seria, interfaz compleja.
+`.trim(),
+    },
+    // 9. RELLENO - Fill in the Blank
+    {
+        id: 'pregunta-fill',
+        name: 'Relleno',
+        description: 'Completar',
+        svgIcon: 'Edit3',
+        textZone: 'center',
+        promptInstruction: 'Sentence with a blank space to fill in.',
+        structuralPrompt: `
+## Composición: Fill in the Blank Game
+
+**Estructura:** Juego de completar la frase.
+
+### Jerarquía Visual
+1. **Principal:** Declaración con línea en blanco visible o guion bajo para completar
+2. **Secundario:** Pistas visuales sugiriendo escritura/rellenado (bolígrafo, cursor)
+3. **Terciario:** Respuesta de ejemplo o pista si es apropiado
+
+### Distribución
+- Frase con espacio en blanco prominente "_____"
+- Campo vacío resaltado invitando a completar
+- Pequeña pista opcional o respuesta de ejemplo
+
+### Estilo
+- **Textura:** Hoja de trabajo, Mad Libs, sensación de ejercicio interactivo
+- **Iluminación:** Limpia, brillo amigable de aula
+- **Paleta:** Colores de papel/bolígrafo o rellenos lúdicos
+
+### Evitar
+Respuestas completas visibles, sin espacio en blanco, pregunta cerrada.
+`.trim(),
+    },
+    // 10. SLIDER - Rate Scale
+    {
+        id: 'pregunta-slider',
+        name: 'Slider',
+        description: 'Rango',
+        svgIcon: 'MoveHorizontal',
+        textZone: 'center',
+        promptInstruction: 'Interactive slider rating interface.',
+        structuralPrompt: `
+## Composición: Slider Rating Interface
+
+**Estructura:** Interfaz de calificación por deslizador.
+
+### Jerarquía Visual
+1. **Principal:** Barra deslizante horizontal con indicador arrastrable
+2. **Secundario:** Etiquetas de extremos de escala ("Nunca" a "Siempre")
+3. **Terciario:** Pregunta solicitando la calificación sobre el deslizador
+
+### Distribución
+- Pregunta de calificación en la parte superior de la composición
+- Barra deslizante de aspecto interactivo en el centro
+- Etiquetas extremas en cada lado de la escala
+
+### Estilo
+- **Textura:** Diseño UI, interfaz de app, estética de deslizador de Stories
+- **Iluminación:** Brillo tipo pantalla, resaltado de elemento interactivo
+- **Paleta:** Pistas de deslizador degradadas, indicador de marca
+
+### Evitar
+Apariencia estática, sensación no interactiva, escala confusa.
+`.trim(),
+    },
+    // 11. CONTROVERSIAL - Hot Take
+    {
+        id: 'pregunta-contro',
+        name: 'Polémica',
+        description: 'Debate Hot',
+        svgIcon: 'Flame',
+        textZone: 'center',
+        promptInstruction: 'Bold controversial statement layout.',
+        structuralPrompt: `
+## Composición: Hot Take Controversial Statement
+
+**Estructura:** Declaración controversial "Hot Take".
+
+### Jerarquía Visual
+1. **Principal:** Declaración controversial audaz u opinión impopular como texto principal
+2. **Secundario:** Fuego, calor o elementos visuales calientes sugiriendo controversia
+3. **Terciario:** Indicación "¿De acuerdo o en desacuerdo?" o "Pelea en comentarios"
+
+### Distribución
+- Declaración central audaz destinada a provocar
+- Fuego, llamas, gráficos calientes alrededor de los bordes
+- Llamada a la acción desafiando la respuesta de la audiencia
+
+### Estilo
+- **Textura:** Audaz, agresiva, que llama la atención
+- **Iluminación:** Dramática, alto contraste, intensa
+- **Paleta:** Colores calientes (rojo, naranja), vibras de emoji enojado
+
+### Evitar
+Declaraciones suaves, estética tranquila, encuadre cortés.
+`.trim(),
+    },
+]
 
 export const PREGUNTA_DESCRIPTION = 'Diseño para fomentar la participación mediante preguntas, encuestas y debates. 11 composiciones interactivas.'

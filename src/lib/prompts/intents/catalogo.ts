@@ -6,8 +6,9 @@
  * Muestra múltiples ítems en layouts estructurados.
  */
 
-import type { IntentRequiredField } from '@/lib/creation-flow-types'
+import type { LayoutOption, IntentRequiredField } from '@/lib/creation-flow-types'
 
+export const CATALOGO_DESCRIPTION = 'Catálogos y colecciones de producto. 12 composiciones para mostrar múltiples ítems.'
 export const CATALOGO_EXTENDED_DESCRIPTION = `
 Para colecciones de productos, lookbooks y grids organizados.
 Muestra múltiples ítems en layouts estructurados.
@@ -42,277 +43,375 @@ export const CATALOGO_REQUIRED_FIELDS: IntentRequiredField[] = [
 
 // 1. REJILLA - Classic Product Grid
 export const CATALOGO_REJILLA_PROMPT = `
-<structural_instruction>
-    <composition_type>Classic Product Grid</composition_type>
-    <visual_hierarchy>
-        <primary>Clean, symmetrical 2x2 or 3x3 grid of products</primary>
-        <secondary>Uniform background color for all items</secondary>
-        <tertiary>Minimal text labels under each item</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_grid>Evenly distributed product array</zone_grid>
-        <zone_labels>Optional price or name under each</zone_labels>
-        <zone_title>Collection title above grid</zone_title>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Studio photography, seamless backgrounds</texture>
-        <lighting>Uniform softbox lighting across all items</lighting>
-        <palette>Neutral white or pastel background, products pop</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Random angles, mismatched lighting, visual clutter</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Classic Product Grid
+
+# Visual Hierarchy
+- **Primary**: Clean, symmetrical 2x2 or 3x3 grid of products
+- **Secondary**: Uniform background color for all items
+- **Tertiary**: Minimal text labels under each item
+
+# Zoning Guide
+- **Zone Grid**: Evenly distributed product array
+- **Zone Labels**: Optional price or name under each
+- **Zone Title**: Collection title above grid
+
+# Style Modifiers
+- **Texture**: Studio photography, seamless backgrounds
+- **Lighting**: Uniform softbox lighting across all items
+- **Palette**: Neutral white or pastel background, products pop
+
+# Negative Constraints
+- **Avoid**: Random angles, mismatched lighting, visual clutter
 `
 
 // 2. EDITORIAL - Lookbook Spread
 export const CATALOGO_EDITORIAL_PROMPT = `
-<structural_instruction>
-    <composition_type>Editorial Lookbook Spread</composition_type>
-    <visual_hierarchy>
-        <primary>One large hero lifestyle image (dominant)</primary>
-        <secondary>Two-three smaller product detail shots on side</secondary>
-        <tertiary>Elegant serif title "Collection Name"</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_hero>Large lifestyle/context image (60-70%)</zone_hero>
-        <zone_details>Column of smaller detail shots</zone_details>
-        <zone_title>Collection branding</zone_title>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Magazine glossy paper, high fashion</texture>
-        <lighting>Natural sunlight with studio fill</lighting>
-        <palette>Sophisticated, tonal, cohesive color story</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Boring grid only, low quality, cheap catalog feel</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Editorial Lookbook Spread
+
+# Visual Hierarchy
+- **Primary**: One large hero lifestyle image (dominant)
+- **Secondary**: Two-three smaller product detail shots on side
+- **Tertiary**: Elegant serif title "Collection Name"
+
+# Zoning Guide
+- **Zone Hero**: Large lifestyle/context image (60-70%)
+- **Zone Details**: Column of smaller detail shots
+- **Zone Title**: Collection branding
+
+# Style Modifiers
+- **Texture**: Magazine glossy paper, high fashion
+- **Lighting**: Natural sunlight with studio fill
+- **Palette**: Sophisticated, tonal, cohesive color story
+
+# Negative Constraints
+- **Avoid**: Boring grid only, low quality, cheap catalog feel
 `
 
 // 3. MOSAICO - Dynamic Masonry
 export const CATALOGO_MOSAICO_PROMPT = `
-<structural_instruction>
-    <composition_type>Dynamic Masonry Collage</composition_type>
-    <visual_hierarchy>
-        <primary>Interlocking masonry layout with varied aspect ratios</primary>
-        <secondary>Mix of portrait and landscape images tightly packed</secondary>
-        <tertiary>Small badges or tags on select featured images</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_mosaic>Pinterest-style tightly packed images</zone_mosaic>
-        <zone_featured>Larger cells for hero products</zone_featured>
-        <zone_tags>Optional "New" or "Sale" badges</zone_tags>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Pinterest aesthetic, vibrant, lifestyle</texture>
-        <lighting>Mixed but high quality sources</lighting>
-        <palette>Colorful, energetic, varied</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Gaps between images, overlapping chaos, low resolution</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Dynamic Masonry Collage
+
+# Visual Hierarchy
+- **Primary**: Interlocking masonry layout with varied aspect ratios
+- **Secondary**: Mix of portrait and landscape images tightly packed
+- **Tertiary**: Small badges or tags on select featured images
+
+# Zoning Guide
+- **Zone Mosaic**: Pinterest-style tightly packed images
+- **Zone Featured**: Larger cells for hero products
+- **Zone Tags**: Optional "New" or "Sale" badges
+
+# Style Modifiers
+- **Texture**: Pinterest aesthetic, vibrant, lifestyle
+- **Lighting**: Mixed but high quality sources
+- **Palette**: Colorful, energetic, varied
+
+# Negative Constraints
+- **Avoid**: Gaps between images, overlapping chaos, low resolution
 `
 
 // 4. ESTANTERÍA - Retail Shelf Display
 export const CATALOGO_ESTANTERIA_PROMPT = `
-<structural_instruction>
-    <composition_type>Retail Shelf Display</composition_type>
-    <visual_hierarchy>
-        <primary>Products arranged neatly on floating shelves</primary>
-        <secondary>Soft shadows cast on the wall behind</secondary>
-        <tertiary>Decor elements (plants, books) styling the display</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_shelves>Horizontal shelf lines across composition</zone_shelves>
-        <zone_products>Products arranged on each shelf</zone_products>
-        <zone_decor>Lifestyle styling elements</zone_decor>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Interior design, wood or metal shelves</texture>
-        <lighting>Warm interior spot lighting</lighting>
-        <palette>Neutral wall, colorful products as focus</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Grocery store metal racks, bad perspective, cluttered</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Retail Shelf Display
+
+# Visual Hierarchy
+- **Primary**: Products arranged neatly on floating shelves
+- **Secondary**: Soft shadows cast on the wall behind
+- **Tertiary**: Decor elements (plants, books) styling the display
+
+# Zoning Guide
+- **Zone Shelves**: Horizontal shelf lines across composition
+- **Zone Products**: Products arranged on each shelf
+- **Zone Decor**: Lifestyle styling elements
+
+# Style Modifiers
+- **Texture**: Interior design, wood or metal shelves
+- **Lighting**: Warm interior spot lighting
+- **Palette**: Neutral wall, colorful products as focus
+
+# Negative Constraints
+- **Avoid**: Grocery store metal racks, bad perspective, cluttered
 `
 
 // 5. COLORES - Color Variant Series
 export const CATALOGO_COLORES_PROMPT = `
-<structural_instruction>
-    <composition_type>Color Variation Series</composition_type>
-    <visual_hierarchy>
-        <primary>Same product repeated in multiple color options</primary>
-        <secondary>Pop art repetition layout (Andy Warhol style)</secondary>
-        <tertiary>Bold color backgrounds matching each variant</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_grid>Repeated product matrix</zone_grid>
-        <zone_colors>Distinct background per color variant</zone_colors>
-        <zone_message>"Available in X colors" optional text</zone_message>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Plastic, glossy, vibrant color explosion</texture>
-        <lighting>Hard high-contrast studio flash</lighting>
-        <palette>Rainbow matrix, monochrome per cell</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Subtle hues, boring grey, inconsistent angles</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Color Variation Series
+
+# Visual Hierarchy
+- **Primary**: Same product repeated in multiple color options
+- **Secondary**: Pop art repetition layout (Andy Warhol style)
+- **Tertiary**: Bold color backgrounds matching each variant
+
+# Zoning Guide
+- **Zone Grid**: Repeated product matrix
+- **Zone Colors**: Distinct background per color variant
+- **Zone Message**: "Available in X colors" optional text
+
+# Style Modifiers
+- **Texture**: Plastic, glossy, vibrant color explosion
+- **Lighting**: Hard high-contrast studio flash
+- **Palette**: Rainbow matrix, monochrome per cell
+
+# Negative Constraints
+- **Avoid**: Subtle hues, boring grey, inconsistent angles
 `
 
 // 6. DETALLE - Zoom Detail Focus
 export const CATALOGO_DETALLE_PROMPT = `
-<structural_instruction>
-    <composition_type>Macro Detail Focus</composition_type>
-    <visual_hierarchy>
-        <primary>Main full product shot in center</primary>
-        <secondary>Circular magnifying glass overlays showing texture details</secondary>
-        <tertiary>Dotted lines connecting zoom bubbles to source</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_product>Main product in center</zone_product>
-        <zone_zooms>Detail bubble callouts in corners</zone_zooms>
-        <zone_lines>Connection indicators</zone_lines>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>High resolution macro photography</texture>
-        <lighting>Clean crisp scientific lighting</lighting>
-        <palette>Clean white background, focus on textures</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Blurry textures, fake-looking loupes, low res</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Macro Detail Focus
+
+# Visual Hierarchy
+- **Primary**: Main full product shot in center
+- **Secondary**: Circular magnifying glass overlays showing texture details
+- **Tertiary**: Dotted lines connecting zoom bubbles to source
+
+# Zoning Guide
+- **Zone Product**: Main product in center
+- **Zone Zooms**: Detail bubble callouts in corners
+- **Zone Lines**: Connection indicators
+
+# Style Modifiers
+- **Texture**: High resolution macro photography
+- **Lighting**: Clean crisp scientific lighting
+- **Palette**: Clean white background, focus on textures
+
+# Negative Constraints
+- **Avoid**: Blurry textures, fake-looking loupes, low res
 `
 
 // 7. FLAT_LAY - Top Down Arrangement
 export const CATALOGO_FLATLAY_PROMPT = `
-<structural_instruction>
-    <composition_type>Flat Lay Top-Down Collection</composition_type>
-    <visual_hierarchy>
-        <primary>Top-down view of multiple products artfully arranged</primary>
-        <secondary>Props and styling elements (leaves, fabric, accessories)</secondary>
-        <tertiary>Subtle brand elements or collection tag</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_products>Multiple items spread across surface</zone_products>
-        <zone_props>Lifestyle styling elements</zone_props>
-        <zone_negative>Strategic breathing room between items</zone_negative>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Instagram flat lay, lifestyle photography</texture>
-        <lighting>Soft overhead natural or studio</lighting>
-        <palette>Cohesive color story across all items</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Random chaotic pile, bad shadows, crowded</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Flat Lay Top-Down Collection
+
+# Visual Hierarchy
+- **Primary**: Top-down view of multiple products artfully arranged
+- **Secondary**: Props and styling elements (leaves, fabric, accessories)
+- **Tertiary**: Subtle brand elements or collection tag
+
+# Zoning Guide
+- **Zone Products**: Multiple items spread across surface
+- **Zone Props**: Lifestyle styling elements
+- **Zone Negative**: Strategic breathing room between items
+
+# Style Modifiers
+- **Texture**: Instagram flat lay, lifestyle photography
+- **Lighting**: Soft overhead natural or studio
+- **Palette**: Cohesive color story across all items
+
+# Negative Constraints
+- **Avoid**: Random chaotic pile, bad shadows, crowded
 `
 
 // 8. COMPARATIVO - Side by Side
 export const CATALOGO_COMPARATIVO_PROMPT = `
-<structural_instruction>
-    <composition_type>Side-by-Side Product Comparison</composition_type>
-    <visual_hierarchy>
-        <primary>Two or three products aligned for direct comparison</primary>
-        <secondary>Feature callouts or labels for each</secondary>
-        <tertiary>"Compare" or size/spec indicators</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_products>Aligned products in a row</zone_products>
-        <zone_specs>Feature labels per product</zone_specs>
-        <zone_comparison>Connecting or distinguishing elements</zone_comparison>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Clean product photography, comparison layout</texture>
-        <lighting>Consistent across all products for fair comparison</lighting>
-        <palette>Neutral background, products differentiated by their colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unequal treatment, biased sizes, unclear comparison</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Side-by-Side Product Comparison
+
+# Visual Hierarchy
+- **Primary**: Two or three products aligned for direct comparison
+- **Secondary**: Feature callouts or labels for each
+- **Tertiary**: "Compare" or size/spec indicators
+
+# Zoning Guide
+- **Zone Products**: Aligned products in a row
+- **Zone Specs**: Feature labels per product
+- **Zone Comparison**: Connecting or distinguishing elements
+
+# Style Modifiers
+- **Texture**: Clean product photography, comparison layout
+- **Lighting**: Consistent across all products for fair comparison
+- **Palette**: Neutral background, products differentiated by their colors
+
+# Negative Constraints
+- **Avoid**: Unequal treatment, biased sizes, unclear comparison
 `
 
 // 9. CARRUSEL - Carousel Preview
 export const CATALOGO_CARRUSEL_PROMPT = `
-<structural_instruction>
-    <composition_type>Carousel Swipe Collection</composition_type>
-    <visual_hierarchy>
-        <primary>Central product card with peeking edges of adjacent items</primary>
-        <secondary>Swipe or slide indicators (dots, arrows)</secondary>
-        <tertiary>Collection title and "Swipe to see more"</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_main>Central visible product card</zone_main>
-        <zone_peek>Partial edges of next/previous cards</zone_peek>
-        <zone_nav>Pagination dots or swipe indicator</zone_nav>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Mobile-native, Stories/carousel aesthetic</texture>
-        <lighting>Spotlight on main, dimmed on sides</lighting>
-        <palette>Consistent card design, varied products</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Static single product, no carousel feel, equal visibility</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Carousel Swipe Collection
+
+# Visual Hierarchy
+- **Primary**: Central product card with peeking edges of adjacent items
+- **Secondary**: Swipe or slide indicators (dots, arrows)
+- **Tertiary**: Collection title and "Swipe to see more"
+
+# Zoning Guide
+- **Zone Main**: Central visible product card
+- **Zone Peek**: Partial edges of next/previous cards
+- **Zone Nav**: Pagination dots or swipe indicator
+
+# Style Modifiers
+- **Texture**: Mobile-native, Stories/carousel aesthetic
+- **Lighting**: Spotlight on main, dimmed on sides
+- **Palette**: Consistent card design, varied products
+
+# Negative Constraints
+- **Avoid**: Static single product, no carousel feel, equal visibility
 `
 
 // 10. LIFESTYLE - Products in Context
 export const CATALOGO_LIFESTYLE_PROMPT = `
-<structural_instruction>
-    <composition_type>Lifestyle Context Collection</composition_type>
-    <visual_hierarchy>
-        <primary>Products shown in natural use environment/scene</primary>
-        <secondary>Human interaction or lifestyle context</secondary>
-        <tertiary>Brand or collection watermark</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_scene>Lifestyle environment as backdrop</zone_scene>
-        <zone_products>Products integrated naturally in scene</zone_products>
-        <zone_context>Human element or usage demonstration</zone_context>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Editorial lifestyle photography</texture>
-        <lighting>Natural environment lighting</lighting>
-        <palette>Real-world colors, brand-coordinated</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>White background isolation, stock photo feel, products hidden</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Lifestyle Context Collection
+
+# Visual Hierarchy
+- **Primary**: Products shown in natural use environment/scene
+- **Secondary**: Human interaction or lifestyle context
+- **Tertiary**: Brand or collection watermark
+
+# Zoning Guide
+- **Zone Scene**: Lifestyle environment as backdrop
+- **Zone Products**: Products integrated naturally in scene
+- **Zone Context**: Human element or usage demonstration
+
+# Style Modifiers
+- **Texture**: Editorial lifestyle photography
+- **Lighting**: Natural environment lighting
+- **Palette**: Real-world colors, brand-coordinated
+
+# Negative Constraints
+- **Avoid**: White background isolation, stock photo feel, products hidden
 `
 
 // 11. HERO - Single Product Hero
 export const CATALOGO_HERO_PROMPT = `
-<structural_instruction>
-    <composition_type>Hero Product Spotlight</composition_type>
-    <visual_hierarchy>
-        <primary>Single featured product as absolute hero center stage</primary>
-        <secondary>Dramatic lighting and shadow play</secondary>
-        <tertiary>Collection name or "Star of the collection" badge</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_product>Center stage single product hero</zone_product>
-        <zone_lighting>Dramatic shadow and highlight areas</zone_lighting>
-        <zone_badge>Featured or star product indicator</zone_badge>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Premium product photography</texture>
-        <lighting>Dramatic studio lighting, hero treatment</lighting>
-        <palette>Dark backdrop, spotlight on product</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Multiple products competing, flat lighting, lost focus</avoid>
-    </negative_constraints>
-</structural_instruction>
+# Composition Type
+Hero Product Spotlight
+
+# Visual Hierarchy
+- **Primary**: Single featured product as absolute hero center stage
+- **Secondary**: Dramatic lighting and shadow play
+- **Tertiary**: Collection name or "Star of the collection" badge
+
+# Zoning Guide
+- **Zone Product**: Center stage single product hero
+- **Zone Lighting**: Dramatic shadow and highlight areas
+- **Zone Badge**: Featured or star product indicator
+
+# Style Modifiers
+- **Texture**: Premium product photography
+- **Lighting**: Dramatic studio lighting, hero treatment
+- **Palette**: Dark backdrop, spotlight on product
+
+# Negative Constraints
+- **Avoid**: Multiple products competing, flat lighting, lost focus
 `
 
-export const CATALOGO_DESCRIPTION = 'Catálogos y colecciones de producto. 11 composiciones para mostrar múltiples ítems.'
+export const CATALOGO_LAYOUTS: LayoutOption[] = [
+    {
+        id: 'catalogo-free',
+        name: 'Libre',
+        description: 'Sin indicación',
+        svgIcon: 'Sparkles',
+        textZone: 'center',
+        promptInstruction: 'Natural composition without structural constraints.',
+        structuralPrompt: '',
+    },
+    {
+        id: 'catalogo-grid',
+        name: 'Grid',
+        description: 'Producto 2x2',
+        svgIcon: 'Grid2x2',
+        textZone: 'bottom',
+        promptInstruction: 'Structured 2x2 product grid.',
+        structuralPrompt: CATALOGO_REJILLA_PROMPT,
+    },
+    {
+        id: 'catalogo-lookbook',
+        name: 'Lookbook',
+        description: 'Editorial',
+        svgIcon: 'BookOpen',
+        textZone: 'center',
+        promptInstruction: 'Editorial lookbook spread.',
+        structuralPrompt: CATALOGO_EDITORIAL_PROMPT,
+    },
+    {
+        id: 'catalogo-masonry',
+        name: 'Mosaico',
+        description: 'Collage',
+        svgIcon: 'Layout',
+        textZone: 'center',
+        promptInstruction: 'Dynamic masonry collage.',
+        structuralPrompt: CATALOGO_MOSAICO_PROMPT,
+    },
+    {
+        id: 'catalogo-shelf',
+        name: 'Estante',
+        description: 'Retail',
+        svgIcon: 'Package',
+        textZone: 'center',
+        promptInstruction: 'Products on floating shelves.',
+        structuralPrompt: CATALOGO_ESTANTERIA_PROMPT,
+    },
+    {
+        id: 'catalogo-variants',
+        name: 'Colores',
+        description: 'Variantes',
+        svgIcon: 'Columns',
+        textZone: 'center',
+        promptInstruction: 'Same product in multiple colors.',
+        structuralPrompt: CATALOGO_COLORES_PROMPT,
+    },
+    {
+        id: 'catalogo-detail',
+        name: 'Detalle',
+        description: 'Zoom',
+        svgIcon: 'ZoomIn',
+        textZone: 'center',
+        promptInstruction: 'Zoom bubbles showing texture.',
+        structuralPrompt: CATALOGO_DETALLE_PROMPT,
+    },
+    {
+        id: 'catalogo-flatlay',
+        name: 'Flat Lay',
+        description: 'Cenital',
+        svgIcon: 'Layers',
+        textZone: 'center',
+        promptInstruction: 'Top-down organized arrangement.',
+        structuralPrompt: CATALOGO_FLATLAY_PROMPT,
+    },
+    {
+        id: 'catalogo-comparativo',
+        name: 'Vs',
+        description: 'Comparativo',
+        svgIcon: 'ArrowLeftRight',
+        textZone: 'center',
+        promptInstruction: 'Side-by-side comparison.',
+        structuralPrompt: CATALOGO_COMPARATIVO_PROMPT,
+    },
+    {
+        id: 'catalogo-carrusel',
+        name: 'Carrusel',
+        description: 'Preview',
+        svgIcon: 'Copy',
+        textZone: 'center',
+        promptInstruction: 'Swipeable carousel preview.',
+        structuralPrompt: CATALOGO_CARRUSEL_PROMPT,
+    },
+    {
+        id: 'catalogo-lifestyle',
+        name: 'Uso',
+        description: 'En Contexto',
+        svgIcon: 'Image',
+        textZone: 'center',
+        promptInstruction: 'Products in real use context.',
+        structuralPrompt: CATALOGO_LIFESTYLE_PROMPT,
+    },
+    {
+        id: 'catalogo-hero',
+        name: 'Hero',
+        description: 'Destacado',
+        svgIcon: 'Star',
+        textZone: 'center',
+        promptInstruction: 'Single hero product spotlight.',
+        structuralPrompt: CATALOGO_HERO_PROMPT,
+    },
+]

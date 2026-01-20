@@ -6,7 +6,7 @@
  * Humaniza la marca mostrando el lado real de la creación.
  */
 
-import type { IntentRequiredField } from '@/lib/creation-flow-types'
+import type { IntentRequiredField, LayoutOption } from '@/lib/creation-flow-types'
 
 export const BTS_EXTENDED_DESCRIPTION = `
 Comparte el proceso auténtico detrás del trabajo.
@@ -32,279 +32,369 @@ export const BTS_REQUIRED_FIELDS: IntentRequiredField[] = [
     }
 ]
 
-// 1. PROCESO - Work in Progress Macro
-export const BTS_PROCESO_PROMPT = `
-<structural_instruction>
-    <composition_type>Work in Progress Close-up</composition_type>
-    <visual_hierarchy>
-        <primary>Macro shot of hands working or tools in action (pen, brush, keyboard)</primary>
-        <secondary>The unfinished project visible in the frame</secondary>
-        <tertiary>Depth of field blur hiding background clutter</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_focus>Tools and action at center</zone_focus>
-        <zone_work>Visible in-progress project</zone_work>
-        <zone_blur>Blurred background for focus</zone_blur>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Raw, authentic, film grain</texture>
-        <lighting>Task lamp lighting, warm and focused</lighting>
-        <palette>Natural materials, unfinished surfaces, real colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Perfectly polished final product, staged stock photo feel</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+export const BTS_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
+    // 0. LIBRE
+    {
+        id: 'bts-free',
+        name: 'Libre',
+        description: 'Sin indicación',
+        svgIcon: 'Sparkles',
+        textZone: 'center',
+        promptInstruction: 'Natural composition without structural constraints.',
+        structuralPrompt: '',
+    },
+    // 1. PROCESO - Work in Progress Macro
+    {
+        id: 'bts-wip',
+        name: 'Proceso',
+        description: 'Work in Progress',
+        svgIcon: 'Tool',
+        textZone: 'center',
+        promptInstruction: 'Macro shot of tools and unfinished work.',
+        structuralPrompt: `
+## Composición: Work in Progress Close-up
 
-// 2. ESCRITORIO - Creative Workspace
-export const BTS_ESCRITORIO_PROMPT = `
-<structural_instruction>
-    <composition_type>Creative Desk Layout</composition_type>
-    <visual_hierarchy>
-        <primary>Top-down or wide shot of messy creative desk</primary>
-        <secondary>Scattered sketches, coffee cup, tools, references</secondary>
-        <tertiary>Screen or notebook showing the main project</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_desk>Full desk surface as canvas</zone_desk>
-        <zone_tools>Scattered creative tools and materials</zone_tools>
-        <zone_project>Visible work in progress on screen/paper</zone_project>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Knolling photography or organized chaos</texture>
-        <lighting>Natural window light, warm ambiance</lighting>
-        <palette>Wood, paper, coffee, ink - real workspace colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Empty clean desk, sterile office, fake mess</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Primer plano de herramientas y trabajo en curso.
 
-// 3. MOODBOARD - Inspiration Wall
-export const BTS_MOODBOARD_PROMPT = `
-<structural_instruction>
-    <composition_type>Inspiration Wall Collage</composition_type>
-    <visual_hierarchy>
-        <primary>Wall covered in prints, sketches, and reference images</primary>
-        <secondary>Tape, pushpins, color swatches as decorative elements</secondary>
-        <tertiary>Hand pointing or adjusting a piece (optional)</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_wall>Covered surface with mixed media</zone_wall>
-        <zone_details>Tape, pins, notes visible</zone_details>
-        <zone_interaction>Optional human interaction element</zone_interaction>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Paper collage, mixed media, physical materials</texture>
-        <lighting>Gallery or studio track lighting</lighting>
-        <palette>Eclectic mix reflecting the inspiration</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Digital screenshot, single image, Pinterest screenshot</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía Visual
+1. **Principal:** Primer plano macro de manos trabajando o herramientas en acción (bolígrafo, pincel, teclado)
+2. **Secundario:** El proyecto sin terminar visible en el encuadre
+3. **Terciario:** Desenfoque de profundidad de campo ocultando el desorden del fondo
 
-// 4. BOCETO - Sketch vs Final
-export const BTS_BOCETO_PROMPT = `
-<structural_instruction>
-    <composition_type>Sketch to Final Comparison</composition_type>
-    <visual_hierarchy>
-        <primary>Split screen comparison between stages</primary>
-        <secondary>Left: Rough pencil sketch or wireframe</secondary>
-        <tertiary>Right: Polished final render or result</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_sketch>Left side showing rough work</zone_sketch>
-        <zone_final>Right side showing polished result</zone_final>
-        <zone_divider>Vertical line, tear, or blend between</zone_divider>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Graphite pencil vs glossy pixel perfect</texture>
-        <lighting>Flat scan on sketch, 3D lighting on final</lighting>
-        <palette>Black/white sketch vs full color final</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Bad alignment between halves, unclear evolution</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución
+- Herramientas y acción en el centro
+- Proyecto en curso visible
+- Fondo desenfocado para centrar la atención
 
-// 5. EVOLUCIÓN - Before/After Progress
-export const BTS_EVOLUCION_PROMPT = `
-<structural_instruction>
-    <composition_type>Project Evolution Timeline</composition_type>
-    <visual_hierarchy>
-        <primary>Two or more stages of the same project</primary>
-        <secondary>Progress arrows or timeline connecting states</secondary>
-        <tertiary>"Start" and "Now" or stage labels</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_before>Earlier stage of the work</zone_before>
-        <zone_after>Current or final stage</zone_after>
-        <zone_progress>Visual progress indicator</zone_progress>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Process documentation, progress story</texture>
-        <lighting>Consistent to show true change</lighting>
-        <palette>Desaturated early vs saturated final</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Confusing timeline, random unrelated images</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Estilo
+- **Textura:** Cruda, auténtica, grano de película
+- **Iluminación:** Luz de lámpara de trabajo, cálida y focalizada
+- **Paleta:** Materiales naturales, superficies sin terminar, colores reales
 
-// 6. PALETA - Color Extraction
-export const BTS_PALETA_PROMPT = `
-<structural_instruction>
-    <composition_type>Color Palette Extraction</composition_type>
-    <visual_hierarchy>
-        <primary>Beautiful source photo or design as base</primary>
-        <secondary>Row of 5 color swatches extracted from the image</secondary>
-        <tertiary>Hex codes or color names as labels</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_source>Main visual from which colors are extracted</zone_source>
-        <zone_swatches>Floating color cards or bar</zone_swatches>
-        <zone_codes>Color identification text</zone_codes>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Design tool UI overlay aesthetic</texture>
-        <lighting>Clean, color-accurate presentation</lighting>
-        <palette>Harmonious matching extracted colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Clashing colors, tiny swatches, missing source connection</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar
+Producto final perfectamente pulido, sensación de foto de stock preparada.
+`.trim(),
+    },
+    // 2. ESCRITORIO - Creative Workspace
+    {
+        id: 'bts-desk',
+        name: 'Escritorio',
+        description: 'Workspace',
+        svgIcon: 'Coffee',
+        textZone: 'center',
+        promptInstruction: 'Creative desk setup with scattered items.',
+        structuralPrompt: `
+## Composición: Creative Desk Layout
 
-// 7. EQUIPO - Team at Work
-export const BTS_EQUIPO_PROMPT = `
-<structural_instruction>
-    <composition_type>Team Collaboration Candid</composition_type>
-    <visual_hierarchy>
-        <primary>Team members collaborating, brainstorming, or creating together</primary>
-        <secondary>Work environment and tools visible in frame</secondary>
-        <tertiary>Subtle text overlay with team/project context</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_people>Team interaction as main focus</zone_people>
-        <zone_environment>Authentic workspace setting</zone_environment>
-        <zone_context>Optional text or caption area</zone_context>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Candid documentary, real moments</texture>
-        <lighting>Natural office or studio lighting</lighting>
-        <palette>True-to-life workplace colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Posed stock photos, empty offices, solo focus</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+**Estructura:** Configuración de escritorio creativo con elementos dispersos.
 
-// 8. HERRAMIENTAS - Tools of the Trade
-export const BTS_HERRAMIENTAS_PROMPT = `
-<structural_instruction>
-    <composition_type>Tools Flat Lay</composition_type>
-    <visual_hierarchy>
-        <primary>Top-down arrangement of professional tools/equipment</primary>
-        <secondary>Knolling style organization on clean surface</secondary>
-        <tertiary>Logo or handle badge visible on featured tool</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_main>Central featured tool or kit</zone_main>
-        <zone_supporting>Surrounding accessories and items</zone_supporting>
-        <zone_surface>Clean background surface</zone_surface>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Product photography, knolling aesthetic</texture>
-        <lighting>Even overhead softbox lighting</lighting>
-        <palette>Tool colors against neutral background</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Messy random arrangement, dirty tools, unclear items</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Jerarquía Visual
+1. **Principal:** Toma cenital o amplia de un escritorio creativo desordenado
+2. **Secundario:** Bocetos dispersos, taza de café, herramientas, referencias
+3. **Terciario:** Pantalla o cuaderno mostrando el proyecto principal
 
-// 9. ESTUDIO - Studio Space
-export const BTS_ESTUDIO_PROMPT = `
-<structural_instruction>
-    <composition_type>Studio Environment Shot</composition_type>
-    <visual_hierarchy>
-        <primary>Wide shot of the creative studio or workspace</primary>
-        <secondary>Equipment, materials, and ongoing projects visible</secondary>
-        <tertiary>Brand elements or signage in the space</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_space>Full studio environment</zone_space>
-        <zone_work>Active work areas and projects</zone_work>
-        <zone_identity>Brand presence in the space</zone_identity>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Architectural photography, interior design</texture>
-        <lighting>Natural and artificial studio mix</lighting>
-        <palette>True studio colors with brand accents</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Cramped closet, purely residential, no creative feel</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Distribución
+- Superficie completa del escritorio como lienzo
+- Herramientas creativas y materiales dispersos
+- Trabajo en curso visible en pantalla/papel
 
-// 10. MAKING_OF - Production Shot
-export const BTS_MAKING_OF_PROMPT = `
-<structural_instruction>
-    <composition_type>Making-Of Production Shot</composition_type>
-    <visual_hierarchy>
-        <primary>The production setup visible (camera, lights, set)</primary>
-        <secondary>The subject being photographed/filmed in context</secondary>
-        <tertiary>Crew or equipment silhouettes adding scale</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_set>The scene/subject being captured</zone_set>
-        <zone_equipment>Visible production gear</zone_equipment>
-        <zone_crew>Human element working the equipment</zone_crew>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Behind the camera, production documentary</texture>
-        <lighting>Mixed: set lighting visible plus practical</lighting>
-        <palette>Darker production tones with set lighting contrast</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Only final result, hidden process, no equipment visible</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Estilo
+- **Textura:** Fotografía "knolling" o caos organizado
+- **Iluminación:** Luz natural de ventana, ambiente cálido
+- **Paleta:** Madera, papel, café, tinta - colores reales de espacio de trabajo
 
-// 11. DETALLE - Macro Detail Focus
-export const BTS_DETALLE_PROMPT = `
-<structural_instruction>
-    <composition_type>Extreme Detail Macro</composition_type>
-    <visual_hierarchy>
-        <primary>Extreme close-up of texture, material, or craftsmanship</primary>
-        <secondary>Context clues about what the detail belongs to</secondary>
-        <tertiary>Subtle brand watermark or caption</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_macro>Extreme detail filling frame</zone_macro>
-        <zone_context>Hints of the larger object</zone_context>
-        <zone_brand>Minimal brand presence</zone_brand>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Macro photography, material exploration</texture>
-        <lighting>Raking light to reveal texture</lighting>
-        <palette>Natural material colors in detail</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Full product shots, unclear detail, blurry focus</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+### Evitar
+Escritorio vacío y limpio, oficina estéril, desorden falso.
+`.trim(),
+    },
+    // 3. MOODBOARD - Inspiration Wall
+    {
+        id: 'bts-moodboard',
+        name: 'Inspiración',
+        description: 'Moodboard',
+        svgIcon: 'Grid',
+        textZone: 'center',
+        promptInstruction: 'Wall covered in inspiration prints.',
+        structuralPrompt: `
+## Composición: Inspiration Wall Collage
+
+**Estructura:** Pared cubierta con impresiones de inspiración.
+
+### Jerarquía Visual
+1. **Principal:** Pared cubierta de impresiones, bocetos e imágenes de referencia
+2. **Secundario:** Cinta adhesiva, chinchetas, muestras de color como elementos decorativos
+3. **Terciario:** Mano señalando o ajustando una pieza (opcional)
+
+### Distribución
+- Superficie cubierta con técnica mixta
+- Cinta adhesiva, pines, notas visibles
+- Elemento de interacción humana opcional
+
+### Estilo
+- **Textura:** Collage de papel, técnica mixta, materiales físicos
+- **Iluminación:** Iluminación de galería o riel de estudio
+- **Paleta:** Mezcla ecléctica reflejando la inspiración
+
+### Evitar
+Captura de pantalla digital, imagen única, captura de Pinterest.
+`.trim(),
+    },
+    // 4. BOCETO - Sketch vs Final
+    {
+        id: 'bts-sketch',
+        name: 'Boceto',
+        description: 'Sketch/Real',
+        svgIcon: 'Edit2',
+        textZone: 'center',
+        promptInstruction: 'Split screen sketch vs final.',
+        structuralPrompt: `
+## Composición: Sketch to Final Comparison
+
+**Estructura:** Pantalla dividida comparando boceto vs final.
+
+### Jerarquía Visual
+1. **Principal:** Comparación en pantalla dividida entre etapas
+2. **Secundario:** Izquierda: Boceto a lápiz o wireframe
+3. **Terciario:** Derecha: Render final pulido o resultado
+
+### Distribución
+- Lado izquierdo mostrando trabajo preliminar
+- Lado derecho mostrando resultado pulido
+- Línea vertical, rasgadura o mezcla entre ambos
+
+### Estilo
+- **Textura:** Lápiz de grafito vs píxel perfecto brillante
+- **Iluminación:** Escaneado plano en boceto, iluminación 3D en final
+- **Paleta:** Boceto blanco/negro vs final a todo color
+
+### Evitar
+Mala alineación entre mitades, evolución poco clara.
+`.trim(),
+    },
+    // 5. EVOLUCIÓN - Before/After Progress
+    {
+        id: 'bts-before',
+        name: 'Antes/Después',
+        description: 'Evolución',
+        svgIcon: 'RefreshCw',
+        textZone: 'bottom',
+        promptInstruction: 'Transformation before and after.',
+        structuralPrompt: `
+## Composición: Project Evolution Timeline
+
+**Estructura:** Transformación antes y después.
+
+### Jerarquía Visual
+1. **Principal:** Dos o más etapas del mismo proyecto
+2. **Secundario:** Flechas de progreso o línea de tiempo conectando estados
+3. **Terciario:** Etiquetas "Inicio" y "Ahora" o de etapa
+
+### Distribución
+- Etapa anterior del trabajo
+- Etapa actual o final
+- Indicador visual de progreso
+
+### Estilo
+- **Textura:** Documentación de proceso, historia de progreso
+- **Iluminación:** Consistente para mostrar el cambio real
+- **Paleta:** Etapa temprana desaturada vs final saturado
+
+### Evitar
+Línea de tiempo confusa, imágenes aleatorias sin relación.
+`.trim(),
+    },
+    // 6. PALETA - Color Extraction
+    {
+        id: 'bts-palette',
+        name: 'Paleta',
+        description: 'Colores',
+        svgIcon: 'Droplet',
+        textZone: 'bottom',
+        promptInstruction: 'Image with extracted color swatches.',
+        structuralPrompt: `
+## Composición: Color Palette Extraction
+
+**Estructura:** Imagen con muestras de color extraídas.
+
+### Jerarquía Visual
+1. **Principal:** Foto o diseño base hermoso como fuente
+2. **Secundario:** Fila de 5 muestras de color extraídas de la imagen
+3. **Terciario:** Códigos hexadecimales o nombres de colores como etiquetas
+
+### Distribución
+- Visual principal del cual se extraen los colores
+- Tarjetas o barra flotante de muestras de color
+- Texto de identificación de color
+
+### Estilo
+- **Textura:** Estética de interfaz de herramienta de diseño
+- **Iluminación:** Presentación limpia y precisa en color
+- **Paleta:** Colores extraídos armoniosos y combinables
+
+### Evitar
+Colores que chocan, muestras diminutas, falta de conexión con la fuente.
+`.trim(),
+    },
+    // 7. EQUIPO - Team at Work
+    {
+        id: 'bts-team',
+        name: 'Equipo',
+        description: 'Colaboración',
+        svgIcon: 'Users',
+        textZone: 'center',
+        promptInstruction: 'Team collaborating behind scenes.',
+        structuralPrompt: `
+## Composición: Team Collaboration Candid
+
+**Estructura:** Equipo colaborando detrás de escena.
+
+### Jerarquía Visual
+1. **Principal:** Miembros del equipo colaborando, haciendo lluvia de ideas o creando juntos
+2. **Secundario:** Entorno de trabajo y herramientas visibles en el encuadre
+3. **Terciario:** Superposición de texto sutil con contexto de equipo/proyecto
+
+### Distribución
+- Interacción del equipo como foco principal
+- Entorno de trabajo auténtico
+- Área de texto o leyenda opcional
+
+### Estilo
+- **Textura:** Documental cándido, momentos reales
+- **Iluminación:** Luz natural de oficina o estudio
+- **Paleta:** Colores de lugar de trabajo fieles a la realidad
+
+### Evitar
+Fotos de stock posadas, oficinas vacías, foco en una sola persona.
+`.trim(),
+    },
+    // 8. HERRAMIENTAS - Tools of the Trade
+    {
+        id: 'bts-tools',
+        name: 'Herramientas',
+        description: 'Tools',
+        svgIcon: 'Tool',
+        textZone: 'center',
+        promptInstruction: 'Tools of the trade laydown.',
+        structuralPrompt: `
+## Composición: Tools Flat Lay
+
+**Estructura:** Disposición plana de herramientas.
+
+### Jerarquía Visual
+1. **Principal:** Arreglo cenital de herramientas/equipo profesional
+2. **Secundario:** Organización estilo "knolling" sobre superficie limpia
+3. **Terciario:** Logotipo o insignia visible en la herramienta destacada
+
+### Distribución
+- Herramienta o kit central destacado
+- Accesorios y artículos circundantes
+- Superficie de fondo limpia
+
+### Estilo
+- **Textura:** Fotografía de producto, estética knolling
+- **Iluminación:** Iluminación uniforme de softbox cenital
+- **Paleta:** Colores de herramientas sobre fondo neutral
+
+### Evitar
+Arreglo desordenado al azar, herramientas sucias, artículos poco claros.
+`.trim(),
+    },
+    // 9. ESTUDIO - Studio Space
+    {
+        id: 'bts-studio',
+        name: 'Estudio',
+        description: 'Ambiente',
+        svgIcon: 'Home',
+        textZone: 'center',
+        promptInstruction: 'Wide shot of creative estudio.',
+        structuralPrompt: `
+## Composición: Studio Environment Shot
+
+**Estructura:** Toma amplia del estudio creativo.
+
+### Jerarquía Visual
+1. **Principal:** Toma amplia del estudio creativo o espacio de trabajo
+2. **Secundario:** Equipo, materiales y proyectos en curso visibles
+3. **Terciario:** Elementos de marca o señalización en el espacio
+
+### Distribución
+- Entorno completo del estudio
+- Áreas de trabajo activas y proyectos
+- Presencia de marca en el espacio
+
+### Estilo
+- **Textura:** Fotografía arquitectónica, diseño de interiores
+- **Iluminación:** Mezcla de luz natural y artificial de estudio
+- **Paleta:** Colores reales de estudio con acentos de marca
+
+### Evitar
+Armario estrecho, puramente residencial, sin sensación creativa.
+`.trim(),
+    },
+    // 10. MAKING_OF - Production Shot
+    {
+        id: 'bts-makingof',
+        name: 'Making Of',
+        description: 'Rodaje',
+        svgIcon: 'Video',
+        textZone: 'center',
+        promptInstruction: 'Behind the camera view.',
+        structuralPrompt: `
+## Composición: Making-Of Production Shot
+
+**Estructura:** Vista detrás de cámara.
+
+### Jerarquía Visual
+1. **Principal:** La configuración de producción visible (cámara, luces, set)
+2. **Secundario:** El sujeto siendo fotografiado/filmado en contexto
+3. **Terciario:** Siluetas de equipo o personal añadiendo escala
+
+### Distribución
+- La escena/sujeto siendo capturado
+- Equipo de producción visible
+- Elemento humano operando el equipo
+
+### Estilo
+- **Textura:** Detrás de cámara, documental de producción
+- **Iluminación:** Mixta: iluminación del set visible más práctica
+- **Paleta:** Tonos de producción más oscuros con contraste de iluminación del set
+
+### Evitar
+Solo resultado final, proceso oculto, sin equipo visible.
+`.trim(),
+    },
+    // 11. DETALLE - Macro Detail Focus
+    {
+        id: 'bts-detail',
+        name: 'Detalle',
+        description: 'Zoom',
+        svgIcon: 'ZoomIn',
+        textZone: 'center',
+        promptInstruction: 'Close up detail of work.',
+        structuralPrompt: `
+## Composición: Extreme Detail Macro
+
+**Estructura:** Primer plano extremo de detalle.
+
+### Jerarquía Visual
+1. **Principal:** Primer plano extremo de textura, material o artesanía
+2. **Secundario:** Pistas de contexto sobre a qué pertenece el detalle
+3. **Terciario:** Marca de agua o leyenda sutil de marca
+
+### Distribución
+- Detalle extremo llenando el encuadre
+- Pistas del objeto más grande
+- Presencia mínima de marca
+
+### Estilo
+- **Textura:** Fotografía macro, exploración de materiales
+- **Iluminación:** Luz rasante para revelar textura
+- **Paleta:** Colores de materiales naturales en detalle
+
+### Evitar
+Fotos completas del producto, detalle poco claro, enfoque borroso.
+`.trim(),
+    },
+]
 
 export const BTS_DESCRIPTION = 'Behind-the-scenes y proceso creativo. 11 composiciones para mostrar el lado auténtico.'

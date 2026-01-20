@@ -24,7 +24,7 @@ export const SERVICIO_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
     // 1. BENTO GRID - Modular
     {
         id: 'servicio-grid',
-        name: 'Bento Grid',
+        name: 'BentoGrid',
         description: 'Modular',
         svgIcon: 'Grid3x3',
         textZone: 'center',
@@ -41,7 +41,7 @@ export const SERVICIO_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
 
 ### Distribución:
 - Grid asimétrico siguiendo división de Rectángulo Áureo
-- Módulos con bordes de vidrio esmerilado y brillo interior suave
+- Módulos con brillo interior suave
 - Iluminación de estudio difusa
 
 ### Evitar:

@@ -6,7 +6,7 @@
  * Mito/Realidad o Producto A/B.
  */
 
-import type { IntentRequiredField } from '@/lib/creation-flow-types'
+import type { IntentRequiredField, LayoutOption } from '@/lib/creation-flow-types'
 
 export const COMPARATIVA_EXTENDED_DESCRIPTION = `
 Diseño partido (split screen) para enfrentar dos conceptos: Antes/Después, 
@@ -43,277 +43,390 @@ export const COMPARATIVA_REQUIRED_FIELDS: IntentRequiredField[] = [
 
 // 1. DIVIDIDO - Classic Vertical Split
 export const COMPARATIVA_DIVIDIDO_PROMPT = `
-<structural_instruction>
-    <composition_type>Classic Vertical Split Screen</composition_type>
-    <visual_hierarchy>
-        <primary>50/50 vertical split between two states or options</primary>
-        <secondary>Distinct visual separator line down the center</secondary>
-        <tertiary>Minimal labels ("Before"/"After") at top of each side</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_left>50% "Before" or "Problem" state (can be desaturated)</zone_left>
-        <zone_right>50% "After" or "Solution" state (vibrant, resolved)</zone_right>
-        <zone_divider>Clear vertical separator line</zone_divider>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>High contrast between the two states</texture>
-        <lighting>Different mood lighting per side to emphasize change</lighting>
-        <palette>Desaturated vs vibrant, chaos vs order</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unclear division, similar appearance on both sides</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Classic Vertical Split Screen
+
+## Visual Hierarchy
+- **Primary:** 50/50 vertical split between two states or options
+- **Secondary:** Distinct visual separator line down the center
+- **Tertiary:** Minimal labels ("Before"/"After") at top of each side
+
+## Zoning Guide
+- **Zone Left:** 50% "Before" or "Problem" state (can be desaturated)
+- **Zone Right:** 50% "After" or "Solution" state (vibrant, resolved)
+- **Divider:** Clear vertical separator line
+
+## Style Modifiers
+- **Texture:** High contrast between the two states
+- **Lighting:** Different mood lighting per side to emphasize change
+- **Palette:** Desaturated vs vibrant, chaos vs order
+
+## Negative Constraints
+- **Avoid:** Unclear division, similar appearance on both sides
+`.trim()
 
 // 2. VERSUS - Battle Layout
 export const COMPARATIVA_VERSUS_PROMPT = `
-<structural_instruction>
-    <composition_type>Aggressive Versus Battle</composition_type>
-    <visual_hierarchy>
-        <primary>Dynamic diagonal split separating two contenders</primary>
-        <secondary>Large "VS" badge or lightning bolt at center intersection</secondary>
-        <tertiary>Contender names or labels on each side</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_left>Contender A with one color theme (cool tones)</zone_left>
-        <zone_right>Contender B with opposing color (warm tones)</zone_right>
-        <zone_center>Explosive "VS" typography element</zone_center>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Sports, gaming, high energy competition</texture>
-        <lighting>Clashing colored rim lights (Blue vs Red)</lighting>
-        <palette>High contrast complementary colors</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Peaceful static layout, monochrome, equal treatment</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Aggressive Versus Battle
+
+## Visual Hierarchy
+- **Primary:** Dynamic diagonal split separating two contenders
+- **Secondary:** Large "VS" badge or lightning bolt at center intersection
+- **Tertiary:** Contender names or labels on each side
+
+## Zoning Guide
+- **Zone Left:** Contender A with one color theme (cool tones)
+- **Zone Right:** Contender B with opposing color (warm tones)
+- **Zone Center:** Explosive "VS" typography element
+
+## Style Modifiers
+- **Texture:** Sports, gaming, high energy competition
+- **Lighting:** Clashing colored rim lights (Blue vs Red)
+- **Palette:** High contrast complementary colors
+
+## Negative Constraints
+- **Avoid:** Peaceful static layout, monochrome, equal treatment
+`.trim()
 
 // 3. TRANSFORMACIÓN - Before/After Hero
 export const COMPARATIVA_TRANSFORMACION_PROMPT = `
-<structural_instruction>
-    <composition_type>Transformation Showcase</composition_type>
-    <visual_hierarchy>
-        <primary>Large "After" result image as main hero</primary>
-        <secondary>Small "Before" snapshot inset in corner with frame</secondary>
-        <tertiary>Curved arrow pointing from before to after</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_main>Full canvas showing impressive result</zone_main>
-        <zone_inset>Small corner showing starting point</zone_inset>
-        <zone_arrow>Visual connector between states</zone_arrow>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Testimonial, proof-of-concept, realistic results</texture>
-        <lighting>Professional lighting on the result</lighting>
-        <palette>Aspirational, impressive, achievement-focused</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Equal sizing, no clear improvement visible</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Transformation Showcase
+
+## Visual Hierarchy
+- **Primary:** Large "After" result image as main hero
+- **Secondary:** Small "Before" snapshot inset in corner with frame
+- **Tertiary:** Curved arrow pointing from before to after
+
+## Zoning Guide
+- **Zone Main:** Full canvas showing impressive result
+- **Zone Inset:** Small corner showing starting point
+- **Zone Arrow:** Visual connector between states
+
+## Style Modifiers
+- **Texture:** Testimonial, proof-of-concept, realistic results
+- **Lighting:** Professional lighting on the result
+- **Palette:** Aspirational, impressive, achievement-focused
+
+## Negative Constraints
+- **Avoid:** Equal sizing, no clear improvement visible
+`.trim()
 
 // 4. CHECKLIST - Feature Grid
 export const COMPARATIVA_CHECKLIST_PROMPT = `
-<structural_instruction>
-    <composition_type>Side-by-Side Feature Comparison</composition_type>
-    <visual_hierarchy>
-        <primary>Two columns: Option A vs Option B</primary>
-        <secondary>Rows with checkmarks (green) vs X marks (red) per feature</secondary>
-        <tertiary>Product/option names as headers</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_headers>Option headers at top of each column</zone_headers>
-        <zone_features>Feature rows spanning both columns</zone_features>
-        <zone_marks>Check/X indicators in each cell</zone_marks>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Review site, comparison table, informational</texture>
-        <lighting>Even, readable, no drama</lighting>
-        <palette>Green for yes, red for no, neutral base</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Ambiguous marks, unclear winner, crowded rows</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Side-by-Side Feature Comparison
+
+## Visual Hierarchy
+- **Primary:** Two columns: Option A vs Option B
+- **Secondary:** Rows with checkmarks (green) vs X marks (red) per feature
+- **Tertiary:** Product/option names as headers
+
+## Zoning Guide
+- **Headers:** Option headers at top of each column
+- **Features:** Feature rows spanning both columns
+- **Marks:** Check/X indicators in each cell
+
+## Style Modifiers
+- **Texture:** Review site, comparison table, informational
+- **Lighting:** Even, readable, no drama
+- **Palette:** Green for yes, red for no, neutral base
+
+## Negative Constraints
+- **Avoid:** Ambiguous marks, unclear winner, crowded rows
+`.trim()
 
 // 5. SLIDER - Interactive Reveal
 export const COMPARATIVA_SLIDER_PROMPT = `
-<structural_instruction>
-    <composition_type>Interactive Slider Comparison</composition_type>
-    <visual_hierarchy>
-        <primary>Full-width image split in the middle</primary>
-        <secondary>Slider handle graphic suggesting drag interaction</secondary>
-        <tertiary>Two states of the same subject blending at slider</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_left>One state visible on left of slider</zone_left>
-        <zone_right>Alternate state visible on right of slider</zone_right>
-        <zone_handle>Draggable slider indicator at center</zone_handle>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>UI/UX demo, interactive feel, app interface</texture>
-        <lighting>Consistent across both sides for fair comparison</lighting>
-        <palette>Same subject, different treatments</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Static non-interactive feel, missing slider UI element</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Interactive Slider Comparison
+
+## Visual Hierarchy
+- **Primary:** Full-width image split in the middle
+- **Secondary:** Slider handle graphic suggesting drag interaction
+- **Tertiary:** Two states of the same subject blending at slider
+
+## Zoning Guide
+- **Zone Left:** One state visible on left of slider
+- **Zone Right:** Alternate state visible on right of slider
+- **Handle:** Draggable slider indicator at center
+
+## Style Modifiers
+- **Texture:** UI/UX demo, interactive feel, app interface
+- **Lighting:** Consistent across both sides for fair comparison
+- **Palette:** Same subject, different treatments
+
+## Negative Constraints
+- **Avoid:** Static non-interactive feel, missing slider UI element
+`.trim()
 
 // 6. EVOLUCIÓN - Timeline Progress
 export const COMPARATIVA_EVOLUCION_PROMPT = `
-<structural_instruction>
-    <composition_type>Evolution Timeline</composition_type>
-    <visual_hierarchy>
-        <primary>Horizontal progression from old to new (left to right)</primary>
-        <secondary>Connecting arrow or timeline bar running through</secondary>
-        <tertiary>Year labels or version numbers at each stage</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_start>Old/original version on left</zone_start>
-        <zone_middle>Transition states (optional)</zone_middle>
-        <zone_end>New/current version on right</zone_end>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Growth story, history, progress documentation</texture>
-        <lighting>Consistent across timeline for fair comparison</lighting>
-        <palette>Progressive improvement in quality/vibrancy</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unclear timeline direction, random ordering</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Evolution Timeline
+
+## Visual Hierarchy
+- **Primary:** Horizontal progression from old to new (left to right)
+- **Secondary:** Connecting arrow or timeline bar running through
+- **Tertiary:** Year labels or version numbers at each stage
+
+## Zoning Guide
+- **Zone Start:** Old/original version on left
+- **Zone Middle:** Transition states (optional)
+- **Zone End:** New/current version on right
+
+## Style Modifiers
+- **Texture:** Growth story, history, progress documentation
+- **Lighting:** Consistent across timeline for fair comparison
+- **Palette:** Progressive improvement in quality/vibrancy
+
+## Negative Constraints
+- **Avoid:** Unclear timeline direction, random ordering
+`.trim()
 
 // 7. MITO_REALIDAD - Myth vs Reality
 export const COMPARATIVA_MITO_PROMPT = `
-<structural_instruction>
-    <composition_type>Myth vs Reality Debunk</composition_type>
-    <visual_hierarchy>
-        <primary>Split showing "MYTH" crossed out vs "REALITY" highlighted</primary>
-        <secondary>X mark over myth, checkmark on reality</secondary>
-        <tertiary>Brief text explaining each side</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_myth>Left/top with red X and struck-through text</zone_myth>
-        <zone_reality>Right/bottom with green check and validated text</zone_reality>
-        <zone_education>Brief explanatory text for each</zone_education>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Educational, fact-checking, debunking aesthetic</texture>
-        <lighting>Dramatic contrast between wrong and right</lighting>
-        <palette>Red for myth (wrong), green for reality (correct)</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unclear which is correct, missing verdict indicators</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Myth vs Reality Debunk
+
+## Visual Hierarchy
+- **Primary:** Split showing "MYTH" crossed out vs "REALITY" highlighted
+- **Secondary:** X mark over myth, checkmark on reality
+- **Tertiary:** Brief text explaining each side
+
+## Zoning Guide
+- **Zone Myth:** Left/top with red X and struck-through text
+- **Zone Reality:** Right/bottom with green check and validated text
+- **Education:** Brief explanatory text for each
+
+## Style Modifiers
+- **Texture:** Educational, fact-checking, debunking aesthetic
+- **Lighting:** Dramatic contrast between wrong and right
+- **Palette:** Red for myth (wrong), green for reality (correct)
+
+## Negative Constraints
+- **Avoid:** Unclear which is correct, missing verdict indicators
+`.trim()
 
 // 8. EXPECTATIVA - Expectation vs Reality
 export const COMPARATIVA_EXPECTATIVA_PROMPT = `
-<structural_instruction>
-    <composition_type>Expectation vs Reality Humor</composition_type>
-    <visual_hierarchy>
-        <primary>Split showing idealized "Expectation" vs honest "Reality"</primary>
-        <secondary>"What I imagined" vs "What happened" labels</secondary>
-        <tertiary>Humorous contrast between the two states</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_expectation>Polished, perfect, idealized vision</zone_expectation>
-        <zone_reality>Honest, funny, real-life outcome</zone_reality>
-        <zone_labels>Clear labels for each side</zone_labels>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Meme format, relatable humor, social media native</texture>
-        <lighting>Perfect lighting on expectation, real on reality</lighting>
-        <palette>Dreamy for expectation, realistic for reality</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Both looking similar, missing humor, unclear contrast</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Expectation vs Reality Humor
+
+## Visual Hierarchy
+- **Primary:** Split showing idealized "Expectation" vs honest "Reality"
+- **Secondary:** "What I imagined" vs "What happened" labels
+- **Tertiary:** Humorous contrast between the two states
+
+## Zoning Guide
+- **Zone Expectation:** Polished, perfect, idealized vision
+- **Zone Reality:** Honest, funny, real-life outcome
+- **Labels:** Clear labels for each side
+
+## Style Modifiers
+- **Texture:** Meme format, relatable humor, social media native
+- **Lighting:** Perfect lighting on expectation, real on reality
+- **Palette:** Dreamy for expectation, realistic for reality
+
+## Negative Constraints
+- **Avoid:** Both looking similar, missing humor, unclear contrast
+`.trim()
 
 // 9. PRECIO - Price Comparison
 export const COMPARATIVA_PRECIO_PROMPT = `
-<structural_instruction>
-    <composition_type>Price Tier Comparison</composition_type>
-    <visual_hierarchy>
-        <primary>2-3 pricing columns/cards showing different tiers</primary>
-        <secondary>Feature lists in each tier</secondary>
-        <tertiary>Highlighted "Best Value" or recommended option</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_basic>Entry-level tier with basic features</zone_basic>
-        <zone_recommended>Middle or premium tier highlighted</zone_recommended>
-        <zone_premium>Top tier with all features</zone_premium>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>SaaS pricing page, subscription comparison</texture>
-        <lighting>Spotlight on recommended option</lighting>
-        <palette>Highlight color on best value, neutral on others</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Unclear pricing, hard to compare features, no recommendation</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Price Tier Comparison
+
+## Visual Hierarchy
+- **Primary:** 2-3 pricing columns/cards showing different tiers
+- **Secondary:** Feature lists in each tier
+- **Tertiary:** Highlighted "Best Value" or recommended option
+
+## Zoning Guide
+- **Zone Basic:** Entry-level tier with basic features
+- **Zone Recommended:** Middle or premium tier highlighted
+- **Zone Premium:** Top tier with all features
+
+## Style Modifiers
+- **Texture:** SaaS pricing page, subscription comparison
+- **Lighting:** Spotlight on recommended option
+- **Palette:** Highlight color on best value, neutral on others
+
+## Negative Constraints
+- **Avoid:** Unclear pricing, hard to compare features, no recommendation
+`.trim()
 
 // 10. HORIZONTAL - Top/Bottom Split
 export const COMPARATIVA_HORIZONTAL_PROMPT = `
-<structural_instruction>
-    <composition_type>Horizontal Split Comparison</composition_type>
-    <visual_hierarchy>
-        <primary>Top half showing one state, bottom half showing the other</primary>
-        <secondary>Horizontal divider line between states</secondary>
-        <tertiary>Labels identifying each section</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_top>50% for first comparison element</zone_top>
-        <zone_bottom>50% for second comparison element</zone_bottom>
-        <zone_divider>Horizontal separator</zone_divider>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Before/after, option comparison, clean layout</texture>
-        <lighting>Consistent across both halves</lighting>
-        <palette>Contrasting treatments to show difference</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Vertical confusion, unequal zone sizes, unclear comparison</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Horizontal Split Comparison
+
+## Visual Hierarchy
+- **Primary:** Top half showing one state, bottom half showing the other
+- **Secondary:** Horizontal divider line between states
+- **Tertiary:** Labels identifying each section
+
+## Zoning Guide
+- **Zone Top:** 50% for first comparison element
+- **Zone Bottom:** 50% for second comparison element
+- **Divider:** Horizontal separator
+
+## Style Modifiers
+- **Texture:** Before/after, option comparison, clean layout
+- **Lighting:** Consistent across both halves
+- **Palette:** Contrasting treatments to show difference
+
+## Negative Constraints
+- **Avoid:** Vertical confusion, unequal zone sizes, unclear comparison
+`.trim()
 
 // 11. ZOOM - Detail Comparison
 export const COMPARATIVA_ZOOM_PROMPT = `
-<structural_instruction>
-    <composition_type>Zoomed Detail Comparison</composition_type>
-    <visual_hierarchy>
-        <primary>Two magnified detail shots side by side</primary>
-        <secondary>Magnifying glass or zoom UI elements</secondary>
-        <tertiary>Labels identifying what's being compared</tertiary>
-    </visual_hierarchy>
-    <zoning_guide>
-        <zone_detail_a>Zoomed view of option A</zone_detail_a>
-        <zone_detail_b>Zoomed view of option B</zone_detail_b>
-        <zone_context>Optional context showing full items</zone_context>
-    </zoning_guide>
-    <style_modifiers>
-        <texture>Quality comparison, texture detail, macro focus</texture>
-        <lighting>Clinical, revealing, honest lighting</lighting>
-        <palette>Neutral to not bias either option</palette>
-    </style_modifiers>
-    <negative_constraints>
-        <avoid>Low resolution, different zoom levels, biased framing</avoid>
-    </negative_constraints>
-</structural_instruction>
-`
+# Zoomed Detail Comparison
 
-export const COMPARATIVA_DESCRIPTION = 'Diseño comparativo: Antes/Después, VS, Evolución. 11 composiciones para contrastar.'
+## Visual Hierarchy
+- **Primary:** Two magnified detail shots side by side
+- **Secondary:** Magnifying glass or zoom UI elements
+- **Tertiary:** Labels identifying what's being compared
+
+## Zoning Guide
+- **Zone Detail A:** Zoomed view of option A
+- **Zone Detail B:** Zoomed view of option B
+- **Context:** Optional context showing full items
+
+## Style Modifiers
+- **Texture:** Quality comparison, texture detail, macro focus
+- **Lighting:** Clinical, revealing, honest lighting
+- **Palette:** Neutral to not bias either option
+
+## Negative Constraints
+- **Avoid:** Low resolution, different zoom levels, biased framing
+`.trim()
+
+// 12. FUSIÓN - Intersection/Hybrid (NEW)
+export const COMPARATIVA_FUSION_PROMPT = `
+# Fusion Intersection
+
+## Visual Hierarchy
+- **Primary:** Two overlapping circles or zones creating a central union
+- **Secondary:** Elements A and B distinct in outer zones
+- **Tertiary:** Central zone showing the combination or best of both
+
+## Zoning Guide
+- **Zone A:** Left/Top circle section (Element A)
+- **Zone B:** Right/Bottom circle section (Element B)
+- **Zone Fusion:** Overlapping central area (Synthesis)
+
+## Style Modifiers
+- **Texture:** Transparency, blending modes, ethereal
+- **Lighting:** Glowing core at intersection
+- **Palette:** Color A blends with Color B to make Color C
+
+## Negative Constraints
+- **Avoid:** Separated distinct zones, no overlap, opaque layers
+`.trim()
+
+
+export const COMPARATIVA_DESCRIPTION = 'Diseño comparativo: Antes/Después, VS, Evolución. 12 composiciones para contrastar.'
+
+export const COMPARATIVA_LAYOUTS: LayoutOption[] = [
+    {
+        id: 'comp-split',
+        name: 'Dividido',
+        description: '50/50',
+        svgIcon: 'Columns',
+        textZone: 'center',
+        promptInstruction: COMPARATIVA_DIVIDIDO_PROMPT,
+        structuralPrompt: COMPARATIVA_DIVIDIDO_PROMPT,
+    },
+    {
+        id: 'comp-versus',
+        name: 'Versus',
+        description: 'Batalla',
+        svgIcon: 'Swords',
+        textZone: 'center',
+        promptInstruction: COMPARATIVA_VERSUS_PROMPT,
+        structuralPrompt: COMPARATIVA_VERSUS_PROMPT,
+    },
+    {
+        id: 'comp-transformation',
+        name: 'Antes/Después',
+        description: 'Transformación',
+        svgIcon: 'RefreshCw',
+        textZone: 'overlay',
+        promptInstruction: COMPARATIVA_TRANSFORMACION_PROMPT,
+        structuralPrompt: COMPARATIVA_TRANSFORMACION_PROMPT,
+    },
+    {
+        id: 'comp-checklist',
+        name: 'Checklist',
+        description: 'Grid Vs',
+        svgIcon: 'ListChecks',
+        textZone: 'top',
+        promptInstruction: COMPARATIVA_CHECKLIST_PROMPT,
+        structuralPrompt: COMPARATIVA_CHECKLIST_PROMPT,
+    },
+    {
+        id: 'comp-slider',
+        name: 'Slider',
+        description: 'Interactivo',
+        svgIcon: 'MoveHorizontal',
+        textZone: 'center',
+        promptInstruction: COMPARATIVA_SLIDER_PROMPT,
+        structuralPrompt: COMPARATIVA_SLIDER_PROMPT,
+    },
+    {
+        id: 'comp-evolution',
+        name: 'Evolución',
+        description: 'Timeline',
+        svgIcon: 'TrendingUp',
+        textZone: 'bottom',
+        promptInstruction: COMPARATIVA_EVOLUCION_PROMPT,
+        structuralPrompt: COMPARATIVA_EVOLUCION_PROMPT,
+    },
+    {
+        id: 'comp-myth',
+        name: 'Mito',
+        description: 'Mito vs Realidad',
+        svgIcon: 'AlertTriangle',
+        textZone: 'center',
+        promptInstruction: COMPARATIVA_MITO_PROMPT,
+        structuralPrompt: COMPARATIVA_MITO_PROMPT,
+    },
+    {
+        id: 'comp-expect',
+        name: 'Expectativa',
+        description: 'Humor',
+        svgIcon: 'Smile',
+        textZone: 'bottom',
+        promptInstruction: COMPARATIVA_EXPECTATIVA_PROMPT,
+        structuralPrompt: COMPARATIVA_EXPECTATIVA_PROMPT,
+    },
+    {
+        id: 'comp-pricing',
+        name: 'Precios',
+        description: 'Tiers',
+        svgIcon: 'CreditCard',
+        textZone: 'center',
+        promptInstruction: COMPARATIVA_PRECIO_PROMPT,
+        structuralPrompt: COMPARATIVA_PRECIO_PROMPT,
+    },
+    {
+        id: 'comp-horizontal',
+        name: 'Horizontal',
+        description: 'Arriba/Abajo',
+        svgIcon: 'Rows2',
+        textZone: 'center',
+        promptInstruction: COMPARATIVA_HORIZONTAL_PROMPT,
+        structuralPrompt: COMPARATIVA_HORIZONTAL_PROMPT,
+    },
+    {
+        id: 'comp-zoom',
+        name: 'Zoom',
+        description: 'Detalle',
+        svgIcon: 'ZoomIn',
+        textZone: 'right',
+        promptInstruction: COMPARATIVA_ZOOM_PROMPT,
+        structuralPrompt: COMPARATIVA_ZOOM_PROMPT,
+    },
+    {
+        id: 'comp-fusion',
+        name: 'Fusión',
+        description: 'Intersección',
+        svgIcon: 'Merge',
+        textZone: 'center',
+        promptInstruction: COMPARATIVA_FUSION_PROMPT,
+        structuralPrompt: COMPARATIVA_FUSION_PROMPT,
+    }
+]
