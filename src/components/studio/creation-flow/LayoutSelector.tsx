@@ -21,6 +21,7 @@ const WireframeIcons: Record<string, React.FC<{ className?: string }>> = {
     // Structural/Alignment
     SplitVertical: ({ className }) => <Columns2 className={className} />,
     SplitHorizontal: ({ className }) => <Rows2 className={className} />,
+    Rows2: ({ className }) => <Rows2 className={className} />,
     ArrowRight: ({ className }) => <ArrowRight className={className} />,
     AlignCenter: ({ className }) => <AlignCenter className={className} />,
     AlignBottom: ({ className }) => <ArrowDownToLine className={className} />,
@@ -32,6 +33,7 @@ const WireframeIcons: Record<string, React.FC<{ className?: string }>> = {
     Image: ({ className }) => <Image className={className} />,
     Calendar: ({ className }) => <Calendar className={className} />,
     RectangleVertical: ({ className }) => <RectangleVertical className={className} />,
+
 
     // Abstract/Concepts
     PartyPopper: ({ className }) => <PartyPopper className={className} />,
