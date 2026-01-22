@@ -54,8 +54,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Parse request body
+        // Parse request body
         const body = await request.json()
-        const { prompt, headline, cta, platform, brandDNA, context, model, layoutReference, aspectRatio } = body as {
+        let { prompt, headline, cta, platform, brandDNA, context, model, layoutReference, aspectRatio } = body as {
             prompt: string
             headline?: string
             cta?: string
@@ -66,6 +67,23 @@ export async function POST(request: NextRequest) {
             layoutReference?: string
             aspectRatio?: string
         }
+
+        // Robust Server-Side Fallback: If model is missing, fetch from DB
+        if (!model) {
+            console.log('[API] Model not provided by client, fetching from DB...')
+            try {
+                // Use the initialized convex client since we are in an API route
+                const aiConfig = await convex.query(api.settings.getAIConfig)
+                if (aiConfig && aiConfig.imageModel) {
+                    model = aiConfig.imageModel
+                    console.log(`[API] Resolved model from DB: ${model}`)
+                }
+            } catch (err) {
+                console.error('[API] Failed to fetch AI config:', err)
+            }
+        }
+
+        console.log('[API] Generate Request:', { model, promptLength: prompt?.length, brand: brandDNA?.brand_name })
 
         if (!prompt) {
             return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })

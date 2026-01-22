@@ -146,8 +146,145 @@ export const WISDOM_MODELS = {
     },
     IMAGE: {
         'gemini-3-pro-image-preview': 'Gemini 3 Image (Wisdom)',
-        'qwen-image': 'Qwen Image',
+        'qwen-image': 'Qwen Image (Alibaba)',
+        'kolors': 'Kolors (Kwai)',
+        'wanx-v1': 'Wanx (Alibaba)',
         'seedream-4.0': 'SeeDream 4.0'
+    }
+}
+
+// Helper to map aspect ratios to OpenAI-compatible sizes
+function getOpenAISize(aspectRatio?: string): string {
+    // Default to square
+    if (!aspectRatio) return "1024x1024"
+
+    switch (aspectRatio) {
+        case '16:9': return "1024x1024" // specific scaling might be needed, but 1024x1024 is safe default or 1792x1024 if supported
+        case '9:16': return "1024x1792"
+        case '1:1': return "1024x1024"
+        case '4:3': return "1024x1024"
+        case '3:4': return "1024x1024"
+        // Add more specific resolutions if the underlying models support exactly 1280x720 etc.
+        // For now, these models often default to 1024x1024 if size isn't strictly standard 
+        default: return "1024x1024"
+    }
+}
+
+async function generateWisdomChatImage(prompt: string, model: string): Promise<string> {
+    try {
+        console.log(`🚀 [Wisdom] Generating via Chat Completion (Text-to-Image): ${model}`)
+        const response = await fetch(`${WISDOM_BASE_URL}/v1/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${WISDOM_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model,
+                messages: [{ role: "user", content: prompt }], // Just prompt, or "Draw: " + prompt
+                stream: false
+            })
+        })
+
+        if (!response.ok) {
+            const err = await response.text()
+            throw new Error(`Wisdom Chat API Error: ${err}`)
+        }
+
+        const data = await response.json()
+        const content = data.choices?.[0]?.message?.content
+
+        if (!content) throw new Error('No content in chat response')
+
+        // Try to parse JSON content (common for some Chinese models like Seedream/Qwen)
+        try {
+            if (content.trim().startsWith('[') || content.trim().startsWith('{')) {
+                const parsed = JSON.parse(content)
+                const url = Array.isArray(parsed) ? parsed[0]?.url : parsed?.url
+                if (url) {
+                    console.log('✅ Extracted Image URL from JSON Content:', url)
+                    return url
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to parse chat content as JSON, falling back to regex', e)
+        }
+
+        // Try to find Markdown image URL ![alt](url) or just (url)
+        console.log('📥 Chat Response Content (Truncated):', content.substring(0, 200))
+
+        const urlMatch = content.match(/\((https?:\/\/[^\s\)"']+)\)/) || content.match(/(https?:\/\/[^\s\)"']+)/)
+
+        if (urlMatch) {
+            console.log('✅ Extracted Image URL from Chat:', urlMatch[1])
+            return urlMatch[1]
+        }
+
+        throw new Error('No image URL found in chat response. Response was text only.')
+
+    } catch (error) {
+        console.error("Wisdom Chat Generation Error:", error)
+        throw error
+    }
+}
+
+async function generateWisdomOpenAIImage(prompt: string, model: string, aspectRatio?: string): Promise<string> {
+    try {
+        // SPECIAL ROUTING FOR CHAT-BASED IMAGE MODELS (Qwen, Wanx, Kolors, Seedream)
+        // These models often use the Chat Completion endpoint or return JSON in chat
+        if (model.includes('qwen-image') || model.includes('wanx') || model.includes('kolors') || model.includes('seedream')) {
+            return await generateWisdomChatImage(prompt, model)
+        }
+
+        console.log(`🚀 [Wisdom] Generating with OpenAI-compatible Model: ${model}`)
+        console.log(`   Endpoint: ${WISDOM_BASE_URL}/v1/images/generations`)
+
+        const size = getOpenAISize(aspectRatio)
+
+        const requestBody = {
+            model: model,
+            prompt: prompt,
+            n: 1,
+            size: size,
+            response_format: "b64_json"
+        }
+
+        // Wisdom Gate OpenAI-compatible endpoint
+        const endpoint = `${WISDOM_BASE_URL}/v1/images/generations`
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${WISDOM_API_KEY}`
+            },
+            body: JSON.stringify(requestBody)
+        })
+
+        if (!response.ok) {
+            const errorText = await response.text()
+            console.error(`Wisdom OpenAI Image API failed: ${errorText}`)
+            throw new Error(`Wisdom Gate Error: ${errorText}`)
+        }
+
+        const data = await response.json()
+
+        if (data.data && data.data[0] && data.data[0].b64_json) {
+            return `data:image/png;base64,${data.data[0].b64_json}`
+        }
+
+        if (data.data && data.data[0] && data.data[0].url) {
+            // If a URL is returned, we might need to fetch it to convert to base64 if consistency is needed,
+            // but returning the URL is often fine if the frontend handles it. 
+            // However, app expects base64 or accessible URL.
+            return data.data[0].url
+        }
+
+        throw new Error('No image data found in Wisdom response')
+
+    } catch (error) {
+        console.error('Wisdom Gate Image (OpenAI) Error:', error)
+        throw error
     }
 }
 
@@ -491,7 +628,15 @@ export async function generateContentImageUnified(
             }
         }
 
-        return await generateWisdomImage(promptParts, wisdomModel, options.aspectRatio)
+        if (wisdomModel === 'gemini-3-pro-image-preview' || wisdomModel.includes('gemini')) {
+            return await generateWisdomImage(promptParts, wisdomModel, options.aspectRatio)
+        } else {
+            // For Qwen, Kolors, Wanx, etc., use the OpenAI-compatible endpoint
+            // Note: Context images might not be supported easily in standard OpenAI text-to-image payload 
+            // without using specific image-to-image endpoints. 
+            // For now, we pass just the prompt for these models as they are primarily text-to-image in this flow.
+            return await generateWisdomOpenAIImage(enhancedPrompt, wisdomModel, options.aspectRatio)
+        }
     }
 
     // Fallback to existing Google Implementation

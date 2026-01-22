@@ -40,7 +40,7 @@ export function PresetsCarousel({ onSelectPreset, onReset, userId, className }: 
         return <PresetsSkeleton />
     }
 
-    const userPresets = (presets.user || []).slice(0, 4)
+    const userPresets = presets.user || []
 
     // Don't render anything if there are no presets
     if (userPresets.length === 0) {

@@ -63,7 +63,7 @@ export function CaptionCard({
                 value={caption}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder="El caption aparecerá aquí después de generar..."
-                className="w-full min-h-[80px] text-sm p-3 rounded-xl border border-white/10 bg-white/5 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/60"
+                className="w-full min-h-[80px] text-sm p-3 rounded-lg border border-white/10 bg-white/5 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/60"
                 rows={3}
             />
         </div>

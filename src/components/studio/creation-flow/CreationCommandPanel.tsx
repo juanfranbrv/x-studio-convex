@@ -129,6 +129,13 @@ export function CreationCommandPanel({
     const { user } = useUser()
     const { activeBrandKit } = useBrandKit()
     const aiConfig = useQuery(api.settings.getAIConfig)
+
+    // Fetch presets to enforce limit
+    const presets = useQuery(api.presets.list, {
+        userId: user?.id,
+        brandId: activeBrandKit?.id as any
+    })
+
     const { toast } = useToast()
     const [isMagicParsing, setIsMagicParsing] = useState(false)
     const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
@@ -173,6 +180,17 @@ export function CreationCommandPanel({
             return
         }
 
+        // Enforce 6-Preset Limit (Frontend Check)
+        const currentCount = presets?.user?.length || 0;
+        if (currentCount >= 6) {
+            toast({
+                title: "Límite de Presets Alcanzado",
+                description: "Solo puedes tener 6 presets por Brand Kit. Elimina uno para crear nuevo.",
+                variant: "destructive"
+            })
+            return
+        }
+
         setIsSavingPreset(true)
         try {
             // Save complete state snapshot with correct field names
@@ -189,10 +207,10 @@ export function CreationCommandPanel({
                     selectedIntent: state.selectedIntent,
                     selectedSubMode: state.selectedSubMode,
                     // Image/Input
-                    uploadedImage: state.uploadedImage,
+                    uploadedImages: state.uploadedImages,
                     selectedTheme: state.selectedTheme,
                     imageSourceMode: state.imageSourceMode,
-                    selectedBrandKitImageId: state.selectedBrandKitImageId,
+                    selectedBrandKitImageIds: state.selectedBrandKitImageIds,
                     aiImageDescription: state.aiImageDescription,
                     // Styles & Layout
                     selectedStyles: state.selectedStyles,
@@ -360,6 +378,12 @@ export function CreationCommandPanel({
 
                     {/* PHASE 0: PRESETS (Quick Start) */}
                     <div className="px-6 pb-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Presets</h3>
+                            <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full font-medium text-muted-foreground border border-border/50 shadow-sm">
+                                {presets?.user?.length || 0} / 6
+                            </span>
+                        </div>
                         <PresetsCarousel
                             onSelectPreset={loadPreset}
                             onReset={reset}
@@ -480,12 +504,13 @@ export function CreationCommandPanel({
                                                 Referencia Visual {requiresImage ? '(Obligatoria)' : '(Opcional)'}
                                             </p>
                                             <ImageReferenceSelector
-                                                uploadedImage={state.uploadedImage}
+                                                uploadedImages={state.uploadedImages}
                                                 visionAnalysis={state.visionAnalysis || null}
                                                 isAnalyzing={state.isAnalyzing}
                                                 error={state.error}
                                                 onUpload={uploadImage}
-                                                onClear={clearImage}
+                                                onRemoveUploadedImage={creationFlow.removeUploadedImage}
+                                                onClearUploadedImages={creationFlow.clearUploadedImages}
                                                 isOptional={!requiresImage}
                                                 // Brand Kit images
                                                 brandKitImages={activeBrandKit?.images?.map((img, idx) => ({
@@ -493,8 +518,9 @@ export function CreationCommandPanel({
                                                     url: img.url,
                                                     name: `Imagen ${idx + 1}`
                                                 })) || []}
-                                                selectedBrandKitImageId={state.selectedBrandKitImageId}
-                                                onSelectBrandKitImage={creationFlow.selectBrandKitImage}
+                                                selectedBrandKitImageIds={state.selectedBrandKitImageIds}
+                                                onToggleBrandKitImage={creationFlow.toggleBrandKitImage}
+                                                onClearBrandKitImages={creationFlow.clearBrandKitImages}
                                                 // AI generation
                                                 aiImageDescription={state.aiImageDescription}
                                                 onAiDescriptionChange={creationFlow.setAiImageDescription}

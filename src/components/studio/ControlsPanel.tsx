@@ -100,10 +100,12 @@ export function ControlsPanel({
         selectFormat,
         selectedLayoutMeta,
         uploadImage,
-        setUploadedImage,
+        removeUploadedImage,
+        clearUploadedImages,
         setImageSourceMode,
         setAiImageDescription,
-        selectBrandKitImage,
+        toggleBrandKitImage,
+        clearBrandKitImages,
         reset,
         loadPreset,
     } = creationFlow
@@ -113,12 +115,15 @@ export function ControlsPanel({
         toggleBrandColor(color)
     }
 
-    // Brand kit images for selector
-    const brandKitImages = (activeBrandKit?.images || []).map((img, idx) => ({
-        id: `bk-img-${idx}`,
-        url: typeof img === 'string' ? img : img.url,
-        name: `Imagen ${idx + 1}`
-    }))
+    // Brand kit images for selector - use URL as ID for consistent matching
+    const brandKitImages = (activeBrandKit?.images || []).map((img, idx) => {
+        const imageUrl = typeof img === 'string' ? img : img.url
+        return {
+            id: imageUrl, // Use URL as ID for consistent matching across components
+            url: imageUrl,
+            name: `Imagen ${idx + 1}`
+        }
+    })
 
     // Maximum number of presets allowed
     const MAX_PRESETS = 6
@@ -166,7 +171,7 @@ export function ControlsPanel({
                     rawMessage: state.rawMessage || undefined, // "Lazy Prompt"
                     imageSourceMode: state.imageSourceMode,
                     aiImageDescription: state.aiImageDescription || undefined,
-                    selectedBrandKitImageId: state.selectedBrandKitImageId || undefined,
+                    selectedBrandKitImageIds: state.selectedBrandKitImageIds.length > 0 ? state.selectedBrandKitImageIds : undefined,
                     additionalInstructions: state.additionalInstructions || undefined, // Added
                 },
                 icon: 'Star'
@@ -300,16 +305,18 @@ export function ControlsPanel({
                             <div className="glass-card p-4">
                                 <SectionHeader icon={ImagePlus} title="Imagen de Referencia" />
                                 <ImageReferenceSelector
-                                    uploadedImage={state.uploadedImage}
+                                    uploadedImages={state.uploadedImages}
                                     visionAnalysis={state.visionAnalysis ?? null}
                                     isAnalyzing={state.isAnalyzing || false}
                                     error={null}
                                     onUpload={uploadImage}
-                                    onClear={() => setUploadedImage(null)}
+                                    onRemoveUploadedImage={removeUploadedImage}
+                                    onClearUploadedImages={clearUploadedImages}
                                     isOptional={true}
                                     brandKitImages={brandKitImages}
-                                    selectedBrandKitImageId={state.selectedBrandKitImageId}
-                                    onSelectBrandKitImage={selectBrandKitImage}
+                                    selectedBrandKitImageIds={state.selectedBrandKitImageIds}
+                                    onToggleBrandKitImage={toggleBrandKitImage}
+                                    onClearBrandKitImages={clearBrandKitImages}
                                     aiImageDescription={state.aiImageDescription}
                                     onAiDescriptionChange={setAiImageDescription}
                                     mode={state.imageSourceMode}

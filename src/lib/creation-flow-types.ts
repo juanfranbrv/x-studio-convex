@@ -89,6 +89,7 @@ export interface DebugPromptData {
     finalPrompt: string
     logoUrl?: string
     referenceImageUrl?: string
+    attachedImages?: string[] // URLs of all attached images (uploaded or from brand kit)
     selectedStyles: string[]
     headline?: string
     cta?: string
@@ -655,8 +656,8 @@ export interface GenerationState {
     selectedSubMode: string | null  // For intents with sub-modes
 
     // Step 2: Input
-    uploadedImage: string | null  // Base64 or URL
-    uploadedImageFile: File | null
+    uploadedImages: string[]  // Base64 or URL array (max 10)
+    uploadedImageFiles: File[]
     selectedTheme: SeasonalTheme | null
 
     // Step 3:    // AI Configuration
@@ -688,7 +689,7 @@ export interface GenerationState {
 
     // Image Reference Options
     imageSourceMode: 'upload' | 'brandkit' | 'generate' // Which image source is active
-    selectedBrandKitImageId: string | null // ID of selected brand kit image
+    selectedBrandKitImageIds: string[] // IDs of selected brand kit images (max 10)
     aiImageDescription: string // Description for AI to generate reference image
 
     // Step 7: Final Format
@@ -706,8 +707,8 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     selectedGroup: null,
     selectedIntent: null,
     selectedSubMode: null,
-    uploadedImage: null,
-    uploadedImageFile: null,
+    uploadedImages: [],
+    uploadedImageFiles: [],
     selectedTheme: null,
     visionAnalysis: null,
     isAnalyzing: false,
@@ -725,7 +726,7 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     customStyle: '',
     selectedTextAssets: [],
     imageSourceMode: 'upload',
-    selectedBrandKitImageId: null,
+    selectedBrandKitImageIds: [],
     aiImageDescription: '',
     isGenerating: false,
     generatedImage: null,

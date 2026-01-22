@@ -100,6 +100,18 @@ export const create = mutation({
         state: v.any(), // Complete GenerationState snapshot
     },
     handler: async (ctx, args) => {
+        // Enforce limit of 6 presets per Brand Kit
+        if (args.brandId) {
+            const existingPresets = await ctx.db
+                .query("presets")
+                .withIndex("by_brand", (q) => q.eq("brandId", args.brandId))
+                .collect();
+
+            if (existingPresets.length >= 6) {
+                throw new Error("Límite de presets alcanzado (máximo 6 por Brand Kit).");
+            }
+        }
+
         const presetId = await ctx.db.insert("presets", {
             userId: args.userId,
             brandId: args.brandId,
