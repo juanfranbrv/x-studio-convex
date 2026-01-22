@@ -88,13 +88,15 @@ export default function ImagePage() {
 
     const creationFlow = useCreationFlow({
         onImageUploaded: async (file: File) => {
+            // This callback is called AFTER uploadImage already added the base64 to state
+            // Here we only sync with brand kit storage (don't add again to avoid duplicate)
             if (!activeBrandKit) return
             try {
                 const formData = new FormData()
                 formData.append('file', file)
                 const result = await uploadBrandImage(formData)
                 if (result.success && result.url) {
-                    creationFlow.setUploadedImage(result.url)
+                    // Only save to brand kit, don't add again (already in state as base64)
                     const updatedImages = [...(activeBrandKit.images || []), { url: result.url, selected: true }]
                     await updateActiveBrandKit({
                         images: updatedImages
@@ -258,16 +260,34 @@ export default function ImagePage() {
 
             const finalContext: ContextElement[] = [...selectedContext]
 
-            if (creationFlow.state.uploadedImage) {
-                const hasProduct = finalContext.some(c => c.type === 'image' && c.label === 'Producto')
-                if (!hasProduct) {
-                    finalContext.push({
-                        id: 'flow-product',
-                        type: 'image',
-                        value: creationFlow.state.uploadedImage,
-                        label: 'Producto'
-                    })
-                }
+            // Add uploaded images as product references
+            if (creationFlow.state.uploadedImages.length > 0) {
+                creationFlow.state.uploadedImages.forEach((imgUrl, idx) => {
+                    const hasImg = finalContext.some(c => c.id === `flow-upload-${idx}`)
+                    if (!hasImg) {
+                        finalContext.push({
+                            id: `flow-upload-${idx}`,
+                            type: 'image',
+                            value: imgUrl,
+                            label: idx === 0 ? 'Producto' : `Referencia ${idx + 1}`
+                        })
+                    }
+                })
+            }
+
+            // Add brand kit selected images as references
+            if (creationFlow.state.selectedBrandKitImageIds.length > 0) {
+                creationFlow.state.selectedBrandKitImageIds.forEach((imgUrl, idx) => {
+                    const hasImg = finalContext.some(c => c.id === `flow-brandkit-${idx}`)
+                    if (!hasImg) {
+                        finalContext.push({
+                            id: `flow-brandkit-${idx}`,
+                            type: 'image',
+                            value: imgUrl,
+                            label: `Imagen BrandKit ${idx + 1}`
+                        })
+                    }
+                })
             }
 
             if (logoInclusion && creationFlow.state.selectedLogoId) {
@@ -302,6 +322,8 @@ export default function ImagePage() {
 
             const effectivePrompt = creationFlow.state.generatedImage ? buildEditPrompt(data.prompt) : data.prompt
 
+            console.log('[Client] Generating with State Model:', creationFlow.state.selectedImageModel)
+
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -314,7 +336,7 @@ export default function ImagePage() {
                     },
                     logoInclusion,
                     context: finalContext,
-                    model: data.model || creationFlow.state.selectedImageModel || "wisdom/gemini-3-pro-image-preview",
+                    model: data.model || creationFlow.state.selectedImageModel, // Removed hardcoded fallback to test state
                     layoutReference: creationFlow.selectedLayoutMeta?.referenceImage,
                     aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio
                 }),
@@ -418,7 +440,7 @@ export default function ImagePage() {
         state.customStyle.trim() !== '' ||
         state.headline ||
         state.cta ||
-        state.uploadedImage
+        state.uploadedImages.length > 0
     )
 
     // Wrapped handleGenerate with debug modal intercept (admin only)
@@ -437,6 +459,11 @@ export default function ImagePage() {
         setDebugPromptData({
             finalPrompt: data.prompt,
             logoUrl: activeBrandKit?.logos?.[0]?.url,
+            // Combine uploaded images and brand kit images
+            attachedImages: [
+                ...state.uploadedImages,
+                ...state.selectedBrandKitImageIds // Assuming these are URLs as per handleGenerate usage
+            ],
             selectedStyles: state.selectedStyles,
             headline: state.headline,
             cta: state.cta,

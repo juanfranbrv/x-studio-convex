@@ -77,33 +77,45 @@ División aburrida 50/50, ilustración plana 2D, texto superpuesto sobre fondos 
 `,
     },
 
-    // 3. PRECIOS - Tríptíco central
+    // 3. SPOTLIGHT - Servicio protagonista con foco de atención
     {
         id: 'servicio-pricing',
-        name: 'Precios',
-        description: 'Comparativa',
-        svgIcon: 'DollarSign',
+        name: 'Spotlight',
+        description: 'Foco Central',
+        svgIcon: 'Lightbulb',
         textZone: 'center',
-        promptInstruction: 'Central pricing triptych with emphasis on best value.',
+        promptInstruction: 'Single service spotlight with dramatic central focus.',
         structuralPrompt: `
-## Composición: Tríptico de Precios
+## Composición: Spotlight de Servicio
 
-**Estructura:** Tres columnas con énfasis central.
+**Estructura:** Un solo servicio como protagonista absoluto bajo un foco de luz central.
+
+### Concepto Visual:
+Imagina un escenario donde TU SERVICIO es la estrella. Un foco de luz dramático 
+ilumina el centro, todo lo demás queda en penumbra atmosférica.
 
 ### Jerarquía visual:
-1. **Protagonista:** Tarjeta central elevada, escala 1.2x, iluminación más brillante
-2. **Secundario:** Tarjetas laterales (Básico/Enterprise) retrocedidas en profundidad Z
-3. **Detalle:** Corona o cinta distinguiendo el "Mejor Valor" central
+1. **Protagonista:** Representación visual abstracta del servicio en el centro exacto, bañada en luz
+2. **Secundario:** Halo de luz o resplandor suave radiando desde el centro hacia los bordes
+3. **Detalle:** Elementos contextuales sutiles en la penumbra (herramientas, iconos, símbolos del sector)
 
 ### Distribución:
-- Primer plano: columna central, enfoque nítido, alto contraste
-- Plano medio: columnas laterales, contraste ligeramente menor
-- Fondo: señales abstractas de profundidad para mostrar separación
+- **Centro:** El "objeto héroe" que simboliza el servicio (70% del peso visual)
+- **Periferia:** Gradiente de luz a oscuridad (efecto viñeta invertida)
+- **Fondo:** Profundidad atmosférica con partículas de polvo en el haz de luz
+- Headline impactante en zona superior, tipografía bold
+- CTA flotando debajo del objeto central
+
+### Iluminación:
+- Luz cenital dramática tipo teatro/estudio
+- Sombra suave proyectada hacia abajo
+- Bordes del servicio con rim light sutil
 
 ### Evitar:
-Alineación plana, peso igual para todas las opciones, grids rígidos.
+Múltiples servicios compitiendo, fondos planos sin atmósfera, iluminación uniforme aburrida.
 `,
     },
+
 
     // 4. PROCESO - Flujo Z-Pattern
     {
@@ -245,34 +257,40 @@ Fuentes finas ilegibles, gráficos estándar de Excel, aspecto de documento abur
 `,
     },
 
-    // 9. MINIMAL - Pedestal de estudio
+    // 9. INMERSIÓN - Experiencia POV Memorable
     {
         id: 'servicio-minimal',
-        name: 'Minimal',
-        description: 'Pedestal',
-        svgIcon: 'Box',
+        name: 'Inmersión',
+        description: 'POV Experience',
+        svgIcon: 'Eye',
         textZone: 'center',
-        promptInstruction: 'Minimal studio pedestal with single object.',
+        promptInstruction: 'Hyper-immersive First-Person POV shot. Leading lines drawing the eye inward. Cinematic depth.',
         structuralPrompt: `
-## Composición: Pedestal Minimal de Estudio
+## Composición: Inmersión POV (Punto de Fuga Central)
 
-**Estructura:** Objeto único sobre podio en espacio vacío.
+**Concepto:** El espectador NO observa, *participa*. Es el protagonista absoluto.
+Usa **Líneas de Guía** y **Encuadre Natural** para crear un efecto túnel irresistible.
 
-### Jerarquía visual:
-1. **Protagonista:** Un solo objeto abstracto prístino simbolizando el servicio, sobre un podio
-2. **Secundario:** Reflejo suave en el suelo/superficie
-3. **Detalle:** Niebla o bruma atmosférica (extremadamente sutil)
+### Estructura y Geometría:
+1. **Punto de Fuga:** Convergencia fuerte en el centro exacto de la imagen.
+2. **Líneas de Guía:** Elementos arquitectónicos o herramientas del servicio formando líneas diagonales que apuntan al centro.
+3. **Encuadre (Framing):** El primer plano (manos, bordes de mesa, herramientas) crea un "marco interno" que da profundidad y contexto.
 
-### Distribución:
-- Sujeto: exactamente centrado, flotando ligeramente sobre el pedestal
-- Espacio negativo: vasto espacio vacío alrededor del sujeto para elegancia
-- Texturas: porcelana, cerámica pulida o goma super-mate
-- Iluminación de museo minimalista desde arriba
+### Jerarquía Visual (Profundidad):
+- **Capa 1 (Primerísimo Plano - Borroso):** Elementos que tocan al espectador (manos propias, herramientas en uso). Bokeh desenfocado.
+- **Capa 2 (Plano Medio - Nítido):** La acción principal del servicio ocurriendo justo delante. Foco crítico.
+- **Capa 3 (Fondo - Atmosférico):** El entorno se desvanece en una luz ambiental suave.
+
+### Iluminación y Atmósfera:
+- **Luz Guía:** Una fuente de luz al final del punto de fuga invita a "entrar".
+- **Textura Táctil:** Iluminación rasante suave para resaltar texturas materiales en el primer plano.
+- **Sensación:** Intimidad, concentración y expertise.
 
 ### Evitar:
-Fondo ocupado, múltiples objetos, texto superpuesto sobre el objeto.
+Planos planos de 90 grados, vistas objetivas lejanas, composiciones estáticas sin diagonales.
 `,
     },
+
 
     // 10. CONEXIÓN - Interacción humana
     {

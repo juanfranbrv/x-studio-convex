@@ -109,7 +109,7 @@ export default function AdminPage() {
     const suspendUser = useMutation(api.admin.suspendUser)
     const deleteUser = useMutation(api.admin.deleteUser)
     const adjustCredits = useMutation(api.admin.adjustCredits)
-    const updateSetting = useMutation(api.admin.updateSetting)
+    const updateSetting = useMutation(api.settings.saveAppSetting) // Use the new generic settings mutation
     const initializeSettings = useMutation(api.admin.initializeSettings)
     const approveBetaRequest = useMutation(api.admin.approveBetaRequest)
     const rejectBetaRequest = useMutation(api.admin.rejectBetaRequest)
@@ -232,7 +232,7 @@ export default function AdminPage() {
 
     const handleSaveSetting = async (key: string, value: number | string) => {
         try {
-            await updateSetting({ admin_email: userEmail, key, value })
+            await updateSetting({ key, value })
             toast({ title: 'Configuración guardada' })
         } catch (error: any) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' })
@@ -659,8 +659,10 @@ export default function AdminPage() {
                                                     onChange={(e) => setEditingSettings(prev => ({ ...prev, model_image_generation: e.target.value }))}
                                                 >
                                                     <option value="wisdom/gemini-3-pro-image-preview">Gemini 3 Pro Image (Wisdom)</option>
-                                                    <option value="wisdom/qwen-image">Qwen Image (Wisdom)</option>
-                                                    <option value="wisdom/seedream-4">Seedream 4.0 (Wisdom)</option>
+                                                    <option value="wisdom/qwen-image">Qwen Image (Alibaba)</option>
+                                                    <option value="wisdom/kolors">Kolors (Kwai)</option>
+                                                    <option value="wisdom/wanx-v1">Wanx (Alibaba)</option>
+                                                    <option value="wisdom/seedream-4.0">Seedream 4.0 (Wisdom)</option>
                                                     <option value="google/gemini-3-pro">Gemini 3 Pro (Google Legacy)</option>
                                                     <option value="google/gemini-2.5-flash">Gemini 2.5 Flash (Google Legacy)</option>
                                                     <option value="google/imagen-3-fast">Imagen 3 Fast</option>

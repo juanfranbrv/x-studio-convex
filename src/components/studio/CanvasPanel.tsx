@@ -226,10 +226,10 @@ export function CanvasPanel({
                     selectedIntent: creationState.selectedIntent,
                     selectedSubMode: creationState.selectedSubMode,
                     // Image/Input
-                    uploadedImage: creationState.uploadedImage,
+                    uploadedImages: creationState.uploadedImages,
                     selectedTheme: creationState.selectedTheme,
                     imageSourceMode: creationState.imageSourceMode,
-                    selectedBrandKitImageId: creationState.selectedBrandKitImageId,
+                    selectedBrandKitImageIds: creationState.selectedBrandKitImageIds,
                     aiImageDescription: creationState.aiImageDescription,
                     // Styles & Layout
                     selectedStyles: creationState.selectedStyles,
@@ -579,7 +579,7 @@ export function CanvasPanel({
                     {/* Canvas Container */}
                     <div
                         ref={containerRef}
-                        className="relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-white dark:bg-zinc-900 bg-dot group shrink-0 rounded-aero overflow-hidden"
+                        className="relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-hidden"
                         style={(() => {
                             const [w, h] = aspectRatio.split(':').map(Number);
                             const ratio = w / h;
@@ -625,7 +625,7 @@ export function CanvasPanel({
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.8 }}
-                                    className="absolute inset-0 z-50 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/10"
+                                    className="absolute inset-0 z-50 overflow-hidden rounded-sm shadow-lg ring-1 ring-white/10"
                                 >
                                     <DigitalStaticLoader />
                                 </motion.div>
@@ -633,7 +633,7 @@ export function CanvasPanel({
                         </AnimatePresence>
 
                         {currentImage ? (
-                            <div className="relative w-full h-full overflow-hidden rounded-lg bg-background/50">
+                            <div className="relative w-full h-full overflow-hidden rounded-sm bg-background/50">
                                 <div className="w-full h-full flex items-center justify-center">
                                     <motion.div
                                         key={currentImage}
@@ -693,31 +693,42 @@ export function CanvasPanel({
                         {/* PREVIEW OVERLAYS (Reference Image & Logo) */}
                         {!currentImage && creationState && (
                             <>
-                                {/* Reference Image (Top Left) */}
-                                {creationState.uploadedImage && (
-                                    <div className="absolute top-4 left-4 z-20 group/ref">
-                                        <div className="relative group">
-                                            <img
-                                                src={creationState.uploadedImage}
-                                                alt="Referencia"
-                                                className="w-24 h-32 object-cover rounded-lg ring-1 ring-white/20 shadow-xl"
-                                            />
-                                            <div className="absolute bottom-0 inset-x-0 bg-black/50 text-[8px] text-white text-center py-0.5 backdrop-blur-sm">
-                                                REFERENCIA
-                                            </div>
-                                            {onClearUploadedImage && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={onClearUploadedImage}
-                                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
-                                                >
-                                                    <X className="w-3 h-3" />
-                                                </Button>
+                                {/* Reference Images Strip (Top Left) - Combined from uploads + brand kit */}
+                                {(() => {
+                                    // Combine uploaded images and brand kit selections
+                                    const uploadedImgs = creationState.uploadedImages.map((url, i) => ({ url, source: 'upload' as const, key: `u-${i}` }))
+                                    // Since selectedBrandKitImageIds now stores URLs directly, use them as-is
+                                    const brandKitImgs = creationState.selectedBrandKitImageIds.map((url, i) => ({
+                                        url,
+                                        source: 'brandkit' as const,
+                                        key: `bk-${i}`
+                                    }))
+                                    const allImages = [...uploadedImgs, ...brandKitImgs]
+
+                                    if (allImages.length === 0) return null
+
+                                    return (
+                                        <div className="absolute top-4 left-4 z-20 flex gap-2 flex-wrap max-w-[220px]">
+                                            {allImages.slice(0, 6).map((item, idx) => (
+                                                <div key={item.key} className="relative group">
+                                                    <img
+                                                        src={item.url}
+                                                        alt={`Ref ${idx + 1}`}
+                                                        className="w-11 h-14 object-cover rounded-lg ring-1 ring-white/20 shadow-xl"
+                                                    />
+                                                    <div className={`absolute bottom-0 inset-x-0 text-[5px] text-white text-center py-0.5 backdrop-blur-sm rounded-b-lg ${item.source === 'brandkit' ? 'bg-primary/70' : 'bg-black/50'}`}>
+                                                        {item.source === 'brandkit' ? 'BK' : idx + 1}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {allImages.length > 6 && (
+                                                <div className="w-11 h-14 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-white text-[10px] font-bold ring-1 ring-white/20">
+                                                    +{allImages.length - 6}
+                                                </div>
                                             )}
                                         </div>
-                                    </div>
-                                )}
+                                    )
+                                })()}
 
                                 {/* Logo (Top Right) */}
                                 {creationState.selectedLogoId && activeBrandKit?.logos && (

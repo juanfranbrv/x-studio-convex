@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { Upload, Image as ImageIcon, Loader2, X, Sparkles, Palette, Check } from 'lucide-react'
+import { Upload, Image as ImageIcon, Loader2, X, Sparkles, Palette, Check, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
@@ -9,18 +9,23 @@ import type { VisionAnalysis } from '@/lib/creation-flow-types'
 
 type ImageSourceMode = 'upload' | 'brandkit' | 'generate'
 
+const MAX_REFERENCE_IMAGES = 10
+
 interface ImageReferenceSelectorProps {
-    uploadedImage: string | null
+    // Multi-image support
+    uploadedImages: string[]
     visionAnalysis: VisionAnalysis | null
     isAnalyzing: boolean
     error: string | null
     onUpload: (file: File) => void
-    onClear?: () => void
+    onRemoveUploadedImage?: (url: string) => void
+    onClearUploadedImages?: () => void
     isOptional?: boolean
     // Brand Kit images
     brandKitImages?: Array<{ id: string; url: string; name?: string }>
-    selectedBrandKitImageId?: string | null
-    onSelectBrandKitImage?: (imageId: string) => void
+    selectedBrandKitImageIds?: string[]
+    onToggleBrandKitImage?: (imageId: string) => void
+    onClearBrandKitImages?: () => void
     // AI Generation
     aiImageDescription?: string
     onAiDescriptionChange?: (description: string) => void
@@ -30,16 +35,18 @@ interface ImageReferenceSelectorProps {
 }
 
 export function ImageReferenceSelector({
-    uploadedImage,
+    uploadedImages = [],
     visionAnalysis,
     isAnalyzing,
     error,
     onUpload,
-    onClear,
+    onRemoveUploadedImage,
+    onClearUploadedImages,
     isOptional = false,
     brandKitImages = [],
-    selectedBrandKitImageId = null,
-    onSelectBrandKitImage,
+    selectedBrandKitImageIds = [],
+    onToggleBrandKitImage,
+    onClearBrandKitImages,
     aiImageDescription = '',
     onAiDescriptionChange,
     mode = 'upload',
@@ -47,6 +54,10 @@ export function ImageReferenceSelector({
 }: ImageReferenceSelectorProps) {
     const [isDragging, setIsDragging] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
+
+    // Total images selected across both sources
+    const totalSelected = uploadedImages.length + selectedBrandKitImageIds.length
+    const canAddMore = totalSelected < MAX_REFERENCE_IMAGES
 
     const handleDragOver = useCallback((e: React.DragEvent) => {
         e.preventDefault()
@@ -60,18 +71,22 @@ export function ImageReferenceSelector({
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault()
         setIsDragging(false)
-        const file = e.dataTransfer.files[0]
-        if (file && file.type.startsWith('image/')) {
+        if (!canAddMore) return
+
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
+        files.slice(0, MAX_REFERENCE_IMAGES - totalSelected).forEach(file => {
             onUpload(file)
-        }
-    }, [onUpload])
+        })
+    }, [onUpload, canAddMore, totalSelected])
 
     const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
+        const files = Array.from(e.target.files || [])
+        files.slice(0, MAX_REFERENCE_IMAGES - totalSelected).forEach(file => {
             onUpload(file)
-        }
-    }, [onUpload])
+        })
+        // Reset input for re-selection
+        if (inputRef.current) inputRef.current.value = ''
+    }, [onUpload, totalSelected])
 
     // Internal handler to sync if onModeChange is provided
     const handleModeChange = (val: string) => {
@@ -106,66 +121,68 @@ export function ImageReferenceSelector({
                 </TabsTrigger>
             </TabsList>
 
+            {/* Selected count badge */}
+            {totalSelected > 0 && (
+                <div className="mt-2 flex items-center justify-between px-1">
+                    <p className="text-[10px] text-muted-foreground">
+                        <span className="font-semibold text-primary">{totalSelected}</span>/{MAX_REFERENCE_IMAGES} imágenes seleccionadas
+                    </p>
+                    {totalSelected > 0 && (
+                        <button
+                            onClick={() => {
+                                onClearUploadedImages?.()
+                                onClearBrandKitImages?.()
+                            }}
+                            className="text-[10px] text-red-500 hover:text-red-600 transition-colors"
+                        >
+                            Limpiar todo
+                        </button>
+                    )}
+                </div>
+            )}
+
             {/* UPLOAD MODE */}
             <TabsContent value="upload" className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                {uploadedImage ? (
-                    <div className="space-y-3">
-                        <div
-                            className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 backdrop-blur-md cursor-pointer group shadow-sm transition-all hover:shadow-md"
-                            onClick={() => inputRef.current?.click()}
-                        >
-                            <img
-                                src={uploadedImage}
-                                alt="Uploaded"
-                                className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-
-                            {onClear && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onClear()
-                                    }}
-                                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-all z-10 hover:scale-110"
-                                >
-                                    <X className="w-3.5 h-3.5" />
-                                </button>
-                            )}
-
-                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                                <p className="text-[10px] text-white font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-md border border-white/20">
-                                    Cambiar imagen
-                                </p>
-                            </div>
-
-                            {isAnalyzing && (
-                                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                                    <div className="flex flex-col items-center gap-2 text-white/90">
-                                        <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                                        <span className="text-[10px] font-medium tracking-wide">Analizando visión...</span>
-                                    </div>
+                {/* Grid of uploaded images */}
+                {uploadedImages.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                        {uploadedImages.map((img, idx) => (
+                            <div
+                                key={idx}
+                                className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 aspect-square group"
+                            >
+                                <img
+                                    src={img}
+                                    alt={`Uploaded ${idx + 1}`}
+                                    className="w-full h-full object-cover"
+                                />
+                                {onRemoveUploadedImage && (
+                                    <button
+                                        onClick={() => onRemoveUploadedImage(img)}
+                                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-red-500 transition-all z-10 opacity-0 group-hover:opacity-100"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                )}
+                                <div className="absolute bottom-1 left-1 bg-black/50 text-white text-[8px] px-1.5 py-0.5 rounded-full">
+                                    {idx + 1}
                                 </div>
-                            )}
-                        </div>
-
-                        {visionAnalysis && !isAnalyzing && (
-                            <div className="flex items-center gap-2 px-1">
-                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                <p className="text-[10px] font-medium text-green-700 dark:text-green-400">
-                                    Análisis completado: {visionAnalysis.subjectLabel}
-                                </p>
                             </div>
-                        )}
+                        ))}
                     </div>
-                ) : (
+                )}
+
+                {/* Upload dropzone (always show if can add more) */}
+                {canAddMore && (
                     <div
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         onClick={() => inputRef.current?.click()}
                         className={cn(
-                            "relative h-32 rounded-2xl border-2 border-dashed transition-all cursor-pointer group overflow-hidden",
+                            "relative rounded-2xl border-2 border-dashed transition-all cursor-pointer group overflow-hidden",
                             "flex flex-col items-center justify-center gap-3",
+                            uploadedImages.length > 0 ? "h-20" : "h-32",
                             isDragging
                                 ? "border-primary bg-primary/10 dark:bg-primary/10 scale-[0.99]"
                                 : "border-slate-200 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-white/10"
@@ -175,6 +192,7 @@ export function ImageReferenceSelector({
                             ref={inputRef}
                             type="file"
                             accept="image/*"
+                            multiple
                             onChange={handleFileSelect}
                             className="hidden"
                         />
@@ -183,15 +201,17 @@ export function ImageReferenceSelector({
                         <div className="absolute inset-0 bg-gradient-to-tr from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                         <div className={cn(
-                            "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm",
+                            "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm",
                             isDragging
                                 ? "bg-primary text-primary-foreground scale-110"
                                 : "bg-white text-slate-400 group-hover:text-primary group-hover:scale-110 dark:bg-white/10 dark:text-slate-400"
                         )}>
                             {isDragging ? (
-                                <Upload className="w-5 h-5" />
+                                <Upload className="w-4 h-4" />
+                            ) : uploadedImages.length > 0 ? (
+                                <Plus className="w-4 h-4" />
                             ) : (
-                                <ImageIcon className="w-5 h-5" />
+                                <ImageIcon className="w-4 h-4" />
                             )}
                         </div>
 
@@ -200,12 +220,36 @@ export function ImageReferenceSelector({
                                 "text-xs font-semibold transition-colors",
                                 isDragging ? "text-primary dark:text-primary" : "text-slate-600 dark:text-slate-300"
                             )}>
-                                {isDragging ? 'Suelta la imagen' : 'Sube tu referencia'}
+                                {isDragging
+                                    ? 'Suelta las imágenes'
+                                    : uploadedImages.length > 0
+                                        ? 'Añadir más imágenes'
+                                        : 'Sube tus referencias'
+                                }
                             </p>
                             <p className="text-[10px] text-slate-400 mt-0.5">
-                                Arrastra o haz clic para explorar
+                                {uploadedImages.length > 0
+                                    ? `${MAX_REFERENCE_IMAGES - totalSelected} disponibles`
+                                    : 'Arrastra o haz clic (máx. 10)'
+                                }
                             </p>
                         </div>
+                    </div>
+                )}
+
+                {/* Max reached message */}
+                {!canAddMore && (
+                    <div className="text-center py-2 px-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800/30">
+                        <p className="text-[10px] text-amber-700 dark:text-amber-400">
+                            Máximo de {MAX_REFERENCE_IMAGES} imágenes alcanzado
+                        </p>
+                    </div>
+                )}
+
+                {isAnalyzing && (
+                    <div className="mt-2 flex items-center gap-2 px-1">
+                        <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                        <span className="text-[10px] text-muted-foreground">Analizando imagen...</span>
                     </div>
                 )}
 
@@ -221,32 +265,40 @@ export function ImageReferenceSelector({
             <TabsContent value="brandkit" className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
                 {brandKitImages.length > 0 ? (
                     <div className="grid grid-cols-3 gap-2">
-                        {brandKitImages.map((img) => (
-                            <button
-                                key={img.id}
-                                onClick={() => onSelectBrandKitImage?.(img.id)}
-                                className={cn(
-                                    "relative rounded-xl overflow-hidden border transition-all aspect-square group",
-                                    selectedBrandKitImageId === img.id
-                                        ? "border-primary ring-2 ring-primary/20 shadow-md transform scale-[0.98]"
-                                        : "border-slate-200 dark:border-white/10 hover:border-primary/50 dark:hover:border-white/30"
-                                )}
-                            >
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-10" />
-                                <img
-                                    src={img.url}
-                                    alt={img.name || 'Brand image'}
-                                    className="w-full h-full object-cover"
-                                />
-                                {selectedBrandKitImageId === img.id && (
-                                    <div className="absolute inset-0 bg-primary/30 flex items-center justify-center backdrop-blur-[1px] z-20">
-                                        <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg transform scale-100 animate-in zoom-in duration-200">
-                                            <Check className="w-4 h-4 stroke-[3]" />
+                        {brandKitImages.map((img) => {
+                            const isSelected = selectedBrandKitImageIds.includes(img.id)
+                            const canSelect = canAddMore || isSelected
+
+                            return (
+                                <button
+                                    key={img.id}
+                                    onClick={() => canSelect && onToggleBrandKitImage?.(img.id)}
+                                    disabled={!canSelect}
+                                    className={cn(
+                                        "relative rounded-xl overflow-hidden border transition-all aspect-square group",
+                                        isSelected
+                                            ? "border-primary ring-2 ring-primary/20 shadow-md transform scale-[0.98]"
+                                            : canSelect
+                                                ? "border-slate-200 dark:border-white/10 hover:border-primary/50 dark:hover:border-white/30"
+                                                : "border-slate-200 dark:border-white/10 opacity-50 cursor-not-allowed"
+                                    )}
+                                >
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-10" />
+                                    <img
+                                        src={img.url}
+                                        alt={img.name || 'Brand image'}
+                                        className="w-full h-full object-cover"
+                                    />
+                                    {isSelected && (
+                                        <div className="absolute inset-0 bg-primary/30 flex items-center justify-center backdrop-blur-[1px] z-20">
+                                            <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg transform scale-100 animate-in zoom-in duration-200">
+                                                <Check className="w-4 h-4 stroke-[3]" />
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </button>
-                        ))}
+                                    )}
+                                </button>
+                            )
+                        })}
                     </div>
                 ) : (
                     <div className="h-32 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 flex flex-col items-center justify-center gap-2 text-center p-4">

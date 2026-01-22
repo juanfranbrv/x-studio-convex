@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 
 export const getThemeSettings = query({
     args: {},
@@ -38,5 +38,26 @@ export const getAIConfig = query({
             imageModel: (imageModel?.value as string) || "wisdom/gemini-3-pro-image-preview",
             intelligenceModel: (intelligenceModel?.value as string) || "gemini-pro",
         };
+    },
+});
+
+export const saveAppSetting = mutation({
+    args: {
+        key: v.string(),
+        value: v.any(),
+    },
+    handler: async (ctx, args) => {
+        const existing = await ctx.db
+            .query("app_settings")
+            .withIndex("by_key", (q) => q.eq("key", args.key))
+            .first();
+
+        const timestamp = new Date().toISOString();
+
+        if (existing) {
+            await ctx.db.patch(existing._id, { value: args.value, updated_at: timestamp });
+        } else {
+            await ctx.db.insert("app_settings", { key: args.key, value: args.value, updated_at: timestamp });
+        }
     },
 });

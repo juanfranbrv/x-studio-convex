@@ -31,7 +31,9 @@ import { api } from '../../convex/_generated/api'
 import * as P12 from '@/lib/prompts/priorities/p12-preferred-language'
 import * as P11 from '@/lib/prompts/priorities/p11-system-persona'
 import * as P10 from '@/lib/prompts/priorities/p10-logo-integrity'
+import { P10B } from '@/lib/prompts/priorities/p10b-secondary-logos'
 import * as P09 from '@/lib/prompts/priorities/p09-brand-dna'
+import { P09B } from '@/lib/prompts/priorities/p09b-cta-url-hierarchy'
 import * as P08 from '@/lib/prompts/priorities/p08-custom-instructions'
 import * as P07 from '@/lib/prompts/priorities/p07-layout-structure'
 import * as P06 from '@/lib/prompts/priorities/p06-subject-context'
@@ -69,6 +71,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // Initialize defaults from Brand Kit & AI Config
     useEffect(() => {
         if (aiConfig) {
+            console.log('🔄 [CreationFlow] AI Config Loaded:', aiConfig)
             setState(prev => ({
                 ...prev,
                 selectedImageModel: aiConfig.imageModel,
@@ -186,8 +189,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 return acc
             }, {} as Record<string, string>) || {},
             // Reset downstream selections
-            uploadedImage: null,
-            uploadedImageFile: null,
+            uploadedImages: [],
+            uploadedImageFiles: [],
             selectedTheme: null,
             visionAnalysis: null,
             selectedStyles: [],
@@ -204,11 +207,44 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // STEP 2: Image Upload or Theme Selection
     // -------------------------------------------------------------------------
 
-    const setUploadedImage = useCallback((url: string | null) => {
-        setState(prev => ({ ...prev, uploadedImage: url }))
+    const MAX_REFERENCE_IMAGES = 10
+
+    // Add an uploaded image (max 10 total across sources)
+    const addUploadedImage = useCallback((url: string) => {
+        setState(prev => {
+            const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
+            if (totalImages >= MAX_REFERENCE_IMAGES) return prev
+            if (prev.uploadedImages.includes(url)) return prev
+            return { ...prev, uploadedImages: [...prev.uploadedImages, url] }
+        })
+    }, [])
+
+    // Remove an uploaded image by URL
+    const removeUploadedImage = useCallback((url: string) => {
+        setState(prev => ({
+            ...prev,
+            uploadedImages: prev.uploadedImages.filter(u => u !== url),
+            uploadedImageFiles: prev.uploadedImageFiles.filter((_, i) => prev.uploadedImages[i] !== url)
+        }))
+    }, [])
+
+    // Clear all uploaded images
+    const clearUploadedImages = useCallback(() => {
+        setState(prev => ({
+            ...prev,
+            uploadedImages: [],
+            uploadedImageFiles: [],
+            visionAnalysis: null
+        }))
     }, [])
 
     const uploadImage = useCallback(async (file: File) => {
+        const currentTotal = state.uploadedImages.length + state.selectedBrandKitImageIds.length
+        if (currentTotal >= MAX_REFERENCE_IMAGES) {
+            console.warn('Max reference images reached')
+            return
+        }
+
         setState(prev => ({ ...prev, isAnalyzing: true, error: null, generatedImage: null }))
 
         try {
@@ -222,8 +258,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
             setState(prev => ({
                 ...prev,
-                uploadedImage: base64,
-                uploadedImageFile: file,
+                uploadedImages: [...prev.uploadedImages, base64],
+                uploadedImageFiles: [...prev.uploadedImageFiles, file],
             }))
 
             if (options?.onImageUploaded) {
@@ -333,8 +369,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const clearImage = useCallback(() => {
         setState(prev => ({
             ...prev,
-            uploadedImage: null,
-            uploadedImageFile: null,
+            uploadedImages: [],
+            uploadedImageFiles: [],
             visionAnalysis: null,
             selectedStyles: [],
             selectedLayout: null,
@@ -351,12 +387,38 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => ({ ...prev, imageSourceMode: mode, generatedImage: null }))
     }, [])
 
-    const selectBrandKitImage = useCallback(async (imageUrl: string) => {
-        setState(prev => ({ ...prev, selectedBrandKitImageId: imageUrl, generatedImage: null }))
+    // Toggle selection of a brand kit image (multi-select, max 10 total)
+    const toggleBrandKitImage = useCallback((imageId: string) => {
+        setState(prev => {
+            const isSelected = prev.selectedBrandKitImageIds.includes(imageId)
+            if (isSelected) {
+                // Remove from selection
+                return {
+                    ...prev,
+                    selectedBrandKitImageIds: prev.selectedBrandKitImageIds.filter(id => id !== imageId),
+                    generatedImage: null
+                }
+            } else {
+                // Add to selection (if under limit)
+                const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
+                if (totalImages >= MAX_REFERENCE_IMAGES) return prev
+                return {
+                    ...prev,
+                    selectedBrandKitImageIds: [...prev.selectedBrandKitImageIds, imageId],
+                    generatedImage: null
+                }
+            }
+        })
+    }, [])
 
-        // Use the image URL directly
-        await setImageFromUrl(imageUrl)
-    }, [setImageFromUrl])
+    // Clear all brand kit image selections
+    const clearBrandKitImages = useCallback(() => {
+        setState(prev => ({
+            ...prev,
+            selectedBrandKitImageIds: [],
+            generatedImage: null
+        }))
+    }, [])
 
     const setAiImageDescription = useCallback((description: string) => {
         setState(prev => ({ ...prev, aiImageDescription: description, generatedImage: null }))
@@ -804,6 +866,27 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         }
 
         // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 10b - SECONDARY LOGOS HIERARCHY
+        // ═══════════════════════════════════════════════════════════════
+        // When reference images are provided (brand kit OR uploaded), instruct the model to detect
+        // and properly hierarchy any logos found (collaborators, sponsors, institutions, etc.)
+        const hasReferenceImages = activeState.selectedBrandKitImageIds.length > 0 || activeState.uploadedImages.length > 0
+        if (hasReferenceImages) {
+            sections.push(
+                P10B.PRIORITY_HEADER,
+                ``,
+                P10B.ANALYSIS_INSTRUCTION,
+                ``,
+                P10B.HIERARCHY_RULES,
+                ``,
+                P10B.VISUAL_TREATMENT,
+                ``,
+                P10B.AVOID_INSTRUCTION,
+                ``
+            )
+        }
+
+        // ═══════════════════════════════════════════════════════════════
         // PRIORITY 9 - BRAND DNA & MANDATORY TEXT
         // ═══════════════════════════════════════════════════════════════
         const brandDNA: string[] = []
@@ -836,10 +919,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         const ctaUrl = activeState.ctaUrl?.trim()
         if (ctaValue && ctaValue !== NO_TEXT_TOKEN) {
             if (ctaUrl) {
-                // Unified CTA Prompt - Explicitly linking them
-                textParts.push(`• CTA VISUAL ELEMENT: Main Button "${ctaValue}" WITH INTEGRATED URL TEXT "${ctaUrl}" (e.g., as a subtitle or directly under the button text within the same visual unit)`)
+                // URL is the HERO element, CTA label is secondary above it (from p09b-cta-url-hierarchy.ts)
+                textParts.push(P09B.URL_HERO_INSTRUCTION(ctaUrl))
+                textParts.push(P09B.CTA_SECONDARY_INSTRUCTION(ctaValue))
             } else {
-                textParts.push(`• CTA BUTTON TEXT: "${ctaValue}"`)
+                textParts.push(P09B.CTA_ONLY_INSTRUCTION(ctaValue))
             }
         }
 
@@ -870,7 +954,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         if (textParts.length > 0) {
             brandDNA.push(P09.MANDATORY_TEXT_HEADER)
             if (activeState.ctaUrl?.trim()) {
-                brandDNA.push(`⚠️ CRITICAL REQT: The URL must be VISIBLY WRITTEN on the image composition below the CTA.`)
+                brandDNA.push(P09B.CRITICAL_HIERARCHY_INSTRUCTION(activeState.ctaUrl))
             }
             brandDNA.push(...textParts, ``)
         } else if (activeState.rawMessage) {
@@ -1139,10 +1223,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // Basic requirement: must have an intent
         if (!state.selectedIntent) return false;
         // Must have some form of image source or a detailed description
-        const hasImageSource = !!state.uploadedImage || !!state.selectedBrandKitImageId;
+        const hasImageSource = state.uploadedImages.length > 0 || state.selectedBrandKitImageIds.length > 0;
         const hasEnoughVisualInfo = hasImageSource || (state.aiImageDescription && state.aiImageDescription.length > 10);
         return !!hasEnoughVisualInfo;
-    }, [state.selectedIntent, state.uploadedImage, state.selectedBrandKitImageId, state.aiImageDescription])
+    }, [state.selectedIntent, state.uploadedImages, state.selectedBrandKitImageIds, state.aiImageDescription])
 
     // -------------------------------------------------------------------------
     // GENERATION (stub for now)
@@ -1176,10 +1260,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                     selectedIntent: state.selectedIntent,
                     selectedSubMode: state.selectedSubMode,
                     // Image/Input
-                    uploadedImage: state.uploadedImage, // Base64/URL string only
+                    uploadedImages: state.uploadedImages, // Base64/URL array
                     selectedTheme: state.selectedTheme,
                     imageSourceMode: state.imageSourceMode,
-                    selectedBrandKitImageId: state.selectedBrandKitImageId,
+                    selectedBrandKitImageIds: state.selectedBrandKitImageIds,
                     aiImageDescription: state.aiImageDescription,
                     // Styles & Layout
                     selectedStyles: state.selectedStyles,
@@ -1255,10 +1339,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             selectedGroup: state.selectedGroup,
             selectedIntent: state.selectedIntent,
             selectedSubMode: state.selectedSubMode,
-            uploadedImage: state.uploadedImage,
+            uploadedImages: state.uploadedImages,
             selectedTheme: state.selectedTheme,
             imageSourceMode: state.imageSourceMode,
-            selectedBrandKitImageId: state.selectedBrandKitImageId,
+            selectedBrandKitImageIds: state.selectedBrandKitImageIds,
             aiImageDescription: state.aiImageDescription,
             selectedStyles: state.selectedStyles,
             selectedLayout: state.selectedLayout,
@@ -1284,7 +1368,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             return val
         }
 
-        snapshot.uploadedImage = stripIfLargeBase64(snapshot.uploadedImage)
+        snapshot.uploadedImages = snapshot.uploadedImages.map(stripIfLargeBase64).filter(Boolean) as string[]
         snapshot.generatedImage = stripIfLargeBase64(snapshot.generatedImage)
 
         return snapshot
@@ -1307,11 +1391,14 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         selectIntent,
         selectSubMode,
         uploadImage,
-        setUploadedImage,
+        addUploadedImage,
+        removeUploadedImage,
+        clearUploadedImages,
         setImageFromUrl,
         clearImage,
         setImageSourceMode,
-        selectBrandKitImage,
+        toggleBrandKitImage,
+        clearBrandKitImages,
         setAiImageDescription,
         selectTheme,
         toggleStyle,
