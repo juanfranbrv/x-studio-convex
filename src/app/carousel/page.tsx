@@ -21,8 +21,13 @@ import {
 export default function CarouselPage() {
     const router = useRouter()
     const { user } = useUser()
-    const { activeBrandKit } = useBrandKit()
+    const { activeBrandKit, brandKits, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const { toast } = useToast()
+
+    const handleNewBrandKit = () => {
+        router.push('/brand-kit/new')
+    }
+
 
     const [isGenerating, setIsGenerating] = useState(false)
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
@@ -170,7 +175,13 @@ export default function CarouselPage() {
     }, [slides, carouselSettings, activeBrandKit, toast])
 
     return (
-        <DashboardLayout>
+        <DashboardLayout
+            brands={brandKits}
+            currentBrand={activeBrandKit}
+            onBrandChange={setActiveBrandKit}
+            onBrandDelete={deleteBrandKitById}
+            onNewBrandKit={handleNewBrandKit}
+        >
             <div className="flex h-full">
                 {/* Canvas Panel (Preview) */}
                 <CarouselCanvasPanel

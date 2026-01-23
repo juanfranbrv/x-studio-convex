@@ -13,13 +13,17 @@ import { generateVideoAction } from '@/app/actions/generate-video'
 export default function VideoPage() {
     const router = useRouter()
     const { user } = useUser()
-    const { activeBrandKit } = useBrandKit()
+    const { activeBrandKit, brandKits, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const { toast } = useToast()
 
     const [isGenerating, setIsGenerating] = useState(false)
     const [progress, setProgress] = useState<string>('')
     const [videoUrl, setVideoUrl] = useState<string | null>(null)
     const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('16:9')
+
+    const handleNewBrandKit = () => {
+        router.push('/brand-kit/new')
+    }
 
     const handleGenerate = useCallback(async (settings: VideoSettings) => {
         if (!settings.prompt.trim()) {
@@ -72,7 +76,13 @@ export default function VideoPage() {
     }, [toast])
 
     return (
-        <DashboardLayout>
+        <DashboardLayout
+            brands={brandKits}
+            currentBrand={activeBrandKit}
+            onBrandChange={setActiveBrandKit}
+            onBrandDelete={deleteBrandKitById}
+            onNewBrandKit={handleNewBrandKit}
+        >
             <div className="flex h-full">
                 {/* Canvas Panel (Preview) */}
                 <VideoCanvasPanel
