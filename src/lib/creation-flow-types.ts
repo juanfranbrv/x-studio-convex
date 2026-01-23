@@ -157,7 +157,7 @@ export interface SelectedColor {
     role: ColorRole
 }
 
-export type TextAssetType = 'cta' | 'tagline' | 'url' | 'custom'
+export type TextAssetType = 'cta' | 'tagline' | 'url' | 'hook' | 'custom'
 
 export interface TextAsset {
     id: string

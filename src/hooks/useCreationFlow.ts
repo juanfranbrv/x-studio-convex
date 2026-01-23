@@ -44,7 +44,6 @@ import * as P02 from '@/lib/prompts/priorities/p02-technical-specs'
 
 // Intent prompts
 import * as IntentPrompts from '@/lib/prompts/intents'
-import { buildTypographyInstructions } from '@/lib/prompts/image-generation/typography-builder'
 
 export const NO_TEXT_TOKEN = '[NO_TEXT]'
 
@@ -898,18 +897,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         const brandDNA: string[] = []
         const hasTone = (activeBrandKit?.tone_of_voice?.length ?? 0) > 0
-        const typographyInstructions = buildTypographyInstructions(activeBrandKit?.fonts || []);
 
-        if (hasTone || typographyInstructions) {
+        if (hasTone) {
             brandDNA.push(P09.PRIORITY_HEADER, ``)
 
-            if (hasTone) {
-                brandDNA.push(`BRAND TONE: ${activeBrandKit!.tone_of_voice.join(', ')}`)
-            }
-
-            if (typographyInstructions) {
-                brandDNA.push(typographyInstructions)
-            }
+            brandDNA.push(`BRAND TONE: ${activeBrandKit!.tone_of_voice.join(', ')}`)
 
             brandDNA.push(
                 ``,

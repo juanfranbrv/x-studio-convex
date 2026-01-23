@@ -53,7 +53,7 @@ import { GeneratedCopyCard } from './GeneratedCopyCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { generateSocialPost } from '@/app/actions/generate-social-post'
 import { WireframeRenderer } from './previews/WireframeRenderer'
-import { GenerationState } from '@/lib/creation-flow-types'
+import { GenerationState, TextAsset } from '@/lib/creation-flow-types'
 
 export interface Generation {
     id: string
@@ -89,7 +89,7 @@ export interface CanvasPanelProps {
     onCtaUrlChange?: (value: string) => void
     onCustomTextChange?: (id: string, value: string) => void
     // New handlers for text assets
-    onAddTextAsset?: () => void
+    onAddTextAsset?: (asset: TextAsset) => void
     onRemoveTextAsset?: (id: string) => void
     onUpdateTextAsset?: (id: string, value: string) => void
     // Original props that were not removed but are still used
@@ -194,6 +194,34 @@ export function CanvasPanel({
     const [generatedHashtags, setGeneratedHashtags] = useState<string[]>([])
     const [isGeneratingCopy, setIsGeneratingCopy] = useState(false)
     const [isCopyLocked, setIsCopyLocked] = useState(false) // New state for locking copy
+
+    // Build brand kit text options for the dropdown
+    const brandKitTexts = useMemo(() => {
+        if (!activeBrandKit) return []
+        const options: { id: string; label: string; value: string; type: 'url' | 'tagline' | 'cta' | 'hook' | 'custom' }[] = []
+
+        // URL
+        if (activeBrandKit.url) {
+            options.push({ id: 'bk-url', label: 'URL', value: activeBrandKit.url, type: 'url' })
+        }
+        // Tagline
+        if (activeBrandKit.tagline) {
+            options.push({ id: 'bk-tagline', label: 'Tagline', value: activeBrandKit.tagline, type: 'tagline' })
+        }
+        // CTAs
+        if (activeBrandKit.text_assets?.ctas) {
+            activeBrandKit.text_assets.ctas.forEach((cta, idx) => {
+                options.push({ id: `bk-cta-${idx}`, label: `CTA ${idx + 1}`, value: cta, type: 'cta' })
+            })
+        }
+        // Marketing Hooks
+        if (activeBrandKit.text_assets?.marketing_hooks) {
+            activeBrandKit.text_assets.marketing_hooks.forEach((hook, idx) => {
+                options.push({ id: `bk-hook-${idx}`, label: `Hook ${idx + 1}`, value: hook, type: 'hook' })
+            })
+        }
+        return options
+    }, [activeBrandKit])
 
     // Save Preset State
     const [isSavePresetOpen, setIsSavePresetOpen] = useState(false)
@@ -768,6 +796,7 @@ export function CanvasPanel({
                                         ctaUrl={creationState.ctaUrl}
                                         customTexts={creationState.customTexts}
                                         textAssets={creationState.selectedTextAssets}
+                                        brandKitTexts={brandKitTexts}
                                         onHeadlineChange={(val) => onHeadlineChange?.(val)}
                                         onCtaChange={(val) => onCtaChange?.(val)}
                                         onCtaUrlChange={(val) => onCtaUrlChange?.(val)}

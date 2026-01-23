@@ -1,9 +1,24 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, MousePointerClick, Plus, Fingerprint, Link2 } from 'lucide-react'
+import { X, MousePointerClick, Fingerprint, Link2, Plus } from 'lucide-react'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { TextAsset } from '@/lib/creation-flow-types'
+
+export interface BrandKitTextOption {
+    id: string
+    label: string
+    value: string
+    type: 'url' | 'tagline' | 'cta' | 'hook' | 'custom'
+}
 
 interface TextLayersEditorProps {
     headline: string
@@ -11,13 +26,13 @@ interface TextLayersEditorProps {
     ctaUrl?: string
     customTexts: Record<string, string>
     textAssets?: TextAsset[]
+    brandKitTexts?: BrandKitTextOption[]
     onHeadlineChange: (value: string) => void
     onCtaChange: (value: string) => void
     onCtaUrlChange?: (value: string) => void
     onCustomTextChange: (id: string, value: string) => void
     onDeleteLayer: (id: string, type: 'headline' | 'cta' | 'custom' | 'asset') => void
-    // New handlers for text assets
-    onAddTextAsset?: () => void
+    onAddTextAsset?: (asset: TextAsset) => void
     onUpdateTextAsset?: (id: string, value: string) => void
 }
 
@@ -27,6 +42,7 @@ export function TextLayersEditor({
     ctaUrl = '',
     customTexts,
     textAssets = [],
+    brandKitTexts = [],
     onHeadlineChange,
     onCtaChange,
     onCtaUrlChange,
@@ -150,30 +166,65 @@ export function TextLayersEditor({
                     </div>
                 )}
 
-                {/* Add New Text Button (Shared for both custom and assets) */}
-                <div className="pt-2 pointer-events-auto flex gap-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                            const newId = `custom_text_${Object.keys(customTexts).length + 1}`
-                            onCustomTextChange(newId, '')
-                        }}
-                        className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-foreground transition-colors h-8 gap-2 bg-foreground/5 hover:bg-foreground/10 rounded-full px-4"
-                    >
-                        <Plus className="w-3.5 h-3.5" />
-                        Capas de Diseño
-                    </Button>
+                {/* Add New Text Button (Brand Kit Assets Only) */}
+                <div className="pt-2 pointer-events-auto flex justify-center">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-foreground transition-colors h-8 gap-2 bg-foreground/5 hover:bg-foreground/10 rounded-full px-4"
+                            >
+                                <Fingerprint className="w-3.5 h-3.5 text-primary" />
+                                Textos de Marca
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" className="w-72 max-h-80 overflow-y-auto">
+                            <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                                Selecciona un texto del Kit de Marca
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
 
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onAddTextAsset}
-                        className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-foreground transition-colors h-8 gap-2 bg-foreground/5 hover:bg-foreground/10 rounded-full px-4"
-                    >
-                        <Fingerprint className="w-3.5 h-3.5 text-primary" />
-                        Textos Prompt
-                    </Button>
+                            {/* Empty option to add custom text */}
+                            <DropdownMenuItem
+                                onClick={() => onAddTextAsset?.({
+                                    id: `text-${Date.now()}`,
+                                    type: 'custom',
+                                    label: 'Texto',
+                                    value: ''
+                                })}
+                                className="text-xs gap-2"
+                            >
+                                <Plus className="w-3.5 h-3.5 text-muted-foreground" />
+                                <span className="text-muted-foreground">Añadir texto libre...</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator />
+
+                            {/* Brand Kit Texts */}
+                            {brandKitTexts && brandKitTexts.length > 0 ? (
+                                brandKitTexts.map((option) => (
+                                    <DropdownMenuItem
+                                        key={option.id}
+                                        onClick={() => onAddTextAsset?.({
+                                            id: `text-${Date.now()}-${option.id}`,
+                                            type: option.type,
+                                            label: option.label,
+                                            value: option.value
+                                        })}
+                                        className="text-xs flex flex-col items-start gap-0.5 py-2"
+                                    >
+                                        <span className="text-[9px] uppercase text-primary font-bold">{option.label}</span>
+                                        <span className="text-foreground truncate max-w-full">{option.value}</span>
+                                    </DropdownMenuItem>
+                                ))
+                            ) : (
+                                <DropdownMenuItem disabled className="text-xs text-muted-foreground italic">
+                                    Sin textos guardados en el Kit
+                                </DropdownMenuItem>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 

@@ -173,31 +173,32 @@ Muros de texto, espaciado desordenado, estilos de iconos inconsistentes.
 `,
     },
 
-    // 6. GARANTÍA - Foco radial
+    // 6. TALLER - Knolling workspace (Recuperado)
     {
-        id: 'servicio-trust',
-        name: 'Garantía',
-        description: 'Sello Trust',
-        svgIcon: 'ShieldCheck',
+        id: 'servicio-workshop',
+        name: 'Taller',
+        description: 'Knolling',
+        svgIcon: 'Wrench',
         textZone: 'center',
-        promptInstruction: 'Radial trust seal with authority elements.',
+        promptInstruction: 'Organized knolling workspace layout.',
         structuralPrompt: `
-## Composición: Sello de Garantía Radial
+## Composición: Taller Knolling
 
-**Estructura:** Foco central con anillos concéntricos.
+**Estructura:** Vista cenital de herramientas organizadas con precisión obsesiva.
 
 ### Jerarquía visual:
-1. **Protagonista:** Sello de confianza o escudo masivo y detallado centrado en el frame
-2. **Secundario:** Anillos concéntricos de luz, laureles o partículas radiando hacia afuera
-3. **Detalle:** Elementos contextuales difuminados en el fondo profundo (oficina, apretón de manos)
+1. **Protagonista:** Herramientas profesionales clave dispuestas con precisión obsesiva
+2. **Secundario:** Manos del experto interactuando con la herramienta o material central
+3. **Detalle:** Superficie de trabajo texturizada (madera, cutting mat, mármol, plano técnico)
 
 ### Distribución:
-- Centro: el "Bullseye" con detalle y enfoque extremo
-- Periferia: caída rápida de enfoque (efecto profundidad de campo)
-- Texturas metálicas, causticas de vidrio, detalles en relieve
+- Grid: alineación geométrica estricta de objetos (ángulos de 90 grados)
+- Centro: la "Herramienta Hero" o resultado terminado exactamente en el centro
+- Espacio negativo: espaciado limpio entre objetos para que el ojo descanse
+- Iluminación flat lay desde arriba, sombras mínimas, alta claridad
 
 ### Evitar:
-Insignia caricaturesca, aspecto de sticker plano, fondo desordenado.
+Desorden caótico, ángulos aleatorios, distorsión de perspectiva, herramientas sucias (a menos que sea artístico).
 `,
     },
 
@@ -320,32 +321,57 @@ Apretón de manos de stock photo rígido, sonrisas forzadas, mirar directamente 
 `,
     },
 
-    // 11. TALLER - Knolling workspace
+    // 11. EXPLOSIÓN - Perspectiva Explosiva Multi-Dimensional
     {
-        id: 'servicio-workshop',
-        name: 'Taller',
-        description: 'Knolling',
-        svgIcon: 'Wrench',
+        id: 'servicio-explosion',
+        name: 'Explosión',
+        description: 'Radial Explosivo',
+        svgIcon: 'Zap',
         textZone: 'center',
-        promptInstruction: 'Organized knolling workspace layout.',
+        promptInstruction: 'Explosive radial composition with extreme depth and energy burst.',
         structuralPrompt: `
-## Composición: Taller Knolling
+## Composición: Explosión Radial Multi-Dimensional
 
-**Estructura:** Vista cenital de herramientas organizadas con precisión obsesiva.
+**Concepto Visual:** Una detonación controlada de energía visual. El servicio NO se muestra, se SIENTE como una fuerza imparable emanando desde el centro hacia el espectador.
 
-### Jerarquía visual:
-1. **Protagonista:** Herramientas profesionales clave dispuestas con precisión obsesiva
-2. **Secundario:** Manos del experto interactuando con la herramienta o material central
-3. **Detalle:** Superficie de trabajo texturizada (madera, cutting mat, mármol, plano técnico)
+### Estructura Geométrica (Perspectiva + Equilibrio Radial):
+1. **Punto de Fuga Ultra-Profundo:** El centro exacto del canvas actúa como epicentro de una explosión tridimensional.
+2. **Líneas de Fuerza:** 8-12 rayos diagonales principales irradian desde el centro hacia los bordes, creando un efecto starburst.
+3. **Capas en Profundidad:** Elementos se dispersan en 3 planos distintos (cercano-medio-lejano) con escala decreciente hacia el centro.
 
-### Distribución:
-- Grid: alineación geométrica estricta de objetos (ángulos de 90 grados)
-- Centro: la "Herramienta Hero" o resultado terminado exactamente en el centro
-- Espacio negativo: espaciado limpio entre objetos para que el ojo descanse
-- Iluminación flat lay desde arriba, sombras mínimas, alta claridad
+### Jerarquía Visual (Del Centro a los Bordes):
+- **Epicentro (5% central):** Núcleo brillante y abstracto representando la esencia del servicio. Máxima luminosidad.
+- **Radio Medio (30% del área):** Fragmentos geométricos 3D (cubos, esferas, prismas) flotando y rotando en trayectorias radiales. Enfoque nítido.
+- **Periferia Explosiva (65% del área):** Partículas, estelas de luz y elementos secundarios desenfocados por el movimiento. Efecto de motion blur radial.
 
-### Evitar:
-Desorden caótico, ángulos aleatorios, distorsión de perspectiva, herramientas sucias (a menos que sea artístico).
+### Distribución y Movimiento:
+- **Simetría Radial Imperfecta:** Balance visual alrededor del centro, pero con variaciones orgánicas para evitar rigidez absoluta.
+- **Escala Variable:** Los elementos más cercanos al borde son 3-5x más grandes que los del núcleo, creando ilusión de profundidad extrema.
+- **Rotación Implícita:** Los objetos siguen trayectorias curvas (no líneas rectas), sugiriendo un vórtice en expansión.
+
+### Iluminación y Atmósfera:
+- **Fuente Central:** El epicentro emite luz volumétrica que baña todos los elementos flotantes.
+- **Rim Lighting:** Cada fragmento tiene un halo de luz en sus bordes traseros, separándolos del fondo.
+- **Caustics y God Rays:** Rayos de luz atravesando el espacio tridimensional, creando haces visibles como si hubiera polvo atmosférico.
+- **Profundidad de Campo Cinematográfica:** El núcleo está en foco crítico, mientras que primer plano y fondo extremo muestran bokeh hexagonal dramático.
+
+### Psicología del Color y Textura:
+- **Centro:** Blancos puros, azules eléctricos o violetas vibrantes (alta energía).
+- **Transición:** Degradado hacia tonos cálidos (naranjas, magentas) a medida que los elementos se alejan.
+- **Bordes:** Oscurecimiento atmosférico (viñeta invertida), con destellos ocasionales de partículas brillantes.
+- **Materiales:** Cristal facetado, metales pulidos, hologramas semi-transparentes, energía pura.
+
+### Elementos de Marca y Texto:
+- **Headline:** Tipografía bold colocada en el tercio superior, siguiendo una trayectoria arqueada que respeta el flujo radial.
+- **CTA:** Flotando en el tercio inferior, con un rectángulo de cristal translúcido como fondo para legibilidad.
+- **Detalles del Servicio:** Iconos o palabras clave integrados en algunos de los fragmentos flotantes (como si fueran datos holográficos).
+
+### Evitar Absolutamente:
+- Fondos planos sin profundidad
+- Dispersión aleatoria sin punto focal claro
+- Exceso de simetría que parezca un caleidoscopio genérico
+- Colores apagados o iluminación uniforme
+- Elementos estáticos sin sensación de movimiento congelado
 `,
     },
 ]

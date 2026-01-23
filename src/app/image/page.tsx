@@ -535,10 +535,7 @@ export default function ImagePage() {
                                     onCtaChange={creationFlow.setCta}
                                     onCtaUrlChange={creationFlow.setCtaUrl}
                                     onCustomTextChange={creationFlow.setCustomText}
-                                    onAddTextAsset={() => {
-                                        const newId = `custom-${Date.now()}`
-                                        creationFlow.addTextAsset({ id: newId, type: 'custom', label: 'Texto', value: '' })
-                                    }}
+                                    onAddTextAsset={(asset) => creationFlow.addTextAsset(asset)}
                                     onRemoveTextAsset={creationFlow.removeTextAsset}
                                     onUpdateTextAsset={creationFlow.updateTextAsset}
                                     hidePromptArea={true}
