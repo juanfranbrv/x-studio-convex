@@ -79,9 +79,14 @@ export default function CarouselPage() {
                 slideCount: settings.slideCount,
                 aspectRatio: settings.aspectRatio,
                 style: settings.style,
-                brandName: activeBrandKit.brand_name || 'Brand',
+                // Full Brand Kit Context
                 brandDNA: activeBrandKit,
-                slideOverrides
+                slideOverrides,
+                // Brand Kit Selections from UI
+                selectedLogoUrl: settings.selectedLogoUrl,
+                selectedColors: settings.selectedColors,
+                selectedImageUrls: settings.selectedImageUrls,
+                includeLogoOnSlides: settings.includeLogoOnSlides
             })
 
             if (result.success) {
@@ -130,8 +135,9 @@ export default function CarouselPage() {
                 slides.length,
                 carouselSettings.style,
                 carouselSettings.aspectRatio,
-                activeBrandKit.brand_name || 'Brand',
-                activeBrandKit
+                activeBrandKit,
+                carouselSettings.selectedLogoUrl,
+                carouselSettings.selectedColors
             )
 
             if (result.success && result.imageUrl) {
@@ -183,6 +189,8 @@ export default function CarouselPage() {
                     isGenerating={isGenerating}
                     currentSlideIndex={currentSlideIndex}
                     generatedCount={generatedCount}
+                    totalSlides={slides.length || 5}
+                    brandKit={activeBrandKit}
                 />
             </div>
         </DashboardLayout>

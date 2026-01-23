@@ -25,11 +25,14 @@ export interface GenerateCarouselInput {
     slideCount: number
     aspectRatio?: '1:1' | '4:5'
     style?: string
-    brandName: string
     brandDNA: BrandDNA
-    model?: string
     // Optional per-slide overrides
     slideOverrides?: { index: number; text: string }[]
+    // Brand Kit Selections
+    selectedLogoUrl?: string
+    selectedColors?: string[]
+    selectedImageUrls?: string[]
+    includeLogoOnSlides?: boolean
 }
 
 export interface GenerateCarouselResult {
@@ -39,113 +42,175 @@ export interface GenerateCarouselResult {
 }
 
 /**
+ * Build brand context string for prompts
+ */
+function buildBrandContext(brand: BrandDNA, selectedColors?: string[], includeLogoUrl?: string): string {
+    const parts: string[] = []
+
+    // Brand identity
+    parts.push(`MARCA: ${brand.brand_name}`)
+    if (brand.tagline) parts.push(`TAGLINE: ${brand.tagline}`)
+    if (brand.business_overview) parts.push(`CONTEXTO: ${brand.business_overview}`)
+
+    // Colors
+    const colors = selectedColors && selectedColors.length > 0
+        ? selectedColors
+        : brand.colors?.slice(0, 4).map(c => c.color) || []
+    if (colors.length > 0) {
+        parts.push(`PALETA DE COLORES: ${colors.join(', ')}`)
+    }
+
+    // Tone
+    if (brand.tone_of_voice?.length) {
+        parts.push(`TONO DE VOZ: ${brand.tone_of_voice.join(', ')}`)
+    }
+
+    // Visual aesthetic
+    if (brand.visual_aesthetic?.length) {
+        parts.push(`ESTÉTICA VISUAL: ${brand.visual_aesthetic.join(', ')}`)
+    }
+
+    // Fonts
+    if (brand.fonts?.length) {
+        const fontNames = brand.fonts.map(f => f.family).join(', ')
+        parts.push(`TIPOGRAFÍAS: ${fontNames}`)
+    }
+
+    // Logo instruction
+    if (includeLogoUrl) {
+        parts.push(`INCLUIR LOGO: Sí, integrar sutilmente el logo de la marca`)
+    }
+
+    return parts.join('\n')
+}
+
+/**
  * Decompose a prompt into N slide concepts using AI
  */
 async function decomposeIntoSlides(
     prompt: string,
     slideCount: number,
-    brand: { name: string; brand_dna: BrandDNA },
+    brand: BrandDNA,
     model: string
 ): Promise<SlideContent[]> {
-    const decompositionPrompt = `
-Eres un experto en contenido para Instagram. Tu tarea es descomponer el siguiente tema en exactamente ${slideCount} slides para un carrusel.
+    const brandContext = buildBrandContext(brand)
 
-TEMA: "${prompt}"
+    const decompositionPrompt = `
+Eres un experto en contenido para Instagram para la marca "${brand.brand_name}".
+Tu tarea es descomponer el tema en exactamente ${slideCount} slides para un carrusel.
+
+${brandContext}
+
+TEMA DEL CARRUSEL: "${prompt}"
 
 Para cada slide, proporciona:
-1. Un título corto (máximo 6 palabras)
-2. Una descripción breve (1-2 oraciones)
-3. Un prompt visual detallado para generar la imagen
+1. Título corto (máximo 6 palabras)
+2. Descripción breve (1-2 oraciones)
+3. Prompt visual detallado que refleje la identidad de la marca
 
 REGLAS:
-- Slide 1 debe ser una portada llamativa que enganche
-- Los slides intermedios desarrollan el contenido
-- El último slide debe tener un CTA o conclusión
-- Mantén coherencia visual y narrativa
-- Usa el tono de la marca: ${brand.brand_dna?.tone_of_voice?.join(', ') || 'profesional'}
+- Slide 1: Portada llamativa con el título principal
+- Slides intermedios: Desarrollan el contenido punto por punto
+- Último slide: CTA o conclusión
+- COHERENCIA: Todos los slides deben usar la misma paleta de colores y estilo
+- MARCA: Reflejar los valores y tono de ${brand.brand_name}
 
-Responde SOLO con JSON válido en este formato:
+Responde SOLO con JSON válido:
 {
   "slides": [
     {
       "index": 0,
-      "title": "Título del slide",
-      "description": "Descripción breve",
-      "visualPrompt": "Prompt detallado para la imagen"
+      "title": "Título",
+      "description": "Descripción",
+      "visualPrompt": "Prompt visual detallado..."
     }
   ]
 }
 `
 
+    const brandWrapper = { name: brand.brand_name, brand_dna: brand }
+
     try {
         const response = await generateTextUnified(
-            brand,
+            brandWrapper,
             decompositionPrompt,
             model,
             undefined,
-            '' // No system prompt override, use brand context
+            ''
         )
 
-        // Parse JSON from response
         const jsonMatch = response.match(/\{[\s\S]*\}/)
-        if (!jsonMatch) {
-            throw new Error('No valid JSON in response')
-        }
+        if (!jsonMatch) throw new Error('No valid JSON')
 
         const parsed = JSON.parse(jsonMatch[0])
         return parsed.slides || []
 
     } catch (error) {
         console.error('Decomposition error:', error)
-        // Fallback: create simple slides
         return Array.from({ length: slideCount }, (_, i) => ({
             index: i,
             title: i === 0 ? 'Portada' : i === slideCount - 1 ? 'Conclusión' : `Punto ${i}`,
             description: prompt,
-            visualPrompt: `${prompt} - Slide ${i + 1} of ${slideCount}`
+            visualPrompt: `${prompt} - Slide ${i + 1} of ${slideCount} for ${brand.brand_name}`
         }))
     }
 }
 
 /**
- * Generate a single slide image
+ * Generate a single slide image with brand context
  */
 async function generateSlideImage(
     slideContent: SlideContent,
     totalSlides: number,
     style: string,
     aspectRatio: string,
-    brand: { name: string; brand_dna: BrandDNA },
+    brand: BrandDNA,
     model: string,
-    previousSlideUrl?: string
+    selectedColors?: string[],
+    selectedLogoUrl?: string,
+    selectedImageUrls?: string[]
 ): Promise<string> {
-    // Build coherent prompt
-    const coherenceContext = previousSlideUrl
-        ? 'Mantén coherencia visual con los slides anteriores del carrusel.'
-        : 'Este es el primer slide del carrusel, establece el estilo visual.'
+    const brandContext = buildBrandContext(brand, selectedColors, selectedLogoUrl)
 
     const fullPrompt = `
-CARRUSEL DE INSTAGRAM - Slide ${slideContent.index + 1} de ${totalSlides}
+CARRUSEL INSTAGRAM - Slide ${slideContent.index + 1} de ${totalSlides}
+MARCA: ${brand.brand_name}
 
+${brandContext}
+
+---
+CONTENIDO DEL SLIDE:
 TÍTULO: ${slideContent.title}
 DESCRIPCIÓN: ${slideContent.description}
 
-INSTRUCCIONES VISUALES:
-${slideContent.visualPrompt}
+ESTILO VISUAL: ${style}
+INSTRUCCIONES: ${slideContent.visualPrompt}
 
-ESTILO: ${style || 'Moderno y profesional'}
-COHERENCIA: ${coherenceContext}
-
-REQUISITOS:
-- Diseño limpio optimizado para Instagram
-- Tipografía legible incluso en móvil
-- Colores de marca consistentes
-- Espacio para texto superpuesto si es necesario
+REQUISITOS TÉCNICOS:
+- Diseño limpio y profesional para Instagram
+- Colores de la paleta de marca
+- Tipografía legible en móvil
+- ${selectedLogoUrl ? 'Incluir logo de forma sutil' : 'Sin logo'}
+- Coherencia con otros slides del carrusel
 `
 
-    const imageUrl = await generateContentImageUnified(brand, fullPrompt, {
+    const brandWrapper = { name: brand.brand_name, brand_dna: brand }
+
+    // Build context array for reference images
+    const context: Array<{ type: string; value: string; label?: string }> = []
+    if (selectedImageUrls && selectedImageUrls.length > 0) {
+        selectedImageUrls.slice(0, 2).forEach((url, idx) => {
+            context.push({ type: 'image', value: url, label: `Referencia ${idx + 1}` })
+        })
+    }
+    if (selectedLogoUrl) {
+        context.push({ type: 'logo', value: selectedLogoUrl, label: 'Logo' })
+    }
+
+    const imageUrl = await generateContentImageUnified(brandWrapper, fullPrompt, {
         aspectRatio,
-        model
+        model,
+        context
     })
 
     return imageUrl
@@ -162,27 +227,24 @@ export async function generateCarouselAction(
         slideCount,
         aspectRatio = '1:1',
         style = 'Moderno y minimalista',
-        brandName,
         brandDNA,
-        model = 'gemini-3-pro-image-preview',
-        slideOverrides = []
+        slideOverrides = [],
+        selectedLogoUrl,
+        selectedColors,
+        selectedImageUrls,
+        includeLogoOnSlides
     } = input
 
-    const brand = { name: brandName, brand_dna: brandDNA }
+    const model = 'gemini-3-pro-image-preview'
 
     try {
-        console.log(`\n🎠 Starting carousel generation: ${slideCount} slides`)
+        console.log(`\n🎠 Starting carousel for ${brandDNA.brand_name}: ${slideCount} slides`)
 
-        // Step 1: Decompose prompt into slides
-        console.log('📝 Decomposing prompt into slide concepts...')
-        let slideContents = await decomposeIntoSlides(
-            prompt,
-            slideCount,
-            brand,
-            'gemini-3-flash'
-        )
+        // Step 1: Decompose prompt
+        console.log('📝 Decomposing with brand context...')
+        let slideContents = await decomposeIntoSlides(prompt, slideCount, brandDNA, 'gemini-3-flash')
 
-        // Apply any manual overrides
+        // Apply overrides
         slideOverrides.forEach(override => {
             if (slideContents[override.index]) {
                 slideContents[override.index].visualPrompt = override.text
@@ -190,7 +252,7 @@ export async function generateCarouselAction(
             }
         })
 
-        // Step 2: Generate images for each slide
+        // Step 2: Generate images
         const slides: CarouselSlide[] = slideContents.map(sc => ({
             index: sc.index,
             title: sc.title,
@@ -198,10 +260,8 @@ export async function generateCarouselAction(
             status: 'pending' as const
         }))
 
-        let previousUrl: string | undefined
-
         for (let i = 0; i < slideContents.length; i++) {
-            console.log(`🖼️ Generating slide ${i + 1}/${slideCount}...`)
+            console.log(`🖼️ Generating slide ${i + 1}/${slideCount} with brand context...`)
             slides[i].status = 'generating'
 
             try {
@@ -210,41 +270,38 @@ export async function generateCarouselAction(
                     slideCount,
                     style,
                     aspectRatio,
-                    brand,
+                    brandDNA,
                     model,
-                    previousUrl
+                    selectedColors,
+                    includeLogoOnSlides ? selectedLogoUrl : undefined,
+                    selectedImageUrls
                 )
 
                 slides[i].imageUrl = imageUrl
                 slides[i].status = 'done'
-                previousUrl = imageUrl
 
             } catch (error) {
-                console.error(`Error generating slide ${i + 1}:`, error)
+                console.error(`Error slide ${i + 1}:`, error)
                 slides[i].status = 'error'
-                slides[i].error = error instanceof Error ? error.message : 'Unknown error'
+                slides[i].error = error instanceof Error ? error.message : 'Error'
             }
         }
 
-        console.log('✅ Carousel generation complete!')
-
-        return {
-            success: true,
-            slides
-        }
+        console.log('✅ Carousel complete!')
+        return { success: true, slides }
 
     } catch (error) {
-        console.error('Carousel generation error:', error)
+        console.error('Carousel error:', error)
         return {
             success: false,
             slides: [],
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Error'
         }
     }
 }
 
 /**
- * Regenerate a single slide
+ * Regenerate a single slide with brand context
  */
 export async function regenerateSlideAction(
     slideIndex: number,
@@ -252,22 +309,23 @@ export async function regenerateSlideAction(
     totalSlides: number,
     style: string,
     aspectRatio: string,
-    brandName: string,
     brandDNA: BrandDNA,
+    selectedLogoUrl?: string,
+    selectedColors?: string[],
     model: string = 'gemini-3-pro-image-preview'
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
-    const brand = { name: brandName, brand_dna: brandDNA }
-
     try {
-        console.log(`🔄 Regenerating slide ${slideIndex + 1}...`)
+        console.log(`🔄 Regenerating slide ${slideIndex + 1} for ${brandDNA.brand_name}...`)
 
         const imageUrl = await generateSlideImage(
             slideContent,
             totalSlides,
             style,
             aspectRatio,
-            brand,
-            model
+            brandDNA,
+            model,
+            selectedColors,
+            selectedLogoUrl
         )
 
         return { success: true, imageUrl }
@@ -275,7 +333,7 @@ export async function regenerateSlideAction(
     } catch (error) {
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Error'
         }
     }
 }
