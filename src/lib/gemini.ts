@@ -643,3 +643,224 @@ export async function generateContentImageUnified(
     // Fallback to existing Google Implementation
     return await generateBrandImage(brand, prompt, options)
 }
+
+// =============================================================================
+// VIDEO GENERATION (Veo 3.1 via Wisdom Gate)
+// =============================================================================
+
+export interface VideoGenerationOptions {
+    prompt: string
+    negativePrompt?: string
+    startFrame?: string // Base64 or URL
+    endFrame?: string   // Base64 or URL
+    aspectRatio?: '16:9' | '9:16'
+    resolution?: '720p' | '1080p'
+    durationSeconds?: 4 | 6 | 8
+    personGeneration?: 'allow_all' | 'allow_adult' | 'dont_allow'
+}
+
+export interface VideoGenerationResult {
+    videoUrl: string
+    operationName?: string
+}
+
+/**
+ * Generate video using Veo 3.1 via Wisdom Gate
+ * Supports text-to-video and image-to-video (start/end frames)
+ */
+export async function generateVideoUnified(
+    options: VideoGenerationOptions
+): Promise<VideoGenerationResult> {
+    const model = 'veo-3.1'
+
+    console.log('\n--- 🎬 GENERATING VIDEO WITH VEO 3.1 ---')
+    console.log('Prompt:', options.prompt.substring(0, 100) + '...')
+    console.log('Aspect Ratio:', options.aspectRatio || '16:9')
+    console.log('Resolution:', options.resolution || '720p')
+    console.log('Duration:', options.durationSeconds || 4, 'seconds')
+
+    // Build request payload
+    const instances: any = [{
+        prompt: options.prompt
+    }]
+
+    // Add negative prompt if provided
+    if (options.negativePrompt) {
+        instances[0].negativePrompt = options.negativePrompt
+    }
+
+    // Add start frame (first frame) if provided
+    if (options.startFrame) {
+        const startPart = await urlToPart(options.startFrame)
+        if (startPart) {
+            instances[0].image = {
+                inlineData: startPart.inlineData
+            }
+        }
+    }
+
+    // Add end frame (last frame) if provided
+    if (options.endFrame) {
+        const endPart = await urlToPart(options.endFrame)
+        if (endPart) {
+            instances[0].lastFrame = {
+                image: {
+                    inlineData: endPart.inlineData
+                }
+            }
+        }
+    }
+
+    // Build parameters
+    const parameters: any = {
+        aspectRatio: options.aspectRatio || '16:9',
+        resolution: options.resolution || '720p',
+        durationSeconds: String(options.durationSeconds || 4),
+    }
+
+    if (options.personGeneration) {
+        parameters.personGeneration = options.personGeneration
+    }
+
+    const requestBody = {
+        instances,
+        parameters
+    }
+
+    try {
+        // Start the video generation (async operation)
+        console.log('🚀 Starting video generation...')
+        const startResponse = await fetch(`${WISDOM_BASE_URL}/v1beta/models/${model}:predictLongRunning`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': WISDOM_API_KEY
+            },
+            body: JSON.stringify(requestBody)
+        })
+
+        if (!startResponse.ok) {
+            const errorText = await startResponse.text()
+            console.error('Video generation start failed:', errorText)
+            throw new Error(`Video generation failed: ${errorText}`)
+        }
+
+        const startData = await startResponse.json()
+        const operationName = startData.name
+
+        if (!operationName) {
+            throw new Error('No operation name returned from video generation')
+        }
+
+        console.log('⏳ Operation started:', operationName)
+
+        // Poll for completion
+        const maxPolls = 60 // 10 minutes max (10s * 60)
+        let pollCount = 0
+
+        while (pollCount < maxPolls) {
+            await new Promise(resolve => setTimeout(resolve, 10000)) // Wait 10 seconds
+            pollCount++
+
+            console.log(`📊 Polling status (${pollCount}/${maxPolls})...`)
+
+            const statusResponse = await fetch(`${WISDOM_BASE_URL}/v1beta/${operationName}`, {
+                method: 'GET',
+                headers: {
+                    'x-goog-api-key': WISDOM_API_KEY
+                }
+            })
+
+            if (!statusResponse.ok) {
+                console.warn('Status check failed, retrying...')
+                continue
+            }
+
+            const statusData = await statusResponse.json()
+
+            if (statusData.done) {
+                console.log('✅ Video generation complete!')
+
+                // Extract video URL from response
+                const videoUri = statusData.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri
+                    || statusData.response?.generatedVideos?.[0]?.video?.uri
+
+                if (!videoUri) {
+                    console.error('Response structure:', JSON.stringify(statusData, null, 2))
+                    throw new Error('No video URI in completed response')
+                }
+
+                return {
+                    videoUrl: videoUri,
+                    operationName
+                }
+            }
+
+            // Check for error
+            if (statusData.error) {
+                throw new Error(`Video generation error: ${statusData.error.message || JSON.stringify(statusData.error)}`)
+            }
+        }
+
+        throw new Error('Video generation timed out after 10 minutes')
+
+    } catch (error) {
+        console.error('Video Generation Error:', error)
+        throw error
+    }
+}
+
+/**
+ * Check the status of a video generation operation
+ */
+export async function checkVideoOperationStatus(operationName: string): Promise<{
+    done: boolean
+    videoUrl?: string
+    error?: string
+    progress?: number
+}> {
+    try {
+        const response = await fetch(`${WISDOM_BASE_URL}/v1beta/${operationName}`, {
+            method: 'GET',
+            headers: {
+                'x-goog-api-key': WISDOM_API_KEY
+            }
+        })
+
+        if (!response.ok) {
+            const errorText = await response.text()
+            return { done: false, error: errorText }
+        }
+
+        const data = await response.json()
+
+        if (data.done) {
+            const videoUri = data.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri
+                || data.response?.generatedVideos?.[0]?.video?.uri
+
+            return {
+                done: true,
+                videoUrl: videoUri
+            }
+        }
+
+        if (data.error) {
+            return {
+                done: true,
+                error: data.error.message || 'Unknown error'
+            }
+        }
+
+        // Still processing
+        return {
+            done: false,
+            progress: data.metadata?.progress || undefined
+        }
+
+    } catch (error) {
+        return {
+            done: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        }
+    }
+}
