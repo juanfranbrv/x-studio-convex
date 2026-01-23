@@ -116,14 +116,18 @@ export function ControlsPanel({
     }
 
     // Brand kit images for selector - use URL as ID for consistent matching
-    const brandKitImages = (activeBrandKit?.images || []).map((img, idx) => {
+    // Deduplicate to avoid React key issues if URLs are repeated
+    const brandKitImages = (activeBrandKit?.images || []).reduce((acc: Array<{ id: string; url: string; name?: string }>, img, idx) => {
         const imageUrl = typeof img === 'string' ? img : img.url
-        return {
-            id: imageUrl, // Use URL as ID for consistent matching across components
-            url: imageUrl,
-            name: `Imagen ${idx + 1}`
+        if (imageUrl && !acc.find(i => i.url === imageUrl)) {
+            acc.push({
+                id: imageUrl,
+                url: imageUrl,
+                name: `Imagen ${idx + 1}`
+            })
         }
-    })
+        return acc
+    }, [])
 
     // Maximum number of presets allowed
     const MAX_PRESETS = 6

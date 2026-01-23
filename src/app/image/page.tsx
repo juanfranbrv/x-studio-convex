@@ -88,27 +88,9 @@ export default function ImagePage() {
 
     const creationFlow = useCreationFlow({
         onImageUploaded: async (file: File) => {
-            // This callback is called AFTER uploadImage already added the base64 to state
-            // Here we only sync with brand kit storage (don't add again to avoid duplicate)
-            if (!activeBrandKit) return
-            try {
-                const formData = new FormData()
-                formData.append('file', file)
-                const result = await uploadBrandImage(formData)
-                if (result.success && result.url) {
-                    // Only save to brand kit, don't add again (already in state as base64)
-                    const updatedImages = [...(activeBrandKit.images || []), { url: result.url, selected: true }]
-                    await updateActiveBrandKit({
-                        images: updatedImages
-                    })
-                    toast({
-                        title: "Imagen guardada",
-                        description: "La imagen se ha añadido a tu Brand Kit automáticamente.",
-                    })
-                }
-            } catch (error) {
-                console.error('Error saving flow image to kit:', error)
-            }
+            // Reference images are only used for the current session/generation
+            // and should not be persisted in the permanent Brand Kit image storage.
+            console.log('Image uploaded for current flow:', file.name)
         },
         onReset: () => {
             creationFlow.setGeneratedImage(null)

@@ -689,8 +689,9 @@ export default function AdminPage() {
                                                     <option value="wisdom/gemini-3-pro">Gemini 3 Pro (Wisdom)</option>
                                                     <option value="wisdom/gemini-3-flash">Gemini 3 Flash (Wisdom)</option>
                                                     <option value="wisdom/gemini-2.5-flash">Gemini 2.5 Flash (Wisdom)</option>
-                                                    <option value="gemini-flash-latest">Gemini 1.5 Flash (Google Official)</option>
-                                                    <option value="gemini-pro">Gemini Pro (Legacy)</option>
+                                                    <option value="gemini-3-pro-preview">Gemini 3 Pro (Google Official)</option>
+                                                    <option value="gemini-3-flash-preview">Gemini 3 Flash (Google Official)</option>
+                                                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Google Official)</option>
                                                 </select>
                                                 <Button
                                                     size="sm"

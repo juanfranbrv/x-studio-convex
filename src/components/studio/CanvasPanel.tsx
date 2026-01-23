@@ -614,7 +614,10 @@ export function CanvasPanel({
                                 height: `${canvasHeight}px`,
                                 transform: `scale(${zoom / 100})`,
                                 transformOrigin: 'top center',
+                                containerType: 'inline-size',
+                                containerName: 'canvas',
                             };
+
                         })()}
                     >
                         <AnimatePresence mode="wait">

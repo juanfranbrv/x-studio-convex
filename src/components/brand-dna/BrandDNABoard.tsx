@@ -47,6 +47,8 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
     });
     const [isEditingBrandName, setIsEditingBrandName] = useState(false);
     const [brandNameEdit, setBrandNameEdit] = useState(initialData.brand_name);
+    const [isEditingUrl, setIsEditingUrl] = useState(false);
+    const [urlEdit, setUrlEdit] = useState(initialData.url || '');
     const [showDebug, setShowDebug] = useState(isDebug);
 
     const handleSave = async (isAuto = false) => {
@@ -367,20 +369,80 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                                     Sincronizado
                                 </div>
                             )}
-                            {/* Website URL display */}
-                            {data.url && (
-                                <>
-                                    <span className="text-muted-foreground/40">·</span>
-                                    <a
-                                        href={data.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xs text-primary/70 hover:text-primary transition-colors truncate max-w-[200px]"
-                                    >
-                                        {data.url.replace(/^https?:\/\//, '')}
-                                    </a>
-                                </>
-                            )}
+                            {/* Website URL display / Edit */}
+                            <span className="text-muted-foreground/40">·</span>
+                            <div className="flex items-center gap-1.5 group/url">
+                                {isEditingUrl ? (
+                                    <div className="flex items-center gap-1.5">
+                                        <Input
+                                            value={urlEdit}
+                                            onChange={(e) => setUrlEdit(e.target.value)}
+                                            placeholder="Añadir sitio web..."
+                                            className="text-xs h-7 px-2 w-[180px] border-primary"
+                                            autoFocus
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    setData({ ...data, url: urlEdit || undefined });
+                                                    setHasUnsavedChanges(true);
+                                                    setIsEditingUrl(false);
+                                                }
+                                                if (e.key === 'Escape') {
+                                                    setUrlEdit(data.url ?? '');
+                                                    setIsEditingUrl(false);
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                setData({ ...data, url: urlEdit || undefined });
+                                                setHasUnsavedChanges(true);
+                                                setIsEditingUrl(false);
+                                            }}
+                                            className="p-1 rounded hover:bg-muted"
+                                        >
+                                            <Check className="w-3.5 h-3.5 text-green-500" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setUrlEdit(data.url || '');
+                                                setIsEditingUrl(false);
+                                            }}
+                                            className="p-1 rounded hover:bg-muted"
+                                        >
+                                            <X className="w-3.5 h-3.5 text-red-500" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {data.url ? (
+                                            <a
+                                                href={data.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs text-primary/70 hover:text-primary transition-colors truncate max-w-[200px]"
+                                            >
+                                                {data.url.replace(/^https?:\/\//, '')}
+                                            </a>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground/50 italic">Sin sitio web</span>
+                                        )}
+                                        <button
+                                            onClick={() => {
+                                                setUrlEdit(data.url ?? '');
+                                                setIsEditingUrl(true);
+                                            }}
+                                            className="opacity-0 group-hover/url:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
+                                            title={data.url ? "Editar URL" : "Añadir URL"}
+                                        >
+                                            {data.url ? (
+                                                <Pencil className="w-3 h-3 text-muted-foreground hover:text-primary" />
+                                            ) : (
+                                                <Plus className="w-3 h-3 text-muted-foreground hover:text-primary" />
+                                            )}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -422,10 +484,10 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             {/* NEW LAYOUT IMPLEMENTATION */}
 
             {/* Top Section: Branding & Screenshot */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
                 {/* Left Column: Identities & Palette */}
-                <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4 h-[200px]">
+                <div className="space-y-10">
+                    <div className="grid grid-cols-2 gap-8">
                         <LogoCard
                             logoUrl={data.logo_url}
                             logos={data.logos}
@@ -471,7 +533,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             </div>
 
             {/* Two-Column Layout: Content Cards (Left) + Image Gallery (Right) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
                 {/* Left Column: All Content/Info Cards */}
                 <div className="space-y-6">
                     {/* Language Selection */}

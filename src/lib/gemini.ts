@@ -7,7 +7,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 const imageGenAI = new GoogleGenerativeAI(process.env.GEMINI_IMAGE_API_KEY!)
 
 // Models
-export const flashModel = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
+export const flashModel = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
 
 // Default image model
 const DEFAULT_IMAGE_MODEL = 'gemini-3-pro-image-preview'
@@ -531,7 +531,7 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
 export async function generateTextUnified(
     brand: { name: string; brand_dna: BrandDNA },
     prompt: string,
-    model: string = 'gemini-flash-latest', // Default to native Google
+    model: string = 'gemini-3-flash-preview', // Default to native Google
     images?: string[],
     systemPromptOverride?: string // NEW: Allow specialized tasks to set their own persona
 ): Promise<string> {
@@ -543,6 +543,7 @@ export async function generateTextUnified(
     }
 
     // Default to Google
+    const selectedModel = genAI.getGenerativeModel({ model: model })
     const parts: any[] = [{ text: `${systemPrompt}\n\nSOLICITUD DEL USUARIO:\n${prompt}` }]
 
     if (images && images.length > 0) {
@@ -558,7 +559,7 @@ export async function generateTextUnified(
         })
     }
 
-    const result = await flashModel.generateContent({
+    const result = await selectedModel.generateContent({
         contents: [
             {
                 role: 'user',

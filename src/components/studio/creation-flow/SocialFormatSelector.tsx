@@ -15,7 +15,8 @@ import {
     Youtube,
     Square,
     RectangleHorizontal,
-    RectangleVertical
+    RectangleVertical,
+    Twitter
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -32,6 +33,7 @@ const PLATFORM_CONFIG: Record<SocialPlatform, { icon: any; label: string; color:
     tiktok: { icon: Video, label: 'TikTok', color: 'text-zinc-900 dark:text-white' },
     linkedin: { icon: Linkedin, label: 'LinkedIn', color: 'text-blue-700' },
     whatsapp: { icon: MessageCircle, label: 'WhatsApp', color: 'text-green-500' },
+    x: { icon: Twitter, label: 'X (Twitter)', color: 'text-slate-900 dark:text-white' },
     youtube: { icon: Youtube, label: 'YouTube', color: 'text-red-600' }
 }
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { generateFieldCopy as getAICopy } from '@/app/actions/generate-copy'
 import {
     type IntentGroup,
@@ -57,6 +57,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const saveGeneration = useMutation(api.generations.saveGeneration)
     const aiConfig = useQuery(api.settings.getAIConfig)
     const [state, setState] = useState<GenerationState>(INITIAL_GENERATION_STATE)
+    const optionsRef = useRef(options)
+
+    // Keep options reference up to date to avoid stale closures in callbacks
+    useEffect(() => {
+        optionsRef.current = options
+    }, [options])
 
     // -------------------------------------------------------------------------
     // COMPUTED VALUES (Moved to top for callback access)
@@ -262,8 +268,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 uploadedImageFiles: [...prev.uploadedImageFiles, file],
             }))
 
-            if (options?.onImageUploaded) {
-                options.onImageUploaded(file)
+            if (optionsRef.current?.onImageUploaded) {
+                optionsRef.current.onImageUploaded(file)
             }
 
             // Call Vision API
@@ -1307,8 +1313,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
     const reset = useCallback(() => {
         setState({ ...INITIAL_GENERATION_STATE, caption: '' }) // NEW: Reset caption
-        options?.onReset?.()
-    }, [options])
+        optionsRef.current?.onReset?.()
+    }, [])
 
     // -------------------------------------------------------------------------
     // PRESETS

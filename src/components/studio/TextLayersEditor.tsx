@@ -37,16 +37,17 @@ export function TextLayersEditor({
 }: TextLayersEditorProps) {
 
     return (
-        <div className="w-full h-full flex flex-col justify-between py-12 px-8 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto overflow-x-hidden thin-scrollbar">
+        <div className="w-full h-full flex flex-col justify-between py-[6cqh] py-[3cqw] px-[6cqw] animate-in fade-in zoom-in-95 duration-500 overflow-y-auto overflow-x-hidden thin-scrollbar">
 
             {/* TOP: HEADLINE & CUSTOM TEXTS (Required by Intent) */}
-            <div className="flex-none flex flex-col items-center justify-start pt-4 space-y-6">
+            <div className="flex-none flex flex-col items-center justify-start pt-2 space-y-[1.5cqw]">
                 {/* Headline */}
-                <div className="group relative w-full max-w-2xl px-12 pointer-events-auto">
+                <div className="group relative w-full max-w-2xl px-[8cqw] pointer-events-auto">
                     <textarea
                         value={headline || ''}
                         onChange={(e) => onHeadlineChange(e.target.value)}
-                        className="w-full bg-transparent border-none text-center text-4xl md:text-5xl font-black text-foreground placeholder:text-muted-foreground/20 focus:ring-0 resize-none overflow-hidden min-h-[1.5em] leading-tight drop-shadow-sm"
+                        className="w-full bg-transparent border-none text-center font-black text-foreground placeholder:text-muted-foreground/20 focus:ring-0 resize-none overflow-hidden min-h-[1.2em] leading-tight drop-shadow-sm"
+                        style={{ fontSize: 'min(5cqw, 5cqh, 32px)' }}
                         placeholder="ESCRIBE TU TITULAR"
                         rows={2}
                         onInput={(e) => {
@@ -76,11 +77,12 @@ export function TextLayersEditor({
                 {/* Intent-based Custom Texts */}
                 <div className="w-full flex flex-col items-center gap-4">
                     {Object.entries(customTexts).map(([key, value]) => (
-                        <div key={key} className="group relative w-full max-w-3xl px-12 pointer-events-auto">
+                        <div key={key} className="group relative w-full max-w-3xl px-[8cqw] pointer-events-auto">
                             <textarea
                                 value={value || ''}
                                 onChange={(e) => onCustomTextChange(key, e.target.value)}
-                                className="w-full bg-transparent border-none text-center text-xl md:text-3xl font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.2em] leading-tight transition-all drop-shadow-sm py-1"
+                                className="w-full bg-transparent border-none text-center font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.1em] leading-tight transition-all drop-shadow-sm py-0.5"
+                                style={{ fontSize: 'min(3cqw, 3cqh, 18px)' }}
                                 placeholder={`PROMPT PARA ${key.replace(/_/g, ' ').toUpperCase()}...`}
                                 rows={1}
                                 onInput={(e) => {
@@ -109,8 +111,8 @@ export function TextLayersEditor({
 
                 {/* Brand-based Text Assets (PROMPT TEXTS moved from Panel) */}
                 {textAssets.length > 0 && (
-                    <div className="w-full flex flex-col items-center gap-3 pt-4 border-t border-dashed border-foreground/10">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Textos Adicionales</p>
+                    <div className="w-full flex flex-col items-center gap-2 pt-2 border-t border-dashed border-foreground/10">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-1">Textos Adicionales</p>
                         {textAssets.map((asset) => (
                             <div key={asset.id} className="group relative w-full max-w-2xl pointer-events-auto flex items-start justify-center gap-2 px-4">
                                 <div className="flex-1 flex items-start gap-3 px-4 py-2 bg-foreground/5 rounded-2xl ring-1 ring-foreground/10 hover:ring-foreground/20 transition-all">
@@ -118,7 +120,8 @@ export function TextLayersEditor({
                                     <textarea
                                         value={asset.value || ''}
                                         onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
-                                        className="flex-1 bg-transparent border-none text-sm font-medium text-foreground focus:ring-0 resize-none overflow-hidden min-h-[1.4em] leading-relaxed"
+                                        className="flex-1 bg-transparent border-none font-medium text-foreground focus:ring-0 resize-none overflow-hidden min-h-[1.2em] leading-relaxed"
+                                        style={{ fontSize: 'min(2cqw, 2cqh, 12px)' }}
                                         placeholder={`Valor para ${asset.label}...`}
                                         rows={1}
                                         onInput={(e) => {
@@ -180,14 +183,13 @@ export function TextLayersEditor({
                 <div className="group relative flex flex-col items-center bg-black/5 dark:bg-white/10 backdrop-blur-md rounded-[2rem] p-1.5 border border-white/10 hover:border-primary/20 transition-all hover:bg-black/10 dark:hover:bg-white/15 gap-0.5">
 
                     {/* 1. CTA Button (Primary Visual) */}
-                    <div className="relative z-10 flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-6 py-3 transition-transform group-hover:scale-[1.02]">
+                    <div className="relative z-10 flex items-center gap-[1.5cqw] bg-primary text-primary-foreground rounded-full shadow-lg px-[4cqw] py-[2cqw] transition-transform group-hover:scale-[1.02]">
                         <MousePointerClick className="w-4.5 h-4.5 text-primary-foreground/70 flex-shrink-0" />
                         <input
                             value={cta || ''}
                             onChange={(e) => onCtaChange(e.target.value)}
-                            className="bg-transparent text-primary-foreground font-bold text-lg border-none placeholder:text-primary-foreground/40 focus:ring-0 focus:outline-none min-w-[100px] text-center"
-                            placeholder="Inscríbete"
-                            style={{ width: `${Math.max(100, (cta?.length || 10) * 12)}px` }}
+                            className="bg-transparent text-primary-foreground font-bold border-none placeholder:text-primary-foreground/40 focus:ring-0 focus:outline-none min-w-[80px] text-center"
+                            style={{ fontSize: 'min(3cqw, 3cqh, 15px)', width: `${Math.max(80, (cta?.length || 10) * 9)}px` }}
                         />
                     </div>
 

@@ -38,7 +38,7 @@ export async function parseLazyIntentAction({
         const intent = intentId ? INTENT_CATALOG.find(i => i.id === intentId) : undefined
         const allLayouts = Object.values(LAYOUTS_BY_INTENT).flat()
         const layout = layoutId ? allLayouts.find(l => l.id === layoutId) : undefined
-        const modelToUse = intelligenceModel || 'gemini-flash-latest'
+        const modelToUse = intelligenceModel || 'gemini-3-flash-preview'
         console.log(`[LazyPrompt] Parsing with model ${modelToUse} ${intent ? `for intent: ${intent.name}` : 'with auto-detection'}`)
 
         // 2. Build Prompt Parts (Include system prompt in body for maximum adherence across all models)

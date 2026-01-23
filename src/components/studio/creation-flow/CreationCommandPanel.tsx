@@ -513,11 +513,17 @@ export function CreationCommandPanel({
                                                 onClearUploadedImages={creationFlow.clearUploadedImages}
                                                 isOptional={!requiresImage}
                                                 // Brand Kit images
-                                                brandKitImages={activeBrandKit?.images?.map((img, idx) => ({
-                                                    id: img.url,
-                                                    url: img.url,
-                                                    name: `Imagen ${idx + 1}`
-                                                })) || []}
+                                                brandKitImages={(activeBrandKit?.images || []).reduce((acc: Array<{ id: string; url: string; name?: string }>, img, idx) => {
+                                                    const imageUrl = typeof img === 'string' ? img : (img as any).url
+                                                    if (imageUrl && !acc.find(i => i.url === imageUrl)) {
+                                                        acc.push({
+                                                            id: imageUrl,
+                                                            url: imageUrl,
+                                                            name: `Imagen ${idx + 1}`
+                                                        })
+                                                    }
+                                                    return acc
+                                                }, [])}
                                                 selectedBrandKitImageIds={state.selectedBrandKitImageIds}
                                                 onToggleBrandKitImage={creationFlow.toggleBrandKitImage}
                                                 onClearBrandKitImages={creationFlow.clearBrandKitImages}
