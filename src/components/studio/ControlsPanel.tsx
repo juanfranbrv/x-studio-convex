@@ -108,6 +108,10 @@ export function ControlsPanel({
         clearBrandKitImages,
         reset,
         loadPreset,
+        // Text Assets Management
+        addTextAsset,
+        removeTextAsset,
+        updateTextAsset,
     } = creationFlow
 
     // Función para añadir color personalizado
@@ -399,6 +403,13 @@ export function ControlsPanel({
                                     onAddCustomColor={handleAddCustomColor}
                                     showLogo={true}
                                     showColors={true}
+                                    // Text Assets
+                                    textAssets={state.selectedTextAssets}
+                                    onAddTextAsset={addTextAsset}
+                                    onRemoveTextAsset={removeTextAsset}
+                                    onUpdateTextAsset={updateTextAsset}
+                                    // Fonts (automatic from activeBrandKit inside BrandingConfigurator)
+                                    rawMessage={promptValue}
                                 />
                             </div>
                         </>

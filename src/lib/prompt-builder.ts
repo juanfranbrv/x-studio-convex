@@ -3,6 +3,7 @@ import { IMAGE_GENERATION_BASE_PROMPT } from './prompts/image-generator-base'
 import { LAYOUTS_BY_INTENT, DEFAULT_LAYOUTS, LayoutOption } from './creation-flow-types'
 import { buildContextInstructions } from './prompts/image-generation/context-builder'
 import { buildLayoutInstruction } from './prompts/image-generation/layout-rules'
+import { buildTypographyInstructions } from './prompts/image-generation/typography-builder'
 
 export interface ImageGenerationOptions {
     headline?: string
@@ -19,9 +20,10 @@ export function buildImagePrompt(
     userPrompt: string,
     options: ImageGenerationOptions = {}
 ): string {
-    const { colors, tone_of_voice } = brand.brand_dna
+    const { colors, tone_of_voice, fonts } = brand.brand_dna
     const tone = tone_of_voice?.join(', ') || 'Sin definir'
     const colorList = colors?.map(c => c.color).join(', ') || 'Sin definir'
+    const typographyInstructions = buildTypographyInstructions(fonts || [])
 
     // Process explicit context items (Drag & Drop)
     let contextInstructions = ''
@@ -54,5 +56,6 @@ export function buildImagePrompt(
         .replace('{{tone}}', tone)
         .replace('{{contextInstructions}}', contextInstructions)
         .replace('{{layoutReferencePart}}', layoutReferencePart)
+        .replace('{{typographyInstructions}}', typographyInstructions)
         .replace('{{userPrompt}}', userPrompt)
 }

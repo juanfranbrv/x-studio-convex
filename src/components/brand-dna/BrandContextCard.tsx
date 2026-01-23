@@ -29,9 +29,23 @@ export function BrandContextCard({ context, onUpdate }: BrandContextCardProps) {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="group relative p-3 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all min-h-[120px]">
+                <div
+                    className={cn(
+                        "group relative p-3 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all min-h-[120px] cursor-pointer",
+                        isEditing && "cursor-default"
+                    )}
+                    onClick={() => {
+                        if (!isEditing) {
+                            setEditValue(context);
+                            setIsEditing(true);
+                        }
+                    }}
+                >
                     {isEditing ? (
-                        <div className="space-y-2">
+                        <div
+                            className="space-y-2"
+                            onClick={(e) => e.stopPropagation()}
+                        >
                             <textarea
                                 value={editValue}
                                 onChange={(e) => setEditValue(e.target.value)}

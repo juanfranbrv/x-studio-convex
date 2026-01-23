@@ -10,23 +10,37 @@ import { Type, Search, Plus, Trash2, Info, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TypographySectionProps {
-    fonts: string[];
+    fonts: { family: string; role?: 'heading' | 'body' }[];
     tagline?: string;
     onAddFont: (font: string) => void;
     onRemoveFont: (index: number) => void;
+    onUpdateRole: (index: number, role?: 'heading' | 'body') => void;
 }
 
 export function TypographySection({
     fonts,
     tagline,
     onAddFont,
-    onRemoveFont
+    onRemoveFont,
+    onUpdateRole
 }: TypographySectionProps) {
     const [fontSearch, setFontSearch] = useState('');
     const [searchResults, setSearchResults] = useState<string[]>([]);
     const [allFonts, setAllFonts] = useState<string[]>([]);
     const [loadingFonts, setLoadingFonts] = useState(false);
     const [hasFetched, setHasFetched] = useState(false);
+
+    // Ciclar roles: heading -> body -> undefined
+    const handleToggleRole = (index: number) => {
+        const currentRole = fonts[index].role;
+        let nextRole: 'heading' | 'body' | undefined;
+
+        if (!currentRole) nextRole = 'heading';
+        else if (currentRole === 'heading') nextRole = 'body';
+        else nextRole = undefined;
+
+        onUpdateRole(index, nextRole);
+    };
 
     // Fetch Google Fonts
     const fetchGoogleFonts = async () => {
@@ -66,7 +80,7 @@ export function TypographySection({
 
         if (allFonts.length > 0) {
             const filtered = allFonts.filter(f =>
-                f.toLowerCase().includes(fontSearch.toLowerCase()) && !fonts.includes(f)
+                f.toLowerCase().includes(fontSearch.toLowerCase()) && !fonts.some(ef => ef.family === f)
             ).slice(0, 50);
             setSearchResults(filtered);
         } else if (hasFetched && allFonts.length === 0) {
@@ -90,7 +104,7 @@ export function TypographySection({
 
     // Load existing fonts
     useEffect(() => {
-        fonts.forEach(loadGoogleFont);
+        fonts.forEach(f => loadGoogleFont(f.family));
     }, [fonts]);
 
     // Load result fonts for preview
@@ -108,14 +122,35 @@ export function TypographySection({
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 gap-4">
-                    {fonts.map((font, idx) => (
-                        <div key={idx} className="relative group p-4 bg-muted/20 border border-border rounded-xl hover:border-primary/30 transition-all">
+                    {fonts.map((fontObj, idx) => (
+                        <div
+                            key={idx}
+                            onClick={() => handleToggleRole(idx)}
+                            className={cn(
+                                "group relative p-4 border rounded-xl transition-all cursor-pointer",
+                                fontObj.role === 'heading' ? "bg-primary/5 border-primary/30" :
+                                    fontObj.role === 'body' ? "bg-accent/5 border-accent/20" :
+                                        "bg-muted/20 border-border hover:border-primary/20"
+                            )}
+                        >
                             <div className="flex justify-between items-start mb-2">
-                                <span className="text-xs font-bold uppercase tracking-widest text-[var(--accent)]/70">
-                                    {idx === 0 ? 'Primaria' : idx === 1 ? 'Secundaria' : 'Terciaria'}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className={cn(
+                                        "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border",
+                                        fontObj.role === 'heading' ? "bg-primary text-primary-foreground border-primary shadow-sm" :
+                                            fontObj.role === 'body' ? "bg-zinc-800 text-zinc-100 border-zinc-700 shadow-sm" :
+                                                "bg-muted/50 text-muted-foreground border-border"
+                                    )}>
+                                        {fontObj.role === 'heading' ? 'Titulares' :
+                                            fontObj.role === 'body' ? 'Párrafos' :
+                                                'Sin asignar'}
+                                    </span>
+                                </div>
                                 <button
-                                    onClick={() => onRemoveFont(idx)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onRemoveFont(idx);
+                                    }}
                                     className="p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500/10 text-red-500 transition-all"
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -123,12 +158,18 @@ export function TypographySection({
                             </div>
                             <div className="flex justify-between items-end">
                                 <div>
-                                    <p className="text-sm text-[var(--text-secondary)] mb-1 font-mono">{font}</p>
-                                    <p className="text-xl md:text-2xl leading-tight" style={{ fontFamily: font }}>
-                                        {tagline || (idx === 0 ? 'The quick brown fox' : 'jumps over the lazy dog')}
+                                    <p className="text-sm text-muted-foreground mb-1 font-mono">{fontObj.family}</p>
+                                    <p
+                                        className={cn(
+                                            "leading-tight transition-all",
+                                            fontObj.role === 'heading' ? "text-2xl md:text-3xl font-bold" : "text-lg md:text-xl"
+                                        )}
+                                        style={{ fontFamily: fontObj.family }}
+                                    >
+                                        {tagline || (fontObj.role === 'heading' ? 'Un titular impactante' : 'El texto de párrafo fluye con naturalidad.')}
                                     </p>
                                 </div>
-                                <span className="text-2xl opacity-10" style={{ fontFamily: font }}>Aa</span>
+                                <span className="text-2xl opacity-10" style={{ fontFamily: fontObj.family }}>Aa</span>
                             </div>
                         </div>
                     ))}

@@ -84,7 +84,7 @@ export default defineSchema({
     tone_of_voice: v.array(v.string()), // string[]
     visual_aesthetic: v.array(v.string()), // string[]
     colors: v.any(), // Complex object with sources and scores
-    fonts: v.array(v.string()),
+    fonts: v.array(v.any()), // Changed from string[] to object array { family, role? }
     text_assets: v.optional(v.any()), // JSON
     logo_url: v.optional(v.string()),
     logos: v.optional(v.any()), // Array of logo objects

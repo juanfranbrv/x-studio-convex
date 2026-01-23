@@ -283,6 +283,65 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         downloadAnchorNode.remove();
     };
 
+    const handleAppendExtractedData = (extracted: any) => {
+        updateData(prev => {
+            const newState = { ...prev };
+
+            // Merge arrays by appending and de-duplicating strings
+            const mergeArray = (key: string, items: string[]) => {
+                if (!items || items.length === 0) return (prev as any)[key];
+                const current = (prev as any)[key] || [];
+                const combined = [...current, ...items];
+                return [...new Set(combined)];
+            };
+
+            if (extracted.brand_values) newState.brand_values = mergeArray('brand_values', extracted.brand_values);
+            if (extracted.tone_of_voice) newState.tone_of_voice = mergeArray('tone_of_voice', extracted.tone_of_voice);
+            if (extracted.visual_aesthetic) newState.visual_aesthetic = mergeArray('visual_aesthetic', extracted.visual_aesthetic);
+            if (extracted.target_audience) newState.target_audience = mergeArray('target_audience', extracted.target_audience);
+            if (extracted.emails) newState.emails = mergeArray('emails', extracted.emails);
+            if (extracted.phones) newState.phones = mergeArray('phones', extracted.phones);
+            if (extracted.preferred_language) newState.preferred_language = extracted.preferred_language;
+
+            // For brand_name and tagline, only update if they were empty or very short
+            if (extracted.brand_name && (!prev.brand_name || prev.brand_name.length < 3)) {
+                newState.brand_name = extracted.brand_name;
+            }
+            if (extracted.tagline && (!prev.tagline || prev.tagline.length < 3)) {
+                newState.tagline = extracted.tagline;
+            }
+
+            // Text assets merging
+            if (extracted.text_assets) {
+                const currentText = prev.text_assets || { marketing_hooks: [], visual_keywords: [], ctas: [], brand_context: '' };
+                newState.text_assets = {
+                    marketing_hooks: [...new Set([...(currentText.marketing_hooks || []), ...(extracted.text_assets.marketing_hooks || [])])],
+                    visual_keywords: currentText.visual_keywords, // No extracted by this schema
+                    ctas: [...new Set([...(currentText.ctas || []), ...(extracted.text_assets.ctas || [])])],
+                    brand_context: extracted.text_assets.brand_context || currentText.brand_context
+                };
+
+                if (extracted.text_assets.brand_context) {
+                    newState.business_overview = extracted.text_assets.brand_context;
+                }
+            }
+
+            // Social links merging
+            if (extracted.social_links) {
+                const currentLinks = prev.social_links || [];
+                const newLinks = [...currentLinks];
+                extracted.social_links.forEach((link: any) => {
+                    if (!currentLinks.some(l => l.url === link.url)) {
+                        newLinks.push(link);
+                    }
+                });
+                newState.social_links = newLinks;
+            }
+
+            return newState;
+        });
+    };
+
     return (
         <div className="space-y-8 pb-12">
             {/* Header / Save Status */}
@@ -382,19 +441,19 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                                             autoFocus
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
-                                                    setData({ ...data, url: urlEdit || undefined });
+                                                    setData({ ...data, url: urlEdit || '' });
                                                     setHasUnsavedChanges(true);
                                                     setIsEditingUrl(false);
                                                 }
                                                 if (e.key === 'Escape') {
-                                                    setUrlEdit(data.url ?? '');
+                                                    setUrlEdit(data.url || '');
                                                     setIsEditingUrl(false);
                                                 }
                                             }}
                                         />
                                         <button
                                             onClick={() => {
-                                                setData({ ...data, url: urlEdit || undefined });
+                                                setData({ ...data, url: urlEdit || '' });
                                                 setHasUnsavedChanges(true);
                                                 setIsEditingUrl(false);
                                             }}
@@ -473,7 +532,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                         size="sm"
                         onClick={() => handleSave(false)}
                         disabled={!hasUnsavedChanges || isSaving}
-                        className="gap-2 h-9 bg-brand-gradient hover:opacity-90 text-white border-0"
+                        className="gap-2 h-9 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
                     >
                         {isSaving ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Guardar Ahora
@@ -553,10 +612,17 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
 
                     {/* Typography */}
                     <TypographySection
-                        fonts={data.fonts || []}
+                        fonts={(data.fonts || []).map(f => typeof f === 'string' ? { family: f } : f)}
                         tagline={data.tagline || ''}
-                        onAddFont={(f) => updateData(prev => ({ ...prev, fonts: [...(prev.fonts || []), f] }))}
+                        onAddFont={(f) => updateData(prev => ({ ...prev, fonts: [...(prev.fonts || []), { family: f }] }))}
                         onRemoveFont={(idx) => updateData(prev => ({ ...prev, fonts: prev.fonts?.filter((_, i) => i !== idx) }))}
+                        onUpdateRole={(idx, role) => updateData(prev => ({
+                            ...prev,
+                            fonts: (prev.fonts || []).map((f, i) => {
+                                const fontObj = typeof f === 'string' ? { family: f } : f;
+                                return i === idx ? { ...fontObj, role } : f;
+                            })
+                        }))}
                     />
 
                     {/* Brand Assets */}
@@ -592,6 +658,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                                 business_overview: newTextAssets.brand_context || prev.business_overview
                             }));
                         }}
+                        onAppendData={handleAppendExtractedData}
                     />
                 </div>
 

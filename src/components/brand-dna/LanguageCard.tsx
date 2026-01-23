@@ -38,7 +38,7 @@ export function LanguageCard({ selectedLanguage = 'es', onLanguageChange }: Lang
                                 "flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-200",
                                 "border hover:scale-[1.02] active:scale-[0.98]",
                                 selectedLanguage === lang.code
-                                    ? "bg-brand-gradient text-white border-transparent shadow-aero-glow"
+                                    ? "bg-primary text-primary-foreground border-transparent shadow-aero-glow"
                                     : "bg-background/50 border-border hover:border-primary/50 hover:bg-primary/5"
                             )}
                         >

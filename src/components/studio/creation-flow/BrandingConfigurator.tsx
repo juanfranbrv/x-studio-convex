@@ -11,6 +11,7 @@ import {
     Loader2,
 } from 'lucide-react'
 import { HexColorPicker } from 'react-colorful'
+import Link from 'next/link'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -56,6 +57,8 @@ interface BrandingConfiguratorProps {
     onAddTextAsset?: (asset: TextAsset) => void
     onRemoveTextAsset?: (id: string) => void
     onUpdateTextAsset?: (id: string, value: string) => void
+    // Fonts
+    fonts?: Array<{ family: string; role?: 'heading' | 'body' }>
     // AI Generation
     rawMessage?: string
     onGenerateText?: (fieldType: string) => Promise<string>
@@ -164,10 +167,16 @@ interface TextAssetRowProps {
     onUpdate: (id: string, value: string) => void
     onRemove: (id: string) => void
     onGenerateText?: (fieldType: string) => Promise<string>
+    headingFont?: string
+    bodyFont?: string
 }
 
-function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, onGenerateText }: TextAssetRowProps) {
+function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, onGenerateText, headingFont, bodyFont }: TextAssetRowProps) {
     const [isGenerating, setIsGenerating] = useState(false)
+
+    const assetFont = asset.type === 'headline' || asset.type === 'cta' || asset.label.toLowerCase().includes('titulo')
+        ? headingFont
+        : bodyFont
 
     const handleGenerate = async () => {
         if (!onGenerateText || isGenerating) return
@@ -193,8 +202,9 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
                 <Input
                     value={asset.value}
                     onChange={(e) => onUpdate(asset.id, e.target.value)}
-                    className="h-7 text-xs pr-7"
+                    className="h-7 text-xs pr-7 transition-all focus:ring-1 focus:ring-primary/30"
                     placeholder={`Valor para ${asset.label}...`}
+                    style={{ fontFamily: assetFont ? `"${assetFont}", sans-serif` : undefined }}
                 />
                 {/* Fingerprint - Brand Kit Presets */}
                 <DropdownMenu>
@@ -258,6 +268,16 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
             >
                 <X className="w-3.5 h-3.5" />
             </button>
+
+            {/* Font Preview Indicator */}
+            {assetFont && asset.value && (
+                <div
+                    className="absolute -bottom-4 right-10 text-[10px] text-primary/60 font-medium italic pointer-events-none"
+                    style={{ fontFamily: `"${assetFont}", sans-serif` }}
+                >
+                    Vista previa: {asset.value.length > 25 ? asset.value.substring(0, 25) + '...' : asset.value}
+                </div>
+            )}
         </div>
     )
 }
@@ -278,10 +298,61 @@ export function BrandingConfigurator({
     onUpdateTextAsset,
     rawMessage = '',
     onGenerateText,
+    fonts: propFonts,
 }: BrandingConfiguratorProps) {
     const { activeBrandKit } = useBrandKit()
 
     const logos = activeBrandKit?.logos || []
+    const fonts = propFonts || activeBrandKit?.fonts || []
+
+    // Dynamically load Google Fonts if they are specified in the Brand Kit
+    useEffect(() => {
+        if (fonts.length === 0) return;
+
+        const familiesToLoad = fonts
+            .map(f => f.family)
+            .filter(f => f && f.toLowerCase() !== 'system' && f.toLowerCase() !== 'sans-serif');
+
+        if (familiesToLoad.length === 0) return;
+        const uniqueFamilies = Array.from(new Set(familiesToLoad));
+
+        // Create individual links for each font to be more resilient
+        // (if one font is not on Google Fonts, the others will still load)
+        const linkTags: HTMLLinkElement[] = [];
+
+        uniqueFamilies.forEach(family => {
+            const familyNormalized = family.replace(/\s+/g, '+');
+            const linkId = `font-${family.replace(/\s+/g, '-').toLowerCase()}`;
+            if (document.getElementById(linkId)) return;
+
+            const link = document.createElement('link');
+            link.id = linkId;
+            link.rel = 'stylesheet';
+            link.className = 'dynamic-brand-font';
+
+            // Hubot Sans is usually not on Google Fonts API directly under that name
+            // If it's Hubot Sans, we might need a different CDN or just pray it's local
+            // For others, use Google Fonts v2 with a flexible weight range
+            if (family.toLowerCase().includes('hubot')) {
+                link.href = `https://cdn.jsdelivr.net/npm/hubot-sans@1.0.1/dist/hubot-sans.min.css`;
+            } else {
+                // Simplest possible Google Fonts URL for maximum compatibility
+                link.href = `https://fonts.googleapis.com/css2?family=${familyNormalized}&display=swap`;
+            }
+
+            document.head.appendChild(link);
+            linkTags.push(link);
+        });
+
+        return () => {
+            // Optional: cleanup could go here, but keeping fonts loaded is usually fine for the session
+        };
+    }, [fonts]);
+
+    const headingFonts = fonts.filter(f => f.role === 'heading')
+    const bodyFonts = fonts.filter(f => f.role === 'body')
+    const unassignedFonts = fonts.filter(f => !f.role || (f.role !== 'heading' && f.role !== 'body'))
+
     // Base colors for the grid: All colors from Brand Kit + any custom colors added in session
     const brandKitColors = activeBrandKit?.colors || []
     const colors = [
@@ -423,6 +494,128 @@ export function BrandingConfigurator({
 
                         {/* Custom Color Adder - only show if less than 10 colors */}
                         {colors.length < 10 && <CustomColorPicker onAdd={onAddCustomColor} />}
+                    </div>
+                </div>
+            )}
+
+            {/* Typography Section */}
+            {fonts.length > 0 && (
+                <div className="space-y-3 pt-2 border-t border-border/10">
+                    <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                            <Type className="w-3 h-3 text-primary" />
+                            Tipografía
+                        </label>
+                        <Link
+                            href="/brand-kit"
+                            className="text-[9px] text-primary hover:underline font-medium bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10 transition-colors"
+                        >
+                            Editar en Kit
+                        </Link>
+                    </div>
+
+                    <div className="space-y-3 bg-muted/5 p-2 rounded-lg border border-border/20">
+                        {/* Heading Fonts */}
+                        {headingFonts.length > 0 && (
+                            <div className="space-y-1">
+                                <p className="text-[8px] uppercase font-bold text-muted-foreground/40 px-0.5">Titulares</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {headingFonts.map((font, idx) => (
+                                        <Badge
+                                            key={idx}
+                                            variant="outline"
+                                            className="text-[10px] font-medium bg-background/50 border-border/50 py-1 flex items-center gap-1.5"
+                                            style={{ fontFamily: `"${font.family}", sans-serif` }}
+                                        >
+                                            <span className="opacity-60 text-[8px] font-normal border-r border-border/50 pr-1.5">Aa</span>
+                                            {font.family}
+                                        </Badge>
+                                    ))}
+                                </div>
+                                {headingFonts[0] && (
+                                    <p
+                                        className="text-2xl md:text-3xl font-bold tracking-tighter text-foreground mt-4 px-0.5 leading-[1.05]"
+                                        style={{ fontFamily: `"${headingFonts[0].family}", sans-serif` }}
+                                    >
+                                        Explora nuevos universos visuales.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Body Fonts */}
+                        {bodyFonts.length > 0 && (
+                            <div className="space-y-1">
+                                <p className="text-[8px] uppercase font-bold text-muted-foreground/40 px-0.5">Párrafos</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {bodyFonts.map((font, idx) => (
+                                        <Badge
+                                            key={idx}
+                                            variant="outline"
+                                            className="text-[10px] font-medium bg-background/50 border-border/50 py-1 flex items-center gap-1.5"
+                                            style={{ fontFamily: `"${font.family}", sans-serif` }}
+                                        >
+                                            <span className="opacity-60 text-[8px] font-normal border-r border-border/50 pr-1.5">Aa</span>
+                                            {font.family}
+                                        </Badge>
+                                    ))}
+                                </div>
+                                {bodyFonts[0] && (
+                                    <p
+                                        className="text-base opacity-90 mt-3 px-0.5 leading-normal"
+                                        style={{ fontFamily: `"${bodyFonts[0].family}", sans-serif` }}
+                                    >
+                                        Diseño inteligente para marcas con propósito y visión de futuro.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Other Fonts */}
+                        {unassignedFonts.length > 0 && (
+                            <div className="space-y-1">
+                                <p className="text-[8px] uppercase font-bold text-muted-foreground/40 px-0.5">Otras fuentes</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {unassignedFonts.map((font, idx) => (
+                                        <Badge
+                                            key={idx}
+                                            variant="outline"
+                                            className="text-[10px] font-medium bg-background/50 border-border/50 py-1 flex items-center gap-1.5"
+                                            style={{ fontFamily: `"${font.family}", sans-serif` }}
+                                        >
+                                            <span className="opacity-60 text-[8px] font-normal border-r border-border/50 pr-1.5">Aa</span>
+                                            {font.family}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Brand Texts Section */}
+            {textAssets.length > 0 && (
+                <div className="space-y-3 pt-2 border-t border-border/10">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                        <Fingerprint className="w-3 h-3 text-primary" />
+                        Textos de Marca
+                    </label>
+
+                    <div className="space-y-6">
+                        {textAssets.map((asset) => (
+                            <TextAssetRow
+                                key={asset.id}
+                                asset={asset}
+                                textResources={[]} // Optional: could pass actual brand kit resources here if needed
+                                rawMessage={rawMessage}
+                                onUpdate={onUpdateTextAsset || (() => { })}
+                                onRemove={onRemoveTextAsset || (() => { })}
+                                onGenerateText={onGenerateText}
+                                headingFont={headingFonts[0]?.family}
+                                bodyFont={bodyFonts[0]?.family}
+                            />
+                        ))}
                     </div>
                 </div>
             )}
