@@ -9,7 +9,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { type ContextElement } from "@/app/image/page";
 import { cn } from '@/lib/utils';
 
-import { Palette, Info, RotateCcw, X, Pipette, Check, Plus } from 'lucide-react';
+import { Palette, Info, RotateCcw, X, Pipette, Check, Plus, Copy } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useTheme } from 'next-themes';
 import { hexToRgb, rgbToLab } from '@/lib/color-utils';
 
@@ -277,22 +278,36 @@ export function ColorPalette({
                                     </TooltipContent>
                                 </Tooltip>
 
-                                {!hideHeader && (
-                                    <div className="mt-2 space-y-1">
+                                <div className="mt-2 space-y-1">
+                                    {/* Always show high-visibility editable HEX input below (for desktop/manual edit) */}
+                                    <div className="relative group/hex-input">
+                                        <Input
+                                            value={item.color.toUpperCase()}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                // Basic sanitization and limit
+                                                if (val.length <= 7) {
+                                                    onUpdateColor(idx, val.startsWith('#') ? val : `#${val}`);
+                                                }
+                                            }}
+                                            className={cn(
+                                                "w-full h-8 text-[11px] font-mono text-center bg-muted/50 border-border/50 focus:border-primary/50 transition-all uppercase px-1 py-0 rounded-lg group-hover/hex-input:bg-muted"
+                                            )}
+                                        />
                                         <button
                                             onClick={() => copyToClipboard(item.color)}
-                                            className="w-full text-[10px] font-mono text-center px-1 py-1 rounded bg-muted hover:bg-muted/80 transition-colors relative group truncate border border-transparent hover:border-border"
+                                            className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/hex-input:opacity-100 transition-opacity p-1 hover:text-primary"
+                                            title="Copiar HEX"
                                         >
-                                            {item.color.toUpperCase()}
-                                            {copiedColor === item.color && (
-                                                <span className="absolute inset-0 flex items-center justify-center bg-primary text-white rounded text-[10px] font-bold">
-                                                    <Check className="w-2.5 h-2.5 mr-1" />
-                                                </span>
-                                            )}
+                                            <Copy className="w-3 h-3" />
                                         </button>
-                                        {/* Removed external role button */}
                                     </div>
-                                )}
+                                    {copiedColor === item.color && (
+                                        <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-primary/10 rounded-lg animate-in fade-in duration-300">
+                                            <Check className="w-3 h-3 text-primary" />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         ))}
                         {colors.length < 10 && (

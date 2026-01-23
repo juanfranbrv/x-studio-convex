@@ -42,268 +42,268 @@ export const ESCAPARATE_REQUIRED_FIELDS: IntentRequiredField[] = [
     }
 ]
 
-// 1. ESTUDIO - Classic Studio Photography
-export const ESCAPARATE_ESTUDIO_PROMPT = `
+// 1. ZEN - Minimalismo de Alta Gama (Espacio Negativo)
+export const ESCAPARATE_ZEN_PROMPT = `
 # Composition Type
-Classic Studio Hero Shot
+High-End Zen Minimalism (Negative Space)
 
 # Visual Hierarchy
-- **Primary**: The [PRODUCT] perfectly lit on an infinite sweep background
-- **Secondary**: Reflection on glossy floor surface creating depth
-- **Tertiary**: Subtle gradient lighting from one side
+- **Primary**: The [PRODUCT] placed at the lower-right rule-of-thirds intersection.
+- **Secondary**: A vast, clean background occupying 85% of the frame.
+- **Tertiary**: Subtle, hard-edged light shadow cast by an unseen source.
 
 # Zoning Guide
-- **Zone Product**: Center-weighted, product occupies 50-70% of frame
-- **Zone Info**: Clean lower third reserved for text
-- **Zone Negative**: Ample breathing room on sides
+- **Zone Product**: Small footprint (15-20% of canvas) in the bottom-right quadrant.
+- **Zone Repose**: Complete negative space in top and left sections.
+- **Zone Floor**: Shadow anchoring the product to the bottom edge.
 
 # Style Modifiers
-- **Texture**: Flawless product surface, no dust
-- **Lighting**: Three-point studio lighting (key, fill, rim)
-- **Palette**: Neutral background (white, gray, black)
+- **Atmosphere**: Quiet luxury, expensive, breathable.
+- **Lighting**: Single source, sharp shadows, high-end commercial feel.
+- **Palette**: Monochromatic or extremely muted tones.
 
 # Negative Constraints
-- **Avoid**: Harsh shadows, color casts, cluttered props
+- **Avoid**: Centered placement, cluttered backgrounds, soft diffused lighting.
 `
 
-// 2. PODIO - Elevated Pedestal Display
-export const ESCAPARATE_PODIO_PROMPT = `
+// 2. MARCO - Arquitectónico (Framing)
+export const ESCAPARATE_MARCO_PROMPT = `
 # Composition Type
-Elevated Pedestal Display
+Architectural Framing (U-Composition)
 
 # Visual Hierarchy
-- **Primary**: The [PRODUCT] elevated on a geometric podium
-- **Secondary**: Dramatic lighting casting long shadows
-- **Tertiary**: Thematic props floating or arranged at base
+- **Primary**: The [PRODUCT] centered in a luminous "window" of light.
+- **Secondary**: Structural or architectural elements framing the sides and top.
+- **Tertiary**: Deep shadows in the framing elements for contrast.
 
 # Zoning Guide
-- **Zone Stage**: Product on elevated platform
-- **Zone Props**: Supporting elements arranged around base
-- **Zone Backdrop**: Gradient or solid color background
+- **Zone Frame**: Borders (left, top, right) occupied by dark architectural structures.
+- **Zone Portal**: Bright, detailed center where the product resides.
+- **Zone Floor**: Mirrored or high-quality material floor.
 
 # Style Modifiers
-- **Texture**: Matte or glossy podium, raw materials props
-- **Lighting**: Single dramatic spotlight
-- **Palette**: Monochromatic base with brand accent highlights
+- **Atmosphere**: Brutalist, structured, high-fashion urbanity.
+- **Lighting**: Dramatic rim-lighting on the frame, volumetric light in center.
+- **Palette**: Dark grays and blacks with a single vibrant brand light source.
 
 # Negative Constraints
-- **Avoid**: Cheap plastic look, cluttered stage
+- **Avoid**: Natural/forest framing, irregular shapes, soft edges.
 `
 
-// 3. FLOTANTE - Levitating Product
-export const ESCAPARATE_FLOTANTE_PROMPT = `
+// 3. ESPIRAL - Flujo Áureo (Fibonacci)
+export const ESCAPARATE_ESPIRAL_PROMPT = `
 # Composition Type
-Levitating Product Hero
+Organic Fibonacci Spiral
 
 # Visual Hierarchy
-- **Primary**: The [PRODUCT] suspended in mid-air
-- **Secondary**: Soft shadow cast below indicating levitation
-- **Tertiary**: Subtle particles or light rays
+- **Primary**: The [PRODUCT] located at the focal point of a spiral.
+- **Secondary**: Flowing elements (smoke, liquid, fabric) tracing a Golden Ratio curve.
+- **Tertiary**: Soft particle highlights following the flow.
 
 # Zoning Guide
-- **Zone Float**: Product centered vertically with negative space
-- **Zone Shadow**: Drop shadow or reflection offset below
-- **Zone Atmosphere**: Volumetric light or particles
+- **Zone Focal**: Golden ratio intersection (top-right or bottom-left).
+- **Zone Flow**: Circular movement covering the entire diagonal.
+- **Zone Depth**: Background elements blurred along the spiral path.
 
 # Style Modifiers
-- **Texture**: Ultra-clean product surfaces, magical atmosphere
-- **Lighting**: Rim lighting emphasizing silhouette
-- **Palette**: Deep dark backgrounds or gradient voids
+- **Atmosphere**: Elegant, liquid, ethereal, sophisticated.
+- **Lighting**: Dreamy diffused light, glowing particles following the curve.
+- **Palette**: Soft gradients, transition between two brand colors.
 
 # Negative Constraints
-- **Avoid**: Visible supports, unnatural angles
+- **Avoid**: Rigid lines, geometric grids, static poses.
 `
 
-// 4. CONTEXTO - Lifestyle In-Use
-export const ESCAPARATE_CONTEXTO_PROMPT = `
+// 4. DIAGONAL - Cine (Triángulo Dorado)
+export const ESCAPARATE_DIAGONAL_PROMPT = `
 # Composition Type
-Contextual Lifestyle Shot
+Cinematic Diagonal (Golden Triangle)
 
 # Visual Hierarchy
-- **Primary**: The [PRODUCT] naturally integrated into real world
-- **Secondary**: Environmental elements telling a story
-- **Tertiary**: Atmospheric lighting matching context
+- **Primary**: The [PRODUCT] oriented along a strong diagonal axis.
+- **Secondary**: Action lines or light streaks crossing perpendicularly.
+- **Tertiary**: Speed blur in the background indicates motion.
 
 # Zoning Guide
-- **Zone Product**: Product in natural use position
-- **Zone Context**: Environmental details
-- **Zone Depth**: Background blur (bokeh)
+- **Zone Axis**: Main diagonal from bottom-left to top-right.
+- **Zone Counter**: Sub-elements in the opposing corners for balance.
+- **Zone Focus**: Sharpest focus at the diagonal's center.
 
 # Style Modifiers
-- **Texture**: Authentic materials, lived-in feel
-- **Lighting**: Natural or practical lights (window, sun)
-- **Palette**: Earth tones, lifestyle color grading
+- **Atmosphere**: Cinematic action, high-tech, energetic.
+- **Lighting**: Lens flares, strong side-lighting, anamorphic bokeh.
+- **Palette**: Contrast-heavy, teal and orange or high-saturation brand colors.
 
 # Negative Constraints
-- **Avoid**: Sterile studio feel, forced placement
+- **Avoid**: Vertical/Horizontal lines, static studio background.
 `
 
-// 5. MACRO - Close-Up Detail
-export const ESCAPARATE_MACRO_PROMPT = `
-# Composition Type
-Extreme Close-Up Detail Shot
-
-# Visual Hierarchy
-- **Primary**: Macro view of most impressive detail/texture
-- **Secondary**: Shallow depth of field bokeh
-- **Tertiary**: Subtle context hints
-
-# Zoning Guide
-- **Zone Focus**: Ultra-sharp focal plane on hero detail
-- **Zone Transition**: Gradual focus fall-off
-- **Zone Context**: Edge of frame hints at full object
-
-# Style Modifiers
-- **Texture**: Hyper-detailed surface rendering
-- **Lighting**: Side lighting strictly for texture
-- **Palette**: True-to-material colors
-
-# Negative Constraints
-- **Avoid**: Too abstract, noisy/grainy, flat lighting
-`
-
-// 6. SPLASH - Dynamic Motion
-export const ESCAPARATE_SPLASH_PROMPT = `
-# Composition Type
-Dynamic Splash/Motion Freeze
-
-# Visual Hierarchy
-- **Primary**: The [PRODUCT] caught mid-action (splash/explode)
-- **Secondary**: Frozen droplets or particles suspended
-- **Tertiary**: Motion trails or speed lines
-
-# Zoning Guide
-- **Zone Impact**: Point of action at visual center
-- **Zone Particles**: Splash radiating outward
-- **Zone Direction**: Diagonal or spiral flow
-
-# Style Modifiers
-- **Texture**: Crystal-clear liquid/particles
-- **Lighting**: High-speed flash freeze, high contrast
-- **Palette**: High saturation, energetic colors
-
-# Negative Constraints
-- **Avoid**: Static boring composition, messy chaos
-`
-
-// 7. ESPEJO - Mirror/Reflection
-export const ESCAPARATE_ESPEJO_PROMPT = `
-# Composition Type
-Mirror Reflection Composition
-
-# Visual Hierarchy
-- **Primary**: The [PRODUCT] and its perfect reflection
-- **Secondary**: Subtle infinity effect or gradient fade
-- **Tertiary**: Clean horizon line separating them
-
-# Zoning Guide
-- **Zone Real**: Upper 60% contains actual product
-- **Zone Reflection**: Lower 40% mirrored image
-- **Zone Horizon**: Seperation line
-
-# Style Modifiers
-- **Texture**:  Ultra-glossy reflective surface
-- **Lighting**: Minimal, focus on reflection highlights
-- **Palette**: Dark, luxurious backgrounds
-
-# Negative Constraints
-- **Avoid**: Distorted reflections, surface imperfections
-`
-
-// 8. CAPAS - Layered Arrangement
+// 5. CAPAS - Profundidad (Layering)
 export const ESCAPARATE_CAPAS_PROMPT = `
 # Composition Type
-Layered Depth Arrangement
+Deep Layered Depth (Foreground-Midground-Background)
 
 # Visual Hierarchy
-- **Primary**: Multiple components/instances in depth layers
-- **Secondary**: Foreground blur framing hero
-- **Tertiary**: Background elements creating variety
+- **Primary**: The [PRODUCT] in sharp focus in the middle plane.
+- **Secondary**: Out-of-focus elements in the immediate foreground creating "peek" effect.
+- **Tertiary**: Distant background elements providing context and scale.
 
 # Zoning Guide
-- **Zone Foreground**: Blurred partial product framing
-- **Zone Hero**: Main sharp product in middle ground
-- **Zone Background**: Supporting progressive blur
+- **Zone Peek**: Extreme edges (foreground) heavily blurred.
+- **Zone Hero**: Center focal plane (sharp).
+- **Zone Infinity**: Deep background with progressive blur.
 
 # Style Modifiers
-- **Texture**: Consistent finish across layers
-- **Lighting**: Graduated lighting, hero brightest
-- **Palette**: Color variations or monochrome
+- **Atmosphere**: Immersive, mysterious, high-end macro photography.
+- **Lighting**: Zonal lighting, hero layer is the brightest.
+- **Palette**: Layered tonal depth, subtle color shifts across planes.
 
 # Negative Constraints
-- **Avoid**: Confusing focus, flat arrangement
+- **Avoid**: Flat flat-lay look, uniform sharpness, lack of depth.
 `
 
-// 9. FLAT - Flat Lay Knolling
-export const ESCAPARATE_FLAT_PROMPT = `
+// 6. RADIAL - Explosión (Radial Symmetry)
+export const ESCAPARATE_RADIAL_PROMPT = `
 # Composition Type
-Top-Down Flat Lay (Knolling)
+Explosive Radial Symmetry
 
 # Visual Hierarchy
-- **Primary**: The [PRODUCT] from above, perfectly organized
-- **Secondary**: Accessories arranged with geometric precision
-- **Tertiary**: Textured background surface
+- **Primary**: [PRODUCT] as the absolute center of a visual explosion.
+- **Secondary**: Rays of light, debris, or brand elements radiating outwards.
+- **Tertiary**: Concentric rings of light or energy.
 
 # Zoning Guide
-- **Zone Hero**: Main product centered or offset
-- **Zone Accessories**: Items in 90-degree grid
-- **Zone Negative**: Precise spacing between elements
+- **Zone Core**: Central product focused and detailed.
+- **Zone Blast**: Radial motion outward from center to edges.
+- **Zone Glow**: Intense light source centered directly behind the product.
 
 # Style Modifiers
-- **Texture**: Tactile materials, patterns visible
-- **Lighting**: Soft diffused overhead light
-- **Palette**: Curated color palette, organized
+- **Atmosphere**: Epic, heroic, high-impact product launch.
+- **Lighting**: Intense backlighting (halo effect), starburst effects.
+- **Palette**: High contrast, vibrant energy, glowing materials.
 
 # Negative Constraints
-- **Avoid**: Messy, tilted angles, overlapping
+- **Avoid**: Offset placement, subtle lighting, static feeling.
 `
 
-// 10. SILUETA - Dramatic Silhouette
-export const ESCAPARATE_SILUETA_PROMPT = `
+// 7. SIMETRÍA - Monolito (Symmetrical)
+export const ESCAPARATE_SIMETRÍA_PROMPT = `
 # Composition Type
-Dramatic Backlit Silhouette
+Monolithic Symmetry
 
 # Visual Hierarchy
-- **Primary**: Bold silhouette against bright backdrop
-- **Secondary**: Rim lighting outlining edges
-- **Tertiary**: Gradient atmosphere background
+- **Primary**: [PRODUCT] placed in perfect vertical and horizontal center.
+- **Secondary**: Symmetrical supporting elements on both sides.
+- **Tertiary**: Centered horizon or grounding plane.
 
 # Zoning Guide
-- **Zone Silhouette**: Product recognizable iconic shape
-- **Zone Glow**: Intense light behind
-- **Zone Atmosphere**: Color gradient filling background
+- **Zone Hero**: Dead center.
+- **Zone Balance**: Equal weight on left and right halves.
+- **Zone Void**: Clean, symmetrical side gutters.
 
 # Style Modifiers
-- **Texture**: Sharp defined edges, iconic shape
-- **Lighting**: Strong backlight, high contrast
-- **Palette**: Bold gradient backgrounds (sunset, neon)
+- **Atmosphere**: Established, powerful, authoritative, divine.
+- **Lighting**: Perfectly balanced bilateral lighting.
+- **Palette**: Split-tone background, perfectly centered.
 
 # Negative Constraints
-- **Avoid**: Unrecognizable shape, washed out
+- **Avoid**: Rule of thirds, tilted angles, any form of imbalance.
 `
 
-// 11. PACK - Product Family/Collection
-export const ESCAPARATE_PACK_PROMPT = `
+// 8. CONTRASTE - Pop (Dynamic Asymmetry)
+export const ESCAPARATE_CONTRASTE_PROMPT = `
 # Composition Type
-Product Family Collection Display
+Dynamic Asymmetric Contrast (Pop)
 
 # Visual Hierarchy
-- **Primary**: Hero [PRODUCT] centrally positioned
-- **Secondary**: Family variants flanking hero
-- **Tertiary**: Unifying visual connection
+- **Primary**: [PRODUCT] detailed and realistic.
+- **Secondary**: A huge, bold geometric color block behind half the product.
+- **Tertiary**: Clean typography-ready areas with heavy "visual weight" on one side.
 
 # Zoning Guide
-- **Zone Hero**: Central product dominant scale
-- **Zone Family**: Supporting products left/right
-- **Zone Unity**: Shared ground plane
+- **Zone Bio**: 60% of frame is a bold color block.
+- **Zone Detail**: 40% is clean, showing product in high detail.
+- **Zone Interaction**: Where the product breaks the line between the two zones.
 
 # Style Modifiers
-- **Texture**: Consistent quality across products
-- **Lighting**: Even lighting, hero slightly brighter
-- **Palette**: Variety within unified brand aesthetic
+- **Atmosphere**: Modern, graphic, editorial, eye-catching.
+- **Lighting**: Flat graphic lighting mixed with 3D product rendering.
+- **Palette**: Complementary colors, bold saturation.
 
 # Negative Constraints
-- **Avoid**: Chaotic, no hierarchy, disconnected
+- **Avoid**: Soft gradients, realistic shadows, traditional photography look.
+`
+
+// 9. GOBO - Sombras Proyectadas (Shadow Play)
+export const ESCAPARATE_GOBO_PROMPT = `
+# Composition Type
+Cinematic Shadow Play (Gobo Lighting)
+
+# Visual Hierarchy
+- **Primary**: The [PRODUCT] partially obscured by complex, rhythmic shadows.
+- **Secondary**: Intricate patterns (palm leaves, window blinds, organic textures) projected on the background.
+- **Tertiary**: High-contrast light patches highlighting product features.
+
+# Zoning Guide
+- **Zone Light**: Strategic highlights on the main product logo or feature.
+- **Zone Texture**: Background completely covered by the projected shadow pattern.
+- **Zone Floor**: Sharp intersection where shadow meets the ground.
+
+# Style Modifiers
+- **Atmosphere**: Mysterious, tropical, high-end editorial, evocative.
+- **Lighting**: Hard directional light through a stencil (Gobo), high contrast.
+- **Palette**: Deep earth tones or warm sunset highlights against dark shadows.
+
+# Negative Constraints
+- **Avoid**: Flat lighting, soft shadows, uniform background colors.
+`
+
+// 10. LEVITACIÓN - Gravedad Cero (Suspended)
+export const ESCAPARATE_LEVITACION_PROMPT = `
+# Composition Type
+Zero-Gravity levitation
+
+# Visual Hierarchy
+- **Primary**: The [PRODUCT] tilted at a dynamic angle as if weightless.
+- **Secondary**: Exploded view or accompanying components floating nearby.
+- **Tertiary**: Subtle "invisible" force lines or light particles.
+
+# Zoning Guide
+- **Zone Suspension**: Product occupies the central vertical axis but avoids the floor.
+- **Zone Orbit**: Smaller elements or particles floating in a spiral around the hero.
+- **Zone Void**: Deep, dark, or extremely clean background to emphasize flight.
+
+# Style Modifiers
+- **Atmosphere**: Futuristic, magical, high-tech, clean.
+- **Lighting**: Rim-lighting to separate product from background, blue or cyan accents.
+- **Palette**: Cool tones, metallic finishes, dark void backgrounds.
+
+# Negative Constraints
+- **Avoid**: Ground planes, visible wires, heavy shadows on the floor.
+`
+
+// 11. BODEGÓN - Curaduría (Modern Still Life)
+export const ESCAPARATE_BODEGON_PROMPT = `
+# Composition Type
+Modern Still Life (Rule of Odds)
+
+# Visual Hierarchy
+- **Primary**: The [PRODUCT] as the anchor of a group of 3 or 5 objects.
+- **Secondary**: Carefully selected props (textures, raw materials) arranged in a triangle.
+- **Tertiary**: Overlapping shapes creating a sense of "arranged reality".
+
+# Zoning Guide
+- **Zone Cluster**: Objects grouped tightly in one section (e.g., center-left).
+- **Zone Breathing**: Empty space on the opposite side (e.g., right).
+- **Zone Surface**: Tactile material floor (marble, wood, rough concrete).
+
+# Style Modifiers
+- **Atmosphere**: Curated, artisanal, sophisticated, balanced.
+- **Lighting**: Soft side-lighting (Rembrandt style), gentle focus fall-off.
+- **Palette**: Harmonious color story, tone-on-tone textures.
+
+# Negative Constraints
+- **Avoid**: Chaotic placement, even numbers of objects, generic backgrounds.
 `
 
 export const ESCAPARATE_LAYOUTS: LayoutOption[] = [
@@ -317,102 +317,102 @@ export const ESCAPARATE_LAYOUTS: LayoutOption[] = [
         structuralPrompt: '',
     },
     {
-        id: 'escaparate-estudio',
-        name: 'Estudio',
-        description: 'Fotografía clásica',
+        id: 'escaparate-zen',
+        name: 'Zen',
+        description: 'Minimalismo de lujo',
         svgIcon: 'Target',
         textZone: 'bottom',
-        promptInstruction: 'Classic studio hero shot with infinite sweep background.',
-        structuralPrompt: ESCAPARATE_ESTUDIO_PROMPT,
+        promptInstruction: 'Zen-like minimalist composition with heavy negative space.',
+        structuralPrompt: ESCAPARATE_ZEN_PROMPT,
     },
     {
-        id: 'escaparate-podio',
-        name: 'Podio',
-        description: 'Pedestal elegante',
+        id: 'escaparate-marco',
+        name: 'Marco',
+        description: 'Enmarcado arquitectónico',
         svgIcon: 'Box',
         textZone: 'bottom',
-        promptInstruction: 'Product elevated on geometric podium with thematic props.',
-        structuralPrompt: ESCAPARATE_PODIO_PROMPT,
+        promptInstruction: 'Architectural framing with structural shadows.',
+        structuralPrompt: ESCAPARATE_MARCO_PROMPT,
     },
     {
-        id: 'escaparate-flotante',
-        name: 'Flotante',
-        description: 'Levitación',
+        id: 'escaparate-espiral',
+        name: 'Espiral',
+        description: 'Flujo Áureo Fibonacci',
         svgIcon: 'Wind',
         textZone: 'bottom',
-        promptInstruction: 'Product suspended in mid-air with soft shadow below.',
-        structuralPrompt: ESCAPARATE_FLOTANTE_PROMPT,
+        promptInstruction: 'Organic movement following a Fibonacci spiral flow.',
+        structuralPrompt: ESCAPARATE_ESPIRAL_PROMPT,
     },
     {
-        id: 'escaparate-contexto',
-        name: 'Contexto',
-        description: 'Lifestyle',
+        id: 'escaparate-diagonal',
+        name: 'Diagonal',
+        description: 'Perspectiva dinámica',
         svgIcon: 'Sun',
         textZone: 'center',
-        promptInstruction: 'Product integrated naturally into a real-world setting.',
-        structuralPrompt: ESCAPARATE_CONTEXTO_PROMPT,
-    },
-    {
-        id: 'escaparate-macro',
-        name: 'Macro',
-        description: 'Primerísimo plano',
-        svgIcon: 'ZoomIn',
-        textZone: 'bottom',
-        promptInstruction: 'Extreme macro close-up of product details.',
-        structuralPrompt: ESCAPARATE_MACRO_PROMPT,
-    },
-    {
-        id: 'escaparate-splash',
-        name: 'Splash',
-        description: 'Dinámico',
-        svgIcon: 'Droplets',
-        textZone: 'center',
-        promptInstruction: 'Dynamic splash or motion freeze mid-action.',
-        structuralPrompt: ESCAPARATE_SPLASH_PROMPT,
-    },
-    {
-        id: 'escaparate-espejo',
-        name: 'Espejo',
-        description: 'Reflejo',
-        svgIcon: 'Copy',
-        textZone: 'bottom',
-        promptInstruction: 'Product with perfect reflection on glossy surface.',
-        structuralPrompt: ESCAPARATE_ESPEJO_PROMPT,
+        promptInstruction: 'Dynamic cinematic diagonal axis composition.',
+        structuralPrompt: ESCAPARATE_DIAGONAL_PROMPT,
     },
     {
         id: 'escaparate-capas',
-        name: 'Capas',
-        description: 'Profundidad',
+        name: 'Profundidad',
+        description: 'Capas desenfocadas',
         svgIcon: 'Layers',
-        textZone: 'center',
-        promptInstruction: 'Layered arrangement with foreground blur.',
+        textZone: 'bottom',
+        promptInstruction: 'Immersive layered composition with foreground and background blur.',
         structuralPrompt: ESCAPARATE_CAPAS_PROMPT,
     },
     {
-        id: 'escaparate-flat',
-        name: 'Flat Lay',
-        description: 'Cenital',
+        id: 'escaparate-radial',
+        name: 'Radial',
+        description: 'Explosión de luz',
+        svgIcon: 'Droplets',
+        textZone: 'center',
+        promptInstruction: 'High-impact radial symmetry explosion effect.',
+        structuralPrompt: ESCAPARATE_RADIAL_PROMPT,
+    },
+    {
+        id: 'escaparate-simetria',
+        name: 'Monolito',
+        description: 'Simetría perfecta',
+        svgIcon: 'Copy',
+        textZone: 'bottom',
+        promptInstruction: 'Perfectly centered monolithic symmetry.',
+        structuralPrompt: ESCAPARATE_SIMETRÍA_PROMPT,
+    },
+    {
+        id: 'escaparate-contraste',
+        name: 'Contraste',
+        description: 'Estilo Pop/Editorial',
         svgIcon: 'Grid',
         textZone: 'center',
-        promptInstruction: 'Top-down organized knolling layout.',
-        structuralPrompt: ESCAPARATE_FLAT_PROMPT,
+        promptInstruction: 'Graphic asymmetric color blocking pop-art contrast.',
+        structuralPrompt: ESCAPARATE_CONTRASTE_PROMPT,
     },
     {
-        id: 'escaparate-silueta',
-        name: 'Silueta',
-        description: 'Contraluz',
+        id: 'escaparate-gobo',
+        name: 'Sombras',
+        description: 'Juego de luces Proyectadas',
         svgIcon: 'Moon',
-        textZone: 'center',
-        promptInstruction: 'Dramatic backlit silhouette against bright background.',
-        structuralPrompt: ESCAPARATE_SILUETA_PROMPT,
+        textZone: 'bottom',
+        promptInstruction: 'Cinematic shadow play with intricate Gobo lighting patterns.',
+        structuralPrompt: ESCAPARATE_GOBO_PROMPT,
     },
     {
-        id: 'escaparate-pack',
-        name: 'Pack',
-        description: 'Colección',
-        svgIcon: 'Package', // Changed from Packages (assuming Lucide Package)
+        id: 'escaparate-levitacion',
+        name: 'Levitación',
+        description: 'Gravedad Cero',
+        svgIcon: 'Wind',
         textZone: 'bottom',
-        promptInstruction: 'Product family collection with hero centered.',
-        structuralPrompt: ESCAPARATE_PACK_PROMPT,
+        promptInstruction: 'Futuristic zero-gravity suspension with floating elements.',
+        structuralPrompt: ESCAPARATE_LEVITACION_PROMPT,
+    },
+    {
+        id: 'escaparate-bodegon',
+        name: 'Bodegón',
+        description: 'Curaduría moderna',
+        svgIcon: 'Package',
+        textZone: 'center',
+        promptInstruction: 'Sophisticated modern still life with curated props.',
+        structuralPrompt: ESCAPARATE_BODEGON_PROMPT,
     },
 ]

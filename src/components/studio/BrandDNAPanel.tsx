@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import Link from 'next/link'
 import type { BrandDNA } from '@/lib/brand-types'
 import { ColorPalette } from '@/components/brand-dna/ColorPalette'
 import { useBrandKit } from '@/contexts/BrandKitContext'
@@ -164,6 +165,11 @@ export function BrandDNAPanel({
     }, [])
 
     const { colors = [], fonts = [], brand_name, logo_url, logos = [], tone_of_voice = [], tagline, brand_values = [], visual_aesthetic = [], url, social_links = [], emails = [], phones = [], addresses = [] } = data
+
+    // Group fonts by role
+    const headingFonts = fonts.filter((f: any) => typeof f === 'object' && f.role === 'heading')
+    const bodyFonts = fonts.filter((f: any) => typeof f === 'object' && f.role === 'body')
+    const unassignedFonts = fonts.filter((f: any) => typeof f === 'string' || (typeof f === 'object' && f.role !== 'heading' && f.role !== 'body'))
 
     // Handlers for ColorPalette
     const handleAddColor = () => {
@@ -864,17 +870,69 @@ export function BrandDNAPanel({
                             icon={Type}
                             title="Tipografía"
                             isOpen={openSections.typography}
+                            extra={
+                                <Link href="/brand-kit" className="text-[9px] text-primary hover:underline flex items-center gap-1 font-medium bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
+                                    Editar en Kit
+                                </Link>
+                            }
                         />
                         <CollapsibleContent>
-                            <div className="flex flex-wrap gap-1.5 p-1.5 bg-muted/10 rounded-lg">
-                                {fonts.length > 0 ? fonts.map((font, idx) => (
-                                    <DraggableChip
-                                        key={`font-${idx}`}
-                                        {...chipProps(`font-${idx}`, 'font', font, font)}
-                                        icon={Type}
-                                    />
-                                )) : (
-                                    <p className="text-[9px] text-muted-foreground/50 italic p-1">Sin tipografías detectadas</p>
+                            <div className="space-y-3 p-2 bg-muted/10 rounded-xl border border-border/30">
+                                {/* Headlines */}
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between px-0.5">
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50">Titulares</p>
+                                        {headingFonts.length === 0 && <span className="text-[8px] text-muted-foreground/30 italic">No asignado</span>}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {headingFonts.map((font, idx) => (
+                                            <DraggableChip
+                                                key={`heading-font-${idx}`}
+                                                {...chipProps(`font-heading-${idx}`, 'font', font.family, font.family)}
+                                                icon={Type}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Body / Paragraphs */}
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between px-0.5">
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50">Párrafos</p>
+                                        {bodyFonts.length === 0 && <span className="text-[8px] text-muted-foreground/30 italic">No asignado</span>}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {bodyFonts.map((font, idx) => (
+                                            <DraggableChip
+                                                key={`body-font-${idx}`}
+                                                {...chipProps(`font-body-${idx}`, 'font', font.family, font.family)}
+                                                icon={Type}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Other unassigned fonts if any (legacy or just not assigned roles) */}
+                                {unassignedFonts.length > 0 && (
+                                    <div className="space-y-1 pt-1 border-t border-border/20">
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Otras fuentes</p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {unassignedFonts.map((font, idx) => {
+                                                const family = typeof font === 'string' ? font : font.family
+                                                return (
+                                                    <DraggableChip
+                                                        key={`other-font-${idx}`}
+                                                        {...chipProps(`font-other-${idx}`, 'font', family, family)}
+                                                        icon={Type}
+                                                    />
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {fonts.length === 0 && (
+                                    <p className="text-[9px] text-muted-foreground/50 italic p-1 text-center">Sin tipografías detectadas</p>
                                 )}
                             </div>
                         </CollapsibleContent>

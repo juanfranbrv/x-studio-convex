@@ -108,6 +108,10 @@ export function ControlsPanel({
         clearBrandKitImages,
         reset,
         loadPreset,
+        // Text Assets Management
+        addTextAsset,
+        removeTextAsset,
+        updateTextAsset,
     } = creationFlow
 
     // Función para añadir color personalizado
@@ -116,6 +120,7 @@ export function ControlsPanel({
     }
 
     // Brand kit images for selector - use URL as ID for consistent matching
+<<<<<<< HEAD
     const brandKitImages = (activeBrandKit?.images || []).map((img, idx) => {
         const imageUrl = typeof img === 'string' ? img : img.url
         return {
@@ -124,6 +129,20 @@ export function ControlsPanel({
             name: `Imagen ${idx + 1}`
         }
     })
+=======
+    // Deduplicate to avoid React key issues if URLs are repeated
+    const brandKitImages = (activeBrandKit?.images || []).reduce((acc: Array<{ id: string; url: string; name?: string }>, img, idx) => {
+        const imageUrl = typeof img === 'string' ? img : img.url
+        if (imageUrl && !acc.find(i => i.url === imageUrl)) {
+            acc.push({
+                id: imageUrl,
+                url: imageUrl,
+                name: `Imagen ${idx + 1}`
+            })
+        }
+        return acc
+    }, [])
+>>>>>>> main
 
     // Maximum number of presets allowed
     const MAX_PRESETS = 6
@@ -395,6 +414,13 @@ export function ControlsPanel({
                                     onAddCustomColor={handleAddCustomColor}
                                     showLogo={true}
                                     showColors={true}
+                                    // Text Assets
+                                    textAssets={state.selectedTextAssets}
+                                    onAddTextAsset={addTextAsset}
+                                    onRemoveTextAsset={removeTextAsset}
+                                    onUpdateTextAsset={updateTextAsset}
+                                    // Fonts (automatic from activeBrandKit inside BrandingConfigurator)
+                                    rawMessage={promptValue}
                                 />
                             </div>
                         </>

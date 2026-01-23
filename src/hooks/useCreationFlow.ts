@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { generateFieldCopy as getAICopy } from '@/app/actions/generate-copy'
 import {
     type IntentGroup,
@@ -57,6 +57,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const saveGeneration = useMutation(api.generations.saveGeneration)
     const aiConfig = useQuery(api.settings.getAIConfig)
     const [state, setState] = useState<GenerationState>(INITIAL_GENERATION_STATE)
+    const optionsRef = useRef(options)
+
+    // Keep options reference up to date to avoid stale closures in callbacks
+    useEffect(() => {
+        optionsRef.current = options
+    }, [options])
 
     // -------------------------------------------------------------------------
     // COMPUTED VALUES (Moved to top for callback access)
@@ -262,8 +268,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 uploadedImageFiles: [...prev.uploadedImageFiles, file],
             }))
 
-            if (options?.onImageUploaded) {
-                options.onImageUploaded(file)
+            if (optionsRef.current?.onImageUploaded) {
+                optionsRef.current.onImageUploaded(file)
             }
 
             // Call Vision API
@@ -890,14 +896,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // PRIORITY 9 - BRAND DNA & MANDATORY TEXT
         // ═══════════════════════════════════════════════════════════════
         const brandDNA: string[] = []
-        const toneCount = activeBrandKit?.tone_of_voice?.length ?? 0
-        const aestheticCount = activeBrandKit?.visual_aesthetic?.length ?? 0
+        const hasTone = (activeBrandKit?.tone_of_voice?.length ?? 0) > 0
 
-        if (toneCount > 0) {
-            brandDNA.push(
-                P09.PRIORITY_HEADER,
-                ``
-            )
+        if (hasTone) {
+            brandDNA.push(P09.PRIORITY_HEADER, ``)
 
             brandDNA.push(`BRAND TONE: ${activeBrandKit!.tone_of_voice.join(', ')}`)
 
@@ -1107,31 +1109,49 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             colorsToUse = activeState.selectedBrandColors
         } else if (activeBrandKit?.colors) {
             // Default to brand kit colors if nothing explicitly selected in Imagen
-            // Map legacy brand colors to SelectedColor format
             colorsToUse = (activeBrandKit.colors as any[]).map(c => ({
                 color: c.color || c.hex || (typeof c === 'string' ? c : ''),
-                role: (['Texto', 'Fondo', 'Acento'].includes(c.role as string) ? c.role : 'Acento') as ColorRole
+                role: c.role || 'Acento'
             })).filter(c => c.color)
         }
 
         if (colorsToUse.length > 0) {
-            sections.push(P04.PRIORITY_HEADER) // P31 is alias for P4 in this file? Wait, check imports.
+            sections.push(P04.PRIORITY_HEADER)
             sections.push(`Below is the STRICT color palette for this generation. Use these specific values and respect their assigned semantic roles:`)
             sections.push(``)
 
             // Group by role for better AI clarity
-            const roles: ColorRole[] = ['Texto', 'Fondo', 'Acento']
-            roles.forEach(role => {
-                const group = colorsToUse.filter(c => c.role === role)
+            const coreRoles = ['Fondo', 'Texto', 'Acento'] as const
+            const usedColors = new Set<string>()
+
+            // 1. Group Core Roles (with smart mapping for Principal -> Fondo)
+            coreRoles.forEach(role => {
+                const group = colorsToUse.filter(c => {
+                    const normalizedRole = (c.role as string) === 'Principal' ? 'Fondo' : c.role
+                    return normalizedRole === role
+                })
+
                 if (group.length > 0) {
                     const label = (P04.ROLE_LABELS as any)[role] || role.toUpperCase()
                     sections.push(`### ${label}`)
                     group.forEach(c => {
                         sections.push(`- ${c.color}`)
+                        usedColors.add(c.color.toLowerCase())
                     })
                     sections.push(``)
                 }
             })
+
+            // 2. Group Extras (any colors not yet listed)
+            const extras = colorsToUse.filter(c => !usedColors.has(c.color.toLowerCase()))
+            if (extras.length > 0) {
+                sections.push(`### 🎨 EXTRA / SECONDARY COLORS`)
+                extras.forEach(c => {
+                    const displayRole = (P04.ROLE_LABELS as any)[c.role] || c.role || 'Secondary'
+                    sections.push(`- ${c.color} (${displayRole})`)
+                })
+                sections.push(``)
+            }
 
             sections.push(P04.COLOR_USAGE_GUIDELINES)
             sections.push(``)
@@ -1307,8 +1327,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
     const reset = useCallback(() => {
         setState({ ...INITIAL_GENERATION_STATE, caption: '' }) // NEW: Reset caption
-        options?.onReset?.()
-    }, [options])
+        optionsRef.current?.onReset?.()
+    }, [])
 
     // -------------------------------------------------------------------------
     // PRESETS

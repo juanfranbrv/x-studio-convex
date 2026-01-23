@@ -83,7 +83,7 @@ export const upsertBrandDNA = mutation({
         tone_of_voice: v.array(v.string()),
         visual_aesthetic: v.array(v.string()),
         colors: v.any(),
-        fonts: v.array(v.string()),
+        fonts: v.array(v.any()),
         text_assets: v.optional(v.any()),
         logo_url: v.optional(v.string()),
         logos: v.optional(v.any()), // array of logo objects
@@ -221,7 +221,7 @@ export const updateBrandDNADoc = mutation({
             tone_of_voice: v.optional(v.array(v.string())),
             visual_aesthetic: v.optional(v.array(v.string())),
             colors: v.optional(v.any()), // array ok
-            fonts: v.optional(v.array(v.string())),
+            fonts: v.optional(v.array(v.any())),
             logo_url: v.optional(v.string()),
             logos: v.optional(v.any()), // array of objects
             favicon_url: v.optional(v.string()),

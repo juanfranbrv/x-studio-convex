@@ -157,7 +157,7 @@ export interface SelectedColor {
     role: ColorRole
 }
 
-export type TextAssetType = 'cta' | 'tagline' | 'url' | 'custom'
+export type TextAssetType = 'cta' | 'tagline' | 'url' | 'hook' | 'custom'
 
 export interface TextAsset {
     id: string
@@ -533,7 +533,7 @@ export const DEFAULT_LAYOUTS: LayoutOption[] = [
 // SOCIAL MEDIA FORMATS
 // -----------------------------------------------------------------------------
 
-export type SocialPlatform = 'instagram' | 'facebook' | 'linkedin' | 'tiktok' | 'whatsapp' | 'youtube'
+export type SocialPlatform = 'instagram' | 'facebook' | 'linkedin' | 'tiktok' | 'whatsapp' | 'youtube' | 'x'
 
 export interface SocialFormat {
     id: string
@@ -580,39 +580,152 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
     },
     // Facebook
     {
-        id: 'fb-post',
+        id: 'fb-cover',
         platform: 'facebook',
-        name: 'Post Estándar',
+        name: 'Foto de Portada',
+        aspectRatio: '2.7:1',
+        description: '851 x 315 px',
+        icon: 'Facebook'
+    },
+    {
+        id: 'fb-feed-v',
+        platform: 'facebook',
+        name: 'Feed Vertical',
+        aspectRatio: '4:5',
+        description: '1080 x 1350 px',
+        icon: 'Facebook'
+    },
+    {
+        id: 'fb-feed-h',
+        platform: 'facebook',
+        name: 'Feed Horizontal',
         aspectRatio: '1.91:1',
-        description: 'Optimizado para Facebook',
+        description: '1200 x 630 px',
+        icon: 'Facebook'
+    },
+    {
+        id: 'fb-stories',
+        platform: 'facebook',
+        name: 'Stories y Reels',
+        aspectRatio: '9:16',
+        description: '1080 x 1920 px',
+        icon: 'Facebook'
+    },
+    {
+        id: 'fb-event',
+        platform: 'facebook',
+        name: 'Portada de Evento',
+        aspectRatio: '1.91:1',
+        description: '1200 x 628 px',
         icon: 'Facebook'
     },
     // LinkedIn
     {
-        id: 'li-post',
+        id: 'li-bg-personal',
         platform: 'linkedin',
-        name: 'Post Profesional',
-        aspectRatio: '1.2:1',
-        description: 'Feed de noticias LinkedIn',
+        name: 'Fondo Personal',
+        aspectRatio: '4:1',
+        description: '1584 x 396 px',
+        icon: 'Linkedin'
+    },
+    {
+        id: 'li-cover-company',
+        platform: 'linkedin',
+        name: 'Portada Empresa',
+        aspectRatio: '5.9:1',
+        description: '1128 x 191 px',
+        icon: 'Linkedin'
+    },
+    {
+        id: 'li-post-link',
+        platform: 'linkedin',
+        name: 'Post Imagen/Enlace',
+        aspectRatio: '1.91:1',
+        description: '1200 x 627 px',
         icon: 'Linkedin'
     },
     // TikTok
     {
         id: 'tt-video',
         platform: 'tiktok',
-        name: 'Video / Ad',
+        name: 'Video Vertical',
         aspectRatio: '9:16',
-        description: 'Formato inmersivo vertical',
+        description: '1080 x 1920 px',
+        icon: 'Tiktok'
+    },
+    {
+        id: 'tt-carousel',
+        platform: 'tiktok',
+        name: 'Imagen Carrusel',
+        aspectRatio: '9:16',
+        description: '1080 x 1920 px',
+        icon: 'Tiktok'
+    },
+    {
+        id: 'tt-carousel-sq',
+        platform: 'tiktok',
+        name: 'Carrusel Cuadrado',
+        aspectRatio: '1:1',
+        description: '1080 x 1080 px',
         icon: 'Tiktok'
     },
     // WhatsApp
     {
         id: 'wa-status',
         platform: 'whatsapp',
-        name: 'Estado',
+        name: 'Estados',
         aspectRatio: '9:16',
-        description: 'Estado de WhatsApp',
+        description: '1080 x 1920 px',
         icon: 'MessageCircle'
+    },
+    {
+        id: 'wa-chat-sq',
+        platform: 'whatsapp',
+        name: 'Imagen Chat (Cuadrado)',
+        aspectRatio: '1:1',
+        description: '800 x 800 px',
+        icon: 'MessageCircle'
+    },
+    {
+        id: 'wa-chat-v',
+        platform: 'whatsapp',
+        name: 'Imagen Chat (Vertical)',
+        aspectRatio: '9:16',
+        description: '1080 x 1920 px',
+        icon: 'MessageCircle'
+    },
+    {
+        id: 'wa-catalog',
+        platform: 'whatsapp',
+        name: 'Catálogo Business',
+        aspectRatio: '1:1',
+        description: '500 x 500 px',
+        icon: 'MessageCircle'
+    },
+    // X (Twitter)
+    {
+        id: 'x-header',
+        platform: 'x',
+        name: 'Foto de Encabezado',
+        aspectRatio: '3:1',
+        description: '1500 x 500 px',
+        icon: 'Twitter'
+    },
+    {
+        id: 'x-post-single',
+        platform: 'x',
+        name: 'Post Imagen Única',
+        aspectRatio: '16:9',
+        description: '1600 x 900 px',
+        icon: 'Twitter'
+    },
+    {
+        id: 'x-post-multi',
+        platform: 'x',
+        name: 'Post Varias Imágenes',
+        aspectRatio: '16:9',
+        description: '1200 x 675 px',
+        icon: 'Twitter'
     },
     // YouTube
     {

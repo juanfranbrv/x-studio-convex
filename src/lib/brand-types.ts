@@ -17,7 +17,7 @@ export interface BrandDNA {
     tone_of_voice: string[];
     visual_aesthetic: string[];
     colors: { color: string; sources: string[]; score: number; role?: string; selected?: boolean }[];
-    fonts: string[];
+    fonts: { family: string; role?: 'heading' | 'body' }[];
     logo_url?: string;
     logos?: { url: string; selected?: boolean }[];
     favicon_url?: string;

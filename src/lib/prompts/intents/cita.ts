@@ -95,23 +95,22 @@ const CITA_TIPOGRAFIA_PROMPT = `
 Tipografía pequeña, tratamiento suave, layouts convencionales.
 `
 
-const CITA_MARCO_PROMPT = `
-## Composición: Cita Enmarcada Clásica
-
-**Estructura:** Cita protegida por un borde ornamental o geométrico.
+const CITA_POP_STICKER_PROMPT = `
+## Composición: Pop Sticker Art
+**Estructura:** Diseño vibrante y lúdico estilo "sticker bomb" con elementos gráficos dispersos y bordes gruesos.
 
 ### Jerarquía Visual
-1. **Principal:** Borde enmarcando toda la composición
-2. **Secundario:** Espacio central limpio para el texto
-3. **Terciario:** Atribución elegante al fondo dentro del marco
+1. **Principal:** La cita con tipografía display "bubble" o "bold heavy" con contornos negros muy marcados y sombra paralela sólida (block shadow).
+2. **Secundario:** Iconos tipo doodle (café, reloj, corazones, estrellas, flores) rodeando el texto como si fueran pegatinas.
+3. **Terciario:** Fondo con degradado suave pastel o color sólido vibrante que haga resaltar los bordes blancos de los "stickers".
 
 ### Distribución
-- Marco perimetral (8-12% del canvas)
-- Espacio interior protegido para la cita
-- Autor centrado en la base del espacio interior
+- Texto centralizado o apilado dinámicamente.
+- Elementos decorativos (doodles) en los márgenes y huecos entre palabras.
+- Cada elemento (texto e iconos) tiene un borde blanco exterior (die-cut effect) y un contorno negro interior.
 
 ### Evitar
-Estética moderna rota, marcos asimétricos, layouts abiertos.
+Estética seria, líneas finas, falta de contornos, composiciones vacías o minimalistas.
 `
 
 const CITA_TEXTURA_PROMPT = `
@@ -292,15 +291,15 @@ export const CITA_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
         promptInstruction: 'Typography as the main visual element.',
         structuralPrompt: CITA_TIPOGRAFIA_PROMPT,
     },
-    // 4. MARCO
+    // 4. POP STICKER (Anterior Marco)
     {
         id: 'cita-frame',
-        name: 'Marco',
-        description: 'Enmarcado',
-        svgIcon: 'Frame',
+        name: 'Pop Sticker',
+        description: 'Doodles & Contornos',
+        svgIcon: 'Sticker',
         textZone: 'center',
-        promptInstruction: 'Quote inside an elegant border.',
-        structuralPrompt: CITA_MARCO_PROMPT,
+        promptInstruction: 'Playful sticker-bomb layout with bold outlined typography and doodles.',
+        structuralPrompt: CITA_POP_STICKER_PROMPT,
     },
     // 5. TEXTURA
     {

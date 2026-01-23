@@ -55,7 +55,7 @@ export function BrandAssets({
         setEditingItem({ section, index });
         setEditValue(value);
         setOriginalValue(value);
-        setShowSuggestions(section === 'aesthetic'); // Only show for aesthetic
+        setShowSuggestions(false); // DO NOT open by default anymore
     };
 
     const handleSaveEdit = () => {
@@ -117,17 +117,19 @@ export function BrandAssets({
                     isEditing ? "bg-background border-primary ring-1 ring-primary z-20" : "bg-muted/20 border-border hover:shadow-md hover:border-primary/30"
                 )}>
                     {isEditing ? (
-                        <div className="flex-1 flex items-center gap-2 relative">
+                        <div
+                            className="flex-1 flex items-center gap-2 relative"
+                            onClick={(e) => e.stopPropagation()}
+                        >
                             <Input
                                 value={editValue}
                                 onChange={(e) => {
                                     setEditValue(e.target.value);
-                                    if (isAesthetic) setShowSuggestions(true);
+                                    // Only show suggestions if typing, but don't force it to open if it was closed
                                 }}
-                                onFocus={() => isAesthetic && setShowSuggestions(true)}
                                 className="flex-1 h-7 text-sm bg-transparent border-none focus-visible:ring-0 px-0"
                                 autoFocus
-                                placeholder={isAesthetic ? "Busca un estilo o escribe uno nuevo..." : "Escribe aquí..."}
+                                placeholder={isAesthetic ? "Escribe un estilo..." : "Escribe aquí..."}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') handleSaveEdit();
                                     if (e.key === 'Escape') {
@@ -137,10 +139,33 @@ export function BrandAssets({
                                 }}
                             />
 
+                            {isAesthetic && (
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className={cn(
+                                        "h-6 w-6 p-0 hover:bg-primary/10",
+                                        showSuggestions && "text-primary bg-primary/5"
+                                    )}
+                                    onClick={() => setShowSuggestions(!showSuggestions)}
+                                    title="Ver catálogo de estilos"
+                                >
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                </Button>
+                            )}
+
                             <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-green-500/10" onClick={handleSaveEdit}>
                                 <Check className="w-4 h-4 text-green-500" />
                             </Button>
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-red-500/10" onClick={() => setEditingItem(null)}>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 hover:bg-red-500/10"
+                                onClick={() => {
+                                    setEditingItem(null);
+                                    setShowSuggestions(false);
+                                }}
+                            >
                                 <X className="w-4 h-4 text-red-500" />
                             </Button>
                         </div>
@@ -249,9 +274,23 @@ export function BrandAssets({
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="group relative p-3 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all">
+                    <div
+                        className={cn(
+                            "group relative p-3 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-pointer",
+                            isEditingTagline && "cursor-default"
+                        )}
+                        onClick={() => {
+                            if (!isEditingTagline) {
+                                setTaglineEdit(tagline);
+                                setIsEditingTagline(true);
+                            }
+                        }}
+                    >
                         {isEditingTagline ? (
-                            <div className="flex items-center gap-2">
+                            <div
+                                className="flex items-center gap-2"
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 <Input
                                     value={taglineEdit}
                                     onChange={(e) => setTaglineEdit(e.target.value)}

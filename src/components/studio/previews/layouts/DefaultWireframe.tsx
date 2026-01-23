@@ -1,6 +1,6 @@
 import { LayoutProps } from './types'
 import { IntentCategory } from '@/lib/creation-flow-types'
-import { AlignCenter, Image as ImageIcon } from 'lucide-react'
+import { AlignCenter } from 'lucide-react'
 
 interface DefaultWireframeProps extends LayoutProps {
     intent: IntentCategory
@@ -17,13 +17,9 @@ export function DefaultWireframe({ image, texts, intent, brandColors }: DefaultW
 
             {/* Dynamic Content Center */}
             <div className="relative z-10 space-y-6 max-w-[80%]">
-                {image ? (
+                {image && (
                     <div className="w-full aspect-video bg-zinc-100 rounded-lg overflow-hidden shadow-sm">
                         <img src={image} className="w-full h-full object-cover" alt="Preview" />
-                    </div>
-                ) : (
-                    <div className="w-24 h-24 mx-auto bg-zinc-50 rounded-2xl flex items-center justify-center border border-zinc-200">
-                        <ImageIcon className="text-zinc-300 w-8 h-8" />
                     </div>
                 )}
 

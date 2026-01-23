@@ -13,12 +13,16 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { Megaphone, Tag, MousePointerClick, FileText, Pencil, Info, Check, X, Trash2, Plus } from 'lucide-react';
+import { Megaphone, Tag, MousePointerClick, FileText, Pencil, Info, Check, X, Trash2, Plus, Upload, Loader2, Sparkles } from 'lucide-react';
+import { analyzeBrandFile } from '@/app/actions/analyze-brand-file';
+import { ExtractionPreviewModal } from './ExtractionPreviewModal';
+import { useToast } from '@/hooks/use-toast';
 
 
 interface TextAssetsSectionProps {
     data?: TextAssets;
     onChange?: (data: TextAssets) => void;
+    onAppendData?: (extractedData: any) => void;
 }
 
 // Datos de ejemplo por defecto
@@ -50,7 +54,7 @@ const SECTION_TOOLTIPS = {
     brand_context: "Descripción del negocio que ayuda a la IA a entender qué estás vendiendo y generar contenido relevante."
 };
 
-export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
+export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSectionProps) {
     // Merge incoming data with defaults to ensure all arrays exist
     const mergeWithDefaults = (incoming?: TextAssets): TextAssets => ({
         marketing_hooks: incoming?.marketing_hooks ?? DEFAULT_DATA.marketing_hooks,
@@ -62,6 +66,10 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
     const [assets, setAssets] = useState<TextAssets>(mergeWithDefaults(data));
     const [editingItem, setEditingItem] = useState<{ section: keyof TextAssets; index: number } | null>(null);
     const [editValue, setEditValue] = useState('');
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [showExtractionModal, setShowExtractionModal] = useState(false);
+    const [extractedData, setExtractedData] = useState<any>(null);
+    const { toast } = useToast();
 
     // Sincronizar estado interno cuando cambian los props (para edición bidireccional)
     useEffect(() => {
@@ -158,9 +166,20 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
         setEditValue: (v: string) => void;
         sectionType?: 'marketing_hooks' | 'ctas' | 'visual_keywords';
     }) => (
-        <div className="group relative flex items-center gap-2 p-2.5 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all">
+        <div
+            className={cn(
+                "group relative flex items-center gap-2 p-2.5 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-pointer",
+                isEditing && "cursor-default"
+            )}
+            onClick={() => {
+                if (!isEditing) onEdit();
+            }}
+        >
             {isEditing ? (
-                <div className="flex-1 flex items-start gap-2">
+                <div
+                    className="flex-1 flex items-start gap-2"
+                    onClick={(e) => e.stopPropagation()} // Prevent closing edit mode if clicking inside
+                >
                     <textarea
                         value={editValue}
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -222,14 +241,64 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
     return (
         <Card className="glass-panel border-0 shadow-none relative overflow-visible">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--accent)]/10 to-transparent rounded-full blur-3xl" />
-            <CardHeader className="relative pb-3">
-                <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                    <FileText className="w-5 h-5 text-primary" />
-                    Activos de texto
-                </CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">
-                    Textos editables para campañas y generación de contenido
-                </p>
+            <CardHeader className="relative pb-3 flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+                        <FileText className="w-5 h-5 text-primary" />
+                        Activos de texto
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Textos editables para campañas y generación de contenido
+                    </p>
+                </div>
+
+                <div className="flex gap-2">
+                    <input
+                        type="file"
+                        id="brand-file-upload"
+                        className="hidden"
+                        accept=".pdf,.txt,.md"
+                        onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+
+                            setIsAnalyzing(true);
+                            const formData = new FormData();
+                            formData.append('file', file);
+
+                            try {
+                                const result = await analyzeBrandFile(formData);
+                                if (result.success && result.data) {
+                                    setExtractedData(result.data);
+                                    setShowExtractionModal(true);
+                                } else {
+                                    toast({
+                                        title: "Error al analizar",
+                                        description: result.error || "No se pudo procesar el archivo.",
+                                        variant: "destructive"
+                                    });
+                                }
+                            } catch (err) {
+                                console.error(err);
+                            } finally {
+                                setIsAnalyzing(false);
+                                e.target.value = ''; // Reset
+                            }
+                        }}
+                    />
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-2 bg-primary/5 border-primary/20 hover:bg-primary/10 text-primary cursor-pointer"
+                        disabled={isAnalyzing}
+                        asChild
+                    >
+                        <label htmlFor="brand-file-upload">
+                            {isAnalyzing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                            Importar desde Archivo
+                        </label>
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent className="relative space-y-6 pt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -298,6 +367,19 @@ export function TextAssetsSection({ data, onChange }: TextAssetsSectionProps) {
 
                 </div>
             </CardContent>
+
+            <ExtractionPreviewModal
+                open={showExtractionModal}
+                onOpenChange={setShowExtractionModal}
+                data={extractedData}
+                onConfirm={(selectedData) => {
+                    onAppendData?.(selectedData);
+                    toast({
+                        title: "Kit actualizado",
+                        description: "Los activos seleccionados se han añadido a tu kit de marca."
+                    });
+                }}
+            />
         </Card>
     );
 }

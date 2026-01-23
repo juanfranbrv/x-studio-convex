@@ -14,6 +14,8 @@ RECURSOS ARRASTRADOS (PRIORIDAD TOTAL):
 
 {{layoutReferencePart}}
 
+{{typographyInstructions}}
+
 SOLICITUD DEL USUARIO:
 "{{userPrompt}}"
 

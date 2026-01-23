@@ -47,6 +47,8 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
     });
     const [isEditingBrandName, setIsEditingBrandName] = useState(false);
     const [brandNameEdit, setBrandNameEdit] = useState(initialData.brand_name);
+    const [isEditingUrl, setIsEditingUrl] = useState(false);
+    const [urlEdit, setUrlEdit] = useState(initialData.url || '');
     const [showDebug, setShowDebug] = useState(isDebug);
 
     const handleSave = async (isAuto = false) => {
@@ -281,6 +283,65 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         downloadAnchorNode.remove();
     };
 
+    const handleAppendExtractedData = (extracted: any) => {
+        updateData(prev => {
+            const newState = { ...prev };
+
+            // Merge arrays by appending and de-duplicating strings
+            const mergeArray = (key: string, items: string[]) => {
+                if (!items || items.length === 0) return (prev as any)[key];
+                const current = (prev as any)[key] || [];
+                const combined = [...current, ...items];
+                return [...new Set(combined)];
+            };
+
+            if (extracted.brand_values) newState.brand_values = mergeArray('brand_values', extracted.brand_values);
+            if (extracted.tone_of_voice) newState.tone_of_voice = mergeArray('tone_of_voice', extracted.tone_of_voice);
+            if (extracted.visual_aesthetic) newState.visual_aesthetic = mergeArray('visual_aesthetic', extracted.visual_aesthetic);
+            if (extracted.target_audience) newState.target_audience = mergeArray('target_audience', extracted.target_audience);
+            if (extracted.emails) newState.emails = mergeArray('emails', extracted.emails);
+            if (extracted.phones) newState.phones = mergeArray('phones', extracted.phones);
+            if (extracted.preferred_language) newState.preferred_language = extracted.preferred_language;
+
+            // For brand_name and tagline, only update if they were empty or very short
+            if (extracted.brand_name && (!prev.brand_name || prev.brand_name.length < 3)) {
+                newState.brand_name = extracted.brand_name;
+            }
+            if (extracted.tagline && (!prev.tagline || prev.tagline.length < 3)) {
+                newState.tagline = extracted.tagline;
+            }
+
+            // Text assets merging
+            if (extracted.text_assets) {
+                const currentText = prev.text_assets || { marketing_hooks: [], visual_keywords: [], ctas: [], brand_context: '' };
+                newState.text_assets = {
+                    marketing_hooks: [...new Set([...(currentText.marketing_hooks || []), ...(extracted.text_assets.marketing_hooks || [])])],
+                    visual_keywords: currentText.visual_keywords, // No extracted by this schema
+                    ctas: [...new Set([...(currentText.ctas || []), ...(extracted.text_assets.ctas || [])])],
+                    brand_context: extracted.text_assets.brand_context || currentText.brand_context
+                };
+
+                if (extracted.text_assets.brand_context) {
+                    newState.business_overview = extracted.text_assets.brand_context;
+                }
+            }
+
+            // Social links merging
+            if (extracted.social_links) {
+                const currentLinks = prev.social_links || [];
+                const newLinks = [...currentLinks];
+                extracted.social_links.forEach((link: any) => {
+                    if (!currentLinks.some(l => l.url === link.url)) {
+                        newLinks.push(link);
+                    }
+                });
+                newState.social_links = newLinks;
+            }
+
+            return newState;
+        });
+    };
+
     return (
         <div className="space-y-8 pb-12">
             {/* Header / Save Status */}
@@ -367,20 +428,80 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                                     Sincronizado
                                 </div>
                             )}
-                            {/* Website URL display */}
-                            {data.url && (
-                                <>
-                                    <span className="text-muted-foreground/40">·</span>
-                                    <a
-                                        href={data.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xs text-primary/70 hover:text-primary transition-colors truncate max-w-[200px]"
-                                    >
-                                        {data.url.replace(/^https?:\/\//, '')}
-                                    </a>
-                                </>
-                            )}
+                            {/* Website URL display / Edit */}
+                            <span className="text-muted-foreground/40">·</span>
+                            <div className="flex items-center gap-1.5 group/url">
+                                {isEditingUrl ? (
+                                    <div className="flex items-center gap-1.5">
+                                        <Input
+                                            value={urlEdit}
+                                            onChange={(e) => setUrlEdit(e.target.value)}
+                                            placeholder="Añadir sitio web..."
+                                            className="text-xs h-7 px-2 w-[180px] border-primary"
+                                            autoFocus
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    setData({ ...data, url: urlEdit || '' });
+                                                    setHasUnsavedChanges(true);
+                                                    setIsEditingUrl(false);
+                                                }
+                                                if (e.key === 'Escape') {
+                                                    setUrlEdit(data.url || '');
+                                                    setIsEditingUrl(false);
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                setData({ ...data, url: urlEdit || '' });
+                                                setHasUnsavedChanges(true);
+                                                setIsEditingUrl(false);
+                                            }}
+                                            className="p-1 rounded hover:bg-muted"
+                                        >
+                                            <Check className="w-3.5 h-3.5 text-green-500" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setUrlEdit(data.url || '');
+                                                setIsEditingUrl(false);
+                                            }}
+                                            className="p-1 rounded hover:bg-muted"
+                                        >
+                                            <X className="w-3.5 h-3.5 text-red-500" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {data.url ? (
+                                            <a
+                                                href={data.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs text-primary/70 hover:text-primary transition-colors truncate max-w-[200px]"
+                                            >
+                                                {data.url.replace(/^https?:\/\//, '')}
+                                            </a>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground/50 italic">Sin sitio web</span>
+                                        )}
+                                        <button
+                                            onClick={() => {
+                                                setUrlEdit(data.url ?? '');
+                                                setIsEditingUrl(true);
+                                            }}
+                                            className="opacity-0 group-hover/url:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
+                                            title={data.url ? "Editar URL" : "Añadir URL"}
+                                        >
+                                            {data.url ? (
+                                                <Pencil className="w-3 h-3 text-muted-foreground hover:text-primary" />
+                                            ) : (
+                                                <Plus className="w-3 h-3 text-muted-foreground hover:text-primary" />
+                                            )}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -411,7 +532,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                         size="sm"
                         onClick={() => handleSave(false)}
                         disabled={!hasUnsavedChanges || isSaving}
-                        className="gap-2 h-9 bg-brand-gradient hover:opacity-90 text-white border-0"
+                        className="gap-2 h-9 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
                     >
                         {isSaving ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Guardar Ahora
@@ -422,10 +543,10 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             {/* NEW LAYOUT IMPLEMENTATION */}
 
             {/* Top Section: Branding & Screenshot */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
                 {/* Left Column: Identities & Palette */}
-                <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4 h-[200px]">
+                <div className="space-y-10">
+                    <div className="grid grid-cols-2 gap-8">
                         <LogoCard
                             logoUrl={data.logo_url}
                             logos={data.logos}
@@ -471,7 +592,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             </div>
 
             {/* Two-Column Layout: Content Cards (Left) + Image Gallery (Right) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
                 {/* Left Column: All Content/Info Cards */}
                 <div className="space-y-6">
                     {/* Language Selection */}
@@ -491,10 +612,17 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
 
                     {/* Typography */}
                     <TypographySection
-                        fonts={data.fonts || []}
+                        fonts={(data.fonts || []).map(f => typeof f === 'string' ? { family: f } : f)}
                         tagline={data.tagline || ''}
-                        onAddFont={(f) => updateData(prev => ({ ...prev, fonts: [...(prev.fonts || []), f] }))}
+                        onAddFont={(f) => updateData(prev => ({ ...prev, fonts: [...(prev.fonts || []), { family: f }] }))}
                         onRemoveFont={(idx) => updateData(prev => ({ ...prev, fonts: prev.fonts?.filter((_, i) => i !== idx) }))}
+                        onUpdateRole={(idx, role) => updateData(prev => ({
+                            ...prev,
+                            fonts: (prev.fonts || []).map((f, i) => {
+                                const fontObj = typeof f === 'string' ? { family: f } : f;
+                                return i === idx ? { ...fontObj, role } : f;
+                            })
+                        }))}
                     />
 
                     {/* Brand Assets */}
@@ -530,6 +658,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                                 business_overview: newTextAssets.brand_context || prev.business_overview
                             }));
                         }}
+                        onAppendData={handleAppendExtractedData}
                     />
                 </div>
 
