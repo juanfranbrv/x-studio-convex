@@ -52,6 +52,8 @@ interface BrandingConfiguratorProps {
     onAddCustomColor: (color: string) => void
     showLogo?: boolean
     showColors?: boolean
+    showTypography?: boolean
+    showBrandTexts?: boolean
     // Text Assets
     textAssets?: TextAsset[]
     onAddTextAsset?: (asset: TextAsset) => void
@@ -292,6 +294,8 @@ export function BrandingConfigurator({
     onAddCustomColor,
     showLogo = true,
     showColors = true,
+    showTypography = true,
+    showBrandTexts = true,
     textAssets = [],
     onAddTextAsset,
     onRemoveTextAsset,
@@ -499,7 +503,7 @@ export function BrandingConfigurator({
             )}
 
             {/* Typography Section */}
-            {fonts.length > 0 && (
+            {showTypography && fonts.length > 0 && (
                 <div className="space-y-3 pt-2 border-t border-border/10">
                     <div className="flex items-center justify-between">
                         <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
@@ -595,7 +599,7 @@ export function BrandingConfigurator({
             )}
 
             {/* Brand Texts Section */}
-            {textAssets.length > 0 && (
+            {showBrandTexts && textAssets.length > 0 && (
                 <div className="space-y-3 pt-2 border-t border-border/10">
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                         <Fingerprint className="w-3 h-3 text-primary" />

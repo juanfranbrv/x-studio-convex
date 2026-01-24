@@ -762,6 +762,7 @@ export interface GenerationState {
     // Step 0: Platform and Format
     selectedPlatform: SocialPlatform | null
     selectedFormat: string | null // SocialFormat ID
+    currentStep: number // 1-based index for the linear creation flow
 
     // Step 1: Intent
     selectedGroup: IntentGroup | null
@@ -817,6 +818,7 @@ export interface GenerationState {
 export const INITIAL_GENERATION_STATE: GenerationState = {
     selectedPlatform: null, // Changed: was 'instagram'
     selectedFormat: null,   // Changed: was 'ig-square'
+    currentStep: 1,
     selectedGroup: null,
     selectedIntent: null,
     selectedSubMode: null,

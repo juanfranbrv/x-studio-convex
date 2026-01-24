@@ -4,4 +4,5 @@ export interface LayoutProps {
     logoId: string | null
     texts: Record<string, string>
     aspectRatio: number
+    isGhost?: boolean
 }

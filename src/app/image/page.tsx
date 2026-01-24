@@ -45,6 +45,8 @@ export interface ContextElement {
     label?: string
 }
 
+
+
 export default function ImagePage() {
     const router = useRouter()
     const { user } = useUser()
@@ -503,7 +505,7 @@ export default function ImagePage() {
             isFixed={true}
         >
             {activeBrandKit ? (
-                <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex-1 flex flex-col overflow-hidden relative">
                     {/* TOP AREA: 2 Columns */}
                     <div className={cn(
                         "flex-1 flex overflow-hidden min-h-0",

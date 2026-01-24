@@ -1,10 +1,11 @@
 import { LayoutProps } from './types'
 import { cn } from '@/lib/utils'
 
-export function ImpactoComercial({ image, texts, brandColors, aspectRatio }: LayoutProps) {
+export function ImpactoComercial({ image, texts, brandColors, aspectRatio, isGhost }: LayoutProps) {
     // Default colors if none selected
-    const mainColor = brandColors[0] || '#000000'
-    const accentColor = brandColors[1] || '#FF0000'
+    const mainColor = isGhost ? '#f4f4f5' : (brandColors[0] || '#000000') // zinc-100
+    const accentColor = isGhost ? '#d4d4d8' : (brandColors[1] || '#FF0000') // zinc-300
+    const ghostTextBase = '#e4e4e7' // zinc-200
 
     // Texts
     const headline = texts['headline'] || 'GRAN OFERTA'
@@ -13,12 +14,12 @@ export function ImpactoComercial({ image, texts, brandColors, aspectRatio }: Lay
     const footer = texts['footer'] || 'www.tienda.com'
 
     return (
-        <div className="w-full h-full relative overflow-hidden flex flex-col pointer-events-none select-none">
+        <div className="w-full h-full relative overflow-hidden flex flex-col pointer-events-none select-none bg-white">
             {/* Background Diagonal Split */}
             <div
                 className="absolute inset-0 z-0"
                 style={{
-                    background: `linear-gradient(135deg, ${mainColor} 0%, ${mainColor} 40%, #f3f4f6 40%, #f3f4f6 100%)`
+                    background: `linear-gradient(135deg, ${mainColor} 0%, ${mainColor} 40%, #ffffff 40%, #ffffff 100%)`
                 }}
             />
 
@@ -31,8 +32,11 @@ export function ImpactoComercial({ image, texts, brandColors, aspectRatio }: Lay
                         alt="Product"
                     />
                 ) : (
-                    <div className="w-full h-full bg-black/5 border-2 border-dashed border-black/10 rounded-xl flex items-center justify-center">
-                        <span className="text-xs font-mono text-black/30">PRODUCT HERO</span>
+                    <div className={cn(
+                        "w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center",
+                        isGhost ? "bg-zinc-50 border-zinc-200" : "bg-black/5 border-black/10"
+                    )}>
+                        {!isGhost && <span className="text-xs font-mono text-black/30">PRODUCT HERO</span>}
                     </div>
                 )}
             </div>
@@ -40,38 +44,57 @@ export function ImpactoComercial({ image, texts, brandColors, aspectRatio }: Lay
             {/* Eyebrow Label */}
             <div className="absolute top-8 left-8 z-20">
                 <div
-                    className="px-3 py-1 text-xs font-bold uppercase tracking-widest text-white shadow-sm rotate-[-2deg]"
+                    className="px-3 py-1 shadow-sm rotate-[-2deg]"
                     style={{ backgroundColor: accentColor }}
                 >
-                    {eyebrow}
+                    {isGhost ? (
+                        <div className="h-2 w-12 rounded bg-white/50" />
+                    ) : (
+                        <span className="text-xs font-bold uppercase tracking-widest text-white">{eyebrow}</span>
+                    )}
                 </div>
             </div>
 
             {/* Discount Badge */}
             <div className="absolute top-1/4 right-8 z-30">
                 <div
-                    className="w-24 h-24 rounded-full flex items-center justify-center text-white font-black text-2xl shadow-lg rotate-12"
+                    className="w-24 h-24 rounded-full flex items-center justify-center shadow-lg rotate-12"
                     style={{ backgroundColor: accentColor }}
                 >
-                    <span className="text-center leading-none transform -rotate-12">{discount}</span>
+                    {isGhost ? (
+                        <div className="w-12 h-12 rounded-full bg-white/30" />
+                    ) : (
+                        <span className="text-center leading-none transform -rotate-12 text-white font-black text-2xl">{discount}</span>
+                    )}
                 </div>
             </div>
 
             {/* Headline (Big Impact) */}
-            <div className="absolute bottom-20 left-0 right-0 z-30 px-8 text-center">
-                <h1
-                    className="text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-black to-zinc-800 drop-shadow-sm"
-                    style={{
-                        WebkitTextStroke: '1px white'
-                    }}
-                >
-                    {headline}
-                </h1>
+            <div className="absolute bottom-20 left-0 right-0 z-30 px-8 text-center flex flex-col items-center">
+                {isGhost ? (
+                    <div className="space-y-2 w-full flex flex-col items-center">
+                        <div className="h-8 w-[80%] rounded bg-zinc-200" />
+                        <div className="h-8 w-[60%] rounded bg-zinc-200" />
+                    </div>
+                ) : (
+                    <h1
+                        className="text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-black to-zinc-800 drop-shadow-sm"
+                        style={{
+                            WebkitTextStroke: '1px white'
+                        }}
+                    >
+                        {headline}
+                    </h1>
+                )}
             </div>
 
             {/* Footer */}
-            <div className="absolute bottom-4 inset-x-0 text-center z-20">
-                <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">{footer}</p>
+            <div className="absolute bottom-4 inset-x-0 text-center z-20 flex justify-center">
+                {isGhost ? (
+                    <div className="h-1.5 w-24 rounded bg-zinc-200" />
+                ) : (
+                    <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">{footer}</p>
+                )}
             </div>
         </div>
     )

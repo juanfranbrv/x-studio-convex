@@ -8,9 +8,10 @@ import { ComunicadoOficial } from './layouts/ComunicadoOficial'
 interface WireframeRendererProps {
     state: GenerationState
     aspectRatio: number
+    isGhost?: boolean
 }
 
-export function WireframeRenderer({ state, aspectRatio }: WireframeRendererProps) {
+export function WireframeRenderer({ state, aspectRatio, isGhost }: WireframeRendererProps) {
     const { selectedLayout, selectedIntent } = state
 
     // If no intent is selected, show nothing or a generic "Select Intent" state
@@ -25,17 +26,16 @@ export function WireframeRenderer({ state, aspectRatio }: WireframeRendererProps
 
     // Common props for all layouts
     const props = {
-        image: null, // Temporarily removed to avoid clutter as per user request
+        image: null,
         brandColors: state.selectedBrandColors.map(c => c.color),
         logoId: state.selectedLogoId,
         texts: {
-            // Hiding text in wireframe because we now have the TextLayersEditor overlay
             headline: '',
             cta: '',
-            // Also hide custom texts from the wireframe
             ...Object.keys(state.customTexts).reduce((acc, k) => ({ ...acc, [k]: '' }), {})
         },
-        aspectRatio
+        aspectRatio,
+        isGhost
     }
 
     // Layout Router

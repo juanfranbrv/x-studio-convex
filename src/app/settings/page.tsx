@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
     const { brandKits, activeBrandKit, setActiveBrandKit } = useBrandKit();
-    const { panelPosition, setPanelPosition } = useUI();
+    const { panelPosition, setPanelPosition, assistanceEnabled, setAssistanceEnabled } = useUI();
     const { signOut } = useClerk();
     const { user } = useUser();
     const [isSaving, setIsSaving] = useState(false);
@@ -258,33 +258,19 @@ export default function SettingsPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            <Separator />
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
-                                    <Label htmlFor="panel-position">Posición del Panel de Controles</Label>
+                                    <Label htmlFor="guided-assistance">Asistencia Guiada</Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Mueve el panel de controles a la izquierda o derecha
+                                        Muestra consejos y explicaciones paso a paso al crear imágenes
                                     </p>
                                 </div>
-                                <div className="flex bg-muted p-1 rounded-lg">
-                                    <button
-                                        onClick={() => setPanelPosition('left')}
-                                        className={cn(
-                                            "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                                            panelPosition === 'left' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                                        )}
-                                    >
-                                        Izquierda
-                                    </button>
-                                    <button
-                                        onClick={() => setPanelPosition('right')}
-                                        className={cn(
-                                            "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                                            panelPosition === 'right' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                                        )}
-                                    >
-                                        Derecha
-                                    </button>
-                                </div>
+                                <Switch
+                                    id="guided-assistance"
+                                    checked={assistanceEnabled}
+                                    onCheckedChange={setAssistanceEnabled}
+                                />
                             </div>
                         </CardContent>
                     </Card>

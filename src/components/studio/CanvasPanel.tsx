@@ -53,6 +53,7 @@ import { GeneratedCopyCard } from './GeneratedCopyCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { generateSocialPost } from '@/app/actions/generate-social-post'
 import { WireframeRenderer } from './previews/WireframeRenderer'
+import { CanvasGhostOverlay } from './creation-flow/CanvasGhostOverlay'
 import { GenerationState, TextAsset } from '@/lib/creation-flow-types'
 
 export interface Generation {
@@ -663,9 +664,18 @@ export function CanvasPanel({
                             )}
                         </AnimatePresence>
 
+                        {/* GHOST WIREFRAME BACKGROUND - Shows the selected layout structure */}
+                        {creationState?.selectedLayout && !isGenerating && !currentImage && (
+                            <CanvasGhostOverlay
+                                layoutId={creationState.selectedLayout}
+                                className="z-30 opacity-60 bg-white/50 backdrop-blur-[2px]"
+                            />
+                        )}
+
+                        {/* Main Content Area */}
                         {currentImage ? (
-                            <div className="relative w-full h-full overflow-hidden rounded-sm bg-background/50">
-                                <div className="w-full h-full flex items-center justify-center">
+                            <div className="relative w-full h-full overflow-hidden rounded-sm z-20">
+                                <div className="w-full h-full flex items-center justify-center text-center">
                                     <motion.div
                                         key={currentImage}
                                         initial={wasJustGenerated ? { opacity: 0, filter: 'blur(20px)' } : { opacity: 1, filter: 'blur(0px)' }}
@@ -702,13 +712,15 @@ export function CanvasPanel({
                                 </div>
                             </div>
                         ) : creationState ? (
-                            <WireframeRenderer
-                                state={creationState}
-                                aspectRatio={(() => {
-                                    const [w, h] = aspectRatio.split(':').map(Number);
-                                    return w / h;
-                                })()}
-                            />
+                            <div className="relative w-full h-full z-10">
+                                <WireframeRenderer
+                                    state={creationState}
+                                    aspectRatio={(() => {
+                                        const [w, h] = aspectRatio.split(':').map(Number);
+                                        return w / h;
+                                    })()}
+                                />
+                            </div>
                         ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
                                 <div className="w-16 h-16 rounded-2xl bg-white/50 dark:bg-zinc-800/50 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm">

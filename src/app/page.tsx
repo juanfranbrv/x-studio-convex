@@ -103,12 +103,12 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
     <div className="relative min-h-screen flex flex-col">
       {/* Header / Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between glass-card px-6 py-3 border-white/10 shadow-sm transition-all duration-300 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-gradient flex items-center justify-center shadow-lg transform rotate-3">
-              <Bot className="w-6 h-6 text-white" />
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-6 transition-all duration-300">
+          <div className="flex items-center gap-4 group">
+            <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+              <Bot className="w-8 h-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)]" />
             </div>
-            <span className="text-xl font-bold font-heading tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <span className="text-xl font-bold font-heading tracking-tight opacity-90">
               X Studio
             </span>
           </div>
@@ -134,14 +134,11 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
         <div className="absolute bottom-20 left-10 w-[500px] h-[500px] bg-secondary/15 blur-[150px] rounded-full pointer-events-none -z-10" />
 
         <div className="max-w-4xl mx-auto py-12 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-fade-in border-white/10 shadow-sm">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-xs font-semibold tracking-wide uppercase">El Futuro del Diseño de Marca</span>
-          </div>
+
 
           <h1 className="text-5xl md:text-7xl font-bold font-heading mb-6 leading-[1.1] tracking-tight text-balance text-foreground">
             Tu Director Creativo <br />
-            <span className="bg-brand-gradient bg-clip-text text-transparent italic px-2">
+            <span className="text-primary italic px-2">
               con Inteligencia de Marca
             </span>
           </h1>
@@ -151,8 +148,7 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
             Coherencia visual total impulsada por un motor inteligente.
           </p>
 
-          <div className="max-w-xl mx-auto relative group">
-            <div className="absolute -inset-1 bg-brand-gradient rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+          <div className="max-w-xl mx-auto relative">
             <div className="glass-card relative p-8 md:p-10 border-white/20 shadow-2xl backdrop-blur-xl">
               {hasAccess ? (
                 <div className="space-y-6">
@@ -162,7 +158,7 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
                   </div>
                   <p className="text-muted-foreground">Tu cuenta está lista para empezar a crear assets de impacto.</p>
                   <Link href="/image" className="block">
-                    <Button className="w-full bg-brand-gradient text-white h-14 text-lg font-bold rounded-2xl shadow-lg hover:shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-all">
+                    <Button className="w-full bg-primary text-primary-foreground h-14 text-lg font-bold rounded-2xl shadow-md hover:scale-[1.02] active:scale-95 transition-all">
                       Entrar al Studio <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </Link>
@@ -203,7 +199,7 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
                       <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="bg-brand-gradient text-white h-14 px-8 text-lg font-bold rounded-2xl shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-50"
+                        className="bg-primary text-primary-foreground h-14 px-8 text-lg font-bold rounded-2xl shadow-md transition-all disabled:opacity-50"
                       >
                         {isSubmitting ? (
                           <Loader2 className="w-6 h-6 animate-spin" />

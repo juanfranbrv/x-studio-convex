@@ -143,6 +143,48 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [activeBrandKit, lastInitBrandId, state.selectedBrandColors.length, state.selectedTextAssets.length])
 
     // -------------------------------------------------------------------------
+    // CRITICAL: SEQUENTIAL FLOW ENFORCER
+    // -------------------------------------------------------------------------
+    // This effect acts as a safety net to prevent "ghost" steps from appearing.
+    // If the step count is high but the required selections for previous steps
+    // are missing, it forcefully pulls the step count back.
+    useEffect(() => {
+        let correctedStep = state.currentStep
+
+        // If at Step 3 (Format) or higher, we MUST have a Layout (Step 2)
+        if (state.currentStep > 2 && !state.selectedLayout) {
+            correctedStep = 2
+        }
+        // If at Step 4 (Image) or higher, we MUST have a Format (Step 3)
+        // (Note: Format requires Platform, so checking Format is enough)
+        else if (state.currentStep > 3 && (!state.selectedFormat || !state.selectedPlatform)) {
+            correctedStep = 3
+        }
+
+        if (correctedStep !== state.currentStep) {
+            console.warn(`[FlowEnforcer] Correcting invalid step: ${state.currentStep} -> ${correctedStep}`)
+            setState(prev => ({ ...prev, currentStep: correctedStep }))
+        }
+    }, [state.currentStep, state.selectedLayout, state.selectedFormat, state.selectedPlatform])
+
+
+    // -------------------------------------------------------------------------
+    // STEP MANAGEMENT
+    // -------------------------------------------------------------------------
+
+    const setStep = useCallback((step: number) => {
+        setState(prev => ({ ...prev, currentStep: step }))
+    }, [])
+
+    const nextStep = useCallback(() => {
+        setState(prev => ({ ...prev, currentStep: prev.currentStep + 1 }))
+    }, [])
+
+    const prevStep = useCallback(() => {
+        setState(prev => ({ ...prev, currentStep: Math.max(1, prev.currentStep - 1) }))
+    }, [])
+
+    // -------------------------------------------------------------------------
     // STEP 0: Platform and Format Selection
     // -------------------------------------------------------------------------
 
@@ -158,7 +200,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     const selectFormat = useCallback((formatId: string) => {
-        setState(prev => ({ ...prev, selectedFormat: formatId, generatedImage: null }))
+        setState(prev => ({ ...prev, selectedFormat: formatId, generatedImage: null, currentStep: 4 })) // Auto-advance to Step 4 (Image Reference)
     }, [])
 
     // -------------------------------------------------------------------------
@@ -200,8 +242,14 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             selectedTheme: null,
             visionAnalysis: null,
             selectedStyles: [],
-            selectedLayout: defaultLayoutId, // Auto-select first layout (Libre)
+            selectedLayout: null, // FORCE USER TO SELECT LAYOUT. Do not auto-select.
             generatedImage: null,
+
+            // CRITICAL: Clear all downstream step data to enforce sequential flow
+            selectedFormat: null,
+            selectedPlatform: null,
+
+            currentStep: 2, // Auto-advance to Step 2 (Composition/Layout)
         }))
     }, [])
 
@@ -266,6 +314,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 ...prev,
                 uploadedImages: [...prev.uploadedImages, base64],
                 uploadedImageFiles: [...prev.uploadedImageFiles, file],
+                currentStep: 5 // Auto-advance to Step 5 (Style) after upload
             }))
 
             if (optionsRef.current?.onImageUploaded) {
@@ -300,7 +349,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 error: error instanceof Error ? error.message : 'Error analyzing image',
             }))
         }
-    }, [])
+    }, [state.uploadedImages.length, state.selectedBrandKitImageIds.length]) // Added dependencies
 
     const selectTheme = useCallback((theme: SeasonalTheme) => {
         const themeMeta = THEME_CATALOG.find(t => t.id === theme)
@@ -439,10 +488,13 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             const isSelected = prev.selectedStyles.includes(styleId)
             // Mutually exclusive: If selecting a new one, clear previous ones.
             // If deselecting the current one, just clear.
+            const newStyles = isSelected ? [] : [styleId]
+
             return {
                 ...prev,
-                selectedStyles: isSelected ? [] : [styleId],
+                selectedStyles: newStyles,
                 generatedImage: null, // Invalidate to force new generation
+                currentStep: newStyles.length > 0 ? 6 : prev.currentStep // Auto-advance to Step 6 (Texts) if style selected
             }
         })
     }, [])
@@ -452,7 +504,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // -------------------------------------------------------------------------
 
     const selectLayout = useCallback((layoutId: string) => {
-        setState(prev => ({ ...prev, selectedLayout: layoutId, generatedImage: null }))
+        setState(prev => ({ ...prev, selectedLayout: layoutId, generatedImage: null, currentStep: 3 })) // Auto-advance to Step 3 (Format)
     }, [])
 
     // -------------------------------------------------------------------------
@@ -1409,7 +1461,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         selectGroup,
         setGeneratedImage,
         selectIntent,
+
         selectSubMode,
+        setStep,
+        nextStep,
+        prevStep,
         uploadImage,
         addUploadedImage,
         removeUploadedImage,
