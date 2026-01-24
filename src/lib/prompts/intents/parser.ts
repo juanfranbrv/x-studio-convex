@@ -1,66 +1,56 @@
+import path from 'path'
+import { readFileSync } from 'fs'
 import { IntentMeta, LayoutOption } from '@/lib/creation-flow-types'
 import { BrandDNA } from '@/lib/brand-types'
-import { INTENT_PARSER_SYSTEM_PROMPT } from './parser-system-prompt'
-import {
-  INTENT_PARSER_AUTO_TASK,
-  INTENT_PARSER_MANUAL_HEADER,
-  INTENT_PARSER_CUSTOM_FIELDS_HEADER,
-  INTENT_PARSER_FOOTER,
-  BRAND_WEBSITE_CONTEXT
-} from './parser-templates'
 import { buildBrandContextBlock } from './brand-context-template'
+
+const PROMPT_TEMPLATE_PATH = path.join(
+  process.cwd(),
+  'src',
+  'lib',
+  'prompts',
+  'intents',
+  'lazy-intent-parser.md'
+)
+
+let cachedPromptTemplate: string | null = null
+
+function getPromptTemplate(): string {
+  if (!cachedPromptTemplate) {
+    cachedPromptTemplate = readFileSync(PROMPT_TEMPLATE_PATH, 'utf8')
+  }
+  return cachedPromptTemplate
+}
 
 export function buildIntentParserPrompt(
   userRequest: string,
   brandWebsite?: string,
   brandDNA?: BrandDNA | null,
   intent?: IntentMeta,
-  layout?: LayoutOption,
-  includeSystemPrompt: boolean = true
+  layout?: LayoutOption
 ): string {
-  const websiteContext = brandWebsite ? BRAND_WEBSITE_CONTEXT(brandWebsite) : ''
-  const brandContext = buildBrandContextBlock(brandDNA)
+  const brandContext = buildBrandContextBlock(brandDNA) || 'BRAND CONTEXT: (none)'
+  const websiteContext = brandWebsite ? `BRAND WEBSITE:\n${brandWebsite}` : 'BRAND WEBSITE: (none)'
+  const intentContextLines: string[] = []
 
-  // AUTO-DETECTION MODE: No intent provided
-  if (!intent) {
-    const body = `
-${brandContext}
-
-${websiteContext}
-
-${INTENT_PARSER_AUTO_TASK.replace('{{userRequest}}', userRequest)}
-`
-    return includeSystemPrompt ? `${INTENT_PARSER_SYSTEM_PROMPT}\n\n${body}` : body
+  if (intent) {
+    intentContextLines.push(`INTENT: ${intent.name} - ${intent.description}`)
+  } else {
+    intentContextLines.push('INTENT: AUTO-DETECT')
   }
 
-  // ... (MANUAL MODE schema description build)
-  let schemaDescription = INTENT_PARSER_MANUAL_HEADER
-    .replace('{{intentName}}', intent.name)
-    .replace('{{intentDescription}}', intent.description)
-
-  schemaDescription += '\n'
-
-  // Custom fields from Intent or Layout
-  const textFields = layout?.textFields || intent.requiredFields || []
-
-  if (textFields.length > 0) {
-    schemaDescription += `${INTENT_PARSER_CUSTOM_FIELDS_HEADER}\n`
-    textFields.forEach(field => {
-      schemaDescription += `- "${field.id}": ${field.label} (Context: ${field.aiContext || 'No context'})\n`
-    })
+  if (layout) {
+    const layoutLabel = layout.name || layout.id
+    intentContextLines.push(`LAYOUT: ${layoutLabel}`)
   }
 
-  // 2. Build Prompt
-  const body = `
-${brandContext}
+  const intentContext = intentContextLines.join('\n')
 
-${websiteContext}
-
-${schemaDescription}
-
-${INTENT_PARSER_FOOTER.replace('{{userRequest}}', userRequest)}
-`
-  return includeSystemPrompt ? `${INTENT_PARSER_SYSTEM_PROMPT}\n\n${body}` : body
+  return getPromptTemplate()
+    .replaceAll('{{BRAND_CONTEXT}}', brandContext)
+    .replaceAll('{{WEBSITE_CONTEXT}}', websiteContext)
+    .replaceAll('{{INTENT_CONTEXT}}', intentContext)
+    .replaceAll('{{USER_REQUEST}}', userRequest)
 }
 
 

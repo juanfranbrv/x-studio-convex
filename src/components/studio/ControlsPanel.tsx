@@ -15,7 +15,7 @@ import { SavePresetDialog } from './creation-flow/SavePresetDialog'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { GenerationState, INTENT_CATALOG, IntentCategory } from '@/lib/creation-flow-types'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
@@ -97,6 +97,7 @@ export function ControlsPanel({
     const step6Ref = useRef<HTMLDivElement>(null)
     const step7Ref = useRef<HTMLDivElement>(null)
     const step8Ref = useRef<HTMLDivElement>(null)
+    const clearedStylesOnStep5 = useRef(false)
 
     const presetsData = useQuery(api.presets.list, userId ? {
         userId,
@@ -133,6 +134,15 @@ export function ControlsPanel({
         removeTextAsset,
         updateTextAsset,
     } = creationFlow
+
+    useEffect(() => {
+        if (state.currentStep >= 5 && !clearedStylesOnStep5.current) {
+            if (state.selectedStyles.length > 0) {
+                toggleStyle(state.selectedStyles[0])
+            }
+            clearedStylesOnStep5.current = true
+        }
+    }, [state.currentStep, state.selectedStyles, toggleStyle])
 
     const handleAddCustomColor = (color: string) => {
         toggleBrandColor(color)
@@ -234,7 +244,9 @@ export function ControlsPanel({
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault()
-                                    onUnifiedAction()
+                                    if (!isMagicParsing && promptValue.trim()) {
+                                        onAnalyze()
+                                    }
                                 }
                             }}
                         />
@@ -247,7 +259,7 @@ export function ControlsPanel({
                                 className="h-8 px-4 text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
                             >
                                 <Sparkles className="w-3.5 h-3.5 mr-2" />
-                                Magia
+                                Analizar
                             </Button>
                         </div>
                     </div>
@@ -318,7 +330,7 @@ export function ControlsPanel({
                                 />
                                 {state.currentStep === 4 && (
                                     <div className="flex justify-end mt-3">
-                                        <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(5)} className="h-7 text-xs">Confirmar Imagen</Button>
+                                        <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(5)} className="h-7 text-xs">Sin imagen de referencia</Button>
                                     </div>
                                 )}
                             </div>

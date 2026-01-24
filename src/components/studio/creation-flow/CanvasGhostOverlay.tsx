@@ -241,7 +241,7 @@ function TestimonialGhost() {
 function DefaultGhost() {
     return (
         <div className="w-full h-full flex flex-col gap-6 p-8">
-            <div className="flex-1 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/15" />
+            <div className="flex-1 bg-primary/5 rounded-2xl" />
             <div className="h-6 w-[50%] mx-auto bg-primary/15 rounded-full" />
         </div>
     );

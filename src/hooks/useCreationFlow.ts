@@ -125,10 +125,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         // 2. Initialize Text Assets
         if (state.selectedTextAssets.length === 0) {
             const defaultTextAssets: TextAsset[] = []
-            const cta = (activeBrandKit.text_assets as any)?.ctas?.[0] || ''
-            if (cta) defaultTextAssets.push({ id: 'cta', type: 'cta', label: 'CTA', value: cta })
             if (activeBrandKit.tagline) defaultTextAssets.push({ id: 'tagline', type: 'tagline', label: 'Tagline', value: activeBrandKit.tagline })
-            if (activeBrandKit.url) defaultTextAssets.push({ id: 'url', type: 'url', label: 'URL', value: activeBrandKit.url })
 
             if (defaultTextAssets.length > 0) {
                 nextState.selectedTextAssets = defaultTextAssets
@@ -1000,6 +997,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
         // Add selected text assets from Brand DNA Panel
         activeState.selectedTextAssets.forEach(asset => {
+            if (asset.type === 'cta' || asset.type === 'url') return
             if (asset.value?.trim()) {
                 textParts.push(`• ${asset.label.toUpperCase()}: "${asset.value.trim()}"`)
             }

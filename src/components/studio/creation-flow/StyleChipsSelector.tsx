@@ -45,16 +45,19 @@ export function StyleChipsSelector({
                                 onClick={() => onToggleStyle(style.id)}
                                 title={style.keywords?.join(', ')}
                                 className={cn(
-                                    "px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-300 flex items-center gap-2",
+                                    "relative px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-300 flex items-center gap-2",
                                     "border backdrop-blur-md",
                                     isSelected
-                                        ? "border-primary/50 bg-primary/20 text-primary dark:text-primary-foreground dark:border-primary/50 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
-                                        : isSuggested
-                                            ? "border-primary/30 bg-primary/10 text-primary dark:bg-primary/10 dark:text-primary hover:border-primary/50 hover:bg-primary/20 dark:hover:bg-primary/20"
-                                            : "border-slate-200 bg-white/50 text-slate-600 hover:bg-white/80 hover:border-slate-300 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:border-white/20 dark:hover:text-white hover:-translate-y-0.5"
+                                        ? "border-primary/60 bg-primary/20 text-primary dark:text-primary-foreground dark:border-primary/60 ring-2 ring-primary/25 shadow-[0_0_14px_hsl(var(--primary)/0.25)]"
+                                        : "border-slate-200 bg-white/50 text-slate-600 hover:bg-white/80 hover:border-slate-300 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:border-white/20 dark:hover:text-white hover:-translate-y-0.5"
                                 )}
                             >
-                                {style.label}
+                                {isSelected && (
+                                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary/20 text-primary dark:bg-primary/30 dark:text-primary-foreground">
+                                        <Check className="w-3 h-3" />
+                                    </span>
+                                )}
+                                <span className="truncate">{style.label}</span>
                                 {isSuggested && (
                                     <span className={cn(
                                         "ml-1 text-[9px] uppercase tracking-wider px-1 rounded-sm border",

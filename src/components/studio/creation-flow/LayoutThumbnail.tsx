@@ -59,6 +59,9 @@ export function LayoutThumbnail({ layout, intent, className }: LayoutThumbnailPr
 function getLayoutVisual(id: string) {
     // FREE layout (any intent) - Double size question mark
     if (id.endsWith('-free')) return <FreeLayout />;
+    if (id === 'clean') return <CleanLayout />;
+    if (id === 'full-bleed') return <FullBleedLayout />;
+    if (id === 'frame') return <FrameLayout />;
 
     // === DEFINICION layouts ===
     if (id === 'def-classic') return <DictionaryLayout />;
@@ -336,6 +339,47 @@ function FreeLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center">
             <div className="text-primary/60 text-5xl font-bold">?</div>
+        </div>
+    );
+}
+
+function CleanLayout() {
+    return (
+        <div className="w-full h-full flex flex-col gap-1 p-1">
+            <div className="flex-1 rounded-sm border border-primary/25 bg-gradient-to-br from-primary/15 via-primary/5 to-white relative overflow-hidden">
+                <div className="absolute right-1 top-1 w-2.5 h-2.5 rounded-full bg-primary/35" />
+                <div className="absolute left-1 bottom-1 w-6 h-1 bg-white/70 rounded-full" />
+                <div className="absolute inset-0 border border-dashed border-primary/20 rounded-sm" />
+            </div>
+            <div className="h-3 flex flex-col gap-0.5">
+                <div className="h-1 w-full bg-primary/35 rounded-full" />
+                <div className="h-1 w-[70%] bg-primary/20 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function FullBleedLayout() {
+    return (
+        <div className="w-full h-full relative overflow-hidden rounded-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/45 via-primary/25 to-primary/5" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/30" />
+            <div className="absolute bottom-1 left-1 right-1 h-3 rounded-sm border border-white/70 bg-white/70 backdrop-blur-sm" />
+            <div className="absolute top-1 left-1 w-4 h-4 rounded-sm border border-white/70 bg-white/40" />
+        </div>
+    );
+}
+
+function FrameLayout() {
+    return (
+        <div className="w-full h-full p-1">
+            <div className="w-full h-full rounded-sm border-2 border-primary/40 p-1">
+                <div className="w-full h-full rounded-sm border border-primary/20 bg-gradient-to-br from-primary/20 via-primary/10 to-white relative">
+                    <div className="absolute top-0.5 left-0.5 w-2 h-2 bg-primary/60 rounded-sm" />
+                    <div className="absolute bottom-0.5 right-0.5 w-2 h-2 bg-primary/35 rounded-sm" />
+                    <div className="absolute inset-x-1 bottom-1 h-1 bg-white/70 rounded-full" />
+                </div>
+            </div>
         </div>
     );
 }

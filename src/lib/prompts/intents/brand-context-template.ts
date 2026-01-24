@@ -19,6 +19,7 @@ export function buildBrandContextBlock(brandDNA: BrandDNA | null | undefined): s
     const preferredCTAs = brandDNA.text_assets?.ctas?.slice(0, 3).join(', ') || ''
     const marketingHooks = brandDNA.text_assets?.marketing_hooks?.slice(0, 3).join(' | ') || ''
     const brandContext = brandDNA.text_assets?.brand_context || ''
+    const tagline = brandDNA.tagline || ''
 
     return `
 ### BRAND CONTEXT (Use this to adapt tone and style of the extraction):
@@ -27,6 +28,7 @@ export function buildBrandContextBlock(brandDNA: BrandDNA | null | undefined): s
 - Target Audience: ${targetAudience}
 - Brand Values: ${brandValues}
 - Visual Aesthetic: ${visualAesthetic}
+${tagline ? `- Tagline: ${tagline}` : ''}
 ${preferredCTAs ? `- Preferred CTAs (use as inspiration): ${preferredCTAs}` : ''}
 ${marketingHooks ? `- Marketing Hooks (use as inspiration): ${marketingHooks}` : ''}
 ${brandContext ? `- Brand Description: ${brandContext}` : ''}

@@ -49,6 +49,6 @@ export function WireframeRenderer({ state, aspectRatio, isGhost }: WireframeRend
         case 'comunicado-oficial':
             return <ComunicadoOficial {...props} />
         default:
-            return <DefaultWireframe {...props} intent={selectedIntent} />
+            return <DefaultWireframe {...props} />
     }
 }

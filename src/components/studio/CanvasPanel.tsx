@@ -201,19 +201,9 @@ export function CanvasPanel({
         if (!activeBrandKit) return []
         const options: { id: string; label: string; value: string; type: 'url' | 'tagline' | 'cta' | 'hook' | 'custom' }[] = []
 
-        // URL
-        if (activeBrandKit.url) {
-            options.push({ id: 'bk-url', label: 'URL', value: activeBrandKit.url, type: 'url' })
-        }
         // Tagline
         if (activeBrandKit.tagline) {
             options.push({ id: 'bk-tagline', label: 'Tagline', value: activeBrandKit.tagline, type: 'tagline' })
-        }
-        // CTAs
-        if (activeBrandKit.text_assets?.ctas) {
-            activeBrandKit.text_assets.ctas.forEach((cta, idx) => {
-                options.push({ id: `bk-cta-${idx}`, label: `CTA ${idx + 1}`, value: cta, type: 'cta' })
-            })
         }
         // Marketing Hooks
         if (activeBrandKit.text_assets?.marketing_hooks) {
@@ -668,7 +658,7 @@ export function CanvasPanel({
                         {creationState?.selectedLayout && !isGenerating && !currentImage && (
                             <CanvasGhostOverlay
                                 layoutId={creationState.selectedLayout}
-                                className="z-30 opacity-60 bg-white/50 backdrop-blur-[2px]"
+                                className="z-30 opacity-80"
                             />
                         )}
 

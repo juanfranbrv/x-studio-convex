@@ -1,10 +1,8 @@
 'use server'
 
 import { generateTextUnified } from '@/lib/gemini'
-import { buildBrandDirectorPrompt } from '@/lib/prompts/system/brand-director'
 import { buildIntentParserPrompt } from '@/lib/prompts/intents/parser'
-import { IntentMeta, LayoutOption, INTENT_CATALOG, LAYOUTS_BY_INTENT } from '@/lib/creation-flow-types'
-import { INTENT_PARSER_SYSTEM_PROMPT } from '@/lib/prompts/intents/parser-system-prompt'
+import { INTENT_CATALOG, LAYOUTS_BY_INTENT } from '@/lib/creation-flow-types'
 
 export interface ParsedIntentResult {
     detectedIntent?: string // Auto-detected intent ID
@@ -13,9 +11,166 @@ export interface ParsedIntentResult {
     cta?: string
     ctaUrl?: string          // NEW: Separate field for the URL
     caption?: string         // NEW: Social media caption
-    imageTexts?: Record<string, string> // NEW: Consolidated image texts
+    imageTexts?: Array<{ label: string; value: string; type?: 'tagline' | 'hook' | 'custom' }>
     customTexts?: Record<string, string>
     error?: string
+}
+
+const INTENT_ALIASES: Record<string, string> = {
+    promocional: 'oferta',
+    promocion: 'oferta',
+    promotional: 'oferta',
+    promotion: 'oferta',
+    promo: 'oferta',
+    offer: 'oferta',
+    sale: 'oferta',
+    showcase: 'escaparate',
+    catalog: 'catalogo',
+    launch: 'lanzamiento',
+    service: 'servicio',
+    announcement: 'comunicado',
+    event: 'evento',
+    list: 'lista',
+    comparison: 'comparativa',
+    anniversary: 'efemeride',
+    team: 'equipo',
+    quote: 'cita',
+    testimonial: 'cita',
+    hiring: 'talento',
+    jobs: 'talento',
+    achievement: 'logro',
+    bts: 'bts',
+    data: 'dato',
+    steps: 'pasos',
+    howto: 'pasos',
+    definition: 'definicion',
+    question: 'pregunta',
+    challenge: 'reto',
+}
+
+function normalizeText(text: string): string {
+    return text
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+}
+
+function includesAny(text: string, tokens: string[]): boolean {
+    return tokens.some(token => text.includes(token))
+}
+
+function inferIntentFromText(userText: string): string | undefined {
+    const text = normalizeText(userText)
+    if (!text.trim()) return undefined
+
+    const has = (tokens: string[]) => includesAny(text, tokens)
+    const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+    const months = [
+        'enero',
+        'febrero',
+        'marzo',
+        'abril',
+        'mayo',
+        'junio',
+        'julio',
+        'agosto',
+        'septiembre',
+        'octubre',
+        'noviembre',
+        'diciembre'
+    ]
+    const hasDate = new RegExp(`\\b\\d{1,2}\\s*(de\\s*)?(${months.join('|')})\\b`).test(text)
+    const hasDay = new RegExp(`\\b(${days.join('|')})\\b`).test(text)
+    const hasTime = /\b\d{1,2}(:\d{2})?\s*(h|am|pm)\b/.test(text)
+    const hasEventTime = hasDate || hasDay || hasTime
+
+    const discountTokens = ['descuento', 'oferta', 'rebaja', 'promocion', 'promo', '2x1', '2x', 'liquidacion']
+    const hasDiscount = has(discountTokens)
+
+    if (has(['comunicado', 'aviso', 'anuncio oficial', 'cambio de horario', 'horario', 'cierre', 'cerramos', 'politica', 'normativa'])) {
+        return 'comunicado'
+    }
+
+    if (has(['evento', 'webinar', 'directo', 'live', 'charla', 'conferencia', 'seminario', 'presentacion'])) {
+        return 'evento'
+    }
+    if (hasEventTime && has(['curso', 'taller', 'formacion', 'clase'])) {
+        return 'evento'
+    }
+
+    if (hasDiscount) {
+        return 'oferta'
+    }
+
+    if (has(['lanzamiento', 'lanzamos', 'presentamos', 'proximamente', 'coming soon', 'nuevo producto', 'nueva coleccion'])) {
+        return 'lanzamiento'
+    }
+
+    if (has(['catalogo', 'coleccion', 'gama', 'linea', 'variedad', 'seleccion'])) {
+        return 'catalogo'
+    }
+
+    if (has(['servicio', 'consultoria', 'asesoria', 'mentoria', 'curso', 'taller', 'clase', 'programa', 'formacion'])) {
+        return 'servicio'
+    }
+
+    if (has(['comparativa', 'comparar', 'versus', 'vs', 'antes y despues', 'antes/despues'])) {
+        return 'comparativa'
+    }
+
+    if (has(['lista', 'checklist', 'top', 'consejos', 'tips'])) {
+        return 'lista'
+    }
+
+    if (has(['dato', 'estadistica', 'estadisticas', 'porcentaje', 'segun', 'estudio', 'datos']) || (text.includes('%') && !hasDiscount)) {
+        return 'dato'
+    }
+
+    if (has(['paso', 'pasos', 'tutorial', 'guia', 'como '])) {
+        return 'pasos'
+    }
+
+    if (has(['definicion', 'que es', 'significado', 'concepto'])) {
+        return 'definicion'
+    }
+
+    if (has(['pregunta', 'que opinas', 'opinas']) || text.includes('?')) {
+        return 'pregunta'
+    }
+
+    if (has(['reto', 'desafio', 'challenge'])) {
+        return 'reto'
+    }
+
+    if (has(['logro', 'premio', 'ganamos', 'reconocimiento', 'finalista'])) {
+        return 'logro'
+    }
+
+    if (has(['equipo', 'nuestro equipo', 'conoce al equipo', 'staff'])) {
+        return 'equipo'
+    }
+
+    if (has(['cita', 'frase', 'testimonio', 'testimonios', 'review', 'resena'])) {
+        return 'cita'
+    }
+
+    if (has(['vacante', 'empleo', 'contratamos', 'buscamos', 'reclutamiento', 'oferta de empleo'])) {
+        return 'talento'
+    }
+
+    if (has(['bts', 'detras de', 'behind', 'making of', 'proceso'])) {
+        return 'bts'
+    }
+
+    if (has(['efemeride', 'aniversario', 'cumpleanos', 'feliz', 'navidad', 'halloween', 'black friday', 'san valentin', 'dia de'])) {
+        return 'efemeride'
+    }
+
+    if (has(['producto', 'modelo', 'edicion', 'nuevo modelo'])) {
+        return 'escaparate'
+    }
+
+    return undefined
 }
 
 export async function parseLazyIntentAction({
@@ -38,11 +193,14 @@ export async function parseLazyIntentAction({
         const intent = intentId ? INTENT_CATALOG.find(i => i.id === intentId) : undefined
         const allLayouts = Object.values(LAYOUTS_BY_INTENT).flat()
         const layout = layoutId ? allLayouts.find(l => l.id === layoutId) : undefined
-        const modelToUse = intelligenceModel || 'gemini-3-flash-preview'
+        if (!intelligenceModel) {
+            throw new Error('Missing intelligence model configuration')
+        }
+        const modelToUse = intelligenceModel
         console.log(`[LazyPrompt] Parsing with model ${modelToUse} ${intent ? `for intent: ${intent.name}` : 'with auto-detection'}`)
 
         // 2. Build Prompt Parts (Include system prompt in body for maximum adherence across all models)
-        const prompt = buildIntentParserPrompt(userText, brandWebsite, brandDNA, intent, layout, true)
+        const prompt = buildIntentParserPrompt(userText, brandWebsite, brandDNA, intent, layout)
 
         // 3. Prepare Brand Context
         const brandName = brandDNA?.brand_name || brandDNA?.name || 'la marca'
@@ -64,7 +222,34 @@ export async function parseLazyIntentAction({
 
         // 5. Parse Response
         const cleanJson = jsonResponse.replace(/```json/g, '').replace(/```/g, '').trim()
-        const parsed = JSON.parse(cleanJson)
+        const parsed: ParsedIntentResult = JSON.parse(cleanJson)
+
+        const validIntentIds = new Set(INTENT_CATALOG.map(i => i.id))
+        let detected = parsed.detectedIntent?.toLowerCase().trim()
+
+        if (detected && !validIntentIds.has(detected)) {
+            const alias = INTENT_ALIASES[detected]
+            if (alias && validIntentIds.has(alias)) {
+                detected = alias
+            } else {
+                detected = undefined
+            }
+        }
+
+        if (!detected) {
+            const fallback = inferIntentFromText(userText)
+            if (fallback && validIntentIds.has(fallback)) {
+                detected = fallback
+            }
+        }
+
+        if (intentId && validIntentIds.has(intentId)) {
+            parsed.detectedIntent = intentId
+        } else if (detected) {
+            parsed.detectedIntent = detected
+        } else {
+            parsed.detectedIntent = undefined
+        }
 
         return parsed
     } catch (error) {

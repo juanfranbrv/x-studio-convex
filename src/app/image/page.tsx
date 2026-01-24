@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 import { buildEditPrompt } from '@/lib/prompts/image-edit'
 import { parseLazyIntentAction } from '@/app/actions/parse-intent'
-import { IntentCategory } from '@/lib/creation-flow-types'
+import { IntentCategory, TextAsset } from '@/lib/creation-flow-types'
 import { useUI } from '@/contexts/UIContext'
 import { hexToHslString } from '@/lib/color-utils'
 
@@ -126,13 +126,23 @@ export default function ImagePage() {
         setHighlightedFields(new Set())
 
         try {
+            const modelToUse = autoModel || aiConfig?.intelligenceModel
+            if (!modelToUse) {
+                toast({
+                    title: "Falta configuracion de IA",
+                    description: "No hay un modelo de inteligencia configurado en el panel de Admin.",
+                    variant: "destructive"
+                })
+                return null
+            }
+
             creationFlow.setRawMessage(promptValue)
 
             const result = await parseLazyIntentAction({
                 userText: promptValue,
                 brandDNA: activeBrandKit,
                 brandWebsite: activeBrandKit?.url,
-                intelligenceModel: autoModel || aiConfig?.intelligenceModel || 'gemini-flash-latest',
+                intelligenceModel: modelToUse,
                 intentId: creationFlow.currentIntent?.id,
                 layoutId: creationFlow.selectedLayoutMeta?.id
             })
@@ -175,34 +185,48 @@ export default function ImagePage() {
                 newHighlights.add('caption')
             }
 
-            // Process imageTexts (subheadline and other visual texts)
-            if (result.imageTexts) {
-                // Subheadline goes as a text asset
-                if (result.imageTexts.subheadline) {
-                    creationFlow.addTextAsset({
-                        id: `ai-subheadline-${Date.now()}`,
-                        type: 'custom',
-                        label: 'Subtítulo',
-                        value: result.imageTexts.subheadline
-                    })
-                    newHighlights.add('subheadline')
-                }
+            // Process imageTexts (secondary text layers for preview)
+            const aiAssets: TextAsset[] = []
+            const seenValues = new Set<string>()
+
+            const addAsset = (label: string, value: string, type?: TextAsset['type']) => {
+                const cleanValue = value.trim()
+                if (!cleanValue) return
+                if (seenValues.has(cleanValue.toLowerCase())) return
+                seenValues.add(cleanValue.toLowerCase())
+                aiAssets.push({
+                    id: `ai-${Date.now()}-${aiAssets.length}`,
+                    type: type || 'custom',
+                    label: label.trim() || 'Texto',
+                    value: cleanValue
+                })
             }
 
-            // Process customTexts (additional extracted fields)
-            if (result.customTexts) {
-                Object.entries(result.customTexts).forEach(([key, value]) => {
-                    if (value && typeof value === 'string' && value.trim()) {
-                        creationFlow.addTextAsset({
-                            id: `ai-${key}-${Date.now()}`,
-                            type: 'custom',
-                            label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
-                            value: value.trim()
-                        })
-                        newHighlights.add(key)
+            if (Array.isArray(result.imageTexts)) {
+                result.imageTexts.forEach((item) => {
+                    if (!item || typeof item !== 'object') return
+                    const label = typeof item.label === 'string' ? item.label : 'Texto'
+                    const value = typeof item.value === 'string' ? item.value : ''
+                    const type = item.type === 'tagline' || item.type === 'hook' ? item.type : 'custom'
+                    addAsset(label, value, type)
+                })
+            } else if (result.imageTexts && typeof result.imageTexts === 'object') {
+                Object.entries(result.imageTexts).forEach(([key, value]) => {
+                    if (typeof value === 'string') {
+                        addAsset(key, value, 'custom')
                     }
                 })
             }
+
+            if (result.customTexts) {
+                Object.entries(result.customTexts).forEach(([key, value]) => {
+                    if (value && typeof value === 'string' && value.trim()) {
+                        addAsset(key.replace(/_/g, ' '), value, 'custom')
+                    }
+                })
+            }
+
+            creationFlow.setSelectedTextAssets(aiAssets)
 
             setHighlightedFields(newHighlights)
             setTimeout(() => setHighlightedFields(new Set()), 2500)

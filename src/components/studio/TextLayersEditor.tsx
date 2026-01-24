@@ -51,6 +51,7 @@ export function TextLayersEditor({
     onAddTextAsset,
     onUpdateTextAsset
 }: TextLayersEditorProps) {
+    const visibleTextAssets = textAssets.filter(asset => asset.type !== 'cta' && asset.type !== 'url')
 
     return (
         <div className="w-full h-full flex flex-col justify-between py-[6cqh] py-[3cqw] px-[6cqw] animate-in fade-in zoom-in-95 duration-500 overflow-y-auto overflow-x-hidden thin-scrollbar">
@@ -126,10 +127,9 @@ export function TextLayersEditor({
                 </div>
 
                 {/* Brand-based Text Assets (PROMPT TEXTS moved from Panel) */}
-                {textAssets.length > 0 && (
-                    <div className="w-full flex flex-col items-center gap-2 pt-2 border-t border-dashed border-foreground/10">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mb-1">Textos Adicionales</p>
-                        {textAssets.map((asset) => (
+                {visibleTextAssets.length > 0 && (
+                    <div className="w-full flex flex-col items-center gap-2 pt-2">
+                        {visibleTextAssets.map((asset) => (
                             <div key={asset.id} className="group relative w-full max-w-2xl pointer-events-auto flex items-start justify-center gap-2 px-4">
                                 <div className="flex-1 flex items-start gap-3 px-4 py-2 bg-foreground/5 rounded-2xl ring-1 ring-foreground/10 hover:ring-foreground/20 transition-all">
                                     <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground opacity-70 pt-1 flex-shrink-0">{asset.label}</span>
