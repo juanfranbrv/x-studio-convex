@@ -2,7 +2,7 @@
 
 import { generateTextUnified } from '@/lib/gemini'
 import { buildIntentParserPrompt } from '@/lib/prompts/intents/parser'
-import { INTENT_CATALOG, LAYOUTS_BY_INTENT } from '@/lib/creation-flow-types'
+import { INTENT_CATALOG, LAYOUTS_BY_INTENT, type IntentCategory } from '@/lib/creation-flow-types'
 
 export interface ParsedIntentResult {
     detectedIntent?: string // Auto-detected intent ID
@@ -224,12 +224,14 @@ export async function parseLazyIntentAction({
         const cleanJson = jsonResponse.replace(/```json/g, '').replace(/```/g, '').trim()
         const parsed: ParsedIntentResult = JSON.parse(cleanJson)
 
-        const validIntentIds = new Set(INTENT_CATALOG.map(i => i.id))
+        const validIntentIds = new Set<IntentCategory>(INTENT_CATALOG.map(i => i.id))
+        const isIntentCategory = (value?: string): value is IntentCategory =>
+            !!value && validIntentIds.has(value as IntentCategory)
         let detected = parsed.detectedIntent?.toLowerCase().trim()
 
-        if (detected && !validIntentIds.has(detected)) {
+        if (detected && !isIntentCategory(detected)) {
             const alias = INTENT_ALIASES[detected]
-            if (alias && validIntentIds.has(alias)) {
+            if (alias && isIntentCategory(alias)) {
                 detected = alias
             } else {
                 detected = undefined
@@ -238,12 +240,12 @@ export async function parseLazyIntentAction({
 
         if (!detected) {
             const fallback = inferIntentFromText(userText)
-            if (fallback && validIntentIds.has(fallback)) {
+            if (isIntentCategory(fallback)) {
                 detected = fallback
             }
         }
 
-        if (intentId && validIntentIds.has(intentId)) {
+        if (intentId && isIntentCategory(intentId)) {
             parsed.detectedIntent = intentId
         } else if (detected) {
             parsed.detectedIntent = detected
