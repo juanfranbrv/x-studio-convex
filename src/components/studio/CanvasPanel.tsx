@@ -15,21 +15,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
-import { Save } from 'lucide-react'
-import { useUser } from "@clerk/nextjs"
-import { useMutation } from "convex/react"
-import { api } from "../../../convex/_generated/api"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -51,9 +36,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
 import { GeneratedCopyCard } from './GeneratedCopyCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
+import { useUI } from '@/contexts/UIContext'
 import { generateSocialPost } from '@/app/actions/generate-social-post'
 import { WireframeRenderer } from './previews/WireframeRenderer'
 import { CanvasGhostOverlay } from './creation-flow/CanvasGhostOverlay'
+import { FloatingAssistance } from './creation-flow/FloatingAssistance'
 import { GenerationState, TextAsset } from '@/lib/creation-flow-types'
 
 export interface Generation {
@@ -134,6 +121,7 @@ export function CanvasPanel({
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const { activeBrandKit } = useBrandKit()
+    const { panelPosition, assistanceEnabled } = useUI()
     const [zoom, setZoom] = useState(100)
     const containerRef = useRef<HTMLDivElement>(null)
     const [isDragActive, setIsDragActive] = useState(false)
@@ -152,6 +140,7 @@ export function CanvasPanel({
         window.addEventListener('resize', updateHeight)
         return () => window.removeEventListener('resize', updateHeight)
     }, [])
+
 
     // Calculate effective zoom (base scale * manual zoom)
     const effectiveZoom = useMemo(() => {
@@ -213,69 +202,6 @@ export function CanvasPanel({
         }
         return options
     }, [activeBrandKit])
-
-    // Save Preset State
-    const [isSavePresetOpen, setIsSavePresetOpen] = useState(false)
-    const [presetName, setPresetName] = useState('')
-    const [isSavingPreset, setIsSavingPreset] = useState(false)
-    const { user } = useUser();
-    const createPreset = useMutation(api.presets.create);
-
-    const handleSavePreset = async () => {
-        if (!presetName.trim() || !creationState) return;
-
-        setIsSavingPreset(true);
-        try {
-            // Use activeBrandKit.userId if available, otherwise check user.id (clerk)
-            // Assuming activeBrandKit might store the owner's ID or we use current user's ID
-            const userId = user?.id || (activeBrandKit as any)?.userId || "user";
-
-            await createPreset({
-                userId: userId,
-                brandId: activeBrandKit?.id as any,
-                name: presetName,
-                description: creationState.selectedIntent || "Preset personalizado",
-                icon: creationState.selectedIntent ? creationState.selectedIntent : "Sparkles", // Use intent ID as icon reference or default
-                state: {
-                    // Platform & Format
-                    selectedPlatform: creationState.selectedPlatform,
-                    selectedFormat: creationState.selectedFormat,
-                    // Intent
-                    selectedGroup: creationState.selectedGroup,
-                    selectedIntent: creationState.selectedIntent,
-                    selectedSubMode: creationState.selectedSubMode,
-                    // Image/Input
-                    uploadedImages: creationState.uploadedImages,
-                    selectedTheme: creationState.selectedTheme,
-                    imageSourceMode: creationState.imageSourceMode,
-                    selectedBrandKitImageIds: creationState.selectedBrandKitImageIds,
-                    aiImageDescription: creationState.aiImageDescription,
-                    // Styles & Layout
-                    selectedStyles: creationState.selectedStyles,
-                    selectedLayout: creationState.selectedLayout,
-                    // Branding
-                    selectedLogoId: creationState.selectedLogoId,
-                    headline: creationState.headline,
-                    cta: creationState.cta,
-                    customTexts: creationState.customTexts,
-                    selectedBrandColors: creationState.selectedBrandColors,
-                    rawMessage: creationState.rawMessage,
-                    additionalInstructions: creationState.additionalInstructions,
-                    customStyle: creationState.customStyle,
-                    selectedTextAssets: creationState.selectedTextAssets,
-                }
-            });
-            setIsSavePresetOpen(false);
-            setPresetName('');
-            // Optional: Toast success
-        } catch (error) {
-            console.error("Failed to save preset:", error);
-        } finally {
-            setIsSavingPreset(false);
-        }
-    };
-
-
 
     const handleZoomIn = () => setZoom((z) => Math.min(z + 25, 300))
     const handleZoomOut = () => setZoom((z) => Math.max(z - 25, 25))
@@ -480,7 +406,7 @@ export function CanvasPanel({
                 {/* Zoom Controls & Actions */}
                 <div className="hidden md:flex pointer-events-auto items-center gap-1 glass-panel rounded-full px-3 py-1.5 text-muted-foreground transition-all duration-300 hover:text-foreground">
                     {/* Zoom Controls */}
-                    <div className="flex items-center gap-1 mr-2 border-r border-white/10 pr-2">
+                    <div className="flex items-center gap-1 border-r border-white/10 pr-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut} title="Zoom out">
                             <ZoomOutIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
@@ -495,43 +421,6 @@ export function CanvasPanel({
                         </Button>
                     </div>
 
-                    <Dialog open={isSavePresetOpen} onOpenChange={setIsSavePresetOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" title={t('canvas.savePreset') || "Guardar Preset"}>
-                                <Save className="w-5 h-5" />
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                                <DialogTitle>Guardar Preset</DialogTitle>
-                                <DialogDescription>
-                                    Guarda esta configuración para reutilizarla en futuros diseños.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Nombre</Label>
-                                    <Input
-                                        id="name"
-                                        value={presetName}
-                                        onChange={(e) => setPresetName(e.target.value)}
-                                        placeholder="Ej: Oferta Black Friday"
-                                    />
-                                </div>
-                                {creationState?.selectedIntent && (
-                                    <p className="text-sm text-muted-foreground">
-                                        Tipo: <span className="font-medium">{creationState.selectedIntent}</span>
-                                    </p>
-                                )}
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsSavePresetOpen(false)}>Cancelar</Button>
-                                <Button onClick={handleSavePreset} disabled={!presetName.trim() || isSavingPreset}>
-                                    {isSavingPreset ? "Guardando..." : "Guardar Preset"}
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
                     <Button
                         variant={isAnnotating ? 'default' : 'ghost'}
                         size="icon"
@@ -639,6 +528,21 @@ export function CanvasPanel({
 
                         })()}
                     >
+                        <FloatingAssistance
+                            isVisible={
+                                assistanceEnabled &&
+                                !isMobile &&
+                                !isGenerating &&
+                                !currentImage &&
+                                creationState.currentStep >= 2 &&
+                                !!creationState.selectedIntent
+                            }
+                            title="Vista previa"
+                            description="Puedes añadir, editar o quitar textos. Haz clic en cada capa para ajustarla."
+                            side={panelPosition === 'right' ? 'left' : 'right'}
+                            anchorRef={containerRef}
+                            className="w-[240px] opacity-95"
+                        />
                         <AnimatePresence mode="wait">
                             {(isGenerating || isRevealing) && (
                                 <motion.div

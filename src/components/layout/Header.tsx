@@ -53,6 +53,11 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
         return name?.charAt(0).toUpperCase() || '?'
     }
 
+    const currentBrandName = ('brand_name' in (currentBrand || {}))
+        ? (currentBrand as any).brand_name
+        : t('common.switchBrand')
+    const currentBrandFavicon = (currentBrand as any)?.favicon_url as string | undefined
+
     const handleDeleteClick = (brand: BrandKitSummary | BrandDNA, e: React.MouseEvent) => {
         e.stopPropagation()
         setBrandToDelete(brand)
@@ -83,8 +88,21 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm" className="gap-2 w-[140px] md:w-72 justify-between px-2 md:px-4 bg-white/50 dark:bg-white/10 border-white/30 hover:bg-white/80 hover:border-primary/50 rounded-xl">
-                                    <span className="truncate block text-left">
-                                        {('brand_name' in (currentBrand || {})) ? (currentBrand as any).brand_name : t('common.switchBrand')}
+                                    <span className="flex items-center gap-2 min-w-0">
+                                        <span className="w-6 h-6 rounded-md bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                                            {currentBrandFavicon ? (
+                                                <img
+                                                    src={currentBrandFavicon}
+                                                    alt={currentBrandName}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-xs font-semibold text-muted-foreground">
+                                                    {getBrandInitial(currentBrandName)}
+                                                </span>
+                                            )}
+                                        </span>
+                                        <span className="truncate block text-left">{currentBrandName}</span>
                                     </span>
                                     <ChevronDown className="h-4 w-4 shrink-0" />
                                 </Button>

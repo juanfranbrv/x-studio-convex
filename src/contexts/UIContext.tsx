@@ -1,6 +1,7 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react'
+import { useUser } from '@clerk/nextjs'
 
 type PanelPosition = 'left' | 'right'
 
@@ -14,8 +15,13 @@ interface UIContextType {
 const UIContext = createContext<UIContextType | undefined>(undefined)
 
 export function UIProvider({ children }: { children: React.ReactNode }) {
+    const { user, isLoaded } = useUser()
     const [panelPosition, setPanelPositionState] = useState<PanelPosition>('right')
     const [assistanceEnabled, setAssistanceEnabledState] = useState<boolean>(true)
+    const assistanceStorageKey = useMemo(() => {
+        const baseKey = 'x-studio-assistance-enabled'
+        return user?.id ? `${baseKey}:${user.id}` : baseKey
+    }, [user?.id])
 
     // Load from localStorage on mount
     useEffect(() => {
@@ -24,11 +30,31 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
             setPanelPositionState(savedPosition)
         }
 
-        const savedAssistance = localStorage.getItem('x-studio-assistance-enabled')
+        if (!isLoaded) return
+
+        const legacyKey = 'x-studio-assistance-enabled'
+        const savedAssistance = localStorage.getItem(assistanceStorageKey)
+
         if (savedAssistance !== null) {
             setAssistanceEnabledState(savedAssistance === 'true')
+            return
         }
-    }, [])
+
+        const legacyAssistance = localStorage.getItem(legacyKey)
+        if (legacyAssistance !== null && user?.id) {
+            localStorage.setItem(assistanceStorageKey, legacyAssistance)
+            localStorage.removeItem(legacyKey)
+            setAssistanceEnabledState(legacyAssistance === 'true')
+            return
+        }
+
+        if (legacyAssistance !== null && !user?.id) {
+            setAssistanceEnabledState(legacyAssistance === 'true')
+            return
+        }
+
+        setAssistanceEnabledState(true)
+    }, [assistanceStorageKey, isLoaded, user?.id])
 
     const setPanelPosition = (position: PanelPosition) => {
         setPanelPositionState(position)
@@ -37,7 +63,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
 
     const setAssistanceEnabled = (enabled: boolean) => {
         setAssistanceEnabledState(enabled)
-        localStorage.setItem('x-studio-assistance-enabled', String(enabled))
+        localStorage.setItem(assistanceStorageKey, String(enabled))
     }
 
     return (

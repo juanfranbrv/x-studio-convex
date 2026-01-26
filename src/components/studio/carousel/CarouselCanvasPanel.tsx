@@ -65,6 +65,7 @@ export function CarouselCanvasPanel({
     }, [])
 
     const currentSlide = slides[currentIndex]
+    const hasScript = Boolean(currentSlide && !currentSlide.imageUrl && (currentSlide.title || currentSlide.description))
     const completedSlides = slides.filter(s => s.status === 'done').length
     const isGeneratingAny = slides.some(s => s.status === 'generating') || isRegenerating
 
@@ -310,6 +311,20 @@ export function CarouselCanvasPanel({
                                 animate={{ opacity: 1, filter: 'blur(0px)' }}
                                 className="w-full h-full object-cover"
                             />
+                        ) : hasScript ? (
+                            <div className="w-full h-full flex items-center justify-center p-10">
+                                <div className="w-full max-w-md rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm p-6 text-center shadow-lg space-y-3">
+                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                                        Guion previo
+                                    </p>
+                                    <h3 className="text-xl font-semibold text-foreground">
+                                        {currentSlide?.title || `Slide ${currentIndex + 1}`}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        {currentSlide?.description || 'Sin descripcion'}
+                                    </p>
+                                </div>
+                            </div>
                         ) : (
                             <div className="text-muted-foreground opacity-30 flex flex-col items-center gap-2">
                                 <Loader2 className="w-8 h-8 animate-spin" />

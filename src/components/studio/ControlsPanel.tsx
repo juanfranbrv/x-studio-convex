@@ -7,7 +7,7 @@ import { SocialFormatSelector } from './creation-flow/SocialFormatSelector'
 import { BrandingConfigurator } from './creation-flow/BrandingConfigurator'
 import { ImageReferenceSelector } from './creation-flow/ImageReferenceSelector'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Sparkles, Type, Layers, ImagePlus, Wand2, Loader2, Star, Fingerprint, Bookmark as BookmarkIcon } from 'lucide-react'
+import { Palette, Layout, Sparkles, Type, Layers, ImagePlus, Wand2, Loader2, Star, Fingerprint, Bookmark as BookmarkIcon, SquarePlus } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { PresetsCarousel } from './creation-flow/PresetsCarousel'
@@ -22,13 +22,12 @@ import { FloatingAssistance } from './creation-flow/FloatingAssistance'
 import { cn } from '@/lib/utils'
 
 const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = {
-    1: { title: "Tu Idea", description: "Describe lo que quieres crear o usa la varita mágica para analizar tu intención." },
-    2: { title: "Composición", description: "Elige la estructura base para tu diseño." },
+    1: { title: "Tu Idea", description: "Escribe tu idea y pulsa el boton para crear la publicación" },
+    2: { title: "Composición", description: "Elige la composición base. Si eliges \"Libre\", la IA crea la estructura por ti." },
     3: { title: "Formato", description: "Selecciona las dimensiones según la red social." },
     4: { title: "Imagen", description: "Sube una referencia o usa una del Brand Kit." },
     5: { title: "Estilo", description: "Define la estética visual." },
-    6: { title: "Logo", description: "Selecciona qué variante del logo usar." },
-    7: { title: "Colores", description: "Ajusta la paleta cromática." }
+    6: { title: "Marca", description: "Elige la variante del logo y ajusta la paleta cromática." }
 }
 
 // Section header component
@@ -82,7 +81,7 @@ export function ControlsPanel({
     userId,
 }: ControlsPanelProps) {
     const { toast } = useToast()
-    const { panelPosition } = useUI()
+    const { panelPosition, assistanceEnabled } = useUI()
     const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
     const [isSavingPreset, setIsSavingPreset] = useState(false)
     const createPreset = useMutation(api.presets.create)
@@ -95,7 +94,6 @@ export function ControlsPanel({
     const step4Ref = useRef<HTMLDivElement>(null)
     const step5Ref = useRef<HTMLDivElement>(null)
     const step6Ref = useRef<HTMLDivElement>(null)
-    const step7Ref = useRef<HTMLDivElement>(null)
     const step8Ref = useRef<HTMLDivElement>(null)
     const clearedStylesOnStep5 = useRef(false)
 
@@ -156,6 +154,11 @@ export function ControlsPanel({
         return acc
     }, [])
 
+    const handleSelectPreset = (presetState: Partial<GenerationState>) => {
+        loadPreset(presetState)
+        onPromptChange(typeof presetState.rawMessage === 'string' ? presetState.rawMessage : '')
+    }
+
     const handleSavePreset = async (name: string) => {
         if (!userId || !state.selectedIntent) {
             toast({ title: "Error", description: "Faltan datos para guardar el preset.", variant: "destructive" })
@@ -163,10 +166,14 @@ export function ControlsPanel({
         }
         setIsSavingPreset(true)
         try {
+            const intentLabel = state.selectedIntent || undefined
+            const rawMessage = promptValue.trim() || state.rawMessage || undefined
+
             await createPreset({
                 userId,
                 brandId: activeBrandKit?.id as any,
                 name,
+                description: intentLabel,
                 state: {
                     selectedGroup: state.selectedGroup || undefined,
                     selectedIntent: state.selectedIntent,
@@ -184,7 +191,7 @@ export function ControlsPanel({
                     caption: state.caption || undefined,
                     customTexts: state.customTexts,
                     selectedTextAssets: state.selectedTextAssets,
-                    rawMessage: state.rawMessage || undefined,
+                    rawMessage,
                     imageSourceMode: state.imageSourceMode,
                     aiImageDescription: state.aiImageDescription || undefined,
                     selectedBrandKitImageIds: state.selectedBrandKitImageIds.length > 0 ? state.selectedBrandKitImageIds : undefined,
@@ -212,7 +219,6 @@ export function ControlsPanel({
                         <div className="flex items-center justify-between mb-2">
                             <SectionHeader icon={Star} title="Favoritos" />
                             <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="sm" onClick={reset} className="h-6 px-2 text-[10px] uppercase font-bold tracking-tight">Reiniciar</Button>
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -225,7 +231,7 @@ export function ControlsPanel({
                                 </Button>
                             </div>
                         </div>
-                        <PresetsCarousel onSelectPreset={loadPreset} onReset={reset} userId={userId} />
+                        <PresetsCarousel onSelectPreset={handleSelectPreset} onReset={reset} userId={userId} />
                     </div>
                 )}
 
@@ -234,7 +240,21 @@ export function ControlsPanel({
                     {(isMagicParsing || isGenerating) && (
                         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 animate-shimmer" />
                     )}
-                    <SectionHeader icon={Wand2} title="¿Qué quieres crear?" />
+                    <SectionHeader
+                        icon={Wand2}
+                        title="¿Qué quieres crear?"
+                        extra={
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={reset}
+                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                            >
+                                <SquarePlus className="w-3 h-3" />
+                                Nuevo
+                            </Button>
+                        }
+                    />
                     <div className="relative">
                         <Textarea
                             value={promptValue}
@@ -264,7 +284,7 @@ export function ControlsPanel({
                         </div>
                     </div>
                     <FloatingAssistance
-                        isVisible={state.currentStep === 1 && !state.generatedImage && !isGenerating}
+                        isVisible={assistanceEnabled && state.currentStep === 1 && !state.hasGeneratedImage && !isGenerating}
                         {...STEP_ASSISTANCE[1]}
                         side={panelPosition === 'right' ? 'left' : 'right'}
                         anchorRef={step1Ref}
@@ -274,9 +294,9 @@ export function ControlsPanel({
                 {state.selectedIntent && (
                     <>
                         {/* STEP 2: LAYOUT */}
-                        {(state.currentStep >= 2 || state.generatedImage) && availableLayouts.length > 0 && (
+                        {(state.currentStep >= 2 || state.hasGeneratedImage) && availableLayouts.length > 0 && (
                             <div ref={step2Ref} className={cn("relative", state.currentStep === 2 ? "glass-card p-4" : "glass-card p-4 opacity-70 hover:opacity-100 transition-opacity")}>
-                                <FloatingAssistance isVisible={state.currentStep === 2 && !state.generatedImage && !isGenerating} {...STEP_ASSISTANCE[2]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step2Ref} />
+                                <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 2 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[2]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step2Ref} />
                                 <SectionHeader
                                     icon={Layout}
                                     title="Composición"
@@ -292,9 +312,9 @@ export function ControlsPanel({
                         )}
 
                         {/* STEP 3: FORMAT */}
-                        {(state.currentStep >= 3 || state.generatedImage) && (
+                        {(state.currentStep >= 3 || state.hasGeneratedImage) && (
                             <div ref={step3Ref} className={cn("relative", state.currentStep === 3 ? "glass-card p-4" : "glass-card p-4 opacity-70 hover:opacity-100 transition-opacity")}>
-                                <FloatingAssistance isVisible={state.currentStep === 3 && !state.generatedImage && !isGenerating} {...STEP_ASSISTANCE[3]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step3Ref} />
+                                <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 3 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[3]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step3Ref} />
                                 <SectionHeader icon={Layers} title="Formato" />
                                 <SocialFormatSelector selectedPlatform={state.selectedPlatform} selectedFormat={state.selectedFormat} onSelectPlatform={selectPlatform} onSelectFormat={selectFormat} />
                                 {state.currentStep === 3 && state.selectedFormat && (
@@ -306,9 +326,9 @@ export function ControlsPanel({
                         )}
 
                         {/* STEP 4: IMAGE */}
-                        {(state.currentStep >= 4 || state.generatedImage) && (
+                        {(state.currentStep >= 4 || state.hasGeneratedImage) && (
                             <div ref={step4Ref} className={cn("relative", state.currentStep === 4 ? "glass-card p-4" : "glass-card p-4 opacity-70 hover:opacity-100 transition-opacity")}>
-                                <FloatingAssistance isVisible={state.currentStep === 4 && !state.generatedImage && !isGenerating} {...STEP_ASSISTANCE[4]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step4Ref} />
+                                <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 4 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[4]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step4Ref} />
                                 <SectionHeader icon={ImagePlus} title="Imagen de Referencia" />
                                 <ImageReferenceSelector
                                     uploadedImages={state.uploadedImages}
@@ -337,9 +357,9 @@ export function ControlsPanel({
                         )}
 
                         {/* STEP 5: STYLE */}
-                        {(state.currentStep >= 5 || state.generatedImage) && (
+                        {(state.currentStep >= 5 || state.hasGeneratedImage) && (
                             <div ref={step5Ref} className={cn("relative", state.currentStep === 5 ? "glass-card p-4" : "glass-card p-4 opacity-70 hover:opacity-100 transition-opacity")}>
-                                <FloatingAssistance isVisible={state.currentStep === 5 && !state.generatedImage && !isGenerating} {...STEP_ASSISTANCE[5]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step5Ref} />
+                                <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[5]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step5Ref} />
                                 <SectionHeader icon={Sparkles} title="Estilo" />
                                 <StyleChipsSelector
                                     availableStyles={availableStyles}
@@ -357,11 +377,11 @@ export function ControlsPanel({
                             </div>
                         )}
 
-                        {/* STEP 6: LOGO & COLORS - Appear together */}
-                        {(state.currentStep >= 6 || state.generatedImage) && (
-                            <>
-                                <div ref={step6Ref} className="relative glass-card p-4">
-                                    <FloatingAssistance isVisible={state.currentStep === 6 && !state.generatedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
+                        {/* STEP 6: LOGO & COLORS - Unified */}
+                        {(state.currentStep >= 6 || state.hasGeneratedImage) && (
+                            <div ref={step6Ref} className="relative glass-card p-4 space-y-6">
+                                <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 6 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
+                                <div className="space-y-3">
                                     <SectionHeader icon={Fingerprint} title="Logo" />
                                     <BrandingConfigurator
                                         selectedLayout={selectedLayoutMeta || null}
@@ -375,7 +395,7 @@ export function ControlsPanel({
                                     />
                                 </div>
 
-                                <div ref={step7Ref} className="relative glass-card p-4">
+                                <div className="space-y-3 border-t border-border/60 pt-4">
                                     <SectionHeader icon={Palette} title="Colores" />
                                     <BrandingConfigurator
                                         selectedLayout={selectedLayoutMeta || null}
@@ -388,7 +408,7 @@ export function ControlsPanel({
                                         rawMessage={promptValue}
                                     />
                                 </div>
-                            </>
+                            </div>
                         )}
                     </>
                 )}

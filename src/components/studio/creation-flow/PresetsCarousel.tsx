@@ -54,6 +54,8 @@ export function PresetsCarousel({ onSelectPreset, onReset, userId, className }: 
                     // Dynamic Icon
                     const IconComponent = (icons as any)[preset.icon || 'Sparkles'] || (icons as any)['Sparkles']
 
+                    const presetDescription = preset.description || preset.state?.selectedIntent || ''
+
                     const handleDelete = async () => {
                         if (!userId) return
                         await deletePreset({ presetId: preset._id, userId })
@@ -79,7 +81,7 @@ export function PresetsCarousel({ onSelectPreset, onReset, userId, className }: 
                                                 {preset.name}
                                             </p>
                                             <p className="text-[10px] text-muted-foreground/70 mt-0.5 line-clamp-2 leading-tight">
-                                                {preset.description}
+                                                {presetDescription}
                                             </p>
                                         </div>
                                     </div>

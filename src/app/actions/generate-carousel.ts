@@ -3,12 +3,14 @@
 import { generateContentImageUnified } from '@/lib/gemini'
 import { generateTextUnified } from '@/lib/gemini'
 import type { BrandDNA } from '@/lib/brand-types'
+import { buildCarouselDecompositionPrompt, buildCarouselImagePrompt } from '@/lib/prompts/carousel'
 
 export interface SlideContent {
     index: number
     title: string
     description: string
     visualPrompt: string
+    focus?: string
 }
 
 export interface CarouselSlide {
@@ -26,13 +28,32 @@ export interface GenerateCarouselInput {
     aspectRatio?: '1:1' | '4:5'
     style?: string
     brandDNA: BrandDNA
+    intelligenceModel?: string
+    imageModel?: string
     // Optional per-slide overrides
     slideOverrides?: { index: number; text: string }[]
+    slideScript?: SlideContent[]
     // Brand Kit Selections
     selectedLogoUrl?: string
     selectedColors?: string[]
     selectedImageUrls?: string[]
     includeLogoOnSlides?: boolean
+}
+
+export interface AnalyzeCarouselInput {
+    prompt: string
+    slideCount: number
+    brandDNA: BrandDNA
+    intelligenceModel: string
+    selectedColors?: string[]
+    includeLogoOnSlides?: boolean
+    selectedLogoUrl?: string
+}
+
+export interface AnalyzeCarouselResult {
+    success: boolean
+    slides: SlideContent[]
+    error?: string
 }
 
 export interface GenerateCarouselResult {
@@ -67,18 +88,18 @@ function buildBrandContext(brand: BrandDNA, selectedColors?: string[], includeLo
 
     // Visual aesthetic
     if (brand.visual_aesthetic?.length) {
-        parts.push(`ESTÉTICA VISUAL: ${brand.visual_aesthetic.join(', ')}`)
+        parts.push(`ESTETICA VISUAL: ${brand.visual_aesthetic.join(', ')}`)
     }
 
     // Fonts
     if (brand.fonts?.length) {
         const fontNames = brand.fonts.map(f => f.family).join(', ')
-        parts.push(`TIPOGRAFÍAS: ${fontNames}`)
+        parts.push(`TIPOGRAFIAS: ${fontNames}`)
     }
 
     // Logo instruction
     if (includeLogoUrl) {
-        parts.push(`INCLUIR LOGO: Sí, integrar sutilmente el logo de la marca`)
+        parts.push('INCLUIR LOGO: Si, integrar sutilmente el logo de la marca')
     }
 
     return parts.join('\n')
@@ -91,42 +112,17 @@ async function decomposeIntoSlides(
     prompt: string,
     slideCount: number,
     brand: BrandDNA,
-    model: string
+    model: string,
+    selectedColors?: string[],
+    includeLogoUrl?: string
 ): Promise<SlideContent[]> {
-    const brandContext = buildBrandContext(brand)
-
-    const decompositionPrompt = `
-Eres un experto en contenido para Instagram para la marca "${brand.brand_name}".
-Tu tarea es descomponer el tema en exactamente ${slideCount} slides para un carrusel.
-
-${brandContext}
-
-TEMA DEL CARRUSEL: "${prompt}"
-
-Para cada slide, proporciona:
-1. Título corto (máximo 6 palabras)
-2. Descripción breve (1-2 oraciones)
-3. Prompt visual detallado que refleje la identidad de la marca
-
-REGLAS:
-- Slide 1: Portada llamativa con el título principal
-- Slides intermedios: Desarrollan el contenido punto por punto
-- Último slide: CTA o conclusión
-- COHERENCIA: Todos los slides deben usar la misma paleta de colores y estilo
-- MARCA: Reflejar los valores y tono de ${brand.brand_name}
-
-Responde SOLO con JSON válido:
-{
-  "slides": [
-    {
-      "index": 0,
-      "title": "Título",
-      "description": "Descripción",
-      "visualPrompt": "Prompt visual detallado..."
-    }
-  ]
-}
-`
+    const brandContext = buildBrandContext(brand, selectedColors, includeLogoUrl)
+    const decompositionPrompt = buildCarouselDecompositionPrompt({
+        brandName: brand.brand_name,
+        slideCount,
+        brandContext,
+        topic: prompt
+    })
 
     const brandWrapper = { name: brand.brand_name, brand_dna: brand }
 
@@ -149,7 +145,7 @@ Responde SOLO con JSON válido:
         console.error('Decomposition error:', error)
         return Array.from({ length: slideCount }, (_, i) => ({
             index: i,
-            title: i === 0 ? 'Portada' : i === slideCount - 1 ? 'Conclusión' : `Punto ${i}`,
+            title: i === 0 ? 'Portada' : i === slideCount - 1 ? 'Conclusion' : `Punto ${i}`,
             description: prompt,
             visualPrompt: `${prompt} - Slide ${i + 1} of ${slideCount} for ${brand.brand_name}`
         }))
@@ -171,28 +167,19 @@ async function generateSlideImage(
     selectedImageUrls?: string[]
 ): Promise<string> {
     const brandContext = buildBrandContext(brand, selectedColors, selectedLogoUrl)
-
-    const fullPrompt = `
-CARRUSEL INSTAGRAM - Slide ${slideContent.index + 1} de ${totalSlides}
-MARCA: ${brand.brand_name}
-
-${brandContext}
-
----
-CONTENIDO DEL SLIDE:
-TÍTULO: ${slideContent.title}
-DESCRIPCIÓN: ${slideContent.description}
-
-ESTILO VISUAL: ${style}
-INSTRUCCIONES: ${slideContent.visualPrompt}
-
-REQUISITOS TÉCNICOS:
-- Diseño limpio y profesional para Instagram
-- Colores de la paleta de marca
-- Tipografía legible en móvil
-- ${selectedLogoUrl ? 'Incluir logo de forma sutil' : 'Sin logo'}
-- Coherencia con otros slides del carrusel
-`
+    const fullPrompt = buildCarouselImagePrompt({
+        slideIndex: slideContent.index,
+        totalSlides,
+        brandName: brand.brand_name,
+        brandContext,
+        title: slideContent.title,
+        description: slideContent.description,
+        visualPrompt: slideContent.visualPrompt,
+        focus: slideContent.focus,
+        style,
+        aspectRatio,
+        includeLogo: Boolean(selectedLogoUrl)
+    })
 
     const brandWrapper = { name: brand.brand_name, brand_dna: brand }
 
@@ -228,21 +215,39 @@ export async function generateCarouselAction(
         aspectRatio = '1:1',
         style = 'Moderno y minimalista',
         brandDNA,
+        intelligenceModel,
+        imageModel,
         slideOverrides = [],
+        slideScript,
         selectedLogoUrl,
         selectedColors,
         selectedImageUrls,
         includeLogoOnSlides
     } = input
 
-    const model = 'gemini-3-pro-image-preview'
-
     try {
-        console.log(`\n🎠 Starting carousel for ${brandDNA.brand_name}: ${slideCount} slides`)
+        console.log(`Starting carousel for ${brandDNA.brand_name}: ${slideCount} slides`)
 
-        // Step 1: Decompose prompt
-        console.log('📝 Decomposing with brand context...')
-        let slideContents = await decomposeIntoSlides(prompt, slideCount, brandDNA, 'gemini-3-flash')
+        // Step 1: Decompose prompt (or reuse script)
+        console.log('Decomposing with brand context...')
+        const canUseScript = Array.isArray(slideScript) && slideScript.length === slideCount
+        if (!canUseScript && !intelligenceModel) {
+            throw new Error('Missing intelligence model configuration')
+        }
+        if (!imageModel) {
+            throw new Error('Missing image model configuration')
+        }
+
+        let slideContents = canUseScript
+            ? slideScript
+            : await decomposeIntoSlides(
+                prompt,
+                slideCount,
+                brandDNA,
+                intelligenceModel as string,
+                selectedColors,
+                includeLogoOnSlides ? selectedLogoUrl : undefined
+            )
 
         // Apply overrides
         slideOverrides.forEach(override => {
@@ -261,7 +266,7 @@ export async function generateCarouselAction(
         }))
 
         for (let i = 0; i < slideContents.length; i++) {
-            console.log(`🖼️ Generating slide ${i + 1}/${slideCount} with brand context...`)
+            console.log(`Generating slide ${i + 1}/${slideCount} with brand context...`)
             slides[i].status = 'generating'
 
             try {
@@ -271,7 +276,7 @@ export async function generateCarouselAction(
                     style,
                     aspectRatio,
                     brandDNA,
-                    model,
+                    imageModel,
                     selectedColors,
                     includeLogoOnSlides ? selectedLogoUrl : undefined,
                     selectedImageUrls
@@ -287,11 +292,48 @@ export async function generateCarouselAction(
             }
         }
 
-        console.log('✅ Carousel complete!')
+        console.log('Carousel complete.')
         return { success: true, slides }
 
     } catch (error) {
         console.error('Carousel error:', error)
+        return {
+            success: false,
+            slides: [],
+            error: error instanceof Error ? error.message : 'Error'
+        }
+    }
+}
+
+/**
+ * Analyze prompt and return the slide script (no images)
+ */
+export async function analyzeCarouselAction(
+    input: AnalyzeCarouselInput
+): Promise<AnalyzeCarouselResult> {
+    const {
+        prompt,
+        slideCount,
+        brandDNA,
+        intelligenceModel,
+        selectedColors,
+        includeLogoOnSlides,
+        selectedLogoUrl
+    } = input
+
+    try {
+        console.log(`[Carousel] Analyzing script for ${brandDNA.brand_name}: ${slideCount} slides`)
+        const slides = await decomposeIntoSlides(
+            prompt,
+            slideCount,
+            brandDNA,
+            intelligenceModel,
+            selectedColors,
+            includeLogoOnSlides ? selectedLogoUrl : undefined
+        )
+        return { success: true, slides }
+    } catch (error) {
+        console.error('Carousel analysis error:', error)
         return {
             success: false,
             slides: [],
@@ -310,12 +352,12 @@ export async function regenerateSlideAction(
     style: string,
     aspectRatio: string,
     brandDNA: BrandDNA,
+    imageModel: string,
     selectedLogoUrl?: string,
-    selectedColors?: string[],
-    model: string = 'gemini-3-pro-image-preview'
+    selectedColors?: string[]
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
     try {
-        console.log(`🔄 Regenerating slide ${slideIndex + 1} for ${brandDNA.brand_name}...`)
+        console.log(`Regenerating slide ${slideIndex + 1} for ${brandDNA.brand_name}...`)
 
         const imageUrl = await generateSlideImage(
             slideContent,
@@ -323,7 +365,7 @@ export async function regenerateSlideAction(
             style,
             aspectRatio,
             brandDNA,
-            model,
+            imageModel,
             selectedColors,
             selectedLogoUrl
         )

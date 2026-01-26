@@ -28,6 +28,7 @@ export function FloatingAssistance({
     const [mounted, setMounted] = useState(false);
     const [coords, setCoords] = useState({ top: 0, left: 0, right: 0, width: 0 });
     const assistanceRef = useRef<HTMLDivElement>(null);
+    const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
     useEffect(() => {
         setMounted(true);
@@ -68,6 +69,13 @@ export function FloatingAssistance({
 
     if (!mounted || !isVisible || !description) return null;
 
+    const contentWidth = assistanceRef.current?.getBoundingClientRect().width ?? 280;
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const desiredLeft = side === 'left'
+        ? coords.left - contentWidth - 16
+        : coords.right + 16;
+    const clampedLeft = clamp(desiredLeft, 12, Math.max(12, viewportWidth - contentWidth - 12));
+
     // The assistance content
     const content = (
         <AnimatePresence mode="wait">
@@ -86,10 +94,7 @@ export function FloatingAssistance({
                 )}
                 style={{
                     top: coords.top,
-                    ...(side === 'left'
-                        ? { left: coords.left - 280 - 16 } // Card left - width - margin
-                        : { left: coords.right + 16 }      // Card right + margin
-                    )
+                    left: clampedLeft
                 }}
             >
                 {/* Arrow pointing towards the step */}

@@ -812,6 +812,7 @@ export interface GenerationState {
     // Generation
     isGenerating: boolean
     generatedImage: string | null
+    hasGeneratedImage: boolean
     error: string | null
 }
 
@@ -845,5 +846,6 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     aiImageDescription: '',
     isGenerating: false,
     generatedImage: null,
+    hasGeneratedImage: false,
     error: null,
 }

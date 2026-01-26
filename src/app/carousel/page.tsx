@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
@@ -13,16 +12,19 @@ import {
 import { CarouselCanvasPanel } from '@/components/studio/carousel/CarouselCanvasPanel'
 import {
     generateCarouselAction,
+    analyzeCarouselAction,
     regenerateSlideAction,
     CarouselSlide,
     SlideContent
 } from '@/app/actions/generate-carousel'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 
 export default function CarouselPage() {
     const router = useRouter()
-    const { user } = useUser()
     const { activeBrandKit, brandKits, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const { toast } = useToast()
+    const aiConfig = useQuery(api.settings.getAIConfig)
 
     const handleNewBrandKit = () => {
         router.push('/brand-kit/new')
@@ -30,14 +32,92 @@ export default function CarouselPage() {
 
 
     const [isGenerating, setIsGenerating] = useState(false)
+    const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
     const [generatedCount, setGeneratedCount] = useState(0)
     const [slides, setSlides] = useState<CarouselSlide[]>([])
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5'>('1:1')
     const [carouselSettings, setCarouselSettings] = useState<CarouselSettings | null>(null)
+    const [scriptSlides, setScriptSlides] = useState<SlideContent[] | null>(null)
+    const [scriptPrompt, setScriptPrompt] = useState('')
+    const [scriptSlideCount, setScriptSlideCount] = useState<number | null>(null)
 
     const [isRegenerating, setIsRegenerating] = useState(false)
     const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null)
+
+    const handleAnalyze = useCallback(async (settings: CarouselSettings) => {
+        if (!settings.prompt.trim()) {
+            toast({
+                title: 'Error',
+                description: 'Por favor, introduce un tema para el carrusel.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        if (!activeBrandKit) {
+            toast({
+                title: 'Error',
+                description: 'Selecciona un Brand Kit primero.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        if (!aiConfig?.intelligenceModel) {
+            toast({
+                title: 'Falta configuracion de IA',
+                description: 'No hay un modelo de inteligencia configurado en el panel de Admin.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        setIsAnalyzing(true)
+        setGeneratedCount(0)
+        setCurrentSlideIndex(0)
+        setAspectRatio(settings.aspectRatio)
+        setCarouselSettings(settings)
+
+        try {
+            const result = await analyzeCarouselAction({
+                prompt: settings.prompt,
+                slideCount: settings.slideCount,
+                brandDNA: activeBrandKit,
+                intelligenceModel: aiConfig.intelligenceModel,
+                selectedColors: settings.selectedColors,
+                includeLogoOnSlides: settings.includeLogoOnSlides,
+                selectedLogoUrl: settings.selectedLogoUrl
+            })
+
+            if (result.success) {
+                setScriptSlides(result.slides)
+                setScriptPrompt(settings.prompt)
+                setScriptSlideCount(settings.slideCount)
+                setSlides(result.slides.map(s => ({
+                    index: s.index,
+                    title: s.title,
+                    description: s.description,
+                    status: 'pending' as const
+                })))
+                toast({
+                    title: 'Guion listo',
+                    description: 'Revisa la vista previa antes de generar.'
+                })
+            } else {
+                throw new Error(result.error || 'Error desconocido')
+            }
+        } catch (error) {
+            console.error('Carousel analysis error:', error)
+            toast({
+                title: 'Error',
+                description: error instanceof Error ? error.message : 'No se pudo analizar el carrusel.',
+                variant: 'destructive'
+            })
+        } finally {
+            setIsAnalyzing(false)
+        }
+    }, [activeBrandKit, aiConfig?.intelligenceModel, toast])
 
     const handleGenerate = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
@@ -53,6 +133,25 @@ export default function CarouselPage() {
             toast({
                 title: 'Error',
                 description: 'Selecciona un Brand Kit primero.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        if (!aiConfig?.imageModel) {
+            toast({
+                title: 'Falta configuracion de IA',
+                description: 'No hay un modelo de imagen configurado en el panel de Admin.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        const shouldUseScript = scriptSlides && scriptPrompt === settings.prompt && scriptSlideCount === settings.slideCount
+        if (!shouldUseScript && !aiConfig?.intelligenceModel) {
+            toast({
+                title: 'Falta configuracion de IA',
+                description: 'No hay un modelo de inteligencia configurado en el panel de Admin.',
                 variant: 'destructive'
             })
             return
@@ -84,9 +183,12 @@ export default function CarouselPage() {
                 slideCount: settings.slideCount,
                 aspectRatio: settings.aspectRatio,
                 style: settings.style,
+                intelligenceModel: aiConfig?.intelligenceModel,
+                imageModel: aiConfig?.imageModel,
                 // Full Brand Kit Context
                 brandDNA: activeBrandKit,
                 slideOverrides,
+                slideScript: shouldUseScript ? scriptSlides : undefined,
                 // Brand Kit Selections from UI
                 selectedLogoUrl: settings.selectedLogoUrl,
                 selectedColors: settings.selectedColors,
@@ -115,7 +217,7 @@ export default function CarouselPage() {
         } finally {
             setIsGenerating(false)
         }
-    }, [activeBrandKit, toast])
+    }, [activeBrandKit, aiConfig?.imageModel, aiConfig?.intelligenceModel, scriptSlides, scriptPrompt, scriptSlideCount, toast])
 
     const handleRegenerateSlide = useCallback(async (index: number) => {
         if (!carouselSettings || !activeBrandKit) return
@@ -134,6 +236,10 @@ export default function CarouselPage() {
                 visualPrompt: slide.description
             }
 
+            if (!aiConfig?.imageModel) {
+                throw new Error('Missing image model configuration')
+            }
+
             const result = await regenerateSlideAction(
                 index,
                 slideContent,
@@ -141,6 +247,7 @@ export default function CarouselPage() {
                 carouselSettings.style,
                 carouselSettings.aspectRatio,
                 activeBrandKit,
+                aiConfig.imageModel,
                 carouselSettings.selectedLogoUrl,
                 carouselSettings.selectedColors
             )
@@ -172,7 +279,7 @@ export default function CarouselPage() {
             setIsRegenerating(false)
             setRegeneratingIndex(null)
         }
-    }, [slides, carouselSettings, activeBrandKit, toast])
+    }, [slides, carouselSettings, activeBrandKit, aiConfig?.imageModel, toast])
 
     return (
         <DashboardLayout
@@ -196,7 +303,9 @@ export default function CarouselPage() {
 
                 {/* Controls Panel (Right Side) */}
                 <CarouselControlsPanel
+                    onAnalyze={handleAnalyze}
                     onGenerate={handleGenerate}
+                    isAnalyzing={isAnalyzing}
                     isGenerating={isGenerating}
                     currentSlideIndex={currentSlideIndex}
                     generatedCount={generatedCount}

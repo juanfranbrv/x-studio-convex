@@ -241,6 +241,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             selectedStyles: [],
             selectedLayout: null, // FORCE USER TO SELECT LAYOUT. Do not auto-select.
             generatedImage: null,
+            hasGeneratedImage: false,
 
             // CRITICAL: Clear all downstream step data to enforce sequential flow
             selectedFormat: null,
@@ -1372,7 +1373,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
     // -------------------------------------------------------------------------
 
     const setGeneratedImage = useCallback((url: string | null) => {
-        setState(prev => ({ ...prev, generatedImage: url }))
+        setState(prev => ({
+            ...prev,
+            generatedImage: url,
+            hasGeneratedImage: url ? true : prev.hasGeneratedImage,
+        }))
     }, [])
 
     const reset = useCallback(() => {
@@ -1389,6 +1394,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             ...INITIAL_GENERATION_STATE,
             caption: '', // NEW: Ensure caption is reset for presets
             ...presetState,
+            hasGeneratedImage: Boolean(presetState.generatedImage),
             // Ensure clean technical state
             isGenerating: false,
             isAnalyzing: false,
@@ -1427,6 +1433,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             customStyle: state.customStyle,
             selectedTextAssets: state.selectedTextAssets,
             generatedImage: state.generatedImage,
+            hasGeneratedImage: state.hasGeneratedImage,
         }
 
         // Safety: Strip large base64 strings (over ~50KB) to avoid Convex 1MB limit.

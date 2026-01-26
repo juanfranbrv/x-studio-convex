@@ -260,24 +260,31 @@ function getLayoutVisual(id: string) {
 
     // === COMUNICADO layouts ===
     if (id === 'comunicado-oficial') return <ComunicadoOficialLayout />;
-    if (id === 'comunicado-alerta') return <ComunicadoAlertaLayout />;
-    if (id === 'comunicado-memo') return <ComunicadoMemoLayout />;
-    if (id === 'comunicado-banner') return <ComunicadoBannerLayout />;
+    if (id === 'comunicado-urgent' || id === 'comunicado-alerta') return <ComunicadoUrgenteLayout />;
+    if (id === 'comunicado-modern') return <ComunicadoModernoLayout />;
+    if (id === 'comunicado-editorial') return <ComunicadoEditorialLayout />;
+    if (id === 'comunicado-community') return <ComunicadoComunidadLayout />;
     if (id === 'comunicado-minimal') return <ComunicadoMinimalLayout />;
-    if (id === 'comunicado-seal') return <LogroSealLayout />;
-    if (id === 'comunicado-timeline') return <TimelineLayout />;
-    if (id === 'comunicado-split') return <SplitLayout />;
+    if (id === 'comunicado-card') return <ComunicadoCardLayout />;
+    if (id === 'comunicado-ticker' || id === 'comunicado-banner') return <ComunicadoMarquesinaLayout />;
+    if (id === 'comunicado-memo') return <ComunicadoMemoLayout />;
+    if (id === 'comunicado-poster') return <ComunicadoCartelLayout />;
+    if (id === 'comunicado-timeline') return <ComunicadoTimelineLayout />;
     if (id === 'comunicado-icon') return <ComunicadoIconLayout />;
-    if (id === 'comunicado-quote') return <TestimonialLayout />;
-    if (id === 'comunicado-checklist') return <PasosChecklistLayout />;
-
+    if (id === 'comunicado-quote') return <ComunicadoEditorialLayout />;
+    if (id === 'comunicado-checklist') return <ComunicadoMemoLayout />;
     // === PREGUNTA layouts ===
+    if (id === 'pregunta-big') return <PreguntaBigLayout />;
+    if (id === 'pregunta-versus') return <PreguntaVersusLayout />;
+    if (id === 'pregunta-conversation') return <PreguntaConversationLayout />;
+    if (id === 'pregunta-thought') return <PreguntaThoughtLayout />;
+    if (id === 'pregunta-contro') return <PreguntaControLayout />;
     if (id === 'pregunta-bold') return <PreguntaBoldLayout />;
     if (id === 'pregunta-poll') return <PreguntaPollLayout />;
     if (id === 'pregunta-options') return <PreguntaOptionsLayout />;
     if (id === 'pregunta-bubble') return <CitaBocadilloLayout />;
     if (id === 'pregunta-quiz') return <RetoQuizLayout />;
-    if (id === 'pregunta-vs') return <RetoVersusLayout />;
+    if (id === 'pregunta-vs') return <PreguntaVersusLayout />;
     if (id === 'pregunta-fill') return <PreguntaFillLayout />;
     if (id === 'pregunta-slider') return <PreguntaSliderLayout />;
     if (id === 'pregunta-emoji') return <PreguntaEmojiLayout />;
@@ -1858,92 +1865,277 @@ function EscaparateEditorialLayout() {
 // === COMUNICADO LAYOUTS ===
 function ComunicadoOficialLayout() {
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-0.5 p-1">
-            <div className="w-4 h-4 border-2 border-primary/50 rounded-sm flex items-center justify-center">
-                <div className="text-primary/60 text-[6px]">!</div>
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-1">
+            <div className="relative w-7 h-7">
+                <div className="absolute inset-0 rounded-full border-2 border-primary/40" />
+                <div className="absolute inset-1 rounded-full border-2 border-primary/20" />
+                <div className="absolute inset-2 rounded-full bg-primary/15" />
+                <div className="absolute inset-y-1.5 left-1/2 w-1 -translate-x-1/2 bg-primary/60" />
             </div>
-            <div className="w-[60%] h-0.5 bg-primary/25 rounded-full" />
+            <div className="w-[75%] h-1 bg-primary/30 rounded-full" />
+            <div className="w-[60%] h-1 bg-primary/20 rounded-full" />
         </div>
     );
 }
 
-function ComunicadoAlertaLayout() {
+function ComunicadoUrgenteLayout() {
     return (
-        <div className="w-full h-full flex items-center justify-center">
-            <div className="w-0 h-0 border-l-4 border-r-4 border-b-6 border-transparent border-b-primary/50" />
-        </div>
-    );
-}
-
-function ComunicadoMemoLayout() {
-    return (
-        <div className="w-full h-full flex flex-col gap-0.5 p-2 bg-primary/5">
-            <div className="h-0.5 w-full bg-primary/30 rounded-full" />
-            <div className="h-0.5 w-[90%] bg-primary/20 rounded-full" />
-            <div className="h-0.5 w-[80%] bg-primary/15 rounded-full" />
-        </div>
-    );
-}
-
-function ComunicadoBannerLayout() {
-    return (
-        <div className="w-full h-full flex items-center justify-center p-1">
-            <div className="w-full h-3 bg-primary/40 rounded-sm flex items-center justify-center">
-                <div className="text-white text-[5px]">INFO</div>
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-1">
+            <div className="w-full h-2 bg-primary/40 rounded-full" />
+            <div className="relative w-7 h-7 flex items-end justify-center">
+                <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[12px] border-transparent border-b-primary/50" />
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-1 h-2.5 bg-primary/70" />
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary/70 rounded-full" />
             </div>
+            <div className="w-[70%] h-1 bg-primary/20 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoModernoLayout() {
+    return (
+        <div className="w-full h-full flex gap-1 p-1">
+            <div className="w-2/3 h-full rounded-sm bg-primary/30 relative overflow-hidden">
+                <div className="absolute -top-1 -right-2 w-7 h-7 rounded-full bg-primary/20" />
+                <div className="absolute top-1 left-1 w-2.5 h-2.5 border-2 border-primary/45 rounded-sm" />
+                <div className="absolute bottom-1 left-1 h-1.5 w-7 bg-primary/40 rounded-full" />
+            </div>
+            <div className="flex-1 flex flex-col justify-between py-0.5">
+                <div className="h-2 bg-primary/40 rounded-sm" />
+                <div className="h-1.5 bg-primary/30 rounded-sm" />
+                <div className="h-1.5 bg-primary/20 rounded-sm" />
+            </div>
+        </div>
+    );
+}
+
+function ComunicadoEditorialLayout() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-1">
+            <div className="flex items-end gap-1">
+                <div className="text-primary/80 text-xl font-black leading-none">A</div>
+                <div className="text-primary/50 text-sm font-bold leading-none">a</div>
+            </div>
+            <div className="w-[75%] h-1 bg-primary/20 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoComunidadLayout() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-1">
+            <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 bg-primary/30 rounded-full" />
+                <div className="w-5 h-5 bg-primary/45 rounded-full" />
+                <div className="w-4 h-4 bg-primary/25 rounded-full" />
+            </div>
+            <div className="w-[65%] h-1 bg-primary/20 rounded-full" />
         </div>
     );
 }
 
 function ComunicadoMinimalLayout() {
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-0.5 p-1">
-            <div className="text-primary/60 text-sm">ℹ</div>
-            <div className="w-[50%] h-0.5 bg-primary/25 rounded-full" />
+        <div className="w-full h-full flex flex-col justify-center gap-1.5 p-1">
+            <div className="w-3 h-3 bg-primary/40 rounded-sm" />
+            <div className="w-full h-1 bg-primary/25 rounded-full" />
+            <div className="w-[70%] h-1 bg-primary/15 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoCardLayout() {
+    return (
+        <div className="w-full h-full p-1">
+            <div className="w-full h-full rounded-sm bg-primary/5 flex items-center justify-center">
+                <div className="w-[88%] h-[75%] rounded-sm border-2 border-primary/25 bg-primary/10 shadow-sm flex flex-col gap-1 p-1.5">
+                    <div className="h-2 w-[70%] bg-primary/30 rounded-sm" />
+                    <div className="h-1 w-full bg-primary/20 rounded-full" />
+                    <div className="h-1 w-[80%] bg-primary/15 rounded-full" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ComunicadoMarquesinaLayout() {
+    return (
+        <div className="w-full h-full flex flex-col justify-center gap-1.5 p-1">
+            <div className="h-3 bg-primary/45 rounded-sm flex items-center gap-1 px-1">
+                <div className="w-3 h-1.5 bg-primary/70 rounded-sm" />
+                <div className="h-1 flex-1 bg-primary/15 rounded-full" />
+            </div>
+            <div className="h-1 w-[75%] bg-primary/25 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoMemoLayout() {
+    return (
+        <div className="w-full h-full flex flex-col gap-1 p-1">
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-1.5 bg-primary/40 rounded-sm" />
+                <div className="h-1 flex-1 bg-primary/25 rounded-full" />
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-1.5 bg-primary/30 rounded-sm" />
+                <div className="h-1 flex-1 bg-primary/20 rounded-full" />
+            </div>
+            <div className="mt-0.5 h-1 w-full bg-primary/20 rounded-full" />
+            <div className="h-1 w-[80%] bg-primary/15 rounded-full" />
+            <div className="h-1 w-[50%] bg-primary/20 rounded-full self-end" />
+        </div>
+    );
+}
+
+function ComunicadoCartelLayout() {
+    return (
+        <div className="w-full h-full flex flex-col justify-center gap-1 p-1">
+            <div className="h-5 bg-primary/45 rounded-sm" />
+            <div className="h-2 bg-primary/25 rounded-sm" />
+            <div className="h-1 w-[60%] bg-primary/20 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoTimelineLayout() {
+    return (
+        <div className="w-full h-full flex items-center p-1">
+            <div className="relative h-full w-4 flex items-center justify-center">
+                <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-1 bg-primary/25" />
+                <div className="absolute top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary/45 rounded-full" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary/30 rounded-full" />
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary/20 rounded-full" />
+            </div>
+            <div className="flex-1 flex flex-col gap-1 pl-1.5">
+                <div className="h-1 w-full bg-primary/20 rounded-full" />
+                <div className="h-1 w-[80%] bg-primary/15 rounded-full" />
+                <div className="h-1 w-[60%] bg-primary/10 rounded-full" />
+            </div>
         </div>
     );
 }
 
 function ComunicadoIconLayout() {
     return (
-        <div className="w-full h-full flex gap-1 p-1.5">
-            <div className="w-3 h-3 rounded-full bg-primary/40" />
-            <div className="flex-1 flex flex-col gap-0.5 justify-center">
-                <div className="h-0.5 w-full bg-primary/25 rounded-full" />
-                <div className="h-0.5 w-[60%] bg-primary/15 rounded-full" />
+        <div className="w-full h-full flex items-center gap-1.5 p-1">
+            <div className="w-5 h-5 rounded-sm border-2 border-primary/35 flex items-center justify-center">
+                <div className="w-2 h-2 bg-primary/40 rounded-full" />
+            </div>
+            <div className="flex-1 flex flex-col gap-1 justify-center">
+                <div className="h-1 w-full bg-primary/25 rounded-full" />
+                <div className="h-1 w-[70%] bg-primary/15 rounded-full" />
             </div>
         </div>
     );
 }
 
 // === PREGUNTA LAYOUTS ===
+function PreguntaBigLayout() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
+            <div className="w-full h-3 rounded-md bg-primary/30" />
+            <div className="w-[85%] h-3 rounded-md bg-primary/20" />
+            <div className="relative mt-0.5">
+                <div className="text-primary/80 text-2xl font-black leading-none">?</div>
+                <div className="absolute -top-1 -right-2 w-3 h-3 bg-primary/35 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function PreguntaVersusLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-full h-10 rounded-md overflow-hidden border border-primary/25">
+                <div className="absolute inset-y-0 left-0 w-1/2 bg-primary/25" />
+                <div className="absolute inset-y-0 right-0 w-1/2 bg-primary/40" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-primary/60 text-primary-foreground text-[8px] font-bold flex items-center justify-center">
+                        VS
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function PreguntaConversationLayout() {
+    return (
+        <div className="w-full h-full relative p-1 flex items-center justify-center">
+            <div className="absolute left-1 top-2 w-9 h-5 rounded-lg bg-primary/35" />
+            <div className="absolute left-3 top-6 w-2 h-2 bg-primary/35 rotate-45" />
+            <div className="absolute right-1 bottom-2 w-10 h-5 rounded-lg border-2 border-primary/35 bg-background" />
+            <div className="absolute right-4 bottom-1 w-2 h-2 border-2 border-primary/35 bg-background rotate-45" />
+            <div className="absolute left-3 top-3 w-4 h-1 bg-primary/45 rounded-full" />
+            <div className="absolute right-3 bottom-3 w-4 h-1 bg-primary/30 rounded-full" />
+        </div>
+    );
+}
+
+function PreguntaThoughtLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10 rounded-full border-2 border-primary/30 flex items-center justify-center">
+                <div className="w-5 h-5 bg-primary/35 rounded-full" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary/35 rounded-full" />
+                <div className="absolute -top-2 left-2 w-2 h-2 bg-primary/25 rounded-full" />
+                <div className="absolute -right-3 top-4 w-1.5 h-1.5 bg-primary/25 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function PreguntaControLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center">
+                <Flame className="w-6 h-6 text-primary/70" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary/40 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
 function PreguntaBoldLayout() {
     return (
-        <div className="w-full h-full flex items-center justify-center">
-            <div className="text-primary/70 text-2xl font-black">?</div>
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10 rounded-full border-2 border-primary/40 flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary/35 rounded-full" />
+                <div className="text-primary/70 text-2xl font-black leading-none">?</div>
+            </div>
         </div>
     );
 }
 
 function PreguntaPollLayout() {
     return (
-        <div className="w-full h-full flex flex-col gap-0.5 p-2">
-            <div className="h-2 w-[80%] bg-primary/40 rounded-sm" />
-            <div className="h-2 w-[50%] bg-primary/25 rounded-sm" />
+        <div className="w-full h-full flex flex-col justify-center gap-1 p-1">
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full border-2 border-primary/45 flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 bg-primary/50 rounded-full" />
+                </div>
+                <div className="h-2 flex-1 bg-primary/35 rounded-md" />
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full border-2 border-primary/30" />
+                <div className="h-2 flex-1 bg-primary/20 rounded-md" />
+            </div>
+            <div className="mt-0.5 h-1 w-[70%] bg-primary/20 rounded-full self-end" />
         </div>
     );
 }
 
 function PreguntaOptionsLayout() {
     return (
-        <div className="w-full h-full flex flex-col gap-0.5 p-2">
-            <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full border border-primary/40" />
-                <div className="h-0.5 flex-1 bg-primary/25 rounded-full" />
+        <div className="w-full h-full flex flex-col gap-1 p-1">
+            <div className="flex items-center justify-between h-4 px-1.5 rounded-md bg-primary/25">
+                <div className="w-4 h-4 rounded-full bg-primary/45 flex items-center justify-center text-[7px] font-bold text-primary-foreground">A</div>
+                <div className="h-1 w-8 bg-primary/40 rounded-full" />
             </div>
-            <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full border border-primary/40 bg-primary/40" />
-                <div className="h-0.5 flex-1 bg-primary/20 rounded-full" />
+            <div className="flex items-center justify-between h-4 px-1.5 rounded-md border border-primary/30">
+                <div className="w-4 h-4 rounded-full border-2 border-primary/40 flex items-center justify-center text-[7px] font-bold text-primary/70">B</div>
+                <div className="h-1 w-8 bg-primary/25 rounded-full" />
             </div>
         </div>
     );
@@ -1951,18 +2143,27 @@ function PreguntaOptionsLayout() {
 
 function PreguntaFillLayout() {
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-0.5 p-1">
-            <div className="w-[60%] h-0.5 bg-primary/25 rounded-full" />
-            <div className="w-[40%] h-2 border-b-2 border-primary/40" />
+        <div className="w-full h-full flex flex-col justify-center gap-1 p-1">
+            <div className="h-1 w-full bg-primary/25 rounded-full" />
+            <div className="flex items-center gap-1">
+                <div className="h-1 w-4 bg-primary/25 rounded-full" />
+                <div className="h-2 w-10 border-b-2 border-primary/50" />
+                <div className="h-1 w-6 bg-primary/25 rounded-full" />
+            </div>
         </div>
     );
 }
 
 function PreguntaSliderLayout() {
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2">
-            <div className="w-full h-1 bg-primary/20 rounded-full relative">
-                <div className="absolute left-1/2 top-1/2 -translate-y-1/2 w-2 h-2 bg-primary/50 rounded-full" />
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
+            <div className="w-full h-2 bg-primary/20 rounded-full relative">
+                <div className="absolute left-1/2 top-1/2 -translate-y-1/2 w-4 h-4 bg-primary/45 rounded-full ring-2 ring-primary/30" />
+            </div>
+            <div className="flex w-full justify-between px-1">
+                <div className="w-1.5 h-1.5 bg-primary/30 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary/30 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary/30 rounded-full" />
             </div>
         </div>
     );
@@ -1970,10 +2171,19 @@ function PreguntaSliderLayout() {
 
 function PreguntaEmojiLayout() {
     return (
-        <div className="w-full h-full flex items-center justify-center gap-2 p-1">
-            <div className="w-6 h-6 rounded-full border-2 border-primary/50" />
-            <div className="w-6 h-6 rounded-full border-2 border-primary/30" />
-            <div className="w-6 h-6 rounded-full border-2 border-primary/20" />
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-7 h-7 rounded-full border-2 border-primary/50 flex items-center justify-center gap-1">
+                <div className="w-1 h-1 bg-primary/60 rounded-full" />
+                <div className="w-1 h-1 bg-primary/60 rounded-full" />
+            </div>
+            <div className="w-7 h-7 rounded-full border-2 border-primary/35 flex items-center justify-center gap-1">
+                <div className="w-1 h-1 bg-primary/45 rounded-full" />
+                <div className="w-1 h-1 bg-primary/45 rounded-full" />
+            </div>
+            <div className="w-7 h-7 rounded-full border-2 border-primary/25 flex items-center justify-center gap-1">
+                <div className="w-1 h-1 bg-primary/35 rounded-full" />
+                <div className="w-1 h-1 bg-primary/35 rounded-full" />
+            </div>
         </div>
     );
 }
@@ -1981,12 +2191,14 @@ function PreguntaEmojiLayout() {
 function PreguntaDebateLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center gap-1 p-1">
-            <div className="w-4 h-4 bg-primary/40 rounded-sm flex items-center justify-center">
-                <div className="text-white text-[6px]">A</div>
+            <div className="relative w-6 h-5 rounded-md bg-primary/35 flex items-center justify-center">
+                <div className="absolute -bottom-1 left-1.5 w-2 h-2 bg-primary/35 rotate-45" />
+                <div className="text-primary-foreground text-[7px] font-bold">A</div>
             </div>
-            <div className="text-primary/40 text-[6px]">vs</div>
-            <div className="w-4 h-4 bg-primary/30 rounded-sm flex items-center justify-center">
-                <div className="text-primary/60 text-[6px]">B</div>
+            <div className="w-1.5 h-5 bg-primary/30 rounded-full" />
+            <div className="relative w-6 h-5 rounded-md border-2 border-primary/35 flex items-center justify-center">
+                <div className="absolute -bottom-1 right-1.5 w-2 h-2 border-2 border-primary/35 rotate-45 bg-background" />
+                <div className="text-primary/70 text-[7px] font-bold">B</div>
             </div>
         </div>
     );

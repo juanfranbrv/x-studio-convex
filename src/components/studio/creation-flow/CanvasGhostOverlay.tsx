@@ -28,6 +28,22 @@ export function CanvasGhostOverlay({ layoutId, className }: CanvasGhostOverlayPr
 }
 
 function getGhostVisual(id: string) {
+    // COMUNICADO layouts
+    if (id.startsWith('comunicado-')) {
+        if (id === 'comunicado-oficial') return <ComunicadoOficialGhost />;
+        if (id === 'comunicado-urgent' || id === 'comunicado-alerta') return <ComunicadoUrgenteGhost />;
+        if (id === 'comunicado-modern') return <ComunicadoModernoGhost />;
+        if (id === 'comunicado-editorial' || id === 'comunicado-quote') return <ComunicadoEditorialGhost />;
+        if (id === 'comunicado-community') return <ComunicadoComunidadGhost />;
+        if (id === 'comunicado-minimal') return <ComunicadoMinimalGhost />;
+        if (id === 'comunicado-card') return <ComunicadoCardGhost />;
+        if (id === 'comunicado-ticker' || id === 'comunicado-banner') return <ComunicadoMarquesinaGhost />;
+        if (id === 'comunicado-memo' || id === 'comunicado-checklist') return <ComunicadoMemoGhost />;
+        if (id === 'comunicado-poster') return <ComunicadoCartelGhost />;
+        if (id === 'comunicado-timeline') return <ComunicadoTimelineGhost />;
+        if (id === 'comunicado-icon') return <ComunicadoIconGhost />;
+    }
+
     // DATO layouts
     if (id === 'dato-free' || id.endsWith('-free')) return <FreeGhost />;
     if (id === 'dato-big') return <BigNumberGhost />;
@@ -234,6 +250,154 @@ function TestimonialGhost() {
             <div className="h-5 w-[80%] bg-primary/15 rounded-full" />
             <div className="h-5 w-[60%] bg-primary/15 rounded-full" />
             <div className="w-16 h-16 rounded-full bg-primary/20 mt-6" />
+        </div>
+    );
+}
+
+function ComunicadoOficialGhost() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-8 p-10">
+            <div className="relative w-40 h-40">
+                <div className="absolute inset-0 rounded-full border-[6px] border-primary/20" />
+                <div className="absolute inset-4 rounded-full border-[4px] border-primary/15" />
+                <div className="absolute inset-8 rounded-full bg-primary/10" />
+                <div className="absolute inset-y-6 left-1/2 w-1.5 -translate-x-1/2 bg-primary/35" />
+            </div>
+            <div className="w-[60%] h-5 bg-primary/15 rounded-full" />
+            <div className="w-[45%] h-4 bg-primary/10 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoUrgenteGhost() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-8 p-10">
+            <div className="w-[80%] h-6 bg-primary/25 rounded-full" />
+            <div className="relative w-32 h-32 flex items-end justify-center">
+                <div className="w-0 h-0 border-l-[24px] border-r-[24px] border-b-[40px] border-transparent border-b-primary/35" />
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-2 h-10 bg-primary/45" />
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary/45 rounded-full" />
+            </div>
+            <div className="w-[55%] h-4 bg-primary/15 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoModernoGhost() {
+    return (
+        <div className="w-full h-full flex gap-10 p-10">
+            <div className="w-[60%] rounded-2xl bg-primary/15 relative overflow-hidden">
+                <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-primary/10" />
+                <div className="absolute top-6 left-6 w-10 h-10 border-[4px] border-primary/25 rounded-xl" />
+                <div className="absolute bottom-6 left-6 h-4 w-40 bg-primary/25 rounded-full" />
+            </div>
+            <div className="flex-1 flex flex-col justify-center gap-6">
+                <div className="h-6 bg-primary/25 rounded-lg" />
+                <div className="h-5 bg-primary/18 rounded-lg" />
+                <div className="h-5 bg-primary/12 rounded-lg" />
+            </div>
+        </div>
+    );
+}
+
+function ComunicadoEditorialGhost() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-10">
+            <div className="text-primary/25 text-[120px] font-black leading-none">Aa</div>
+            <div className="w-[60%] h-4 bg-primary/12 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoComunidadGhost() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-10">
+            <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-primary/25 rounded-full" />
+                <div className="w-20 h-20 bg-primary/35 rounded-full" />
+                <div className="w-14 h-14 bg-primary/20 rounded-full" />
+            </div>
+            <div className="w-[60%] h-4 bg-primary/12 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoMinimalGhost() {
+    return (
+        <div className="w-full h-full flex flex-col justify-center gap-6 p-10">
+            <div className="w-10 h-10 bg-primary/20 rounded-lg" />
+            <div className="w-full h-4 bg-primary/12 rounded-full" />
+            <div className="w-[65%] h-4 bg-primary/10 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoCardGhost() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-10">
+            <div className="w-[80%] h-[70%] rounded-2xl border-2 border-primary/15 bg-primary/10 flex flex-col gap-4 p-6 shadow-sm">
+                <div className="h-6 w-[70%] bg-primary/20 rounded-full" />
+                <div className="h-4 w-full bg-primary/12 rounded-full" />
+                <div className="h-4 w-[80%] bg-primary/10 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function ComunicadoMarquesinaGhost() {
+    return (
+        <div className="w-full h-full flex flex-col justify-center gap-6 p-10">
+            <div className="h-8 bg-primary/25 rounded-2xl flex items-center gap-4 px-6">
+                <div className="w-10 h-4 bg-primary/45 rounded-full" />
+                <div className="h-3 flex-1 bg-primary/12 rounded-full" />
+            </div>
+            <div className="h-4 w-[70%] bg-primary/12 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoMemoGhost() {
+    return (
+        <div className="w-full h-full flex flex-col gap-5 p-10">
+            <div className="flex items-center gap-4">
+                <div className="w-10 h-5 bg-primary/30 rounded-full" />
+                <div className="h-4 flex-1 bg-primary/15 rounded-full" />
+            </div>
+            <div className="flex items-center gap-4">
+                <div className="w-10 h-5 bg-primary/20 rounded-full" />
+                <div className="h-4 flex-1 bg-primary/12 rounded-full" />
+            </div>
+            <div className="h-4 w-full bg-primary/12 rounded-full" />
+            <div className="h-4 w-[80%] bg-primary/10 rounded-full" />
+            <div className="h-4 w-[50%] bg-primary/12 rounded-full self-end" />
+        </div>
+    );
+}
+
+function ComunicadoCartelGhost() {
+    return (
+        <div className="w-full h-full flex flex-col justify-center gap-6 p-10">
+            <div className="h-12 bg-primary/30 rounded-2xl" />
+            <div className="h-6 bg-primary/18 rounded-2xl" />
+            <div className="h-4 w-[60%] bg-primary/12 rounded-full" />
+        </div>
+    );
+}
+
+function ComunicadoTimelineGhost() {
+    return <TimelineGhost />;
+}
+
+function ComunicadoIconGhost() {
+    return (
+        <div className="w-full h-full flex items-center gap-8 p-10">
+            <div className="w-20 h-20 rounded-2xl border-2 border-primary/20 flex items-center justify-center">
+                <div className="w-6 h-6 bg-primary/25 rounded-full" />
+            </div>
+            <div className="flex-1 flex flex-col gap-4">
+                <div className="h-5 w-full bg-primary/15 rounded-full" />
+                <div className="h-4 w-[70%] bg-primary/10 rounded-full" />
+            </div>
         </div>
     );
 }
