@@ -1390,11 +1390,28 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
     // -------------------------------------------------------------------------
 
     const loadPreset = useCallback((presetState: Partial<GenerationState>) => {
+        const computeStepFromPreset = (preset: Partial<GenerationState>) => {
+            let step = 1
+            if (preset.selectedIntent) step = 2
+            if (preset.selectedLayout) step = 3
+            if (preset.selectedFormat && preset.selectedPlatform) step = 4
+            const hasImageRef = (preset.uploadedImages?.length || 0) > 0
+                || (preset.selectedBrandKitImageIds?.length || 0) > 0
+                || (preset.aiImageDescription?.trim()?.length || 0) > 0
+            if (hasImageRef) step = Math.max(step, 5)
+            const hasStyles = (preset.selectedStyles?.length || 0) > 0 || Boolean(preset.customStyle?.trim())
+            if (hasStyles) step = Math.max(step, 6)
+            const hasBranding = Boolean(preset.selectedLogoId) || (preset.selectedBrandColors?.length || 0) > 0
+            if (hasBranding) step = Math.max(step, 6)
+            return step
+        }
+
         setState(prev => ({
             ...INITIAL_GENERATION_STATE,
             caption: '', // NEW: Ensure caption is reset for presets
             ...presetState,
             hasGeneratedImage: Boolean(presetState.generatedImage),
+            currentStep: presetState.currentStep ?? computeStepFromPreset(presetState),
             // Ensure clean technical state
             isGenerating: false,
             isAnalyzing: false,

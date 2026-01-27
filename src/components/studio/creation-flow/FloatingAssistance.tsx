@@ -71,6 +71,7 @@ export function FloatingAssistance({
 
     const contentWidth = assistanceRef.current?.getBoundingClientRect().width ?? 280;
     const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const drift = side === 'left' ? 6 : -6;
     const desiredLeft = side === 'left'
         ? coords.left - contentWidth - 16
         : coords.right + 16;
@@ -82,9 +83,13 @@ export function FloatingAssistance({
             <motion.div
                 ref={assistanceRef}
                 initial={{ opacity: 0, x: side === 'left' ? 20 : -20, scale: 0.95 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
+                animate={{ opacity: 1, x: [0, drift, 0], scale: 1 }}
                 exit={{ opacity: 0, x: side === 'left' ? 20 : -20, scale: 0.95 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
+                transition={{
+                    opacity: { duration: 0.3, ease: 'easeOut' },
+                    scale: { duration: 0.3, ease: 'easeOut' },
+                    x: { duration: 1.2, ease: 'easeInOut', repeat: Infinity, repeatType: 'mirror', delay: 0.2 }
+                }}
                 className={cn(
                     "fixed z-[9999] w-[280px] pointer-events-auto",
                     "overflow-visible rounded-xl border border-primary/20",

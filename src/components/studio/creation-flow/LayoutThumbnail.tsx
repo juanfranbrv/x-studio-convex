@@ -34,6 +34,7 @@ interface LayoutThumbnailProps {
     layout: LayoutOption;
     intent?: string;
     className?: string;
+    variant?: 'default' | 'ghost';
 }
 
 /**
@@ -41,12 +42,13 @@ interface LayoutThumbnailProps {
  * Each layout has its own distinctive visual representation.
  * Uses theme primary color for consistent branding.
  */
-export function LayoutThumbnail({ layout, intent, className }: LayoutThumbnailProps) {
+export function LayoutThumbnail({ layout, intent, className, variant = 'default' }: LayoutThumbnailProps) {
     const { id } = layout;
 
     return (
         <div className={cn(
-            "w-full h-full bg-white rounded-md overflow-hidden flex items-center justify-center p-1.5",
+            "w-full h-full rounded-md overflow-hidden flex items-center justify-center",
+            variant === 'ghost' ? "bg-transparent p-0" : "bg-white p-1.5",
             className
         )}>
             <div className="w-full h-full relative">
@@ -181,7 +183,11 @@ function getLayoutVisual(id: string) {
     if (id === 'talento-diversity') return <TalentoDiversityLayout />;
 
     // === EFEMERIDE layouts ===
+    if (id === 'efemeride-free') return <FreeLayout />;
     if (id === 'efemeride-calendar') return <LanzamientoCalendarLayout />;
+    if (id === 'efemeride-hero') return <EfemerideHeroLayout />;
+    if (id === 'efemeride-party') return <EfemeridePartyLayout />;
+    if (id === 'efemeride-history') return <EfemerideHistoryLayout />;
     if (id === 'efemeride-flag') return <EfemerideFlagLayout />;
     if (id === 'efemeride-ribbon') return <EfemerideRibbonLayout />;
     if (id === 'efemeride-vintage') return <EfemerideVintageLayout />;
@@ -189,24 +195,51 @@ function getLayoutVisual(id: string) {
     if (id === 'efemeride-collage') return <EfemerideCollageLayout />;
     if (id === 'efemeride-stamp') return <EfemerideStampLayout />;
     if (id === 'efemeride-neon') return <NeonLayout />;
+    if (id === 'efemeride-seasonal') return <EfemerideSeasonalLayout />;
+    if (id === 'efemeride-bandera') return <EfemerideBanderaLayout />;
+    if (id === 'efemeride-religioso') return <EfemerideReligiosoLayout />;
+    if (id === 'efemeride-countdown') return <EfemerideCountdownLayout />;
+    if (id === 'efemeride-mensaje') return <EfemerideMensajeLayout />;
     if (id === 'efemeride-timeline') return <TimelineLayout />;
     if (id === 'efemeride-portrait') return <EquipoPortraitLayout />;
     if (id === 'efemeride-minimal') return <EfemerideMinimalLayout />;
 
     // === PASOS layouts ===
+    if (id === 'pasos-free') return <FreeLayout />;
+    if (id === 'pasos-zigzag') return <PasosZigzagLayout />;
+    if (id === 'pasos-carousel') return <PasosCarouselLayout />;
+    if (id === 'pasos-split') return <PasosSplitGuideLayout />;
+    if (id === 'pasos-floating') return <PasosFloating3DLayout />;
+    if (id === 'pasos-blueprint') return <PasosBlueprintLayout />;
+    if (id === 'pasos-timeline') return <PasosTimelineLayout />;
+    if (id === 'pasos-recipe') return <PasosRecipeLayout />;
+    if (id === 'pasos-beforeafter') return <PasosBeforeAfterLayout />;
+    if (id === 'pasos-circles') return <PasosCirclesLayout />;
+    if (id === 'pasos-hands') return <PasosHandsLayout />;
+    if (id === 'pasos-quick') return <PasosQuickLayout />;
     if (id === 'pasos-vertical') return <PasosVerticalLayout />;
     if (id === 'pasos-horizontal') return <PasosHorizontalLayout />;
     if (id === 'pasos-circular') return <PasosCircularLayout />;
     if (id === 'pasos-cards') return <PasosCardsLayout />;
-    if (id === 'pasos-timeline') return <TimelineLayout />;
     if (id === 'pasos-infographic') return <InfoGridLayout />;
     if (id === 'pasos-checklist') return <PasosChecklistLayout />;
     if (id === 'pasos-flowchart') return <PasosFlowchartLayout />;
     if (id === 'pasos-icons') return <PasosIconsLayout />;
     if (id === 'pasos-numbered') return <PasosNumberedLayout />;
-    if (id === 'pasos-split') return <SplitLayout />;
 
     // === BTS layouts ===
+    if (id === 'bts-free') return <FreeLayout />;
+    if (id === 'bts-wip') return <BtsWipLayout />;
+    if (id === 'bts-desk') return <BtsDeskLayout />;
+    if (id === 'bts-moodboard') return <BtsMoodboardLayout />;
+    if (id === 'bts-sketch') return <BtsSketchLayout />;
+    if (id === 'bts-before') return <BtsBeforeLayout />;
+    if (id === 'bts-palette') return <BtsPaletteLayout />;
+    if (id === 'bts-team') return <BtsTeamLayout />;
+    if (id === 'bts-tools') return <BtsToolsLayout />;
+    if (id === 'bts-studio') return <BtsStudioLayout />;
+    if (id === 'bts-makingof') return <BtsMakingOfLayout />;
+    if (id === 'bts-detail') return <BtsDetailLayout />;
     if (id === 'bts-filmstrip') return <BtsFilmstripLayout />;
     if (id === 'bts-polaroid') return <BtsPolaroidLayout />;
     if (id === 'bts-clapperboard') return <BtsClapperboardLayout />;
@@ -220,42 +253,62 @@ function getLayoutVisual(id: string) {
     if (id === 'bts-collage') return <EquipoCollageLayout />;
 
     // === CATALOGO layouts ===
+    if (id === 'catalogo-free') return <FreeLayout />;
     if (id === 'catalogo-grid') return <CatalogoGridLayout />;
+    if (id === 'catalogo-masonry') return <CatalogoMasonryLayout />;
     if (id === 'catalogo-hero') return <CatalogoHeroLayout />;
-    if (id === 'catalogo-carousel') return <CatalogoCarouselLayout />;
+    if (id === 'catalogo-carousel' || id === 'catalogo-carrusel') return <CatalogoCarruselLayout />;
     if (id === 'catalogo-lookbook') return <CatalogoLookbookLayout />;
     if (id === 'catalogo-minimal') return <CatalogoMinimalLayout />;
-    if (id === 'catalogo-comparison') return <ComparisonLayout />;
+    if (id === 'catalogo-comparison' || id === 'catalogo-comparativo') return <CatalogoComparativoLayout />;
     if (id === 'catalogo-bundle') return <CatalogoBundleLayout />;
+    if (id === 'catalogo-variants') return <CatalogoVariantsLayout />;
+    if (id === 'catalogo-detail') return <CatalogoDetailLayout />;
+    if (id === 'catalogo-flatlay') return <CatalogoFlatlayLayout />;
+    if (id === 'catalogo-lifestyle') return <CatalogoLifestyleLayout />;
     if (id === 'catalogo-mosaic') return <EquipoCollageLayout />;
     if (id === 'catalogo-shelf') return <CatalogoShelfLayout />;
     if (id === 'catalogo-collection') return <CatalogoCollectionLayout />;
     if (id === 'catalogo-new') return <CatalogoNewLayout />;
 
     // === OFERTA layouts ===
-    if (id === 'oferta-impacto') return <OfertaImpactoLayout />;
-    if (id === 'oferta-precio') return <OfertaPrecioLayout />;
-    if (id === 'oferta-flash') return <OfertaFlashLayout />;
-    if (id === 'oferta-comparativa') return <ComparisonLayout />;
-    if (id === 'oferta-bundle') return <CatalogoBundleLayout />;
+    if (id === 'retail-classic' || id === 'oferta-impacto') return <OfertaImpactoLayout />;
+    if (id === 'flash-sale' || id === 'oferta-flash') return <OfertaFlashLayout />;
+    if (id === 'minimal-lux' || id === 'oferta-minimal') return <OfertaMinimalLayout />;
+    if (id === 'bundle-grid' || id === 'oferta-bundle') return <OfertaBundleLayout />;
+    if (id === 'urgency-time' || id === 'oferta-countdown') return <OfertaUrgencyLayout />;
+    if (id === 'seasonal-deco' || id === 'oferta-seasonal') return <OfertaSeasonalLayout />;
+    if (id === 'oferta-price' || id === 'oferta-precio') return <OfertaPriceLayout />;
+    if (id === 'oferta-banner') return <OfertaBannerLayout />;
+    if (id === 'oferta-explosion') return <OfertaExplosionLayout />;
+    if (id === 'oferta-compare' || id === 'oferta-comparativa') return <OfertaCompareLayout />;
+    if (id === 'oferta-exclusive') return <OfertaExclusiveLayout />;
     if (id === 'oferta-cupon') return <OfertaCuponLayout />;
-    if (id === 'oferta-countdown') return <LanzamientoCountdownLayout />;
     if (id === 'oferta-sticker') return <OfertaStickerLayout />;
-    if (id === 'oferta-split') return <SplitLayout />;
-    if (id === 'oferta-minimal') return <OfertaMinimalLayout />;
-    if (id === 'oferta-seasonal') return <OfertaSeasonalLayout />;
+    if (id === 'oferta-split') return <OfertaSplitLayout />;
 
     // === ESCAPARATE layouts ===
+    if (id === 'escaparate-zen') return <EscaparateZenLayout />;
+    if (id === 'escaparate-marco') return <EscaparateMarcoLayout />;
+    if (id === 'escaparate-espiral') return <EscaparateEspiralLayout />;
+    if (id === 'escaparate-diagonal') return <EscaparateDiagonalLayout />;
+    if (id === 'escaparate-capas') return <EscaparateCapasLayout />;
+    if (id === 'escaparate-radial') return <EscaparateRadialLayout />;
+    if (id === 'escaparate-simetria') return <EscaparateSimetriaLayout />;
+    if (id === 'escaparate-contraste') return <EscaparateContrasteLayout />;
+    if (id === 'escaparate-gobo') return <EscaparateGoboLayout />;
+    if (id === 'escaparate-levitacion') return <EscaparateLevitacionLayout />;
+    if (id === 'escaparate-bodegon') return <EscaparateBodegonLayout />;
     if (id === 'escaparate-hero') return <EscaparateHeroLayout />;
     if (id === 'escaparate-floating') return <EscaparateFloatingLayout />;
     if (id === 'escaparate-lifestyle') return <EscaparateLifestyleLayout />;
     if (id === 'escaparate-minimal') return <EscaparateMinimalLayout />;
     if (id === 'escaparate-detail') return <EscaparateDetailLayout />;
     if (id === 'escaparate-360') return <Escaparate360Layout />;
-    if (id === 'escaparate-comparison') return <ComparisonLayout />;
+    if (id === 'escaparate-comparison') return <EscaparateComparisonLayout />;
     if (id === 'escaparate-context') return <EscaparateContextLayout />;
-    if (id === 'escaparate-unboxing') return <LanzamientoBoxLayout />;
-    if (id === 'escaparate-grid') return <BentoGridLayout />;
+    if (id === 'escaparate-unboxing') return <EscaparateUnboxingLayout />;
+    if (id === 'escaparate-grid') return <EscaparateGridLayout />;
     if (id === 'escaparate-editorial') return <EscaparateEditorialLayout />;
 
     // === COMUNICADO layouts ===
@@ -292,6 +345,18 @@ function getLayoutVisual(id: string) {
     if (id === 'pregunta-debate') return <PreguntaDebateLayout />;
 
     // === EVENTO layouts ===
+    if (id === 'evento-free') return <FreeLayout />;
+    if (id === 'evento-conference') return <EventoConferenceLayout />;
+    if (id === 'evento-party') return <EventoPartyLayout />;
+    if (id === 'evento-workshop') return <EventoWorkshopLayout />;
+    if (id === 'evento-festival') return <EventoFestivalLayout />;
+    if (id === 'evento-networking') return <EventoNetworkingLayout />;
+    if (id === 'evento-minimal') return <EventoMinimalLayout />;
+    if (id === 'evento-virtual') return <EventoVirtualLayout />;
+    if (id === 'evento-sport') return <EventoSportLayout />;
+    if (id === 'evento-grand') return <EventoGrandLayout />;
+    if (id === 'evento-concert') return <EventoConcertLayout />;
+    if (id === 'evento-agenda') return <EventoAgendaLayout />;
     if (id === 'evento-date') return <EventoDateLayout />;
     if (id === 'evento-countdown') return <LanzamientoCountdownLayout />;
     if (id === 'evento-poster') return <EventoPosterLayout />;
@@ -305,6 +370,18 @@ function getLayoutVisual(id: string) {
     if (id === 'evento-recap') return <EventoRecapLayout />;
 
     // === COMPARATIVA layouts ===
+    if (id === 'comp-split') return <ComparativaSplitLayout />;
+    if (id === 'comp-versus') return <ComparativaVersusLayout />;
+    if (id === 'comp-transformation') return <ComparativaTransformLayout />;
+    if (id === 'comp-checklist') return <ComparativaChecklistLayout />;
+    if (id === 'comp-slider') return <ComparativaSliderLayout />;
+    if (id === 'comp-evolution') return <ComparativaEvolutionLayout />;
+    if (id === 'comp-myth') return <ComparativaMythLayout />;
+    if (id === 'comp-expect') return <ComparativaExpectLayout />;
+    if (id === 'comp-pricing') return <ComparativaPricingLayout />;
+    if (id === 'comp-horizontal') return <ComparativaHorizontalLayout />;
+    if (id === 'comp-zoom') return <ComparativaZoomLayout />;
+    if (id === 'comp-fusion') return <ComparativaFusionLayout />;
     if (id === 'comparativa-split') return <SplitLayout />;
     if (id === 'comparativa-before-after') return <ComparativaBeforeAfterLayout />;
     if (id === 'comparativa-table') return <ComparativaTableLayout />;
@@ -318,6 +395,18 @@ function getLayoutVisual(id: string) {
     if (id === 'comparativa-stack') return <ComparativaStackLayout />;
 
     // === LISTA layouts ===
+    if (id === 'checklist') return <ListaChecklistLayout />;
+    if (id === 'ranking') return <ListaRankingLayout />;
+    if (id === 'pasos') return <ListaPasosLayout />;
+    if (id === 'rejilla') return <ListaRejillaLayout />;
+    if (id === 'timeline') return <ListaTimelineLayout />;
+    if (id === 'nota') return <ListaNotaLayout />;
+    if (id === 'bullets') return <ListaBulletsLayout />;
+    if (id === 'iconos') return <ListaIconosLayout />;
+    if (id === 'carousel') return <ListaCarouselLayout />;
+    if (id === 'numerado') return <ListaNumeradoLayout />;
+    if (id === 'pros_cons') return <ListaProsConsLayout />;
+    if (id === 'agenda') return <ListaAgendaLayout />;
     if (id === 'lista-checklist') return <PasosChecklistLayout />;
     if (id === 'lista-numbered') return <PasosNumberedLayout />;
     if (id === 'lista-icons') return <PasosIconsLayout />;
@@ -1385,6 +1474,96 @@ function TalentoDiversityLayout() {
 }
 
 // === EFEMERIDE LAYOUTS ===
+
+function EfemerideHeroLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10 rounded-full bg-primary/20 border-2 border-primary/35 flex items-center justify-center">
+                <div className="w-5 h-5 bg-primary/45 rounded-full" />
+                <div className="absolute -bottom-1 w-7 h-1 bg-primary/35 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function EfemeridePartyLayout() {
+    return (
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="w-8 h-4 bg-primary/35 rounded-md" />
+            <div className="absolute top-1 left-2 w-2 h-2 bg-primary/45 rounded-full" />
+            <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary/30 rounded-full" />
+            <div className="absolute bottom-1 left-3 w-1.5 h-1.5 bg-primary/25 rounded-full" />
+        </div>
+    );
+}
+
+function EfemerideHistoryLayout() {
+    return (
+        <div className="w-full h-full flex items-center p-1">
+            <div className="relative w-4 h-full">
+                <div className="absolute inset-y-1 left-1/2 -translate-x-1/2 w-0.5 bg-primary/25" />
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary/45 rounded-full" />
+            </div>
+            <div className="flex-1 flex flex-col gap-1 pl-1">
+                <div className="h-1 w-full bg-primary/25 rounded-full" />
+                <div className="h-1 w-[70%] bg-primary/20 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function EfemerideSeasonalLayout() {
+    return (
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="w-8 h-8 bg-primary/25 rounded-full" />
+            <div className="absolute top-2 left-3 w-3 h-6 bg-primary/35 rounded-full rotate-45" />
+            <div className="absolute bottom-2 right-3 w-3 h-6 bg-primary/30 rounded-full -rotate-45" />
+        </div>
+    );
+}
+
+function EfemerideBanderaLayout() {
+    return (
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="w-2 h-10 bg-primary/35 rounded-full" />
+            <div className="absolute left-3 top-3 w-7 h-4 bg-primary/30 rounded-sm" />
+        </div>
+    );
+}
+
+function EfemerideReligiosoLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-4 h-10 bg-primary/35 rounded-sm">
+                <div className="absolute left-1/2 -translate-x-1/2 top-3 w-8 h-2 bg-primary/35 rounded-sm" />
+            </div>
+        </div>
+    );
+}
+
+function EfemerideCountdownLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-0.5 p-1">
+            <div className="w-3 h-5 bg-primary/45 rounded-sm" />
+            <div className="w-3 h-5 bg-primary/35 rounded-sm" />
+            <div className="w-1.5 h-1.5 bg-primary/50 rounded-full" />
+            <div className="w-3 h-5 bg-primary/35 rounded-sm" />
+            <div className="w-3 h-5 bg-primary/45 rounded-sm" />
+        </div>
+    );
+}
+
+function EfemerideMensajeLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="w-10 h-8 bg-primary/25 rounded-md">
+                <div className="mt-2 mx-2 h-1 bg-primary/35 rounded-full" />
+                <div className="mt-1 mx-2 h-1 bg-primary/20 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
 function EfemerideFlagLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center p-1">
@@ -1450,6 +1629,176 @@ function EfemerideMinimalLayout() {
 }
 
 // === PASOS LAYOUTS ===
+function PasosZigzagLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute left-1 top-2 w-4 h-4 rounded-full bg-primary/50" />
+            <div className="absolute right-1 top-6 w-4 h-4 rounded-full bg-primary/40" />
+            <div className="absolute left-2 bottom-2 w-4 h-4 rounded-full bg-primary/30" />
+            <div className="absolute left-3 top-5 w-10 h-0.5 bg-primary/30 rotate-12" />
+            <div className="absolute left-3 top-8 w-10 h-0.5 bg-primary/25 -rotate-12" />
+        </div>
+    );
+}
+
+function PasosCarouselLayout() {
+    return (
+        <div className="w-full h-full relative p-1 flex items-center justify-center">
+            <div className="absolute left-1 w-8 h-10 rounded-md bg-primary/20 border border-primary/25" />
+            <div className="absolute right-1 w-8 h-10 rounded-md bg-primary/20 border border-primary/25" />
+            <div className="relative w-10 h-12 rounded-md bg-primary/35 border border-primary/30 flex items-center justify-center">
+                <div className="w-5 h-5 rounded-full bg-primary/60 text-primary-foreground text-[8px] font-bold flex items-center justify-center">2</div>
+            </div>
+        </div>
+    );
+}
+
+function PasosSplitGuideLayout() {
+    return (
+        <div className="w-full h-full flex gap-1 p-1">
+            <div className="w-[55%] rounded-md bg-primary/25 border border-primary/30 relative">
+                <div className="absolute bottom-1 left-1 w-6 h-1 bg-primary/40 rounded-full" />
+            </div>
+            <div className="w-[45%] flex flex-col justify-center gap-1">
+                <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full bg-primary/50 flex items-center justify-center text-[6px] text-white font-bold">1</div>
+                    <div className="h-1 flex-1 bg-primary/25 rounded-full" />
+                </div>
+                <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full bg-primary/35 flex items-center justify-center text-[6px] text-white font-bold">2</div>
+                    <div className="h-1 flex-1 bg-primary/20 rounded-full" />
+                </div>
+                <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full bg-primary/25 flex items-center justify-center text-[6px] text-primary/60 font-bold">3</div>
+                    <div className="h-1 flex-1 bg-primary/15 rounded-full" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function PasosFloating3DLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="relative w-8 h-8 rounded-full bg-primary/35 shadow-sm flex items-center justify-center">
+                <div className="text-primary-foreground text-[9px] font-bold">1</div>
+            </div>
+            <div className="relative -mt-2 w-10 h-10 rounded-full bg-primary/50 shadow-md flex items-center justify-center">
+                <div className="text-primary-foreground text-[10px] font-bold">2</div>
+            </div>
+            <div className="relative w-8 h-8 rounded-full bg-primary/30 shadow-sm flex items-center justify-center">
+                <div className="text-primary-foreground text-[9px] font-bold">3</div>
+            </div>
+        </div>
+    );
+}
+
+function PasosBlueprintLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 rounded-md border border-dashed border-primary/30" />
+            <div className="absolute left-2 top-2 w-10 h-6 border-2 border-primary/35 rounded-sm" />
+            <div className="absolute left-4 top-4 w-6 h-2 bg-primary/20 rounded-full" />
+            <div className="absolute right-2 bottom-2 w-5 h-5 border-2 border-primary/35 rounded-full" />
+            <div className="absolute right-6 bottom-6 w-6 h-0.5 bg-primary/30" />
+            <div className="absolute right-6 bottom-4 w-0.5 h-4 bg-primary/30" />
+        </div>
+    );
+}
+
+function PasosTimelineLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-6 h-full">
+                <div className="absolute left-1/2 -translate-x-1/2 inset-y-1 w-0.5 bg-primary/25" />
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-primary/50" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-primary/40" />
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-primary/30" />
+            </div>
+            <div className="flex-1 flex flex-col gap-1 pl-1">
+                <div className="h-1 w-[80%] bg-primary/30 rounded-full" />
+                <div className="h-1 w-[70%] bg-primary/20 rounded-full" />
+                <div className="h-1 w-[60%] bg-primary/15 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function PasosRecipeLayout() {
+    return (
+        <div className="w-full h-full flex gap-1 p-1">
+            <div className="w-[55%] rounded-md bg-primary/30 border border-primary/30 relative">
+                <div className="absolute bottom-1 left-1 w-7 h-1 bg-primary/50 rounded-full" />
+            </div>
+            <div className="w-[45%] flex flex-col justify-between">
+                <div className="w-full h-3 rounded-md bg-primary/20" />
+                <div className="flex flex-col gap-1">
+                    <div className="h-1 w-full bg-primary/25 rounded-full" />
+                    <div className="h-1 w-[80%] bg-primary/20 rounded-full" />
+                    <div className="h-1 w-[60%] bg-primary/15 rounded-full" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function PasosBeforeAfterLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-8 h-10 bg-primary/20 rounded-md border border-primary/25" />
+            <div className="w-3 h-3 rounded-full bg-primary/40 flex items-center justify-center">
+                <div className="w-1.5 h-1.5 bg-primary-foreground rounded-full" />
+            </div>
+            <div className="w-8 h-10 bg-primary/45 rounded-md border border-primary/35" />
+        </div>
+    );
+}
+
+function PasosCirclesLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10 rounded-full border-2 border-primary/30">
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-primary/45" />
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-primary/35" />
+                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-3 h-3 rounded-full bg-primary/30" />
+                <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-3 h-3 rounded-full bg-primary/25" />
+            </div>
+        </div>
+    );
+}
+
+function PasosHandsLayout() {
+    return (
+        <div className="w-full h-full relative p-1 flex items-center justify-center">
+            <div className="absolute left-2 w-8 h-6 rounded-full bg-primary/30 rotate-6" />
+            <div className="absolute right-2 w-8 h-6 rounded-full bg-primary/40 -rotate-6" />
+            <div className="w-4 h-4 rounded-full bg-primary/60" />
+        </div>
+    );
+}
+
+function PasosQuickLayout() {
+    return (
+        <div className="w-full h-full flex flex-col justify-center gap-1 p-1">
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-primary/50" />
+                <div className="h-1 flex-1 bg-primary/35 rounded-full" />
+                <div className="w-4 h-1 bg-primary/25 rounded-full" />
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-primary/40" />
+                <div className="h-1 flex-1 bg-primary/25 rounded-full" />
+                <div className="w-4 h-1 bg-primary/20 rounded-full" />
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-primary/30" />
+                <div className="h-1 flex-1 bg-primary/20 rounded-full" />
+                <div className="w-4 h-1 bg-primary/15 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
 function PasosVerticalLayout() {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center gap-0.5 p-1">
@@ -1560,6 +1909,119 @@ function PasosNumberedLayout() {
 }
 
 // === BTS LAYOUTS ===
+
+function BtsWipLayout() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
+            <div className="w-10 h-2 bg-primary/25 rounded-full">
+                <div className="w-6 h-2 bg-primary/45 rounded-full" />
+            </div>
+            <div className="w-4 h-4 bg-primary/35 rounded-sm" />
+        </div>
+    );
+}
+
+function BtsDeskLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 bg-primary/20 rounded-md" />
+            <div className="absolute left-2 top-2 w-6 h-3 bg-primary/35 rounded-sm" />
+            <div className="absolute right-2 bottom-2 w-4 h-4 bg-primary/30 rounded-sm" />
+        </div>
+    );
+}
+
+function BtsMoodboardLayout() {
+    return (
+        <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-0.5 p-1">
+            <div className="bg-primary/35 rounded-sm" />
+            <div className="bg-primary/25 rounded-sm" />
+            <div className="bg-primary/25 rounded-sm" />
+            <div className="bg-primary/40 rounded-sm" />
+        </div>
+    );
+}
+
+function BtsSketchLayout() {
+    return (
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="w-10 h-0.5 bg-primary/35 rotate-[-10deg]" />
+            <div className="absolute bottom-2 left-2 w-6 h-0.5 bg-primary/25 rotate-[10deg]" />
+        </div>
+    );
+}
+
+function BtsBeforeLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-7 h-9 bg-primary/20 rounded-md border border-primary/25" />
+            <div className="w-2 h-2 bg-primary/50 rotate-45" />
+            <div className="w-7 h-9 bg-primary/45 rounded-md border border-primary/40" />
+        </div>
+    );
+}
+
+function BtsPaletteLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-6 h-6 bg-primary/45 rounded-full" />
+            <div className="w-6 h-6 bg-primary/30 rounded-full" />
+            <div className="w-6 h-6 bg-primary/20 rounded-full" />
+        </div>
+    );
+}
+
+function BtsTeamLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-4 h-4 bg-primary/45 rounded-full" />
+            <div className="w-5 h-5 bg-primary/35 rounded-full" />
+            <div className="w-4 h-4 bg-primary/25 rounded-full" />
+        </div>
+    );
+}
+
+function BtsToolsLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10">
+                <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-2 bg-primary/35 rounded-full" />
+                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 bg-primary/45 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function BtsStudioLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="w-10 h-7 bg-primary/25 rounded-md border border-primary/35">
+                <div className="mx-auto mt-2 w-4 h-3 bg-primary/45 rounded-sm" />
+            </div>
+        </div>
+    );
+}
+
+function BtsMakingOfLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="w-8 h-6 bg-primary/30 rounded-sm">
+                <div className="w-full h-2 bg-primary/45 rounded-t-sm" />
+            </div>
+        </div>
+    );
+}
+
+function BtsDetailLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 bg-primary/20 rounded-md" />
+            <div className="absolute right-2 bottom-2 w-6 h-6 rounded-full border-2 border-primary/40" />
+            <div className="absolute right-1 bottom-1 w-3 h-0.5 bg-primary/45 rotate-45" />
+        </div>
+    );
+}
+
 function BtsFilmstripLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center p-1">
@@ -1619,89 +2081,171 @@ function BtsFocusLayout() {
 // === CATALOGO LAYOUTS ===
 function CatalogoGridLayout() {
     return (
-        <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-0.5 p-1">
-            <div className="bg-primary/30 rounded-sm" />
+        <div className="w-full h-full grid grid-cols-3 grid-rows-3 gap-0.5 p-1">
+            <div className="col-span-2 row-span-2 bg-primary/40 rounded-sm" />
             <div className="bg-primary/25 rounded-sm" />
             <div className="bg-primary/25 rounded-sm" />
             <div className="bg-primary/30 rounded-sm" />
+            <div className="bg-primary/20 rounded-sm" />
+        </div>
+    );
+}
+
+function CatalogoMasonryLayout() {
+    return (
+        <div className="w-full h-full flex gap-0.5 p-1">
+            <div className="flex-1 flex flex-col gap-0.5">
+                <div className="flex-1 bg-primary/35 rounded-sm" />
+                <div className="h-3 bg-primary/25 rounded-sm" />
+            </div>
+            <div className="flex-1 flex flex-col gap-0.5">
+                <div className="h-3 bg-primary/20 rounded-sm" />
+                <div className="flex-1 bg-primary/40 rounded-sm" />
+            </div>
         </div>
     );
 }
 
 function CatalogoHeroLayout() {
     return (
-        <div className="w-full h-full flex flex-col p-1 gap-0.5">
-            <div className="flex-1 bg-primary/40 rounded-sm" />
-            <div className="h-2 flex gap-0.5">
-                <div className="flex-1 bg-primary/20 rounded-sm" />
-                <div className="flex-1 bg-primary/20 rounded-sm" />
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-11 h-11 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center">
+                <div className="w-7 h-7 bg-primary/50 rounded-md" />
+                <div className="absolute -bottom-1 w-8 h-1 bg-primary/35 rounded-full" />
             </div>
         </div>
     );
 }
 
-function CatalogoCarouselLayout() {
+function CatalogoCarruselLayout() {
     return (
-        <div className="w-full h-full flex items-center justify-center gap-0.5 p-1">
-            <div className="w-2 h-5 bg-primary/20 rounded-sm" />
-            <div className="w-4 h-6 bg-primary/40 rounded-sm" />
-            <div className="w-2 h-5 bg-primary/20 rounded-sm" />
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="absolute left-1 w-7 h-9 rounded-md bg-primary/20 border border-primary/25" />
+            <div className="absolute right-1 w-7 h-9 rounded-md bg-primary/20 border border-primary/25" />
+            <div className="relative w-9 h-11 rounded-md bg-primary/40 border border-primary/35" />
+            <div className="absolute bottom-1 flex gap-1">
+                <div className="w-1.5 h-1.5 bg-primary/45 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary/25 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary/25 rounded-full" />
+            </div>
         </div>
     );
 }
 
 function CatalogoLookbookLayout() {
     return (
-        <div className="w-full h-full flex gap-0.5 p-1">
-            <div className="flex-1 bg-primary/35 rounded-sm" />
-            <div className="flex-1 flex flex-col gap-0.5">
-                <div className="flex-1 bg-primary/25 rounded-sm" />
-                <div className="flex-1 bg-primary/20 rounded-sm" />
-            </div>
+        <div className="w-full h-full flex flex-col gap-0.5 p-1">
+            <div className="flex-1 bg-primary/30 rounded-md" />
+            <div className="h-1.5 w-full bg-primary/25 rounded-full" />
+            <div className="h-1 w-[70%] bg-primary/15 rounded-full" />
         </div>
     );
 }
 
 function CatalogoMinimalLayout() {
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
-            <div className="w-5 h-5 bg-primary/30 rounded-sm" />
-            <div className="w-[50%] h-0.5 bg-primary/25 rounded-full" />
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 rounded-md border border-primary/20" />
+            <div className="absolute bottom-1 right-1 w-6 h-6 bg-primary/35 rounded-md" />
+            <div className="absolute bottom-1 right-7 w-5 h-1 bg-primary/20 rounded-full" />
         </div>
     );
 }
 
 function CatalogoBundleLayout() {
     return (
-        <div className="w-full h-full flex items-center justify-center p-1">
-            <div className="flex -space-x-2">
-                <div className="w-4 h-5 bg-primary/40 rounded-sm" />
-                <div className="w-4 h-5 bg-primary/30 rounded-sm" />
-                <div className="w-4 h-5 bg-primary/20 rounded-sm" />
+        <div className="w-full h-full relative p-1">
+            <div className="grid grid-cols-2 gap-0.5">
+                <div className="h-5 bg-primary/35 rounded-sm" />
+                <div className="h-5 bg-primary/25 rounded-sm" />
+                <div className="h-5 bg-primary/25 rounded-sm" />
+                <div className="h-5 bg-primary/40 rounded-sm" />
             </div>
+            <div className="absolute -right-1 -top-1 w-5 h-5 rounded-full bg-primary/60 text-primary-foreground text-[6px] font-bold flex items-center justify-center">
+                2x
+            </div>
+        </div>
+    );
+}
+
+function CatalogoVariantsLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-8 h-8 bg-primary/45 rounded-md" />
+            <div className="flex flex-col gap-1">
+                <div className="w-3 h-3 bg-primary/35 rounded-full" />
+                <div className="w-3 h-3 bg-primary/25 rounded-full" />
+                <div className="w-3 h-3 bg-primary/20 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function CatalogoDetailLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 rounded-md bg-primary/20" />
+            <div className="absolute left-1.5 top-1.5 w-6 h-6 rounded-full border-2 border-primary/40 flex items-center justify-center">
+                <div className="w-3 h-3 bg-primary/45 rounded-full" />
+            </div>
+            <div className="absolute right-1.5 bottom-1.5 w-8 h-3 bg-primary/30 rounded-md" />
+        </div>
+    );
+}
+
+function CatalogoFlatlayLayout() {
+    return (
+        <div className="w-full h-full grid grid-cols-3 grid-rows-2 gap-0.5 p-1">
+            <div className="col-span-2 bg-primary/30 rounded-sm" />
+            <div className="bg-primary/20 rounded-sm" />
+            <div className="bg-primary/25 rounded-sm" />
+            <div className="bg-primary/35 rounded-sm" />
+        </div>
+    );
+}
+
+function CatalogoComparativoLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-8 h-10 rounded-md bg-primary/20 border border-primary/25" />
+            <div className="w-2 h-2 bg-primary/50 rotate-45" />
+            <div className="w-8 h-10 rounded-md bg-primary/45 border border-primary/40" />
+        </div>
+    );
+}
+
+function CatalogoLifestyleLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 bg-primary/20 rounded-md" />
+            <div className="absolute left-2 bottom-2 w-7 h-7 bg-primary/45 rounded-md" />
+            <div className="absolute right-2 top-2 w-8 h-1 bg-primary/35 rounded-full" />
         </div>
     );
 }
 
 function CatalogoShelfLayout() {
     return (
-        <div className="w-full h-full flex items-end justify-center gap-0.5 p-1">
-            <div className="w-2 h-4 bg-primary/35 rounded-t-sm" />
-            <div className="w-2 h-5 bg-primary/45 rounded-t-sm" />
-            <div className="w-2 h-3 bg-primary/25 rounded-t-sm" />
+        <div className="w-full h-full flex flex-col justify-end gap-0.5 p-1">
+            <div className="flex gap-0.5 items-end">
+                <div className="w-3 h-4 bg-primary/35 rounded-sm" />
+                <div className="w-3 h-5 bg-primary/25 rounded-sm" />
+                <div className="w-3 h-3 bg-primary/20 rounded-sm" />
+            </div>
+            <div className="h-0.5 w-full bg-primary/35 rounded-full" />
         </div>
     );
 }
 
 function CatalogoCollectionLayout() {
     return (
-        <div className="w-full h-full p-1">
-            <div className="w-full h-full border border-primary/30 rounded-sm p-0.5">
-                <div className="grid grid-cols-2 gap-0.5 h-full">
-                    <div className="bg-primary/25 rounded-sm" />
-                    <div className="bg-primary/25 rounded-sm" />
-                </div>
+        <div className="w-full h-full flex flex-col gap-1 p-1">
+            <div className="grid grid-cols-3 gap-0.5">
+                <div className="h-4 bg-primary/30 rounded-sm" />
+                <div className="h-4 bg-primary/40 rounded-sm" />
+                <div className="h-4 bg-primary/25 rounded-sm" />
             </div>
+            <div className="h-1 w-full bg-primary/25 rounded-full" />
         </div>
     );
 }
@@ -1710,35 +2254,55 @@ function CatalogoNewLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center p-1">
             <div className="relative">
-                <div className="w-5 h-5 bg-primary/30 rounded-sm" />
-                <div className="absolute -top-1 -right-1 px-1 bg-primary/60 rounded-sm text-white text-[5px]">NEW</div>
+                <div className="w-6 h-6 bg-primary/35 rounded-md" />
+                <div className="absolute -top-1 -right-1 px-1 bg-primary/60 rounded-sm text-primary-foreground text-[6px] font-bold">NEW</div>
             </div>
         </div>
     );
 }
 
+
 // === OFERTA LAYOUTS ===
 function OfertaImpactoLayout() {
     return (
-        <div className="w-full h-full flex items-center justify-center">
-            <div className="text-primary/70 text-lg font-black">%</div>
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary/45 rounded-full" />
+                <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-primary/30 rounded-full" />
+                <div className="text-primary/80 text-xl font-black leading-none">%</div>
+            </div>
+        </div>
+    );
+}
+
+function OfertaPriceLayout() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
+            <div className="relative w-12 h-4 rounded-full bg-primary/20 flex items-center justify-center">
+                <div className="text-primary/50 text-[7px] line-through">99</div>
+                <div className="absolute inset-x-1 h-0.5 bg-primary/35 rotate-6" />
+            </div>
+            <div className="text-primary/80 text-base font-black">49</div>
+            <div className="w-8 h-1 bg-primary/25 rounded-full" />
         </div>
     );
 }
 
 function OfertaPrecioLayout() {
-    return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-0.5 p-1">
-            <div className="text-primary/40 text-[8px] line-through">$99</div>
-            <div className="text-primary/70 text-sm font-bold">$49</div>
-        </div>
-    );
+    return <OfertaPriceLayout />;
 }
 
 function OfertaFlashLayout() {
     return (
-        <div className="w-full h-full flex items-center justify-center p-1">
-            <Zap className="w-12 h-12 text-primary/60 fill-primary/20" />
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 rounded-md bg-primary/15 border border-primary/25" />
+            <div className="absolute left-2 top-2 w-8 h-0.5 bg-primary/40 rotate-[-20deg]" />
+            <div className="absolute left-3 top-5 w-8 h-0.5 bg-primary/30 rotate-[-20deg]" />
+            <div className="absolute right-3 bottom-3 w-8 h-0.5 bg-primary/30 rotate-[-20deg]" />
+            <div className="absolute right-2 bottom-6 w-8 h-0.5 bg-primary/40 rotate-[-20deg]" />
+            <div className="absolute inset-0 flex items-center justify-center">
+                <Zap className="w-8 h-8 text-primary/70 fill-primary/20" />
+            </div>
         </div>
     );
 }
@@ -1746,8 +2310,10 @@ function OfertaFlashLayout() {
 function OfertaCuponLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center p-1">
-            <div className="w-full h-4 border-2 border-dashed border-primary/40 rounded-sm flex items-center justify-center">
-                <div className="text-primary/60 text-[6px] font-mono">CODE</div>
+            <div className="w-full h-5 border-2 border-dashed border-primary/45 rounded-md flex items-center justify-center relative">
+                <div className="absolute -left-1 w-2 h-2 rounded-full bg-background border-2 border-primary/45" />
+                <div className="absolute -right-1 w-2 h-2 rounded-full bg-background border-2 border-primary/45" />
+                <div className="text-primary/70 text-[7px] font-mono tracking-widest">CODE</div>
             </div>
         </div>
     );
@@ -1756,8 +2322,12 @@ function OfertaCuponLayout() {
 function OfertaStickerLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center p-1">
-            <div className="w-6 h-6 bg-primary/50 rounded-full flex items-center justify-center -rotate-12">
-                <div className="text-white text-[6px] font-bold">-30%</div>
+            <div className="relative w-9 h-9">
+                <div className="absolute inset-0 bg-primary/45 rounded-full" />
+                <div className="absolute inset-1 border-2 border-primary/60 rounded-full" />
+                <div className="absolute inset-0 flex items-center justify-center -rotate-12">
+                    <div className="text-primary-foreground text-[7px] font-bold">-30%</div>
+                </div>
             </div>
         </div>
     );
@@ -1765,36 +2335,265 @@ function OfertaStickerLayout() {
 
 function OfertaMinimalLayout() {
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-0.5 p-1">
-            <div className="text-primary/60 text-sm font-bold">50%</div>
-            <div className="w-[40%] h-0.5 bg-primary/25 rounded-full" />
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
+            <div className="w-12 h-6 rounded-md border border-primary/25 flex items-center justify-center">
+                <div className="text-primary/70 text-sm font-semibold tracking-wide">50%</div>
+            </div>
+            <div className="w-8 h-0.5 bg-primary/25 rounded-full" />
         </div>
     );
 }
 
 function OfertaSeasonalLayout() {
     return (
-        <div className="w-full h-full flex items-center justify-center p-1">
-            <div className="px-2 py-1 bg-primary/30 rounded-sm">
-                <div className="text-primary/70 text-[7px] font-bold">SALE</div>
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 rounded-md border border-primary/25" />
+            <div className="absolute -top-1 left-2 w-3 h-3 bg-primary/35 rounded-full" />
+            <div className="absolute -top-1 right-2 w-3 h-3 bg-primary/25 rounded-full" />
+            <div className="absolute -bottom-1 left-3 w-3 h-3 bg-primary/25 rounded-full" />
+            <div className="absolute -bottom-1 right-3 w-3 h-3 bg-primary/35 rounded-full" />
+            <div className="absolute inset-0 flex items-center justify-center">
+                <div className="px-2 py-1 bg-primary/20 rounded-full">
+                    <div className="text-primary/70 text-[7px] font-bold">SEASON</div>
+                </div>
             </div>
         </div>
     );
 }
 
+function OfertaBannerLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="w-full h-6 rounded-full bg-primary/25 border border-primary/30 flex items-center justify-between px-2">
+                <div className="w-5 h-5 rounded-full bg-primary/45" />
+                <div className="h-1 w-10 bg-primary/40 rounded-full" />
+                <div className="w-2 h-2 bg-primary/50 rotate-45" />
+            </div>
+        </div>
+    );
+}
+
+function OfertaExplosionLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10">
+                <div className="absolute inset-0 bg-primary/30 rotate-45 rounded-sm" />
+                <div className="absolute inset-1 bg-primary/45 rotate-12 rounded-sm" />
+                <div className="absolute inset-2 bg-primary/60 rotate-[-12deg] rounded-sm" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-primary-foreground text-[7px] font-bold">BOOM</div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function OfertaCompareLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-8 h-10 rounded-md bg-primary/20 border border-primary/25" />
+            <div className="w-2 h-2 bg-primary/50 rotate-45" />
+            <div className="w-8 h-10 rounded-md bg-primary/45 border border-primary/40" />
+        </div>
+    );
+}
+
+function OfertaExclusiveLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10 rounded-full border-2 border-primary/35 bg-primary/10 flex items-center justify-center">
+                <Crown className="w-6 h-6 text-primary/70" />
+                <div className="absolute -bottom-1 px-1.5 py-0.5 bg-primary/35 rounded-full">
+                    <span className="text-primary-foreground text-[6px] font-bold">VIP</span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function OfertaBundleLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="grid grid-cols-2 gap-0.5">
+                <div className="h-5 bg-primary/35 rounded-sm" />
+                <div className="h-5 bg-primary/25 rounded-sm" />
+                <div className="h-5 bg-primary/25 rounded-sm" />
+                <div className="h-5 bg-primary/35 rounded-sm" />
+            </div>
+            <div className="absolute -right-1 -top-1 w-5 h-5 rounded-full bg-primary/60 text-primary-foreground text-[6px] font-bold flex items-center justify-center">
+                2x
+            </div>
+        </div>
+    );
+}
+
+function OfertaUrgencyLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="w-full h-7 rounded-md bg-primary/25 border border-primary/35 flex items-center justify-center gap-1">
+                <div className="w-2 h-3 bg-primary/50 rounded-sm" />
+                <div className="w-2 h-3 bg-primary/50 rounded-sm" />
+                <div className="w-1 h-1 bg-primary/60 rounded-full" />
+                <div className="w-2 h-3 bg-primary/50 rounded-sm" />
+                <div className="w-2 h-3 bg-primary/50 rounded-sm" />
+            </div>
+        </div>
+    );
+}
+
+function OfertaSplitLayout() {
+    return (
+        <div className="w-full h-full flex gap-1 p-1">
+            <div className="w-1/2 rounded-md bg-primary/25 border border-primary/30" />
+            <div className="w-1/2 rounded-md bg-primary/40 border border-primary/40" />
+        </div>
+    );
+}
+
 // === ESCAPARATE LAYOUTS ===
+function EscaparateZenLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 rounded-md border border-primary/20" />
+            <div className="absolute bottom-1 right-1 w-6 h-6 bg-primary/35 rounded-md" />
+            <div className="absolute bottom-1 right-8 w-6 h-0.5 bg-primary/20 rounded-full" />
+        </div>
+    );
+}
+
+function EscaparateMarcoLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 border-2 border-primary/35 rounded-md" />
+            <div className="absolute inset-3 bg-primary/20 rounded-md" />
+            <div className="absolute inset-5 border-2 border-primary/45 rounded-md" />
+            <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-5 h-5 bg-primary/55 rounded-md" />
+            </div>
+        </div>
+    );
+}
+
+function EscaparateEspiralLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-2 rounded-full border-2 border-primary/25" />
+            <div className="absolute inset-4 rounded-full border-2 border-primary/30" />
+            <div className="absolute inset-6 rounded-full border-2 border-primary/40" />
+            <div className="absolute right-3 bottom-3 w-4 h-4 bg-primary/50 rounded-full" />
+        </div>
+    );
+}
+
+function EscaparateDiagonalLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-2 bg-primary/20 rounded-md -skew-y-6" />
+            <div className="absolute left-2 top-3 w-8 h-1 bg-primary/45 rotate-[-25deg] rounded-full" />
+            <div className="absolute right-2 bottom-3 w-6 h-6 bg-primary/50 rounded-md rotate-[-15deg]" />
+        </div>
+    );
+}
+
+function EscaparateCapasLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 bg-primary/15 rounded-md" />
+            <div className="absolute inset-3 bg-primary/25 rounded-md" />
+            <div className="absolute inset-5 bg-primary/40 rounded-md" />
+        </div>
+    );
+}
+
+function EscaparateRadialLayout() {
+    return (
+        <div className="w-full h-full relative p-1 flex items-center justify-center">
+            <div className="absolute inset-1 rounded-full border-2 border-primary/25" />
+            <div className="absolute w-8 h-8 rounded-full bg-primary/45" />
+            <div className="absolute w-11 h-1 bg-primary/35 rotate-45 rounded-full" />
+            <div className="absolute w-11 h-1 bg-primary/35 -rotate-45 rounded-full" />
+        </div>
+    );
+}
+
+function EscaparateSimetriaLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-3 h-10 bg-primary/25 rounded-sm" />
+            <div className="w-5 h-12 bg-primary/45 rounded-sm" />
+            <div className="w-3 h-10 bg-primary/25 rounded-sm" />
+        </div>
+    );
+}
+
+function EscaparateContrasteLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-y-1 left-1 w-1/2 bg-primary/45 rounded-md" />
+            <div className="absolute inset-y-1 right-1 w-1/2 bg-primary/20 rounded-md" />
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-primary/60 rounded-md" />
+        </div>
+    );
+}
+
+function EscaparateGoboLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 bg-primary/20 rounded-md" />
+            <div className="absolute inset-1 grid grid-cols-3 gap-0.5">
+                <div className="bg-primary/30 rounded-sm" />
+                <div className="bg-primary/15 rounded-sm" />
+                <div className="bg-primary/30 rounded-sm" />
+                <div className="bg-primary/15 rounded-sm" />
+                <div className="bg-primary/35 rounded-sm" />
+                <div className="bg-primary/15 rounded-sm" />
+                <div className="bg-primary/30 rounded-sm" />
+                <div className="bg-primary/15 rounded-sm" />
+                <div className="bg-primary/30 rounded-sm" />
+            </div>
+            <div className="absolute right-2 bottom-2 w-5 h-5 bg-primary/50 rounded-md" />
+        </div>
+    );
+}
+
+function EscaparateLevitacionLayout() {
+    return (
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="w-7 h-7 bg-primary/45 rounded-md" />
+            <div className="absolute top-2 left-3 w-3 h-3 bg-primary/35 rounded-sm" />
+            <div className="absolute bottom-2 right-3 w-3 h-3 bg-primary/25 rounded-sm" />
+            <div className="absolute bottom-2 left-5 w-2 h-2 bg-primary/30 rounded-full" />
+        </div>
+    );
+}
+
+function EscaparateBodegonLayout() {
+    return (
+        <div className="w-full h-full relative p-1 flex items-center justify-center">
+            <div className="absolute left-2 bottom-2 w-5 h-5 bg-primary/35 rounded-md" />
+            <div className="absolute right-2 bottom-2 w-6 h-4 bg-primary/45 rounded-md" />
+            <div className="absolute left-4 top-2 w-4 h-6 bg-primary/25 rounded-md" />
+        </div>
+    );
+}
+
 function EscaparateHeroLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center p-1">
-            <div className="w-6 h-6 bg-primary/40 rounded-sm ring-4 ring-primary/15" />
+            <div className="relative w-11 h-11 rounded-full bg-primary/15 border-2 border-primary/30 flex items-center justify-center">
+                <div className="w-7 h-7 bg-primary/45 rounded-md" />
+                <div className="absolute -bottom-1 w-8 h-1 bg-primary/35 rounded-full" />
+            </div>
         </div>
     );
 }
 
 function EscaparateFloatingLayout() {
     return (
-        <div className="w-full h-full flex items-center justify-center p-1">
-            <div className="w-5 h-5 bg-primary/40 rounded-sm shadow-lg shadow-primary/20" />
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="w-8 h-8 bg-primary/45 rounded-md shadow-lg shadow-primary/25" />
+            <div className="absolute top-2 left-3 w-2 h-2 bg-primary/35 rounded-full" />
+            <div className="absolute bottom-2 right-3 w-2 h-2 bg-primary/25 rounded-full" />
         </div>
     );
 }
@@ -1802,8 +2601,10 @@ function EscaparateFloatingLayout() {
 function EscaparateLifestyleLayout() {
     return (
         <div className="w-full h-full p-1">
-            <div className="w-full h-full bg-primary/20 rounded-sm flex items-center justify-center">
-                <div className="w-3 h-3 bg-primary/50 rounded-sm" />
+            <div className="relative w-full h-full bg-primary/20 rounded-md overflow-hidden">
+                <div className="absolute top-1 left-1 w-8 h-4 bg-primary/30 rounded-sm" />
+                <div className="absolute bottom-1 right-1 w-6 h-6 bg-primary/45 rounded-md" />
+                <div className="absolute bottom-1 left-1 w-10 h-1 bg-primary/35 rounded-full" />
             </div>
         </div>
     );
@@ -1811,52 +2612,87 @@ function EscaparateLifestyleLayout() {
 
 function EscaparateMinimalLayout() {
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1 bg-white">
-            <div className="w-5 h-5 bg-primary/30 rounded-sm" />
-            <div className="w-[40%] h-0.5 bg-primary/20 rounded-full" />
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
+            <div className="w-6 h-6 bg-primary/35 rounded-md" />
+            <div className="w-10 h-0.5 bg-primary/20 rounded-full" />
+            <div className="w-6 h-0.5 bg-primary/15 rounded-full" />
         </div>
     );
 }
 
 function EscaparateDetailLayout() {
     return (
-        <div className="w-full h-full flex gap-0.5 p-1">
-            <div className="flex-1 bg-primary/40 rounded-sm" />
-            <div className="w-2 flex flex-col gap-0.5">
-                <div className="flex-1 bg-primary/25 rounded-sm" />
-                <div className="flex-1 bg-primary/25 rounded-sm" />
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 rounded-md bg-primary/20" />
+            <div className="absolute left-1.5 top-1.5 w-6 h-6 rounded-full border-2 border-primary/40 flex items-center justify-center">
+                <div className="w-3 h-3 bg-primary/45 rounded-full" />
             </div>
+            <div className="absolute right-1.5 bottom-1.5 w-8 h-3 bg-primary/30 rounded-md" />
         </div>
     );
 }
 
 function Escaparate360Layout() {
     return (
-        <div className="w-full h-full flex items-center justify-center p-1">
-            <div className="w-5 h-5 border-2 border-primary/40 rounded-full flex items-center justify-center">
-                <div className="text-primary/60 text-[6px]">360°</div>
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="relative w-10 h-10 rounded-full border-2 border-primary/35">
+                <div className="absolute top-1 left-4 w-2 h-2 bg-primary/40 rounded-full" />
+                <div className="absolute right-2 bottom-2 w-2 h-2 bg-primary/30 rounded-full" />
+                <div className="absolute left-2 bottom-4 w-2 h-2 bg-primary/25 rounded-full" />
             </div>
+            <div className="absolute right-2 bottom-2 w-2 h-2 bg-primary/45 rounded-full" />
         </div>
     );
 }
 
 function EscaparateContextLayout() {
     return (
-        <div className="w-full h-full flex items-end p-1">
-            <div className="w-full h-[70%] bg-primary/20 rounded-t-sm flex items-center justify-center">
-                <div className="w-4 h-4 bg-primary/50 rounded-sm" />
-            </div>
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 rounded-md bg-primary/20" />
+            <div className="absolute left-1.5 top-1.5 w-7 h-9 rounded-md bg-primary/30" />
+            <div className="absolute right-1.5 top-2 w-4 h-3 bg-primary/40 rounded-sm" />
+            <div className="absolute right-1.5 bottom-2 w-5 h-3 bg-primary/25 rounded-sm" />
         </div>
     );
 }
 
 function EscaparateEditorialLayout() {
     return (
-        <div className="w-full h-full flex gap-1 p-1.5">
-            <div className="w-1/2 bg-primary/35 rounded-sm" />
-            <div className="w-1/2 flex flex-col gap-0.5 justify-center">
-                <div className="h-0.5 w-full bg-primary/25 rounded-full" />
-                <div className="h-0.5 w-[70%] bg-primary/15 rounded-full" />
+        <div className="w-full h-full flex flex-col gap-1 p-1">
+            <div className="flex-1 rounded-md bg-primary/30" />
+            <div className="h-1 w-full bg-primary/35 rounded-full" />
+            <div className="h-1 w-[70%] bg-primary/20 rounded-full" />
+        </div>
+    );
+}
+
+function EscaparateGridLayout() {
+    return (
+        <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-0.5 p-1">
+            <div className="bg-primary/35 rounded-sm" />
+            <div className="bg-primary/25 rounded-sm" />
+            <div className="bg-primary/25 rounded-sm" />
+            <div className="bg-primary/45 rounded-sm" />
+        </div>
+    );
+}
+
+function EscaparateComparisonLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-8 h-10 rounded-md bg-primary/20 border border-primary/25" />
+            <div className="w-3 h-3 bg-primary/50 rotate-45" />
+            <div className="w-8 h-10 rounded-md bg-primary/45 border border-primary/40" />
+        </div>
+    );
+}
+
+function EscaparateUnboxingLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-8">
+                <div className="absolute bottom-0 w-full h-5 bg-primary/35 rounded-md" />
+                <div className="absolute -top-1 left-1 w-8 h-4 bg-primary/25 rounded-md rotate-[-12deg]" />
             </div>
         </div>
     );
@@ -2205,6 +3041,138 @@ function PreguntaDebateLayout() {
 }
 
 // === EVENTO LAYOUTS ===
+
+function EventoConferenceLayout() {
+    return (
+        <div className="w-full h-full flex flex-col justify-end p-1">
+            <div className="relative h-6 bg-primary/20 rounded-md">
+                <div className="absolute left-2 bottom-1 w-6 h-2 bg-primary/35 rounded-full" />
+                <div className="absolute right-2 bottom-1 w-2 h-2 bg-primary/45 rounded-full" />
+            </div>
+            <div className="mt-1 flex gap-0.5 justify-center">
+                <div className="w-1.5 h-1.5 bg-primary/30 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary/30 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary/30 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function EventoPartyLayout() {
+    return (
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="w-8 h-8 bg-primary/35 rounded-full" />
+            <div className="absolute top-1 left-2 w-2 h-2 bg-primary/45 rounded-full" />
+            <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary/30 rounded-full" />
+            <div className="absolute bottom-1 left-3 w-1.5 h-1.5 bg-primary/25 rounded-full" />
+        </div>
+    );
+}
+
+function EventoWorkshopLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="w-10 h-7 bg-primary/25 rounded-md border border-primary/30 relative">
+                <div className="absolute left-2 top-2 w-4 h-1 bg-primary/40 rounded-full" />
+                <div className="absolute right-2 bottom-2 w-2 h-2 bg-primary/45 rounded-sm" />
+            </div>
+        </div>
+    );
+}
+
+function EventoFestivalLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute top-2 left-1 right-1 h-0.5 bg-primary/35 rounded-full" />
+            <div className="absolute top-2 left-2 w-3 h-3 bg-primary/30 rotate-45" />
+            <div className="absolute top-2 left-6 w-3 h-3 bg-primary/40 rotate-45" />
+            <div className="absolute top-2 right-6 w-3 h-3 bg-primary/30 rotate-45" />
+            <div className="absolute top-2 right-2 w-3 h-3 bg-primary/40 rotate-45" />
+            <div className="absolute bottom-2 left-2 w-8 h-4 bg-primary/20 rounded-md" />
+        </div>
+    );
+}
+
+function EventoNetworkingLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-4 h-4 bg-primary/45 rounded-full" />
+            <div className="w-6 h-0.5 bg-primary/30 rounded-full" />
+            <div className="w-4 h-4 bg-primary/30 rounded-full" />
+        </div>
+    );
+}
+
+function EventoMinimalLayout() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
+            <div className="w-8 h-3 bg-primary/30 rounded-sm" />
+            <div className="w-6 h-6 border-2 border-primary/35 rounded-sm flex items-center justify-center">
+                <div className="w-3 h-3 bg-primary/25 rounded-sm" />
+            </div>
+        </div>
+    );
+}
+
+function EventoVirtualLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="w-10 h-7 bg-primary/25 rounded-md border border-primary/35 flex items-center justify-center">
+                <div className="w-0 h-0 border-l-[6px] border-l-primary/60 border-y-[4px] border-y-transparent" />
+            </div>
+        </div>
+    );
+}
+
+function EventoSportLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="w-9 h-9 rounded-full border-2 border-primary/40 relative">
+                <div className="absolute inset-x-1 top-1/2 h-0.5 bg-primary/35" />
+                <div className="absolute inset-y-1 left-1/2 w-0.5 bg-primary/35" />
+            </div>
+        </div>
+    );
+}
+
+function EventoGrandLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10">
+                <div className="absolute inset-1 bg-primary/35 rotate-45 rounded-sm" />
+                <div className="absolute inset-3 bg-primary/50 rotate-45 rounded-sm" />
+                <div className="absolute -bottom-1 left-2 w-6 h-2 bg-primary/30 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function EventoConcertLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-0.5 p-1">
+            <div className="w-2 h-5 bg-primary/30 rounded-sm" />
+            <div className="w-2 h-7 bg-primary/45 rounded-sm" />
+            <div className="w-2 h-4 bg-primary/25 rounded-sm" />
+            <div className="w-2 h-6 bg-primary/40 rounded-sm" />
+        </div>
+    );
+}
+
+function EventoAgendaLayout() {
+    return (
+        <div className="w-full h-full flex flex-col gap-1 p-1">
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full border-2 border-primary/35" />
+                <div className="h-1 flex-1 bg-primary/25 rounded-full" />
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full border-2 border-primary/25" />
+                <div className="h-1 flex-1 bg-primary/20 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
 function EventoDateLayout() {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center p-1">
@@ -2281,6 +3249,119 @@ function EventoRecapLayout() {
 }
 
 // === COMPARATIVA LAYOUTS ===
+
+function ComparativaSplitLayout() {
+    return (
+        <div className="w-full h-full flex p-1">
+            <div className="w-1/2 bg-primary/25 rounded-l-md" />
+            <div className="w-1/2 bg-primary/45 rounded-r-md" />
+        </div>
+    );
+}
+
+function ComparativaVersusLayout() {
+    return (
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="absolute inset-1 bg-primary/20 rounded-md -skew-x-6" />
+            <div className="absolute inset-1 bg-primary/35 rounded-md skew-x-6" />
+            <div className="relative w-6 h-6 rounded-full bg-primary/60 text-primary-foreground text-[8px] font-bold flex items-center justify-center">VS</div>
+        </div>
+    );
+}
+
+function ComparativaTransformLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 bg-primary/35 rounded-md" />
+            <div className="absolute top-1 left-1 w-4 h-4 bg-primary/20 rounded-sm border border-primary/25" />
+            <div className="absolute left-5 top-2 w-3 h-0.5 bg-primary/45 rounded-full" />
+        </div>
+    );
+}
+
+function ComparativaChecklistLayout() {
+    return (
+        <div className="w-full h-full flex gap-1 p-1">
+            <div className="w-1/2 flex flex-col gap-1">
+                <div className="h-1 w-full bg-primary/30 rounded-full" />
+                <div className="h-1 w-[80%] bg-primary/20 rounded-full" />
+                <div className="h-1 w-[70%] bg-primary/15 rounded-full" />
+            </div>
+            <div className="w-1/2 flex flex-col gap-1">
+                <div className="h-1 w-full bg-primary/40 rounded-full" />
+                <div className="h-1 w-[80%] bg-primary/30 rounded-full" />
+                <div className="h-1 w-[70%] bg-primary/25 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function ComparativaMythLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-6 h-6 rounded-md bg-primary/25 flex items-center justify-center">
+                <div className="w-3 h-0.5 bg-primary/50 rotate-45" />
+                <div className="w-3 h-0.5 bg-primary/50 -rotate-45" />
+            </div>
+            <div className="w-6 h-6 rounded-md bg-primary/40 flex items-center justify-center">
+                <div className="w-3 h-3 border-2 border-primary/60 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function ComparativaExpectLayout() {
+    return (
+        <div className="w-full h-full relative flex items-center justify-center gap-1 p-1">
+            <div className="w-7 h-5 bg-primary/25 rounded-md" />
+            <div className="w-7 h-5 bg-primary/40 rounded-md" />
+            <div className="absolute bottom-2 left-4 w-2 h-2 bg-primary/25 rotate-45" />
+            <div className="absolute bottom-2 right-4 w-2 h-2 bg-primary/40 rotate-45" />
+        </div>
+    );
+}
+
+function ComparativaPricingLayout() {
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
+            <div className="w-10 h-2 bg-primary/20 rounded-full relative">
+                <div className="absolute inset-x-1 top-1/2 h-0.5 bg-primary/35" />
+            </div>
+            <div className="w-8 h-4 bg-primary/45 rounded-md" />
+        </div>
+    );
+}
+
+function ComparativaHorizontalLayout() {
+    return (
+        <div className="w-full h-full flex flex-col p-1">
+            <div className="flex-1 bg-primary/25 rounded-t-md" />
+            <div className="flex-1 bg-primary/45 rounded-b-md" />
+        </div>
+    );
+}
+
+function ComparativaZoomLayout() {
+    return (
+        <div className="w-full h-full relative p-1">
+            <div className="absolute inset-1 bg-primary/20 rounded-md" />
+            <div className="absolute right-2 bottom-2 w-6 h-6 rounded-full border-2 border-primary/40" />
+            <div className="absolute right-1 bottom-1 w-3 h-0.5 bg-primary/45 rotate-45" />
+        </div>
+    );
+}
+
+function ComparativaFusionLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10">
+                <div className="absolute left-0 w-6 h-6 bg-primary/30 rounded-full" />
+                <div className="absolute right-0 w-6 h-6 bg-primary/45 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
 function ComparativaBeforeAfterLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center gap-0.5 p-1">
@@ -2368,6 +3449,154 @@ function ComparativaStackLayout() {
 }
 
 // === LISTA LAYOUTS ===
+
+function ListaChecklistLayout() {
+    return (
+        <div className="w-full h-full flex flex-col gap-1 p-1">
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 border-2 border-primary/40 rounded-sm flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 bg-primary/45 rounded-sm" />
+                </div>
+                <div className="h-1 flex-1 bg-primary/25 rounded-full" />
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 border-2 border-primary/25 rounded-sm" />
+                <div className="h-1 flex-1 bg-primary/20 rounded-full" />
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 border-2 border-primary/25 rounded-sm" />
+                <div className="h-1 flex-1 bg-primary/15 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function ListaPasosLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-4 h-4 rounded-full bg-primary/45 flex items-center justify-center text-[7px] font-bold text-primary-foreground">1</div>
+            <div className="w-5 h-0.5 bg-primary/30 rounded-full" />
+            <div className="w-4 h-4 rounded-full bg-primary/35 flex items-center justify-center text-[7px] font-bold text-primary-foreground">2</div>
+            <div className="w-5 h-0.5 bg-primary/25 rounded-full" />
+            <div className="w-4 h-4 rounded-full bg-primary/25 flex items-center justify-center text-[7px] font-bold text-primary/70">3</div>
+        </div>
+    );
+}
+
+function ListaRejillaLayout() {
+    return (
+        <div className="w-full h-full grid grid-cols-3 grid-rows-3 gap-0.5 p-1">
+            <div className="bg-primary/35 rounded-sm" />
+            <div className="bg-primary/25 rounded-sm" />
+            <div className="bg-primary/30 rounded-sm" />
+            <div className="bg-primary/20 rounded-sm" />
+            <div className="bg-primary/40 rounded-sm" />
+            <div className="bg-primary/25 rounded-sm" />
+            <div className="bg-primary/30 rounded-sm" />
+            <div className="bg-primary/20 rounded-sm" />
+            <div className="bg-primary/35 rounded-sm" />
+        </div>
+    );
+}
+
+function ListaTimelineLayout() {
+    return (
+        <div className="w-full h-full flex items-center p-1">
+            <div className="relative w-4 h-full">
+                <div className="absolute inset-y-1 left-1/2 -translate-x-1/2 w-0.5 bg-primary/25" />
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary/45 rounded-full" />
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary/30 rounded-full" />
+            </div>
+            <div className="flex-1 flex flex-col gap-1 pl-1">
+                <div className="h-1 w-full bg-primary/25 rounded-full" />
+                <div className="h-1 w-[70%] bg-primary/20 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function ListaNotaLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1">
+            <div className="relative w-10 h-10 bg-primary/25 rounded-md">
+                <div className="absolute right-0 top-0 w-4 h-4 bg-primary/35 rounded-bl-md" />
+                <div className="absolute left-2 bottom-2 w-6 h-1 bg-primary/35 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function ListaIconosLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center gap-1 p-1">
+            <div className="w-4 h-4 bg-primary/45 rounded-full" />
+            <div className="w-4 h-4 bg-primary/30 rounded-full" />
+            <div className="w-4 h-4 bg-primary/20 rounded-full" />
+        </div>
+    );
+}
+
+function ListaCarouselLayout() {
+    return (
+        <div className="w-full h-full relative flex items-center justify-center p-1">
+            <div className="absolute left-1 w-7 h-9 rounded-md bg-primary/20 border border-primary/25" />
+            <div className="relative w-9 h-11 rounded-md bg-primary/40 border border-primary/35" />
+            <div className="absolute bottom-1 flex gap-1">
+                <div className="w-1.5 h-1.5 bg-primary/45 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary/25 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-primary/25 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function ListaNumeradoLayout() {
+    return (
+        <div className="w-full h-full flex flex-col gap-1 p-1">
+            <div className="flex items-center gap-1">
+                <div className="w-4 h-4 bg-primary/45 rounded-full text-[7px] font-bold text-primary-foreground flex items-center justify-center">1</div>
+                <div className="h-1 flex-1 bg-primary/25 rounded-full" />
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-4 h-4 bg-primary/35 rounded-full text-[7px] font-bold text-primary-foreground flex items-center justify-center">2</div>
+                <div className="h-1 flex-1 bg-primary/20 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function ListaProsConsLayout() {
+    return (
+        <div className="w-full h-full flex gap-1 p-1">
+            <div className="w-1/2 rounded-md bg-primary/25 flex items-center justify-center">
+                <div className="w-2 h-2 bg-primary/45 rotate-45" />
+            </div>
+            <div className="w-1/2 rounded-md bg-primary/35 flex items-center justify-center">
+                <div className="w-3 h-3 border-2 border-primary/60 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function ListaAgendaLayout() {
+    return (
+        <div className="w-full h-full flex flex-col gap-1 p-1">
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-primary/35 rounded-sm" />
+                <div className="h-1 flex-1 bg-primary/25 rounded-full" />
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-primary/25 rounded-sm" />
+                <div className="h-1 flex-1 bg-primary/20 rounded-full" />
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-primary/20 rounded-sm" />
+                <div className="h-1 flex-1 bg-primary/15 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
 function ListaBulletsLayout() {
     return (
         <div className="w-full h-full flex flex-col gap-0.5 p-2">

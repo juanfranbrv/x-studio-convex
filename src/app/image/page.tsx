@@ -440,15 +440,18 @@ export default function ImagePage() {
     ) ?? false
 
     // Simplified canGenerate logic for the new 2-column layout
-    // Button should be enabled if there's an intent OR any content configured
+    // Button should be enabled only after the Colors card is visible
     const { state } = creationFlow
+    const hasReachedColorsStep = state.currentStep >= 6 || state.hasGeneratedImage
     const canGenerate = Boolean(
-        state.selectedIntent !== null ||
-        state.selectedStyles.length > 0 ||
-        state.customStyle.trim() !== '' ||
-        state.headline ||
-        state.cta ||
-        state.uploadedImages.length > 0
+        hasReachedColorsStep && (
+            state.selectedIntent !== null ||
+            state.selectedStyles.length > 0 ||
+            state.customStyle.trim() !== '' ||
+            state.headline ||
+            state.cta ||
+            state.uploadedImages.length > 0
+        )
     )
 
     // Wrapped handleGenerate with debug modal intercept (admin only)

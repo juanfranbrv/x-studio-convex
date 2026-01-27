@@ -1,6 +1,17 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { DEFAULT_LAYOUTS, LAYOUTS_BY_INTENT, type LayoutOption } from '@/lib/creation-flow-types';
+import { LayoutThumbnail } from './LayoutThumbnail';
+
+const ALL_LAYOUTS: LayoutOption[] = [
+    ...DEFAULT_LAYOUTS,
+    ...Object.values(LAYOUTS_BY_INTENT).flatMap(list => list ?? [])
+];
+
+function getLayoutById(layoutId: string): LayoutOption | undefined {
+    return ALL_LAYOUTS.find(layout => layout.id === layoutId);
+}
 
 interface CanvasGhostOverlayProps {
     layoutId: string | null;
@@ -62,6 +73,11 @@ function getGhostVisual(id: string) {
     if (id.includes('benefit') || id.includes('split')) return <SplitGhost />;
     if (id.includes('pricing') || id.includes('spotlight')) return <SpotlightGhost />;
     if (id.includes('testimonial') || id.includes('quote')) return <TestimonialGhost />;
+
+    const layout = getLayoutById(id);
+    if (layout) {
+        return <ThumbnailGhost layout={layout} />;
+    }
 
     // Default fallback
     return <DefaultGhost />;
@@ -407,6 +423,18 @@ function DefaultGhost() {
         <div className="w-full h-full flex flex-col gap-6 p-8">
             <div className="flex-1 bg-primary/5 rounded-2xl" />
             <div className="h-6 w-[50%] mx-auto bg-primary/15 rounded-full" />
+        </div>
+    );
+}
+
+function ThumbnailGhost({ layout }: { layout: LayoutOption }) {
+    return (
+        <div className="w-full h-full flex items-center justify-center">
+            <div className="w-[96%] h-[96%] opacity-80">
+                <div className="w-full h-full scale-[2.1] origin-center transform-gpu">
+                    <LayoutThumbnail layout={layout} variant="ghost" className="bg-transparent shadow-none" />
+                </div>
+            </div>
         </div>
     );
 }

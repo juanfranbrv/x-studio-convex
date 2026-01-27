@@ -47,6 +47,11 @@ E. Engagement (Interaccion)
 1) pregunta: preguntas para generar comentarios
 2) reto: desafios para participar
 
+CLAVES DE CLASIFICACION (anti-errores):
+- Si el texto es un desafio/juego para la audiencia (adivinanzas, retos, "a ver quien acierta", "sin usar Google", tests o traducciones), es ENGAGEMENT.
+- Ejemplo: "¿Como dirias en ingles: A quien madruga Dios le ayuda? A ver quien acierta..." => "reto" (o "pregunta" si no es desafio).
+- NO clasificar como "pasos" si no hay instrucciones secuenciales ni tutorial.
+
 OUTPUT JSON ONLY:
 {
   "detectedIntent": "intent_id",

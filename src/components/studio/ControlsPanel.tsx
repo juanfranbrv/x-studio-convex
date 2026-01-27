@@ -20,6 +20,7 @@ import { useUI } from '@/contexts/UIContext'
 import { GenerationState, INTENT_CATALOG, IntentCategory } from '@/lib/creation-flow-types'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
 import { cn } from '@/lib/utils'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = {
     1: { title: "Tu Idea", description: "Escribe tu idea y pulsa el boton para crear la publicación" },
@@ -108,6 +109,7 @@ export function ControlsPanel({
         availableStyles,
         availableLayouts,
         styleGroups,
+        selectIntent,
         selectLayout,
         toggleStyle,
         selectLogo,
@@ -300,7 +302,28 @@ export function ControlsPanel({
                                 <SectionHeader
                                     icon={Layout}
                                     title="Composición"
-                                    extra={<span className="text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">{INTENT_CATALOG.find(i => i.id === state.selectedIntent)?.name || state.selectedIntent}</span>}
+                                    extra={
+                                        <Select value={state.selectedIntent ?? ''} onValueChange={(value) => value && selectIntent(value as IntentCategory)}>
+                                            <SelectTrigger
+                                                size="sm"
+                                                className="h-6 px-2 text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 rounded-full shadow-none"
+                                            >
+                                                <SelectValue placeholder="Intent" />
+                                            </SelectTrigger>
+                                            <SelectContent align="end">
+                                                {INTENT_CATALOG.map((intent) => (
+                                                    <SelectItem key={intent.id} value={intent.id}>
+                                                        <span className="flex items-center justify-between w-full gap-2">
+                                                            <span>{intent.name}</span>
+                                                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                                                {intent.group}
+                                                            </span>
+                                                        </span>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    }
                                 />
                                 <LayoutSelector availableLayouts={availableLayouts} selectedLayout={state.selectedLayout} onSelectLayout={selectLayout} intent={state.selectedIntent as IntentCategory} />
                                 {state.currentStep === 2 && state.selectedLayout && (

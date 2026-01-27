@@ -64,6 +64,23 @@ function inferIntentFromText(userText: string): string | undefined {
     if (!text.trim()) return undefined
 
     const has = (tokens: string[]) => includesAny(text, tokens)
+    const challengeTokens = [
+        'reto',
+        'desafio',
+        'challenge',
+        'adivinanza',
+        'adivina',
+        'traduccion',
+        'sin usar google',
+        'sin usar google translate',
+        'quien acierta',
+        'a ver quien',
+        'acierta',
+        'juego',
+        'trivia',
+        'quiz',
+    ]
+    const isChallenge = has(challengeTokens)
     const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
     const months = [
         'enero',
@@ -126,20 +143,28 @@ function inferIntentFromText(userText: string): string | undefined {
         return 'dato'
     }
 
-    if (has(['paso', 'pasos', 'tutorial', 'guia', 'como '])) {
-        return 'pasos'
+    if (has(['reto', 'desafio', 'challenge'])) {
+        return 'reto'
     }
 
-    if (has(['definicion', 'que es', 'significado', 'concepto'])) {
-        return 'definicion'
+    if (isChallenge) {
+        return 'reto'
     }
 
     if (has(['pregunta', 'que opinas', 'opinas']) || text.includes('?')) {
         return 'pregunta'
     }
 
-    if (has(['reto', 'desafio', 'challenge'])) {
-        return 'reto'
+    if (has(['definicion', 'que es', 'significado', 'concepto'])) {
+        return 'definicion'
+    }
+
+    if (has(['paso', 'pasos', 'tutorial', 'guia', 'receta', 'instrucciones'])) {
+        return 'pasos'
+    }
+
+    if (text.includes('como ') && has(['hacer', 'preparar', 'construir', 'crear', 'usar', 'montar', 'configurar', 'aprender'])) {
+        return 'pasos'
     }
 
     if (has(['logro', 'premio', 'ganamos', 'reconocimiento', 'finalista'])) {
