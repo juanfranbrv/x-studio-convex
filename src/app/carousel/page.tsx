@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import { useUser } from '@clerk/nextjs'
 import {
     CarouselControlsPanel,
     CarouselSettings
@@ -14,14 +15,17 @@ import {
     generateCarouselAction,
     analyzeCarouselAction,
     regenerateSlideAction,
+    regenerateCarouselCaptionAction,
     CarouselSlide,
     SlideContent
 } from '@/app/actions/generate-carousel'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
+import { INTENT_CATALOG } from '@/lib/creation-flow-types'
 
 export default function CarouselPage() {
     const router = useRouter()
+    const { user } = useUser()
     const { activeBrandKit, brandKits, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const { toast } = useToast()
     const aiConfig = useQuery(api.settings.getAIConfig)
@@ -36,14 +40,82 @@ export default function CarouselPage() {
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
     const [generatedCount, setGeneratedCount] = useState(0)
     const [slides, setSlides] = useState<CarouselSlide[]>([])
-    const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5'>('1:1')
+    const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('3:4')
     const [carouselSettings, setCarouselSettings] = useState<CarouselSettings | null>(null)
     const [scriptSlides, setScriptSlides] = useState<SlideContent[] | null>(null)
     const [scriptPrompt, setScriptPrompt] = useState('')
     const [scriptSlideCount, setScriptSlideCount] = useState<number | null>(null)
+    const [analysisHook, setAnalysisHook] = useState<string | undefined>()
+    const [analysisStructure, setAnalysisStructure] = useState<{ id?: string; name?: string } | undefined>()
+    const [analysisIntent, setAnalysisIntent] = useState<string | undefined>()
+    const [caption, setCaption] = useState('')
+    const [isCaptionLocked, setIsCaptionLocked] = useState(false)
+    const [isCaptionGenerating, setIsCaptionGenerating] = useState(false)
+    const [referenceImages, setReferenceImages] = useState<Array<{ url: string; source: 'upload' | 'brandkit' }>>([])
+
+    const isAdmin = user?.emailAddresses?.some(
+        email => email.emailAddress === 'juanfranbrv@gmail.com'
+    ) ?? false
+
+    const analysisIntentLabel = useMemo(() => {
+        if (!analysisIntent) return undefined
+        const raw = analysisIntent.trim()
+        const normalized = raw.toLowerCase()
+        const direct = INTENT_CATALOG.find(i => i.id === normalized)
+        if (direct) return `${direct.name} (${direct.id})`
+
+        const codeMatch = raw.match(/^([a-e])\s*([0-9]+)$/i)
+        if (codeMatch) {
+            const group = codeMatch[1].toUpperCase()
+            const index = Number(codeMatch[2]) - 1
+            const groupMap: Record<string, string[]> = {
+                A: ['escaparate', 'catalogo', 'lanzamiento', 'servicio', 'oferta'],
+                B: ['comunicado', 'evento', 'lista', 'comparativa', 'efemeride'],
+                C: ['logro', 'equipo', 'cita', 'talento', 'bts'],
+                D: ['dato', 'pasos', 'definicion'],
+                E: ['pregunta', 'reto']
+            }
+            const resolvedId = groupMap[group]?.[index]
+            const resolved = INTENT_CATALOG.find(i => i.id === resolvedId)
+            if (resolved) return `${resolved.name} (${resolved.id})`
+            if (resolvedId) return resolvedId
+        }
+
+        return raw
+    }, [analysisIntent])
+
+    const brandKitTexts = useMemo(() => {
+        if (!activeBrandKit) return []
+        const options: Array<{ id: string; label: string; value: string }> = []
+
+        if (activeBrandKit.tagline) {
+            options.push({ id: 'bk-tagline', label: 'Tagline', value: activeBrandKit.tagline })
+        }
+        if (activeBrandKit.url) {
+            options.push({ id: 'bk-url', label: 'URL', value: activeBrandKit.url })
+        }
+        const hooks = activeBrandKit.text_assets?.marketing_hooks || []
+        hooks.forEach((hook, idx) => {
+            if (hook) options.push({ id: `bk-hook-${idx}`, label: `Hook ${idx + 1}`, value: hook })
+        })
+        const ctas = activeBrandKit.text_assets?.ctas || []
+        ctas.forEach((cta, idx) => {
+            if (cta) options.push({ id: `bk-cta-${idx}`, label: `CTA ${idx + 1}`, value: cta })
+        })
+        if (activeBrandKit.text_assets?.brand_context) {
+            options.push({ id: 'bk-context', label: 'Contexto', value: activeBrandKit.text_assets.brand_context })
+        }
+
+        return options
+    }, [activeBrandKit])
 
     const [isRegenerating, setIsRegenerating] = useState(false)
     const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null)
+
+    const handleUpdateSlideScript = useCallback((index: number, updates: { title?: string; description?: string }) => {
+        setSlides(prev => prev.map(s => s.index === index ? { ...s, ...updates } : s))
+        setScriptSlides(prev => prev ? prev.map(s => s.index === index ? { ...s, ...updates } : s) : prev)
+    }, [])
 
     const handleAnalyze = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
@@ -89,12 +161,25 @@ export default function CarouselPage() {
                 includeLogoOnSlides: settings.includeLogoOnSlides,
                 selectedLogoUrl: settings.selectedLogoUrl
             })
-
             if (result.success) {
-                setScriptSlides(result.slides)
+                const requestedCount = Math.max(1, Math.min(15, settings.slideCount || 5))
+                if (result.slides.length !== requestedCount) {
+                    throw new Error(`Guion incompleto: esperado ${requestedCount} slides, recibido ${result.slides.length}`)
+                }
+                const normalizedSlides = result.slides
+
+
+                setScriptSlides(normalizedSlides)
                 setScriptPrompt(settings.prompt)
-                setScriptSlideCount(settings.slideCount)
-                setSlides(result.slides.map(s => ({
+                setScriptSlideCount(requestedCount)
+                setCarouselSettings(settings)
+                setAnalysisHook(result.hook)
+                setAnalysisStructure(result.structure)
+                setAnalysisIntent(result.detectedIntent)
+                if (!isCaptionLocked) {
+                    setCaption(result.caption || '')
+                }
+                setSlides(normalizedSlides.map(s => ({
                     index: s.index,
                     title: s.title,
                     description: s.description,
@@ -104,6 +189,7 @@ export default function CarouselPage() {
                     title: 'Guion listo',
                     description: 'Revisa la vista previa antes de generar.'
                 })
+                return
             } else {
                 throw new Error(result.error || 'Error desconocido')
             }
@@ -117,7 +203,49 @@ export default function CarouselPage() {
         } finally {
             setIsAnalyzing(false)
         }
-    }, [activeBrandKit, aiConfig?.intelligenceModel, toast])
+        return undefined
+    }, [activeBrandKit, aiConfig?.intelligenceModel, isCaptionLocked, toast])
+
+    const handleRegenerateCaption = useCallback(async () => {
+        if (!carouselSettings || !activeBrandKit) return
+        if (isCaptionLocked) return
+        if (!aiConfig?.intelligenceModel) {
+            toast({
+                title: 'Falta configuracion de IA',
+                description: 'No hay un modelo de inteligencia configurado en el panel de Admin.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        setIsCaptionGenerating(true)
+        try {
+            const result = await regenerateCarouselCaptionAction({
+                prompt: carouselSettings.prompt,
+                slideCount: carouselSettings.slideCount,
+                brandDNA: activeBrandKit,
+                intelligenceModel: aiConfig.intelligenceModel,
+                selectedColors: carouselSettings.selectedColors,
+                includeLogoOnSlides: carouselSettings.includeLogoOnSlides,
+                selectedLogoUrl: carouselSettings.selectedLogoUrl
+            })
+
+            if (result.success && result.caption) {
+                setCaption(result.caption)
+            } else {
+                throw new Error(result.error || 'No se pudo regenerar el caption.')
+            }
+        } catch (error) {
+            console.error('Caption regeneration error:', error)
+            toast({
+                title: 'Error',
+                description: error instanceof Error ? error.message : 'No se pudo regenerar el caption.',
+                variant: 'destructive'
+            })
+        } finally {
+            setIsCaptionGenerating(false)
+        }
+    }, [activeBrandKit, aiConfig?.intelligenceModel, carouselSettings, isCaptionLocked, toast])
 
     const handleGenerate = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
@@ -185,6 +313,7 @@ export default function CarouselPage() {
                 style: settings.style,
                 intelligenceModel: aiConfig?.intelligenceModel,
                 imageModel: aiConfig?.imageModel,
+                aiImageDescription: settings.aiImageDescription,
                 // Full Brand Kit Context
                 brandDNA: activeBrandKit,
                 slideOverrides,
@@ -290,27 +419,45 @@ export default function CarouselPage() {
             onNewBrandKit={handleNewBrandKit}
         >
             <div className="flex h-full">
-                {/* Canvas Panel (Preview) */}
-                <CarouselCanvasPanel
-                    slides={slides}
-                    currentIndex={currentSlideIndex}
-                    onSelectSlide={setCurrentSlideIndex}
-                    onRegenerateSlide={handleRegenerateSlide}
-                    isRegenerating={isRegenerating}
-                    regeneratingIndex={regeneratingIndex}
-                    aspectRatio={aspectRatio}
-                />
+                {/* Canvas + Caption */}
+                <div className="flex-1 flex flex-col min-h-0">
+                    <CarouselCanvasPanel
+                        slides={slides}
+                        currentIndex={currentSlideIndex}
+                        onSelectSlide={setCurrentSlideIndex}
+                        onRegenerateSlide={handleRegenerateSlide}
+                        onUpdateSlideScript={handleUpdateSlideScript}
+                        isRegenerating={isRegenerating}
+                        regeneratingIndex={regeneratingIndex}
+                        aspectRatio={aspectRatio}
+                        caption={caption}
+                        onCaptionChange={setCaption}
+                        onRegenerateCaption={handleRegenerateCaption}
+                        isCaptionGenerating={isCaptionGenerating}
+                        isCaptionLocked={isCaptionLocked}
+                        onToggleCaptionLock={() => setIsCaptionLocked(!isCaptionLocked)}
+                        referenceImages={referenceImages}
+                        brandKitTexts={brandKitTexts}
+                    />
+                </div>
 
                 {/* Controls Panel (Right Side) */}
                 <CarouselControlsPanel
                     onAnalyze={handleAnalyze}
                     onGenerate={handleGenerate}
+                    onAspectRatioChange={setAspectRatio}
+                    onReferenceImagesChange={setReferenceImages}
                     isAnalyzing={isAnalyzing}
                     isGenerating={isGenerating}
                     currentSlideIndex={currentSlideIndex}
                     generatedCount={generatedCount}
                     totalSlides={slides.length || 5}
                     brandKit={activeBrandKit}
+                    analysisHook={analysisHook}
+                    analysisStructure={analysisStructure}
+                    analysisIntent={analysisIntent}
+                    analysisIntentLabel={analysisIntentLabel}
+                    isAdmin={isAdmin}
                 />
             </div>
         </DashboardLayout>

@@ -23,7 +23,7 @@ import { useUI } from '@/contexts/UIContext';
 
 export default function SettingsPage() {
     const { brandKits, activeBrandKit, setActiveBrandKit } = useBrandKit();
-    const { assistanceEnabled, setAssistanceEnabled } = useUI();
+    const { assistanceEnabled, setAssistanceEnabled, panelPosition, setPanelPosition } = useUI();
     const { signOut } = useClerk();
     const { user } = useUser();
     const { resolvedTheme, setTheme } = useTheme();
@@ -73,6 +73,30 @@ export default function SettingsPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <Separator />
+                            <div className="space-y-2">
+                                <div className="space-y-0.5">
+                                    <Label>Panel de controles</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Coloca el panel a la derecha o a la izquierda
+                                    </p>
+                                </div>
+                                <div className="flex w-full items-center rounded-full bg-muted/60 p-1">
+                                    <Button
+                                        variant={panelPosition === 'right' ? 'secondary' : 'ghost'}
+                                        className="h-8 flex-1 rounded-full text-xs font-medium"
+                                        onClick={() => setPanelPosition('right')}
+                                    >
+                                        Derecha
+                                    </Button>
+                                    <Button
+                                        variant={panelPosition === 'left' ? 'secondary' : 'ghost'}
+                                        className="h-8 flex-1 rounded-full text-xs font-medium"
+                                        onClick={() => setPanelPosition('left')}
+                                    >
+                                        Izquierda
+                                    </Button>
+                                </div>
+                            </div>
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
                                     <Label htmlFor="guided-assistance">Asistencia Guiada</Label>

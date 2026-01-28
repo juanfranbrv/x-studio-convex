@@ -547,6 +547,14 @@ export interface SocialFormat {
 export const SOCIAL_FORMATS: SocialFormat[] = [
     // Instagram
     {
+        id: 'ig-portrait',
+        platform: 'instagram',
+        name: 'Vertical',
+        aspectRatio: '4:5',
+        description: 'Feed vertical (1080x1350)',
+        icon: 'Instagram'
+    },
+    {
         id: 'ig-square',
         platform: 'instagram',
         name: 'Cuadrado',
@@ -560,14 +568,6 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         name: 'Horizontal',
         aspectRatio: '1.91:1',
         description: 'Post horizontal (1080x608)',
-        icon: 'Instagram'
-    },
-    {
-        id: 'ig-portrait',
-        platform: 'instagram',
-        name: 'Vertical',
-        aspectRatio: '4:5',
-        description: 'Feed vertical (1080x1350)',
         icon: 'Instagram'
     },
     {

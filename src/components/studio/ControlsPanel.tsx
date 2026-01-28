@@ -373,7 +373,17 @@ export function ControlsPanel({
                                 />
                                 {state.currentStep === 4 && (
                                     <div className="flex justify-end mt-3">
-                                        <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(5)} className="h-7 text-xs">Sin imagen de referencia</Button>
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            onClick={() => creationFlow.setStep(5)}
+                                            className="h-7 text-xs"
+                                            disabled={state.imageSourceMode === 'generate' && !state.aiImageDescription?.trim()}
+                                        >
+                                            {state.imageSourceMode === 'generate'
+                                                ? (state.aiImageDescription?.trim() ? 'Siguiente' : 'Escribe un prompt')
+                                                : 'Sin imagen de referencia'}
+                                        </Button>
                                     </div>
                                 )}
                             </div>

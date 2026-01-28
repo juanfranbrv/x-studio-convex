@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Plus, Minus, Sparkles, Loader2, GripVertical, Pencil, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
+import { ImageReferenceSelector } from '@/components/studio/creation-flow/ImageReferenceSelector'
+import { resizeImage } from '@/lib/image-utils'
 
 export interface SlideConfig {
     index: number
@@ -16,9 +18,11 @@ export interface SlideConfig {
 export interface CarouselSettings {
     prompt: string
     slideCount: number
-    aspectRatio: '1:1' | '4:5'
+    aspectRatio: '1:1' | '4:5' | '3:4'
     style: string
     slides: SlideConfig[]
+    imageSourceMode: 'upload' | 'brandkit' | 'generate'
+    aiImageDescription?: string
     // Brand Kit Context
     selectedLogoUrl?: string
     selectedColors: string[]
@@ -27,8 +31,10 @@ export interface CarouselSettings {
 }
 
 interface CarouselControlsPanelProps {
-    onAnalyze: (settings: CarouselSettings) => void
+    onAnalyze: (settings: CarouselSettings) => Promise<void>
     onGenerate: (settings: CarouselSettings) => void
+    onAspectRatioChange?: (ratio: '1:1' | '4:5' | '3:4') => void
+    onReferenceImagesChange?: (images: Array<{ url: string; source: 'upload' | 'brandkit' }>) => void
     isAnalyzing: boolean
     isGenerating: boolean
     currentSlideIndex: number
@@ -36,6 +42,11 @@ interface CarouselControlsPanelProps {
     totalSlides: number
     // Brand Kit Data
     brandKit: BrandDNA | null
+    analysisHook?: string
+    analysisStructure?: { id?: string; name?: string }
+    analysisIntent?: string
+    analysisIntentLabel?: string
+    isAdmin?: boolean
 }
 
 const SectionHeader = ({
@@ -72,14 +83,21 @@ export function CarouselControlsPanel({
     onGenerate,
     isAnalyzing,
     isGenerating,
+    onAspectRatioChange,
+    onReferenceImagesChange,
     currentSlideIndex,
     generatedCount,
     totalSlides,
-    brandKit
+    brandKit,
+    analysisHook,
+    analysisStructure,
+    analysisIntent,
+    analysisIntentLabel,
+    isAdmin = false
 }: CarouselControlsPanelProps) {
     const [prompt, setPrompt] = useState('')
     const [slideCount, setSlideCount] = useState(5)
-    const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5'>('1:1')
+    const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('3:4')
     const [style, setStyle] = useState('minimal')
     const [slides, setSlides] = useState<SlideConfig[]>([])
     const [editingSlide, setEditingSlide] = useState<number | null>(null)
@@ -88,7 +106,12 @@ export function CarouselControlsPanel({
     // Brand Kit Selections
     const [selectedLogoUrl, setSelectedLogoUrl] = useState<string | undefined>()
     const [selectedColors, setSelectedColors] = useState<string[]>([])
-    const [selectedImageUrls, setSelectedImageUrls] = useState<string[]>([])
+    const [selectedBrandKitImageIds, setSelectedBrandKitImageIds] = useState<string[]>([])
+    const [uploadedImages, setUploadedImages] = useState<string[]>([])
+    const [imageSourceMode, setImageSourceMode] = useState<'upload' | 'brandkit' | 'generate'>('upload')
+    const [aiImageDescription, setAiImageDescription] = useState('')
+    const [isImageAnalyzing, setIsImageAnalyzing] = useState(false)
+    const [imageError, setImageError] = useState<string | null>(null)
     const [includeLogoOnSlides, setIncludeLogoOnSlides] = useState(true)
 
     // Get brand logos
@@ -102,8 +125,20 @@ export function CarouselControlsPanel({
     const brandImages = (brandKit?.images || []).filter(img => img.url)
 
     const handleSlideCountChange = (delta: number) => {
-        const newCount = Math.max(1, Math.min(5, slideCount + delta))
+        const newCount = Math.max(1, Math.min(15, slideCount + delta))
         setSlideCount(newCount)
+    }
+
+    useEffect(() => {
+        if (!onReferenceImagesChange) return
+        const uploaded = uploadedImages.map(url => ({ url, source: 'upload' as const }))
+        const brandkit = selectedBrandKitImageIds.map(url => ({ url, source: 'brandkit' as const }))
+        onReferenceImagesChange([...uploaded, ...brandkit])
+    }, [uploadedImages, selectedBrandKitImageIds, onReferenceImagesChange])
+
+    const handleAspectRatioSelect = (ratio: '1:1' | '4:5' | '3:4') => {
+        setAspectRatio(ratio)
+        onAspectRatioChange?.(ratio)
     }
 
     const toggleColor = (color: string) => {
@@ -114,13 +149,42 @@ export function CarouselControlsPanel({
         )
     }
 
-    const toggleImage = (url: string) => {
-        setSelectedImageUrls(prev =>
-            prev.includes(url)
-                ? prev.filter(u => u !== url)
-                : [...prev, url]
+    const toggleBrandKitImage = (id: string) => {
+        setSelectedBrandKitImageIds(prev =>
+            prev.includes(id)
+                ? prev.filter(u => u !== id)
+                : [...prev, id]
         )
     }
+
+    const handleUploadImage = async (file: File) => {
+        const maxTotal = 10
+        const totalSelected = uploadedImages.length + selectedBrandKitImageIds.length
+        if (totalSelected >= maxTotal) return
+
+        setIsImageAnalyzing(true)
+        setImageError(null)
+        try {
+            const base64 = await resizeImage(file, {
+                maxWidth: 1536,
+                maxHeight: 1536,
+                quality: 0.8,
+                format: 'image/jpeg'
+            })
+            setUploadedImages(prev => [...prev, base64])
+        } catch (error) {
+            setImageError(error instanceof Error ? error.message : 'Error al subir imagen')
+        } finally {
+            setIsImageAnalyzing(false)
+        }
+    }
+
+    const removeUploadedImage = (url: string) => {
+        setUploadedImages(prev => prev.filter(u => u !== url))
+    }
+
+    const clearUploadedImages = () => setUploadedImages([])
+    const clearBrandKitImages = () => setSelectedBrandKitImageIds([])
 
     const handleEditSlide = (index: number) => {
         setEditingSlide(index)
@@ -145,12 +209,21 @@ export function CarouselControlsPanel({
             ? slides
             : Array.from({ length: slideCount }, (_, i) => slides[i] || { index: i })
 
+        const selectedImageUrls =
+            imageSourceMode === 'upload'
+                ? uploadedImages
+                : imageSourceMode === 'brandkit'
+                    ? selectedBrandKitImageIds
+                    : []
+
         return {
             prompt,
             slideCount,
             aspectRatio,
             style: STYLE_OPTIONS.find(s => s.id === style)?.label || 'Minimalista',
             slides: finalSlides,
+            imageSourceMode,
+            aiImageDescription: imageSourceMode === 'generate' ? (aiImageDescription.trim() || undefined) : undefined,
             selectedLogoUrl: includeLogoOnSlides ? (selectedLogoUrl || primaryLogo) : undefined,
             selectedColors: selectedColors.length > 0 ? selectedColors : brandColors.slice(0, 3).map(c => c.color),
             selectedImageUrls,
@@ -163,9 +236,9 @@ export function CarouselControlsPanel({
         onGenerate(buildSettings())
     }
 
-    const handleAnalyze = () => {
+    const handleAnalyze = async () => {
         if (!prompt.trim()) return
-        onAnalyze(buildSettings())
+        await onAnalyze(buildSettings())
     }
 
     const canGenerate = prompt.trim().length > 0 && !isGenerating && brandKit !== null
@@ -185,12 +258,50 @@ export function CarouselControlsPanel({
                             <span className="text-3xl font-bold">{slideCount}</span>
                             <span className="text-sm text-muted-foreground ml-2">slides</span>
                         </div>
-                        <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(1)} disabled={slideCount >= 5}>
+                        <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(1)} disabled={slideCount >= 15}>
                             <Plus className="w-4 h-4" />
                         </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">Entre 1 y 5 diapositivas.</p>
+                    <p className="text-xs text-muted-foreground">Entre 1 y 15 diapositivas.</p>
                 </div>
+
+                {/* Lazy Prompt Result */}
+                {isAdmin && (analysisHook || analysisStructure?.name || analysisStructure?.id || analysisIntentLabel || analysisIntent) && (
+                    <div className="glass-card p-4 space-y-3">
+                        <SectionHeader icon={Sparkles} title="Resumen IA" />
+                        <div className="space-y-2 text-sm">
+                            {(analysisIntentLabel || analysisIntent) && (
+                                <div className="flex items-start gap-2">
+                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Intencion</span>
+                                    <span className="text-foreground">{analysisIntentLabel || analysisIntent}</span>
+                                </div>
+                            )}
+                            {(analysisStructure?.name || analysisStructure?.id) && (
+                                <div className="flex items-start gap-2">
+                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estructura</span>
+                                    <span className="text-foreground">
+                                        {analysisStructure?.name || analysisStructure?.id}
+                                        {analysisStructure?.name && analysisStructure?.id ? ` (${analysisStructure.id})` : ''}
+                                    </span>
+                                </div>
+                            )}
+                            {analysisHook && (
+                                <div className="space-y-1">
+                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Gancho</span>
+                                    <p className="text-foreground leading-snug">{analysisHook}</p>
+                                </div>
+                            )}
+                            <div className="flex items-start gap-2">
+                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Diapositivas</span>
+                                <span className="text-foreground">{slideCount}</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Formato</span>
+                                <span className="text-foreground">{aspectRatio}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Prompt */}
                 <div className="glass-card p-4 space-y-3">
@@ -225,106 +336,91 @@ export function CarouselControlsPanel({
                     </div>
                 </div>
 
-                {/* Composition */}
-                <div className="glass-card p-4 space-y-3">
-                    <SectionHeader icon={Layout} title="Composicion" />
-                    <div className="space-y-2 max-h-[180px] overflow-y-auto">
-                        {Array.from({ length: slideCount }, (_, i) => (
-                            <div
-                                key={i}
-                                className={cn(
-                                    "flex items-center gap-2 p-3 rounded-lg border transition-all",
-                                    isGenerating && i === currentSlideIndex ? "border-primary bg-primary/5" :
-                                        isGenerating && i < generatedCount ? "border-green-500/50 bg-green-500/5" : "border-border"
-                                )}
-                            >
-                                <GripVertical className="w-4 h-4 text-muted-foreground" />
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium">
-                                        {i === 0 ? 'Portada' : i === slideCount - 1 ? 'CTA' : `Slide ${i + 1}`}
-                                    </p>
-                                    {slides[i]?.customText && (
-                                        <p className="text-xs text-muted-foreground truncate">{slides[i].customText}</p>
-                                    )}
-                                </div>
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditSlide(i)}>
-                                    <Pencil className="w-3 h-3" />
-                                </Button>
-                                {isGenerating && i === currentSlideIndex && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-                                {isGenerating && i < generatedCount && <span className="text-green-500 text-xs">OK</span>}
-                            </div>
-                        ))}
-                    </div>
-
-                    {editingSlide !== null && (
-                        <div className="p-3 rounded-lg border border-primary/50 bg-primary/5 space-y-2">
-                            <Label className="text-xs">Texto para Slide {editingSlide + 1}</Label>
-                            <Textarea
-                                placeholder="Dejar vacio para auto..."
-                                value={editText}
-                                onChange={(e) => setEditText(e.target.value)}
-                                className="min-h-[60px] resize-none text-sm"
-                            />
-                            <div className="flex gap-2">
-                                <Button size="sm" onClick={handleSaveSlideEdit} className="flex-1">Guardar</Button>
-                                <Button size="sm" variant="outline" onClick={() => setEditingSlide(null)}>Cancelar</Button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
                 {/* Format */}
                 <div className="glass-card p-4 space-y-3">
                     <SectionHeader icon={Layers} title="Formato" />
-                    <div className="flex gap-3">
+                    <div className="space-y-2">
                         <button
-                            onClick={() => setAspectRatio('1:1')}
+                            onClick={() => handleAspectRatioSelect('3:4')}
                             className={cn(
-                                "flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-1",
-                                aspectRatio === '1:1' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                                "flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
+                                aspectRatio === '3:4' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                             )}
                         >
-                            <div className="w-10 h-10 rounded bg-muted border border-border" />
-                            <span className="text-xs font-medium">1:1</span>
+                            <div className="w-8 h-10 rounded bg-muted border border-border" />
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold">Tall / Vertical Extendido (Tendencia 2026)</span>
+                                    <span className="text-[10px] font-medium text-muted-foreground">3:4</span>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground leading-snug">
+                                    1080x1440 ? +6.6% pantalla ? domina el feed y encaja con la nueva cuadr?cula vertical.
+                                </p>
+                            </div>
                         </button>
                         <button
-                            onClick={() => setAspectRatio('4:5')}
+                            onClick={() => handleAspectRatioSelect('4:5')}
                             className={cn(
-                                "flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all flex-1",
+                                "flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
                                 aspectRatio === '4:5' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                             )}
                         >
                             <div className="w-8 h-10 rounded bg-muted border border-border" />
-                            <span className="text-xs font-medium">4:5</span>
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold">Vertical Est?ndar (Retrato)</span>
+                                    <span className="text-[10px] font-medium text-muted-foreground">4:5</span>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground leading-snug">
+                                    1080x1350 ? el est?ndar m?s seguro para evitar recortes en dispositivos antiguos o Meta Ads.
+                                </p>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => handleAspectRatioSelect('1:1')}
+                            className={cn(
+                                "flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
+                                aspectRatio === '1:1' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                            )}
+                        >
+                            <div className="w-10 h-10 rounded bg-muted border border-border" />
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold">Cuadrado (Tradicional)</span>
+                                    <span className="text-[10px] font-medium text-muted-foreground">1:1</span>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground leading-snug">
+                                    1080x1080 ? formato original y cl?sico para composiciones equilibradas.
+                                </p>
+                            </div>
                         </button>
                     </div>
                 </div>
 
                 {/* Image */}
                 <div className="glass-card p-4 space-y-3">
-                    <SectionHeader icon={ImagePlus} title="Imagen" />
-                    {brandImages.length > 0 ? (
-                        <div className="grid grid-cols-4 gap-2">
-                            {brandImages.slice(0, 8).map((img, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => toggleImage(img.url)}
-                                    className={cn(
-                                        "aspect-square rounded-lg overflow-hidden border-2 transition-all",
-                                        selectedImageUrls.includes(img.url)
-                                            ? "border-primary ring-2 ring-primary/30"
-                                            : "border-transparent opacity-70 hover:opacity-100"
-                                    )}
-                                >
-                                    <img src={img.url} alt="" className="w-full h-full object-cover" />
-                                </button>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-xs text-muted-foreground">
-                            No hay imagenes en tu Brand Kit.
-                        </p>
-                    )}
+                    <SectionHeader icon={ImagePlus} title="Imagen de Referencia" />
+                    <ImageReferenceSelector
+                        uploadedImages={uploadedImages}
+                        visionAnalysis={null}
+                        isAnalyzing={isImageAnalyzing}
+                        error={imageError}
+                        onUpload={handleUploadImage}
+                        onRemoveUploadedImage={removeUploadedImage}
+                        onClearUploadedImages={clearUploadedImages}
+                        brandKitImages={brandImages.map((img, idx) => ({
+                            id: img.url,
+                            url: img.url,
+                            name: `Imagen ${idx + 1}`
+                        }))}
+                        selectedBrandKitImageIds={selectedBrandKitImageIds}
+                        onToggleBrandKitImage={toggleBrandKitImage}
+                        onClearBrandKitImages={clearBrandKitImages}
+                        aiImageDescription={aiImageDescription}
+                        onAiDescriptionChange={setAiImageDescription}
+                        mode={imageSourceMode}
+                        onModeChange={setImageSourceMode}
+                    />
                 </div>
 
                 {/* Style */}
@@ -440,4 +536,3 @@ export function CarouselControlsPanel({
         </div>
     )
 }
-

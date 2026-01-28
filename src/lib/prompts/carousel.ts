@@ -1,8 +1,11 @@
+import path from 'path'
+import { readFileSync } from 'fs'
+
 interface CarouselDecompositionParams {
-    brandName: string
-    slideCount: number
     brandContext: string
     topic: string
+    brandWebsite?: string
+    requestedSlideCount?: number
 }
 
 interface CarouselImageParams {
@@ -13,63 +16,47 @@ interface CarouselImageParams {
     title: string
     description: string
     visualPrompt: string
+    composition?: string
     focus?: string
+    role?: 'hook' | 'content' | 'cta'
     style: string
     aspectRatio: string
     includeLogo: boolean
+    aiImageDescription?: string
+}
+
+const DECOMPOSITION_PROMPT_PATH = path.join(
+    process.cwd(),
+    'src',
+    'lib',
+    'prompts',
+    'carousel',
+    'lazy-carousel-parser.md'
+)
+
+let cachedDecompositionTemplate: string | null = null
+
+function getDecompositionTemplate(): string {
+    if (!cachedDecompositionTemplate) {
+        cachedDecompositionTemplate = readFileSync(DECOMPOSITION_PROMPT_PATH, 'utf8')
+    }
+    return cachedDecompositionTemplate
 }
 
 export function buildCarouselDecompositionPrompt({
-    brandName,
-    slideCount,
     brandContext,
-    topic
+    topic,
+    brandWebsite,
+    requestedSlideCount
 }: CarouselDecompositionParams): string {
-    return `
-Eres un experto en contenido para Instagram para la marca "${brandName}".
-Tu tarea es descomponer el tema en exactamente ${slideCount} slides para un carrusel.
+    const websiteContext = brandWebsite ? `BRAND WEBSITE:\n${brandWebsite}` : 'BRAND WEBSITE: (none)'
+    const requestedCount = typeof requestedSlideCount === 'number' ? String(requestedSlideCount) : 'N/A'
 
-${brandContext}
-
-TEMA DEL CARRUSEL: "${topic}"
-
-OBJETIVO:
-- Crear un guion con ${slideCount} beats (uno por slide).
-- Mantener coherencia visual estricta entre slides.
-- Cada slide debe aportar un punto distinto del tema.
-
-REGLAS DE COHERENCIA:
-- Todas las diapositivas comparten la misma plantilla base (margenes, grid, jerarquia).
-- Tipografias, estilo de iconos y espaciados consistentes.
-- Misma paleta de colores en todo el carrusel.
-- No cambies el layout base entre slides, solo varia el contenido.
-- No repitas la misma escena o motivo en todos los slides.
-
-PARA CADA SLIDE, PROPORCIONA:
-1. Titulo corto (maximo 6 palabras)
-2. Descripcion breve (1-2 oraciones)
-3. VisualPrompt detallado que respete la misma plantilla base
-4. Focus: una frase corta con el foco del slide
-
-REGLAS DE CONTENIDO:
-- Slide 1: portada llamativa con el titulo principal
-- Slides intermedios: desarrollan el contenido punto por punto
-- Ultimo slide: CTA o conclusion
-- Marca: reflejar valores y tono de ${brandName}
-
-Responde SOLO con JSON valido:
-{
-  "slides": [
-    {
-      "index": 0,
-      "title": "Titulo",
-      "description": "Descripcion",
-      "visualPrompt": "Prompt visual detallado...",
-      "focus": "Foco del slide"
-    }
-  ]
-}
-`
+    return getDecompositionTemplate()
+        .replaceAll('{{BRAND_CONTEXT}}', brandContext)
+        .replaceAll('{{WEBSITE_CONTEXT}}', websiteContext)
+        .replaceAll('{{USER_REQUEST}}', topic)
+        .replaceAll('{{REQUESTED_SLIDE_COUNT}}', requestedCount)
 }
 
 export function buildCarouselImagePrompt({
@@ -80,10 +67,13 @@ export function buildCarouselImagePrompt({
     title,
     description,
     visualPrompt,
+    composition,
     focus,
+    role,
     style,
     aspectRatio,
-    includeLogo
+    includeLogo,
+    aiImageDescription
 }: CarouselImageParams): string {
     return `
 CARRUSEL INSTAGRAM - Slide ${slideIndex + 1} de ${totalSlides}
@@ -97,6 +87,9 @@ CONTENIDO DEL SLIDE:
 TITULO: ${title}
 DESCRIPCION: ${description}
 FOCO: ${focus || 'no especificado'}
+COMPOSICION: ${composition || 'no especificada'}
+ROL: ${role || 'content'}
+${aiImageDescription ? `REFERENCIA IA: ${aiImageDescription}` : ''}
 
 ESTILO VISUAL: ${style}
 INSTRUCCIONES: ${visualPrompt}

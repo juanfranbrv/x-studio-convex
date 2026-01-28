@@ -4,6 +4,9 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { GeneratedCopyCard } from '@/components/studio/GeneratedCopyCard'
 import {
     ChevronLeft,
     ChevronRight,
@@ -17,12 +20,15 @@ import {
     DownloadCloud,
     Images,
     X,
-    Loader2
+    Loader2,
+    Fingerprint
 } from 'lucide-react'
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
@@ -34,9 +40,18 @@ interface CarouselCanvasPanelProps {
     currentIndex: number
     onSelectSlide: (index: number) => void
     onRegenerateSlide: (index: number) => void
+    onUpdateSlideScript?: (index: number, updates: { title?: string; description?: string }) => void
     isRegenerating: boolean
     regeneratingIndex: number | null
-    aspectRatio: '1:1' | '4:5'
+    aspectRatio: '1:1' | '4:5' | '3:4'
+    caption?: string
+    onCaptionChange?: (value: string) => void
+    onRegenerateCaption?: () => void
+    isCaptionGenerating?: boolean
+    isCaptionLocked?: boolean
+    onToggleCaptionLock?: () => void
+    referenceImages?: Array<{ url: string; source: 'upload' | 'brandkit' }>
+    brandKitTexts?: Array<{ id: string; label: string; value: string }>
 }
 
 export function CarouselCanvasPanel({
@@ -44,14 +59,26 @@ export function CarouselCanvasPanel({
     currentIndex,
     onSelectSlide,
     onRegenerateSlide,
+    onUpdateSlideScript,
     isRegenerating,
     regeneratingIndex,
-    aspectRatio
+    aspectRatio,
+    caption,
+    onCaptionChange,
+    onRegenerateCaption,
+    isCaptionGenerating = false,
+    isCaptionLocked = false,
+    onToggleCaptionLock,
+    referenceImages = [],
+    brandKitTexts = []
 }: CarouselCanvasPanelProps) {
     const [zoom, setZoom] = useState(100)
     const containerRef = useRef<HTMLDivElement>(null)
     const [viewportHeight, setViewportHeight] = useState(800)
     const [isMobile, setIsMobile] = useState(false)
+    const [isEditingScript, setIsEditingScript] = useState(false)
+    const [draftTitle, setDraftTitle] = useState('')
+    const [draftDescription, setDraftDescription] = useState('')
 
     // Track viewport for responsive heights
     useEffect(() => {
@@ -68,6 +95,67 @@ export function CarouselCanvasPanel({
     const hasScript = Boolean(currentSlide && !currentSlide.imageUrl && (currentSlide.title || currentSlide.description))
     const completedSlides = slides.filter(s => s.status === 'done').length
     const isGeneratingAny = slides.some(s => s.status === 'generating') || isRegenerating
+
+    useEffect(() => {
+        if (!currentSlide) return
+        setDraftTitle(currentSlide.title || '')
+        setDraftDescription(currentSlide.description || '')
+        setIsEditingScript(false)
+    }, [currentSlide?.index])
+
+    const handleSaveScript = () => {
+        if (!currentSlide) return
+        const nextTitle = draftTitle.trim() || currentSlide.title
+        const nextDescription = draftDescription.trim() || currentSlide.description
+        onUpdateSlideScript?.(currentSlide.index, {
+            title: nextTitle,
+            description: nextDescription
+        })
+        setIsEditingScript(false)
+    }
+
+    const appendBrandText = (currentValue: string, value: string) => {
+        const trimmed = value.trim()
+        if (!trimmed) return currentValue
+        if (!currentValue.trim()) return trimmed
+        return `${currentValue} ${trimmed}`
+    }
+
+    const renderBrandTextMenu = (onSelect: (value: string) => void) => (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button
+                    type="button"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    title="Usar texto del Kit de Marca"
+                >
+                    <Fingerprint className="w-4 h-4" />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72 max-h-80 overflow-y-auto">
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Textos del Kit de Marca
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {brandKitTexts.length === 0 ? (
+                    <DropdownMenuItem disabled className="text-xs text-muted-foreground italic">
+                        Sin textos disponibles
+                    </DropdownMenuItem>
+                ) : (
+                    brandKitTexts.map((option) => (
+                        <DropdownMenuItem
+                            key={option.id}
+                            onClick={() => onSelect(option.value)}
+                            className="text-xs flex flex-col items-start gap-0.5 py-2"
+                        >
+                            <span className="text-[9px] uppercase text-primary font-bold">{option.label}</span>
+                            <span className="text-foreground truncate max-w-full">{option.value}</span>
+                        </DropdownMenuItem>
+                    ))
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
 
     // Navigation handlers
     const handlePrevious = () => currentIndex > 0 && onSelectSlide(currentIndex - 1)
@@ -95,14 +183,8 @@ export function CarouselCanvasPanel({
         const footerOffset = isMobile ? 300 : 450
         const availableHeight = Math.max(200, viewportHeight - footerOffset)
 
-        let baseWidth, baseHeight
-        if (ratio >= 1) {
-            baseWidth = Math.min(availableWidth, availableHeight * ratio)
-            baseHeight = baseWidth / ratio
-        } else {
-            baseHeight = Math.min(availableHeight, availableWidth * ratio)
-            baseWidth = baseHeight / ratio
-        }
+        const baseWidth = Math.min(availableWidth, availableHeight * ratio)
+        const baseHeight = baseWidth / ratio
 
         const zoomW = (availableWidth / baseWidth) * 100 * 0.95
         const zoomH = (targetHeight / baseHeight) * 100 * 0.95
@@ -234,13 +316,8 @@ export function CarouselCanvasPanel({
                         const availableHeight = Math.max(200, viewportHeight - footerOffset)
                         const availableWidth = containerRef.current?.parentElement?.clientWidth || 800
 
-                        let canvasHeight
-                        if (ratio >= 1) {
-                            const canvasWidth = Math.min(availableWidth, availableHeight * ratio)
-                            canvasHeight = canvasWidth / ratio
-                        } else {
-                            canvasHeight = Math.min(availableHeight, availableWidth * ratio)
-                        }
+                        const canvasWidth = Math.min(availableWidth, availableHeight * ratio)
+                        const canvasHeight = canvasWidth / ratio
                         return { height: `${canvasHeight * (zoom / 100)}px` }
                     })()}
                 >
@@ -254,14 +331,8 @@ export function CarouselCanvasPanel({
                             const availableHeight = Math.max(200, viewportHeight - footerOffset)
                             const availableWidth = 800 // Default reference
 
-                            let canvasWidth, canvasHeight
-                            if (ratio >= 1) {
-                                canvasWidth = Math.min(availableWidth, availableHeight * ratio)
-                                canvasHeight = canvasWidth / ratio
-                            } else {
-                                canvasHeight = Math.min(availableHeight, availableWidth * ratio)
-                                canvasWidth = canvasHeight / ratio
-                            }
+                            const canvasWidth = Math.min(availableWidth, availableHeight * ratio)
+                            const canvasHeight = canvasWidth / ratio
 
                             return {
                                 width: `${canvasWidth}px`,
@@ -285,6 +356,64 @@ export function CarouselCanvasPanel({
                                 </motion.div>
                             )}
                         </AnimatePresence>
+
+                        {/* Side Navigation */}
+                        {slides.length > 1 && (
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handlePrevious}
+                                    disabled={currentIndex === 0}
+                                    className={cn(
+                                        "absolute left-3 top-1/2 -translate-y-1/2 z-40 h-10 w-10 rounded-full",
+                                        "bg-background/80 backdrop-blur border border-border shadow-sm"
+                                    )}
+                                    aria-label="Slide anterior"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleNext}
+                                    disabled={currentIndex === slides.length - 1}
+                                    className={cn(
+                                        "absolute right-3 top-1/2 -translate-y-1/2 z-40 h-10 w-10 rounded-full",
+                                        "bg-background/80 backdrop-blur border border-border shadow-sm"
+                                    )}
+                                    aria-label="Slide siguiente"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </Button>
+                            </>
+                        )}
+
+                        {/* Reference Images Strip (Top Left) */}
+                        {!currentSlide?.imageUrl && referenceImages.length > 0 && (
+                            <div className="absolute top-4 left-4 z-20 flex gap-2 flex-wrap max-w-[220px]">
+                                {referenceImages.slice(0, 6).map((item, idx) => (
+                                    <div key={`${item.source}-${idx}`} className="relative group">
+                                        <img
+                                            src={item.url}
+                                            alt={`Ref ${idx + 1}`}
+                                            className="w-11 h-14 object-cover rounded-lg ring-1 ring-white/20 shadow-xl"
+                                        />
+                                        <div className={cn(
+                                            "absolute bottom-0 inset-x-0 text-[5px] text-white text-center py-0.5 backdrop-blur-sm rounded-b-lg",
+                                            item.source === 'brandkit' ? 'bg-primary/70' : 'bg-black/50'
+                                        )}>
+                                            {item.source === 'brandkit' ? 'BK' : idx + 1}
+                                        </div>
+                                    </div>
+                                ))}
+                                {referenceImages.length > 6 && (
+                                    <div className="w-11 h-14 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-white text-[10px] font-bold ring-1 ring-white/20">
+                                        +{referenceImages.length - 6}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Content */}
                         {!currentSlide ? (
@@ -317,12 +446,106 @@ export function CarouselCanvasPanel({
                                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                                         Guion previo
                                     </p>
-                                    <h3 className="text-xl font-semibold text-foreground">
-                                        {currentSlide?.title || `Slide ${currentIndex + 1}`}
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
-                                        {currentSlide?.description || 'Sin descripcion'}
-                                    </p>
+                                    {isEditingScript ? (
+                                        <div className="space-y-3 text-left">
+                                            <div className="relative">
+                                                <Input
+                                                    value={draftTitle}
+                                                    onChange={(e) => setDraftTitle(e.target.value)}
+                                                    placeholder="Título del slide"
+                                                    className="text-sm pr-9"
+                                                    disabled={isGeneratingAny}
+                                                />
+                                                {brandKitTexts.length > 0 && renderBrandTextMenu((value) =>
+                                                    setDraftTitle(prev => appendBrandText(prev, value))
+                                                )}
+                                            </div>
+                                            <div className="relative">
+                                                <Textarea
+                                                    value={draftDescription}
+                                                    onChange={(e) => setDraftDescription(e.target.value)}
+                                                    placeholder="Descripción del slide"
+                                                    className="min-h-[90px] text-sm resize-none pr-9"
+                                                    disabled={isGeneratingAny}
+                                                />
+                                                {brandKitTexts.length > 0 && renderBrandTextMenu((value) =>
+                                                    setDraftDescription(prev => appendBrandText(prev, value))
+                                                )}
+                                            </div>
+                                            {brandKitTexts.length > 0 && (
+                                                <div className="flex justify-start">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 px-3 text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-foreground transition-colors gap-2"
+                                                            >
+                                                                <Fingerprint className="w-3.5 h-3.5 text-primary" />
+                                                                Textos de Marca
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="start" className="w-72 max-h-80 overflow-y-auto">
+                                                            <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                                                                Selecciona un texto del Kit de Marca
+                                                            </DropdownMenuLabel>
+                                                            <DropdownMenuSeparator />
+                                                            {brandKitTexts.map((option) => (
+                                                                <DropdownMenuItem
+                                                                    key={`button-${option.id}`}
+                                                                    onClick={() => setDraftDescription(prev => appendBrandText(prev, option.value))}
+                                                                    className="text-xs flex flex-col items-start gap-0.5 py-2"
+                                                                >
+                                                                    <span className="text-[9px] uppercase text-primary font-bold">{option.label}</span>
+                                                                    <span className="text-foreground truncate max-w-full">{option.value}</span>
+                                                                </DropdownMenuItem>
+                                                            ))}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            )}
+                                            <div className="flex gap-2">
+                                                <Button size="sm" onClick={handleSaveScript} disabled={isGeneratingAny}>
+                                                    Guardar
+                                                </Button>
+                                                <Button size="sm" variant="outline" onClick={() => setIsEditingScript(false)} disabled={isGeneratingAny}>
+                                                    Cancelar
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={() => setIsEditingScript(true)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault()
+                                                        setIsEditingScript(true)
+                                                    }
+                                                }}
+                                                className="space-y-2 cursor-text"
+                                                aria-label="Editar guion"
+                                                title="Haz clic para editar"
+                                            >
+                                                <h3 className="text-xl font-semibold text-foreground">
+                                                    {currentSlide?.title || `Slide ${currentIndex + 1}`}
+                                                </h3>
+                                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                                    {currentSlide?.description || 'Sin descripcion'}
+                                                </p>
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => setIsEditingScript(true)}
+                                                className="mt-2"
+                                            >
+                                                Editar guion
+                                            </Button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ) : (
@@ -335,31 +558,41 @@ export function CarouselCanvasPanel({
                 </div>
 
                 {/* Lower Navigation & Thumbnails */}
-                <div className="mt-12 w-full flex flex-col items-center gap-8 pb-12">
+                <div className="mt-6 w-full flex flex-col items-center gap-4 pb-6">
                     {/* Thumbnail Strip */}
                     {slides.length > 0 && (
-                        <div className="flex gap-3 overflow-x-auto max-w-full pb-4 px-4 no-scrollbar">
+                        <div className="flex gap-2 overflow-x-auto max-w-full pb-3 pt-1 px-2 no-scrollbar">
                             {slides.map((slide, index) => (
                                 <button
                                     key={index}
                                     onClick={() => onSelectSlide(index)}
                                     className={cn(
-                                        "relative flex-shrink-0 rounded-xl overflow-hidden transition-all duration-300 border-2",
-                                        aspectRatio === '1:1' ? "w-20 h-20" : "w-16 h-20",
+                                        "relative flex-shrink-0 rounded-[18px] p-1.5 transition-all duration-300",
+                                        "bg-white/60 dark:bg-white/10 backdrop-blur border border-border/60",
+                                        aspectRatio === '1:1' ? "w-16 h-16" : "w-14 h-20",
                                         currentIndex === index
-                                            ? "border-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] scale-110 z-10"
-                                            : "border-transparent opacity-60 hover:opacity-100 scale-100"
+                                            ? "ring-2 ring-primary/70 shadow-[0_0_12px_hsl(var(--primary)/0.25)] z-10"
+                                            : "opacity-60 hover:opacity-100"
                                     )}
                                 >
-                                    {slide.imageUrl ? (
-                                        <img src={slide.imageUrl} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full bg-muted flex items-center justify-center">
-                                            <span className="text-[10px] font-mono opacity-50">{index + 1}</span>
-                                        </div>
-                                    )}
+                                    {/* Phone skin notch */}
+                                    <div className="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1.5 rounded-full bg-black/10 dark:bg-white/15" />
+                                    <div
+                                        className={cn(
+                                            "relative w-full h-full rounded-[14px] overflow-hidden bg-muted/60 border border-black/5",
+                                            aspectRatio === '1:1' ? "aspect-square" : "aspect-[3/4]"
+                                        )}
+                                    >
+                                        {slide.imageUrl ? (
+                                            <img src={slide.imageUrl} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full bg-muted flex items-center justify-center">
+                                                <span className="text-[10px] font-mono opacity-50">{index + 1}</span>
+                                            </div>
+                                        )}
+                                    </div>
                                     {slide.status === 'generating' && (
-                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-[18px]">
                                             <div className="w-1 h-1 bg-white rounded-full animate-ping" />
                                         </div>
                                     )}
@@ -368,6 +601,21 @@ export function CarouselCanvasPanel({
                         </div>
                     )}
                 </div>
+
+                {/* Caption Card - Integrated with preview scroll */}
+                {caption && (
+                    <div className="w-full max-w-[800px] shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-8">
+                        <GeneratedCopyCard
+                            copy={caption}
+                            hashtags={[]}
+                            onRegenerate={onRegenerateCaption}
+                            isLoading={isCaptionGenerating}
+                            isLocked={isCaptionLocked}
+                            onToggleLock={onToggleCaptionLock}
+                            onCopyChange={(val) => onCaptionChange?.(val)}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     )
