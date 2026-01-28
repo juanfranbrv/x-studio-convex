@@ -183,7 +183,7 @@ async function decomposeIntoSlides(
             throw new Error(`Slide count mismatch: expected ${requested}, got ${rawSlides?.length ?? 0}`)
         }
 
-        let slides = rawSlides.map((raw: any, i: number) => ({
+        let slides: SlideContent[] = rawSlides.map((raw: any, i: number) => ({
             index: typeof raw?.index === 'number' ? raw.index : i,
             title: typeof raw?.title === 'string' ? raw.title.trim() : '',
             description: typeof raw?.description === 'string' ? raw.description.trim() : '',
@@ -194,7 +194,7 @@ async function decomposeIntoSlides(
         }))
 
         // Validate required fields
-        const hasMissing = slides.some(s => !s.title || !s.description || !s.visualPrompt || !s.role)
+        const hasMissing = slides.some((s: SlideContent) => !s.title || !s.description || !s.visualPrompt || !s.role)
         if (hasMissing) {
             throw new Error('Missing required fields in one or more slides')
         }
