@@ -199,26 +199,32 @@ export function ControlsPanel({
             <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-6">
 
                 {/* SECTION: Presets */}
-                {hasPresets && (
-                    <div className="glass-card p-4">
-                        <div className="flex items-center justify-between mb-2">
-                            <SectionHeader icon={Star} title="Favoritos" />
-                            <div className="flex items-center gap-1">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setIsSaveDialogOpen(true)}
-                                    disabled={!state.selectedIntent}
-                                    className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
-                                >
-                                    <BookmarkIcon className="w-3 h-3" />
-                                    Guardar
-                                </Button>
-                            </div>
+                <div className="glass-card p-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <SectionHeader icon={Star} title="Favoritos" />
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsSaveDialogOpen(true)}
+                                disabled={!state.selectedIntent}
+                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                            >
+                                <BookmarkIcon className="w-3 h-3" />
+                                Guardar
+                            </Button>
                         </div>
-                        <PresetsCarousel onSelectPreset={handleSelectPreset} onReset={reset} userId={userId} />
                     </div>
-                )}
+                    {hasPresets ? (
+                        <PresetsCarousel onSelectPreset={handleSelectPreset} onReset={reset} userId={userId} />
+                    ) : (
+                        <div className="rounded-xl border border-dashed border-border/70 bg-muted/30 px-3 py-4 text-center">
+                            <p className="text-[11px] text-muted-foreground">
+                                Aún no hay presets guardados para esta marca. Guarda el primero con “Guardar”.
+                            </p>
+                        </div>
+                    )}
+                </div>
 
                 {/* STEP 1: Intent Input */}
                 <div ref={step1Ref} className="glass-card p-4 space-y-3 relative group">

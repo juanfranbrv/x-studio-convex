@@ -128,7 +128,7 @@ export default function ImagePage() {
         try {
             const modelToUse = autoModel || aiConfig?.intelligenceModel
             if (!modelToUse) {
-                toast({
+            toast({
                     title: "Falta configuracion de IA",
                     description: "No hay un modelo de inteligencia configurado en el panel de Admin.",
                     variant: "destructive"
@@ -148,7 +148,7 @@ export default function ImagePage() {
             })
 
             if (result.error) {
-                toast({
+            toast({
                     title: "Error analyzing prompt",
                     description: "Could not parse intent. Please fill manually.",
                     variant: "destructive"
@@ -161,7 +161,7 @@ export default function ImagePage() {
             // Auto-detect intent
             if (result.detectedIntent && !creationFlow.state.selectedIntent) {
                 creationFlow.selectIntent(result.detectedIntent as IntentCategory)
-                toast({
+            toast({
                     title: "✨ Intención detectada",
                     description: `Detectamos que quieres crear: ${result.detectedIntent}`,
                 })
@@ -231,6 +231,8 @@ export default function ImagePage() {
             setHighlightedFields(newHighlights)
             setTimeout(() => setHighlightedFields(new Set()), 2500)
 
+            // Ensure the next step appears after a successful analysis
+            creationFlow.setStep(2)
             toast({
                 title: "Magic Applied! ✨",
                 description: "Your fields have been auto-filled based on your description.",
@@ -361,7 +363,7 @@ export default function ImagePage() {
                 }, ...prev])
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al generar la imagen' }))
-                toast({
+            toast({
                     title: "Error de generación",
                     description: errorData.error || 'Error al generar la imagen',
                     variant: "destructive",
@@ -416,7 +418,7 @@ export default function ImagePage() {
                 }, ...prev])
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al editar la imagen' }))
-                toast({
+            toast({
                     title: "Error de edición",
                     description: errorData.error || 'Error al editar la imagen',
                     variant: "destructive",

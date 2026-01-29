@@ -38,6 +38,7 @@ import { P09B } from '@/lib/prompts/priorities/p09b-cta-url-hierarchy'
 import * as P08 from '@/lib/prompts/priorities/p08-custom-instructions'
 import * as P07 from '@/lib/prompts/priorities/p07-layout-structure'
 import * as P06 from '@/lib/prompts/priorities/p06-subject-context'
+import { P06B } from '@/lib/prompts/priorities/p06b-ai-image-description'
 import * as P05 from '@/lib/prompts/priorities/p05-visual-style'
 import * as P04 from '@/lib/prompts/priorities/p04-brand-colors'
 import * as P03 from '@/lib/prompts/priorities/p03-content-type'
@@ -1324,6 +1325,22 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
         if (subjectParts.length > 0) {
             sections.push(...subjectParts)
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        // PRIORITY 6B - AI IMAGE DESCRIPTION (TEXT-ONLY)
+        // ─────────────────────────────────────────────────────────────
+        const aiDescription = activeState.imageSourceMode === 'generate'
+            ? activeState.aiImageDescription.trim()
+            : ''
+
+        if (aiDescription) {
+            sections.push(
+                P06B.PRIORITY_HEADER,
+                ``,
+                P06B.AI_IMAGE_DESCRIPTION_INSTRUCTION(aiDescription),
+                ``
+            )
         }
 
         // ═══════════════════════════════════════════════════════════════

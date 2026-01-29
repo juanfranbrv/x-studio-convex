@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
+import JSZip from 'jszip'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,7 +31,7 @@ import {
 } from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/image/page'
-import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, ImagePlus } from 'lucide-react'
+import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, ImagePlus, SquareArrowDown, ImageDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
@@ -323,6 +324,38 @@ export function CanvasPanel({
         document.body.removeChild(link)
     }
 
+    const handleDownloadBundle = async () => {
+        if (!currentImage) return
+        const timestamp = Date.now()
+
+        const caption = (creationState.caption || generatedCopy || '').trim()
+        const hashtags = generatedHashtags.length > 0 ? generatedHashtags.join(' ') : ''
+        const textContent = [
+            `COPY:\n${caption}`,
+            `HASHTAGS:\n${hashtags}`,
+            `HEADLINE:\n${creationState.headline || ''}`,
+            `CTA:\n${creationState.cta || ''}`,
+            `URL:\n${creationState.ctaUrl || ''}`,
+        ].join('\n\n').trimEnd()
+
+        const imageResponse = await fetch(currentImage)
+        const imageBlob = await imageResponse.blob()
+
+        const zip = new JSZip()
+        zip.file(`image-${timestamp}.png`, imageBlob)
+        zip.file(`copy-${timestamp}.txt`, textContent || '')
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' })
+        const zipUrl = URL.createObjectURL(zipBlob)
+        const zipLink = document.createElement('a')
+        zipLink.href = zipUrl
+        zipLink.download = `x-image-generation-${timestamp}.zip`
+        document.body.appendChild(zipLink)
+        zipLink.click()
+        document.body.removeChild(zipLink)
+        URL.revokeObjectURL(zipUrl)
+    }
+
 
 
     const handleSelectTemplate = (template: Template) => {
@@ -431,8 +464,11 @@ export function CanvasPanel({
                     >
                         <EditIcon fontSize="small" style={{ fontSize: '1.1rem' }} />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleDownload} className="h-7 w-7">
-                        <DownloadIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
+                    <Button variant="ghost" size="icon" onClick={handleDownload} className="h-7 w-7" title="Descargar imagen">
+                        <ImageDown className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={handleDownloadBundle} className="h-7 w-7" title="Descargar ZIP (imagen + copy)">
+                        <SquareArrowDown className="w-4 h-4" />
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
