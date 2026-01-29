@@ -4,6 +4,8 @@ import { generateContentImageUnified } from '@/lib/gemini'
 import { generateTextUnified } from '@/lib/gemini'
 import type { BrandDNA } from '@/lib/brand-types'
 import { buildCarouselDecompositionPrompt, buildCarouselImagePrompt } from '@/lib/prompts/carousel'
+import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
+import { getCarouselComposition } from '@/lib/carousel-compositions'
 
 export interface SlideContent {
     index: number
@@ -29,6 +31,7 @@ export interface GenerateCarouselInput {
     slideCount: number
     aspectRatio?: '1:1' | '4:5' | '3:4'
     style?: string
+    compositionId?: string
     brandDNA: BrandDNA
     intelligenceModel?: string
     imageModel?: string
@@ -70,52 +73,6 @@ export interface GenerateCarouselResult {
     error?: string
 }
 
-/**
- * Build brand context string for prompts
- */
-function buildBrandContext(brand: BrandDNA, selectedColors?: string[], includeLogoUrl?: string): string {
-    const parts: string[] = []
-
-    // Brand identity
-    parts.push(`MARCA: ${brand.brand_name}`)
-    if (brand.tagline) parts.push(`TAGLINE: ${brand.tagline}`)
-    if (brand.business_overview) parts.push(`CONTEXTO: ${brand.business_overview}`)
-    if (brand.preferred_language) parts.push(`IDIOMA_PREFERIDO: ${brand.preferred_language}`)
-    if (brand.target_audience?.length) parts.push(`PUBLICO_OBJETIVO: ${brand.target_audience.join(', ')}`)
-    if (brand.brand_values?.length) parts.push(`VALORES: ${brand.brand_values.join(', ')}`)
-    if (brand.text_assets?.brand_context) parts.push(`VISION_CONTEXTO: ${brand.text_assets.brand_context}`)
-
-    // Colors
-    const colors = selectedColors && selectedColors.length > 0
-        ? selectedColors
-        : brand.colors?.slice(0, 4).map(c => c.color) || []
-    if (colors.length > 0) {
-        parts.push(`PALETA DE COLORES: ${colors.join(', ')}`)
-    }
-
-    // Tone
-    if (brand.tone_of_voice?.length) {
-        parts.push(`TONO_DE_VOZ: ${brand.tone_of_voice.join(', ')}`)
-    }
-
-    // Visual aesthetic
-    if (brand.visual_aesthetic?.length) {
-        parts.push(`ESTETICA VISUAL: ${brand.visual_aesthetic.join(', ')}`)
-    }
-
-    // Fonts
-    if (brand.fonts?.length) {
-        const fontNames = brand.fonts.map(f => f.family).join(', ')
-        parts.push(`TIPOGRAFIAS: ${fontNames}`)
-    }
-
-    // Logo instruction
-    if (includeLogoUrl) {
-        parts.push('INCLUIR LOGO: Si, integrar sutilmente el logo de la marca')
-    }
-
-    return parts.join('\n')
-}
 
 /**
  * Decompose a prompt into N slide concepts using AI
@@ -136,7 +93,7 @@ async function decomposeIntoSlides(
     detectedIntent?: string
     caption?: string
 }> {
-    const brandContext = buildBrandContext(brand, selectedColors, includeLogoUrl)
+    const brandContext = buildCarouselBrandContext(brand, selectedColors, includeLogoUrl)
     const decompositionPrompt = buildCarouselDecompositionPrompt({
         brandContext,
         topic: prompt,
@@ -305,16 +262,18 @@ async function generateSlideImage(
     selectedColors?: string[],
     selectedLogoUrl?: string,
     selectedImageUrls?: string[],
-    aiImageDescription?: string
+    aiImageDescription?: string,
+    compositionId?: string
 ): Promise<string> {
-    const brandContext = buildBrandContext(brand, selectedColors, selectedLogoUrl)
-        const fullPrompt = buildCarouselImagePrompt({
-            slideIndex: slideContent.index,
-            totalSlides,
-            brandName: brand.brand_name,
-            brandContext,
-            title: slideContent.title,
-            description: slideContent.description,
+    const brandContext = buildCarouselBrandContext(brand, selectedColors, selectedLogoUrl)
+    const compositionPreset = getCarouselComposition(compositionId)
+    const fullPrompt = buildCarouselImagePrompt({
+        slideIndex: slideContent.index,
+        totalSlides,
+        brandName: brand.brand_name,
+        brandContext,
+        title: slideContent.title,
+        description: slideContent.description,
         visualPrompt: slideContent.visualPrompt,
         composition: slideContent.composition,
         focus: slideContent.focus,
@@ -322,7 +281,8 @@ async function generateSlideImage(
         style,
         aspectRatio,
         includeLogo: Boolean(selectedLogoUrl),
-        aiImageDescription
+        aiImageDescription,
+        compositionPreset: compositionPreset?.layoutPrompt
     })
 
     const brandWrapper = { name: brand.brand_name, brand_dna: brand }
@@ -358,6 +318,7 @@ export async function generateCarouselAction(
         slideCount,
         aspectRatio = '3:4',
         style = 'Moderno y minimalista',
+        compositionId,
         brandDNA,
         intelligenceModel,
         imageModel,
@@ -427,7 +388,8 @@ export async function generateCarouselAction(
                     selectedColors,
                     includeLogoOnSlides ? selectedLogoUrl : undefined,
                     selectedImageUrls,
-                    aiImageDescription
+                    aiImageDescription,
+                    compositionId
                 )
 
                 slides[i].imageUrl = imageUrl
@@ -546,7 +508,8 @@ export async function regenerateSlideAction(
     brandDNA: BrandDNA,
     imageModel: string,
     selectedLogoUrl?: string,
-    selectedColors?: string[]
+    selectedColors?: string[],
+    compositionId?: string
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
     try {
         console.log(`Regenerating slide ${slideIndex + 1} for ${brandDNA.brand_name}...`)
@@ -559,7 +522,10 @@ export async function regenerateSlideAction(
             brandDNA,
             imageModel,
             selectedColors,
-            selectedLogoUrl
+            selectedLogoUrl,
+            undefined,
+            undefined,
+            compositionId
         )
 
         return { success: true, imageUrl }

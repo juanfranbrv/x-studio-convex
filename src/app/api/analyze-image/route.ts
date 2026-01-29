@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { VisionAnalysis, DetectedSubject } from '@/lib/creation-flow-types'
+import { IMAGE_ANALYSIS_PROMPT } from '@/lib/prompts/vision/image-analysis.prompt'
 
 // Use the same paid API key as image generation
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_IMAGE_API_KEY!)
 
 const VISION_MODEL = 'models/gemini-flash-lite-latest'
 
-const ANALYSIS_PROMPT = `Analyze this image for marketing/advertising purposes. Return a JSON object with:
-
-1. "subject": One of: "food", "tech", "fashion", "beauty", "home", "sports", "nature", "people", "abstract", "product", "unknown"
-2. "subjectLabel": A short Spanish description of the main subject (e.g., "Botella de aceite de oliva", "Auriculares inalámbricos")
-3. "lighting": One of: "bright", "dim", "natural", "studio", "golden_hour", "unknown"
-4. "colorPalette": Array of 3-5 dominant hex colors extracted from the image
-5. "keywords": Provide 3-5 rigorous visual style descriptors in English. Focus on: lighting (e.g. cinematic, flat), vibe (e.g. minimalist, authentic, neon, luxury), and composition (e.g. wide angle, macro). Avoid generic terms.
-6. "confidence": A number between 0 and 1 indicating confidence in the analysis
-
-Respond ONLY with valid JSON, no markdown or explanation.`
 
 export async function POST(request: NextRequest) {
     try {
@@ -45,7 +36,7 @@ export async function POST(request: NextRequest) {
                                 data: base64Data,
                             },
                         },
-                        { text: ANALYSIS_PROMPT },
+                        { text: IMAGE_ANALYSIS_PROMPT },
                     ],
                 },
             ],
@@ -62,12 +53,17 @@ export async function POST(request: NextRequest) {
             const parsed = JSON.parse(jsonText)
 
             // Validate and normalize the response
+            const rawKeywords = Array.isArray(parsed.keywords)
+                ? parsed.keywords.filter((k: unknown) => typeof k === 'string')
+                : (typeof parsed.keywords === 'string' ? [parsed.keywords] : [])
+            const normalizedKeywords = rawKeywords.length > 1 ? [rawKeywords.join(', ')] : rawKeywords
+
             analysis = {
                 subject: validateSubject(parsed.subject),
                 subjectLabel: parsed.subjectLabel || 'Objeto detectado',
                 lighting: parsed.lighting || 'unknown',
                 colorPalette: Array.isArray(parsed.colorPalette) ? parsed.colorPalette : [],
-                keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
+                keywords: normalizedKeywords,
                 confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.7,
             }
         } catch {

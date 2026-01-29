@@ -12,6 +12,9 @@ CONTEXT
 
 {{INTENT_CONTEXT}}
 
+USER_LANGUAGE (must be respected):
+{{USER_LANGUAGE}}
+
 USER REQUEST:
 "{{USER_REQUEST}}"
 
@@ -83,4 +86,4 @@ RULES
    - Use type: "tagline", "hook", or "custom".
 8. detectedIntent must be one of the allowed ids above. Never invent new ones.
 9. If intent is not provided, detect it. If it is provided, respect it.
-10. Language: Spanish.
+10. Language: you MUST output in USER_LANGUAGE. Ignore any brand language preference.

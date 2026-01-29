@@ -22,6 +22,11 @@ import {
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { INTENT_CATALOG } from '@/lib/creation-flow-types'
+import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
+import type { DebugPromptData } from '@/lib/creation-flow-types'
+import { buildCarouselImagePrompt } from '@/lib/prompts/carousel-image'
+import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
+import { getCarouselComposition } from '@/lib/carousel-compositions'
 
 export default function CarouselPage() {
     const router = useRouter()
@@ -52,6 +57,9 @@ export default function CarouselPage() {
     const [isCaptionLocked, setIsCaptionLocked] = useState(false)
     const [isCaptionGenerating, setIsCaptionGenerating] = useState(false)
     const [referenceImages, setReferenceImages] = useState<Array<{ url: string; source: 'upload' | 'brandkit' }>>([])
+    const [showDebugModal, setShowDebugModal] = useState(false)
+    const [debugPromptData, setDebugPromptData] = useState<DebugPromptData | null>(null)
+    const [pendingGenerateSettings, setPendingGenerateSettings] = useState<CarouselSettings | null>(null)
 
     const isAdmin = user?.emailAddresses?.some(
         email => email.emailAddress === 'juanfranbrv@gmail.com'
@@ -117,6 +125,83 @@ export default function CarouselPage() {
         setScriptSlides(prev => prev ? prev.map(s => s.index === index ? { ...s, ...updates } : s) : prev)
     }, [])
 
+    const performAnalyze = useCallback(async (settings: CarouselSettings, silent = false) => {
+        if (!settings.prompt.trim() || !activeBrandKit || !aiConfig?.intelligenceModel) {
+            if (!silent) {
+                toast({
+                    title: 'Falta configuracion de IA',
+                    description: 'No hay un modelo de inteligencia configurado en el panel de Admin.',
+                    variant: 'destructive'
+                })
+            }
+            return null
+        }
+
+        setIsAnalyzing(true)
+        setGeneratedCount(0)
+        setCurrentSlideIndex(0)
+        setAspectRatio(settings.aspectRatio)
+        setCarouselSettings(settings)
+
+        try {
+            const result = await analyzeCarouselAction({
+                prompt: settings.prompt,
+                slideCount: settings.slideCount,
+                brandDNA: activeBrandKit,
+                intelligenceModel: aiConfig.intelligenceModel,
+                selectedColors: settings.selectedColors,
+                includeLogoOnSlides: settings.includeLogoOnSlides,
+                selectedLogoUrl: settings.selectedLogoUrl
+            })
+            if (!result.success) {
+                throw new Error(result.error || 'Error desconocido')
+            }
+
+            const requestedCount = Math.max(1, Math.min(15, settings.slideCount || 5))
+            if (result.slides.length !== requestedCount) {
+                throw new Error(`Guion incompleto: esperado ${requestedCount} slides, recibido ${result.slides.length}`)
+            }
+
+            setScriptSlides(result.slides)
+            setScriptPrompt(settings.prompt)
+            setScriptSlideCount(requestedCount)
+            setCarouselSettings(settings)
+            setAnalysisHook(result.hook)
+            setAnalysisStructure(result.structure)
+            setAnalysisIntent(result.detectedIntent)
+            if (!isCaptionLocked) {
+                setCaption(result.caption || '')
+            }
+            setSlides(result.slides.map(s => ({
+                index: s.index,
+                title: s.title,
+                description: s.description,
+                status: 'pending' as const
+            })))
+
+            if (!silent) {
+                toast({
+                    title: 'Guion listo',
+                    description: 'Revisa la vista previa antes de generar.'
+                })
+            }
+
+            return result.slides
+        } catch (error) {
+            console.error('Carousel analysis error:', error)
+            if (!silent) {
+                toast({
+                    title: 'Error',
+                    description: error instanceof Error ? error.message : 'No se pudo analizar el carrusel.',
+                    variant: 'destructive'
+                })
+            }
+            return null
+        } finally {
+            setIsAnalyzing(false)
+        }
+    }, [activeBrandKit, aiConfig?.intelligenceModel, isCaptionLocked, toast])
+
     const handleAnalyze = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
             toast({
@@ -144,67 +229,8 @@ export default function CarouselPage() {
             })
             return
         }
-
-        setIsAnalyzing(true)
-        setGeneratedCount(0)
-        setCurrentSlideIndex(0)
-        setAspectRatio(settings.aspectRatio)
-        setCarouselSettings(settings)
-
-        try {
-            const result = await analyzeCarouselAction({
-                prompt: settings.prompt,
-                slideCount: settings.slideCount,
-                brandDNA: activeBrandKit,
-                intelligenceModel: aiConfig.intelligenceModel,
-                selectedColors: settings.selectedColors,
-                includeLogoOnSlides: settings.includeLogoOnSlides,
-                selectedLogoUrl: settings.selectedLogoUrl
-            })
-            if (result.success) {
-                const requestedCount = Math.max(1, Math.min(15, settings.slideCount || 5))
-                if (result.slides.length !== requestedCount) {
-                    throw new Error(`Guion incompleto: esperado ${requestedCount} slides, recibido ${result.slides.length}`)
-                }
-                const normalizedSlides = result.slides
-
-
-                setScriptSlides(normalizedSlides)
-                setScriptPrompt(settings.prompt)
-                setScriptSlideCount(requestedCount)
-                setCarouselSettings(settings)
-                setAnalysisHook(result.hook)
-                setAnalysisStructure(result.structure)
-                setAnalysisIntent(result.detectedIntent)
-                if (!isCaptionLocked) {
-                    setCaption(result.caption || '')
-                }
-                setSlides(normalizedSlides.map(s => ({
-                    index: s.index,
-                    title: s.title,
-                    description: s.description,
-                    status: 'pending' as const
-                })))
-                toast({
-                    title: 'Guion listo',
-                    description: 'Revisa la vista previa antes de generar.'
-                })
-                return
-            } else {
-                throw new Error(result.error || 'Error desconocido')
-            }
-        } catch (error) {
-            console.error('Carousel analysis error:', error)
-            toast({
-                title: 'Error',
-                description: error instanceof Error ? error.message : 'No se pudo analizar el carrusel.',
-                variant: 'destructive'
-            })
-        } finally {
-            setIsAnalyzing(false)
-        }
-        return undefined
-    }, [activeBrandKit, aiConfig?.intelligenceModel, isCaptionLocked, toast])
+        await performAnalyze(settings)
+    }, [activeBrandKit, aiConfig?.intelligenceModel, performAnalyze, toast])
 
     const handleRegenerateCaption = useCallback(async () => {
         if (!carouselSettings || !activeBrandKit) return
@@ -247,7 +273,7 @@ export default function CarouselPage() {
         }
     }, [activeBrandKit, aiConfig?.intelligenceModel, carouselSettings, isCaptionLocked, toast])
 
-    const handleGenerate = useCallback(async (settings: CarouselSettings) => {
+    const executeGenerate = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
             toast({
                 title: 'Error',
@@ -311,6 +337,7 @@ export default function CarouselPage() {
                 slideCount: settings.slideCount,
                 aspectRatio: settings.aspectRatio,
                 style: settings.style,
+                compositionId: settings.compositionId,
                 intelligenceModel: aiConfig?.intelligenceModel,
                 imageModel: aiConfig?.imageModel,
                 aiImageDescription: settings.aiImageDescription,
@@ -348,6 +375,111 @@ export default function CarouselPage() {
         }
     }, [activeBrandKit, aiConfig?.imageModel, aiConfig?.intelligenceModel, scriptSlides, scriptPrompt, scriptSlideCount, toast])
 
+    const handleGenerate = useCallback(async (settings: CarouselSettings) => {
+        if (!settings.prompt.trim()) {
+            toast({
+                title: 'Error',
+                description: 'Por favor, introduce un tema para el carrusel.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        if (!activeBrandKit) {
+            toast({
+                title: 'Error',
+                description: 'Selecciona un Brand Kit primero.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        if (!aiConfig?.imageModel) {
+            toast({
+                title: 'Falta configuracion de IA',
+                description: 'No hay un modelo de imagen configurado en el panel de Admin.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        if (!isAdmin) {
+            await executeGenerate(settings)
+            return
+        }
+
+        const shouldUseScript = scriptSlides && scriptPrompt === settings.prompt && scriptSlideCount === settings.slideCount
+        let slidesForPrompt = shouldUseScript ? scriptSlides : null
+
+        if (!slidesForPrompt) {
+            slidesForPrompt = await performAnalyze(settings, true)
+        }
+
+        if (!slidesForPrompt) {
+            toast({
+                title: 'Error',
+                description: 'No se pudo preparar el guion para el preview del prompt.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        const compositionPreset = getCarouselComposition(settings.compositionId)
+        const brandContext = buildCarouselBrandContext(
+            activeBrandKit,
+            settings.selectedColors,
+            settings.selectedLogoUrl
+        )
+
+        const prompts = slidesForPrompt.map((slide) =>
+            buildCarouselImagePrompt({
+                slideIndex: slide.index,
+                totalSlides: slidesForPrompt.length,
+                brandName: activeBrandKit?.brand_name || 'Marca',
+                brandContext,
+                title: slide.title,
+                description: slide.description,
+                visualPrompt: slide.visualPrompt,
+                composition: slide.composition,
+                compositionPreset: compositionPreset?.layoutPrompt,
+                focus: slide.focus,
+                role: slide.role,
+                style: settings.style,
+                aspectRatio: settings.aspectRatio,
+                includeLogo: Boolean(settings.selectedLogoUrl),
+                aiImageDescription: settings.aiImageDescription
+            })
+        )
+
+        const finalPrompt = prompts
+            .map((prompt, idx) => `--- SLIDE ${idx + 1} ---\n${prompt}`)
+            .join('\n\n')
+
+        setDebugPromptData({
+            finalPrompt,
+            logoUrl: settings.selectedLogoUrl,
+            attachedImages: settings.selectedImageUrls,
+            selectedStyles: [settings.style],
+            platform: 'Instagram Carousel',
+            format: settings.aspectRatio,
+            intent: analysisIntentLabel || analysisIntent || undefined
+        })
+        setPendingGenerateSettings(settings)
+        setShowDebugModal(true)
+    }, [
+        activeBrandKit,
+        aiConfig?.imageModel,
+        analysisIntent,
+        analysisIntentLabel,
+        executeGenerate,
+        isAdmin,
+        performAnalyze,
+        scriptPrompt,
+        scriptSlideCount,
+        scriptSlides,
+        toast
+    ])
+
     const handleRegenerateSlide = useCallback(async (index: number) => {
         if (!carouselSettings || !activeBrandKit) return
 
@@ -378,7 +510,8 @@ export default function CarouselPage() {
                 activeBrandKit,
                 aiConfig.imageModel,
                 carouselSettings.selectedLogoUrl,
-                carouselSettings.selectedColors
+                carouselSettings.selectedColors,
+                carouselSettings.compositionId
             )
 
             if (result.success && result.imageUrl) {
@@ -409,6 +542,21 @@ export default function CarouselPage() {
             setRegeneratingIndex(null)
         }
     }, [slides, carouselSettings, activeBrandKit, aiConfig?.imageModel, toast])
+
+    const confirmGeneration = useCallback(async () => {
+        setShowDebugModal(false)
+        if (pendingGenerateSettings) {
+            await executeGenerate(pendingGenerateSettings)
+            setPendingGenerateSettings(null)
+            setDebugPromptData(null)
+        }
+    }, [executeGenerate, pendingGenerateSettings])
+
+    const cancelGeneration = useCallback(() => {
+        setShowDebugModal(false)
+        setPendingGenerateSettings(null)
+        setDebugPromptData(null)
+    }, [])
 
     return (
         <DashboardLayout
@@ -460,6 +608,13 @@ export default function CarouselPage() {
                     isAdmin={isAdmin}
                 />
             </div>
+
+            <PromptDebugModal
+                open={showDebugModal}
+                onClose={cancelGeneration}
+                onConfirm={confirmGeneration}
+                promptData={debugPromptData}
+            />
         </DashboardLayout>
     )
 }

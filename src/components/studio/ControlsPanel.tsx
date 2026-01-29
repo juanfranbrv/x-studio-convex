@@ -2,12 +2,11 @@
 
 import { useCreationFlow } from '@/hooks/useCreationFlow'
 import { LayoutSelector } from './creation-flow/LayoutSelector'
-import { StyleChipsSelector } from './creation-flow/StyleChipsSelector'
 import { SocialFormatSelector } from './creation-flow/SocialFormatSelector'
 import { BrandingConfigurator } from './creation-flow/BrandingConfigurator'
 import { ImageReferenceSelector } from './creation-flow/ImageReferenceSelector'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Sparkles, Type, Layers, ImagePlus, Wand2, Loader2, Star, Fingerprint, Bookmark as BookmarkIcon, SquarePlus } from 'lucide-react'
+import { Palette, Layout, Sparkles, Layers, ImagePlus, Wand2, Loader2, Star, Fingerprint, Bookmark as BookmarkIcon, SquarePlus } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { PresetsCarousel } from './creation-flow/PresetsCarousel'
@@ -15,7 +14,7 @@ import { SavePresetDialog } from './creation-flow/SavePresetDialog'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
-import { useEffect, useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { GenerationState, INTENT_CATALOG, IntentCategory } from '@/lib/creation-flow-types'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
@@ -27,7 +26,6 @@ const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = 
     2: { title: "Composición", description: "Elige la composición base. Si eliges \"Libre\", la IA crea la estructura por ti." },
     3: { title: "Formato", description: "Selecciona las dimensiones según la red social." },
     4: { title: "Imagen", description: "Sube una referencia o usa una del Brand Kit." },
-    5: { title: "Estilo", description: "Define la estética visual." },
     6: { title: "Marca", description: "Elige la variante del logo y ajusta la paleta cromática." }
 }
 
@@ -93,10 +91,7 @@ export function ControlsPanel({
     const step2Ref = useRef<HTMLDivElement>(null)
     const step3Ref = useRef<HTMLDivElement>(null)
     const step4Ref = useRef<HTMLDivElement>(null)
-    const step5Ref = useRef<HTMLDivElement>(null)
     const step6Ref = useRef<HTMLDivElement>(null)
-    const step8Ref = useRef<HTMLDivElement>(null)
-    const clearedStylesOnStep5 = useRef(false)
 
     const presetsData = useQuery(api.presets.list, userId ? {
         userId,
@@ -106,12 +101,9 @@ export function ControlsPanel({
 
     const {
         state,
-        availableStyles,
         availableLayouts,
-        styleGroups,
         selectIntent,
         selectLayout,
-        toggleStyle,
         selectLogo,
         setHeadline,
         setCta,
@@ -134,15 +126,6 @@ export function ControlsPanel({
         removeTextAsset,
         updateTextAsset,
     } = creationFlow
-
-    useEffect(() => {
-        if (state.currentStep >= 5 && !clearedStylesOnStep5.current) {
-            if (state.selectedStyles.length > 0) {
-                toggleStyle(state.selectedStyles[0])
-            }
-            clearedStylesOnStep5.current = true
-        }
-    }, [state.currentStep, state.selectedStyles, toggleStyle])
 
     const handleAddCustomColor = (color: string) => {
         toggleBrandColor(color)
@@ -368,6 +351,8 @@ export function ControlsPanel({
                                     onClearBrandKitImages={clearBrandKitImages}
                                     aiImageDescription={state.aiImageDescription}
                                     onAiDescriptionChange={setAiImageDescription}
+                                    customStyle={state.customStyle}
+                                    onCustomStyleChange={setCustomStyle}
                                     mode={state.imageSourceMode}
                                     onModeChange={setImageSourceMode}
                                 />
@@ -376,35 +361,14 @@ export function ControlsPanel({
                                         <Button
                                             size="sm"
                                             variant="secondary"
-                                            onClick={() => creationFlow.setStep(5)}
+                                            onClick={() => creationFlow.setStep(6)}
                                             className="h-7 text-xs"
                                             disabled={state.imageSourceMode === 'generate' && !state.aiImageDescription?.trim()}
                                         >
                                             {state.imageSourceMode === 'generate'
-                                                ? (state.aiImageDescription?.trim() ? 'Siguiente' : 'Escribe un prompt')
-                                                : 'Sin imagen de referencia'}
+                                                ? (state.aiImageDescription?.trim() ? 'Revisar marca' : 'Escribe un prompt')
+                                                : 'Revisar marca'}
                                         </Button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* STEP 5: STYLE */}
-                        {(state.currentStep >= 5 || state.hasGeneratedImage) && (
-                            <div ref={step5Ref} className={cn("relative", state.currentStep === 5 ? "glass-card p-4" : "glass-card p-4 opacity-70 hover:opacity-100 transition-opacity")}>
-                                <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[5]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step5Ref} />
-                                <SectionHeader icon={Sparkles} title="Estilo" />
-                                <StyleChipsSelector
-                                    availableStyles={availableStyles}
-                                    styleGroups={styleGroups}
-                                    selectedStyles={state.selectedStyles}
-                                    customStyle={state.customStyle}
-                                    onToggleStyle={toggleStyle}
-                                    onCustomStyleChange={setCustomStyle}
-                                />
-                                {state.currentStep === 5 && (state.selectedStyles.length > 0 || state.customStyle) && (
-                                    <div className="flex justify-end mt-3">
-                                        <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(6)} className="h-7 text-xs">Revisar Marca</Button>
                                     </div>
                                 )}
                             </div>

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Copy, RefreshCw, Share2, Lock, Unlock } from 'lucide-react'
+import { Copy, RefreshCw, Share2, Lock, Unlock, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 
@@ -33,16 +33,33 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
 }) => {
     const { activeBrandKit: brand } = useBrandKit()
     const [editedCopy, setEditedCopy] = React.useState(copy || '')
+    const [isCopied, setIsCopied] = React.useState(false)
+    const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
     // Update local state when prop changes
     React.useEffect(() => {
         setEditedCopy(copy || '')
     }, [copy])
 
+    React.useEffect(() => {
+        return () => {
+            if (copyTimeoutRef.current) {
+                clearTimeout(copyTimeoutRef.current)
+            }
+        }
+    }, [])
+
     const handleCopy = () => {
         const fullText = `${editedCopy}\n\n${hashtags.join(' ')}`
         navigator.clipboard.writeText(fullText)
         onCopy?.(fullText)
+        setIsCopied(true)
+        if (copyTimeoutRef.current) {
+            clearTimeout(copyTimeoutRef.current)
+        }
+        copyTimeoutRef.current = setTimeout(() => {
+            setIsCopied(false)
+        }, 1600)
     }
 
     return (
@@ -114,9 +131,15 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                         {isLocked ? <Lock className="mr-1.5 h-3 w-3" /> : <Unlock className="mr-1.5 h-3 w-3" />}
                         {isLocked ? 'Congelado' : 'Congelar'}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={handleCopy} className="h-7 text-xs">
-                        <Copy className="mr-1.5 h-3 w-3" />
-                        Copiar
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopy}
+                        className={cn("h-7 text-xs transition-all", isCopied && "text-primary bg-primary/10")}
+                        title={isCopied ? "Copiado" : "Copiar"}
+                    >
+                        {isCopied ? <Check className="mr-1.5 h-3 w-3" /> : <Copy className="mr-1.5 h-3 w-3" />}
+                        {isCopied ? 'Copiado' : 'Copiar'}
                     </Button>
                 </div>
             </CardFooter>

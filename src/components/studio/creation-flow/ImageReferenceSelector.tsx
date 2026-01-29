@@ -29,6 +29,9 @@ interface ImageReferenceSelectorProps {
     // AI Generation
     aiImageDescription?: string
     onAiDescriptionChange?: (description: string) => void
+    // Optional custom style (moved from Style card)
+    customStyle?: string
+    onCustomStyleChange?: (style: string) => void
     // Mode Control
     mode?: ImageSourceMode
     onModeChange?: (mode: ImageSourceMode) => void
@@ -49,6 +52,8 @@ export function ImageReferenceSelector({
     onClearBrandKitImages,
     aiImageDescription = '',
     onAiDescriptionChange,
+    customStyle = '',
+    onCustomStyleChange,
     mode = 'upload',
     onModeChange,
 }: ImageReferenceSelectorProps) {
@@ -330,6 +335,33 @@ export function ImageReferenceSelector({
                     </div>
                 </div>
             </TabsContent>
+
+            {/* CUSTOM STYLE INPUT (optional) */}
+            {onCustomStyleChange && (
+                <div className="mt-4 pt-2">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2 pl-1">
+                        ¿Otro estilo en mente?
+                    </label>
+                    <div className="relative group">
+                        <input
+                            type="text"
+                            value={customStyle}
+                            onChange={(e) => onCustomStyleChange(e.target.value)}
+                            placeholder="Ej: Cyberpunk, Acuarela, Lego..."
+                            className={cn(
+                                "w-full h-11 px-4 rounded-xl bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10",
+                                "backdrop-blur-md text-sm transition-all duration-300",
+                                "placeholder:text-slate-400 dark:placeholder:text-slate-500",
+                                "focus:ring-2 focus:ring-primary/20 focus:border-primary/50 focus:bg-white/80 dark:focus:bg-black/40",
+                                "hover:border-slate-300 dark:hover:border-white/20"
+                            )}
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            {customStyle ? <Check className="w-4 h-4 text-green-500" /> : <Palette className="w-4 h-4 opacity-50" />}
+                        </div>
+                    </div>
+                </div>
+            )}
         </Tabs>
     )
 }

@@ -282,6 +282,8 @@ export function CanvasPanel({
             const result = await generateSocialPost({
                 brand: activeBrandKit,
                 imageBase64: currentImage,
+                topic: creationState.rawMessage || undefined,
+                userPrompt: creationState.rawMessage || undefined,
                 model: creationState.selectedIntelligenceModel
             })
 

@@ -4,11 +4,14 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Plus, Minus, Sparkles, Loader2, GripVertical, Pencil, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal } from 'lucide-react'
+import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import { ImageReferenceSelector } from '@/components/studio/creation-flow/ImageReferenceSelector'
 import { resizeImage } from '@/lib/image-utils'
+import { CAROUSEL_COMPOSITIONS } from '@/lib/carousel-compositions'
+import { CarouselCompositionSelector } from '@/components/studio/carousel/CarouselCompositionSelector'
+import { BrandingConfigurator } from '@/components/studio/creation-flow/BrandingConfigurator'
 
 export interface SlideConfig {
     index: number
@@ -21,6 +24,7 @@ export interface CarouselSettings {
     aspectRatio: '1:1' | '4:5' | '3:4'
     style: string
     slides: SlideConfig[]
+    compositionId: string
     imageSourceMode: 'upload' | 'brandkit' | 'generate'
     aiImageDescription?: string
     // Brand Kit Context
@@ -100,11 +104,12 @@ export function CarouselControlsPanel({
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('3:4')
     const [style, setStyle] = useState('minimal')
     const [slides, setSlides] = useState<SlideConfig[]>([])
+    const [compositionId, setCompositionId] = useState(CAROUSEL_COMPOSITIONS[0]?.id || 'free')
     const [editingSlide, setEditingSlide] = useState<number | null>(null)
     const [editText, setEditText] = useState('')
 
     // Brand Kit Selections
-    const [selectedLogoUrl, setSelectedLogoUrl] = useState<string | undefined>()
+    const [selectedLogoId, setSelectedLogoId] = useState<string | null>(null)
     const [selectedColors, setSelectedColors] = useState<string[]>([])
     const [selectedBrandKitImageIds, setSelectedBrandKitImageIds] = useState<string[]>([])
     const [uploadedImages, setUploadedImages] = useState<string[]>([])
@@ -216,15 +221,27 @@ export function CarouselControlsPanel({
                     ? selectedBrandKitImageIds
                     : []
 
+        const resolveSelectedLogoUrl = () => {
+            if (!includeLogoOnSlides) return undefined
+            if (!selectedLogoId) return primaryLogo
+            const match = selectedLogoId.match(/^logo-(\d+)$/)
+            if (match) {
+                const idx = Number(match[1])
+                return brandLogos[idx]?.url || primaryLogo
+            }
+            return primaryLogo
+        }
+
         return {
             prompt,
             slideCount,
             aspectRatio,
             style: STYLE_OPTIONS.find(s => s.id === style)?.label || 'Minimalista',
             slides: finalSlides,
+            compositionId,
             imageSourceMode,
             aiImageDescription: imageSourceMode === 'generate' ? (aiImageDescription.trim() || undefined) : undefined,
-            selectedLogoUrl: includeLogoOnSlides ? (selectedLogoUrl || primaryLogo) : undefined,
+            selectedLogoUrl: resolveSelectedLogoUrl(),
             selectedColors: selectedColors.length > 0 ? selectedColors : brandColors.slice(0, 3).map(c => c.color),
             selectedImageUrls,
             includeLogoOnSlides
@@ -336,6 +353,19 @@ export function CarouselControlsPanel({
                     </div>
                 </div>
 
+                {/* Composition */}
+                <div className="glass-card p-4 space-y-3">
+                    <SectionHeader icon={Layout} title="Composición" />
+                    <CarouselCompositionSelector
+                        compositions={CAROUSEL_COMPOSITIONS}
+                        selectedId={compositionId}
+                        onSelect={setCompositionId}
+                    />
+                    <p className="text-[11px] text-muted-foreground leading-snug">
+                        Define la forma de distribuir el contenido en cada diapositiva.
+                    </p>
+                </div>
+
                 {/* Format */}
                 <div className="glass-card p-4 space-y-3">
                     <SectionHeader icon={Layers} title="Formato" />
@@ -423,52 +453,43 @@ export function CarouselControlsPanel({
                     />
                 </div>
 
-                {/* Style */}
-                <div className="glass-card p-4 space-y-3">
-                    <SectionHeader icon={Sparkles} title="Estilo" />
-                    <div className="grid grid-cols-2 gap-2">
-                        {STYLE_OPTIONS.map((opt) => (
-                            <button
-                                key={opt.id}
-                                onClick={() => setStyle(opt.id)}
-                                className={cn(
-                                    "px-3 py-2 rounded-lg text-sm font-medium transition-all",
-                                    style === opt.id ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
-                                )}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
                 {/* Logo */}
-                <div className="glass-card p-4 space-y-3">
+                <div className="glass-card p-4 space-y-4">
                     <SectionHeader icon={Fingerprint} title="Logo" />
-                    {primaryLogo ? (
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center overflow-hidden">
-                                    <img src={selectedLogoUrl || primaryLogo} alt="Logo" className="w-full h-full object-contain" />
+                    {brandLogos.length > 0 || primaryLogo ? (
+                        <>
+                            <BrandingConfigurator
+                                selectedLayout={null}
+                                selectedLogoId={selectedLogoId}
+                                selectedBrandColors={[]}
+                                onSelectLogo={setSelectedLogoId}
+                                onToggleBrandColor={() => { }}
+                                onAddCustomColor={() => { }}
+                                showLogo={true}
+                                showColors={false}
+                                showTypography={false}
+                                showBrandTexts={false}
+                                rawMessage={prompt}
+                            />
+                            <div className="flex items-center justify-between pt-1">
+                                <div className="space-y-0.5">
+                                    <p className="text-sm font-medium">Aplicar logo en todas</p>
+                                    <p className="text-xs text-muted-foreground">Misma posiciÃ³n y tamaÃ±o</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium">Incluir logo</p>
-                                    <p className="text-xs text-muted-foreground">Se aplicara en las slides</p>
-                                </div>
+                                <button
+                                    onClick={() => setIncludeLogoOnSlides(!includeLogoOnSlides)}
+                                    className={cn(
+                                        "w-10 h-6 rounded-full transition-colors",
+                                        includeLogoOnSlides ? "bg-primary" : "bg-muted"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "w-4 h-4 rounded-full bg-white transition-transform mx-1",
+                                        includeLogoOnSlides ? "translate-x-4" : "translate-x-0"
+                                    )} />
+                                </button>
                             </div>
-                            <button
-                                onClick={() => setIncludeLogoOnSlides(!includeLogoOnSlides)}
-                                className={cn(
-                                    "w-10 h-6 rounded-full transition-colors",
-                                    includeLogoOnSlides ? "bg-primary" : "bg-muted"
-                                )}
-                            >
-                                <div className={cn(
-                                    "w-4 h-4 rounded-full bg-white transition-transform mx-1",
-                                    includeLogoOnSlides ? "translate-x-4" : "translate-x-0"
-                                )} />
-                            </button>
-                        </div>
+                        </>
                     ) : (
                         <p className="text-xs text-muted-foreground">No hay logo en tu Brand Kit.</p>
                     )}

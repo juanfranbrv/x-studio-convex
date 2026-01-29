@@ -3,7 +3,7 @@
  * Supports: Spanish, English, French, German, Portuguese, Italian, Catalan
  */
 export function detectLanguage(text: string): string {
-    if (!text || text.length < 50) return 'es'; // Default to Spanish
+    if (!text || text.trim().length === 0) return 'es'; // Default to Spanish
 
     const lowerText = text.toLowerCase();
 

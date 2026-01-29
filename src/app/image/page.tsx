@@ -584,16 +584,19 @@ export default function ImagePage() {
                         </div >
 
                         {/* RIGHT COLUMN - Controls Panel */}
-                        <ControlsPanel
-                            creationFlow={creationFlow}
-                            highlightedFields={highlightedFields}
-                            promptValue={promptValue}
-                            onPromptChange={setPromptValue}
-                            isMagicParsing={isMagicParsing}
-                            isGenerating={isGenerating}
-                            canGenerate={Boolean(canGenerate)}
-                            onUnifiedAction={handleUnifiedAction}
-                            onAnalyze={() => handleSmartAnalyze()}
+                            <ControlsPanel
+                                creationFlow={creationFlow}
+                                highlightedFields={highlightedFields}
+                                promptValue={promptValue}
+                                onPromptChange={(val) => {
+                                    setPromptValue(val)
+                                    creationFlow.setRawMessage(val)
+                                }}
+                                isMagicParsing={isMagicParsing}
+                                isGenerating={isGenerating}
+                                canGenerate={Boolean(canGenerate)}
+                                onUnifiedAction={handleUnifiedAction}
+                                onAnalyze={() => handleSmartAnalyze()}
                             userId={user?.id}
                         />
                     </div>

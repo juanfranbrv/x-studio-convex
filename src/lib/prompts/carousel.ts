@@ -1,5 +1,6 @@
 import path from 'path'
 import { readFileSync } from 'fs'
+import { buildCarouselImagePrompt } from './carousel-image'
 
 interface CarouselDecompositionParams {
     brandContext: string
@@ -17,6 +18,7 @@ interface CarouselImageParams {
     description: string
     visualPrompt: string
     composition?: string
+    compositionPreset?: string
     focus?: string
     role?: 'hook' | 'content' | 'cta'
     style: string
@@ -59,51 +61,4 @@ export function buildCarouselDecompositionPrompt({
         .replaceAll('{{REQUESTED_SLIDE_COUNT}}', requestedCount)
 }
 
-export function buildCarouselImagePrompt({
-    slideIndex,
-    totalSlides,
-    brandName,
-    brandContext,
-    title,
-    description,
-    visualPrompt,
-    composition,
-    focus,
-    role,
-    style,
-    aspectRatio,
-    includeLogo,
-    aiImageDescription
-}: CarouselImageParams): string {
-    return `
-CARRUSEL INSTAGRAM - Slide ${slideIndex + 1} de ${totalSlides}
-FORMATO: ${aspectRatio}
-MARCA: ${brandName}
-
-${brandContext}
-
----
-CONTENIDO DEL SLIDE:
-TITULO: ${title}
-DESCRIPCION: ${description}
-FOCO: ${focus || 'no especificado'}
-COMPOSICION: ${composition || 'no especificada'}
-ROL: ${role || 'content'}
-${aiImageDescription ? `REFERENCIA IA: ${aiImageDescription}` : ''}
-
-ESTILO VISUAL: ${style}
-INSTRUCCIONES: ${visualPrompt}
-
-COHERENCIA OBLIGATORIA:
-- Usa la misma plantilla base en todas las diapositivas.
-- Mantener margenes, grid, jerarquia tipografica y espaciado.
-- Paleta de marca consistente, sin cambios de estilo entre slides.
-- Hilo narrativo continuo entre las piezas.
-- El elemento principal debe ser distinto al del slide anterior y siguiente.
-
-REQUISITOS TECNICOS:
-- Diseno limpio y profesional para Instagram
-- Tipografia legible en movil
-- ${includeLogo ? 'Incluir logo de forma sutil' : 'Sin logo'}
-`
-}
+export { buildCarouselImagePrompt }

@@ -780,6 +780,9 @@ export interface GenerationState {
 
     // Analysis
     visionAnalysis?: VisionAnalysis | null
+    firstVisionAnalysis?: VisionAnalysis | null
+    firstReferenceId?: string | null
+    firstReferenceSource?: 'upload' | 'brandkit' | null
     isAnalyzing: boolean
 
     // Step 4: Style
@@ -827,6 +830,9 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     uploadedImageFiles: [],
     selectedTheme: null,
     visionAnalysis: null,
+    firstVisionAnalysis: null,
+    firstReferenceId: null,
+    firstReferenceSource: null,
     isAnalyzing: false,
     selectedStyles: [],
     selectedLayout: null,

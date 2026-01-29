@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { BrandDNA } from '@/lib/brand-types';
 import { cn } from '@/lib/utils';
@@ -50,6 +50,8 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
     const [isEditingUrl, setIsEditingUrl] = useState(false);
     const [urlEdit, setUrlEdit] = useState(initialData.url || '');
     const [showDebug, setShowDebug] = useState(isDebug);
+    const languageSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pendingLanguageRef = useRef<BrandDNA | null>(null);
 
     const handleSave = async (isAuto = false) => {
         if (!user || !hasUnsavedChanges) return;
@@ -105,6 +107,50 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             setHasUnsavedChanges(true);
             return newData;
         });
+    }, []);
+
+    const handleLanguageChange = (lang: string) => {
+        setData(prev => {
+            const next = { ...prev, preferred_language: lang };
+            pendingLanguageRef.current = next;
+            setHasUnsavedChanges(true);
+            return next;
+        });
+        if (languageSaveTimeout.current) {
+            clearTimeout(languageSaveTimeout.current);
+        }
+        languageSaveTimeout.current = setTimeout(async () => {
+            const next = pendingLanguageRef.current;
+            if (!user || !next?.id) return;
+            setIsSaving(true);
+            try {
+                const result = await updateUserBrandKit(next.id, next);
+                if (result.success) {
+                    setHasUnsavedChanges(false);
+                    setLastSaved(new Date());
+                    syncActiveBrandKit?.(next);
+                } else {
+                    throw new Error(result.error || 'Error al guardar');
+                }
+            } catch (error: any) {
+                console.error('Error saving language preference:', error);
+                setErrorModal({
+                    open: true,
+                    title: 'Error al Guardar',
+                    message: error.message || 'No se pudo guardar el idioma.'
+                });
+            } finally {
+                setIsSaving(false);
+            }
+        }, 300);
+    };
+
+    useEffect(() => {
+        return () => {
+            if (languageSaveTimeout.current) {
+                clearTimeout(languageSaveTimeout.current);
+            }
+        };
     }, []);
 
     // Handlers
@@ -598,7 +644,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                     {/* Language Selection */}
                     <LanguageCard
                         selectedLanguage={data.preferred_language || 'es'}
-                        onLanguageChange={(lang) => updateData(prev => ({ ...prev, preferred_language: lang }))}
+                        onLanguageChange={handleLanguageChange}
                     />
 
                     {/* Contact & Audience */}

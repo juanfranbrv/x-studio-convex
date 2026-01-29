@@ -16,7 +16,7 @@ PREFERENCIA DEL USUARIO (si existe):
 {{REQUESTED_SLIDE_COUNT}}
 
 REGLAS CLAVE
-- Lenguaje: usa IDIOMA_PREFERIDO si existe; si no, Espanol.
+- Lenguaje: usa el idioma de USER_REQUEST si es claro; si no, usa IDIOMA_PREFERIDO; si tampoco, Espanol.
 - Detecta la intenci?n principal (usa los IDs de la lista de INTENTOS).
 - Elige un GANCHO corto, memorable y coherente con la marca.
 - Usa el TONO_DE_VOZ, TAGLINE, VALORES y VISION_CONTEXTO cuando aporten (no los ignores).

@@ -14,6 +14,6 @@ export const PRIORITY_HEADER = `╔═══════════════
 
 export const BRAND_DNA_REQUIREMENT = `⚠️  REQUIREMENT: Final image MUST feel authentically aligned with this brand universe.`
 
-export const MANDATORY_TEXT_HEADER = `MANDATORY TEXT CONTENT (NOTHING ELSE):`
+export const MANDATORY_TEXT_HEADER = `MANDATORY TEXT CONTENT (NOTHING ELSE). Render EXACTLY as provided. DO NOT add labels or prefixes like "CTA:" or "URL:".`
 
 export const NO_TEXT_WARNING = `⚠️  NO TEXT PROVIDED: Image must be completely text-free.`

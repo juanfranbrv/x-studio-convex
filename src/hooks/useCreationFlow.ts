@@ -29,6 +29,7 @@ import { api } from '../../convex/_generated/api'
 
 // Priority-based prompt construction imports
 import * as P12 from '@/lib/prompts/priorities/p12-preferred-language'
+import { detectLanguage } from '@/lib/language-detection'
 import * as P11 from '@/lib/prompts/priorities/p11-system-persona'
 import * as P10 from '@/lib/prompts/priorities/p10-logo-integrity'
 import { P10B } from '@/lib/prompts/priorities/p10b-secondary-logos'
@@ -192,7 +193,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             ...prev,
             selectedPlatform: platform,
             selectedFormat: firstFormat?.id || null,
-            generatedImage: null
+            generatedImage: null,
+            currentStep: firstFormat ? 4 : prev.currentStep
         }))
     }, [])
 
@@ -238,6 +240,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             uploadedImageFiles: [],
             selectedTheme: null,
             visionAnalysis: null,
+            firstVisionAnalysis: null,
+            firstReferenceId: null,
+            firstReferenceSource: null,
             selectedStyles: [],
             selectedLayout: null, // FORCE USER TO SELECT LAYOUT. Do not auto-select.
             generatedImage: null,
@@ -261,33 +266,175 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     const MAX_REFERENCE_IMAGES = 10
 
+    const pickFirstReference = (uploadedImages: string[], brandKitIds: string[]) => {
+        if (uploadedImages.length > 0) {
+            return { id: uploadedImages[0], source: 'upload' as const }
+        }
+        if (brandKitIds.length > 0) {
+            return { id: brandKitIds[0], source: 'brandkit' as const }
+        }
+        return { id: null, source: null }
+    }
+
+    const analyzeImageBase64 = useCallback(async (base64: string, mimeType: string) => {
+        try {
+            const response = await fetch('/api/analyze-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    imageBase64: base64,
+                    mimeType,
+                }),
+            })
+
+            const result = await response.json()
+
+            if (result.success && result.data) {
+                setState(prev => ({
+                    ...prev,
+                    visionAnalysis: result.data,
+                    firstVisionAnalysis: prev.firstVisionAnalysis || result.data,
+                    isAnalyzing: false,
+                }))
+            } else {
+                throw new Error(result.error || 'Vision analysis failed')
+            }
+        } catch (error) {
+            setState(prev => ({
+                ...prev,
+                isAnalyzing: false,
+                error: error instanceof Error ? error.message : 'Vision analysis failed',
+            }))
+        }
+    }, [])
+
+    const analyzeImageFromUrl = useCallback(async (url: string) => {
+        setState(prev => ({ ...prev, isAnalyzing: true, error: null, generatedImage: null }))
+        try {
+            const response = await fetch(url)
+            const blob = await response.blob()
+            const file = new File([blob], 'image_from_kit.png', { type: blob.type })
+
+            const base64 = await resizeImage(file, {
+                maxWidth: 1536,
+                maxHeight: 1536,
+                quality: 0.8,
+                format: 'image/jpeg'
+            })
+
+            await analyzeImageBase64(base64, blob.type || 'image/jpeg')
+        } catch (error) {
+            setState(prev => ({
+                ...prev,
+                isAnalyzing: false,
+                error: error instanceof Error ? error.message : 'Error processing image from kit',
+            }))
+        }
+    }, [analyzeImageBase64])
+
+    useEffect(() => {
+        if (!state.firstReferenceId || state.firstVisionAnalysis || state.isAnalyzing) return
+
+        if (state.firstReferenceSource === 'upload') {
+            if (!state.firstReferenceId.startsWith('data:')) return
+            setState(prev => ({ ...prev, isAnalyzing: true, error: null }))
+            const match = /^data:([^;]+);base64,/.exec(state.firstReferenceId)
+            const mimeType = match?.[1] || 'image/jpeg'
+            analyzeImageBase64(state.firstReferenceId, mimeType)
+            return
+        }
+
+        if (state.firstReferenceSource === 'brandkit') {
+            setState(prev => ({ ...prev, isAnalyzing: true, error: null }))
+            analyzeImageFromUrl(state.firstReferenceId)
+        }
+    }, [state.firstReferenceId, state.firstReferenceSource, state.firstVisionAnalysis, state.isAnalyzing, analyzeImageBase64, analyzeImageFromUrl])
+
     // Add an uploaded image (max 10 total across sources)
     const addUploadedImage = useCallback((url: string) => {
         setState(prev => {
             const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
             if (totalImages >= MAX_REFERENCE_IMAGES) return prev
             if (prev.uploadedImages.includes(url)) return prev
-            return { ...prev, uploadedImages: [...prev.uploadedImages, url] }
+            const shouldSetFirst = !prev.firstReferenceId
+            return {
+                ...prev,
+                uploadedImages: [...prev.uploadedImages, url],
+                currentStep: Math.max(prev.currentStep, 6),
+                firstReferenceId: shouldSetFirst ? url : prev.firstReferenceId,
+                firstReferenceSource: shouldSetFirst ? 'upload' : prev.firstReferenceSource,
+                firstVisionAnalysis: shouldSetFirst ? null : prev.firstVisionAnalysis,
+                visionAnalysis: shouldSetFirst ? null : prev.visionAnalysis
+            }
         })
     }, [])
 
     // Remove an uploaded image by URL
     const removeUploadedImage = useCallback((url: string) => {
-        setState(prev => ({
-            ...prev,
-            uploadedImages: prev.uploadedImages.filter(u => u !== url),
-            uploadedImageFiles: prev.uploadedImageFiles.filter((_, i) => prev.uploadedImages[i] !== url)
-        }))
+        setState(prev => {
+            const nextUploadedImages = prev.uploadedImages.filter(u => u !== url)
+            const nextUploadedFiles = prev.uploadedImageFiles.filter((_, i) => prev.uploadedImages[i] !== url)
+            const removingFirst = prev.firstReferenceSource === 'upload' && prev.firstReferenceId === url
+
+            let nextFirstId = prev.firstReferenceId
+            let nextFirstSource = prev.firstReferenceSource
+
+            if (removingFirst) {
+                nextFirstId = null
+                nextFirstSource = null
+            }
+
+            if (!nextFirstId) {
+                const picked = pickFirstReference(nextUploadedImages, prev.selectedBrandKitImageIds)
+                nextFirstId = picked.id
+                nextFirstSource = picked.source
+            }
+
+            const resetAnalysis = removingFirst || nextFirstId !== prev.firstReferenceId
+
+            return {
+                ...prev,
+                uploadedImages: nextUploadedImages,
+                uploadedImageFiles: nextUploadedFiles,
+                firstReferenceId: nextFirstId,
+                firstReferenceSource: nextFirstSource,
+                firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
+                visionAnalysis: resetAnalysis ? null : prev.visionAnalysis
+            }
+        })
     }, [])
 
     // Clear all uploaded images
     const clearUploadedImages = useCallback(() => {
-        setState(prev => ({
-            ...prev,
-            uploadedImages: [],
-            uploadedImageFiles: [],
-            visionAnalysis: null
-        }))
+        setState(prev => {
+            const nextUploadedImages: string[] = []
+            const nextUploadedFiles: File[] = []
+            let nextFirstId = prev.firstReferenceId
+            let nextFirstSource = prev.firstReferenceSource
+
+            if (prev.firstReferenceSource === 'upload') {
+                nextFirstId = null
+                nextFirstSource = null
+            }
+
+            if (!nextFirstId) {
+                const picked = pickFirstReference(nextUploadedImages, prev.selectedBrandKitImageIds)
+                nextFirstId = picked.id
+                nextFirstSource = picked.source
+            }
+
+            const resetAnalysis = prev.firstReferenceSource === 'upload' || nextFirstId !== prev.firstReferenceId
+
+            return {
+                ...prev,
+                uploadedImages: nextUploadedImages,
+                uploadedImageFiles: nextUploadedFiles,
+                visionAnalysis: resetAnalysis ? null : prev.visionAnalysis,
+                firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
+                firstReferenceId: nextFirstId,
+                firstReferenceSource: nextFirstSource
+            }
+        })
     }, [])
 
     const uploadImage = useCallback(async (file: File) => {
@@ -312,34 +459,16 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 ...prev,
                 uploadedImages: [...prev.uploadedImages, base64],
                 uploadedImageFiles: [...prev.uploadedImageFiles, file],
-                currentStep: 5 // Auto-advance to Step 5 (Style) after upload
+                currentStep: 6, // Auto-advance to Step 6 (Brand) after upload
+                firstReferenceId: prev.firstReferenceId || base64,
+                firstReferenceSource: prev.firstReferenceSource || 'upload'
             }))
 
             if (optionsRef.current?.onImageUploaded) {
                 optionsRef.current.onImageUploaded(file)
             }
 
-            // Call Vision API
-            const response = await fetch('/api/analyze-image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    imageBase64: base64,
-                    mimeType: file.type,
-                }),
-            })
-
-            const result = await response.json()
-
-            if (result.success && result.data) {
-                setState(prev => ({
-                    ...prev,
-                    visionAnalysis: result.data,
-                    isAnalyzing: false,
-                }))
-            } else {
-                throw new Error(result.error || 'Vision analysis failed')
-            }
+            await analyzeImageBase64(base64, file.type || 'image/jpeg')
         } catch (error) {
             setState(prev => ({
                 ...prev,
@@ -347,7 +476,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 error: error instanceof Error ? error.message : 'Error analyzing image',
             }))
         }
-    }, [state.uploadedImages.length, state.selectedBrandKitImageIds.length]) // Added dependencies
+    }, [state.uploadedImages.length, state.selectedBrandKitImageIds.length, analyzeImageBase64]) // Added dependencies
 
     const selectTheme = useCallback((theme: SeasonalTheme) => {
         const themeMeta = THEME_CATALOG.find(t => t.id === theme)
@@ -405,6 +534,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 setState(prev => ({
                     ...prev,
                     visionAnalysis: result.data,
+                    firstVisionAnalysis: prev.firstVisionAnalysis || result.data,
                     isAnalyzing: false,
                 }))
             } else {
@@ -425,6 +555,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             uploadedImages: [],
             uploadedImageFiles: [],
             visionAnalysis: null,
+            firstVisionAnalysis: null,
+            firstReferenceId: null,
+            firstReferenceSource: null,
             selectedStyles: [],
             selectedLayout: null,
         }))
@@ -446,19 +579,48 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             const isSelected = prev.selectedBrandKitImageIds.includes(imageId)
             if (isSelected) {
                 // Remove from selection
+                const nextBrandKitIds = prev.selectedBrandKitImageIds.filter(id => id !== imageId)
+                const removingFirst = prev.firstReferenceSource === 'brandkit' && prev.firstReferenceId === imageId
+
+                let nextFirstId = prev.firstReferenceId
+                let nextFirstSource = prev.firstReferenceSource
+
+                if (removingFirst) {
+                    nextFirstId = null
+                    nextFirstSource = null
+                }
+
+                if (!nextFirstId) {
+                    const picked = pickFirstReference(prev.uploadedImages, nextBrandKitIds)
+                    nextFirstId = picked.id
+                    nextFirstSource = picked.source
+                }
+
+                const resetAnalysis = removingFirst || nextFirstId !== prev.firstReferenceId
+
                 return {
                     ...prev,
-                    selectedBrandKitImageIds: prev.selectedBrandKitImageIds.filter(id => id !== imageId),
-                    generatedImage: null
+                    selectedBrandKitImageIds: nextBrandKitIds,
+                    generatedImage: null,
+                    firstReferenceId: nextFirstId,
+                    firstReferenceSource: nextFirstSource,
+                    firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
+                    visionAnalysis: resetAnalysis ? null : prev.visionAnalysis
                 }
             } else {
                 // Add to selection (if under limit)
                 const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
                 if (totalImages >= MAX_REFERENCE_IMAGES) return prev
+                const shouldSetFirst = !prev.firstReferenceId
                 return {
                     ...prev,
                     selectedBrandKitImageIds: [...prev.selectedBrandKitImageIds, imageId],
-                    generatedImage: null
+                    generatedImage: null,
+                    currentStep: Math.max(prev.currentStep, 6),
+                    firstReferenceId: shouldSetFirst ? imageId : prev.firstReferenceId,
+                    firstReferenceSource: shouldSetFirst ? 'brandkit' : prev.firstReferenceSource,
+                    firstVisionAnalysis: shouldSetFirst ? null : prev.firstVisionAnalysis,
+                    visionAnalysis: shouldSetFirst ? null : prev.visionAnalysis
                 }
             }
         })
@@ -466,11 +628,34 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     // Clear all brand kit image selections
     const clearBrandKitImages = useCallback(() => {
-        setState(prev => ({
-            ...prev,
-            selectedBrandKitImageIds: [],
-            generatedImage: null
-        }))
+        setState(prev => {
+            const nextBrandKitIds: string[] = []
+            let nextFirstId = prev.firstReferenceId
+            let nextFirstSource = prev.firstReferenceSource
+
+            if (prev.firstReferenceSource === 'brandkit') {
+                nextFirstId = null
+                nextFirstSource = null
+            }
+
+            if (!nextFirstId) {
+                const picked = pickFirstReference(prev.uploadedImages, nextBrandKitIds)
+                nextFirstId = picked.id
+                nextFirstSource = picked.source
+            }
+
+            const resetAnalysis = prev.firstReferenceSource === 'brandkit' || nextFirstId !== prev.firstReferenceId
+
+            return {
+                ...prev,
+                selectedBrandKitImageIds: nextBrandKitIds,
+                generatedImage: null,
+                firstReferenceId: nextFirstId,
+                firstReferenceSource: nextFirstSource,
+                firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
+                visionAnalysis: resetAnalysis ? null : prev.visionAnalysis
+            }
+        })
     }, [])
 
     const setAiImageDescription = useCallback((description: string) => {
@@ -564,7 +749,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     const setCustomStyle = useCallback((style: string) => {
-        setState(prev => ({ ...prev, customStyle: style, generatedImage: null }))
+        setState(prev => ({
+            ...prev,
+            customStyle: style,
+            generatedImage: null,
+            currentStep: style.trim() ? Math.max(prev.currentStep, 6) : prev.currentStep
+        }))
     }, [])
 
     const setCustomText = useCallback((id: string, value: string) => {
@@ -894,11 +1084,13 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 12 - PREFERRED LANGUAGE ENFORCEMENT
         // ═══════════════════════════════════════════════════════════════
-        const preferredLanguage = activeBrandKit?.preferred_language || 'es'
+        const userLanguage = detectLanguage(
+            activeState.rawMessage || activeState.headline || activeState.cta || ''
+        ) || 'es'
         sections.push(
             P12.PRIORITY_HEADER,
             ``,
-            P12.LANGUAGE_ENFORCEMENT_INSTRUCTION(preferredLanguage),
+            P12.LANGUAGE_ENFORCEMENT_INSTRUCTION(userLanguage),
             ``
         )
 
@@ -1099,8 +1291,12 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // PRIORITY 6 - SUBJECT & VISUAL CONTEXT
         // ═══════════════════════════════════════════════════════════════
         const subjectParts: string[] = []
+        const ENABLE_PRIORITY_6 = false // Suspended by request; set true to restore
 
-        if (activeState.visionAnalysis || (activeState.imageSourceMode === 'generate' && activeState.aiImageDescription.trim())) {
+        if (
+            ENABLE_PRIORITY_6 &&
+            (activeState.visionAnalysis || (activeState.imageSourceMode === 'generate' && activeState.aiImageDescription.trim()))
+        ) {
             subjectParts.push(
                 P06.PRIORITY_HEADER,
                 ``
@@ -1133,16 +1329,26 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 5 - VISUAL STYLE & AESTHETIC
         // ═══════════════════════════════════════════════════════════════
-        if (activeState.selectedStyles.length > 0 || activeState.customStyle) {
-            const selectedChips = availableStyles.filter(s => activeState.selectedStyles.includes(s.id))
-            const styleKeywords = selectedChips.flatMap(c => c.keywords)
-            const allStyles = [...styleKeywords]
-            if (activeState.customStyle) allStyles.push(activeState.customStyle)
+        const customStyle = activeState.customStyle?.trim()
+        const styleDirectives: string[] = []
 
+        if (customStyle) {
+            styleDirectives.push(customStyle)
+        }
+
+        if (activeState.firstVisionAnalysis?.keywords?.length) {
+            const combinedVisionStyle = activeState.firstVisionAnalysis.keywords.join(', ')
+            if (combinedVisionStyle.trim()) {
+                styleDirectives.push(combinedVisionStyle)
+            }
+        }
+
+        if (styleDirectives.length > 0) {
+            const uniqueStyles = Array.from(new Set(styleDirectives))
             sections.push(
                 P05.PRIORITY_HEADER,
                 ``,
-                `STYLE DIRECTIVES: ${allStyles.join(', ')}`,
+                `STYLE DIRECTIVES: ${uniqueStyles.join(', ')}`,
                 ``,
                 P05.STYLE_REQUIREMENT,
                 ``
@@ -1280,15 +1486,13 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         if (activeState.ctaUrl?.trim()) {
             sections.push(
                 ``,
-                `!!! CRITICAL LAYOUT INSTRUCTION !!!`,
-                `The URL "${activeState.ctaUrl.trim()}" MUST BE VISIBLE in the final image composition.`,
-                `It should be rendered as small text, typically positioned below the main Call to Action button.`,
+                P09B.FINAL_URL_VISIBILITY_INSTRUCTION(activeState.ctaUrl.trim()),
                 ``
             )
         }
 
         return sections.join('\n')
-    }, [state, currentIntent, availableStyles, selectedLayoutMeta, activeBrandKit])
+    }, [state, currentIntent, selectedLayoutMeta, activeBrandKit])
 
     const canGenerate = useMemo(() => {
         // Basic requirement: must have an intent
@@ -1418,6 +1622,9 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             error: null,
             uploadedImageFile: null,
             visionAnalysis: null, // Reset analysis
+            firstVisionAnalysis: null,
+            firstReferenceId: null,
+            firstReferenceSource: null,
         }))
     }, [])
 

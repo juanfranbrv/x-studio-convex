@@ -3,6 +3,7 @@ import { readFileSync } from 'fs'
 import { IntentMeta, LayoutOption } from '@/lib/creation-flow-types'
 import { BrandDNA } from '@/lib/brand-types'
 import { buildBrandContextBlock } from './brand-context-template'
+import { detectLanguage } from '@/lib/language-detection'
 
 const PROMPT_TEMPLATE_PATH = path.join(
   process.cwd(),
@@ -31,6 +32,17 @@ export function buildIntentParserPrompt(
 ): string {
   const brandContext = buildBrandContextBlock(brandDNA) || 'BRAND CONTEXT: (none)'
   const websiteContext = brandWebsite ? `BRAND WEBSITE:\n${brandWebsite}` : 'BRAND WEBSITE: (none)'
+  const detectedLanguage = detectLanguage(userRequest || '')
+  const languageNames: Record<string, string> = {
+    es: 'Español',
+    en: 'English',
+    fr: 'Français',
+    de: 'Deutsch',
+    it: 'Italiano',
+    pt: 'Português',
+    ca: 'Català'
+  }
+  const userLanguage = languageNames[detectedLanguage] || detectedLanguage
   const intentContextLines: string[] = []
 
   if (intent) {
@@ -50,6 +62,7 @@ export function buildIntentParserPrompt(
     .replaceAll('{{BRAND_CONTEXT}}', brandContext)
     .replaceAll('{{WEBSITE_CONTEXT}}', websiteContext)
     .replaceAll('{{INTENT_CONTEXT}}', intentContext)
+    .replaceAll('{{USER_LANGUAGE}}', userLanguage)
     .replaceAll('{{USER_REQUEST}}', userRequest)
 }
 
