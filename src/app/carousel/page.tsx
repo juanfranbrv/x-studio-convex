@@ -26,7 +26,7 @@ import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 import type { DebugPromptData } from '@/lib/creation-flow-types'
 import { buildCarouselImagePrompt } from '@/lib/prompts/carousel-image'
 import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
-import { getCarouselComposition } from '@/lib/carousel-compositions'
+import { getNarrativeComposition } from '@/lib/carousel-structures'
 
 export default function CarouselPage() {
     const router = useRouter()
@@ -338,6 +338,7 @@ export default function CarouselPage() {
                 aspectRatio: settings.aspectRatio,
                 style: settings.style,
                 compositionId: settings.compositionId,
+                structureId: settings.structureId,
                 intelligenceModel: aiConfig?.intelligenceModel,
                 imageModel: aiConfig?.imageModel,
                 aiImageDescription: settings.aiImageDescription,
@@ -424,7 +425,9 @@ export default function CarouselPage() {
             return
         }
 
-        const compositionPreset = getCarouselComposition(settings.compositionId)
+        const compositionPreset = settings.structureId
+            ? getNarrativeComposition(settings.structureId, settings.compositionId)
+            : undefined
         const brandContext = buildCarouselBrandContext(
             activeBrandKit,
             settings.selectedColors,
@@ -511,7 +514,8 @@ export default function CarouselPage() {
                 aiConfig.imageModel,
                 carouselSettings.selectedLogoUrl,
                 carouselSettings.selectedColors,
-                carouselSettings.compositionId
+                carouselSettings.compositionId,
+                carouselSettings.structureId
             )
 
             if (result.success && result.imageUrl) {

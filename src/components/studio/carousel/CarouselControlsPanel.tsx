@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal } from 'lucide-react'
+import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Rows3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import { ImageReferenceSelector } from '@/components/studio/creation-flow/ImageReferenceSelector'
 import { resizeImage } from '@/lib/image-utils'
-import { CAROUSEL_COMPOSITIONS } from '@/lib/carousel-compositions'
+import { CAROUSEL_STRUCTURES, getNarrativeStructure } from '@/lib/carousel-structures'
 import { CarouselCompositionSelector } from '@/components/studio/carousel/CarouselCompositionSelector'
 import { BrandingConfigurator } from '@/components/studio/creation-flow/BrandingConfigurator'
 
@@ -25,6 +25,7 @@ export interface CarouselSettings {
     style: string
     slides: SlideConfig[]
     compositionId: string
+    structureId: string
     imageSourceMode: 'upload' | 'brandkit' | 'generate'
     aiImageDescription?: string
     // Brand Kit Context
@@ -104,7 +105,9 @@ export function CarouselControlsPanel({
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('3:4')
     const [style, setStyle] = useState('minimal')
     const [slides, setSlides] = useState<SlideConfig[]>([])
-    const [compositionId, setCompositionId] = useState(CAROUSEL_COMPOSITIONS[0]?.id || 'free')
+    const [structureId, setStructureId] = useState<string>(analysisStructure?.id || 'problema-solucion')
+    const currentStructure = getNarrativeStructure(structureId) || CAROUSEL_STRUCTURES[0]
+    const [compositionId, setCompositionId] = useState(currentStructure?.compositions[0]?.id || 'free')
     const [editingSlide, setEditingSlide] = useState<number | null>(null)
     const [editText, setEditText] = useState('')
 
@@ -140,6 +143,23 @@ export function CarouselControlsPanel({
         const brandkit = selectedBrandKitImageIds.map(url => ({ url, source: 'brandkit' as const }))
         onReferenceImagesChange([...uploaded, ...brandkit])
     }, [uploadedImages, selectedBrandKitImageIds, onReferenceImagesChange])
+
+    useEffect(() => {
+        if (analysisStructure?.id && analysisStructure.id !== structureId) {
+            const found = getNarrativeStructure(analysisStructure.id)
+            if (found) {
+                setStructureId(found.id)
+                setCompositionId(found.compositions[0]?.id || 'free')
+            }
+        }
+    }, [analysisStructure, structureId])
+
+    useEffect(() => {
+        const refreshed = getNarrativeStructure(structureId)
+        if (refreshed && refreshed.compositions.length > 0) {
+            setCompositionId(refreshed.compositions[0].id)
+        }
+    }, [structureId])
 
     const handleAspectRatioSelect = (ratio: '1:1' | '4:5' | '3:4') => {
         setAspectRatio(ratio)
@@ -239,6 +259,7 @@ export function CarouselControlsPanel({
             style: STYLE_OPTIONS.find(s => s.id === style)?.label || 'Minimalista',
             slides: finalSlides,
             compositionId,
+            structureId,
             imageSourceMode,
             aiImageDescription: imageSourceMode === 'generate' ? (aiImageDescription.trim() || undefined) : undefined,
             selectedLogoUrl: resolveSelectedLogoUrl(),
@@ -356,8 +377,35 @@ export function CarouselControlsPanel({
                 {/* Composition */}
                 <div className="glass-card p-4 space-y-3">
                     <SectionHeader icon={Layout} title="Composición" />
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <Rows3 className="w-4 h-4 text-primary" />
+                            <p className="text-xs font-semibold uppercase tracking-wider">Estructura narrativa</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            {CAROUSEL_STRUCTURES.map((structure) => {
+                                const isActive = structureId === structure.id
+                                return (
+                                    <button
+                                        key={structure.id}
+                                        onClick={() => setStructureId(structure.id)}
+                                        className={cn(
+                                            "p-2 rounded-lg border text-left transition-all",
+                                            isActive
+                                                ? "border-primary bg-primary/5 shadow-sm"
+                                                : "border-border hover:border-primary/40 hover:bg-muted/40"
+                                        )}
+                                    >
+                                        <div className="text-[11px] font-semibold text-foreground">{structure.name}</div>
+                                        <div className="text-[10px] text-muted-foreground line-clamp-2">{structure.summary}</div>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </div>
                     <CarouselCompositionSelector
-                        compositions={CAROUSEL_COMPOSITIONS}
+                        key={structureId}
+                        compositions={currentStructure?.compositions || []}
                         selectedId={compositionId}
                         onSelect={setCompositionId}
                     />

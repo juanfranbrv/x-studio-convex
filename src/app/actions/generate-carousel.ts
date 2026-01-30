@@ -5,7 +5,7 @@ import { generateTextUnified } from '@/lib/gemini'
 import type { BrandDNA } from '@/lib/brand-types'
 import { buildCarouselDecompositionPrompt, buildCarouselImagePrompt } from '@/lib/prompts/carousel'
 import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
-import { getCarouselComposition } from '@/lib/carousel-compositions'
+import { getNarrativeComposition } from '@/lib/carousel-structures'
 
 export interface SlideContent {
     index: number
@@ -32,6 +32,7 @@ export interface GenerateCarouselInput {
     aspectRatio?: '1:1' | '4:5' | '3:4'
     style?: string
     compositionId?: string
+    structureId?: string
     brandDNA: BrandDNA
     intelligenceModel?: string
     imageModel?: string
@@ -51,6 +52,7 @@ export interface AnalyzeCarouselInput {
     slideCount: number
     brandDNA: BrandDNA
     intelligenceModel: string
+    structureId?: string
     selectedColors?: string[]
     includeLogoOnSlides?: boolean
     selectedLogoUrl?: string
@@ -113,8 +115,17 @@ async function decomposeIntoSlides(
         return undefined
     }
 
+    const normalizeTextForMatching = (text: string) =>
+        text
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/\p{Diacritic}/gu, '')
+            .trim()
+
     const hookForbiddenRegex = /(\\b(truco|tip|atajo|paso|punto)\\b\\s*#?\\s*\\d+)|(#\\s*\\d+)/i
-    const ctaRequiredRegex = /(cta|llamada a la acci[oó]n|call to action|inscr[ií]b|matricul|apúnt|apunt|visita|vis[ií]tanos|descubr|aprende|más info|mas info|escr[ií]benos|cont[aá]ct|reg[íi]strate|sígu|sigu|comparte|compra|reserva|solicita|pide|descarga|entra|únete|mandanos|env[ií]anos|aplica)/i
+    const ctaRequiredRegex =
+        /(cta|llamada a la accion|call to action|inscrib|matricul|apunt|visita|visit|mas info|escriben|contact|registr|sigu|comparte|compra|reserva|solicita|pide|descarga|entra|unete|mandan|envian|aplica|agenda|agend|descubre|prueba|pruebalo|explora|cotiza|demo|demos|llama|llamanos|haz clic|haz click|clic|click|swipe|desliza|link en bio|comprar|shop|get started|learn more|join|suscrib)/i
+    const contactRegex = /(wa\.me|whatsapp|dm|mensaje|correo|email|@|tel\.?|llama)/i
     const urlRegex = /(https?:\/\/|www\.)/i
 
     const normalizeParsed = (parsed: any) => {
@@ -192,8 +203,22 @@ async function decomposeIntoSlides(
             throw new Error('Hook slide contains content numbering; it must be a pure hook')
         }
         const ctaText = `${slides[lastIndex].title} ${slides[lastIndex].description}`
-        if (!ctaRequiredRegex.test(ctaText) && !urlRegex.test(ctaText)) {
-            throw new Error('CTA slide missing a clear call-to-action')
+        const ctaTextNormalized = normalizeTextForMatching(ctaText)
+        const hasCTAKeyword = ctaRequiredRegex.test(ctaTextNormalized)
+        const hasUrl = urlRegex.test(ctaText)
+        const hasContactHint = contactRegex.test(ctaTextNormalized)
+
+        if (!hasCTAKeyword && !hasUrl && !hasContactHint) {
+            const fallbackUrl = brand.url?.trim()
+            const fallbackCTA = fallbackUrl
+                ? `Visita ${fallbackUrl} y empieza hoy.`
+                : 'Escríbenos y empecemos hoy mismo.'
+
+            slides[lastIndex] = {
+                ...slides[lastIndex],
+                description: `${slides[lastIndex].description} ${fallbackCTA}`.trim()
+            }
+            console.warn('CTA slide missing explicit call-to-action; fallback CTA appended.')
         }
 
         return {
@@ -263,10 +288,13 @@ async function generateSlideImage(
     selectedLogoUrl?: string,
     selectedImageUrls?: string[],
     aiImageDescription?: string,
-    compositionId?: string
+    compositionId?: string,
+    structureId?: string
 ): Promise<string> {
     const brandContext = buildCarouselBrandContext(brand, selectedColors, selectedLogoUrl)
-    const compositionPreset = getCarouselComposition(compositionId)
+    const compositionPreset = structureId
+        ? getNarrativeComposition(structureId, compositionId)
+        : undefined
     const fullPrompt = buildCarouselImagePrompt({
         slideIndex: slideContent.index,
         totalSlides,
@@ -319,6 +347,7 @@ export async function generateCarouselAction(
         aspectRatio = '3:4',
         style = 'Moderno y minimalista',
         compositionId,
+        structureId,
         brandDNA,
         intelligenceModel,
         imageModel,
@@ -389,7 +418,8 @@ export async function generateCarouselAction(
                     includeLogoOnSlides ? selectedLogoUrl : undefined,
                     selectedImageUrls,
                     aiImageDescription,
-                    compositionId
+                    compositionId,
+                    input.structureId
                 )
 
                 slides[i].imageUrl = imageUrl
@@ -509,7 +539,8 @@ export async function regenerateSlideAction(
     imageModel: string,
     selectedLogoUrl?: string,
     selectedColors?: string[],
-    compositionId?: string
+    compositionId?: string,
+    structureId?: string
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
     try {
         console.log(`Regenerating slide ${slideIndex + 1} for ${brandDNA.brand_name}...`)
@@ -525,7 +556,8 @@ export async function regenerateSlideAction(
             selectedLogoUrl,
             undefined,
             undefined,
-            compositionId
+            compositionId,
+            structureId
         )
 
         return { success: true, imageUrl }
