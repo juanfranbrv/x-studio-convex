@@ -1,100 +1,148 @@
 import { CarouselComposition } from '../../carousel-structures'
 
 export const FRAMEWORK_PAS_COMPOSITIONS: CarouselComposition[] = [
-    // 1. COMPO LIBRE
+    // 1. THE ABYSS (EL ABISMO)
     {
-        id: 'framework-pas::free',
-        name: 'Libre (IA)',
-        description: 'La IA decide la mejor adaptación.',
-        layoutPrompt: 'Freeform: Adapts layout to the Problem-Agitation-Solution arc. Emotional journey from dark to light.',
-        iconPrompt: 'Minimalist abstract icon of a 5-dot dice face, monochrome in primary color.'
+        id: 'framework-pas::abyss',
+        name: 'The Abyss',
+        description: 'Peso opresivo superior, liberacion inferior.',
+        layoutPrompt: `--- ARCHITECTURE: TOP-HEAVY COMPRESSION ---
+1. CANVAS GRID: 3:4 canvas divided horizontally. Top 70% occupied by heavy visual mass, bottom 30% open.
+2. TEXT ZONING: Solid, clean negative space in the bottom 30% for headline and body; logo bottom-right.
+3. VISUAL FRAMING: High-angle shot looking down into a void or massive structure looming above.
+4. ATMOSPHERE STRUCTURE: Oppressive shadows at the top, transitioning to clarity at the bottom. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Large black block pressing down on a small white strip, monochrome.'
     },
-    // 2. TRIPTYCH VERTICAL
+    // 2. THE THORN (LA ESPINA)
     {
-        id: 'framework-pas::triptych',
-        name: 'PAS Triptych',
-        description: 'Tríptico vertical P-A-S.',
-        layoutPrompt: '3-Panel Vertical split: Panel 1 (Problem/Dark), Panel 2 (Agitation/Red/Intense), Panel 3 (Solution/Light/Blue). Distinct emotional zoning.',
-        iconPrompt: 'Square divided into 3 vertical columns.'
+        id: 'framework-pas::thorn',
+        name: 'The Thorn',
+        description: 'Elemento agudo que rompe el espacio.',
+        layoutPrompt: `--- ARCHITECTURE: ACUTE INTERVAL ---
+1. CANVAS GRID: Sharp triangular wedge piercing from left to right, occupying 40% of the center.
+2. TEXT ZONING: Clean negative space surrounding the wedge top and bottom; logo top-right.
+3. VISUAL FRAMING: Macro focus on a sharp, piercing element (thorn, shard, needle).
+4. ATMOSPHERE STRUCTURE: High contrast around the sharp point, diffuse background. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Sharp triangle piercing a circle, monochrome style.'
     },
-    // 3. TARGET BULLSEYE
+    // 3. THE HORIZON (EL HORIZONTE)
     {
-        id: 'framework-pas::bullseye',
-        name: 'Target Pain',
-        description: 'Dardo en el dolor.',
-        layoutPrompt: 'Bullseye: The "Agitation" is the center of the target. We zoom in on the pain point before zooming out to solution.',
-        iconPrompt: 'Target/Bullseye circles.'
+        id: 'framework-pas::horizon',
+        name: 'The Horizon',
+        description: 'Claridad vasta y despejada.',
+        layoutPrompt: `--- ARCHITECTURE: LOW HORIZON ---
+1. CANVAS GRID: Low horizon line at the bottom 15%. Top 85% is vast open space.
+2. TEXT ZONING: Massive negative space in the sky area (centered) for large typography; logo top-center.
+3. VISUAL FRAMING: Extreme wide shot, emphasizing scale and emptiness above.
+4. ATMOSPHERE STRUCTURE: Gradient sky, clearing from storm to calm. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Flat horizontal line with a small sun rising, minimalist monochrome.'
     },
-    // 4. STORM TO CALM
+    // 4. THE LABYRINTH (EL LABERINTO)
     {
-        id: 'framework-pas::storm',
-        name: 'Storm to Calm',
-        description: 'Tormenta a calma.',
-        layoutPrompt: 'Atmospheric: Left side is chaotic/stormy (P+A), transitioning smoothly to a calm/sunny Right side (S).',
-        iconPrompt: 'Cloud with lightning transitioning to sun.'
+        id: 'framework-pas::labyrinth',
+        name: 'The Labyrinth',
+        description: 'Complejidad exterior, foco central.',
+        layoutPrompt: `--- ARCHITECTURE: CENTRAL VOID ---
+1. CANVAS GRID: Dense, complex patterns on the perimeter (20% margin), clear center box.
+2. TEXT ZONING: Central 60% is solid clean space for structured text; logo bottom-center.
+3. VISUAL FRAMING: Top-down view of complex geometry surrounding a calm clearing.
+4. ATMOSPHERE STRUCTURE: Shadows in the periphery, bright spotlight in the center. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Square maze pattern with an empty square in the center, monochrome.'
     },
-    // 5. KNOT UNTIED
+    // 5. THE CRUSH (LA PRESION)
     {
-        id: 'framework-pas::knot',
-        name: 'Untying Knot',
-        description: 'Desatanudos.',
-        layoutPrompt: 'Visual Metaphor: A tight, messy knot (Problem/Agitation) being loosened or fully straightforward string (Solution).',
-        iconPrompt: 'Icon of a looped knot.'
+        id: 'framework-pas::crush',
+        name: 'The Crush',
+        description: 'Bloques laterales comprimiendo el centro.',
+        layoutPrompt: `--- ARCHITECTURE: VERTICAL COMPRESSION ---
+1. CANVAS GRID: Two heavy vertical columns (left and right), leaving a narrow 30% channel in the center.
+2. TEXT ZONING: Vertical text stack in the central negative space channel; logo bottom-center.
+3. VISUAL FRAMING: Perspective looking through a narrow gap between two massive walls.
+4. ATMOSPHERE STRUCTURE: Dark walls, light streaming through the gap. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Two vertical bars squeezing a thin line, monochrome.'
     },
-    // 6. AMPLIFIER
+    // 6. THE ASCENT (EL ASCENSO)
     {
-        id: 'framework-pas::amp',
-        name: 'Volume Up',
-        description: 'Amplificando el problema.',
-        layoutPrompt: 'Volume Knob: Visualizing "Agitation" as turning up the volume/intensity dial on the Problem, then Muting it for Solution.',
-        iconPrompt: 'Speaker volume icon.'
+        id: 'framework-pas::ascent',
+        name: 'The Ascent',
+        description: 'Progreso escalonado diagonal.',
+        layoutPrompt: `--- ARCHITECTURE: DIAGONAL STEPS ---
+1. CANVAS GRID: Stepped geometry rising from bottom-left to top-right.
+2. TEXT ZONING: Clean negative space on the "steps" or in the upper-left void; logo top-right.
+3. VISUAL FRAMING: Low angle shot looking up a staircase or climbing structure.
+4. ATMOSPHERE STRUCTURE: Light source at the top-right peak, casting long shadows. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Three steps rising diagonally, monochrome style.'
     },
-    // 7. MAGNIFYING BURN
+    // 7. THE BREACH (LA BRECHA)
     {
-        id: 'framework-pas::burn',
-        name: 'Sunburn Focus',
-        description: 'Lupa quemando (Agitación).',
-        layoutPrompt: 'Focus Point: A magnifying glass focusing sunlight to "burn" (agitate) a specific spot, creating smoke/urgency.',
-        iconPrompt: 'Magnify glass with a ray/spark.'
+        id: 'framework-pas::breach',
+        name: 'The Breach',
+        description: 'Ruptura central de luz.',
+        layoutPrompt: `--- ARCHITECTURE: CENTER SPLIT ---
+1. CANVAS GRID: Solid mass split vertically down the center by a jagged rift.
+2. TEXT ZONING: Text aligned inside the rift or to one side of the split; logo bottom-right.
+3. VISUAL FRAMING: Close-up of a surface cracking open to reveal light.
+4. ATMOSPHERE STRUCTURE: Backlighting bursting through the crack. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Vertical line breaking a solid square, monochrome.'
     },
-    // 8. TEETER TOTTER
+    // 8. THE ORBIT (LA ORBITA)
     {
-        id: 'framework-pas::scale',
-        name: 'Tipping Scale',
-        description: 'Balanza desequilibrada.',
-        layoutPrompt: 'Balance Scale: Heavy weight of "Problem" tipping the scale down. "Solution" feather balances or corrects it.',
-        iconPrompt: 'Balance scale icon.'
+        id: 'framework-pas::orbit',
+        name: 'The Orbit',
+        description: 'Flujo circular alrededor del nucleo.',
+        layoutPrompt: `--- ARCHITECTURE: ORBITAL FLOW ---
+1. CANVAS GRID: Circular elements orbiting a central point.
+2. TEXT ZONING: Center circle is solid negative space for headline; orbital paths for details; logo bottom-center.
+3. VISUAL FRAMING: Top-down motion blur of rotating elements.
+4. ATMOSPHERE STRUCTURE: Glowing core, motion trails in shadow. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Central dot with two orbital rings, monochrome.'
     },
-    // 9. PRESSURE COOKER
+    // 9. THE FRAGMENT (EL FRAGMENTO)
     {
-        id: 'framework-pas::pressure',
-        name: 'Pressure Gauge',
-        description: 'Medidor de presión.',
-        layoutPrompt: 'Gauge Needle: Dial in the Red Zone (Agitation/Danger), then resetting to Green Zone (Solution/Safe).',
-        iconPrompt: 'Gauge meter icon.'
+        id: 'framework-pas::fragment',
+        name: 'The Fragment',
+        description: 'Caos disperso vs orden.',
+        layoutPrompt: `--- ARCHITECTURE: SCATTERED FIELD ---
+1. CANVAS GRID: 70% of canvas filled with floating shards/debris, 30% clear corner (top-left).
+2. TEXT ZONING: The clear top-left corner is solid negative space; logo top-left.
+3. VISUAL FRAMING: Frozen motion of an explosion or shattering object.
+4. ATMOSPHERE STRUCTURE: Sharp highlights on shards, deep void background. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Cluster of small triangles and dots, monochrome.'
     },
-    // 10. CRACK SPREADING
+    // 10. THE FILTER (EL FILTRO)
     {
-        id: 'framework-pas::crack',
-        name: 'Cracked Glass',
-        description: 'Grieta expandiéndose.',
-        layoutPrompt: 'Progression: A small crack (Problem) -> Spreading spiderweb crack (Agitation) -> Brand new glass (Solution).',
-        iconPrompt: 'Cracked surface icon.'
+        id: 'framework-pas::filter',
+        name: 'The Filter',
+        description: 'Purificacion de ruido a claridad.',
+        layoutPrompt: `--- ARCHITECTURE: LATERAL FLOW ---
+1. CANVAS GRID: Gradient of density from left (noisy) to right (clean).
+2. TEXT ZONING: Right side (clean zone) is solid negative space for text; logo bottom-right.
+3. VISUAL FRAMING: Abstract flow of particles passing through a barrier.
+4. ATMOSPHERE STRUCTURE: Hazy/foggy left, crystal clear right. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Dots on left becoming lines on right, monochrome.'
     },
-    // 11. EQUATION SOLVED
+    // 11. THE INTERSECTION (LA CRUZ)
     {
-        id: 'framework-pas::math',
-        name: 'Equation',
-        description: 'Resolviendo la incógnita.',
-        layoutPrompt: 'Blackboard Math: "X + Y = ?" (Problem). "X + Y = CHAOS" (Agitation). "X + Y = SOLUTION" (Answer).',
-        iconPrompt: 'X + Y symbols.'
+        id: 'framework-pas::intersection',
+        name: 'The Intersection',
+        description: 'Punto de decision crucial.',
+        layoutPrompt: `--- ARCHITECTURE: QUADRANT CROSS ---
+1. CANVAS GRID: Large X or Plus shape dividing canvas into 4 quadrants.
+2. TEXT ZONING: One quadrant (top-right) is solid negative space; logo bottom-right.
+3. VISUAL FRAMING: Overhead view of crossing paths or structural beams.
+4. ATMOSPHERE STRUCTURE: Spotlight on the intersection point. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Cross shape with one quadrant filled, monochrome.'
     },
-    // 12. PUZZLE FIT
+    // 12. THE ECLIPSE (EL ECLIPSE)
     {
-        id: 'framework-pas::puzzle',
-        name: 'Missing Piece',
-        description: 'La pieza que falta.',
-        layoutPrompt: 'Jigsaw: A completed puzzle with one glaring hole (Problem). The hole glowing/throbbing (Agitation). The piece clicking in (Solution).',
-        iconPrompt: 'Puzzle piece.'
+        id: 'framework-pas::eclipse',
+        name: 'The Eclipse',
+        description: 'Sombra transitoria revelando luz.',
+        layoutPrompt: `--- ARCHITECTURE: PARTIAL OCCLUSION ---
+1. CANVAS GRID: Large circle partially obstructing a light source/background.
+2. TEXT ZONING: The obstructing circle is solid negative space for text; logo centered.
+3. VISUAL FRAMING: silhouette against a bright rim light (corona effect).
+4. ATMOSPHERE STRUCTURE: Deep silhouette contrast against blinding backlight. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Circle partially covering another, monochrome.'
     }
 ]

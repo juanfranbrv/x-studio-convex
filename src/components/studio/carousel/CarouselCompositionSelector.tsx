@@ -75,14 +75,11 @@ function CompositionThumbnail({ id }: { id: string }) {
         const dotClass = "absolute w-2 h-2 rounded-full bg-primary/80"
         switch (variant) {
             case 0:
-                return <span className={`${dotClass} top-1 left-1`} />
             case 1:
-                return <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/20 pointer-events-none" />
             case 2:
-                return <div className="absolute inset-1 rounded-lg border border-primary/25 pointer-events-none" />
             case 3:
             default:
-                return <span className={`${dotClass} bottom-1 right-1`} />
+                return null
         }
     }
 
@@ -371,6 +368,57 @@ function CompositionThumbnail({ id }: { id: string }) {
         case 'cart': return withOverlay(<CartLayout />)
         case 'overlay': return withOverlay(<SaleOverlayLayout />)
 
+
+        // FRAMEWORK PAS (NEW 12)
+        case 'abyss':
+            return withOverlay(<AbyssLayout />)
+        case 'thorn':
+            return withOverlay(<ThornLayout />)
+        case 'horizon':
+            return withOverlay(<HorizonLayout />)
+        case 'labyrinth':
+            return withOverlay(<LabyrinthLayout />)
+        case 'crush':
+            return withOverlay(<CrushLayout />)
+        case 'ascent':
+            return withOverlay(<AscentLayout />)
+        case 'breach':
+            return withOverlay(<BreachLayout />)
+        case 'orbit':
+            return withOverlay(<OrbitLayout />)
+        case 'fragment':
+            return withOverlay(<FragmentLayout />)
+        case 'filter':
+            return withOverlay(<FilterNewLayout />)
+        case 'intersection':
+            return withOverlay(<IntersectionLayout />)
+        case 'eclipse':
+            return withOverlay(<EclipseLayout />)
+
+        // OLD PAS (Keeping for reference if needed, but likely unused)
+        case 'pas-triptych':
+            return withOverlay(<PAS_TriptychLayout />)
+        case 'bullseye':
+            return withOverlay(<BullseyeLayout />)
+        case 'storm-to-calm':
+            return withOverlay(<StormToCalmLayout />)
+        case 'knot':
+            return withOverlay(<KnotLayout />)
+        case 'amp':
+            return withOverlay(<AmpLayout />)
+        case 'burn':
+            return withOverlay(<BurnLayout />)
+        case 'scale':
+            return withOverlay(<ScaleLayout />)
+        case 'pressure':
+            return withOverlay(<PressureLayout />)
+        case 'crack':
+            return withOverlay(<CrackLayout />)
+        case 'math':
+            return withOverlay(<MathLayout />)
+        case 'puzzle':
+            return withOverlay(<PuzzleLayout />)
+
         default:
             return withOverlay(<DefaultIcon />)
     }
@@ -418,6 +466,21 @@ function AlarmLayout() { return <div className="w-full h-full p-2 flex items-cen
 function DominoLayout() { return <div className="w-full h-full p-2 flex items-end justify-center gap-0.5"><div className="w-2 h-6 bg-primary/40 rotate-[-15deg]" /><div className="w-2 h-6 bg-primary/30 rotate-[-30deg] origin-bottom-left" /><div className="w-2 h-6 bg-primary/10 rotate-[-60deg] origin-bottom-left" /></div> }
 
 // --- FRAMEWORK PAS ---
+// --- FRAMEWORK PAS (NEW 12) ---
+function AbyssLayout() { return <div className="w-full h-full p-2 flex flex-col justify-between items-center"><div className="w-full h-3/4 bg-primary/80 rounded-2xl" /><div className="w-3/4 h-1.5 bg-primary/20 rounded-full mt-1" /></div> }
+function ThornLayout() { return <div className="w-full h-full p-2 flex items-center justify-center relative"><div className="w-12 h-12 bg-primary/20 rounded-full" /><div className="absolute bottom-2 right-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[28px] border-b-primary/80 rotate-45 rounded-sm" /></div> }
+function HorizonLayout() { return <div className="w-full h-full p-2 flex flex-col justify-end"><div className="w-10 h-10 bg-primary/40 rounded-full mx-auto -mb-4" /><div className="w-full h-2 bg-primary/60 rounded-full" /></div> }
+function LabyrinthLayout() { return <div className="w-full h-full p-2 flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary/30 rounded-xl flex items-center justify-center"><div className="w-4 h-4 bg-primary/60 rounded-md" /></div></div> }
+function CrushLayout() { return <div className="w-full h-full p-2 flex justify-between items-center gap-1"><div className="w-3 h-full bg-primary/60 rounded-full" /><div className="w-1 h-3/4 bg-primary/20 rounded-full" /><div className="w-3 h-full bg-primary/60 rounded-full" /></div> }
+function AscentLayout() { return <div className="w-full h-full p-2 flex items-end justify-center gap-1"><div className="w-3 h-4 bg-primary/30 rounded-t-lg" /><div className="w-3 h-8 bg-primary/50 rounded-t-lg" /><div className="w-3 h-full bg-primary/80 rounded-t-lg" /></div> }
+function BreachLayout() { return <div className="w-full h-full p-2 flex items-center justify-center relative"><div className="w-10 h-10 bg-primary/80 rounded-full" /><div className="absolute h-full w-2 bg-white dark:bg-zinc-950 rotate-12" /></div> }
+function OrbitLayout() { return <div className="w-full h-full p-2 flex items-center justify-center"><div className="w-12 h-12 rounded-full border-4 border-primary/20 relative flex items-center justify-center"><div className="absolute top-0 right-0 w-3 h-3 bg-primary/60 rounded-full" /><div className="w-4 h-4 bg-primary/80 rounded-full" /></div></div> }
+function FragmentLayout() { return <div className="w-full h-full p-2 relative"><div className="absolute top-2 left-2 w-4 h-4 bg-primary/40 rounded-lg -rotate-12" /><div className="absolute bottom-2 right-2 w-5 h-5 bg-primary/60 rounded-lg rotate-12" /><div className="absolute top-2 right-2 w-3 h-3 bg-primary/30 rounded-full" /></div> }
+function FilterNewLayout() { return <div className="w-full h-full p-2 flex flex-col items-center justify-center gap-1"><div className="flex gap-1"><div className="w-2 h-2 bg-primary/30 rounded-full" /><div className="w-2 h-2 bg-primary/30 rounded-full" /><div className="w-2 h-2 bg-primary/30 rounded-full" /></div><div className="w-8 h-1 bg-primary/20 rounded-full" /><div className="w-4 h-4 bg-primary/80 rounded-full mt-1" /></div> }
+function IntersectionLayout() { return <div className="w-full h-full p-2 flex items-center justify-center relative"><div className="absolute w-full h-2 bg-primary/30 rotate-45 rounded-full" /><div className="absolute w-full h-2 bg-primary/30 -rotate-45 rounded-full" /><div className="w-4 h-4 bg-primary/80 rounded-full z-10 ring-2 ring-white dark:ring-zinc-950" /></div> }
+function EclipseLayout() { return <div className="w-full h-full p-2 flex items-center justify-center relative"><div className="w-8 h-8 bg-primary/30 rounded-full absolute right-2" /><div className="w-8 h-8 bg-primary/80 rounded-full absolute left-2 ring-2 ring-white dark:ring-zinc-950" /></div> }
+
+// --- OLD PAS (Deprecated?) ---
 function PAS_TriptychLayout() { return <div className="w-full h-full grid grid-cols-3 gap-0.5 p-1"><div className="bg-primary/20" /><div className="bg-primary/50" /><div className="bg-primary/10" /></div> }
 function BullseyeLayout() { return <div className="w-full h-full p-2 flex items-center justify-center"><div className="w-8 h-8 rounded-full border border-primary/20 flex items-center justify-center"><div className="w-4 h-4 rounded-full border border-primary/40 flex items-center justify-center"><div className="w-1.5 h-1.5 bg-primary/60 rounded-full" /></div></div></div> }
 function StormToCalmLayout() { return <div className="w-full h-full flex"><div className="flex-1 bg-primary/40 opacity-80" /><div className="flex-1 bg-gradient-to-r from-primary/40 to-primary/10" /><div className="flex-1 bg-primary/10" /></div> }
@@ -581,7 +644,6 @@ function WeightLayout() { return <div className="w-full h-full p-2 flex flex-col
 function MazeLayout() { return <div className="w-full h-full p-2 flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary/40 relative"><div className="absolute top-0 left-2 w-1 h-4 bg-primary/20" /><div className="absolute bottom-0 right-2 w-1 h-4 bg-primary/20" /><div className="absolute top-1/2 left-0 w-4 h-1 bg-primary/20" /></div></div> }
 function KintsugiLayout() { return <div className="w-full h-full p-2 flex items-center justify-center"><div className="w-8 h-8 rounded-full bg-primary/10 relative overflow-hidden"><div className="absolute top-0 left-0 w-full h-full border-t-2 border-r-2 border-primary/60 rotate-12" /></div></div> }
 function HurdleLayout() { return <div className="w-full h-full p-2 flex items-end justify-center"><div className="w-1 h-4 bg-primary/40 mr-2" /><div className="w-4 h-4 rounded-full bg-primary/60 mb-6" /></div> }
-// CloudSun, Knot, Filter, Bullseye are reused from existing definitions
 
 
 function DefaultIcon() {
