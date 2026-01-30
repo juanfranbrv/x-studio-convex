@@ -27,6 +27,7 @@ import type { DebugPromptData } from '@/lib/creation-flow-types'
 import { buildCarouselImagePrompt } from '@/lib/prompts/carousel-image'
 import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
 import { getNarrativeComposition } from '@/lib/carousel-structures'
+import { extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
 
 export default function CarouselPage() {
     const router = useRouter()
@@ -151,7 +152,8 @@ export default function CarouselPage() {
                 intelligenceModel: aiConfig.intelligenceModel,
                 selectedColors: settings.selectedColors,
                 includeLogoOnSlides: settings.includeLogoOnSlides,
-                selectedLogoUrl: settings.selectedLogoUrl
+                selectedLogoUrl: settings.selectedLogoUrl,
+                aiImageDescription: settings.aiImageDescription
             })
             if (!result.success) {
                 throw new Error(result.error || 'Error desconocido')
@@ -425,37 +427,81 @@ export default function CarouselPage() {
             return
         }
 
+        // Import buildFinalPrompt and getMoodForSlide for accurate debug
+        const { buildFinalPrompt, generateCarouselSeed } = await import('@/lib/prompts/carousel/builder/final-prompt')
+        const { getMoodForSlide } = await import('@/lib/prompts/carousel/mood')
+
         const compositionPreset = settings.structureId
             ? getNarrativeComposition(settings.structureId, settings.compositionId)
             : undefined
-        const brandContext = buildCarouselBrandContext(
-            activeBrandKit,
-            settings.selectedColors,
-            settings.selectedLogoUrl
-        )
 
-        const prompts = slidesForPrompt.map((slide) =>
-            buildCarouselImagePrompt({
-                slideIndex: slide.index,
-                totalSlides: slidesForPrompt.length,
-                brandName: activeBrandKit?.brand_name || 'Marca',
-                brandContext,
-                title: slide.title,
-                description: slide.description,
-                visualPrompt: slide.visualPrompt,
-                composition: slide.composition,
-                compositionPreset: compositionPreset?.layoutPrompt,
-                focus: slide.focus,
-                role: slide.role,
-                style: settings.style,
-                aspectRatio: settings.aspectRatio,
+        // Extract brand colors for injection
+        const brandColors = {
+            background: settings.selectedColors?.find(c => c.includes('#'))?.split(',')[0] ||
+                activeBrandKit?.colors?.find(c => c.role === 'background')?.color || '#141210',
+            accent: activeBrandKit?.colors?.find(c => c.role === 'accent')?.color || '#F0E500'
+        }
+
+        const seed = generateCarouselSeed()
+        const slideCount = slidesForPrompt.length
+
+        // Build per-slide debug info
+        const slideDebug = slidesForPrompt.map((slide, idx) => {
+            const currentMood = getMoodForSlide(idx, slideCount)
+            const prompt = buildFinalPrompt({
+                composition: compositionPreset as any,
+                brandColors,
+                slideData: slide,
+                currentMood,
+                currentSlide: idx + 1,
+                totalSlides: slideCount,
+                logoPosition: extractLogoPosition(compositionPreset?.layoutPrompt || ''),
                 includeLogo: Boolean(settings.selectedLogoUrl),
-                aiImageDescription: settings.aiImageDescription
+                isSequentialSlide: idx > 0,
+                visualAnalysis: settings?.aiImageDescription
             })
-        )
 
-        const finalPrompt = prompts
-            .map((prompt, idx) => `--- SLIDE ${idx + 1} ---\n${prompt}`)
+            // Build references array
+            const references: Array<{ type: string; label: string; weight: number; url: string }> = []
+            if (settings.selectedImageUrls?.[0]) {
+                references.push({
+                    type: 'image',
+                    label: 'Master Layout Structure',
+                    weight: 0.8,
+                    url: settings.selectedImageUrls[0].length > 50
+                        ? settings.selectedImageUrls[0].substring(0, 50) + '...'
+                        : settings.selectedImageUrls[0]
+                })
+            }
+            if (idx > 0) {
+                references.push({
+                    type: 'image',
+                    label: 'Slide 1 Style Reference',
+                    weight: 0.4,
+                    url: '(Generated from Slide 1)'
+                })
+            }
+            if (settings.selectedLogoUrl) {
+                references.push({
+                    type: 'logo',
+                    label: 'Brand Logo',
+                    weight: 1.0,
+                    url: settings.selectedLogoUrl.length > 50
+                        ? settings.selectedLogoUrl.substring(0, 50) + '...'
+                        : settings.selectedLogoUrl
+                })
+            }
+
+            return {
+                slideNumber: idx + 1,
+                prompt,
+                mood: currentMood,
+                references
+            }
+        })
+
+        const finalPrompt = slideDebug
+            .map((s) => `--- SLIDE ${s.slideNumber} ---\n${s.prompt}`)
             .join('\n\n')
 
         setDebugPromptData({
@@ -465,7 +511,11 @@ export default function CarouselPage() {
             selectedStyles: [settings.style],
             platform: 'Instagram Carousel',
             format: settings.aspectRatio,
-            intent: analysisIntentLabel || analysisIntent || undefined
+            intent: analysisIntentLabel || analysisIntent || undefined,
+            seed,
+            model: aiConfig?.imageModel,
+            aspectRatio: settings.aspectRatio,
+            slideDebug
         })
         setPendingGenerateSettings(settings)
         setShowDebugModal(true)
@@ -590,6 +640,8 @@ export default function CarouselPage() {
                         onToggleCaptionLock={() => setIsCaptionLocked(!isCaptionLocked)}
                         referenceImages={referenceImages}
                         brandKitTexts={brandKitTexts}
+                        brandName={activeBrandKit?.brand_name}
+                        hook={analysisHook}
                     />
                 </div>
 

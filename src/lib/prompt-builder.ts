@@ -9,10 +9,16 @@ export interface ImageGenerationOptions {
     headline?: string
     cta?: string
     platform?: 'instagram' | 'tiktok' | 'youtube' | 'linkedin'
-    context?: Array<{ type: string; value: string; label?: string }>
+    context?: Array<{
+        type: string
+        value: string
+        label?: string
+        weight?: number // Added for sequential generation control
+    }>
     model?: string
     layoutReference?: string // Path to Phantom Template
     aspectRatio?: string
+    seed?: number // Consistent seed for carousel generation
 }
 
 export function buildImagePrompt(

@@ -37,17 +37,17 @@ export const FRAMEWORK_PAS_COMPOSITIONS: CarouselComposition[] = [
 4. ATMOSPHERE STRUCTURE: Gradient sky, clearing from storm to calm. Mood: {DYNAMIC_MOOD}.`,
         iconPrompt: 'Flat horizontal line with a small sun rising, minimalist monochrome.'
     },
-    // 4. THE LABYRINTH (EL LABERINTO)
+    // 4. THE ANCHOR (EL ANCLA)
     {
-        id: 'framework-pas::labyrinth',
-        name: 'The Labyrinth',
-        description: 'Complejidad exterior, foco central.',
-        layoutPrompt: `--- ARCHITECTURE: CENTRAL VOID ---
-1. CANVAS GRID: Dense, complex patterns on the perimeter (20% margin), clear center box.
-2. TEXT ZONING: Central 60% is solid clean space for structured text; logo bottom-center.
-3. VISUAL FRAMING: Top-down view of complex geometry surrounding a calm clearing.
-4. ATMOSPHERE STRUCTURE: Shadows in the periphery, bright spotlight in the center. Mood: {DYNAMIC_MOOD}.`,
-        iconPrompt: 'Square maze pattern with an empty square in the center, monochrome.'
+        id: 'framework-pas::anchor',
+        name: 'The Anchor',
+        description: 'Base sólida con foco ascendente.',
+        layoutPrompt: `--- ARCHITECTURE: PYRAMIDAL WEIGHT ---
+1. CANVAS GRID: Heavy weighted base at the bottom 35%, tapering upward to a single focal point at the top third.
+2. TEXT ZONING: Primary headline text in the upper 40% negative space; supporting text near the base; logo bottom-right.
+3. VISUAL FRAMING: Grounded perspective looking up at a solid structure or figure with presence and authority.
+4. ATMOSPHERE STRUCTURE: Warm light from above, stable heavy ground below. Mood: {DYNAMIC_MOOD}.`,
+        iconPrompt: 'Triangle with wide base pointing down and apex up, monochrome anchor shape.'
     },
     // 5. THE CRUSH (LA PRESION)
     {

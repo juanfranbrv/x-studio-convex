@@ -6,6 +6,7 @@ import { INTENT_CATALOG, LAYOUTS_BY_INTENT, type IntentCategory } from '@/lib/cr
 
 export interface ParsedIntentResult {
     detectedIntent?: string // Auto-detected intent ID
+    detectedLanguage?: string // Auto-detected language code (es, en, etc)
     confidence?: number      // Confidence score 0-1
     headline?: string
     cta?: string
@@ -276,6 +277,10 @@ export async function parseLazyIntentAction({
             parsed.detectedIntent = detected
         } else {
             parsed.detectedIntent = undefined
+        }
+
+        if (parsed.detectedLanguage) {
+            parsed.detectedLanguage = parsed.detectedLanguage.trim().toLowerCase().substring(0, 2)
         }
 
         return parsed

@@ -58,6 +58,7 @@ CLAVES DE CLASIFICACION (anti-errores):
 OUTPUT JSON ONLY:
 {
   "detectedIntent": "intent_id",
+  "detectedLanguage": "es", 
   "confidence": 0.95,
   "headline": "string",
   "cta": "string",

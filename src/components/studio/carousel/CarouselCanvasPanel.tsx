@@ -10,19 +10,19 @@ import { GeneratedCopyCard } from '@/components/studio/GeneratedCopyCard'
 import {
     ChevronLeft,
     ChevronRight,
-    Download,
     RefreshCw,
     Maximize,
     ZoomIn,
     ZoomOut,
     MoreHorizontal,
     Share2,
-    DownloadCloud,
     Images,
-    X,
     Loader2,
-    Fingerprint
+    Fingerprint,
+    ImageDown,
+    SquareArrowDown
 } from 'lucide-react'
+import JSZip from 'jszip'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -52,6 +52,8 @@ interface CarouselCanvasPanelProps {
     onToggleCaptionLock?: () => void
     referenceImages?: Array<{ url: string; source: 'upload' | 'brandkit' }>
     brandKitTexts?: Array<{ id: string; label: string; value: string }>
+    brandName?: string
+    hook?: string
 }
 
 export function CarouselCanvasPanel({
@@ -70,7 +72,9 @@ export function CarouselCanvasPanel({
     isCaptionLocked = false,
     onToggleCaptionLock,
     referenceImages = [],
-    brandKitTexts = []
+    brandKitTexts = [],
+    brandName,
+    hook
 }: CarouselCanvasPanelProps) {
     const [zoom, setZoom] = useState(100)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -200,16 +204,44 @@ export function CarouselCanvasPanel({
         link.click()
     }
 
-    const handleDownloadAll = async () => {
+    const handleDownloadBundle = async () => {
+        const timestamp = Date.now()
+        const zip = new JSZip()
+
+        // Add all slides to zip
         for (const [i, slide] of slides.entries()) {
             if (slide.imageUrl) {
-                const link = document.createElement('a')
-                link.href = slide.imageUrl
-                link.download = `slide-${i + 1}.png`
-                link.click()
-                await new Promise(r => setTimeout(r, 500))
+                try {
+                    const response = await fetch(slide.imageUrl)
+                    const blob = await response.blob()
+                    zip.file(`slide-${i + 1}.png`, blob)
+                } catch (e) {
+                    console.error(`Failed to fetch slide ${i + 1}:`, e)
+                }
             }
         }
+
+        // Add caption as text file
+        if (caption) {
+            const textContent = `CAPTION:\n${caption}`.trimEnd()
+            zip.file(`caption-${timestamp}.txt`, textContent)
+        }
+
+        // Generate and download ZIP
+        const zipBlob = await zip.generateAsync({ type: 'blob' })
+        const zipUrl = URL.createObjectURL(zipBlob)
+        const zipLink = document.createElement('a')
+        zipLink.href = zipUrl
+        // Format: brandname-hook-YYYY-MM-DD.zip
+        const date = new Date()
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+        const safeBrandName = (brandName || 'carousel').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        const safeHook = (hook || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 30) || 'slides'
+        zipLink.download = `${safeBrandName}-${safeHook}-${dateStr}.zip`
+        document.body.appendChild(zipLink)
+        zipLink.click()
+        document.body.removeChild(zipLink)
+        URL.revokeObjectURL(zipUrl)
     }
 
     const effectiveZoom = useMemo(() => {
@@ -273,8 +305,11 @@ export function CarouselCanvasPanel({
                         </Button>
                     </div>
 
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDownloadCurrent} disabled={!currentSlide?.imageUrl}>
-                        <Download className="w-4 h-4" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDownloadCurrent} disabled={!currentSlide?.imageUrl} title="Descargar slide actual">
+                        <ImageDown className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDownloadBundle} disabled={completedSlides === 0} title="Descargar ZIP (carrusel + caption)">
+                        <SquareArrowDown className="w-4 h-4" />
                     </Button>
 
                     <DropdownMenu>
@@ -287,10 +322,6 @@ export function CarouselCanvasPanel({
                             <DropdownMenuItem onClick={() => onRegenerateSlide(currentIndex)} disabled={!currentSlide || isRegenerating}>
                                 <RefreshCw className={cn("w-4 h-4 mr-2", isRegenerating && "animate-spin")} />
                                 Regenerar slide actual
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleDownloadAll} disabled={completedSlides < slides.length}>
-                                <DownloadCloud className="w-4 h-4 mr-2" />
-                                Descargar Carrusel completo
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                                 <Share2 className="w-4 h-4 mr-2" />

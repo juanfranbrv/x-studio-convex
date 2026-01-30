@@ -54,9 +54,9 @@ TITULO: ${title}
 DESCRIPCION: ${description}
 FOCO: ${focus || 'no especificado'}
 COMPOSICION BASE: ${compositionPreset || 'Libre (define una base coherente)'}
-COMPOSICION DEL SLIDE: ${composition || 'no especificada'}
+COMPOSICION DE SLIDE: ${composition || 'no especificada'}
 ROL: ${role || 'content'}
-${aiImageDescription ? `REFERENCIA IA: ${aiImageDescription}` : ''}
+${aiImageDescription ? `ESTILO MAESTRO (OBLIGATORIO): ${aiImageDescription}` : ''}
 
 ESTILO VISUAL: ${style}
 INSTRUCCIONES: ${visualPrompt}

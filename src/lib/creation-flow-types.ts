@@ -84,6 +84,19 @@ import {
     LANZAMIENTO_DESCRIPTION,
 } from './prompts/intents/lanzamiento'
 
+// Debug Modal Data - Per-Slide Info
+export interface SlideDebugInfo {
+    slideNumber: number
+    prompt: string
+    mood: string
+    references: Array<{
+        type: string
+        label: string
+        weight: number
+        url: string // shortened for display
+    }>
+}
+
 // Debug Modal Data
 export interface DebugPromptData {
     finalPrompt: string
@@ -96,6 +109,11 @@ export interface DebugPromptData {
     platform?: string
     format?: string
     intent?: string
+    // Carousel-specific: per-slide debug
+    seed?: number
+    model?: string
+    aspectRatio?: string
+    slideDebug?: SlideDebugInfo[]
 }
 
 // Intent-specific prompts

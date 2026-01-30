@@ -376,8 +376,8 @@ function CompositionThumbnail({ id }: { id: string }) {
             return withOverlay(<ThornLayout />)
         case 'horizon':
             return withOverlay(<HorizonLayout />)
-        case 'labyrinth':
-            return withOverlay(<LabyrinthLayout />)
+        case 'anchor':
+            return withOverlay(<AnchorLayout />)
         case 'crush':
             return withOverlay(<CrushLayout />)
         case 'ascent':
@@ -470,7 +470,7 @@ function DominoLayout() { return <div className="w-full h-full p-2 flex items-en
 function AbyssLayout() { return <div className="w-full h-full p-2 flex flex-col justify-between items-center"><div className="w-full h-3/4 bg-primary/80 rounded-2xl" /><div className="w-3/4 h-1.5 bg-primary/20 rounded-full mt-1" /></div> }
 function ThornLayout() { return <div className="w-full h-full p-2 flex items-center justify-center relative"><div className="w-12 h-12 bg-primary/20 rounded-full" /><div className="absolute bottom-2 right-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[28px] border-b-primary/80 rotate-45 rounded-sm" /></div> }
 function HorizonLayout() { return <div className="w-full h-full p-2 flex flex-col justify-end"><div className="w-10 h-10 bg-primary/40 rounded-full mx-auto -mb-4" /><div className="w-full h-2 bg-primary/60 rounded-full" /></div> }
-function LabyrinthLayout() { return <div className="w-full h-full p-2 flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary/30 rounded-xl flex items-center justify-center"><div className="w-4 h-4 bg-primary/60 rounded-md" /></div></div> }
+function AnchorLayout() { return <div className="w-full h-full p-2 flex flex-col items-center justify-end"><div className="w-2 h-2 bg-primary/40 rounded-full mb-1" /><div className="w-6 h-3 bg-primary/30 rounded-t-lg" /><div className="w-10 h-5 bg-primary/60 rounded-t-lg" /><div className="w-full h-4 bg-primary/80 rounded-t-lg" /></div> }
 function CrushLayout() { return <div className="w-full h-full p-2 flex justify-between items-center gap-1"><div className="w-3 h-full bg-primary/60 rounded-full" /><div className="w-1 h-3/4 bg-primary/20 rounded-full" /><div className="w-3 h-full bg-primary/60 rounded-full" /></div> }
 function AscentLayout() { return <div className="w-full h-full p-2 flex items-end justify-center gap-1"><div className="w-3 h-4 bg-primary/30 rounded-t-lg" /><div className="w-3 h-8 bg-primary/50 rounded-t-lg" /><div className="w-3 h-full bg-primary/80 rounded-t-lg" /></div> }
 function BreachLayout() { return <div className="w-full h-full p-2 flex items-center justify-center relative"><div className="w-10 h-10 bg-primary/80 rounded-full" /><div className="absolute h-full w-2 bg-white dark:bg-zinc-950 rotate-12" /></div> }

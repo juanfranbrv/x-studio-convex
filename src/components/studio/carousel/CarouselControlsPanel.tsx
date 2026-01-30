@@ -12,6 +12,7 @@ import { resizeImage } from '@/lib/image-utils'
 import { CAROUSEL_STRUCTURES, getNarrativeStructure } from '@/lib/carousel-structures'
 import { CarouselCompositionSelector } from '@/components/studio/carousel/CarouselCompositionSelector'
 import { BrandingConfigurator } from '@/components/studio/creation-flow/BrandingConfigurator'
+import type { SelectedColor } from '@/lib/creation-flow-types'
 
 export interface SlideConfig {
     index: number
@@ -113,7 +114,7 @@ export function CarouselControlsPanel({
 
     // Brand Kit Selections
     const [selectedLogoId, setSelectedLogoId] = useState<string | null>(null)
-    const [selectedColors, setSelectedColors] = useState<string[]>([])
+    const [selectedColors, setSelectedColors] = useState<SelectedColor[]>([])
     const [selectedBrandKitImageIds, setSelectedBrandKitImageIds] = useState<string[]>([])
     const [uploadedImages, setUploadedImages] = useState<string[]>([])
     const [imageSourceMode, setImageSourceMode] = useState<'upload' | 'brandkit' | 'generate'>('upload')
@@ -167,11 +168,26 @@ export function CarouselControlsPanel({
     }
 
     const toggleColor = (color: string) => {
-        setSelectedColors(prev =>
-            prev.includes(color)
-                ? prev.filter(c => c !== color)
-                : [...prev, color]
-        )
+        setSelectedColors(prev => {
+            const exists = prev.find(c => c.color.toLowerCase() === color.toLowerCase())
+            if (exists) {
+                return prev.filter(c => c.color.toLowerCase() !== color.toLowerCase())
+            } else {
+                // Try to find the role from brand kit if possible
+                const brandColor = brandKit?.colors?.find(c => c.color.toLowerCase() === color.toLowerCase())
+                const role = (brandColor?.role || 'Acento') as 'Texto' | 'Fondo' | 'Acento'
+                return [...prev, { color, role }]
+            }
+        })
+    }
+
+    const handleAddCustomColor = (color: string) => {
+        const role: 'Texto' | 'Fondo' | 'Acento' = 'Acento'
+        setSelectedColors(prev => [...prev, { color, role }])
+    }
+
+    const handleRemoveBrandColor = (color: string) => {
+        setSelectedColors(prev => prev.filter(c => c.color.toLowerCase() !== color.toLowerCase()))
     }
 
     const toggleBrandKitImage = (id: string) => {
@@ -197,6 +213,29 @@ export function CarouselControlsPanel({
                 format: 'image/jpeg'
             })
             setUploadedImages(prev => [...prev, base64])
+
+            // Trigger visual analysis
+            try {
+                const response = await fetch('/api/analyze-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        imageBase64: base64,
+                        mimeType: file.type || 'image/jpeg',
+                    }),
+                })
+                const result = await response.json()
+                if (result.success && result.data) {
+                    const analysis = result.data
+                    // Construct a rich visual description from the analysis
+                    const desc = `Subject: ${analysis.subject || 'scene'}. Label: ${analysis.subjectLabel || 'unknown'}. Lighting: ${analysis.lighting}. Keywords: ${analysis.keywords?.join(', ')}. Colors: ${analysis.colorPalette?.join(', ')}.`
+                    setAiImageDescription(desc)
+                }
+            } catch (err) {
+                console.error('Auto-analysis failed:', err)
+                // Non-blocking error
+            }
+
         } catch (error) {
             setImageError(error instanceof Error ? error.message : 'Error al subir imagen')
         } finally {
@@ -261,9 +300,9 @@ export function CarouselControlsPanel({
             compositionId,
             structureId,
             imageSourceMode,
-            aiImageDescription: imageSourceMode === 'generate' ? (aiImageDescription.trim() || undefined) : undefined,
+            aiImageDescription: aiImageDescription.trim() || undefined,
             selectedLogoUrl: resolveSelectedLogoUrl(),
-            selectedColors: selectedColors.length > 0 ? selectedColors : brandColors.slice(0, 3).map(c => c.color),
+            selectedColors: selectedColors.length > 0 ? selectedColors.map(c => c.color) : brandColors.slice(0, 3).map(c => c.color),
             selectedImageUrls,
             includeLogoOnSlides
         }
@@ -543,36 +582,22 @@ export function CarouselControlsPanel({
                     )}
                 </div>
 
-                {/* Colors */}
                 <div className="glass-card p-4 space-y-3">
                     <SectionHeader icon={Palette} title="Colores" />
-                    {brandColors.length > 0 ? (
-                        <>
-                            <div className="flex flex-wrap gap-2">
-                                {brandColors.map((c, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => toggleColor(c.color)}
-                                        className={cn(
-                                            "w-8 h-8 rounded-full border-2 transition-all",
-                                            selectedColors.includes(c.color)
-                                                ? "border-primary ring-2 ring-primary/30 scale-110"
-                                                : "border-transparent hover:scale-105"
-                                        )}
-                                        style={{ backgroundColor: c.color }}
-                                        title={c.role || c.color}
-                                    />
-                                ))}
-                            </div>
-                            {selectedColors.length === 0 && (
-                                <p className="text-xs text-muted-foreground">
-                                    Se usaran los 3 primeros colores por defecto.
-                                </p>
-                            )}
-                        </>
-                    ) : (
-                        <p className="text-xs text-muted-foreground">No hay colores en tu Brand Kit.</p>
-                    )}
+                    <BrandingConfigurator
+                        selectedLayout={null}
+                        selectedLogoId={null}
+                        selectedBrandColors={selectedColors}
+                        onSelectLogo={() => { }}
+                        onToggleBrandColor={toggleColor}
+                        onRemoveBrandColor={handleRemoveBrandColor}
+                        onAddCustomColor={handleAddCustomColor}
+                        showLogo={false}
+                        showColors={true}
+                        showTypography={false}
+                        showBrandTexts={false}
+                        rawMessage={prompt}
+                    />
                 </div>
             </div>
 

@@ -12,6 +12,8 @@ CONTEXTO DE MARCA
 SOLICITUD DEL USUARIO:
 "{{USER_REQUEST}}"
 
+{{VISUAL_ANALYSIS}}
+
 PREFERENCIA DEL USUARIO (si existe):
 {{REQUESTED_SLIDE_COUNT}}
 
@@ -36,6 +38,7 @@ REGLAS CLAVE
 - La composici?n debe ser coherente: misma plantilla base, jerarqu?a y ritmo visual.
 - Genera un CAPTION final para la publicaci?n, coherente con el carrusel.
 - Si no puedes devolver EXACTAMENTE N slides, responde con ERROR y explica el motivo.
+- **REGLA VISUAL CRITICA**: Si existe VISUAL REFERENCE arriba, el campo "visualPrompt" de CADA slide DEBE describir una escena en el MISMO estilo y medio de esa referencia. Si la referencia es "vector illustration", NO generes "Fotografia". Copia el estilo, iluminacion, colores y medio EXACTOS.
 
 INTENTOS (IDs permitidos):
 A. Vender (Ventas)
@@ -103,7 +106,7 @@ FORMATO DE SALIDA (JSON ?NICO, sin markdown):
       "title": "T?tulo corto",
       "description": "Texto breve del slide (1-2 frases).",
       "composition": "Descripci?n de composici?n: jerarqu?a, zonas de texto/imagen, bloques, etc.",
-      "visualPrompt": "Instrucci?n visual detallada y coherente con la estructura y la marca.",
+      "visualPrompt": "Instrucci?n visual detallada. SI existe VISUAL REFERENCE arriba, DEBE describir una escena en el MISMO estilo y medio (ilustracion/foto) de esa referencia. NO inventes fotografia si la referencia es ilustracion.",
       "focus": "Foco principal del slide"
     }
   ]
