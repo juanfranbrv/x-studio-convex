@@ -60,6 +60,72 @@ function includesAny(text: string, tokens: string[]): boolean {
     return tokens.some(token => text.includes(token))
 }
 
+/**
+ * Extracts a clean URL from potential Markdown or dirty strings.
+ * E.g. "[Link](https://bauset.es)" -> "https://bauset.es"
+ * E.g. "https[https://bauset.es](...)" -> "https://bauset.es"
+ */
+function sanitizeUrl(url?: string): string {
+    if (!url) return ''
+    let cleaned = url.trim().replace(/^["']|["']$/g, '')
+
+    // Pattern 1: Direct Markdown match [text](url)
+    const markdownMatch = cleaned.match(/\[.*?\]\((https?:\/\/.*?)\)/)
+    if (markdownMatch) {
+        cleaned = markdownMatch[1].trim()
+    }
+
+    // Pattern 2: Extract any valid URL starting with http
+    // This handles hallucinated prefixes like "https[https://...]"
+    const rawUrlMatch = cleaned.match(/(https?:\/\/[^\s\]\)]+)/)
+    if (rawUrlMatch) {
+        return rawUrlMatch[1].trim()
+    }
+
+    return cleaned
+}
+
+/**
+ * Removes Markdown links from a text, keeping only the URL part.
+ * E.g. "Visit [Bauset](https://bauset.es) now" -> "Visit https://bauset.es now"
+ */
+function sanitizeTextFromMarkdownLinks(text?: string): string {
+    if (!text) return ''
+    return text.replace(/\[.*?\]\((https?:\/\/.*?)\)/g, '$1')
+}
+
+/**
+ * Robustly extracts the first JSON object found in a string.
+ * Handles noise before/after the JSON and handles markdown blocks.
+ */
+function extractJson(text: string): string {
+    // 1. Remove markdown code blocks if present
+    let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim()
+
+    // 2. Find the first '{' and the last matching '}'
+    const startIdx = cleaned.indexOf('{')
+    if (startIdx === -1) return cleaned // Let JSON.parse fail with original string if no {
+
+    let braceCount = 0
+    let endIdx = -1
+
+    for (let i = startIdx; i < cleaned.length; i++) {
+        if (cleaned[i] === '{') braceCount++
+        else if (cleaned[i] === '}') braceCount--
+
+        if (braceCount === 0) {
+            endIdx = i + 1
+            break
+        }
+    }
+
+    if (endIdx !== -1) {
+        return cleaned.substring(startIdx, endIdx)
+    }
+
+    return cleaned
+}
+
 function inferIntentFromText(userText: string): string | undefined {
     const text = normalizeText(userText)
     if (!text.trim()) return undefined
@@ -246,8 +312,8 @@ export async function parseLazyIntentAction({
 
         console.log(`[LazyPrompt] Received JSON: ${jsonResponse.substring(0, 500)}...`)
 
-        // 5. Parse Response
-        const cleanJson = jsonResponse.replace(/```json/g, '').replace(/```/g, '').trim()
+        // 5. Parse Response (Robustly)
+        const cleanJson = extractJson(jsonResponse)
         const parsed: ParsedIntentResult = JSON.parse(cleanJson)
 
         const validIntentIds = new Set<IntentCategory>(INTENT_CATALOG.map(i => i.id))
@@ -281,6 +347,17 @@ export async function parseLazyIntentAction({
 
         if (parsed.detectedLanguage) {
             parsed.detectedLanguage = parsed.detectedLanguage.trim().toLowerCase().substring(0, 2)
+        }
+
+        // 6. Sanitize URLs and Captions (AI occasionally ignores prompt rules)
+        parsed.ctaUrl = sanitizeUrl(parsed.ctaUrl)
+        parsed.caption = sanitizeTextFromMarkdownLinks(parsed.caption)
+
+        // 7. Brand Consistency check for URLs
+        // ONLY fallback to Brand Website if ctaUrl is missing or a placeholder.
+        // If the AI provided a valid URL with subpaths, we MUST preserve it.
+        if (brandWebsite && (!parsed.ctaUrl || parsed.ctaUrl.includes('[BRAND'))) {
+            parsed.ctaUrl = brandWebsite.trim()
         }
 
         return parsed

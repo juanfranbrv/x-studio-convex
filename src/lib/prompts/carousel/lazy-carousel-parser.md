@@ -133,4 +133,4 @@ REGLAS DE SALIDA
 - No inventes IDs de intentos ni estructuras.
 - No repitas el headline o CTA exactos en m?ltiples slides.
 - Si hay URL de marca en el contexto, ?sala en el CTA del ?ltimo slide.
-- FORMATO DE URLs: Todas las URLs deben ser texto plano (ej: "https://example.com"). NUNCA uses formato markdown como "[texto](url)".
+- FORMATO DE URLs: Todas las URLs deben ser texto plano (ej: "https://example.com"). NUNCA uses formato markdown como "[texto](url)". Las URLs en formato markdown rompen la interfaz y se considerar? un fallo.

@@ -179,6 +179,38 @@ async function decomposeIntoSlides(
     const contactRegex = /(wa\.me|whatsapp|dm|mensaje|correo|email|@|tel\.?|llama)/i
     const urlRegex = /(https?:\/\/|www\.)/i
 
+    /**
+ * Removes Markdown links from a text, keeping only the URL part.
+ * E.g. "Visit [Bauset](https://bauset.es) now" -> "Visit https://bauset.es now"
+ */
+    function sanitizeTextFromMarkdownLinks(text?: string): string {
+        if (!text) return ''
+        return text.replace(/\[.*?\]\((https?:\/\/.*?)\)/g, '$1')
+    }
+
+    /**
+     * Extracts a clean URL from potential Markdown or dirty strings.
+     */
+    function sanitizeUrl(url?: string): string {
+        if (!url) return ''
+        let cleaned = url.trim().replace(/^["']|["']$/g, '')
+
+        // Pattern 1: Direct Markdown match [text](url)
+        const markdownMatch = cleaned.match(/\[.*?\]\((https?:\/\/.*?)\)/)
+        if (markdownMatch) {
+            cleaned = markdownMatch[1].trim()
+        }
+
+        // Pattern 2: Extract any valid URL starting with http
+        const rawUrlMatch = cleaned.match(/(https?:\/\/[^\s\]\)]+)/)
+        if (rawUrlMatch) {
+            return rawUrlMatch[1].trim()
+        }
+
+        return cleaned
+    }
+
+
     const normalizeParsed = (parsed: any) => {
         const caption = typeof parsed.caption === 'string' ? parsed.caption.trim() : ''
         if (!caption) {
@@ -193,7 +225,7 @@ async function decomposeIntoSlides(
                     : undefined,
                 optimalSlideCount: requested,
                 detectedIntent: typeof parsed.detectedIntent === 'string' ? parsed.detectedIntent : undefined,
-                caption
+                caption: sanitizeTextFromMarkdownLinks(caption)
             }
         }
 
@@ -204,8 +236,8 @@ async function decomposeIntoSlides(
 
         let slides: SlideContent[] = rawSlides.map((raw: any, i: number) => ({
             index: typeof raw?.index === 'number' ? raw.index : i,
-            title: typeof raw?.title === 'string' ? raw.title.trim() : '',
-            description: typeof raw?.description === 'string' ? raw.description.trim() : '',
+            title: sanitizeTextFromMarkdownLinks(typeof raw?.title === 'string' ? raw.title.trim() : ''),
+            description: sanitizeTextFromMarkdownLinks(typeof raw?.description === 'string' ? raw.description.trim() : ''),
             visualPrompt: typeof raw?.visualPrompt === 'string' ? raw.visualPrompt.trim() : '',
             composition: typeof raw?.composition === 'string' ? raw.composition.trim() : undefined,
             focus: typeof raw?.focus === 'string' ? raw.focus.trim() : undefined,
@@ -290,7 +322,7 @@ async function decomposeIntoSlides(
                 : undefined,
             optimalSlideCount: requested,
             detectedIntent: typeof parsed.detectedIntent === 'string' ? parsed.detectedIntent : undefined,
-            caption
+            caption: sanitizeTextFromMarkdownLinks(caption)
         }
     }
 
