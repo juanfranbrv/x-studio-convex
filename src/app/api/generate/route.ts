@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         // Parse request body
         // Parse request body
         const body = await request.json()
-        let { prompt, headline, cta, platform, brandDNA, context, model, layoutReference, aspectRatio } = body as {
+        let { prompt, headline, cta, platform, brandDNA, context, model, layoutReference, aspectRatio, selectedColors } = body as {
             prompt: string
             headline?: string
             cta?: string
@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
             model?: string
             layoutReference?: string
             aspectRatio?: string
+            selectedColors?: any[]
         }
 
         // Robust Server-Side Fallback: If model is missing, fetch from DB
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
         const imageUrl = await generateContentImageUnified(
             { name: brandDNA.brand_name || 'Brand', brand_dna: brandDNA },
             prompt,
-            { headline, cta, platform, context, model, layoutReference, aspectRatio }
+            { headline, cta, platform, context, model, layoutReference, aspectRatio, selectedColors }
         )
 
         // Consume credit after successful generation

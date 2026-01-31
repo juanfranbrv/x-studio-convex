@@ -31,7 +31,7 @@ export interface CarouselSettings {
     aiImageDescription?: string
     // Brand Kit Context
     selectedLogoUrl?: string
-    selectedColors: string[]
+    selectedColors: { color: string; role: string }[]
     selectedImageUrls: string[]
     includeLogoOnSlides: boolean
 }
@@ -138,6 +138,49 @@ export function CarouselControlsPanel({
         setSlideCount(newCount)
     }
 
+    // TRACK last initialized brand kit for colors
+    const [lastInitBrandId, setLastInitBrandId] = useState<string | null>(null)
+
+    // INITIALIZE default colors from brand kit
+    useEffect(() => {
+        const currentBrandId = brandKit?.id || (brandKit as any)?._id
+        if (!brandKit || !currentBrandId) return
+
+        // Only run if the Brand Kit ID has changed
+        if (currentBrandId === lastInitBrandId) return
+
+        console.log(`[CarouselControlsPanel] Initializing colors for Brand Kit: ${currentBrandId}`)
+        if (brandKit.colors && brandKit.colors.length > 0) {
+            const defaultColors: SelectedColor[] = brandKit.colors
+                .map(c => {
+                    const rawRole = ((c.role as string) || 'Acento').trim().toUpperCase()
+                    let role: 'Texto' | 'Fondo' | 'Acento' = 'Acento'
+                    if (rawRole.includes('TEXT')) role = 'Texto'
+                    else if (rawRole.includes('FOND')) role = 'Fondo'
+                    else if (rawRole.includes('ACENT')) role = 'Acento'
+
+                    return {
+                        color: (c.color || (typeof c === 'string' ? c : '')).toLowerCase(),
+                        role
+                    }
+                })
+                .filter(c => c.color)
+
+            console.log(`[CarouselControlsPanel] Setting ${defaultColors.length} default colors`)
+            setSelectedColors(defaultColors)
+        } else {
+            console.log('[CarouselControlsPanel] No colors found in Brand Kit, starting empty')
+            setSelectedColors([])
+        }
+
+        // 2. Initialize Logo - Always default to first logo when switching brands
+        if (brandKit.logos && brandKit.logos.length > 0) {
+            setSelectedLogoId('logo-0')
+        }
+
+        setLastInitBrandId(currentBrandId)
+    }, [brandKit, lastInitBrandId])
+
     useEffect(() => {
         if (!onReferenceImagesChange) return
         const uploaded = uploadedImages.map(url => ({ url, source: 'upload' as const }))
@@ -169,25 +212,67 @@ export function CarouselControlsPanel({
 
     const toggleColor = (color: string) => {
         setSelectedColors(prev => {
-            const exists = prev.find(c => c.color.toLowerCase() === color.toLowerCase())
-            if (exists) {
-                return prev.filter(c => c.color.toLowerCase() !== color.toLowerCase())
-            } else {
-                // Try to find the role from brand kit if possible
+            // Sequence: Acento -> Texto -> Fondo -> Deseleccionar
+            const roles: Array<'Acento' | 'Texto' | 'Fondo'> = ['Acento', 'Texto', 'Fondo']
+            const index = prev.findIndex(c => c.color.toLowerCase() === color.toLowerCase())
+
+            if (index === -1) {
+                // First click: Add with brand kit role or default to Acento
                 const brandColor = brandKit?.colors?.find(c => c.color.toLowerCase() === color.toLowerCase())
                 const role = (brandColor?.role || 'Acento') as 'Texto' | 'Fondo' | 'Acento'
                 return [...prev, { color, role }]
+            } else {
+                const roles: Array<'Acento' | 'Texto' | 'Fondo'> = ['Acento', 'Texto', 'Fondo']
+                const currentRole = prev[index].role
+                const roleIndex = roles.indexOf(currentRole)
+
+                // Sequence: Non-standard -> Acento (0) -> Texto (1) -> Fondo (2) -> Back to Acento (0)
+                // The only way to remove is via handleRemoveBrandColor (X button)
+                if (roleIndex === -1 || roleIndex === roles.length - 1) {
+                    const nextRole = roles[0]
+                    const newColors = [...prev]
+                    newColors[index] = { ...newColors[index], role: nextRole }
+                    console.log(`[Carousel] Role cycle: ${currentRole} -> ${nextRole}`)
+                    return newColors
+                } else {
+                    // Cycle to next role
+                    const newRole = roles[roleIndex + 1]
+                    const newColors = [...prev]
+                    newColors[index] = { ...newColors[index], role: newRole }
+                    console.log(`[Carousel] Role cycle: ${currentRole} -> ${newRole}`)
+                    return newColors
+                }
             }
         })
     }
 
     const handleAddCustomColor = (color: string) => {
+        console.log('[Carousel] handleAddCustomColor request:', color)
         const role: 'Texto' | 'Fondo' | 'Acento' = 'Acento'
-        setSelectedColors(prev => [...prev, { color, role }])
+        setSelectedColors(prev => {
+            const exists = prev.some(c => c.color.toLowerCase() === color.toLowerCase())
+            if (exists) {
+                console.log('[Carousel] Color already exists, skipping add')
+                return prev
+            }
+            const newColors = [...prev, { color, role }]
+            console.log('[Carousel] New selectedColors after ADD:', newColors.map(c => c.color))
+            return newColors
+        })
     }
 
     const handleRemoveBrandColor = (color: string) => {
-        setSelectedColors(prev => prev.filter(c => c.color.toLowerCase() !== color.toLowerCase()))
+        console.log('[Carousel] handleRemoveBrandColor attempt:', color)
+        setSelectedColors(prev => {
+            const before = prev.length
+            const newColors = prev.filter(c => c.color.toLowerCase() !== color.toLowerCase())
+            const after = newColors.length
+            console.log(`[Carousel] Color removed: ${color}. List size ${before} -> ${after}`)
+            if (before === after) {
+                console.warn('[Carousel] NO COLOR WAS REMOVED! Mismatch?', color, 'vs', prev.map(c => c.color))
+            }
+            return newColors
+        })
     }
 
     const toggleBrandKitImage = (id: string) => {
@@ -302,7 +387,10 @@ export function CarouselControlsPanel({
             imageSourceMode,
             aiImageDescription: aiImageDescription.trim() || undefined,
             selectedLogoUrl: resolveSelectedLogoUrl(),
-            selectedColors: selectedColors.length > 0 ? selectedColors.map(c => c.color) : brandColors.slice(0, 3).map(c => c.color),
+            selectedColors: selectedColors.length > 0 ? selectedColors : brandColors.slice(0, 3).map(c => ({
+                color: c.color,
+                role: (c.role || 'Acento') as any
+            })),
             selectedImageUrls,
             includeLogoOnSlides
         }
@@ -557,6 +645,7 @@ export function CarouselControlsPanel({
                                 showTypography={false}
                                 showBrandTexts={false}
                                 rawMessage={prompt}
+                                debugLabel="Carousel-Logo"
                             />
                             <div className="flex items-center justify-between pt-1">
                                 <div className="space-y-0.5">
@@ -597,6 +686,8 @@ export function CarouselControlsPanel({
                         showTypography={false}
                         showBrandTexts={false}
                         rawMessage={prompt}
+                        debugLabel="Carousel-Colors"
+                        onlyShowSelectedColors={true}
                     />
                 </div>
             </div>

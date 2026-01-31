@@ -128,7 +128,7 @@ export default function ImagePage() {
         try {
             const modelToUse = autoModel || aiConfig?.intelligenceModel
             if (!modelToUse) {
-            toast({
+                toast({
                     title: "Falta configuracion de IA",
                     description: "No hay un modelo de inteligencia configurado en el panel de Admin.",
                     variant: "destructive"
@@ -148,7 +148,7 @@ export default function ImagePage() {
             })
 
             if (result.error) {
-            toast({
+                toast({
                     title: "Error analyzing prompt",
                     description: "Could not parse intent. Please fill manually.",
                     variant: "destructive"
@@ -161,7 +161,7 @@ export default function ImagePage() {
             // Auto-detect intent
             if (result.detectedIntent && !creationFlow.state.selectedIntent) {
                 creationFlow.selectIntent(result.detectedIntent as IntentCategory)
-            toast({
+                toast({
                     title: "✨ Intención detectada",
                     description: `Detectamos que quieres crear: ${result.detectedIntent}`,
                 })
@@ -348,7 +348,8 @@ export default function ImagePage() {
                     context: finalContext,
                     model: data.model || creationFlow.state.selectedImageModel, // Removed hardcoded fallback to test state
                     layoutReference: creationFlow.selectedLayoutMeta?.referenceImage,
-                    aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio
+                    aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
+                    selectedColors: creationFlow.state.selectedBrandColors
                 }),
             })
 
@@ -363,7 +364,7 @@ export default function ImagePage() {
                 }, ...prev])
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al generar la imagen' }))
-            toast({
+                toast({
                     title: "Error de generación",
                     description: errorData.error || 'Error al generar la imagen',
                     variant: "destructive",
@@ -403,7 +404,8 @@ export default function ImagePage() {
                     brandDNA: activeBrandKit,
                     context: editContext,
                     model: creationFlow.state.selectedImageModel || "wisdom/gemini-3-pro-image-preview",
-                    aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio
+                    aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
+                    selectedColors: creationFlow.state.selectedBrandColors
                 }),
             })
 
@@ -418,7 +420,7 @@ export default function ImagePage() {
                 }, ...prev])
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al editar la imagen' }))
-            toast({
+                toast({
                     title: "Error de edición",
                     description: errorData.error || 'Error al editar la imagen',
                     variant: "destructive",
@@ -586,19 +588,19 @@ export default function ImagePage() {
                         </div >
 
                         {/* RIGHT COLUMN - Controls Panel */}
-                            <ControlsPanel
-                                creationFlow={creationFlow}
-                                highlightedFields={highlightedFields}
-                                promptValue={promptValue}
-                                onPromptChange={(val) => {
-                                    setPromptValue(val)
-                                    creationFlow.setRawMessage(val)
-                                }}
-                                isMagicParsing={isMagicParsing}
-                                isGenerating={isGenerating}
-                                canGenerate={Boolean(canGenerate)}
-                                onUnifiedAction={handleUnifiedAction}
-                                onAnalyze={() => handleSmartAnalyze()}
+                        <ControlsPanel
+                            creationFlow={creationFlow}
+                            highlightedFields={highlightedFields}
+                            promptValue={promptValue}
+                            onPromptChange={(val) => {
+                                setPromptValue(val)
+                                creationFlow.setRawMessage(val)
+                            }}
+                            isMagicParsing={isMagicParsing}
+                            isGenerating={isGenerating}
+                            canGenerate={Boolean(canGenerate)}
+                            onUnifiedAction={handleUnifiedAction}
+                            onAnalyze={() => handleSmartAnalyze()}
                             userId={user?.id}
                         />
                     </div>

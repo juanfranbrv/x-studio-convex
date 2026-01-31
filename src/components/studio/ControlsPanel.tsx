@@ -110,6 +110,7 @@ export function ControlsPanel({
         setCtaUrl,
         setCustomStyle,
         toggleBrandColor,
+        removeBrandColor,
         selectPlatform,
         selectFormat,
         selectedLayoutMeta,
@@ -406,9 +407,12 @@ export function ControlsPanel({
                                         selectedBrandColors={state.selectedBrandColors}
                                         onSelectLogo={selectLogo}
                                         onToggleBrandColor={toggleBrandColor}
+                                        onRemoveBrandColor={removeBrandColor}
                                         onAddCustomColor={handleAddCustomColor}
                                         showLogo={false} showColors={true} showTypography={false} showBrandTexts={false}
                                         rawMessage={promptValue}
+                                        debugLabel="Studio-Colors"
+                                        onlyShowSelectedColors={true}
                                     />
                                 </div>
                             </div>

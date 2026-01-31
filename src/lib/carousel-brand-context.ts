@@ -2,7 +2,7 @@ import type { BrandDNA } from '@/lib/brand-types'
 
 export function buildCarouselBrandContext(
     brand: BrandDNA,
-    selectedColors?: string[],
+    selectedColors?: string[] | { color: string; role: string }[],
     includeLogoUrl?: string
 ): string {
     const parts: string[] = []
@@ -17,9 +17,13 @@ export function buildCarouselBrandContext(
     if (brand.text_assets?.brand_context) parts.push(`VISION_CONTEXTO: ${brand.text_assets.brand_context}`)
 
     // Colors
-    const colors = selectedColors && selectedColors.length > 0
-        ? selectedColors
-        : brand.colors?.slice(0, 4).map(c => c.color) || []
+    const colors = (selectedColors && (selectedColors as any[]).length > 0)
+        ? (selectedColors as any[]).map(c => {
+            if (typeof c === 'string') return c
+            return `${c.color}${c.role ? ` (${c.role})` : ''}`
+        })
+        : []
+
     if (colors.length > 0) {
         parts.push(`PALETA DE COLORES: ${colors.join(', ')}`)
     }

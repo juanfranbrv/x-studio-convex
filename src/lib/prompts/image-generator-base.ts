@@ -24,8 +24,8 @@ SOLICITUD DEL USUARIO:
 Si la solicitud del usuario es breve o ambigua, APLICA LOS RECURSOS AUTOMÁTICAMENTE:
 
 1. ¿Hay Colores arrastrados?
-   - Úsalos como colores dominantes (Fondos, bloques grandes).
-   - "Color 1" suele ser primario/fondo. "Color 2" acento.
+   - Los colores con el rol (FONDO) dominan fondos y bloques grandes.
+   - Los colores con el rol (ACENTO) se usan para CTAs y elementos destacados.
 
 2. ¿Hay Texto arrastrado?
    - DEBE aparecer en la imagen. Prioridad absoluta a la legibilidad.

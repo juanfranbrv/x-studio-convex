@@ -435,11 +435,15 @@ export default function CarouselPage() {
             ? getNarrativeComposition(settings.structureId, settings.compositionId)
             : undefined
 
-        // Extract brand colors for injection
+        // Extract brand colors for injection with role-based helper
+        const findColor = (role: string, fallback: string) => {
+            const match = settings.selectedColors?.find(c => (c as any).role === role)
+            return (match as any)?.color || fallback
+        }
+
         const brandColors = {
-            background: settings.selectedColors?.find(c => c.includes('#'))?.split(',')[0] ||
-                activeBrandKit?.colors?.find(c => c.role === 'background')?.color || '#141210',
-            accent: activeBrandKit?.colors?.find(c => c.role === 'accent')?.color || '#F0E500'
+            background: findColor('Fondo', '#141210'),
+            accent: findColor('Acento', '#F0E500')
         }
 
         const seed = generateCarouselSeed()

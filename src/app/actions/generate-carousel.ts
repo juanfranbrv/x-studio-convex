@@ -46,7 +46,7 @@ export interface GenerateCarouselInput {
     slideScript?: SlideContent[]
     // Brand Kit Selections
     selectedLogoUrl?: string
-    selectedColors?: string[]
+    selectedColors?: { color: string; role: string }[]
     selectedImageUrls?: string[]
     includeLogoOnSlides?: boolean
 }
@@ -57,7 +57,7 @@ export interface AnalyzeCarouselInput {
     brandDNA: BrandDNA
     intelligenceModel: string
     structureId?: string
-    selectedColors?: string[]
+    selectedColors?: { color: string; role: string }[]
     includeLogoOnSlides?: boolean
     selectedLogoUrl?: string
     aiImageDescription?: string
@@ -90,7 +90,7 @@ async function decomposeIntoSlides(
     slideCount: number,
     brand: BrandDNA,
     model: string,
-    selectedColors?: string[],
+    selectedColors?: { color: string; role: string }[],
     includeLogoUrl?: string,
     options?: {
         captionOnly?: boolean
@@ -107,7 +107,8 @@ async function decomposeIntoSlides(
     detectedIntent?: string
     caption?: string
 }> {
-    const brandContext = buildCarouselBrandContext(brand, selectedColors, includeLogoUrl)
+    const selectedColorsList = selectedColors?.map(c => c.color) || []
+    const brandContext = buildCarouselBrandContext(brand, selectedColorsList, includeLogoUrl)
 
     // NEW: Use Modular Prompt Builder if structure is defined
     let decompositionPrompt = ''
@@ -128,7 +129,7 @@ async function decomposeIntoSlides(
                     visualAnalysis: options.visualDescription,
                     includeLogo: !!includeLogoUrl,
                     language: options.language,
-                    brandColors: selectedColors
+                    brandColors: selectedColorsList
                 },
                 structure,
                 composition
@@ -137,12 +138,14 @@ async function decomposeIntoSlides(
     }
 
     if (!decompositionPrompt) {
+        const selectedColorsList = selectedColors?.map(c => c.color) || []
         decompositionPrompt = buildCarouselDecompositionPrompt({
-            brandContext,
+            brandContext: buildCarouselBrandContext(brand, selectedColorsList, includeLogoUrl),
             topic: prompt,
             brandWebsite: brand.url,
             requestedSlideCount: slideCount,
-            visualAnalysis: options?.visualDescription
+            visualAnalysis: options?.visualDescription,
+            language: options?.language
         })
     }
 
@@ -337,7 +340,7 @@ async function generateSlideImage(
     aspectRatio: string,
     brand: BrandDNA,
     model: string,
-    selectedColors?: string[],
+    selectedColors?: string[] | { color: string; role: string }[],
     selectedLogoUrl?: string,
     selectedImageUrls?: string[],
     aiImageDescription?: string,
@@ -493,11 +496,16 @@ export async function generateCarouselAction(
                         name: "Free Layout"
                     }
 
-                // Rule 3: Build Brand Colors object from user selection
+                // Rule 3: Build Brand Colors object from user selection accurately by Role
+                const findColorByRole = (role: string, fallback: string) => {
+                    const match = selectedColors?.find(c => (c as any).role === role)
+                    return (match as any)?.color || fallback
+                }
+
                 const brandColors = {
-                    background: selectedColors?.[0] || '#141210', // Default to dark if not set
-                    accent: selectedColors?.[1] || '#F0E500',     // Default to yellow
-                    text: selectedColors?.[2] || '#FFFFFF'        // Default to white
+                    background: findColorByRole('Fondo', '#141210'),
+                    accent: findColorByRole('Acento', '#F0E500'),
+                    text: findColorByRole('Texto', '#FFFFFF')
                 }
 
                 // Rule 1 + 2 + 3: Build Final Prompt (Token Cleanup, Mood, Color Injection)
@@ -586,7 +594,8 @@ export async function generateCarouselAction(
                         aspectRatio,
                         model: imageModel,
                         context: contextReferences,
-                        seed: carouselSeed // Same seed for all slides
+                        seed: carouselSeed, // Same seed for all slides
+                        selectedColors
                     }
                 )
 
@@ -720,7 +729,7 @@ export async function regenerateSlideAction(
     brandDNA: BrandDNA,
     imageModel: string,
     selectedLogoUrl?: string,
-    selectedColors?: string[],
+    selectedColors?: { color: string; role: string }[],
     compositionId?: string,
     structureId?: string
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {

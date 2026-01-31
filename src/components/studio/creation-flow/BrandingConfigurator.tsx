@@ -33,11 +33,24 @@ import {
 
 import { type LayoutOption, type SelectedColor, type TextAsset } from '@/lib/creation-flow-types'
 
+const extractHex = (c: any): string => {
+    if (!c) return ''
+    let hex = ''
+    if (typeof c === 'string') {
+        hex = c.trim().toLowerCase()
+    } else {
+        hex = ((c.color || (c as any).hex || '') as string).trim().toLowerCase()
+    }
+    if (!hex || hex === '#') return ''
+    return hex.startsWith('#') ? hex : `#${hex}`
+}
+
 const getContrastColor = (hex: string) => {
-    if (!hex || hex.length < 7) return 'text-white'
-    const r = parseInt(hex.slice(1, 3), 16)
-    const g = parseInt(hex.slice(3, 5), 16)
-    const b = parseInt(hex.slice(5, 7), 16)
+    const cleanHex = hex.startsWith('#') ? hex : `#${hex}`
+    if (!cleanHex || cleanHex.length < 7) return 'text-white'
+    const r = parseInt(cleanHex.slice(1, 3), 16)
+    const g = parseInt(cleanHex.slice(3, 5), 16)
+    const b = parseInt(cleanHex.slice(5, 7), 16)
     const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000
     return yiq >= 128 ? 'text-black' : 'text-white'
 }
@@ -64,6 +77,8 @@ interface BrandingConfiguratorProps {
     // AI Generation
     rawMessage?: string
     onGenerateText?: (fieldType: string) => Promise<string>
+    debugLabel?: string
+    onlyShowSelectedColors?: boolean
 }
 
 function CustomColorPicker({ onAdd }: { onAdd: (color: string) => void }) {
@@ -71,10 +86,14 @@ function CustomColorPicker({ onAdd }: { onAdd: (color: string) => void }) {
     const [isOpen, setIsOpen] = useState(false)
 
     const handleSubmit = () => {
+        console.log('[CustomColorPicker] handleSubmit called, value:', value)
         if (/^#[0-9A-F]{6}$/i.test(value)) {
+            console.log('[CustomColorPicker] Calling onAdd with:', value)
             onAdd(value)
             setValue('#')
             setIsOpen(false)
+        } else {
+            console.log('[CustomColorPicker] Value does not match regex')
         }
     }
 
@@ -284,6 +303,8 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
     )
 }
 
+
+
 export function BrandingConfigurator({
     selectedLayout,
     selectedLogoId,
@@ -303,6 +324,8 @@ export function BrandingConfigurator({
     rawMessage = '',
     onGenerateText,
     fonts: propFonts,
+    debugLabel = 'Unknown',
+    onlyShowSelectedColors = false
 }: BrandingConfiguratorProps) {
     const { activeBrandKit } = useBrandKit()
 
@@ -359,12 +382,26 @@ export function BrandingConfigurator({
 
     // Base colors for the grid: All colors from Brand Kit + any custom colors added in session
     const brandKitColors = activeBrandKit?.colors || []
-    const colors = [
+    let colors = [
         ...brandKitColors,
         ...selectedBrandColors
-            .filter((sc: SelectedColor) => !brandKitColors.some(bc => (bc.color || (bc as any).hex || '').toLowerCase() === sc.color.toLowerCase()))
+            .filter((sc: SelectedColor) => !brandKitColors.some(bc => extractHex(bc) === extractHex(sc.color)))
             .map((sc: SelectedColor) => ({ color: sc.color, role: sc.role }))
     ]
+
+    // If requested, only show colors that are actually selected
+    if (onlyShowSelectedColors) {
+        const initialCount = colors.length
+        colors = colors.filter(c => {
+            const h = extractHex(c)
+            const isMatch = selectedBrandColors.some(sc => extractHex(sc.color) === h)
+            return isMatch
+        })
+    }
+
+    if (debugLabel.includes('Colors')) {
+        console.log(`[BrandingConfigurator:${debugLabel}] Render: selected=${selectedBrandColors.length}, total_grid=${colors.length}`)
+    }
 
     // Ensure first logo is selected by default if none is selected and logos exist
     const hasAutoSelected = useRef(false)
@@ -380,9 +417,6 @@ export function BrandingConfigurator({
             {/* Logo Selector */}
             {showLogo && logos.length > 0 && (
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                        Logos
-                    </label>
                     <div className="flex gap-2">
                         {/* Logo options */}
                         {logos.map((logo, idx) => {
@@ -436,32 +470,34 @@ export function BrandingConfigurator({
             {/* Brand Colors */}
             {showColors && (
                 <div className="space-y-3">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                        <Palette className="w-3 h-3 text-primary" />
-                        Paleta Cromática
-                    </label>
                     <div className="grid grid-cols-5 gap-2">
                         {colors.slice(0, 10).map((colorObj, idx) => {
-                            const color = (colorObj as any).color || (colorObj as any).hex || (typeof colorObj === 'string' ? colorObj : '')
-                            const selection = selectedBrandColors.find(s => s.color.toLowerCase() === color.toLowerCase())
+                            const color = extractHex(colorObj)
+                            if (!color) return null
+
+                            const selection = selectedBrandColors.find(s => extractHex(s.color) === color)
                             const isSelected = !!selection
-                            const role = (colorObj as any).role || selection?.role || 'Acento'
+
+                            // Only show role if selected OR it's a fixed brand kit color (to guide the user)
+                            const role = selection?.role || (colorObj as any).role
+                            const showRole = !!role
 
                             return (
                                 <div
-                                    key={idx}
+                                    key={`${color}-${idx}`}
                                     role="button"
                                     tabIndex={0}
-                                    onClick={() => onToggleBrandColor(color)}
+                                    onClick={() => {
+                                        console.log(`[BrandingConfigurator] Toggling color: ${color}`)
+                                        onToggleBrandColor(color)
+                                    }}
                                     className={cn(
                                         "relative aspect-square rounded-full border-2 transition-all shadow-sm flex items-center justify-center group/swatch cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
-                                        isSelected
-                                            ? "border-primary ring-2 ring-primary/30 scale-105"
-                                            : "border-white/30 dark:border-white/20 hover:border-primary/50"
+                                        "border-white/30 dark:border-white/20 hover:border-primary/50 hover:scale-105"
                                     )}
                                     style={{
                                         backgroundColor: color,
-                                        boxShadow: isSelected ? `0 0 12px ${color}40` : 'inset 0 1px 1px rgba(255,255,255,0.1)'
+                                        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)'
                                     }}
                                     title={`${color}${role ? ` - ${role}` : ''}`}
                                 >
@@ -469,13 +505,12 @@ export function BrandingConfigurator({
                                     <div className="absolute inset-0 rounded-full border border-black/5 pointer-events-none" />
 
                                     {/* role label - show always if role exists */}
-                                    {role && (
+                                    {showRole && (
                                         <div className={cn(
-                                            "z-10 font-black text-[9px] leading-none tracking-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] select-none pointer-events-none uppercase text-center px-1",
-                                            getContrastColor(color),
-                                            !isSelected && "opacity-60"
+                                            "z-10 font-black text-[9px] leading-none tracking-tight drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] select-none pointer-events-none uppercase text-center px-1 transition-opacity",
+                                            getContrastColor(color)
                                         )}>
-                                            {role.replace(/\d+$/, '').replace(/Color\s*/i, '').trim()}
+                                            {role.replace(/\d+$/, '').replace(/Color\s*/i, '').trim() || 'Acento'}
                                         </div>
                                     )}
 
@@ -484,6 +519,8 @@ export function BrandingConfigurator({
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation()
+                                                console.log('[BrandingConfigurator] Removing color:', color)
+                                                console.log('[BrandingConfigurator] calling onRemoveBrandColor prop...')
                                                 onRemoveBrandColor(color)
                                             }}
                                             className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center opacity-0 group-hover/swatch:opacity-100 transition-all hover:scale-110 z-20"

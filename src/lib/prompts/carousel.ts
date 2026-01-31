@@ -8,6 +8,7 @@ interface CarouselDecompositionParams {
     brandWebsite?: string
     requestedSlideCount?: number
     visualAnalysis?: string
+    language?: string
 }
 
 interface CarouselImageParams {
@@ -51,10 +52,12 @@ export function buildCarouselDecompositionPrompt({
     topic,
     brandWebsite,
     requestedSlideCount,
-    visualAnalysis
+    visualAnalysis,
+    language
 }: CarouselDecompositionParams): string {
     const websiteContext = brandWebsite ? `BRAND WEBSITE:\n${brandWebsite}` : 'BRAND WEBSITE: (none)'
     const requestedCount = typeof requestedSlideCount === 'number' ? String(requestedSlideCount) : 'N/A'
+    const langInstructions = language ? `\nIDIOMA: Responde estrictamente en ${language}.` : ''
 
     // Construct visual analysis section if present
     const visualSection = visualAnalysis
@@ -67,6 +70,7 @@ export function buildCarouselDecompositionPrompt({
         .replaceAll('{{USER_REQUEST}}', topic)
         .replaceAll('{{REQUESTED_SLIDE_COUNT}}', requestedCount)
         .replaceAll('{{VISUAL_ANALYSIS}}', visualSection)
+        .replaceAll('{{LANGUAGE}}', langInstructions)
 }
 
 export { buildCarouselImagePrompt }

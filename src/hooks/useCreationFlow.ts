@@ -96,7 +96,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         const brandId = activeBrandKit?.id || (activeBrandKit as any)?._id
         if (!activeBrandKit || !brandId) return
 
-        // Initialize if it's a different brand kit than last time
+        // Initialize ONLY if it's a different brand kit than last time
+        if (brandId === lastInitBrandId) return
+
+        console.log(`[useCreationFlow] Initializing defaults for Brand Kit: ${brandId}`)
         const nextState: Partial<GenerationState> = {}
         let hasChanges = false
 
@@ -125,21 +128,27 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
 
         // 2. Initialize Text Assets
-        if (state.selectedTextAssets.length === 0) {
-            const defaultTextAssets: TextAsset[] = []
-            if (activeBrandKit.tagline) defaultTextAssets.push({ id: 'tagline', type: 'tagline', label: 'Tagline', value: activeBrandKit.tagline })
+        const defaultTextAssets: TextAsset[] = []
+        if (activeBrandKit.tagline) {
+            defaultTextAssets.push({ id: 'tagline', type: 'tagline', label: 'Tagline', value: activeBrandKit.tagline })
+        }
 
-            if (defaultTextAssets.length > 0) {
-                nextState.selectedTextAssets = defaultTextAssets
-                hasChanges = true
-            }
+        if (defaultTextAssets.length > 0) {
+            nextState.selectedTextAssets = defaultTextAssets
+            hasChanges = true
+        }
+
+        // 3. Initialize Logo - Always default to first logo when switching brands
+        if (activeBrandKit.logos && (activeBrandKit.logos as any[]).length > 0) {
+            nextState.selectedLogoId = 'logo-0'
+            hasChanges = true
         }
 
         if (hasChanges) {
             setState(prev => ({ ...prev, ...nextState }))
         }
         setLastInitBrandId(brandId)
-    }, [activeBrandKit, lastInitBrandId, state.selectedBrandColors.length, state.selectedTextAssets.length])
+    }, [activeBrandKit, lastInitBrandId])
 
     // -------------------------------------------------------------------------
     // CRITICAL: SEQUENTIAL FLOW ENFORCER
@@ -848,16 +857,18 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [activeBrandKit, state.selectedIntent, currentIntent, state.visionAnalysis, state.rawMessage, setCustomText])
 
     const toggleBrandColor = useCallback((color: string, forceRole?: ColorRole) => {
+        console.log('[useCreationFlow] toggleBrandColor called with:', color)
         setState(prev => {
+            const normalizedColor = color.startsWith('#') ? color.toLowerCase() : `#${color.toLowerCase()}`
             // Sequence: Acento -> Texto -> Fondo -> Deseleccionar
             const roles: ColorRole[] = ['Acento', 'Texto', 'Fondo']
-            const index = prev.selectedBrandColors.findIndex(c => c.color.toLowerCase() === color.toLowerCase())
+            const index = prev.selectedBrandColors.findIndex(c => c.color.toLowerCase() === normalizedColor)
 
             if (index === -1) {
                 // First click: Add as Acento (or forced role if provided)
                 return {
                     ...prev,
-                    selectedBrandColors: [...prev.selectedBrandColors, { color, role: forceRole || 'Acento' }],
+                    selectedBrandColors: [...prev.selectedBrandColors, { color: normalizedColor, role: forceRole || 'Acento' }],
                     generatedImage: null
                 }
             } else {
@@ -874,17 +885,20 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
                 const roleIndex = roles.indexOf(currentRole)
 
-                // Sequence: Acento (0) -> Texto (1) -> Fondo (2) -> Remove
-                if (roleIndex === roles.length - 1 || roleIndex === -1) {
-                    return {
-                        ...prev,
-                        selectedBrandColors: prev.selectedBrandColors.filter(c => c.color.toLowerCase() !== color.toLowerCase()),
-                        generatedImage: null
-                    }
+                // Sequence: Non-standard -> Acento (0) -> Texto (1) -> Fondo (2) -> Back to Acento (0)
+                // The only way to remove is via the "X" button (removeBrandColor)
+                if (roleIndex === -1 || roleIndex === roles.length - 1) {
+                    const nextRole = roles[0]
+                    const newColors = [...prev.selectedBrandColors]
+                    newColors[index] = { ...newColors[index], role: nextRole }
+                    console.log(`[useCreationFlow] Role cycle: ${currentRole} -> ${nextRole}`)
+                    return { ...prev, selectedBrandColors: newColors, generatedImage: null }
                 } else {
                     // Cycle to next role
+                    const newRole = roles[roleIndex + 1]
                     const newColors = [...prev.selectedBrandColors]
-                    newColors[index] = { ...newColors[index], role: roles[roleIndex + 1] }
+                    newColors[index] = { ...newColors[index], role: newRole }
+                    console.log(`[useCreationFlow] Role cycle: ${currentRole} -> ${newRole}`)
                     return {
                         ...prev,
                         selectedBrandColors: newColors,
@@ -896,23 +910,35 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     const removeBrandColor = useCallback((color: string) => {
-        setState(prev => ({
-            ...prev,
-            selectedBrandColors: prev.selectedBrandColors.filter(c => c.color.toLowerCase() !== color.toLowerCase()),
-            generatedImage: null
-        }))
+        console.log('[useCreationFlow] removeBrandColor called with:', color)
+        setState(prev => {
+            const normalizedColor = color.startsWith('#') ? color.toLowerCase() : `#${color.toLowerCase()}`
+            const before = prev.selectedBrandColors.length
+            const newColors = prev.selectedBrandColors.filter(c => c.color.toLowerCase() !== normalizedColor)
+            const after = newColors.length
+            console.log(`[useCreationFlow] Color removal: ${normalizedColor}. Count before: ${before}, after: ${after}`)
+            if (before === after) {
+                console.warn('[useCreationFlow] NO COLOR WAS REMOVED! Check for string mismatch. Current colors:', prev.selectedBrandColors.map(c => c.color))
+            }
+            return {
+                ...prev,
+                selectedBrandColors: newColors,
+                generatedImage: null
+            }
+        })
     }, [])
 
     const addCustomColor = useCallback((color: string) => {
+        const normalizedColor = color.startsWith('#') ? color.toLowerCase() : `#${color.toLowerCase()}`
         // Basic hex validation
-        if (!/^#[0-9A-F]{6}$/i.test(color)) return
+        if (!/^#[0-9a-f]{6}$/i.test(normalizedColor)) return
 
         setState(prev => {
-            const exists = prev.selectedBrandColors.some(c => c.color.toLowerCase() === color.toLowerCase())
+            const exists = prev.selectedBrandColors.some(c => c.color.toLowerCase() === normalizedColor)
             if (exists) return prev
             return {
                 ...prev,
-                selectedBrandColors: [...prev.selectedBrandColors, { color, role: 'Acento' }],
+                selectedBrandColors: [...prev.selectedBrandColors, { color: normalizedColor, role: 'Acento' }],
                 generatedImage: null
             }
         })
@@ -1381,12 +1407,6 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
         if (hasSelectedColors) {
             colorsToUse = activeState.selectedBrandColors
-        } else if (activeBrandKit?.colors) {
-            // Default to brand kit colors if nothing explicitly selected in Imagen
-            colorsToUse = (activeBrandKit.colors as any[]).map(c => ({
-                color: c.color || c.hex || (typeof c === 'string' ? c : ''),
-                role: c.role || 'Acento'
-            })).filter(c => c.color)
         }
 
         if (colorsToUse.length > 0) {
@@ -1421,7 +1441,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             if (extras.length > 0) {
                 sections.push(`### 🎨 EXTRA / SECONDARY COLORS`)
                 extras.forEach(c => {
-                    const displayRole = (P04.ROLE_LABELS as any)[c.role] || c.role || 'Secondary'
+                    const displayRole = (P04.ROLE_LABELS as any)[c.role] || c.role || 'Acento'
                     sections.push(`- ${c.color} (${displayRole})`)
                 })
                 sections.push(``)

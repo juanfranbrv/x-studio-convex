@@ -13,18 +13,16 @@ export const PRIORITY_HEADER = `╔═══════════════
 
 // Role-based color labels
 export const ROLE_LABELS = {
-    Principal: '🎨 PRIMARY (backgrounds, hero sections)',
-    Secundario: '✨ SECONDARY (CTAs, highlights, accents)',
-    Texto: '📝 TEXT (body text, ensure readable contrast)',
-    Fondo: '🖼️ BACKGROUND (large areas)',
-    Acento: '💥 ACCENT (focal points, small details)',
+    Fondo: '🎨 FONDO (backgrounds, large areas, base blocks)',
+    Acento: '✨ ACENTO (CTAs, highlights, focal points)',
+    Texto: '📝 TEXTO (body text, ensuring readable contrast)',
     Neutral: '⚪ NEUTRAL (supporting elements)'
 } as const
 
 // Usage guidelines
 export const COLOR_USAGE_GUIDELINES = `⚠️  COLOR USAGE GUIDELINES:
-- Use PRIMARY colors for dominant areas (backgrounds, hero sections)
-- Use SECONDARY colors for CTAs and key highlights
-- Use TEXT colors with minimum 4.5:1 contrast ratio (WCAG AA)
-- ACCENT colors for small focal points only
+- Use FONDO colors for dominant areas (backgrounds, hero sections)
+- Use ACENTO colors for CTAs and key highlights
+- Use TEXTO colors with minimum 4.5:1 contrast ratio (WCAG AA)
+- ACENTO colors for small focal points only
 - Ensure readability takes priority over aesthetics`

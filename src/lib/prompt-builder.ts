@@ -19,6 +19,7 @@ export interface ImageGenerationOptions {
     layoutReference?: string // Path to Phantom Template
     aspectRatio?: string
     seed?: number // Consistent seed for carousel generation
+    selectedColors?: Array<{ color: string; role: string } | string>
 }
 
 export function buildImagePrompt(
@@ -26,9 +27,17 @@ export function buildImagePrompt(
     userPrompt: string,
     options: ImageGenerationOptions = {}
 ): string {
-    const { colors, tone_of_voice, fonts } = brand.brand_dna
+    const { tone_of_voice, fonts } = brand.brand_dna
     const tone = tone_of_voice?.join(', ') || 'Sin definir'
-    const colorList = colors?.map(c => c.color).join(', ') || 'Sin definir'
+
+    // Prioritize selected colors from the session card
+    let colorList = 'Sin definir'
+    if (options.selectedColors && options.selectedColors.length > 0) {
+        colorList = options.selectedColors.map(c =>
+            typeof c === 'string' ? c : `${c.color}${c.role ? ` (${c.role})` : ''}`
+        ).join(', ')
+    }
+
     const typographyInstructions = buildTypographyInstructions(fonts || [])
 
     // Process explicit context items (Drag & Drop)
