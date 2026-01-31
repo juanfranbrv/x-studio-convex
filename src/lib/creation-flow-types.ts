@@ -801,6 +801,14 @@ export interface GenerationState {
     firstVisionAnalysis?: VisionAnalysis | null
     firstReferenceId?: string | null
     firstReferenceSource?: 'upload' | 'brandkit' | null
+
+    // Suggestions from AI
+    suggestions?: Array<{
+        title: string
+        subtitle: string
+        modifications: Partial<GenerationState> // Recursive Partial of state to apply
+    }>
+    originalState?: Partial<GenerationState> | null // Snapshot of state before applying suggestion
     isAnalyzing: boolean
 
     // Step 4: Style
@@ -851,6 +859,8 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     firstVisionAnalysis: null,
     firstReferenceId: null,
     firstReferenceSource: null,
+    suggestions: undefined,
+    originalState: null,
     isAnalyzing: false,
     selectedStyles: [],
     selectedLayout: null,

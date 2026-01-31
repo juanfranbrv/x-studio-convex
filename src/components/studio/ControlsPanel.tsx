@@ -1,12 +1,13 @@
-'use client'
+﻿'use client'
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCreationFlow } from '@/hooks/useCreationFlow'
 import { LayoutSelector } from './creation-flow/LayoutSelector'
 import { SocialFormatSelector } from './creation-flow/SocialFormatSelector'
 import { BrandingConfigurator } from './creation-flow/BrandingConfigurator'
 import { ImageReferenceSelector } from './creation-flow/ImageReferenceSelector'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Sparkles, Layers, ImagePlus, Wand2, Loader2, Star, Fingerprint, Bookmark as BookmarkIcon, SquarePlus } from 'lucide-react'
+import { Palette, Layout, Sparkles, Layers, ImagePlus, Wand2, Loader2, Star, Fingerprint, Bookmark as BookmarkIcon, SquarePlus, RotateCcw } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { PresetsCarousel } from './creation-flow/PresetsCarousel'
@@ -184,7 +185,7 @@ export function ControlsPanel({
                 },
                 icon: 'Star'
             })
-            toast({ title: "Guardado", description: "Tu configuración se ha guardado." })
+            toast({ title: "Guardado", description: "Tu configuraciÃ³n se ha guardado." })
             setIsSaveDialogOpen(false)
         } catch (error) {
             console.error('Error saving preset:', error)
@@ -279,6 +280,26 @@ export function ControlsPanel({
                             </Button>
                         </div>
                     </div>
+
+                    {/* Suggestions List */}
+                    <SuggestionsList
+                        suggestions={state.suggestions}
+                        hasOriginalState={!!state.originalState}
+                        onApply={(index) => {
+                            creationFlow.applySuggestion(index)
+                            toast({
+                                title: "Sugerencia aplicada",
+                                description: "Se han actualizado los textos.",
+                            })
+                        }}
+                        onUndo={() => {
+                            creationFlow.undoSuggestion()
+                            toast({
+                                title: "Cambios revertidos",
+                                description: "Se ha vuelto al contenido original.",
+                            })
+                        }}
+                    />
                     <FloatingAssistance
                         isVisible={assistanceEnabled && state.currentStep === 1 && !state.hasGeneratedImage && !isGenerating}
                         {...STEP_ASSISTANCE[1]}
@@ -428,5 +449,66 @@ export function ControlsPanel({
 
             <SavePresetDialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen} onSave={handleSavePreset} isSaving={isSavingPreset} />
         </div>
+    )
+}
+
+function SuggestionsList({
+    suggestions,
+    onApply,
+    onUndo,
+    hasOriginalState
+}: {
+    suggestions?: any[],
+    onApply: (index: number) => void,
+    onUndo: () => void,
+    hasOriginalState: boolean
+}) {
+    if (!suggestions || suggestions.length === 0) return null
+
+    return (
+        <TooltipProvider delayDuration={300}>
+            <div className="mt-2 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-500">
+                {hasOriginalState && (
+                    <div className="flex justify-end pr-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={onUndo}
+                            className="h-5 px-1.5 text-[9px] text-muted-foreground hover:text-primary gap-1 opacity-60 hover:opacity-100 transition-opacity"
+                        >
+                            <RotateCcw className="w-2.5 h-2.5" />
+                            VOLVER AL ORIGINAL
+                        </Button>
+                    </div>
+                )}
+                {suggestions.map((suggestion, idx) => (
+                    <Tooltip key={idx}>
+                        <TooltipTrigger asChild>
+                            <button
+                                onClick={() => onApply(idx)}
+                                className="group relative w-full flex items-center gap-2.5 p-2.5 rounded-lg border border-purple-100/50 bg-purple-50/50 hover:bg-white hover:border-purple-200 hover:shadow-sm transition-all duration-200 overflow-hidden text-left"
+                            >
+                                {/* Title */}
+                                <span className="text-[11px] font-bold text-gray-900 shrink-0">
+                                    {suggestion.title}
+                                </span>
+
+                                {/* Separator - Vertical Line */}
+                                <div className="h-3 w-[1px] bg-purple-200 shrink-0" />
+
+                                {/* Description - Truncated */}
+                                <span className="text-[11px] text-gray-500 truncate font-medium group-hover:text-purple-700 transition-colors">
+                                    {suggestion.subtitle}
+                                </span>
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" align="start" className="max-w-[260px] text-xs">
+                            <p className="font-semibold text-purple-200 mb-1">{suggestion.title}</p>
+                            <p>{suggestion.subtitle}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                ))}
+            </div>
+        </TooltipProvider>
     )
 }

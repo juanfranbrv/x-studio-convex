@@ -1739,6 +1739,46 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         return snapshot
     }, [state])
 
+    const setSuggestions = useCallback((suggestions: GenerationState['suggestions']) => {
+        setState(prev => ({ ...prev, suggestions }))
+    }, [])
+
+    const applySuggestion = useCallback((suggestionIndex: number) => {
+        setState(prev => {
+            if (!prev.suggestions || !prev.suggestions[suggestionIndex]) return prev
+
+            // Save relevant state if not already saved, so we can undo
+            const originalState = prev.originalState || {
+                headline: prev.headline,
+                cta: prev.cta,
+                ctaUrl: prev.ctaUrl,
+                caption: prev.caption,
+                customTexts: { ...prev.customTexts }
+            }
+
+            const modifications = prev.suggestions[suggestionIndex].modifications
+
+            return {
+                ...prev,
+                originalState,
+                ...modifications,
+                generatedImage: null // Invalidate image as text changed
+            }
+        })
+    }, [])
+
+    const undoSuggestion = useCallback(() => {
+        setState(prev => {
+            if (!prev.originalState) return prev
+            return {
+                ...prev,
+                ...prev.originalState,
+                originalState: null,
+                generatedImage: null
+            }
+        })
+    }, [])
+
     return {
         // State
         state,
@@ -1798,6 +1838,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         generate,
         reset,
         loadPreset,
+        // Suggestions
+        setSuggestions,
+        applySuggestion,
+        undoSuggestion,
         // Constants
         styleGroups: ARTISTIC_STYLE_GROUPS,
     }
