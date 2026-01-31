@@ -15,6 +15,7 @@ interface FeedbackButtonProps {
     brandId?: Id<"brand_dna">
     intent?: string
     layout?: string
+    className?: string
 }
 
 const REACTIONS = [
@@ -23,7 +24,7 @@ const REACTIONS = [
     { id: 'positive', emoji: '😊', label: 'Bueno' },
 ] as const
 
-export function FeedbackButton({ show, generationId, brandId, intent, layout }: FeedbackButtonProps) {
+export function FeedbackButton({ show, generationId, brandId, intent, layout, className }: FeedbackButtonProps) {
     const { user } = useUser()
     const { toast } = useToast()
     const submitFeedback = useMutation(api.feedback.submitFeedback)
@@ -107,15 +108,18 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout }: 
                 <button
                     onClick={() => setIsOpen(true)}
                     className={cn(
-                        "fixed bottom-24 left-1/2 -translate-x-1/2 z-50",
-                        "px-4 py-2.5 rounded-full",
+                        // Default positioning (can be overridden by className)
+                        !className?.includes('absolute') && !className?.includes('fixed') && "fixed bottom-24 left-1/2 -translate-x-1/2",
+                        "z-50 px-4 py-2.5 rounded-full",
                         "glass-panel border border-white/20",
                         "flex items-center gap-2",
                         "opacity-90 hover:opacity-100",
                         "hover:scale-105 active:scale-95",
                         "transition-all duration-300 ease-out",
                         "shadow-lg hover:shadow-xl",
-                        "group"
+                        "group",
+                        "animate-in fade-in zoom-in slide-in-from-bottom-4 duration-700",
+                        className
                     )}
                     title="Enviar feedback"
                 >

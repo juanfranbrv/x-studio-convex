@@ -586,8 +586,25 @@ export default function ImagePage() {
                                     currentImageUrl={creationFlow.state.generatedImage}
                                     onSelectGeneration={(gen) => creationFlow.setGeneratedImage(gen.image_url)}
                                 />
-                            </div>
+                            </div >
                         </div >
+
+                        {/* Feedback Button - Floating to the right of the canvas area */}
+                        <FeedbackButton
+                            show={Boolean(creationFlow.state.generatedImage)}
+                            brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
+                            intent={creationFlow.state.selectedIntent || undefined}
+                            layout={creationFlow.selectedLayoutMeta?.id}
+                            className={cn(
+                                "z-50 transition-all duration-300",
+                                isMobile
+                                    ? "fixed bottom-24 right-4"
+                                    : cn(
+                                        "absolute top-[30%] -translate-y-1/2",
+                                        panelPosition === 'right' ? "right-[32%]" : "left-[32%]"
+                                    )
+                            )}
+                        />
 
                         {/* RIGHT COLUMN - Controls Panel */}
                         <ControlsPanel
@@ -677,13 +694,7 @@ export default function ImagePage() {
                 promptData={debugPromptData}
             />
 
-            {/* Feedback Button - appears after image generation */}
-            <FeedbackButton
-                show={Boolean(creationFlow.state.generatedImage)}
-                brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
-                intent={creationFlow.state.selectedIntent || undefined}
-                layout={creationFlow.selectedLayoutMeta?.id}
-            />
+
         </DashboardLayout >
     )
 }
