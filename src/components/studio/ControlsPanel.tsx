@@ -217,11 +217,16 @@ export function ControlsPanel({
                         </div>
                     </div>
                     {hasPresets ? (
-                        <PresetsCarousel onSelectPreset={handleSelectPreset} onReset={reset} userId={userId} />
+                        <>
+                            <PresetsCarousel onSelectPreset={handleSelectPreset} onReset={reset} userId={userId} />
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Guarda y reutiliza tus configuraciones favoritas.
+                            </p>
+                        </>
                     ) : (
                         <div className="rounded-xl border border-dashed border-border/70 bg-muted/30 px-3 py-4 text-center">
                             <p className="text-[11px] text-muted-foreground">
-                                Aún no hay presets guardados para esta marca. Guarda el primero con “Guardar”.
+                                Aún no hay presets guardados para esta marca. Guarda el primero con "Guardar".
                             </p>
                         </div>
                     )}
@@ -251,7 +256,7 @@ export function ControlsPanel({
                         <Textarea
                             value={promptValue}
                             onChange={(e) => onPromptChange(e.target.value)}
-                            placeholder="Describe tu diseño..."
+                            placeholder="Ej: En mi sector se usa mucho la palabra 'lead' pero los clientes no saben qué es. Quiero un post que sea como un diccionario explicando qué significa exactamente."
                             className="min-h-[100px] text-sm resize-none bg-background border border-border focus:ring-1 focus:ring-primary focus:border-primary pb-12 pr-2 transition-all"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {

@@ -26,6 +26,8 @@ import { parseLazyIntentAction } from '@/app/actions/parse-intent'
 import { IntentCategory, TextAsset } from '@/lib/creation-flow-types'
 import { useUI } from '@/contexts/UIContext'
 import { hexToHslString } from '@/lib/color-utils'
+import { FeedbackButton } from '@/components/studio/FeedbackButton'
+import { Id } from '../../../convex/_generated/dataModel'
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
@@ -673,6 +675,14 @@ export default function ImagePage() {
                 onClose={cancelGeneration}
                 onConfirm={confirmGeneration}
                 promptData={debugPromptData}
+            />
+
+            {/* Feedback Button - appears after image generation */}
+            <FeedbackButton
+                show={Boolean(creationFlow.state.generatedImage)}
+                brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
+                intent={creationFlow.state.selectedIntent || undefined}
+                layout={creationFlow.selectedLayoutMeta?.id}
             />
         </DashboardLayout >
     )

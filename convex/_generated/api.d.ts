@@ -11,6 +11,7 @@
 import type * as admin from "../admin.js";
 import type * as assets from "../assets.js";
 import type * as brands from "../brands.js";
+import type * as feedback from "../feedback.js";
 import type * as generations from "../generations.js";
 import type * as initPresets from "../initPresets.js";
 import type * as presets from "../presets.js";
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   assets: typeof assets;
   brands: typeof brands;
+  feedback: typeof feedback;
   generations: typeof generations;
   initPresets: typeof initPresets;
   presets: typeof presets;

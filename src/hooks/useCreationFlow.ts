@@ -90,14 +90,19 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     // Track last initialized brand kit to allow re-syncing when it changes
     const [lastInitBrandId, setLastInitBrandId] = useState<string | null>(null)
+    // Track if we've done the initial Brand Kit load in this component lifecycle
+    const hasInitializedBrandKit = useRef(false)
 
     // Initialize defaults from Brand Kit (Colors and Text Assets)
     useEffect(() => {
         const brandId = activeBrandKit?.id || (activeBrandKit as any)?._id
         if (!activeBrandKit || !brandId) return
 
-        // Initialize ONLY if it's a different brand kit than last time
-        if (brandId === lastInitBrandId) return
+        // Initialize if:
+        // 1. First time loading (hasInitializedBrandKit.current === false) - ensures colors load on page reload
+        // 2. Brand Kit has changed (brandId !== lastInitBrandId) - allows switching between Brand Kits
+        // Skip if we've already initialized this exact Brand Kit in this session
+        if (hasInitializedBrandKit.current && brandId === lastInitBrandId) return
 
         console.log(`[useCreationFlow] Initializing defaults for Brand Kit: ${brandId}`)
         const nextState: Partial<GenerationState> = {}
@@ -148,6 +153,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             setState(prev => ({ ...prev, ...nextState }))
         }
         setLastInitBrandId(brandId)
+        hasInitializedBrandKit.current = true
     }, [activeBrandKit, lastInitBrandId])
 
     // -------------------------------------------------------------------------
@@ -1623,6 +1629,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
     const reset = useCallback(() => {
         setState({ ...INITIAL_GENERATION_STATE, caption: '' }) // NEW: Reset caption
+        hasInitializedBrandKit.current = false // Reset Brand Kit initialization flag
+        setLastInitBrandId(null) // Reset last initialized Brand Kit ID
         optionsRef.current?.onReset?.()
     }, [])
 

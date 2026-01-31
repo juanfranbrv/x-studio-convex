@@ -88,3 +88,4 @@ RULES
 8. detectedIntent must be one of the allowed ids above. Never invent new ones.
 9. If intent is not provided, detect it. If it is provided, respect it.
 10. Language: you MUST output in USER_LANGUAGE. Ignore any brand language preference.
+11. URL FORMAT: ctaUrl and any URLs in caption MUST be plain text (e.g., "https://example.com"). NEVER use markdown link format like "[text](url)". Just output the raw URL.

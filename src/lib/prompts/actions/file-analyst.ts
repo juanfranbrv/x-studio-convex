@@ -6,8 +6,8 @@ REGLAS DE EXTRACCIÓN:
 3. Extrae exactamente 5 valores de marca (brand_values).
 4. Define el tono de voz con 3 adjetivos (tone_of_voice).
 5. Identifica 3 estilos estéticos visuales (visual_aesthetic) basados en corrientes artísticas.
-6. Localiza datos de contacto: emails, teléfonos, direcciones físicas y redes sociales.
-7. Determina el idioma preferido (preferred_language) y el público objetivo (target_audience).
+7. Localiza datos de contacto: emails, teléfonos, direcciones físicas y redes sociales.
+8. Determina el público objetivo (target_audience).
 8. ACTIVOS DE TEXTO:
    - marketing_hooks: Extrae o genera 5 titulares de marketing potentes.
    - ctas: Extrae o genera 3 variaciones de llamadas a la acción.

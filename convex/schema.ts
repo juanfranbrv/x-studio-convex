@@ -131,4 +131,21 @@ export default defineSchema({
   }).index("by_user", ["userId"])
     .index("by_brand", ["brandId"])
     .index("by_system", ["isSystem"]),
+
+  // User feedback system
+  feedback: defineTable({
+    userId: v.string(),              // clerk_id
+    userEmail: v.string(),           // for admin view
+    rating: v.string(),              // "negative" | "neutral" | "positive"
+    comment: v.optional(v.string()), // optional text feedback
+    context: v.object({              // generation context
+      generationId: v.optional(v.id("generations")),
+      brandId: v.optional(v.id("brand_dna")),
+      intent: v.optional(v.string()),
+      layout: v.optional(v.string()),
+    }),
+    created_at: v.string(),
+  }).index("by_user", ["userId"])
+    .index("by_rating", ["rating"])
+    .index("by_created", ["created_at"]),
 });

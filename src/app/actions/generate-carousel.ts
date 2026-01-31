@@ -9,6 +9,7 @@ import { getNarrativeComposition, getNarrativeStructure } from '@/lib/carousel-s
 import { buildCarouselPrompt } from '@/lib/prompts/carousel/builder'
 import { getMoodForSlide } from '@/lib/prompts/carousel/mood'
 import { buildFinalPrompt, generateCarouselSeed, extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
+import { detectLanguage } from '@/lib/language-detection'
 
 export interface SlideContent {
     index: number
@@ -107,6 +108,10 @@ async function decomposeIntoSlides(
     detectedIntent?: string
     caption?: string
 }> {
+    // Auto-detect language from user prompt (like image module does)
+    const detectedLanguage = detectLanguage(prompt) || 'es'
+    console.log(`🌐 Carousel: Detected language from prompt: ${detectedLanguage}`)
+
     const selectedColorsList = selectedColors?.map(c => c.color) || []
     const brandContext = buildCarouselBrandContext(brand, selectedColorsList, includeLogoUrl)
 
@@ -128,7 +133,7 @@ async function decomposeIntoSlides(
                     slidesCount: slideCount,
                     visualAnalysis: options.visualDescription,
                     includeLogo: !!includeLogoUrl,
-                    language: options.language,
+                    language: detectedLanguage, // Use auto-detected language
                     brandColors: selectedColorsList
                 },
                 structure,
@@ -145,7 +150,7 @@ async function decomposeIntoSlides(
             brandWebsite: brand.url,
             requestedSlideCount: slideCount,
             visualAnalysis: options?.visualDescription,
-            language: options?.language
+            language: detectedLanguage // Use auto-detected language
         })
     }
 
@@ -307,13 +312,49 @@ async function decomposeIntoSlides(
                 throw new Error(response.trim())
             }
 
+            // Extract JSON with robust parsing
             const jsonMatch = response.match(/\{[\s\S]*\}/)
             if (!jsonMatch) {
-                if (attempt === 1) throw new Error('No valid JSON')
+                if (attempt === 1) throw new Error('No valid JSON found in response')
                 continue
             }
 
-            const parsed = JSON.parse(jsonMatch[0])
+            let jsonString = jsonMatch[0]
+            let parsed: any
+
+            try {
+                // First try: direct parse
+                parsed = JSON.parse(jsonString)
+            } catch (firstError) {
+                // Fallback: try to find the first complete JSON object
+                // This handles cases where AI appends extra text after the JSON
+                let braceCount = 0
+                let startIdx = jsonString.indexOf('{')
+                if (startIdx === -1) {
+                    if (attempt === 1) throw new Error('No valid JSON structure found')
+                    continue
+                }
+
+                let endIdx = startIdx
+                for (let i = startIdx; i < jsonString.length; i++) {
+                    if (jsonString[i] === '{') braceCount++
+                    else if (jsonString[i] === '}') braceCount--
+
+                    if (braceCount === 0) {
+                        endIdx = i + 1
+                        break
+                    }
+                }
+
+                const cleanJson = jsonString.substring(startIdx, endIdx)
+                try {
+                    parsed = JSON.parse(cleanJson)
+                } catch (secondError) {
+                    console.error('JSON parse failed. Raw response snippet:', jsonString.substring(0, 200))
+                    if (attempt === 1) throw new Error(`Invalid JSON from AI: ${(secondError as Error).message}`)
+                    continue
+                }
+            }
             try {
                 return normalizeParsed(parsed)
             } catch (err) {

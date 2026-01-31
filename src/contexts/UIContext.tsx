@@ -17,7 +17,7 @@ const UIContext = createContext<UIContextType | undefined>(undefined)
 export function UIProvider({ children }: { children: React.ReactNode }) {
     const { user, isLoaded } = useUser()
     const [panelPosition, setPanelPositionState] = useState<PanelPosition>('right')
-    const [assistanceEnabled, setAssistanceEnabledState] = useState<boolean>(true)
+    const [assistanceEnabled, setAssistanceEnabledState] = useState<boolean>(false)
     const assistanceStorageKey = useMemo(() => {
         const baseKey = 'x-studio-assistance-enabled'
         return user?.id ? `${baseKey}:${user.id}` : baseKey
@@ -53,7 +53,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
             return
         }
 
-        setAssistanceEnabledState(true)
+        setAssistanceEnabledState(false)
     }, [assistanceStorageKey, isLoaded, user?.id])
 
     const setPanelPosition = (position: PanelPosition) => {

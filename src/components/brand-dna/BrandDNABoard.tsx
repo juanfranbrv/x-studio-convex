@@ -13,7 +13,7 @@ import { BrandContextCard } from './BrandContextCard';
 import { TechnicalAudit } from './TechnicalAudit';
 import { ContactSocialCard } from './ContactSocialCard';
 import { TargetAudienceCard } from './TargetAudienceCard';
-import { LanguageCard } from './LanguageCard';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBrandKit } from '@/contexts/BrandKitContext';
@@ -50,8 +50,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
     const [isEditingUrl, setIsEditingUrl] = useState(false);
     const [urlEdit, setUrlEdit] = useState(initialData.url || '');
     const [showDebug, setShowDebug] = useState(isDebug);
-    const languageSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const pendingLanguageRef = useRef<BrandDNA | null>(null);
+
 
     const handleSave = async (isAuto = false) => {
         if (!user || !hasUnsavedChanges) return;
@@ -109,49 +108,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         });
     }, []);
 
-    const handleLanguageChange = (lang: string) => {
-        setData(prev => {
-            const next = { ...prev, preferred_language: lang };
-            pendingLanguageRef.current = next;
-            setHasUnsavedChanges(true);
-            return next;
-        });
-        if (languageSaveTimeout.current) {
-            clearTimeout(languageSaveTimeout.current);
-        }
-        languageSaveTimeout.current = setTimeout(async () => {
-            const next = pendingLanguageRef.current;
-            if (!user || !next?.id) return;
-            setIsSaving(true);
-            try {
-                const result = await updateUserBrandKit(next.id, next);
-                if (result.success) {
-                    setHasUnsavedChanges(false);
-                    setLastSaved(new Date());
-                    syncActiveBrandKit?.(next);
-                } else {
-                    throw new Error(result.error || 'Error al guardar');
-                }
-            } catch (error: any) {
-                console.error('Error saving language preference:', error);
-                setErrorModal({
-                    open: true,
-                    title: 'Error al Guardar',
-                    message: error.message || 'No se pudo guardar el idioma.'
-                });
-            } finally {
-                setIsSaving(false);
-            }
-        }, 300);
-    };
 
-    useEffect(() => {
-        return () => {
-            if (languageSaveTimeout.current) {
-                clearTimeout(languageSaveTimeout.current);
-            }
-        };
-    }, []);
 
     // Handlers
     const handleAddColor = () => {
@@ -347,7 +304,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             if (extracted.target_audience) newState.target_audience = mergeArray('target_audience', extracted.target_audience);
             if (extracted.emails) newState.emails = mergeArray('emails', extracted.emails);
             if (extracted.phones) newState.phones = mergeArray('phones', extracted.phones);
-            if (extracted.preferred_language) newState.preferred_language = extracted.preferred_language;
+
 
             // For brand_name and tagline, only update if they were empty or very short
             if (extracted.brand_name && (!prev.brand_name || prev.brand_name.length < 3)) {
@@ -641,11 +598,6 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
                 {/* Left Column: All Content/Info Cards */}
                 <div className="space-y-6">
-                    {/* Language Selection */}
-                    <LanguageCard
-                        selectedLanguage={data.preferred_language || 'es'}
-                        onLanguageChange={handleLanguageChange}
-                    />
 
                     {/* Contact & Audience */}
                     <TargetAudienceCard audience={data.target_audience} />

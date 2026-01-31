@@ -7,7 +7,7 @@ import { dark } from '@clerk/themes'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
-import { Loader2, Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink, Trash2 } from 'lucide-react'
+import { Loader2, Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink, Trash2, MessageSquare } from 'lucide-react'
 import { CreditsBadge } from '@/components/layout/CreditsBadge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -103,6 +103,10 @@ export default function AdminPage() {
     const settings = useQuery(api.admin.getSettings, { admin_email: userEmail })
     const recentTransactions = useQuery(api.admin.getRecentTransactions, { admin_email: userEmail, limit: 20 })
     const betaRequests = useQuery(api.admin.listBetaRequests, { admin_email: userEmail })
+
+    // Feedback queries
+    const feedbackList = useQuery(api.feedback.listFeedback, { limit: 50 })
+    const feedbackStats = useQuery(api.feedback.getFeedbackStats, {})
 
     // Mutations
     const activateUser = useMutation(api.admin.activateUser)
@@ -338,6 +342,14 @@ export default function AdminPage() {
                         </TabsTrigger>
                         <TabsTrigger value="links" className="gap-2">
                             <ExternalLink className="h-4 w-4" /> Enlaces
+                        </TabsTrigger>
+                        <TabsTrigger value="feedback" className="gap-2">
+                            <MessageSquare className="h-4 w-4" /> Feedback
+                            {(feedbackStats?.total ?? 0) > 0 && (
+                                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                                    {feedbackStats?.total}
+                                </Badge>
+                            )}
                         </TabsTrigger>
                     </TabsList>
 
@@ -852,6 +864,102 @@ export default function AdminPage() {
                                         </a>
                                     ))}
                                 </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Feedback Tab */}
+                    <TabsContent value="feedback">
+                        {/* Stats Row */}
+                        <div className="grid gap-4 md:grid-cols-4 mb-6">
+                            <Card>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{feedbackStats?.total ?? 0}</div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium text-green-500">😊 Positivo</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-green-500">{feedbackStats?.positive ?? 0}</div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium text-yellow-500">😐 Neutral</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-yellow-500">{feedbackStats?.neutral ?? 0}</div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium text-red-500">😞 Negativo</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-red-500">{feedbackStats?.negative ?? 0}</div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Feedback Table */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Feedback Reciente</CardTitle>
+                                <CardDescription>Últimas valoraciones de los usuarios</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Fecha</TableHead>
+                                            <TableHead>Usuario</TableHead>
+                                            <TableHead>Valoración</TableHead>
+                                            <TableHead>Intent</TableHead>
+                                            <TableHead className="max-w-[300px]">Comentario</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {feedbackList?.map((fb) => (
+                                            <TableRow key={fb._id}>
+                                                <TableCell className="text-muted-foreground text-sm">
+                                                    {new Date(fb.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                </TableCell>
+                                                <TableCell className="font-medium text-sm">
+                                                    {fb.userEmail}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="text-xl">
+                                                        {fb.rating === 'positive' ? '😊' : fb.rating === 'neutral' ? '😐' : '😞'}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {fb.context?.intent ? (
+                                                        <Badge variant="outline" className="text-xs">
+                                                            {fb.context.intent}
+                                                        </Badge>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">-</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="max-w-[300px] truncate text-sm text-muted-foreground">
+                                                    {fb.comment || <span className="italic">Sin comentario</span>}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {(!feedbackList || feedbackList.length === 0) && (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                                    No hay feedback todavía
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
                             </CardContent>
                         </Card>
                     </TabsContent>

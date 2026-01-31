@@ -48,6 +48,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.31.3",
+    "fabric": "^7.1.0",
     "framer-motion": "^12.23.26",
     "i18next": "^25.7.3",
     "jszip": "^3.10.1",
