@@ -98,18 +98,27 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         const brandId = activeBrandKit?.id || (activeBrandKit as any)?._id
         if (!activeBrandKit || !brandId) return
 
-        // Initialize if:
-        // 1. First time loading (hasInitializedBrandKit.current === false) - ensures colors load on page reload
-        // 2. Brand Kit has changed (brandId !== lastInitBrandId) - allows switching between Brand Kits
-        // Skip if we've already initialized this exact Brand Kit in this session
-        if (hasInitializedBrandKit.current && brandId === lastInitBrandId) return
+        // CONDITIONS TO RUN INITIALIZATION:
+        // 1. First time for this brand ID (brandId !== lastInitBrandId)
+        // 2. We haven't initialized yet (hasInitializedBrandKit.current === false)
+        // 3. RETRY STRATEGY: If current selected colors are empty, but the brand kit HAS colors, 
+        //    it likely means previous init failed or data wasn't ready. We should retry.
+        //    (We check if state.selectedBrandColors is empty to avoid overwriting user edits, 
+        //    but we prioritize showing *something* over showing nothing)
+
+        const shouldInit =
+            brandId !== lastInitBrandId ||
+            !hasInitializedBrandKit.current ||
+            (state.selectedBrandColors.length === 0 && activeBrandKit.colors && activeBrandKit.colors.length > 0)
+
+        if (!shouldInit) return
 
         console.log(`[useCreationFlow] Initializing defaults for Brand Kit: ${brandId}`)
         const nextState: Partial<GenerationState> = {}
         let hasChanges = false
 
-        // 1. Initialize Colors - Refresh whenever the brand kit changes
-        if (activeBrandKit.colors) {
+        // 1. Initialize Colors - Refresh whenever the brand kit changes or if we have none selected
+        if (activeBrandKit.colors && activeBrandKit.colors.length > 0) {
             const defaultColors = (activeBrandKit.colors as any[]).map(c => {
                 const rawRole = ((c.role as string) || 'Acento').trim().toUpperCase()
                 let role: ColorRole = 'Acento'
@@ -118,43 +127,53 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 else if (rawRole.includes('FOND')) role = 'Fondo'
                 else if (rawRole.includes('ACENT')) role = 'Acento'
 
+                // Robust hex extraction
                 const hex = (c.color || c.hex || (typeof c === 'string' ? c : '')).toLowerCase()
 
                 return {
                     color: hex,
                     role
                 }
-            }).filter(c => c.color)
+            }).filter(c => c.color && c.color !== '#')
 
             if (defaultColors.length > 0) {
+                // Determine if we should overwrite. 
+                // If we are switching brands (brandId !== lastInitBrandId), ALWAYS overwrite.
+                // If we are just retrying (state.selectedBrandColors.length === 0), overwrite.
+
                 nextState.selectedBrandColors = defaultColors
                 hasChanges = true
             }
         }
 
-        // 2. Initialize Text Assets
-        const defaultTextAssets: TextAsset[] = []
-        if (activeBrandKit.tagline) {
-            defaultTextAssets.push({ id: 'tagline', type: 'tagline', label: 'Tagline', value: activeBrandKit.tagline })
-        }
+        // 2. Initialize Text Assets (Only if switching brands or specific retry)
+        // We generally preserve text assets if just fixing colors, but to be safe/simple, we re-init if brand changes
+        if (brandId !== lastInitBrandId || !hasInitializedBrandKit.current) {
+            const defaultTextAssets: TextAsset[] = []
+            if (activeBrandKit.tagline) {
+                defaultTextAssets.push({ id: 'tagline', type: 'tagline', label: 'Tagline', value: activeBrandKit.tagline })
+            }
 
-        if (defaultTextAssets.length > 0) {
-            nextState.selectedTextAssets = defaultTextAssets
-            hasChanges = true
-        }
+            if (defaultTextAssets.length > 0) {
+                nextState.selectedTextAssets = defaultTextAssets
+                hasChanges = true
+            }
 
-        // 3. Initialize Logo - Always default to first logo when switching brands
-        if (activeBrandKit.logos && (activeBrandKit.logos as any[]).length > 0) {
-            nextState.selectedLogoId = 'logo-0'
-            hasChanges = true
+            // 3. Initialize Logo - Always default to first logo when switching brands
+            if (activeBrandKit.logos && (activeBrandKit.logos as any[]).length > 0) {
+                nextState.selectedLogoId = 'logo-0'
+                hasChanges = true
+            }
         }
 
         if (hasChanges) {
+            console.log('[useCreationFlow] Applying initial state changes:', Object.keys(nextState))
             setState(prev => ({ ...prev, ...nextState }))
         }
+
         setLastInitBrandId(brandId)
         hasInitializedBrandKit.current = true
-    }, [activeBrandKit, lastInitBrandId])
+    }, [activeBrandKit, lastInitBrandId, state.selectedBrandColors.length])
 
     // -------------------------------------------------------------------------
     // CRITICAL: SEQUENTIAL FLOW ENFORCER

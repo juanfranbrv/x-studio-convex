@@ -111,6 +111,7 @@ export function ControlsPanel({
         setCustomStyle,
         toggleBrandColor,
         removeBrandColor,
+        addCustomColor,
         selectPlatform,
         selectFormat,
         selectedLayoutMeta,
@@ -128,9 +129,7 @@ export function ControlsPanel({
         updateTextAsset,
     } = creationFlow
 
-    const handleAddCustomColor = (color: string) => {
-        toggleBrandColor(color)
-    }
+
 
     const brandKitImages = (activeBrandKit?.images || []).reduce((acc: Array<{ id: string; url: string; name?: string }>, img, idx) => {
         const imageUrl = typeof img === 'string' ? img : img.url
@@ -398,7 +397,7 @@ export function ControlsPanel({
                                         selectedBrandColors={state.selectedBrandColors}
                                         onSelectLogo={selectLogo}
                                         onToggleBrandColor={toggleBrandColor}
-                                        onAddCustomColor={handleAddCustomColor}
+                                        onAddCustomColor={addCustomColor}
                                         showLogo={true} showColors={false} showTypography={false} showBrandTexts={false}
                                         rawMessage={promptValue}
                                     />
@@ -413,7 +412,8 @@ export function ControlsPanel({
                                         onSelectLogo={selectLogo}
                                         onToggleBrandColor={toggleBrandColor}
                                         onRemoveBrandColor={removeBrandColor}
-                                        onAddCustomColor={handleAddCustomColor}
+
+                                        onAddCustomColor={addCustomColor}
                                         showLogo={false} showColors={true} showTypography={false} showBrandTexts={false}
                                         rawMessage={promptValue}
                                         debugLabel="Studio-Colors"
