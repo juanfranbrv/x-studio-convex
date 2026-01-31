@@ -54,7 +54,7 @@ export function TextLayersEditor({
     const visibleTextAssets = textAssets.filter(asset => asset.type !== 'cta' && asset.type !== 'url')
 
     return (
-        <div className="w-full h-full flex flex-col justify-between py-[6cqh] py-[3cqw] px-[6cqw] animate-in fade-in zoom-in-95 duration-500 overflow-y-auto overflow-x-hidden thin-scrollbar">
+        <div className="w-full h-full flex flex-col justify-between py-[4cqh] py-[2cqw] px-[6cqw] animate-in fade-in zoom-in-95 duration-500 overflow-y-auto overflow-x-hidden thin-scrollbar">
 
             {/* TOP: HEADLINE & CUSTOM TEXTS (Required by Intent) */}
             <div className="flex-none flex flex-col items-center justify-start pt-2 space-y-[1.5cqw]">
@@ -66,16 +66,16 @@ export function TextLayersEditor({
                         className="w-full bg-transparent border-none text-center font-black text-foreground placeholder:text-muted-foreground/20 focus:ring-0 resize-none overflow-hidden min-h-[1.2em] leading-tight drop-shadow-sm"
                         style={{ fontSize: 'min(5cqw, 5cqh, 32px)' }}
                         placeholder="ESCRIBE TU TITULAR"
-                        rows={2}
+                        rows={1}
                         onInput={(e) => {
                             const target = e.target as HTMLTextAreaElement;
                             target.style.height = 'auto';
-                            target.style.height = target.scrollHeight + 'px';
+                            target.style.height = (target.scrollHeight + 2) + 'px';
                         }}
                         ref={(el) => {
                             if (el) {
                                 el.style.height = 'auto';
-                                el.style.height = el.scrollHeight + 'px';
+                                el.style.height = (el.scrollHeight + 2) + 'px';
                             }
                         }}
                     />
@@ -105,12 +105,12 @@ export function TextLayersEditor({
                                 onInput={(e) => {
                                     const target = e.target as HTMLTextAreaElement;
                                     target.style.height = 'auto';
-                                    target.style.height = target.scrollHeight + 'px';
+                                    target.style.height = (target.scrollHeight + 2) + 'px';
                                 }}
                                 ref={(el) => {
                                     if (el) {
                                         el.style.height = 'auto';
-                                        el.style.height = el.scrollHeight + 'px';
+                                        el.style.height = (el.scrollHeight + 2) + 'px';
                                     }
                                 }}
                             />

@@ -14,6 +14,11 @@ export interface ParsedIntentResult {
     caption?: string         // NEW: Social media caption
     imageTexts?: Array<{ label: string; value: string; type?: 'tagline' | 'hook' | 'custom' }>
     customTexts?: Record<string, string>
+    suggestions?: Array<{
+        title: string
+        subtitle: string
+        modifications: any // Will be Partial<ParsedIntentResult> effectively
+    }>
     error?: string
 }
 

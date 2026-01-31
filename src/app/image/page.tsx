@@ -230,6 +230,12 @@ export default function ImagePage() {
 
             creationFlow.setSelectedTextAssets(aiAssets)
 
+            if (result.suggestions) {
+                creationFlow.setSuggestions(result.suggestions)
+            } else {
+                creationFlow.setSuggestions(undefined)
+            }
+
             setHighlightedFields(newHighlights)
             setTimeout(() => setHighlightedFields(new Set()), 2500)
 
@@ -237,7 +243,7 @@ export default function ImagePage() {
             creationFlow.setStep(2)
             toast({
                 title: "Magic Applied! ✨",
-                description: "Your fields have been auto-filled based on your description.",
+                description: "Your fields have been auto-filled. Check the suggestions below for more ideas.",
             })
 
             return result

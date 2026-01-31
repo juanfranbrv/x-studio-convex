@@ -102,11 +102,15 @@ RULES
 11. URL FORMAT: ctaUrl and any URLs in caption MUST be plain text (e.g., "https://example.com"). NEVER use markdown link format like "[text](url)". Just output the raw URL. Markdown links break the UI and will be considered a failure. Output raw, clean URLs ONLY.
 12. SUGGESTIONS STRATEGY:
     - Generate EXACTLY 2 distinct suggestions in the `suggestions` array.
-    - Suggestion 1 ("Enfoque Directo/Visual"): A punchy, short, high-impact version of the headline and caption.
+    - Suggestion 1 ("Enfoque Directo/Visual"): A punchy, short, high-impact version.
     - Suggestion 2 ("Enfoque Storytelling/Empático" or "Enfoque Analítico"): A value-added version that connects emotionally or provides deep analysis.
+    - **FULL CONTENT RULE**: Each suggestion MUST provide modifications for **headline, caption, and cta**. 
+    - **MODIFIED TEXTS**: You should also modify the **imageTexts** (secondary texts) if it helps the overall consistency and tone of the suggestion. Do not feel restricted to the literal extraction if a slight variation works better for the proposed "Package".
+    - The suggestion must feel like a complete "Creative Package" where all elements (headline, caption, CTA, and secondary texts) work together.
+
     - Subtitle/Reasoning: You can now be slightly more descriptive (20-30 words) explaining the 'why', as the user will see it in a tooltip.
     - STRICT RULE: **PRESERVE CONTEXT & SPECIFICITY**. 
       - The AI must identify the "Core Subject" (e.g., "Excel Tables", "Theater Play", "Firefighter Exam", "Vegan Recipes") and FORCE it into the suggestion headline/subtitle.
       - **NEVER** generalize to generic phrases like "Master your skills" or "The best solution". 
-      - **ALWAYS** include the specific noun/topic from the user request. If the user talks about "Apples", the suggestion MUST contain the word "Apples".
+      - **ALWAYS** include the specific noun/topic from the user request.
     - The suggestions must be **subject-specific**, not generic marketing fluff.

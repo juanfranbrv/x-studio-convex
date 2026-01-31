@@ -1753,10 +1753,22 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 cta: prev.cta,
                 ctaUrl: prev.ctaUrl,
                 caption: prev.caption,
-                customTexts: { ...prev.customTexts }
+                customTexts: { ...prev.customTexts },
+                selectedTextAssets: [...prev.selectedTextAssets]
             }
 
-            const modifications = prev.suggestions[suggestionIndex].modifications
+            const modifications = { ...prev.suggestions[suggestionIndex].modifications } as any
+
+            // If AI provided 'imageTexts', map them to 'selectedTextAssets' for our state
+            if (modifications.imageTexts && Array.isArray(modifications.imageTexts)) {
+                modifications.selectedTextAssets = modifications.imageTexts.map((item: any, idx: number) => ({
+                    id: `ai-sugg-${Date.now()}-${idx}`,
+                    type: item.type || 'custom',
+                    label: item.label || 'Texto',
+                    value: item.value || ''
+                }))
+                delete modifications.imageTexts
+            }
 
             return {
                 ...prev,
