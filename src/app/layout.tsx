@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { DynamicThemeProvider } from "@/components/providers/DynamicThemeProvider";
@@ -8,12 +7,6 @@ import { UIProvider } from "@/contexts/UIContext";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import "./globals.css";
-
-// Plus Jakarta Sans: more geometric and friendly than Inter
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "X Imagen | Motor de Diseño Inteligente",
@@ -37,8 +30,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen font-sans antialiased overflow-x-hidden",
-          "bg-mesh", // Animated mesh gradient background
-          jakarta.variable
+          "bg-mesh" // Animated mesh gradient background
         )}
       >
         <ConvexClientProvider>

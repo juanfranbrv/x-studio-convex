@@ -52,14 +52,14 @@ export function AnnotationCanvas({
         fabricRef.current = canvas
 
         // Load background image
-        Image.fromURL(imageUrl, (img) => {
+        Image.fromURL(imageUrl, { crossOrigin: 'anonymous' }).then((img) => {
             img.scaleToWidth(width)
             img.scaleToHeight(height)
             canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
                 originX: 'left',
                 originY: 'top'
             })
-        }, { crossOrigin: 'anonymous' })
+        })
 
         // Save initial state
         historyRef.current = [JSON.stringify(canvas.toJSON())]
@@ -151,7 +151,7 @@ export function AnnotationCanvas({
         const reader = new FileReader()
         reader.onload = (event) => {
             const dataUrl = event.target?.result as string
-            Image.fromURL(dataUrl, (img) => {
+            Image.fromURL(dataUrl).then((img) => {
                 // Scale image to reasonable size
                 const maxSize = Math.min(width, height) * 0.3
                 const scale = Math.min(maxSize / (img.width || 100), maxSize / (img.height || 100))
