@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { fabric } from 'fabric'
+import { Canvas, Image, IText, PencilBrush, type IEvent } from 'fabric'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Eraser, Type, ImagePlus, Undo2, Trash2, Check, X } from 'lucide-react'
@@ -31,7 +31,7 @@ export function AnnotationCanvas({
     className
 }: AnnotationCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const fabricRef = useRef<fabric.Canvas | null>(null)
+    const fabricRef = useRef<Canvas | null>(null)
     const [activeTool, setActiveTool] = useState<AnnotationTool>('erase')
     const [canUndo, setCanUndo] = useState(false)
     const historyRef = useRef<string[]>([])
@@ -41,7 +41,7 @@ export function AnnotationCanvas({
     useEffect(() => {
         if (!canvasRef.current) return
 
-        const canvas = new fabric.Canvas(canvasRef.current, {
+        const canvas = new Canvas(canvasRef.current, {
             width,
             height,
             isDrawingMode: false,
@@ -52,7 +52,7 @@ export function AnnotationCanvas({
         fabricRef.current = canvas
 
         // Load background image
-        fabric.Image.fromURL(imageUrl, (img) => {
+        Image.fromURL(imageUrl, (img) => {
             img.scaleToWidth(width)
             img.scaleToHeight(height)
             canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
@@ -77,7 +77,7 @@ export function AnnotationCanvas({
 
         if (activeTool === 'erase') {
             canvas.isDrawingMode = true
-            canvas.freeDrawingBrush = new fabric.PencilBrush(canvas)
+            canvas.freeDrawingBrush = new PencilBrush(canvas)
             canvas.freeDrawingBrush.color = '#FF0000'
             canvas.freeDrawingBrush.width = 8
             canvas.selection = false
@@ -114,12 +114,12 @@ export function AnnotationCanvas({
         const canvas = fabricRef.current
         if (!canvas) return
 
-        const handleCanvasClick = (e: fabric.IEvent) => {
+        const handleCanvasClick = (e: IEvent) => {
             if (activeTool !== 'text') return
             if (e.target) return // Clicked on existing object
 
             const pointer = canvas.getPointer(e.e)
-            const text = new fabric.IText('Escribe aquí...', {
+            const text = new IText('Escribe aquí...', {
                 left: pointer.x,
                 top: pointer.y,
                 fontSize: 24,
@@ -151,7 +151,7 @@ export function AnnotationCanvas({
         const reader = new FileReader()
         reader.onload = (event) => {
             const dataUrl = event.target?.result as string
-            fabric.Image.fromURL(dataUrl, (img) => {
+            Image.fromURL(dataUrl, (img) => {
                 // Scale image to reasonable size
                 const maxSize = Math.min(width, height) * 0.3
                 const scale = Math.min(maxSize / (img.width || 100), maxSize / (img.height || 100))
@@ -209,7 +209,7 @@ export function AnnotationCanvas({
             if (obj.type === 'path') {
                 return { type: 'stroke' as const, data: obj.toObject() }
             } else if (obj.type === 'i-text' || obj.type === 'text') {
-                return { type: 'text' as const, data: { text: (obj as fabric.IText).text, left: obj.left, top: obj.top } }
+                return { type: 'text' as const, data: { text: (obj as IText).text, left: obj.left, top: obj.top } }
             } else if (obj.type === 'image') {
                 return { type: 'image' as const, data: { left: obj.left, top: obj.top, width: obj.width, height: obj.height } }
             }
