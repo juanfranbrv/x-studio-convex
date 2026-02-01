@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import EditIcon from '@mui/icons-material/Edit'
 import DownloadIcon from '@mui/icons-material/Download'
 import ShareIcon from '@mui/icons-material/Share'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
@@ -55,8 +54,6 @@ import { TextLayersEditor } from './TextLayersEditor'
 
 export interface CanvasPanelProps {
     currentImage: string | null
-    isAnnotating: boolean
-    onAnnotate: () => void
     generations: Generation[]
     onSelectGeneration: (gen: Generation) => void
     selectedContext: ContextElement[]
@@ -94,8 +91,6 @@ export function CanvasPanel({
     currentImage,
     generations = [],
     onSelectGeneration,
-    onAnnotate,
-    isAnnotating = false,
     selectedContext = [],
     onRemoveContext,
     onAddContext,
@@ -456,14 +451,6 @@ export function CanvasPanel({
                         </Button>
                     </div>
 
-                    <Button
-                        variant={isAnnotating ? 'default' : 'ghost'}
-                        size="icon"
-                        onClick={onAnnotate}
-                        className={cn("h-7 w-7", isAnnotating ? 'btn-gradient' : '')}
-                    >
-                        <EditIcon fontSize="small" style={{ fontSize: '1.1rem' }} />
-                    </Button>
                     <Button variant="ghost" size="icon" onClick={handleDownload} className="h-7 w-7" title="Descargar imagen">
                         <ImageDown className="w-4 h-4" />
                     </Button>
@@ -630,16 +617,6 @@ export function CanvasPanel({
                                             alt="Generated design"
                                             className="w-full h-full object-contain"
                                         />
-                                        {isAnnotating && (
-                                            <div className="absolute top-1/4 right-1/4 w-24 h-24 annotation-ring flex items-center justify-center">
-                                                <div className="bg-primary rounded-full p-1">
-                                                    <EditIcon fontSize="small" className="text-primary-foreground" style={{ width: 12, height: 12 }} />
-                                                </div>
-                                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover px-2 py-1 rounded text-xs whitespace-nowrap">
-                                                    Add red accent stitching to laces.
-                                                </div>
-                                            </div>
-                                        )}
                                     </motion.div>
                                 </div>
                             </div>

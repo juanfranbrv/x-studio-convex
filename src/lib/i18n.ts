@@ -33,7 +33,6 @@ const resources = {
                 title: 'El Canvas',
                 versionHistory: 'Historial de versiones',
                 noImage: 'Genera tu primera imagen',
-                annotate: 'Anotar',
                 download: 'Descargar',
                 share: 'Compartir',
             },

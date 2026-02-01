@@ -57,7 +57,6 @@ export default function ImagePage() {
     const [isGenerating, setIsGenerating] = useState(false)
     const { toast } = useToast()
     const [selectedContext, setSelectedContext] = useState<ContextElement[]>([])
-    const [isAnnotating, setIsAnnotating] = useState(false)
     const [logoInclusion, setLogoInclusion] = useState(true)
 
     const [promptValue, setPromptValue] = useState('')
@@ -98,7 +97,6 @@ export default function ImagePage() {
         },
         onReset: () => {
             creationFlow.setGeneratedImage(null)
-            setIsAnnotating(false)
             setDebugPromptData(null)
             setSelectedContext([])
             setPromptValue('')
@@ -110,7 +108,6 @@ export default function ImagePage() {
         if (activeBrandKit?.id) {
             setSelectedContext([])
             creationFlow.reset()
-            setIsAnnotating(false)
             setDebugPromptData(null)
             setPromptValue('')
         }
@@ -551,8 +548,6 @@ export default function ImagePage() {
                             < div className="flex-1 min-h-[500px] flex flex-col overflow-x-hidden" >
                                 <CanvasPanel
                                     currentImage={creationFlow.state.generatedImage}
-                                    isAnnotating={isAnnotating}
-                                    onAnnotate={() => setIsAnnotating(!isAnnotating)}
                                     generations={[]}
                                     onSelectGeneration={() => { }}
                                     selectedContext={selectedContext}
