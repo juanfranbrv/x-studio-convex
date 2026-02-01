@@ -55,10 +55,8 @@ export function AnnotationCanvas({
         Image.fromURL(imageUrl, { crossOrigin: 'anonymous' }).then((img) => {
             img.scaleToWidth(width)
             img.scaleToHeight(height)
-            canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
-                originX: 'left',
-                originY: 'top'
-            })
+            canvas.backgroundImage = img
+            canvas.requestRenderAll()
         })
 
         // Save initial state
