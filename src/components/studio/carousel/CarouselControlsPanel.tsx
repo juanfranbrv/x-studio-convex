@@ -107,6 +107,8 @@ export function CarouselControlsPanel({
     const [style, setStyle] = useState('minimal')
     const [slides, setSlides] = useState<SlideConfig[]>([])
     const [structureId, setStructureId] = useState<string>(analysisStructure?.id || 'problema-solucion')
+    const [hasUserSelectedStructure, setHasUserSelectedStructure] = useState(false)
+    const [lastAnalysisStructureId, setLastAnalysisStructureId] = useState<string | null>(analysisStructure?.id || null)
     const currentStructure = getNarrativeStructure(structureId) || CAROUSEL_STRUCTURES[0]
     const [compositionId, setCompositionId] = useState(currentStructure?.compositions[0]?.id || 'free')
     const [editingSlide, setEditingSlide] = useState<number | null>(null)
@@ -189,14 +191,19 @@ export function CarouselControlsPanel({
     }, [uploadedImages, selectedBrandKitImageIds, onReferenceImagesChange])
 
     useEffect(() => {
-        if (analysisStructure?.id && analysisStructure.id !== structureId) {
+        const nextId = analysisStructure?.id || null
+        if (nextId && nextId !== lastAnalysisStructureId) {
+            setLastAnalysisStructureId(nextId)
+            setHasUserSelectedStructure(false)
+        }
+        if (!hasUserSelectedStructure && analysisStructure?.id && analysisStructure.id !== structureId) {
             const found = getNarrativeStructure(analysisStructure.id)
             if (found) {
                 setStructureId(found.id)
                 setCompositionId(found.compositions[0]?.id || 'free')
             }
         }
-    }, [analysisStructure, structureId])
+    }, [analysisStructure, structureId, hasUserSelectedStructure, lastAnalysisStructureId])
 
     useEffect(() => {
         const refreshed = getNarrativeStructure(structureId)
@@ -473,7 +480,7 @@ export function CarouselControlsPanel({
                     <SectionHeader icon={Wand2} title="Que quieres crear?" />
                     <div className="relative">
                         <Textarea
-                            placeholder="Ej: 5 tips para mejorar tu productividad..."
+                            placeholder="Ej: Quiero dar valor real. Sácame los 5 errores típicos que cometemos los españoles al hablar inglés y cómo corregirlos. Algo que la gente quiera guardar para repasar luego."
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             onKeyDown={(e) => {
@@ -515,7 +522,10 @@ export function CarouselControlsPanel({
                                 return (
                                     <button
                                         key={structure.id}
-                                        onClick={() => setStructureId(structure.id)}
+                                        onClick={() => {
+                                            setHasUserSelectedStructure(true)
+                                            setStructureId(structure.id)
+                                        }}
                                         className={cn(
                                             "p-2 rounded-lg border text-left transition-all",
                                             isActive

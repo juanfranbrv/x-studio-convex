@@ -5,7 +5,7 @@ import { generateTextUnified } from '@/lib/gemini'
 import type { BrandDNA } from '@/lib/brand-types'
 import { buildCarouselDecompositionPrompt, buildCarouselImagePrompt } from '@/lib/prompts/carousel'
 import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
-import { getNarrativeComposition, getNarrativeStructure } from '@/lib/carousel-structures'
+import { CAROUSEL_STRUCTURES, getNarrativeComposition, getNarrativeStructure } from '@/lib/carousel-structures'
 import { buildCarouselPrompt } from '@/lib/prompts/carousel/builder'
 import { getMoodForSlide } from '@/lib/prompts/carousel/mood'
 import { buildFinalPrompt, generateCarouselSeed, extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
@@ -173,6 +173,157 @@ async function decomposeIntoSlides(
             .replace(/\p{Diacritic}/gu, '')
             .trim()
 
+    const normalizeStructureKey = (value: string) =>
+        value
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/\p{Diacritic}/gu, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '')
+
+    const STRUCTURE_ALIASES: Record<string, string> = {
+        'framework-aida': 'framework-pas',
+        'caso-estudio': 'estudio-caso',
+        'case-study': 'estudio-caso',
+        'comparativa-dual': 'comparativa-productos',
+        'checklist': 'checklist-diagnostico',
+        'faq': 'preguntas-respuestas',
+        'storytelling-3-actos': 'cronologia-historia',
+        'datos-estadisticas': 'cifras-dato',
+        'oferta-cta': 'promocion-oferta',
+        'q-and-a': 'preguntas-respuestas',
+        'q-a': 'preguntas-respuestas'
+    }
+
+    const STRUCTURE_NAME_ALIASES: Record<string, string> = {
+        'data-stats': 'cifras-dato',
+        'data-stats-': 'cifras-dato',
+        'case-study': 'estudio-caso',
+        'problem-solution': 'problema-solucion',
+        'before-after': 'antes-despues',
+        'step-by-step': 'paso-a-paso',
+        'tips-list': 'lista-tips',
+        'top-ranking': 'top-ranking',
+        'myths-vs-reality': 'mitos-vs-realidad',
+        'common-mistakes': 'errores-comunes',
+        'pas-framework': 'framework-pas',
+        'promotion-offer': 'promocion-oferta',
+        'timeline-history': 'cronologia-historia',
+        'tutorial-how-to': 'tutorial-how-to',
+        'quote': 'frase-celebre',
+        'meme-humor': 'meme-humor',
+        'questions-answers': 'preguntas-respuestas',
+        'q-and-a': 'preguntas-respuestas',
+        'diagnostic-checklist': 'checklist-diagnostico'
+    }
+
+    const inferStructureFromPrompt = (text: string, detectedIntent?: string) => {
+        const normalized = normalizeTextForMatching(text)
+        const has = (tokens: string[]) => tokens.some(token => normalized.includes(token))
+
+        if (detectedIntent) {
+            const intentStructureRules: Array<{
+                intent: string
+                structure: string
+                keywords?: string[]
+            }> = [
+                { intent: 'oferta', structure: 'promocion-oferta' },
+                {
+                    intent: 'escaparate',
+                    structure: 'paso-a-paso',
+                    keywords: ['tour', 'recorrido', 'instalaciones', 'visita guiada', 'clases por dentro']
+                },
+                {
+                    intent: 'escaparate',
+                    structure: 'checklist-diagnostico',
+                    keywords: ['que curso', 'qué curso', 'cual curso', 'cuál curso', 'nivel', 'diagnostico', 'diagnóstico', 'test', 'evaluacion', 'evaluación', 'b1', 'b2', 'c1']
+                },
+                { intent: 'escaparate', structure: 'checklist-diagnostico' },
+                { intent: 'catalogo', structure: 'comparativa-productos' },
+                { intent: 'lanzamiento', structure: 'framework-pas' },
+                {
+                    intent: 'servicio',
+                    structure: 'preguntas-respuestas',
+                    keywords: ['preguntas', 'dudas', 'faq', 'dm', 'mensaje', 'horario', 'recuperacion', 'recuperación', 'garantia', 'garantía', 'precio', 'tarifa']
+                },
+                { intent: 'servicio', structure: 'estudio-caso' },
+                { intent: 'comunicado', structure: 'cifras-dato' },
+                { intent: 'lista', structure: 'lista-tips' },
+                { intent: 'comparativa', structure: 'comparativa-productos' },
+                { intent: 'equipo', structure: 'top-ranking' },
+                { intent: 'logro', structure: 'antes-despues' },
+                { intent: 'bts', structure: 'paso-a-paso' },
+                { intent: 'dato', structure: 'mitos-vs-realidad' },
+                {
+                    intent: 'pasos',
+                    structure: 'errores-comunes',
+                    keywords: ['errores', 'fallos', 'trampas', 'fallas']
+                },
+                {
+                    intent: 'pasos',
+                    structure: 'framework-pas',
+                    keywords: ['ansiedad', 'miedo', 'nervios', 'estres', 'estrés', 'bloqueo', 'frustracion', 'frustración', 'suspender', 'pánico', 'panico']
+                },
+                { intent: 'pasos', structure: 'tutorial-how-to' },
+                { intent: 'definicion', structure: 'cifras-dato' },
+                { intent: 'pregunta', structure: 'checklist-diagnostico' },
+                { intent: 'reto', structure: 'paso-a-paso' }
+            ]
+
+            for (const rule of intentStructureRules) {
+                if (rule.intent !== detectedIntent) continue
+                if (rule.keywords && !has(rule.keywords)) continue
+                const mapped = getNarrativeStructure(rule.structure)
+                if (mapped) return mapped
+            }
+        }
+
+        if (has(['antes', 'despues', 'before', 'after'])) return getNarrativeStructure('antes-despues')
+        if (has(['paso a paso', 'pasos', 'tutorial', 'how to', 'guia', 'guia'])) return getNarrativeStructure('paso-a-paso')
+        if (has(['top', 'ranking', '#1', 'top 5', 'top 10', 'mejores'])) return getNarrativeStructure('top-ranking')
+        if (has(['mito', 'mitos', 'realidad'])) return getNarrativeStructure('mitos-vs-realidad')
+        if (has(['error', 'errores', 'fallo', 'fallos'])) return getNarrativeStructure('errores-comunes')
+        if (has(['checklist', 'lista de verificacion', 'lista de verificación', 'test rapido', 'test rápido', 'autoevaluacion', 'autoevaluación'])) {
+            return getNarrativeStructure('checklist-diagnostico')
+        }
+        if (has(['preguntas frecuentes', 'faq', 'preguntas y respuestas', 'q&a', 'dudas'])) return getNarrativeStructure('preguntas-respuestas')
+        if (has(['estadistica', 'estadisticas', 'dato', 'datos', '%', 'porcentaje'])) return getNarrativeStructure('cifras-dato')
+        if (has(['estudio de caso', 'caso', 'case study'])) return getNarrativeStructure('estudio-caso')
+        if (has(['historia', 'timeline', 'cronologia', 'storytelling', '3 actos'])) return getNarrativeStructure('cronologia-historia')
+        if (has(['oferta', 'descuento', 'promo', 'promocion', '2x1', 'rebaja'])) return getNarrativeStructure('promocion-oferta')
+        if (has(['meme', 'humor', 'gracioso'])) return getNarrativeStructure('meme-humor')
+        if (has(['frase', 'cita', 'quote'])) return getNarrativeStructure('frase-celebre')
+
+        return CAROUSEL_STRUCTURES[0]
+    }
+
+    const resolveStructureFromParsed = (parsedStructure: any, detectedIntent?: string) => {
+        const rawId = typeof parsedStructure?.id === 'string' ? parsedStructure.id : ''
+        const rawName = typeof parsedStructure?.name === 'string' ? parsedStructure.name : ''
+        const normalizedId = rawId ? normalizeStructureKey(rawId) : ''
+        const normalizedName = rawName ? normalizeStructureKey(rawName) : ''
+
+        if (normalizedId) {
+            const direct = getNarrativeStructure(normalizedId)
+            if (direct) return direct
+            const alias = STRUCTURE_ALIASES[normalizedId]
+            if (alias) {
+                const mapped = getNarrativeStructure(alias)
+                if (mapped) return mapped
+            }
+        }
+
+        if (normalizedName) {
+            const nameAlias = STRUCTURE_NAME_ALIASES[normalizedName]
+            if (nameAlias) {
+                const mapped = getNarrativeStructure(nameAlias)
+                if (mapped) return mapped
+            }
+        }
+
+        return inferStructureFromPrompt(prompt, detectedIntent)
+    }
+
     const hookForbiddenRegex = /(\\b(truco|tip|atajo|paso|punto)\\b\\s*#?\\s*\\d+)|(#\\s*\\d+)/i
     const ctaRequiredRegex =
         /(cta|llamada a la accion|call to action|inscrib|matricul|apunt|visita|visit|mas info|escriben|contact|registr|sigu|comparte|compra|reserva|solicita|pide|descarga|entra|unete|mandan|envian|aplica|agenda|agend|descubre|prueba|pruebalo|explora|cotiza|demo|demos|llama|llamanos|haz clic|haz click|clic|click|swipe|desliza|link en bio|comprar|shop|get started|learn more|join|suscrib)/i
@@ -216,13 +367,13 @@ async function decomposeIntoSlides(
         if (!caption) {
             throw new Error('Missing caption')
         }
+        const resolvedStructure = resolveStructureFromParsed(parsed.structure, parsed.detectedIntent)
+
         if (options?.captionOnly) {
             return {
                 slides: [],
                 hook: typeof parsed.hook === 'string' ? parsed.hook : undefined,
-                structure: parsed.structure && typeof parsed.structure === 'object'
-                    ? { id: parsed.structure.id, name: parsed.structure.name }
-                    : undefined,
+                structure: resolvedStructure ? { id: resolvedStructure.id, name: resolvedStructure.name } : undefined,
                 optimalSlideCount: requested,
                 detectedIntent: typeof parsed.detectedIntent === 'string' ? parsed.detectedIntent : undefined,
                 caption: sanitizeTextFromMarkdownLinks(caption)
@@ -317,9 +468,7 @@ async function decomposeIntoSlides(
         return {
             slides,
             hook: typeof parsed.hook === 'string' ? parsed.hook : undefined,
-            structure: parsed.structure && typeof parsed.structure === 'object'
-                ? { id: parsed.structure.id, name: parsed.structure.name }
-                : undefined,
+            structure: resolvedStructure ? { id: resolvedStructure.id, name: resolvedStructure.name } : undefined,
             optimalSlideCount: requested,
             detectedIntent: typeof parsed.detectedIntent === 'string' ? parsed.detectedIntent : undefined,
             caption: sanitizeTextFromMarkdownLinks(caption)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useToast } from '@/hooks/use-toast'
@@ -35,6 +35,10 @@ export default function CarouselPage() {
     const { activeBrandKit, brandKits, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const { toast } = useToast()
     const aiConfig = useQuery(api.settings.getAIConfig)
+
+    useEffect(() => {
+        document.title = 'X Carrusel | Motor de Diseño Inteligente'
+    }, [])
 
     const handleNewBrandKit = () => {
         router.push('/brand-kit/new')

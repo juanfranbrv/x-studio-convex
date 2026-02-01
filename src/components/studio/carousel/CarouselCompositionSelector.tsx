@@ -367,6 +367,30 @@ function CompositionThumbnail({ id }: { id: string }) {
         case 'gift': return withOverlay(<GiftLayout />)
         case 'cart': return withOverlay(<CartLayout />)
         case 'overlay': return withOverlay(<SaleOverlayLayout />)
+        // CHECKLIST DIAGNOSTICO
+        case 'board': return withOverlay(<ChecklistBoardLayout />)
+        case 'yes-no-split': return withOverlay(<YesNoSplitLayout />)
+        case 'scorecard': return withOverlay(<ScorecardLayout />)
+        case 'radar': return withOverlay(<RadarLayout />)
+        case 'progress-meter': return withOverlay(<ProgressMeterLayout />)
+        case 'decision-tree': return withOverlay(<DecisionTreeLayout />)
+        case 'traffic-lights': return withOverlay(<TrafficLightsLayout />)
+        case 'tile-grid': return withOverlay(<TileGridLayout />)
+        case 'badge-levels': return withOverlay(<BadgeLevelsLayout />)
+        case 'audit-columns': return withOverlay(<AuditColumnsLayout />)
+        case 'stamp-result': return withOverlay(<StampResultLayout />)
+        // PREGUNTAS RESPUESTAS
+        case 'split-qa': return withOverlay(<SplitQALayout />)
+        case 'ping-pong': return withOverlay(<PingPongLayout />)
+        case 'chat-thread': return withOverlay(<ChatThreadLayout />)
+        case 'accordion': return withOverlay(<AccordionLayout />)
+        case 'cards': return withOverlay(<QACardsLayout />)
+        case 'hotline': return withOverlay(<HotlineLayout />)
+        case 'faq-grid': return withOverlay(<FAQGridLayout />)
+        case 'speech-bubbles': return withOverlay(<SpeechBubblesLayout />)
+        case 'timeline': return withOverlay(<QATimelineLayout />)
+        case 'tagged-qa': return withOverlay(<TaggedQALayout />)
+        case 'reply-thread': return withOverlay(<ReplyThreadLayout />)
 
 
         // FRAMEWORK PAS (NEW 12)
@@ -692,6 +716,238 @@ function TwoDiceLayout() {
                     </div>
                 </div>
             </div>
+        </div>
+    )
+}
+
+// --- CHECKLIST DIAGNOSTICO ---
+function ChecklistBoardLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-center">
+            <div className="w-10 h-12 rounded-md bg-primary/15 border border-primary/30">
+                <div className="h-2 bg-primary/30 rounded-t-md" />
+                <div className="p-1 space-y-1">
+                    <div className="h-1 rounded bg-primary/40" />
+                    <div className="h-1 rounded bg-primary/30" />
+                    <div className="h-1 rounded bg-primary/25" />
+                </div>
+            </div>
+        </div>
+    )
+}
+function YesNoSplitLayout() {
+    return (
+        <div className="w-full h-full p-2 flex gap-1">
+            <div className="flex-1 rounded-sm bg-primary/30 flex items-center justify-center text-[7px] font-bold text-primary">✓</div>
+            <div className="flex-1 rounded-sm bg-primary/15 flex items-center justify-center text-[7px] font-bold text-primary">×</div>
+        </div>
+    )
+}
+function ScorecardLayout() {
+    return (
+        <div className="w-full h-full p-2 flex gap-1">
+            <div className="flex-1 space-y-1">
+                <div className="h-1 rounded bg-primary/25" />
+                <div className="h-1 rounded bg-primary/20" />
+                <div className="h-1 rounded bg-primary/15" />
+            </div>
+            <div className="w-5 rounded-sm bg-primary/35 flex items-center justify-center text-[8px] font-bold text-primary">8</div>
+        </div>
+    )
+}
+function RadarLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full border-2 border-primary/35 relative">
+                <div className="absolute inset-0 m-auto w-0.5 h-full bg-primary/25" />
+                <div className="absolute inset-0 m-auto h-0.5 w-full bg-primary/25" />
+                <div className="absolute top-1 right-3 w-1.5 h-1.5 rounded-full bg-primary/50" />
+            </div>
+        </div>
+    )
+}
+function ProgressMeterLayout() {
+    return (
+        <div className="w-full h-full p-2 flex flex-col justify-center gap-1">
+            <div className="h-2 rounded-full bg-primary/20">
+                <div className="h-2 w-2/3 rounded-full bg-primary/50" />
+            </div>
+            <div className="h-1 rounded bg-primary/15" />
+        </div>
+    )
+}
+function DecisionTreeLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-center">
+            <div className="relative w-12 h-10">
+                <div className="absolute top-0 left-1/2 w-2 h-2 -translate-x-1/2 rounded-full bg-primary/50" />
+                <div className="absolute top-2 left-1/2 w-0.5 h-3 -translate-x-1/2 bg-primary/30" />
+                <div className="absolute top-5 left-2 w-2 h-2 rounded-full bg-primary/40" />
+                <div className="absolute top-5 right-2 w-2 h-2 rounded-full bg-primary/40" />
+                <div className="absolute top-4 left-1/2 w-6 h-0.5 -translate-x-1/2 bg-primary/30" />
+            </div>
+        </div>
+    )
+}
+function TrafficLightsLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-center">
+            <div className="w-6 h-12 rounded-md bg-primary/15 flex flex-col items-center justify-between p-1">
+                <div className="w-3 h-3 rounded-full bg-primary/35" />
+                <div className="w-3 h-3 rounded-full bg-primary/35" />
+                <div className="w-3 h-3 rounded-full bg-primary/35" />
+            </div>
+        </div>
+    )
+}
+function TileGridLayout() {
+    return (
+        <div className="w-full h-full p-2 grid grid-cols-2 gap-1">
+            <div className="bg-primary/20 rounded-sm" />
+            <div className="bg-primary/30 rounded-sm" />
+            <div className="bg-primary/25 rounded-sm" />
+            <div className="bg-primary/35 rounded-sm" />
+        </div>
+    )
+}
+function BadgeLevelsLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-primary/25 flex items-center justify-center">
+                <div className="w-4 h-4 rounded-full bg-primary/50" />
+            </div>
+        </div>
+    )
+}
+function AuditColumnsLayout() {
+    return (
+        <div className="w-full h-full p-2 flex gap-1 items-end">
+            <div className="flex-1 h-6 rounded-sm bg-primary/20" />
+            <div className="flex-1 h-8 rounded-sm bg-primary/30" />
+            <div className="flex-1 h-5 rounded-sm bg-primary/25" />
+        </div>
+    )
+}
+function StampResultLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full border-2 border-primary/45 flex items-center justify-center">
+                <div className="w-3 h-3 rounded-full bg-primary/45" />
+            </div>
+        </div>
+    )
+}
+
+// --- PREGUNTAS RESPUESTAS ---
+function SplitQALayout() {
+    return (
+        <div className="w-full h-full p-2 flex flex-col gap-1">
+            <div className="flex-1 rounded-sm bg-primary/20 flex items-center justify-center text-[7px] font-bold text-primary">Q</div>
+            <div className="flex-1 rounded-sm bg-primary/35 flex items-center justify-center text-[7px] font-bold text-primary">A</div>
+        </div>
+    )
+}
+function PingPongLayout() {
+    return (
+        <div className="w-full h-full p-2 flex flex-col gap-1">
+            <div className="w-3/4 h-3 rounded-full bg-primary/25 self-start" />
+            <div className="w-3/4 h-3 rounded-full bg-primary/40 self-end" />
+            <div className="w-3/4 h-3 rounded-full bg-primary/20 self-start" />
+        </div>
+    )
+}
+function ChatThreadLayout() {
+    return (
+        <div className="w-full h-full p-2 flex flex-col gap-1">
+            <div className="w-4 h-4 rounded-full bg-primary/25" />
+            <div className="w-10 h-3 rounded-full bg-primary/20 self-end" />
+            <div className="w-10 h-3 rounded-full bg-primary/35 self-start" />
+        </div>
+    )
+}
+function AccordionLayout() {
+    return (
+        <div className="w-full h-full p-2 flex flex-col gap-1">
+            <div className="h-2 rounded-sm bg-primary/20" />
+            <div className="h-2 rounded-sm bg-primary/35" />
+            <div className="h-2 rounded-sm bg-primary/20" />
+        </div>
+    )
+}
+function QACardsLayout() {
+    return (
+        <div className="w-full h-full p-2 grid grid-cols-2 gap-1">
+            <div className="rounded-sm bg-primary/20" />
+            <div className="rounded-sm bg-primary/35" />
+            <div className="rounded-sm bg-primary/35" />
+            <div className="rounded-sm bg-primary/20" />
+        </div>
+    )
+}
+function HotlineLayout() {
+    return (
+        <div className="w-full h-full p-2 flex gap-1 items-center">
+            <div className="flex-1 h-8 rounded-sm bg-primary/25 flex items-center justify-center text-[7px] font-bold text-primary">Q</div>
+            <div className="flex-1 h-8 rounded-sm bg-primary/40 flex items-center justify-center text-[7px] font-bold text-primary">A</div>
+        </div>
+    )
+}
+function FAQGridLayout() {
+    return (
+        <div className="w-full h-full p-2 grid grid-cols-3 gap-1">
+            <div className="rounded-sm bg-primary/20" />
+            <div className="rounded-sm bg-primary/30" />
+            <div className="rounded-sm bg-primary/25" />
+            <div className="rounded-sm bg-primary/30" />
+            <div className="rounded-sm bg-primary/20" />
+            <div className="rounded-sm bg-primary/35" />
+        </div>
+    )
+}
+function SpeechBubblesLayout() {
+    return (
+        <div className="w-full h-full p-2 relative">
+            <div className="absolute top-2 left-2 w-7 h-4 rounded-full bg-primary/25" />
+            <div className="absolute bottom-3 right-2 w-8 h-4 rounded-full bg-primary/40" />
+        </div>
+    )
+}
+function QATimelineLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center">
+            <div className="w-0.5 h-full bg-primary/30 relative">
+                <div className="absolute top-1 w-2 h-2 rounded-full bg-primary/45 -left-[3px]" />
+                <div className="absolute top-1/2 w-2 h-2 rounded-full bg-primary/45 -left-[3px]" />
+                <div className="absolute bottom-1 w-2 h-2 rounded-full bg-primary/45 -left-[3px]" />
+            </div>
+            <div className="flex-1 ml-2 space-y-1">
+                <div className="h-1 rounded bg-primary/20" />
+                <div className="h-1 rounded bg-primary/30" />
+                <div className="h-1 rounded bg-primary/20" />
+            </div>
+        </div>
+    )
+}
+function TaggedQALayout() {
+    return (
+        <div className="w-full h-full p-2 flex flex-col gap-1">
+            <div className="flex gap-1">
+                <div className="w-3 h-3 rounded bg-primary/35" />
+                <div className="flex-1 h-3 rounded bg-primary/20" />
+            </div>
+            <div className="flex gap-1">
+                <div className="w-3 h-3 rounded bg-primary/50" />
+                <div className="flex-1 h-3 rounded bg-primary/30" />
+            </div>
+        </div>
+    )
+}
+function ReplyThreadLayout() {
+    return (
+        <div className="w-full h-full p-2 flex flex-col gap-1">
+            <div className="w-full h-3 rounded bg-primary/25" />
+            <div className="w-5/6 h-3 rounded bg-primary/40 ml-3" />
+            <div className="w-full h-3 rounded bg-primary/25" />
         </div>
     )
 }

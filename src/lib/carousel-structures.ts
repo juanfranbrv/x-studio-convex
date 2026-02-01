@@ -14,6 +14,8 @@ import { CIFRAS_DATO_COMPOSITIONS } from './prompts/carousel/cifras-dato'
 import { FRASE_CELEBRE_COMPOSITIONS } from './prompts/carousel/frase-celebre'
 import { MEME_HUMOR_COMPOSITIONS } from './prompts/carousel/meme-humor'
 import { PROMOCION_OFERTA_COMPOSITIONS } from './prompts/carousel/promocion-oferta'
+import { CHECKLIST_DIAGNOSTICO_COMPOSITIONS } from './prompts/carousel/checklist-diagnostico'
+import { PREGUNTAS_RESPUESTAS_COMPOSITIONS } from './prompts/carousel/preguntas-respuestas'
 
 export interface CarouselComposition {
     id: string
@@ -58,7 +60,9 @@ const NARRATIVE_CONTEXTS: NarrativeContext[] = [
     { id: 'cifras-dato', name: 'Data / Stats', summary: 'Numbers-driven narrative.', tension: 'insight vs noise', flow: 'lead stat then context', proof: 'source cues', cta: 'use the insight' },
     { id: 'frase-celebre', name: 'Quote', summary: 'Inspirational or famous quote.', tension: 'thought vs action', flow: 'quote focus', proof: 'author authority', cta: 'share the quote' },
     { id: 'meme-humor', name: 'Meme / Humor', summary: 'Relatable humor and engagement.', tension: 'expectation vs reality', flow: 'punchline', proof: 'relatability', cta: 'laugh and share' },
-    { id: 'promocion-oferta', name: 'Promotion / Offer', summary: 'Value proposition ending in action.', tension: 'value vs cost', flow: 'hook → proof → CTA', proof: 'benefit highlight', cta: 'claim the offer' }
+    { id: 'promocion-oferta', name: 'Promotion / Offer', summary: 'Value proposition ending in action.', tension: 'value vs cost', flow: 'hook → proof → CTA', proof: 'benefit highlight', cta: 'claim the offer' },
+    { id: 'checklist-diagnostico', name: 'Diagnostic Checklist', summary: 'Self-assessment with criteria.', tension: 'uncertainty vs clarity', flow: 'signals → score → outcome', proof: 'criteria match', cta: 'act on your result' },
+    { id: 'preguntas-respuestas', name: 'Q&A', summary: 'Doubts resolved in Q and A.', tension: 'question → answer', proof: 'clear response', cta: 'ask or act' }
 ]
 
 type TemplateBuilder = (ctx: NarrativeContext) => CarouselComposition
@@ -84,6 +88,8 @@ function getCompositionsForStructure(ctx: NarrativeContext): CarouselComposition
         case 'frase-celebre': return FRASE_CELEBRE_COMPOSITIONS
         case 'meme-humor': return MEME_HUMOR_COMPOSITIONS
         case 'promocion-oferta': return PROMOCION_OFERTA_COMPOSITIONS
+        case 'checklist-diagnostico': return CHECKLIST_DIAGNOSTICO_COMPOSITIONS
+        case 'preguntas-respuestas': return PREGUNTAS_RESPUESTAS_COMPOSITIONS
         default: return []
     }
 }
