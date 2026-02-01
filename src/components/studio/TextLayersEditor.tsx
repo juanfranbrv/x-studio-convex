@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { X, MousePointerClick, Fingerprint, Link2, Plus } from 'lucide-react'
@@ -52,6 +52,14 @@ export function TextLayersEditor({
     onUpdateTextAsset
 }: TextLayersEditorProps) {
     const visibleTextAssets = textAssets.filter(asset => asset.type !== 'cta' && asset.type !== 'url')
+    const headlineRef = useRef<HTMLTextAreaElement | null>(null)
+
+    useEffect(() => {
+        const el = headlineRef.current
+        if (!el) return
+        el.style.height = 'auto'
+        el.style.height = `${el.scrollHeight + 2}px`
+    }, [headline])
 
     return (
         <div className="w-full h-full flex flex-col justify-between py-[4cqh] py-[2cqw] px-[6cqw] animate-in fade-in zoom-in-95 duration-500 overflow-y-auto overflow-x-hidden thin-scrollbar">
@@ -72,12 +80,7 @@ export function TextLayersEditor({
                             target.style.height = 'auto';
                             target.style.height = (target.scrollHeight + 2) + 'px';
                         }}
-                        ref={(el) => {
-                            if (el) {
-                                el.style.height = 'auto';
-                                el.style.height = (el.scrollHeight + 2) + 'px';
-                            }
-                        }}
+                        ref={headlineRef}
                     />
                     {headline && (
                         <Button

@@ -26,9 +26,10 @@ interface PresetsCarouselProps {
     onReset?: () => void
     userId?: string
     className?: string
+    filterPreset?: (preset: any) => boolean
 }
 
-export function PresetsCarousel({ onSelectPreset, onReset, userId, className }: PresetsCarouselProps) {
+export function PresetsCarousel({ onSelectPreset, onReset, userId, className, filterPreset }: PresetsCarouselProps) {
     const { activeBrandKit } = useBrandKit()
     const presets = useQuery(api.presets.list, {
         userId,
@@ -40,7 +41,8 @@ export function PresetsCarousel({ onSelectPreset, onReset, userId, className }: 
         return <PresetsSkeleton />
     }
 
-    const userPresets = presets.user || []
+    const basePresets = presets.user || []
+    const userPresets = filterPreset ? basePresets.filter(filterPreset) : basePresets
 
     // Don't render anything if there are no presets
     if (userPresets.length === 0) {

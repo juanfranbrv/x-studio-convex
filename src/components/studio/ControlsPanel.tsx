@@ -417,6 +417,9 @@ export function ControlsPanel({
                                     mode={state.imageSourceMode}
                                     onModeChange={setImageSourceMode}
                                 />
+                                <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+                                    Sube una referencia o usa una del Brand Kit.
+                                </p>
                                 {state.currentStep === 4 && (
                                     <div className="flex justify-end mt-3">
                                         <Button

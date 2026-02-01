@@ -125,6 +125,14 @@ export function CanvasPanel({
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
     const [viewportHeight, setViewportHeight] = useState(800) // Default fallback
     const [isMobile, setIsMobile] = useState(false)
+    const selectedLogoUrl = useMemo(() => {
+        if (!creationState.selectedLogoId || !activeBrandKit?.logos?.length) return null
+        const found = activeBrandKit.logos.find((logo: any, idx: number) =>
+            logo?._id === creationState.selectedLogoId || `logo-${idx}` === creationState.selectedLogoId
+        )
+        if (!found) return null
+        return typeof found === 'string' ? found : found.url
+    }, [activeBrandKit?.logos, creationState.selectedLogoId])
 
     // Track viewport height for responsive canvas
     useEffect(() => {
@@ -683,11 +691,11 @@ export function CanvasPanel({
                                 })()}
 
                                 {/* Logo (Top Right) */}
-                                {creationState.selectedLogoId && activeBrandKit?.logos && (
+                                {selectedLogoUrl && (
                                     <div className="absolute top-4 right-4 z-20 group">
                                         <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
                                             <img
-                                                src={activeBrandKit.logos.find((l: any, idx: number) => l._id === creationState.selectedLogoId || `logo-${idx}` === creationState.selectedLogoId)?.url}
+                                                src={selectedLogoUrl}
                                                 alt="Logo"
                                                 className="w-full h-full object-contain drop-shadow"
                                             />

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Rows3 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Star, Bookmark as BookmarkIcon, SquarePlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import { ImageReferenceSelector } from '@/components/studio/creation-flow/ImageReferenceSelector'
@@ -13,6 +14,10 @@ import { CAROUSEL_STRUCTURES, getNarrativeStructure } from '@/lib/carousel-struc
 import { CarouselCompositionSelector } from '@/components/studio/carousel/CarouselCompositionSelector'
 import { BrandingConfigurator } from '@/components/studio/creation-flow/BrandingConfigurator'
 import type { SelectedColor } from '@/lib/creation-flow-types'
+import { useMutation, useQuery } from 'convex/react'
+import { api } from '../../../../convex/_generated/api'
+import { PresetsCarousel } from '@/components/studio/creation-flow/PresetsCarousel'
+import { SavePresetDialog } from '@/components/studio/creation-flow/SavePresetDialog'
 
 export interface SlideConfig {
     index: number
@@ -41,6 +46,8 @@ interface CarouselControlsPanelProps {
     onGenerate: (settings: CarouselSettings) => void
     onAspectRatioChange?: (ratio: '1:1' | '4:5' | '3:4') => void
     onReferenceImagesChange?: (images: Array<{ url: string; source: 'upload' | 'brandkit' }>) => void
+    onSelectedLogoChange?: (logoId: string | null, logoUrl?: string) => void
+    userId?: string
     isAnalyzing: boolean
     isGenerating: boolean
     currentSlideIndex: number
@@ -91,6 +98,8 @@ export function CarouselControlsPanel({
     isGenerating,
     onAspectRatioChange,
     onReferenceImagesChange,
+    onSelectedLogoChange,
+    userId,
     currentSlideIndex,
     generatedCount,
     totalSlides,
@@ -101,6 +110,14 @@ export function CarouselControlsPanel({
     analysisIntentLabel,
     isAdmin = false
 }: CarouselControlsPanelProps) {
+    const createPreset = useMutation(api.presets.create)
+    const presetsData = useQuery(api.presets.list, userId ? {
+        userId,
+        brandId: brandKit?.id as any
+    } : 'skip')
+    const hasPresets = (presetsData?.user?.some((preset: any) => preset?.state?.presetType === 'carousel') ?? false)
+    const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
+    const [isSavingPreset, setIsSavingPreset] = useState(false)
     const [prompt, setPrompt] = useState('')
     const [slideCount, setSlideCount] = useState(5)
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('3:4')
@@ -124,10 +141,20 @@ export function CarouselControlsPanel({
     const [isImageAnalyzing, setIsImageAnalyzing] = useState(false)
     const [imageError, setImageError] = useState<string | null>(null)
     const [includeLogoOnSlides, setIncludeLogoOnSlides] = useState(true)
+    const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1)
+    const [needsReanalysis, setNeedsReanalysis] = useState(false)
+    const [lastAnalyzedPrompt, setLastAnalyzedPrompt] = useState('')
+    const showAllSteps = generatedCount > 0 && !needsReanalysis
+    const selectedImageCount = uploadedImages.length + selectedBrandKitImageIds.length
+    const hasReferenceSelection = selectedImageCount > 0 || (imageSourceMode === 'generate' && aiImageDescription.trim().length > 0)
+    const canGenerate = prompt.trim().length > 0 && !isGenerating && brandKit !== null && currentStep >= 7 && !needsReanalysis
+    const canAnalyze = prompt.trim().length > 0 && !isAnalyzing && !isGenerating && brandKit !== null
+    const canContinueFromImage = imageSourceMode !== 'generate' || Boolean(aiImageDescription.trim())
+    const isStepVisible = (step: number) => showAllSteps || currentStep >= step
 
     // Get brand logos
     const brandLogos = brandKit?.logos || []
-    const primaryLogo = brandLogos[0]?.url || brandKit?.logo_url
+    const primaryLogo = (typeof brandLogos[0] === 'string' ? brandLogos[0] : brandLogos[0]?.url) || brandKit?.logo_url
 
     // Get brand colors
     const brandColors = (brandKit?.colors || []).filter(c => c.color)
@@ -138,6 +165,16 @@ export function CarouselControlsPanel({
     const handleSlideCountChange = (delta: number) => {
         const newCount = Math.max(1, Math.min(15, slideCount + delta))
         setSlideCount(newCount)
+        if (prompt.trim()) {
+            setNeedsReanalysis(true)
+            setCurrentStep(2)
+            setLastAnalyzedPrompt(prompt.trim())
+            if (!isAnalyzing && !isGenerating) {
+                onAnalyze(buildSettings({ slideCount: newCount }))
+            }
+        } else {
+            setCurrentStep(2)
+        }
     }
 
     // TRACK last initialized brand kit for colors
@@ -212,9 +249,30 @@ export function CarouselControlsPanel({
         }
     }, [structureId])
 
+    useEffect(() => {
+        if (showAllSteps) {
+            setCurrentStep(7)
+        }
+    }, [showAllSteps])
+
+    useEffect(() => {
+        if (!analysisStructure?.id) return
+        if (lastAnalyzedPrompt && lastAnalyzedPrompt.trim() === prompt.trim()) {
+            setNeedsReanalysis(false)
+            setCurrentStep(prev => (prev < 3 ? 3 : prev))
+        }
+    }, [analysisStructure?.id, lastAnalyzedPrompt, prompt])
+
+    useEffect(() => {
+        if (!showAllSteps && hasReferenceSelection) {
+            setCurrentStep(prev => (prev < 6 ? 6 : prev))
+        }
+    }, [hasReferenceSelection, showAllSteps])
+
     const handleAspectRatioSelect = (ratio: '1:1' | '4:5' | '3:4') => {
         setAspectRatio(ratio)
         onAspectRatioChange?.(ratio)
+        setCurrentStep(prev => (prev < 5 ? 5 : prev))
     }
 
     const toggleColor = (color: string) => {
@@ -360,7 +418,25 @@ export function CarouselControlsPanel({
         }
     }
 
-    const buildSettings = () => {
+    const resolveSelectedLogoUrl = () => {
+        if (!includeLogoOnSlides) return undefined
+        if (!selectedLogoId) return primaryLogo
+        const match = selectedLogoId.match(/^logo-(\d+)$/)
+        if (match) {
+            const idx = Number(match[1])
+            const entry = brandLogos[idx]
+            if (!entry) return primaryLogo
+            return typeof entry === 'string' ? entry : entry?.url || primaryLogo
+        }
+        return primaryLogo
+    }
+
+    useEffect(() => {
+        if (!onSelectedLogoChange) return
+        onSelectedLogoChange(selectedLogoId, resolveSelectedLogoUrl())
+    }, [selectedLogoId, includeLogoOnSlides, brandLogos, primaryLogo, onSelectedLogoChange])
+
+    const buildSettings = (overrides: Partial<CarouselSettings> = {}) => {
         const finalSlides = slides.length === slideCount
             ? slides
             : Array.from({ length: slideCount }, (_, i) => slides[i] || { index: i })
@@ -372,18 +448,7 @@ export function CarouselControlsPanel({
                     ? selectedBrandKitImageIds
                     : []
 
-        const resolveSelectedLogoUrl = () => {
-            if (!includeLogoOnSlides) return undefined
-            if (!selectedLogoId) return primaryLogo
-            const match = selectedLogoId.match(/^logo-(\d+)$/)
-            if (match) {
-                const idx = Number(match[1])
-                return brandLogos[idx]?.url || primaryLogo
-            }
-            return primaryLogo
-        }
-
-        return {
+        const baseSettings = {
             prompt,
             slideCount,
             aspectRatio,
@@ -401,6 +466,7 @@ export function CarouselControlsPanel({
             selectedImageUrls,
             includeLogoOnSlides
         }
+        return { ...baseSettings, ...overrides }
     }
 
     const handleGenerate = () => {
@@ -410,16 +476,149 @@ export function CarouselControlsPanel({
 
     const handleAnalyze = async () => {
         if (!prompt.trim()) return
+        setNeedsReanalysis(true)
+        setLastAnalyzedPrompt(prompt.trim())
         await onAnalyze(buildSettings())
     }
 
-    const canGenerate = prompt.trim().length > 0 && !isGenerating && brandKit !== null
-    const canAnalyze = prompt.trim().length > 0 && !isAnalyzing && !isGenerating && brandKit !== null
+    const handleReset = () => {
+        setPrompt('')
+        setSlideCount(5)
+        setAspectRatio('3:4')
+        setStyle('minimal')
+        setSlides([])
+        const defaultStructureId = analysisStructure?.id || 'problema-solucion'
+        setStructureId(defaultStructureId)
+        const freshStructure = getNarrativeStructure(defaultStructureId) || CAROUSEL_STRUCTURES[0]
+        setCompositionId(freshStructure?.compositions[0]?.id || 'free')
+        setSelectedLogoId(brandLogos.length > 0 ? 'logo-0' : null)
+        setSelectedColors([])
+        setSelectedBrandKitImageIds([])
+        setUploadedImages([])
+        setImageSourceMode('upload')
+        setAiImageDescription('')
+        setIncludeLogoOnSlides(true)
+        setNeedsReanalysis(false)
+        setLastAnalyzedPrompt('')
+        setCurrentStep(1)
+    }
+
+    const handleSelectPreset = (state: any) => {
+        if (!state || state.presetType !== 'carousel') return
+        setPrompt(state.prompt || '')
+        setSlideCount(state.slideCount || 5)
+        setAspectRatio(state.aspectRatio || '3:4')
+        setStyle(state.style || 'minimal')
+        if (state.structureId) {
+            setStructureId(state.structureId)
+            const nextStructure = getNarrativeStructure(state.structureId)
+            setCompositionId(state.compositionId || nextStructure?.compositions[0]?.id || 'free')
+        } else if (state.compositionId) {
+            setCompositionId(state.compositionId)
+        }
+        setImageSourceMode(state.imageSourceMode || 'upload')
+        setAiImageDescription(state.aiImageDescription || '')
+        setSelectedBrandKitImageIds(state.selectedBrandKitImageIds || [])
+        setSelectedLogoId(state.selectedLogoId ?? (brandLogos.length > 0 ? 'logo-0' : null))
+        setSelectedColors(state.selectedColors || [])
+        setIncludeLogoOnSlides(state.includeLogoOnSlides !== false)
+        setNeedsReanalysis(true)
+        setLastAnalyzedPrompt(state.prompt || '')
+        setCurrentStep(3)
+        if (state.prompt && !isAnalyzing && !isGenerating) {
+            onAnalyze(buildSettings({
+                prompt: state.prompt,
+                slideCount: state.slideCount || 5,
+                aspectRatio: state.aspectRatio || '3:4',
+                style: state.style || 'minimal',
+                structureId: state.structureId || structureId,
+                compositionId: state.compositionId || compositionId,
+                imageSourceMode: state.imageSourceMode || 'upload',
+                aiImageDescription: state.aiImageDescription || '',
+                selectedLogoUrl: resolveSelectedLogoUrl(),
+                selectedColors: state.selectedColors || [],
+                selectedImageUrls: state.selectedBrandKitImageIds || [],
+                includeLogoOnSlides: state.includeLogoOnSlides !== false
+            }))
+        }
+    }
+
+    const handleSavePreset = async (name: string) => {
+        if (!userId || !brandKit) return
+        if (!prompt.trim()) return
+        setIsSavingPreset(true)
+        try {
+            await createPreset({
+                userId,
+                brandId: brandKit?.id as any,
+                name,
+                description: analysisIntentLabel || analysisIntent || structureId || undefined,
+                icon: 'Star',
+                state: {
+                    presetType: 'carousel',
+                    prompt: prompt.trim(),
+                    slideCount,
+                    aspectRatio,
+                    style,
+                    structureId,
+                    compositionId,
+                    imageSourceMode,
+                    aiImageDescription: aiImageDescription || undefined,
+                    selectedBrandKitImageIds,
+                    selectedLogoId,
+                    selectedColors,
+                    includeLogoOnSlides
+                }
+            })
+            setIsSaveDialogOpen(false)
+        } finally {
+            setIsSavingPreset(false)
+        }
+    }
 
     return (
         <div className="w-full md:w-[27%] h-full controls-panel flex flex-col shrink-0 relative group/panel">
             <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-6">
+                {/* SECTION: Presets */}
+                <div className="glass-card p-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <SectionHeader icon={Star} title="Favoritos" />
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setIsSaveDialogOpen(true)}
+                                disabled={generatedCount === 0}
+                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                            >
+                                <BookmarkIcon className="w-3 h-3" />
+                                Guardar
+                            </Button>
+                        </div>
+                    </div>
+                    {hasPresets ? (
+                        <>
+                            <PresetsCarousel
+                                onSelectPreset={handleSelectPreset as any}
+                                onReset={handleReset}
+                                userId={userId}
+                                filterPreset={(preset) => preset?.state?.presetType === 'carousel'}
+                            />
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Guarda y reutiliza tus configuraciones favoritas.
+                            </p>
+                        </>
+                    ) : (
+                        <div className="rounded-xl border border-dashed border-border/70 bg-muted/30 px-3 py-4 text-center">
+                            <p className="text-[11px] text-muted-foreground">
+                                Los favoritos guardan tu configuración de carrusel para reutilizarla. Podrás guardar uno cuando termines de generar tu carrusel.
+                            </p>
+                        </div>
+                    )}
+                </div>
+
                 {/* Slide Count */}
+                {isStepVisible(1) && (
                 <div className="glass-card p-4 space-y-3">
                     <SectionHeader icon={GalleryHorizontal} title="Numero de diapositivas" />
                     <div className="flex items-center gap-4">
@@ -435,54 +634,47 @@ export function CarouselControlsPanel({
                         </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">Entre 1 y 15 diapositivas.</p>
-                </div>
-
-                {/* Lazy Prompt Result */}
-                {isAdmin && (analysisHook || analysisStructure?.name || analysisStructure?.id || analysisIntentLabel || analysisIntent) && (
-                    <div className="glass-card p-4 space-y-3">
-                        <SectionHeader icon={Sparkles} title="Resumen IA" />
-                        <div className="space-y-2 text-sm">
-                            {(analysisIntentLabel || analysisIntent) && (
-                                <div className="flex items-start gap-2">
-                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Intencion</span>
-                                    <span className="text-foreground">{analysisIntentLabel || analysisIntent}</span>
-                                </div>
-                            )}
-                            {(analysisStructure?.name || analysisStructure?.id) && (
-                                <div className="flex items-start gap-2">
-                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estructura</span>
-                                    <span className="text-foreground">
-                                        {analysisStructure?.name || analysisStructure?.id}
-                                        {analysisStructure?.name && analysisStructure?.id ? ` (${analysisStructure.id})` : ''}
-                                    </span>
-                                </div>
-                            )}
-                            {analysisHook && (
-                                <div className="space-y-1">
-                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Gancho</span>
-                                    <p className="text-foreground leading-snug">{analysisHook}</p>
-                                </div>
-                            )}
-                            <div className="flex items-start gap-2">
-                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Diapositivas</span>
-                                <span className="text-foreground">{slideCount}</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Formato</span>
-                                <span className="text-foreground">{aspectRatio}</span>
-                            </div>
+                    {!showAllSteps && currentStep === 1 && (
+                        <div className="flex justify-end">
+                            <Button size="sm" variant="secondary" onClick={() => setCurrentStep(2)} className="h-7 text-xs">
+                                Siguiente
+                            </Button>
                         </div>
-                    </div>
+                    )}
+                </div>
                 )}
 
                 {/* Prompt */}
+                {isStepVisible(2) && (
                 <div className="glass-card p-4 space-y-3">
-                    <SectionHeader icon={Wand2} title="Que quieres crear?" />
+                    <SectionHeader
+                        icon={Wand2}
+                        title="Que quieres crear?"
+                        extra={
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleReset}
+                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                            >
+                                <SquarePlus className="w-3 h-3" />
+                                Nuevo
+                            </Button>
+                        }
+                    />
                     <div className="relative">
                         <Textarea
                             placeholder="Ej: Quiero dar valor real. Sácame los 5 errores típicos que cometemos los españoles al hablar inglés y cómo corregirlos. Algo que la gente quiera guardar para repasar luego."
                             value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
+                            onChange={(e) => {
+                                const nextPrompt = e.target.value
+                                setPrompt(nextPrompt)
+                                setNeedsReanalysis(true)
+                                setCurrentStep(2)
+                                if (!nextPrompt.trim()) {
+                                    setLastAnalyzedPrompt('')
+                                }
+                            }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault()
@@ -507,51 +699,60 @@ export function CarouselControlsPanel({
                         </div>
                     </div>
                 </div>
+                )}
 
                 {/* Composition */}
+                {isStepVisible(3) && (
                 <div className="glass-card p-4 space-y-3">
-                    <SectionHeader icon={Layout} title="Composición" />
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <Rows3 className="w-4 h-4 text-primary" />
-                            <p className="text-xs font-semibold uppercase tracking-wider">Estructura narrativa</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                            {CAROUSEL_STRUCTURES.map((structure) => {
-                                const isActive = structureId === structure.id
-                                return (
-                                    <button
-                                        key={structure.id}
-                                        onClick={() => {
-                                            setHasUserSelectedStructure(true)
-                                            setStructureId(structure.id)
-                                        }}
-                                        className={cn(
-                                            "p-2 rounded-lg border text-left transition-all",
-                                            isActive
-                                                ? "border-primary bg-primary/5 shadow-sm"
-                                                : "border-border hover:border-primary/40 hover:bg-muted/40"
-                                        )}
-                                    >
-                                        <div className="text-[11px] font-semibold text-foreground">{structure.name}</div>
-                                        <div className="text-[10px] text-muted-foreground line-clamp-2">{structure.summary}</div>
-                                    </button>
-                                )
-                            })}
-                        </div>
-                    </div>
+                    <SectionHeader
+                        icon={Layout}
+                        title="Composición"
+                        extra={
+                            <Select
+                                value={structureId}
+                                onValueChange={(value) => {
+                                    setHasUserSelectedStructure(true)
+                                    setStructureId(value)
+                                }}
+                            >
+                                <SelectTrigger
+                                    size="sm"
+                                    className="h-6 px-2 text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 rounded-full shadow-none"
+                                >
+                                    <SelectValue placeholder="Estructura" />
+                                </SelectTrigger>
+                                <SelectContent align="end">
+                                    {CAROUSEL_STRUCTURES.map((structure) => (
+                                        <SelectItem key={structure.id} value={structure.id}>
+                                            <span className="flex items-center justify-between w-full gap-2">
+                                                <span>{structure.name}</span>
+                                                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                                    {structure.id}
+                                                </span>
+                                            </span>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        }
+                    />
                     <CarouselCompositionSelector
                         key={structureId}
                         compositions={currentStructure?.compositions || []}
                         selectedId={compositionId}
-                        onSelect={setCompositionId}
+                        onSelect={(id) => {
+                            setCompositionId(id)
+                            setCurrentStep(prev => (prev < 4 ? 4 : prev))
+                        }}
                     />
                     <p className="text-[11px] text-muted-foreground leading-snug">
                         Define la forma de distribuir el contenido en cada diapositiva.
                     </p>
                 </div>
+                )}
 
                 {/* Format */}
+                {isStepVisible(4) && (
                 <div className="glass-card p-4 space-y-3">
                     <SectionHeader icon={Layers} title="Formato" />
                     <div className="space-y-2">
@@ -611,8 +812,10 @@ export function CarouselControlsPanel({
                         </button>
                     </div>
                 </div>
+                )}
 
                 {/* Image */}
+                {isStepVisible(5) && (
                 <div className="glass-card p-4 space-y-3">
                     <SectionHeader icon={ImagePlus} title="Imagen de Referencia" />
                     <ImageReferenceSelector
@@ -636,9 +839,27 @@ export function CarouselControlsPanel({
                         mode={imageSourceMode}
                         onModeChange={setImageSourceMode}
                     />
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Sube una referencia o usa una del Brand Kit.
+                    </p>
+                    {!showAllSteps && !hasReferenceSelection && (
+                        <div className="flex justify-end">
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => setCurrentStep(6)}
+                                className="h-7 text-xs"
+                                disabled={!canContinueFromImage}
+                            >
+                                {imageSourceMode === 'generate' && !canContinueFromImage ? 'Escribe un prompt' : 'Continuar sin imagen de referencia'}
+                            </Button>
+                        </div>
+                    )}
                 </div>
+                )}
 
                 {/* Logo */}
+                {isStepVisible(6) && (
                 <div className="glass-card p-4 space-y-4">
                     <SectionHeader icon={Fingerprint} title="Logo" />
                     {brandLogos.length > 0 || primaryLogo ? (
@@ -679,8 +900,17 @@ export function CarouselControlsPanel({
                     ) : (
                         <p className="text-xs text-muted-foreground">No hay logo en tu Brand Kit.</p>
                     )}
+                    {!showAllSteps && (
+                        <div className="flex justify-end">
+                            <Button size="sm" variant="secondary" onClick={() => setCurrentStep(7)} className="h-7 text-xs">
+                                Siguiente
+                            </Button>
+                        </div>
+                    )}
                 </div>
+                )}
 
+                {isStepVisible(7) && (
                 <div className="glass-card p-4 space-y-3">
                     <SectionHeader icon={Palette} title="Colores" />
                     <BrandingConfigurator
@@ -700,6 +930,7 @@ export function CarouselControlsPanel({
                         onlyShowSelectedColors={true}
                     />
                 </div>
+                )}
             </div>
 
             {/* Generate */}
@@ -707,7 +938,7 @@ export function CarouselControlsPanel({
                 <Button
                     onClick={handleGenerate}
                     disabled={!canGenerate}
-                    className="w-full h-12 text-base font-semibold bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600"
+                    className="w-full h-12 text-base font-semibold disabled:pointer-events-auto disabled:cursor-not-allowed"
                 >
                     {isGenerating ? (
                         <>
@@ -717,7 +948,7 @@ export function CarouselControlsPanel({
                     ) : (
                         <>
                             <Sparkles className="w-5 h-5 mr-2" />
-                            Generar Carrusel
+                            GENERAR CARRUSEL
                         </>
                     )}
                 </Button>
@@ -728,6 +959,13 @@ export function CarouselControlsPanel({
                     </p>
                 )}
             </div>
+
+            <SavePresetDialog
+                open={isSaveDialogOpen}
+                onOpenChange={setIsSaveDialogOpen}
+                onSave={handleSavePreset}
+                isSaving={isSavingPreset}
+            />
         </div>
     )
 }

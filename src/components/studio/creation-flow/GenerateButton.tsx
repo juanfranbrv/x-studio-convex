@@ -28,6 +28,7 @@ export function GenerateButton({
                 "bg-primary text-primary-foreground",
                 "hover:shadow-lg hover:shadow-primary/25",
                 "active:scale-[0.98]",
+                "disabled:pointer-events-auto disabled:cursor-not-allowed",
                 className
             )}
         >

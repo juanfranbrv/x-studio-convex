@@ -54,6 +54,7 @@ interface CarouselCanvasPanelProps {
     brandKitTexts?: Array<{ id: string; label: string; value: string }>
     brandName?: string
     hook?: string
+    selectedLogoUrl?: string
 }
 
 export function CarouselCanvasPanel({
@@ -74,7 +75,8 @@ export function CarouselCanvasPanel({
     referenceImages = [],
     brandKitTexts = [],
     brandName,
-    hook
+    hook,
+    selectedLogoUrl
 }: CarouselCanvasPanelProps) {
     const [zoom, setZoom] = useState(100)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -443,6 +445,19 @@ export function CarouselCanvasPanel({
                                         +{referenceImages.length - 6}
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Logo Preview (Top Right) */}
+                        {selectedLogoUrl && (
+                            <div className="absolute top-4 right-4 z-20">
+                                <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
+                                    <img
+                                        src={selectedLogoUrl}
+                                        alt="Logo"
+                                        className="w-full h-full object-contain drop-shadow"
+                                    />
+                                </div>
                             </div>
                         )}
 

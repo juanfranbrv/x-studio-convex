@@ -62,6 +62,7 @@ export default function CarouselPage() {
     const [isCaptionLocked, setIsCaptionLocked] = useState(false)
     const [isCaptionGenerating, setIsCaptionGenerating] = useState(false)
     const [referenceImages, setReferenceImages] = useState<Array<{ url: string; source: 'upload' | 'brandkit' }>>([])
+    const [selectedLogoUrl, setSelectedLogoUrl] = useState<string | undefined>(undefined)
     const [showDebugModal, setShowDebugModal] = useState(false)
     const [debugPromptData, setDebugPromptData] = useState<DebugPromptData | null>(null)
     const [pendingGenerateSettings, setPendingGenerateSettings] = useState<CarouselSettings | null>(null)
@@ -650,6 +651,7 @@ export default function CarouselPage() {
                         brandKitTexts={brandKitTexts}
                         brandName={activeBrandKit?.brand_name}
                         hook={analysisHook}
+                        selectedLogoUrl={selectedLogoUrl}
                     />
                 </div>
 
@@ -659,6 +661,8 @@ export default function CarouselPage() {
                     onGenerate={handleGenerate}
                     onAspectRatioChange={setAspectRatio}
                     onReferenceImagesChange={setReferenceImages}
+                    onSelectedLogoChange={(_, logoUrl) => setSelectedLogoUrl(logoUrl)}
+                    userId={user?.id}
                     isAnalyzing={isAnalyzing}
                     isGenerating={isGenerating}
                     currentSlideIndex={currentSlideIndex}
