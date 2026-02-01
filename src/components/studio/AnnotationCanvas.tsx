@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Canvas, Image, IText, PencilBrush, type IEvent } from 'fabric'
+import { Canvas, Image, IText, PencilBrush, type TEvent } from 'fabric'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Eraser, Type, ImagePlus, Undo2, Trash2, Check, X } from 'lucide-react'
@@ -114,7 +114,7 @@ export function AnnotationCanvas({
         const canvas = fabricRef.current
         if (!canvas) return
 
-        const handleCanvasClick = (e: IEvent) => {
+        const handleCanvasClick = (e: TEvent) => {
             if (activeTool !== 'text') return
             if (e.target) return // Clicked on existing object
 
