@@ -62,7 +62,7 @@ const NARRATIVE_CONTEXTS: NarrativeContext[] = [
     { id: 'meme-humor', name: 'Meme / Humor', summary: 'Relatable humor and engagement.', tension: 'expectation vs reality', flow: 'punchline', proof: 'relatability', cta: 'laugh and share' },
     { id: 'promocion-oferta', name: 'Promotion / Offer', summary: 'Value proposition ending in action.', tension: 'value vs cost', flow: 'hook → proof → CTA', proof: 'benefit highlight', cta: 'claim the offer' },
     { id: 'checklist-diagnostico', name: 'Diagnostic Checklist', summary: 'Self-assessment with criteria.', tension: 'uncertainty vs clarity', flow: 'signals → score → outcome', proof: 'criteria match', cta: 'act on your result' },
-    { id: 'preguntas-respuestas', name: 'Q&A', summary: 'Doubts resolved in Q and A.', tension: 'question → answer', proof: 'clear response', cta: 'ask or act' }
+    { id: 'preguntas-respuestas', name: 'Q&A', summary: 'Doubts resolved in Q and A.', tension: 'question → answer', flow: 'prompt → response', proof: 'clear response', cta: 'ask or act' }
 ]
 
 type TemplateBuilder = (ctx: NarrativeContext) => CarouselComposition
