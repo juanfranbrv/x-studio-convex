@@ -412,6 +412,9 @@ export function BrandingConfigurator({
 
     // Base colors for the grid: All colors from Brand Kit + any custom colors added in session
     const brandKitColors = activeBrandKit?.colors || []
+    const brandKitColorHexes = brandKitColors
+        .map((c: any) => extractHex(c))
+        .filter(Boolean)
     let colors = [
         ...brandKitColors,
         ...selectedBrandColors
@@ -564,7 +567,7 @@ export function BrandingConfigurator({
                         })}
 
                         {/* Custom Color Adder - only show if less than 10 colors */}
-                        {colors.length < 10 && <CustomColorPicker onAdd={onAddCustomColor} presetColors={brandKitColors} />}
+                        {colors.length < 10 && <CustomColorPicker onAdd={onAddCustomColor} presetColors={brandKitColorHexes} />}
                     </div>
                 </div>
             )}
