@@ -241,11 +241,6 @@ export default function ImagePage() {
 
             // Ensure the next step appears after a successful analysis
             creationFlow.setStep(2)
-            toast({
-                title: "Magic Applied! ✨",
-                description: "Your fields have been auto-filled. Check the suggestions below for more ideas.",
-            })
-
             return result
 
         } catch (error) {

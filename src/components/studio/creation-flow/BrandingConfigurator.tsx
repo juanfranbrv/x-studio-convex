@@ -81,7 +81,13 @@ interface BrandingConfiguratorProps {
     onlyShowSelectedColors?: boolean
 }
 
-function CustomColorPicker({ onAdd }: { onAdd: (color: string) => void }) {
+function CustomColorPicker({
+    onAdd,
+    presetColors = []
+}: {
+    onAdd: (color: string) => void
+    presetColors?: string[]
+}) {
     const [value, setValue] = useState('#')
     const [isOpen, setIsOpen] = useState(false)
 
@@ -135,6 +141,30 @@ function CustomColorPicker({ onAdd }: { onAdd: (color: string) => void }) {
                     </div>
 
                     <div className="custom-picker-wrapper space-y-4">
+                        {presetColors.length > 0 && (
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Colores de marca</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {Array.from(new Set(presetColors.map((c) => {
+                                        const hex = extractHex(c)
+                                        return hex ? hex.toUpperCase() : ''
+                                    }).filter(Boolean))).map((hex) => (
+                                        <button
+                                            key={hex}
+                                            onClick={() => {
+                                                setValue(hex)
+                                                onAdd(hex)
+                                                setIsOpen(false)
+                                            }}
+                                            className="w-6 h-6 rounded-full border border-border/60 hover:border-primary/60 transition-colors"
+                                            style={{ backgroundColor: hex }}
+                                            title={`Añadir ${hex}`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="relative rounded-lg overflow-hidden border border-border/50">
                             <HexColorPicker
                                 color={value.startsWith('#') && value.length === 7 ? value : '#000000'}
@@ -534,7 +564,7 @@ export function BrandingConfigurator({
                         })}
 
                         {/* Custom Color Adder - only show if less than 10 colors */}
-                        {colors.length < 10 && <CustomColorPicker onAdd={onAddCustomColor} />}
+                        {colors.length < 10 && <CustomColorPicker onAdd={onAddCustomColor} presetColors={brandKitColors} />}
                     </div>
                 </div>
             )}

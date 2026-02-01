@@ -89,10 +89,10 @@ export function TechnicalAudit({ trace = [], isVisible }: TechnicalAuditProps) {
                                                 </div>
                                             </div>
                                         </TooltipTrigger>
-                                        <TooltipContent side="bottom" className="text-xs bg-zinc-900 border-zinc-800 text-zinc-300 max-w-[200px]">
+                                        <TooltipContent side="bottom" className="text-xs max-w-[200px]">
                                             <p>{step.description}</p>
                                             {entry?.details && (
-                                                <p className="mt-1 pt-1 opacity-70 border-t border-zinc-700 italic font-mono text-[10px]">
+                                                <p className="mt-1 pt-1 opacity-70 border-t border-border/60 italic font-mono text-[10px] text-muted-foreground">
                                                     {entry.details}
                                                 </p>
                                             )}

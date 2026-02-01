@@ -80,11 +80,11 @@ function sanitizeUrl(url?: string): string {
         cleaned = markdownMatch[1].trim()
     }
 
-    // Pattern 2: Extract any valid URL starting with http
-    // This handles hallucinated prefixes like "https[https://...]"
-    const rawUrlMatch = cleaned.match(/(https?:\/\/[^\s\]\)]+)/)
-    if (rawUrlMatch) {
-        return rawUrlMatch[1].trim()
+    // Pattern 2: Extract the LAST valid URL starting with http
+    // This handles hallucinated prefixes like "https[https://...]" or "https://bauset.https://bauset.es"
+    const rawUrlMatches = Array.from(cleaned.matchAll(/(https?:\/\/[^\s\]\)]+)/g))
+    if (rawUrlMatches.length > 0) {
+        return rawUrlMatches[rawUrlMatches.length - 1][1].trim()
     }
 
     return cleaned
@@ -97,6 +97,24 @@ function sanitizeUrl(url?: string): string {
 function sanitizeTextFromMarkdownLinks(text?: string): string {
     if (!text) return ''
     return text.replace(/\[.*?\]\((https?:\/\/.*?)\)/g, '$1')
+}
+
+/**
+ * Cleans URLs embedded in text (caption, subtitles, etc.).
+ * - Strips markdown links
+ * - Fixes duplicated protocol fragments like "https://bahtttps://example.com"
+ */
+function sanitizeUrlsInText(text?: string): string {
+    if (!text) return ''
+    let cleaned = sanitizeTextFromMarkdownLinks(text)
+
+    // Replace any occurrences of duplicated protocol inside a URL-like token
+    cleaned = cleaned.replace(
+        /https?:\/\/[^\s]+/g,
+        (token) => sanitizeUrl(token)
+    )
+
+    return cleaned
 }
 
 /**
@@ -356,7 +374,33 @@ export async function parseLazyIntentAction({
 
         // 6. Sanitize URLs and Captions (AI occasionally ignores prompt rules)
         parsed.ctaUrl = sanitizeUrl(parsed.ctaUrl)
-        parsed.caption = sanitizeTextFromMarkdownLinks(parsed.caption)
+        parsed.caption = sanitizeUrlsInText(parsed.caption)
+
+        if (parsed.imageTexts && Array.isArray(parsed.imageTexts)) {
+            parsed.imageTexts = parsed.imageTexts.map(item => ({
+                ...item,
+                value: sanitizeUrlsInText(item.value)
+            }))
+        }
+
+        if (parsed.suggestions && Array.isArray(parsed.suggestions)) {
+            parsed.suggestions = parsed.suggestions.map(suggestion => {
+                const modifications = { ...(suggestion.modifications || {}) }
+                if (typeof modifications.ctaUrl === 'string') {
+                    modifications.ctaUrl = sanitizeUrl(modifications.ctaUrl)
+                }
+                if (typeof modifications.caption === 'string') {
+                    modifications.caption = sanitizeUrlsInText(modifications.caption)
+                }
+                if (Array.isArray(modifications.imageTexts)) {
+                    modifications.imageTexts = modifications.imageTexts.map((item: any) => ({
+                        ...item,
+                        value: sanitizeUrlsInText(item?.value)
+                    }))
+                }
+                return { ...suggestion, modifications }
+            })
+        }
 
         // 7. Brand Consistency check for URLs
         // ONLY fallback to Brand Website if ctaUrl is missing or a placeholder.

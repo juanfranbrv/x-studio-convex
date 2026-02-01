@@ -15,7 +15,7 @@ import { SavePresetDialog } from './creation-flow/SavePresetDialog'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import { GenerationState, INTENT_CATALOG, IntentCategory } from '@/lib/creation-flow-types'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
@@ -129,6 +129,32 @@ export function ControlsPanel({
         removeTextAsset,
         updateTextAsset,
     } = creationFlow
+
+    const lastInitBrandId = useRef<string | null>(null)
+
+    useEffect(() => {
+        const brandId = activeBrandKit?.id || (activeBrandKit as any)?._id
+        if (!activeBrandKit || !brandId) return
+
+        const hasSelectedColors = state.selectedBrandColors.length > 0
+        if (hasSelectedColors && lastInitBrandId.current === brandId) return
+
+        if (!hasSelectedColors && activeBrandKit.colors && activeBrandKit.colors.length > 0) {
+            console.log(`[ControlsPanel] Initializing colors for Brand Kit: ${brandId}`)
+            activeBrandKit.colors.forEach((c) => {
+                const rawRole = ((c.role as string) || 'Acento').trim().toUpperCase()
+                let role: 'Texto' | 'Fondo' | 'Acento' = 'Acento'
+                if (rawRole.includes('TEXT')) role = 'Texto'
+                else if (rawRole.includes('FOND')) role = 'Fondo'
+                else if (rawRole.includes('ACENT')) role = 'Acento'
+
+                const color = (c.color || (c as any).hex || (typeof c === 'string' ? c : '')).toLowerCase()
+                if (color) toggleBrandColor(color, role)
+            })
+        }
+
+        lastInitBrandId.current = brandId
+    }, [activeBrandKit, state.selectedBrandColors.length, toggleBrandColor])
 
 
 
@@ -341,6 +367,9 @@ export function ControlsPanel({
                                     }
                                 />
                                 <LayoutSelector availableLayouts={availableLayouts} selectedLayout={state.selectedLayout} onSelectLayout={selectLayout} intent={state.selectedIntent as IntentCategory} />
+                                <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+                                    La composición define la estructura visual del diseño. Si eliges “Libre”, el modelo decide la disposición.
+                                </p>
                                 {state.currentStep === 2 && state.selectedLayout && (
                                     <div className="flex justify-end mt-3">
                                         <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(3)} className="h-7 text-xs">Siguiente</Button>
@@ -502,9 +531,9 @@ function SuggestionsList({
                                 </span>
                             </button>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" align="start" className="max-w-[260px] text-xs">
-                            <p className="font-semibold text-purple-200 mb-1">{suggestion.title}</p>
-                            <p>{suggestion.subtitle}</p>
+                        <TooltipContent side="bottom" align="start" className="max-w-[260px] text-xs bg-muted text-foreground border border-border shadow-md">
+                            <p className="font-semibold text-foreground mb-1">{suggestion.title}</p>
+                            <p className="text-muted-foreground">{suggestion.subtitle}</p>
                         </TooltipContent>
                     </Tooltip>
                 ))}

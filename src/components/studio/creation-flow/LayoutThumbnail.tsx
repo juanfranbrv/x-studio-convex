@@ -433,8 +433,42 @@ function getLayoutVisual(id: string) {
 
 function FreeLayout() {
     return (
-        <div className="w-full h-full flex items-center justify-center">
-            <div className="text-primary/60 text-5xl font-bold">?</div>
+        <div className="w-full h-full relative flex items-center justify-center">
+            <div className="relative w-16 h-16 flex items-center justify-center">
+                {/* Dice 1 (Back Left) - Cara 3 */}
+                <div className="absolute left-0 top-0 w-8 h-8 z-0 opacity-90">
+                    {/* Top Face */}
+                    <div className="absolute -top-[8px] left-0 w-8 h-[8px] bg-primary/20 transform skew-x-[-45deg] origin-bottom-left" />
+                    {/* Right Face */}
+                    <div className="absolute top-0 -right-[8px] w-[8px] h-8 bg-primary/40 transform skew-y-[-45deg] origin-top-left" />
+                    {/* Front Face */}
+                    <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                        <div className="relative w-full h-full">
+                            <div className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-primary/60" />
+                            <div className="absolute inset-0 m-auto w-1.5 h-1.5 rounded-full bg-primary/60" />
+                            <div className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary/60" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Dice 2 (Front Right) - Cara 5 */}
+                <div className="absolute right-2 bottom-2 w-8 h-8 z-10">
+                    {/* Top Face */}
+                    <div className="absolute -top-[8px] left-0 w-8 h-[8px] bg-primary/30 transform skew-x-[-45deg] origin-bottom-left" />
+                    {/* Right Face */}
+                    <div className="absolute top-0 -right-[8px] w-[8px] h-8 bg-primary/60 transform skew-y-[-45deg] origin-top-left" />
+                    {/* Front Face */}
+                    <div className="absolute inset-0 bg-primary/30 shadow-sm">
+                        <div className="relative w-full h-full">
+                            <div className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-primary/80" />
+                            <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary/80" />
+                            <div className="absolute inset-0 m-auto w-1.5 h-1.5 rounded-full bg-primary/80" />
+                            <div className="absolute bottom-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-primary/80" />
+                            <div className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary/80" />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

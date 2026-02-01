@@ -257,19 +257,28 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         const intentLayouts = LAYOUTS_BY_INTENT[intent] || DEFAULT_LAYOUTS
         const defaultLayoutId = intentLayouts.length > 0 ? intentLayouts[0].id : null
 
-        setState(prev => ({
-            ...prev,
-            selectedIntent: intent,
-            selectedSubMode: null,
-            // Pre-fill defaults from intent metadata
-            headline: intentMeta?.defaultHeadline || '',
-            cta: intentMeta?.defaultCta || '',
-            // Pre-fill mapped fields in customTexts
-            customTexts: intentMeta?.requiredFields?.reduce((acc, field) => {
-                if (field.mapsTo === 'headline') acc[field.id] = intentMeta.defaultHeadline || ''
-                if (field.mapsTo === 'cta') acc[field.id] = intentMeta.defaultCta || ''
-                return acc
-            }, {} as Record<string, string>) || {},
+        setState(prev => {
+            const preserveHeadline = Boolean(prev.headline && prev.headline !== NO_TEXT_TOKEN)
+            const preserveText = prev.hasGeneratedImage
+            const nextHeadline = preserveHeadline ? prev.headline : (intentMeta?.defaultHeadline || '')
+            const nextCta = preserveText ? prev.cta : (intentMeta?.defaultCta || '')
+            const nextCustomTexts = preserveText
+                ? prev.customTexts
+                : (intentMeta?.requiredFields?.reduce((acc, field) => {
+                    if (field.mapsTo === 'headline') acc[field.id] = intentMeta.defaultHeadline || ''
+                    if (field.mapsTo === 'cta') acc[field.id] = intentMeta.defaultCta || ''
+                    return acc
+                }, {} as Record<string, string>) || {})
+
+            return {
+                ...prev,
+                selectedIntent: intent,
+                selectedSubMode: null,
+                // Pre-fill defaults from intent metadata (unless we already generated a preview)
+                headline: nextHeadline,
+                cta: nextCta,
+                // Pre-fill mapped fields in customTexts (unless we already generated a preview)
+                customTexts: nextCustomTexts,
             // Reset downstream selections
             uploadedImages: [],
             uploadedImageFiles: [],
@@ -287,8 +296,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             selectedFormat: null,
             selectedPlatform: null,
 
-            currentStep: 2, // Auto-advance to Step 2 (Composition/Layout)
-        }))
+                currentStep: 2, // Auto-advance to Step 2 (Composition/Layout)
+            }
+        })
     }, [])
 
     const selectSubMode = useCallback((subMode: string) => {
