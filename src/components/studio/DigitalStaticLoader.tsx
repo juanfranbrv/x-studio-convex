@@ -103,9 +103,7 @@ export const DigitalStaticLoader = memo(({ variant = 0, mode = 'classic', seed }
     }, [resolvedSeed])
 
     const loop = (duration: number, delay = 0) => (
-        shouldReduceMotion
-            ? { duration: 0 }
-            : { duration, delay, repeat: Infinity, ease: [0.42, 0, 0.58, 1] }
+        shouldReduceMotion ? { duration: 0 } : { duration, delay, repeat: Infinity }
     )
 
     const renderClassicLayers = () => (
