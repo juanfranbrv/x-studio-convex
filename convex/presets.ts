@@ -100,15 +100,25 @@ export const create = mutation({
         state: v.any(), // Complete GenerationState snapshot
     },
     handler: async (ctx, args) => {
-        // Enforce limit of 6 presets per Brand Kit
+        const presetType =
+            typeof (args.state as any)?.presetType === "string"
+                ? (args.state as any).presetType
+                : "image";
+
+        // Enforce limit of 6 presets per Brand Kit + preset type
         if (args.brandId) {
             const existingPresets = await ctx.db
                 .query("presets")
                 .withIndex("by_brand", (q) => q.eq("brandId", args.brandId))
                 .collect();
 
-            if (existingPresets.length >= 6) {
-                throw new Error("Límite de presets alcanzado (máximo 6 por Brand Kit).");
+            const sameType = existingPresets.filter((preset: any) => {
+                const type = typeof preset?.state?.presetType === "string" ? preset.state.presetType : "image";
+                return type === presetType;
+            });
+
+            if (sameType.length >= 6) {
+                throw new Error("Límite de presets alcanzado (máximo 6 por Brand Kit y tipo).");
             }
         }
 

@@ -367,6 +367,17 @@ function CompositionThumbnail({ id }: { id: string }) {
         case 'gift': return withOverlay(<GiftLayout />)
         case 'cart': return withOverlay(<CartLayout />)
         case 'overlay': return withOverlay(<SaleOverlayLayout />)
+        // COMUNICADO OPERATIVO
+        case 'alert-bar': return withOverlay(<AlertBarLayout />)
+        case 'notice-board': return withOverlay(<NoticeBoardLayout />)
+        case 'schedule-shift': return withOverlay(<ScheduleShiftLayout />)
+        case 'location-change': return withOverlay(<LocationChangeLayout />)
+        case 'maintenance-window': return withOverlay(<MaintenanceWindowLayout />)
+        case 'service-impact': return withOverlay(<ServiceImpactLayout />)
+        case 'action-checklist': return withOverlay(<ActionChecklistLayout />)
+        case 'timeline-pins': return withOverlay(<TimelinePinsLayout />)
+        case 'info-stack': return withOverlay(<InfoStackLayout />)
+        case 'contact-hub': return withOverlay(<ContactHubLayout />)
         // CHECKLIST DIAGNOSTICO
         case 'board': return withOverlay(<ChecklistBoardLayout />)
         case 'yes-no-split': return withOverlay(<YesNoSplitLayout />)
@@ -715,6 +726,129 @@ function TwoDiceLayout() {
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    )
+}
+
+// --- COMUNICADO OPERATIVO ---
+function AlertBarLayout() {
+    return (
+        <div className="w-full h-full p-2 flex flex-col gap-1">
+            <div className="h-3 rounded-sm bg-primary/40" />
+            <div className="flex-1 rounded-sm bg-primary/10" />
+        </div>
+    )
+}
+function NoticeBoardLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-center">
+            <div className="w-10 h-12 rounded-md bg-primary/15 border border-primary/30 relative">
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary/40" />
+                <div className="p-1 space-y-1">
+                    <div className="h-1 rounded bg-primary/35" />
+                    <div className="h-1 rounded bg-primary/25" />
+                    <div className="h-1 rounded bg-primary/20" />
+                </div>
+            </div>
+        </div>
+    )
+}
+function ScheduleShiftLayout() {
+    return (
+        <div className="w-full h-full p-2 flex gap-1">
+            <div className="w-1/2 rounded-sm bg-primary/15 grid grid-cols-2 gap-0.5 p-1">
+                <div className="h-2 rounded bg-primary/30" />
+                <div className="h-2 rounded bg-primary/20" />
+                <div className="h-2 rounded bg-primary/20" />
+                <div className="h-2 rounded bg-primary/30" />
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+                <div className="w-6 h-0.5 bg-primary/40 relative">
+                    <div className="absolute right-0 -top-1 w-2 h-2 rotate-45 border-t-2 border-r-2 border-primary/40" />
+                </div>
+            </div>
+        </div>
+    )
+}
+function LocationChangeLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-between">
+            <div className="w-3 h-3 rounded-full bg-primary/30" />
+            <div className="w-6 h-0.5 bg-primary/40" />
+            <div className="w-3 h-3 rounded-full bg-primary/40" />
+        </div>
+    )
+}
+function MaintenanceWindowLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-center">
+            <div className="w-10 h-8 rounded-sm bg-primary/15 flex items-center justify-center gap-1">
+                <div className="w-2 h-2 rounded-full border-2 border-primary/40" />
+                <div className="w-3 h-0.5 bg-primary/40" />
+            </div>
+        </div>
+    )
+}
+function ServiceImpactLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-center">
+            <div className="w-4 h-10 rounded-md bg-primary/15 flex flex-col items-center justify-between p-0.5">
+                <div className="w-2 h-2 rounded-full bg-primary/35" />
+                <div className="w-2 h-2 rounded-full bg-primary/35" />
+                <div className="w-2 h-2 rounded-full bg-primary/35" />
+            </div>
+        </div>
+    )
+}
+function ActionChecklistLayout() {
+    return (
+        <div className="w-full h-full p-2 flex flex-col gap-1">
+            <div className="flex gap-1 items-center">
+                <div className="w-2 h-2 rounded-sm bg-primary/40" />
+                <div className="flex-1 h-1 rounded bg-primary/20" />
+            </div>
+            <div className="flex gap-1 items-center">
+                <div className="w-2 h-2 rounded-sm bg-primary/35" />
+                <div className="flex-1 h-1 rounded bg-primary/20" />
+            </div>
+            <div className="flex gap-1 items-center">
+                <div className="w-2 h-2 rounded-sm bg-primary/30" />
+                <div className="flex-1 h-1 rounded bg-primary/20" />
+            </div>
+        </div>
+    )
+}
+function TimelinePinsLayout() {
+    return (
+        <div className="w-full h-full p-2 flex">
+            <div className="w-0.5 bg-primary/35 rounded-full relative">
+                <div className="absolute top-1 w-2 h-2 rounded-full bg-primary/45 -left-[3px]" />
+                <div className="absolute top-1/2 w-2 h-2 rounded-full bg-primary/45 -left-[3px]" />
+                <div className="absolute bottom-1 w-2 h-2 rounded-full bg-primary/45 -left-[3px]" />
+            </div>
+            <div className="flex-1 pl-2 space-y-1">
+                <div className="h-1 rounded bg-primary/25" />
+                <div className="h-1 rounded bg-primary/20" />
+                <div className="h-1 rounded bg-primary/25" />
+            </div>
+        </div>
+    )
+}
+function InfoStackLayout() {
+    return (
+        <div className="w-full h-full p-2 flex flex-col gap-1">
+            <div className="h-3 rounded-sm bg-primary/20" />
+            <div className="h-3 rounded-sm bg-primary/30" />
+            <div className="h-3 rounded-sm bg-primary/25" />
+        </div>
+    )
+}
+function ContactHubLayout() {
+    return (
+        <div className="w-full h-full p-2 flex items-center justify-center">
+            <div className="w-10 h-6 rounded-full bg-primary/25 flex items-center justify-center">
+                <div className="w-3 h-3 rounded-full bg-primary/45" />
             </div>
         </div>
     )

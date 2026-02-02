@@ -41,6 +41,7 @@ interface CarouselCanvasPanelProps {
     onSelectSlide: (index: number) => void
     onRegenerateSlide: (index: number) => void
     onUpdateSlideScript?: (index: number, updates: { title?: string; description?: string }) => void
+    isGenerating?: boolean
     isRegenerating: boolean
     regeneratingIndex: number | null
     aspectRatio: '1:1' | '4:5' | '3:4'
@@ -63,6 +64,7 @@ export function CarouselCanvasPanel({
     onSelectSlide,
     onRegenerateSlide,
     onUpdateSlideScript,
+    isGenerating = false,
     isRegenerating,
     regeneratingIndex,
     aspectRatio,
@@ -85,6 +87,9 @@ export function CarouselCanvasPanel({
     const [isEditingScript, setIsEditingScript] = useState(false)
     const [draftTitle, setDraftTitle] = useState('')
     const [draftDescription, setDraftDescription] = useState('')
+    const [loaderVariant, setLoaderVariant] = useState(0)
+    const [loaderSeed, setLoaderSeed] = useState(() => Date.now())
+    const loaderVisibleRef = useRef(false)
 
     // Track viewport for responsive heights
     useEffect(() => {
@@ -100,7 +105,9 @@ export function CarouselCanvasPanel({
     const currentSlide = slides[currentIndex]
     const hasScript = Boolean(currentSlide && !currentSlide.imageUrl && (currentSlide.title || currentSlide.description))
     const completedSlides = slides.filter(s => s.status === 'done').length
-    const isGeneratingAny = slides.some(s => s.status === 'generating') || isRegenerating
+    const isGeneratingAny = isGenerating || slides.some(s => s.status === 'generating') || isRegenerating
+    const hasAnyImage = slides.some(s => Boolean(s.imageUrl))
+    const isLoaderVisible = Boolean(isGeneratingAny && !hasAnyImage)
 
     useEffect(() => {
         if (!currentSlide) return
@@ -108,6 +115,14 @@ export function CarouselCanvasPanel({
         setDraftDescription(currentSlide.description || '')
         setIsEditingScript(false)
     }, [currentSlide?.index])
+
+    useEffect(() => {
+        if (isLoaderVisible && !loaderVisibleRef.current) {
+            setLoaderVariant(Math.floor(Math.random() * 4))
+            setLoaderSeed(Date.now() + Math.floor(Math.random() * 10000))
+        }
+        loaderVisibleRef.current = isLoaderVisible
+    }, [isLoaderVisible])
 
     const handleSaveScript = () => {
         if (!currentSlide) return
@@ -265,31 +280,6 @@ export function CarouselCanvasPanel({
                     </Badge>
                 </div>
 
-                {/* Center: Quick Nav */}
-                {slides.length > 1 && (
-                    <div className="absolute left-1/2 -translate-x-1/2 pointer-events-auto flex items-center glass-panel rounded-full p-1 shadow-sm mt-1">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full"
-                            onClick={handlePrevious}
-                            disabled={currentIndex === 0}
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </Button>
-                        <div className="w-px h-4 bg-white/10 mx-1" />
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full"
-                            onClick={handleNext}
-                            disabled={currentIndex === slides.length - 1}
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </Button>
-                    </div>
-                )}
-
                 {/* Right: Actions */}
                 <div className="hidden md:flex pointer-events-auto items-center gap-1 glass-panel rounded-full px-3 py-1.5 text-muted-foreground">
                     <div className="flex items-center gap-1 mr-2 border-r border-white/10 pr-2">
@@ -377,15 +367,15 @@ export function CarouselCanvasPanel({
                     >
                         <AnimatePresence mode="wait">
                             {/* Loading Overlay */}
-                            {(currentSlide?.status === 'generating' || (isRegenerating && regeneratingIndex === currentIndex)) && (
+                            {isLoaderVisible && (
                                 <motion.div
                                     key="loader"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm"
+                                    className="absolute inset-0 z-50 bg-black/55 backdrop-blur-sm"
                                 >
-                                    <DigitalStaticLoader />
+                                    <DigitalStaticLoader variant={loaderVariant} seed={loaderSeed} mode="spectacle" />
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -449,7 +439,7 @@ export function CarouselCanvasPanel({
                         )}
 
                         {/* Logo Preview (Top Right) */}
-                        {selectedLogoUrl && (
+                        {selectedLogoUrl && !currentSlide?.imageUrl && (
                             <div className="absolute top-4 right-4 z-20">
                                 <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
                                     <img

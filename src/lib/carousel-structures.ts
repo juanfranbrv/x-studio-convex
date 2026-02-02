@@ -16,6 +16,7 @@ import { MEME_HUMOR_COMPOSITIONS } from './prompts/carousel/meme-humor'
 import { PROMOCION_OFERTA_COMPOSITIONS } from './prompts/carousel/promocion-oferta'
 import { CHECKLIST_DIAGNOSTICO_COMPOSITIONS } from './prompts/carousel/checklist-diagnostico'
 import { PREGUNTAS_RESPUESTAS_COMPOSITIONS } from './prompts/carousel/preguntas-respuestas'
+import { COMUNICADO_OPERATIVO_COMPOSITIONS } from './prompts/carousel/comunicado-operativo'
 
 export interface CarouselComposition {
     id: string
@@ -62,7 +63,8 @@ const NARRATIVE_CONTEXTS: NarrativeContext[] = [
     { id: 'meme-humor', name: 'Meme / Humor', summary: 'Relatable humor and engagement.', tension: 'expectation vs reality', flow: 'punchline', proof: 'relatability', cta: 'laugh and share' },
     { id: 'promocion-oferta', name: 'Promotion / Offer', summary: 'Value proposition ending in action.', tension: 'value vs cost', flow: 'hook → proof → CTA', proof: 'benefit highlight', cta: 'claim the offer' },
     { id: 'checklist-diagnostico', name: 'Diagnostic Checklist', summary: 'Self-assessment with criteria.', tension: 'uncertainty vs clarity', flow: 'signals → score → outcome', proof: 'criteria match', cta: 'act on your result' },
-    { id: 'preguntas-respuestas', name: 'Q&A', summary: 'Doubts resolved in Q and A.', tension: 'question → answer', flow: 'prompt → response', proof: 'clear response', cta: 'ask or act' }
+    { id: 'preguntas-respuestas', name: 'Q&A', summary: 'Doubts resolved in Q and A.', tension: 'question → answer', flow: 'prompt → response', proof: 'clear response', cta: 'ask or act' },
+    { id: 'comunicado-operativo', name: 'Operational Notice', summary: 'Clear operational updates and changes.', tension: 'disruption vs clarity', flow: 'context → change → action', proof: 'operational details', cta: 'follow the update' }
 ]
 
 type TemplateBuilder = (ctx: NarrativeContext) => CarouselComposition
@@ -90,6 +92,7 @@ function getCompositionsForStructure(ctx: NarrativeContext): CarouselComposition
         case 'promocion-oferta': return PROMOCION_OFERTA_COMPOSITIONS
         case 'checklist-diagnostico': return CHECKLIST_DIAGNOSTICO_COMPOSITIONS
         case 'preguntas-respuestas': return PREGUNTAS_RESPUESTAS_COMPOSITIONS
+        case 'comunicado-operativo': return COMUNICADO_OPERATIVO_COMPOSITIONS
         default: return []
     }
 }

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Star, Bookmark as BookmarkIcon, SquarePlus } from 'lucide-react'
+import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Star, Bookmark as BookmarkIcon, SquarePlus, Square } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import { ImageReferenceSelector } from '@/components/studio/creation-flow/ImageReferenceSelector'
@@ -44,9 +45,14 @@ export interface CarouselSettings {
 interface CarouselControlsPanelProps {
     onAnalyze: (settings: CarouselSettings) => Promise<void>
     onGenerate: (settings: CarouselSettings) => void
+    onCancelAnalyze?: () => void
+    onCancelGenerate?: () => void
+    isCancelingAnalyze?: boolean
+    isCancelingGenerate?: boolean
     onAspectRatioChange?: (ratio: '1:1' | '4:5' | '3:4') => void
     onReferenceImagesChange?: (images: Array<{ url: string; source: 'upload' | 'brandkit' }>) => void
     onSelectedLogoChange?: (logoId: string | null, logoUrl?: string) => void
+    onReset?: () => void
     userId?: string
     isAnalyzing: boolean
     isGenerating: boolean
@@ -94,11 +100,16 @@ const STYLE_OPTIONS = [
 export function CarouselControlsPanel({
     onAnalyze,
     onGenerate,
+    onCancelAnalyze,
+    onCancelGenerate,
+    isCancelingAnalyze = false,
+    isCancelingGenerate = false,
     isAnalyzing,
     isGenerating,
     onAspectRatioChange,
     onReferenceImagesChange,
     onSelectedLogoChange,
+    onReset,
     userId,
     currentSlideIndex,
     generatedCount,
@@ -120,7 +131,7 @@ export function CarouselControlsPanel({
     const [isSavingPreset, setIsSavingPreset] = useState(false)
     const [prompt, setPrompt] = useState('')
     const [slideCount, setSlideCount] = useState(5)
-    const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('3:4')
+    const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('4:5')
     const [style, setStyle] = useState('minimal')
     const [slides, setSlides] = useState<SlideConfig[]>([])
     const [structureId, setStructureId] = useState<string>(analysisStructure?.id || 'problema-solucion')
@@ -145,6 +156,8 @@ export function CarouselControlsPanel({
     const [needsReanalysis, setNeedsReanalysis] = useState(false)
     const [lastAnalyzedPrompt, setLastAnalyzedPrompt] = useState('')
     const showAllSteps = generatedCount > 0 && !needsReanalysis
+    const stepRefs = useRef<Array<HTMLDivElement | null>>([])
+    const shouldReduceMotion = useReducedMotion()
     const selectedImageCount = uploadedImages.length + selectedBrandKitImageIds.length
     const hasReferenceSelection = selectedImageCount > 0 || (imageSourceMode === 'generate' && aiImageDescription.trim().length > 0)
     const canGenerate = prompt.trim().length > 0 && !isGenerating && brandKit !== null && currentStep >= 7 && !needsReanalysis
@@ -268,6 +281,14 @@ export function CarouselControlsPanel({
             setCurrentStep(prev => (prev < 6 ? 6 : prev))
         }
     }, [hasReferenceSelection, showAllSteps])
+
+    useEffect(() => {
+        if (showAllSteps) return
+        const target = stepRefs.current[currentStep]
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+    }, [currentStep, showAllSteps])
 
     const handleAspectRatioSelect = (ratio: '1:1' | '4:5' | '3:4') => {
         setAspectRatio(ratio)
@@ -484,7 +505,7 @@ export function CarouselControlsPanel({
     const handleReset = () => {
         setPrompt('')
         setSlideCount(5)
-        setAspectRatio('3:4')
+        setAspectRatio('4:5')
         setStyle('minimal')
         setSlides([])
         const defaultStructureId = analysisStructure?.id || 'problema-solucion'
@@ -501,13 +522,14 @@ export function CarouselControlsPanel({
         setNeedsReanalysis(false)
         setLastAnalyzedPrompt('')
         setCurrentStep(1)
+        onReset?.()
     }
 
     const handleSelectPreset = (state: any) => {
         if (!state || state.presetType !== 'carousel') return
         setPrompt(state.prompt || '')
         setSlideCount(state.slideCount || 5)
-        setAspectRatio(state.aspectRatio || '3:4')
+        setAspectRatio(state.aspectRatio || '4:5')
         setStyle(state.style || 'minimal')
         if (state.structureId) {
             setStructureId(state.structureId)
@@ -529,7 +551,7 @@ export function CarouselControlsPanel({
             onAnalyze(buildSettings({
                 prompt: state.prompt,
                 slideCount: state.slideCount || 5,
-                aspectRatio: state.aspectRatio || '3:4',
+                aspectRatio: state.aspectRatio || '4:5',
                 style: state.style || 'minimal',
                 structureId: state.structureId || structureId,
                 compositionId: state.compositionId || compositionId,
@@ -619,7 +641,7 @@ export function CarouselControlsPanel({
 
                 {/* Slide Count */}
                 {isStepVisible(1) && (
-                <div className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[1] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader icon={GalleryHorizontal} title="Numero de diapositivas" />
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(-1)} disabled={slideCount <= 1}>
@@ -637,7 +659,7 @@ export function CarouselControlsPanel({
                     {!showAllSteps && currentStep === 1 && (
                         <div className="flex justify-end">
                             <Button size="sm" variant="secondary" onClick={() => setCurrentStep(2)} className="h-7 text-xs">
-                                Siguiente
+                                Siguiente, Tema
                             </Button>
                         </div>
                     )}
@@ -646,7 +668,7 @@ export function CarouselControlsPanel({
 
                 {/* Prompt */}
                 {isStepVisible(2) && (
-                <div className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[2] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader
                         icon={Wand2}
                         title="Que quieres crear?"
@@ -685,8 +707,44 @@ export function CarouselControlsPanel({
                             }}
                             className="min-h-[100px] text-sm resize-none bg-background border border-border focus:ring-1 focus:ring-primary focus:border-primary pb-12 pr-2 transition-all"
                         />
-                        <div className="absolute right-2 bottom-2 flex items-center gap-2">
-                            {isAnalyzing && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        <div className="absolute left-2 right-2 bottom-2 flex items-center gap-2">
+                            {isAnalyzing && (
+                                <div className="relative h-2 flex-1 overflow-hidden border border-primary/30 bg-primary/10">
+                                    <motion.div
+                                        className="absolute inset-y-0 left-0 bg-primary/50"
+                                        style={{ width: '100%', transformOrigin: '0% 50%' }}
+                                        animate={shouldReduceMotion ? { scaleX: 1 } : { scaleX: [0, 1] }}
+                                        transition={shouldReduceMotion ? { duration: 0 } : { duration: 40, ease: 'linear' }}
+                                    />
+                                    <motion.div
+                                        className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-primary/60 to-transparent"
+                                        animate={shouldReduceMotion ? { x: 0 } : { x: ['-40%', '140%'] }}
+                                        transition={shouldReduceMotion ? { duration: 0 } : { duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                                    />
+                                </div>
+                            )}
+                            {isAnalyzing && onCancelAnalyze && (
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="outline"
+                                        onClick={onCancelAnalyze}
+                                        className="h-7 w-7"
+                                        title="Detener análisis"
+                                    >
+                                        <Square className="w-3.5 h-3.5" />
+                                    </Button>
+                                    <motion.span
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: isCancelingAnalyze ? 1 : 0 }}
+                                        transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
+                                        className="text-[10px] uppercase tracking-wider text-muted-foreground"
+                                    >
+                                        Cancelando...
+                                    </motion.span>
+                                </div>
+                            )}
                             <Button
                                 size="sm"
                                 onClick={handleAnalyze}
@@ -703,7 +761,7 @@ export function CarouselControlsPanel({
 
                 {/* Composition */}
                 {isStepVisible(3) && (
-                <div className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[3] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader
                         icon={Layout}
                         title="Composición"
@@ -753,9 +811,27 @@ export function CarouselControlsPanel({
 
                 {/* Format */}
                 {isStepVisible(4) && (
-                <div className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[4] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader icon={Layers} title="Formato" />
                     <div className="space-y-2">
+                        <button
+                            onClick={() => handleAspectRatioSelect('4:5')}
+                            className={cn(
+                                "flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
+                                aspectRatio === '4:5' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                            )}
+                        >
+                            <div className="w-8 h-10 rounded bg-muted border border-border" />
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold">Vertical Estándar (Retrato)</span>
+                                    <span className="text-[10px] font-medium text-muted-foreground">4:5</span>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground leading-snug">
+                                    1080x1350 · el estándar más seguro para evitar recortes en dispositivos antiguos o Meta Ads.
+                                </p>
+                            </div>
+                        </button>
                         <button
                             onClick={() => handleAspectRatioSelect('3:4')}
                             className={cn(
@@ -770,25 +846,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">3:4</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1440 ? +6.6% pantalla ? domina el feed y encaja con la nueva cuadr?cula vertical.
-                                </p>
-                            </div>
-                        </button>
-                        <button
-                            onClick={() => handleAspectRatioSelect('4:5')}
-                            className={cn(
-                                "flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
-                                aspectRatio === '4:5' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                            )}
-                        >
-                            <div className="w-8 h-10 rounded bg-muted border border-border" />
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold">Vertical Est?ndar (Retrato)</span>
-                                    <span className="text-[10px] font-medium text-muted-foreground">4:5</span>
-                                </div>
-                                <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1350 ? el est?ndar m?s seguro para evitar recortes en dispositivos antiguos o Meta Ads.
+                                    1080x1440 · +6.6% pantalla · domina el feed y encaja con la nueva cuadrícula vertical.
                                 </p>
                             </div>
                         </button>
@@ -806,7 +864,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">1:1</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1080 ? formato original y cl?sico para composiciones equilibradas.
+                                    1080x1080 · formato original y clásico para composiciones equilibradas.
                                 </p>
                             </div>
                         </button>
@@ -816,7 +874,7 @@ export function CarouselControlsPanel({
 
                 {/* Image */}
                 {isStepVisible(5) && (
-                <div className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[5] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader icon={ImagePlus} title="Imagen de Referencia" />
                     <ImageReferenceSelector
                         uploadedImages={uploadedImages}
@@ -851,7 +909,7 @@ export function CarouselControlsPanel({
                                 className="h-7 text-xs"
                                 disabled={!canContinueFromImage}
                             >
-                                {imageSourceMode === 'generate' && !canContinueFromImage ? 'Escribe un prompt' : 'Continuar sin imagen de referencia'}
+                                Siguiente, Logo
                             </Button>
                         </div>
                     )}
@@ -860,7 +918,7 @@ export function CarouselControlsPanel({
 
                 {/* Logo */}
                 {isStepVisible(6) && (
-                <div className="glass-card p-4 space-y-4">
+                <div ref={(el) => { stepRefs.current[6] = el }} className="glass-card p-4 space-y-4">
                     <SectionHeader icon={Fingerprint} title="Logo" />
                     {brandLogos.length > 0 || primaryLogo ? (
                         <>
@@ -881,7 +939,7 @@ export function CarouselControlsPanel({
                             <div className="flex items-center justify-between pt-1">
                                 <div className="space-y-0.5">
                                     <p className="text-sm font-medium">Aplicar logo en todas</p>
-                                    <p className="text-xs text-muted-foreground">Misma posiciÃ³n y tamaÃ±o</p>
+                                    <p className="text-xs text-muted-foreground">Misma posición y tamaño</p>
                                 </div>
                                 <button
                                     onClick={() => setIncludeLogoOnSlides(!includeLogoOnSlides)}
@@ -903,7 +961,7 @@ export function CarouselControlsPanel({
                     {!showAllSteps && (
                         <div className="flex justify-end">
                             <Button size="sm" variant="secondary" onClick={() => setCurrentStep(7)} className="h-7 text-xs">
-                                Siguiente
+                                Siguiente, Colores
                             </Button>
                         </div>
                     )}
@@ -911,7 +969,7 @@ export function CarouselControlsPanel({
                 )}
 
                 {isStepVisible(7) && (
-                <div className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[7] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader icon={Palette} title="Colores" />
                     <BrandingConfigurator
                         selectedLayout={null}
@@ -952,6 +1010,28 @@ export function CarouselControlsPanel({
                         </>
                     )}
                 </Button>
+
+                {isGenerating && onCancelGenerate && (
+                    <div className="mt-2 flex items-center justify-between">
+                        <Button
+                            onClick={onCancelGenerate}
+                            variant="outline"
+                            size="icon"
+                            className="h-9 w-9"
+                            title="Detener generación"
+                        >
+                            <Square className="w-4 h-4" />
+                        </Button>
+                        <motion.span
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: isCancelingGenerate ? 1 : 0 }}
+                            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
+                            className="text-[10px] uppercase tracking-wider text-muted-foreground"
+                        >
+                            Cancelando...
+                        </motion.span>
+                    </div>
+                )}
 
                 {!brandKit && (
                     <p className="text-xs text-destructive text-center mt-2">

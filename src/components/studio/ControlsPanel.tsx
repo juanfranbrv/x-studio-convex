@@ -208,6 +208,7 @@ export function ControlsPanel({
                     aiImageDescription: state.aiImageDescription || undefined,
                     selectedBrandKitImageIds: state.selectedBrandKitImageIds.length > 0 ? state.selectedBrandKitImageIds : undefined,
                     additionalInstructions: state.additionalInstructions || undefined,
+                    presetType: 'image',
                 },
                 icon: 'Star'
             })
@@ -372,7 +373,7 @@ export function ControlsPanel({
                                 </p>
                                 {state.currentStep === 2 && state.selectedLayout && (
                                     <div className="flex justify-end mt-3">
-                                        <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(3)} className="h-7 text-xs">Siguiente</Button>
+                                        <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(3)} className="h-7 text-xs">Siguiente, Formato</Button>
                                     </div>
                                 )}
                             </div>
@@ -386,7 +387,7 @@ export function ControlsPanel({
                                 <SocialFormatSelector selectedPlatform={state.selectedPlatform} selectedFormat={state.selectedFormat} onSelectPlatform={selectPlatform} onSelectFormat={selectFormat} />
                                 {state.currentStep === 3 && state.selectedFormat && (
                                     <div className="flex justify-end mt-3">
-                                        <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(4)} className="h-7 text-xs">Siguiente</Button>
+                                        <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(4)} className="h-7 text-xs">Siguiente, Imagen</Button>
                                     </div>
                                 )}
                             </div>
@@ -429,9 +430,7 @@ export function ControlsPanel({
                                             className="h-7 text-xs"
                                             disabled={state.imageSourceMode === 'generate' && !state.aiImageDescription?.trim()}
                                         >
-                                            {state.imageSourceMode === 'generate'
-                                                ? (state.aiImageDescription?.trim() ? 'Revisar marca' : 'Escribe un prompt')
-                                                : 'Revisar marca'}
+                                            Siguiente, Marca
                                         </Button>
                                     </div>
                                 )}

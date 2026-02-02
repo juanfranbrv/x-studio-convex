@@ -192,7 +192,9 @@ async function decomposeIntoSlides(
         'datos-estadisticas': 'cifras-dato',
         'oferta-cta': 'promocion-oferta',
         'q-and-a': 'preguntas-respuestas',
-        'q-a': 'preguntas-respuestas'
+        'q-a': 'preguntas-respuestas',
+        'comunicado': 'comunicado-operativo',
+        'operational-notice': 'comunicado-operativo'
     }
 
     const STRUCTURE_NAME_ALIASES: Record<string, string> = {
@@ -214,85 +216,49 @@ async function decomposeIntoSlides(
         'meme-humor': 'meme-humor',
         'questions-answers': 'preguntas-respuestas',
         'q-and-a': 'preguntas-respuestas',
-        'diagnostic-checklist': 'checklist-diagnostico'
+        'diagnostic-checklist': 'checklist-diagnostico',
+        'operational-notice': 'comunicado-operativo'
+    }
+
+    const intentStructureMap: Record<string, string> = {
+        oferta: 'promocion-oferta',
+        escaparate: 'paso-a-paso',
+        catalogo: 'comparativa-productos',
+        lanzamiento: 'framework-pas',
+        servicio: 'preguntas-respuestas',
+        comunicado: 'comunicado-operativo',
+        lista: 'lista-tips',
+        comparativa: 'comparativa-productos',
+        evento: 'cronologia-historia',
+        efemeride: 'cronologia-historia',
+        equipo: 'top-ranking',
+        logro: 'antes-despues',
+        cita: 'frase-celebre',
+        talento: 'lista-tips',
+        bts: 'paso-a-paso',
+        dato: 'cifras-dato',
+        pasos: 'tutorial-how-to',
+        definicion: 'cifras-dato',
+        pregunta: 'preguntas-respuestas',
+        reto: 'paso-a-paso'
+    }
+
+    const hasQuoteLikeSignal = (text: string) => {
+        const hasQuotePunctuation = /["\u201C\u201D\u00AB\u00BB]/.test(text)
+        const hasAttributionLine = /(?:^|\n)\s*(?:\u2014|-)\s*[\p{L}][\p{L} .,'\u2019-]{1,}$/u.test(text)
+        return hasQuotePunctuation || hasAttributionLine
     }
 
     const inferStructureFromPrompt = (text: string, detectedIntent?: string) => {
-        const normalized = normalizeTextForMatching(text)
-        const has = (tokens: string[]) => tokens.some(token => normalized.includes(token))
-
-        if (detectedIntent) {
-            const intentStructureRules: Array<{
-                intent: string
-                structure: string
-                keywords?: string[]
-            }> = [
-                { intent: 'oferta', structure: 'promocion-oferta' },
-                {
-                    intent: 'escaparate',
-                    structure: 'paso-a-paso',
-                    keywords: ['tour', 'recorrido', 'instalaciones', 'visita guiada', 'clases por dentro']
-                },
-                {
-                    intent: 'escaparate',
-                    structure: 'checklist-diagnostico',
-                    keywords: ['que curso', 'qué curso', 'cual curso', 'cuál curso', 'nivel', 'diagnostico', 'diagnóstico', 'test', 'evaluacion', 'evaluación', 'b1', 'b2', 'c1']
-                },
-                { intent: 'escaparate', structure: 'checklist-diagnostico' },
-                { intent: 'catalogo', structure: 'comparativa-productos' },
-                { intent: 'lanzamiento', structure: 'framework-pas' },
-                {
-                    intent: 'servicio',
-                    structure: 'preguntas-respuestas',
-                    keywords: ['preguntas', 'dudas', 'faq', 'dm', 'mensaje', 'horario', 'recuperacion', 'recuperación', 'garantia', 'garantía', 'precio', 'tarifa']
-                },
-                { intent: 'servicio', structure: 'estudio-caso' },
-                { intent: 'comunicado', structure: 'cifras-dato' },
-                { intent: 'lista', structure: 'lista-tips' },
-                { intent: 'comparativa', structure: 'comparativa-productos' },
-                { intent: 'equipo', structure: 'top-ranking' },
-                { intent: 'logro', structure: 'antes-despues' },
-                { intent: 'bts', structure: 'paso-a-paso' },
-                { intent: 'dato', structure: 'mitos-vs-realidad' },
-                {
-                    intent: 'pasos',
-                    structure: 'errores-comunes',
-                    keywords: ['errores', 'fallos', 'trampas', 'fallas']
-                },
-                {
-                    intent: 'pasos',
-                    structure: 'framework-pas',
-                    keywords: ['ansiedad', 'miedo', 'nervios', 'estres', 'estrés', 'bloqueo', 'frustracion', 'frustración', 'suspender', 'pánico', 'panico']
-                },
-                { intent: 'pasos', structure: 'tutorial-how-to' },
-                { intent: 'definicion', structure: 'cifras-dato' },
-                { intent: 'pregunta', structure: 'checklist-diagnostico' },
-                { intent: 'reto', structure: 'paso-a-paso' }
-            ]
-
-            for (const rule of intentStructureRules) {
-                if (rule.intent !== detectedIntent) continue
-                if (rule.keywords && !has(rule.keywords)) continue
-                const mapped = getNarrativeStructure(rule.structure)
-                if (mapped) return mapped
-            }
+        const mappedIntent = detectedIntent ? intentStructureMap[detectedIntent] : undefined
+        if (mappedIntent && !(mappedIntent === 'frase-celebre' && !hasQuoteLikeSignal(text))) {
+            const mapped = getNarrativeStructure(mappedIntent)
+            if (mapped) return mapped
         }
 
-        if (has(['antes', 'despues', 'before', 'after'])) return getNarrativeStructure('antes-despues')
-        if (has(['paso a paso', 'pasos', 'tutorial', 'how to', 'guia', 'guia'])) return getNarrativeStructure('paso-a-paso')
-        if (has(['top', 'ranking', '#1', 'top 5', 'top 10', 'mejores'])) return getNarrativeStructure('top-ranking')
-        if (has(['mito', 'mitos', 'realidad'])) return getNarrativeStructure('mitos-vs-realidad')
-        if (has(['error', 'errores', 'fallo', 'fallos'])) return getNarrativeStructure('errores-comunes')
-        if (has(['checklist', 'lista de verificacion', 'lista de verificación', 'test rapido', 'test rápido', 'autoevaluacion', 'autoevaluación'])) {
-            return getNarrativeStructure('checklist-diagnostico')
+        if (hasQuoteLikeSignal(text)) {
+            return getNarrativeStructure('frase-celebre')
         }
-        if (has(['preguntas frecuentes', 'faq', 'preguntas y respuestas', 'q&a', 'dudas'])) return getNarrativeStructure('preguntas-respuestas')
-        if (has(['estadistica', 'estadisticas', 'dato', 'datos', '%', 'porcentaje'])) return getNarrativeStructure('cifras-dato')
-        if (has(['estudio de caso', 'caso', 'case study'])) return getNarrativeStructure('estudio-caso')
-        if (has(['historia', 'timeline', 'cronologia', 'storytelling', '3 actos'])) return getNarrativeStructure('cronologia-historia')
-        if (has(['oferta', 'descuento', 'promo', 'promocion', '2x1', 'rebaja'])) return getNarrativeStructure('promocion-oferta')
-        if (has(['meme', 'humor', 'gracioso'])) return getNarrativeStructure('meme-humor')
-        if (has(['frase', 'cita', 'quote'])) return getNarrativeStructure('frase-celebre')
 
         return CAROUSEL_STRUCTURES[0]
     }
@@ -302,14 +268,30 @@ async function decomposeIntoSlides(
         const rawName = typeof parsedStructure?.name === 'string' ? parsedStructure.name : ''
         const normalizedId = rawId ? normalizeStructureKey(rawId) : ''
         const normalizedName = rawName ? normalizeStructureKey(rawName) : ''
+        const mappedIntent = detectedIntent ? intentStructureMap[detectedIntent] : undefined
+        const hasQuoteSignal = hasQuoteLikeSignal(prompt)
+        const mappedFromIntent =
+            mappedIntent && !(mappedIntent === 'frase-celebre' && !hasQuoteSignal)
+                ? getNarrativeStructure(mappedIntent)
+                : undefined
 
         if (normalizedId) {
             const direct = getNarrativeStructure(normalizedId)
-            if (direct) return direct
+            if (direct) {
+                if (direct.id === 'frase-celebre' && !hasQuoteSignal) {
+                    return mappedFromIntent ?? inferStructureFromPrompt(prompt, detectedIntent)
+                }
+                return direct
+            }
             const alias = STRUCTURE_ALIASES[normalizedId]
             if (alias) {
                 const mapped = getNarrativeStructure(alias)
-                if (mapped) return mapped
+                if (mapped) {
+                    if (mapped.id === 'frase-celebre' && !hasQuoteSignal) {
+                        return mappedFromIntent ?? inferStructureFromPrompt(prompt, detectedIntent)
+                    }
+                    return mapped
+                }
             }
         }
 
@@ -317,11 +299,18 @@ async function decomposeIntoSlides(
             const nameAlias = STRUCTURE_NAME_ALIASES[normalizedName]
             if (nameAlias) {
                 const mapped = getNarrativeStructure(nameAlias)
-                if (mapped) return mapped
+                if (mapped) {
+                    if (mapped.id === 'frase-celebre' && !hasQuoteSignal) {
+                        return mappedFromIntent ?? inferStructureFromPrompt(prompt, detectedIntent)
+                    }
+                    return mapped
+                }
             }
         }
 
-        return inferStructureFromPrompt(prompt, detectedIntent)
+        if (mappedFromIntent) return mappedFromIntent
+        if (hasQuoteSignal) return getNarrativeStructure('frase-celebre')
+        return CAROUSEL_STRUCTURES[0]
     }
 
     const hookForbiddenRegex = /(\\b(truco|tip|atajo|paso|punto)\\b\\s*#?\\s*\\d+)|(#\\s*\\d+)/i
@@ -337,6 +326,143 @@ async function decomposeIntoSlides(
     function sanitizeTextFromMarkdownLinks(text?: string): string {
         if (!text) return ''
         return text.replace(/\[.*?\]\((https?:\/\/.*?)\)/g, '$1')
+    }
+
+    function replaceUrlsWithBrand(text: string, brandUrl?: string): string {
+        if (!brandUrl) return text
+        const trimmed = brandUrl.trim()
+        if (!trimmed) return text
+        return text.replace(/https?:\/\/[^\s)]+|www\.[^\s)]+/gi, trimmed)
+    }
+
+    /**
+     * Best-effort JSON repair for unquoted string values (common AI failure).
+     * This is intentionally conservative: it only quotes values that are
+     * clearly not valid JSON primitives/objects/arrays.
+     */
+    function repairJsonString(raw: string): string {
+        let result = ''
+        let inString = false
+        let escape = false
+        let expectingValue = false
+
+        for (let i = 0; i < raw.length; i++) {
+            const ch = raw[i]
+
+            if (inString) {
+                result += ch
+                if (escape) {
+                    escape = false
+                } else if (ch === '\\') {
+                    escape = true
+                } else if (ch === '"') {
+                    inString = false
+                }
+                continue
+            }
+
+            if (ch === '"') {
+                inString = true
+                result += ch
+                continue
+            }
+
+            if (expectingValue) {
+                if (/\s/.test(ch)) {
+                    result += ch
+                    continue
+                }
+
+                // Valid JSON starters for values
+                if (ch === '{' || ch === '[' || ch === '-' || /[0-9]/.test(ch)) {
+                    expectingValue = false
+                    result += ch
+                    continue
+                }
+                if (ch === 't' || ch === 'f' || ch === 'n') {
+                    expectingValue = false
+                    result += ch
+                    continue
+                }
+
+                // Unquoted string value: quote until separator (comma or closing brace/bracket)
+                const start = i
+                let end = i
+                for (; end < raw.length; end++) {
+                    const current = raw[end]
+                    if (current === ',' || current === '}' || current === ']') {
+                        if (current === ',') {
+                            let j = end + 1
+                            while (j < raw.length && /\s/.test(raw[j])) j++
+                            if (raw[j] === '"') {
+                                break
+                            }
+                            // Comma is likely part of the value; keep scanning
+                        } else {
+                            break
+                        }
+                    }
+                }
+
+                const rawValue = raw.slice(start, end).trim()
+                const escaped = rawValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+                result += `"${escaped}"`
+                expectingValue = false
+                i = end - 1
+                continue
+            }
+
+            if (ch === ':') {
+                expectingValue = true
+                result += ch
+                continue
+            }
+
+            result += ch
+        }
+
+        return result
+    }
+
+    /**
+     * Extracts JSON content from a response string (handles code fences).
+     */
+    function extractJsonFromResponse(text: string): string | null {
+        const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+        if (fenced?.[1]) {
+            return fenced[1].trim()
+        }
+
+        const startIdx = text.indexOf('{')
+        if (startIdx === -1) return null
+
+        let braceCount = 0
+        let inStr = false
+        let esc = false
+        for (let i = startIdx; i < text.length; i++) {
+            const ch = text[i]
+            if (inStr) {
+                if (esc) {
+                    esc = false
+                } else if (ch === '\\') {
+                    esc = true
+                } else if (ch === '"') {
+                    inStr = false
+                }
+                continue
+            }
+            if (ch === '"') {
+                inStr = true
+                continue
+            }
+            if (ch === '{') braceCount++
+            if (ch === '}') braceCount--
+            if (braceCount === 0) {
+                return text.slice(startIdx, i + 1)
+            }
+        }
+
+        return null
     }
 
     /**
@@ -363,11 +489,12 @@ async function decomposeIntoSlides(
 
 
     const normalizeParsed = (parsed: any) => {
-        const caption = typeof parsed.caption === 'string' ? parsed.caption.trim() : ''
+        let caption = typeof parsed.caption === 'string' ? parsed.caption.trim() : ''
         if (!caption) {
             throw new Error('Missing caption')
         }
         const resolvedStructure = resolveStructureFromParsed(parsed.structure, parsed.detectedIntent)
+        caption = replaceUrlsWithBrand(sanitizeTextFromMarkdownLinks(caption), brand.url)
 
         if (options?.captionOnly) {
             return {
@@ -376,7 +503,7 @@ async function decomposeIntoSlides(
                 structure: resolvedStructure ? { id: resolvedStructure.id, name: resolvedStructure.name } : undefined,
                 optimalSlideCount: requested,
                 detectedIntent: typeof parsed.detectedIntent === 'string' ? parsed.detectedIntent : undefined,
-                caption: sanitizeTextFromMarkdownLinks(caption)
+                caption
             }
         }
 
@@ -471,7 +598,7 @@ async function decomposeIntoSlides(
             structure: resolvedStructure ? { id: resolvedStructure.id, name: resolvedStructure.name } : undefined,
             optimalSlideCount: requested,
             detectedIntent: typeof parsed.detectedIntent === 'string' ? parsed.detectedIntent : undefined,
-            caption: sanitizeTextFromMarkdownLinks(caption)
+            caption
         }
     }
 
@@ -494,45 +621,23 @@ async function decomposeIntoSlides(
             }
 
             // Extract JSON with robust parsing
-            const jsonMatch = response.match(/\{[\s\S]*\}/)
-            if (!jsonMatch) {
+            const jsonString = extractJsonFromResponse(response)
+            if (!jsonString) {
                 if (attempt === 1) throw new Error('No valid JSON found in response')
                 continue
             }
-
-            let jsonString = jsonMatch[0]
             let parsed: any
 
             try {
                 // First try: direct parse
                 parsed = JSON.parse(jsonString)
             } catch (firstError) {
-                // Fallback: try to find the first complete JSON object
-                // This handles cases where AI appends extra text after the JSON
-                let braceCount = 0
-                let startIdx = jsonString.indexOf('{')
-                if (startIdx === -1) {
-                    if (attempt === 1) throw new Error('No valid JSON structure found')
-                    continue
-                }
-
-                let endIdx = startIdx
-                for (let i = startIdx; i < jsonString.length; i++) {
-                    if (jsonString[i] === '{') braceCount++
-                    else if (jsonString[i] === '}') braceCount--
-
-                    if (braceCount === 0) {
-                        endIdx = i + 1
-                        break
-                    }
-                }
-
-                const cleanJson = jsonString.substring(startIdx, endIdx)
+                // Attempt repair for common AI mistakes (unquoted strings)
                 try {
-                    parsed = JSON.parse(cleanJson)
-                } catch (secondError) {
+                    parsed = JSON.parse(repairJsonString(jsonString))
+                } catch (repairError) {
                     console.error('JSON parse failed. Raw response snippet:', jsonString.substring(0, 200))
-                    if (attempt === 1) throw new Error(`Invalid JSON from AI: ${(secondError as Error).message}`)
+                    if (attempt === 1) throw new Error(`Invalid JSON from AI: ${(firstError as Error).message}`)
                     continue
                 }
             }
@@ -739,6 +844,8 @@ export async function generateCarouselAction(
                 const urlPattern = /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+\.(?:com|es|org|net|io|co)[^\s]*)/i
                 const urlMatch = slideContent.description?.match(urlPattern)
                 const extractedUrl = urlMatch ? urlMatch[0] : undefined
+                const brandUrl = brandDNA.url?.trim()
+                const finalUrl = brandUrl || extractedUrl
 
                 const promptToUse = buildFinalPrompt({
                     composition: composition as any,
@@ -752,7 +859,7 @@ export async function generateCarouselAction(
                     isSequentialSlide: i > 0, // true for slides 2-5
                     // CTA for final slide only
                     ctaText: (isLastSlide && slideContent.role === 'cta') ? slideContent.title : undefined,
-                    ctaUrl: isLastSlide ? extractedUrl : undefined,
+                    ctaUrl: isLastSlide ? finalUrl : undefined,
                     visualAnalysis: aiImageDescription
                 })
 
@@ -953,7 +1060,10 @@ export async function regenerateSlideAction(
     selectedLogoUrl?: string,
     selectedColors?: { color: string; role: string }[],
     compositionId?: string,
-    structureId?: string
+    structureId?: string,
+    aiImageDescription?: string,
+    selectedImageUrls?: string[],
+    consistencyRefUrls?: string[]
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
     try {
         console.log(`Regenerating slide ${slideIndex + 1} for ${brandDNA.brand_name}...`)
@@ -967,11 +1077,11 @@ export async function regenerateSlideAction(
             imageModel,
             selectedColors,
             selectedLogoUrl,
-            undefined,
-            undefined,
+            selectedImageUrls,
+            aiImageDescription,
             compositionId,
             structureId,
-            undefined // consistencyRefUrls
+            consistencyRefUrls
         )
 
         return { success: true, imageUrl }
