@@ -42,6 +42,8 @@ PRIORIDAD LOGO (OBLIGATORIO):
         : 'SIN LOGO.'
 
     return `
+ROL: Eres un director de arte y diseno editorial. Mantienes coherencia absoluta entre slides (tipografia, composicion, grid, tratamiento visual).
+
 CARRUSEL INSTAGRAM - Slide ${slideIndex + 1} de ${totalSlides}
 FORMATO: ${aspectRatio}
 MARCA: ${brandName}
@@ -68,6 +70,9 @@ COHERENCIA OBLIGATORIA:
 - Paleta de marca consistente, sin cambios de estilo entre slides.
 - El elemento principal debe variar solo en contenido, no en estilo.
 - Hilo narrativo continuo entre las piezas.
+- Trata la referencia de continuidad como MASTER LAYOUT.
+- No cambies la tipografia, escala, pesos ni jerarquia entre slides.
+- No cambies la posicion o tamano de cajas de texto ni bloques principales.
 
 ${logoBlock}
 

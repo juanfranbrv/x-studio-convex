@@ -68,6 +68,11 @@ ${narrative.summary}
 2. **Abstract & Geometric**: Avoid complex illustrations. Use shapes (circles, squares, lines) to represent concepts.
 3. **Semantic Alignment**: The layout MUST reinforce the slide's specific message (e.g., use a "Bridge" layout for a transition slide).
 
+### Consistency Contract (Critical)
+- All slides must share the SAME base layout, typography scale, and spacing system.
+- Visual prompts must describe scenes that fit inside ONE consistent template.
+- Do not introduce new layout patterns, type hierarchies, or background treatments.
+
 # Task
 Generate a JSON object representing the carousel slides. 
 

@@ -398,8 +398,8 @@ export function CarouselControlsPanel({
                 const result = await response.json()
                 if (result.success && result.data) {
                     const analysis = result.data
-                    // Construct a rich visual description from the analysis
-                    const desc = `Subject: ${analysis.subject || 'scene'}. Label: ${analysis.subjectLabel || 'unknown'}. Lighting: ${analysis.lighting}. Keywords: ${analysis.keywords?.join(', ')}. Colors: ${analysis.colorPalette?.join(', ')}.`
+                    // Build style-only description to avoid color overrides
+                    const desc = `Lighting: ${analysis.lighting}. Keywords: ${analysis.keywords?.join(', ')}.`
                     setAiImageDescription(desc)
                 }
             } catch (err) {

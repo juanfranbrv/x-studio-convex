@@ -1,4 +1,7 @@
 import { SlideContent } from '@/app/actions/generate-carousel'
+import { P09B } from '@/lib/prompts/priorities/p09b-cta-url-hierarchy'
+import { FINAL_IMAGE_PROMPT_TEMPLATE } from './final-image.template'
+import { LANGUAGE_ENFORCEMENT_INSTRUCTION } from '@/lib/prompts/priorities/p12-preferred-language'
 
 // --- EXTRACT LOGO POSITION FROM COMPOSITION ---
 /**
@@ -36,20 +39,20 @@ function buildLogoDirective(position: string, slideNumber: number, totalSlides: 
     const isFirstSlide = slideNumber === 1
 
     return `
-🔒 LOGO PLACEMENT (CRITICAL - CAROUSEL CONSISTENCY):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+?? LOGO PLACEMENT (CRITICAL - CAROUSEL CONSISTENCY):
+???????????????????????????????????????????????
 
-📍 EXACT POSITION: ${position} - ${pos.anchor}
+?? EXACT POSITION: ${position} - ${pos.anchor}
    - Horizontal: ${pos.x}
    - Vertical: ${pos.y}
    - THIS POSITION IS MANDATORY FOR ALL ${totalSlides} SLIDES
 
-📐 SIZE SPECIFICATIONS:
+?? SIZE SPECIFICATIONS:
    - Logo height: approximately 5% of canvas height
    - Maximum width: 15% of canvas width
    - Maintain original aspect ratio - NO stretching or squeezing
 
-🔐 IMMUTABILITY RULES:
+?? IMMUTABILITY RULES:
    - The logo is a SACRED ELEMENT - DO NOT alter, recreate, or reimagine it
    - Copy the EXACT pixels from the provided logo reference image
    - Same colors, same shapes, same proportions, same details
@@ -57,22 +60,22 @@ function buildLogoDirective(position: string, slideNumber: number, totalSlides: 
    - NO visual effects on logo: no blur, no glow, no shadows, no gradient overlays
 
 ${isFirstSlide ? `
-🎯 FIRST SLIDE PRECEDENT:
+?? FIRST SLIDE PRECEDENT:
    - This is Slide 1/${totalSlides}. The logo placement you create HERE sets the standard.
    - All subsequent slides MUST match this exact position and size.
 ` : `
-🔄 CONSISTENCY REQUIREMENT (SLIDE ${slideNumber}/${totalSlides}):
+?? CONSISTENCY REQUIREMENT (SLIDE ${slideNumber}/${totalSlides}):
    - Match the EXACT logo position, size, and appearance from Slide 1 (Reference Image 2)
    - If Slide 1 logo is at bottom-right, THIS slide's logo MUST be at bottom-right
    - Same size, same position, pixel-perfect match
 `}
 
-⚠️ FAILURE CONDITION: If you cannot preserve the logo EXACTLY as provided, DO NOT include it at all.
+?? FAILURE CONDITION: If you cannot preserve the logo EXACTLY as provided, DO NOT include it at all.
 `.trim()
 }
 
 // --- TOKEN BLOCKS TO REMOVE (The "Noise Filter") ---
-const NOISE_BLOCKS_REGEX = /---\s*(CONTEXTO|VALORES|VISION_CONTEXTO|CONTEXT|VALUES)\s*---[\s\S]*?(?=---|\\n\\n###|$)/gi
+const NOISE_BLOCKS_REGEX = /---\s*(CONTEXTO|VALORES|VISION_CONTEXTO|CONTEXT|VALUES)\s*---[\s\S]*?(?=---|\n\n###|$)/gi
 
 interface FinalPromptParams {
     composition: {
@@ -95,6 +98,7 @@ interface FinalPromptParams {
     ctaText?: string
     ctaUrl?: string
     visualAnalysis?: string
+    language?: string
 }
 
 /**
@@ -104,46 +108,64 @@ function cleanLayoutPrompt(layoutPrompt: string): string {
     return layoutPrompt.replace(NOISE_BLOCKS_REGEX, '').trim()
 }
 
-/**
- * Injects brand colors into the layout prompt.
- * Replaces generic "Solid negative space" with specific hex color.
- */
-function injectColorsIntoBlueprint(layoutPrompt: string, backgroundColor: string): string {
+function injectColorsIntoBlueprint(layoutPrompt: string): string {
     return layoutPrompt
-        .replace(/Solid negative space/gi, `Solid negative space in Hex ${backgroundColor}`)
-        .replace(/negative space/gi, `negative space (${backgroundColor})`)
+        .replace(/Solid negative space/gi, 'Solid negative space (use brand background)')
+        .replace(/negative space/gi, 'negative space (use brand background)')
 }
 
-// --- CTA DIRECTIVE FOR FINAL SLIDE ---
-function buildCtaDirective(ctaText: string, ctaUrl: string | undefined, accentColor: string): string {
-    return `
-📢 CALL-TO-ACTION (FINAL SLIDE TREATMENT):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function stripColorGuidance(text: string): string {
+    return text
+        .replace(/#[0-9a-f]{3,8}/gi, '')
+        .replace(/(monochromatic|monochrome|monocromatico|monocrom?tica|monocrom?tico)/gi, '')
+        .replace(/(white|black|yellow|blue|red|green|purple|magenta|pink|orange|brown|gray|grey|gold|silver|beige|cream|ivory|cyan|teal|turquoise|navy|maroon)/gi, '')
+        .replace(/(blanco|negro|amarillo|azul|rojo|verde|morado|magenta|rosa|naranja|marron|marr?n|gris|dorado|plata|beige|crema|marfil|cian|turquesa|azul marino|granate)/gi, '')
+        .replace(/(fondo|background)\s+(color\s+)?(de\s+)?/gi, '$1 ')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+}
 
-🔘 CTA BUTTON/PILL:
-   - Text: "${ctaText}"
-   - Style: Rounded pill button with solid fill in accent color (${accentColor})
-   - Position: Center-bottom of the composition, above the logo
-   - Size: Button width should fit the text + comfortable padding (approximately 20-30% of canvas width)
-   - Typography: Bold, clean font, white or contrasting color for maximum legibility
-${ctaUrl ? `
-🔗 URL DISPLAY:
-   - URL: "${ctaUrl}"
-   - Position: Directly below the CTA button, or integrated into the button if short
-   - Style: Clean sans-serif, smaller than CTA text, can be in accent color or white
-   - DO NOT add "www." or "https://" unless it's part of the actual URL provided
-` : ''}
-⚡ VISUAL HIERARCHY:
-   - The CTA button should be the MOST PROMINENT interactive element
-   - Create visual breathing room around the button (negative space)
-   - The button should feel "clickable" - use subtle shadow or depth if appropriate
+function stripPaperCanvasHints(text: string): string {
+    return text
+        .replace(/(ink-on|ink on|pen-on|pen on)/gi, '')
+        .replace(/(paper|paper-like|paperlike|sheet|canvas|white space|blank space)/gi, '')
+        .replace(/(papel|papelera|hoja|lienzo|espacio en blanco|espacio blanco)/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+}
+
+function extractStyleTraits(visualAnalysis: string): { lighting?: string; traits?: string } {
+    const lightingMatch = visualAnalysis.match(/Lighting:\s*([^\.\n]+)/i)
+    const keywordsMatch = visualAnalysis.match(/Keywords:\s*([\s\S]+)/i)
+    const lighting = lightingMatch ? stripPaperCanvasHints(stripColorGuidance(lightingMatch[1])).trim() : undefined
+    const rawKeywords = keywordsMatch ? keywordsMatch[1] : ''
+    const traits = rawKeywords
+        ? stripPaperCanvasHints(stripColorGuidance(rawKeywords))
+        : undefined
+    return {
+        lighting: lighting || undefined,
+        traits: traits || undefined
+    }
+}
+
+function buildCtaDirective(ctaText: string, ctaUrl: string | undefined, accentColor: string): string {
+    if (ctaUrl) {
+        return `
+CALL-TO-ACTION (FINAL SLIDE TREATMENT):
+${P09B.CRITICAL_HIERARCHY_INSTRUCTION(ctaUrl)}
+${P09B.URL_HERO_INSTRUCTION(ctaUrl)}
+${P09B.CTA_SECONDARY_INSTRUCTION(ctaText)}
+CTA ACCENT COLOR: ${accentColor}
+`.trim()
+    }
+
+    return `
+CALL-TO-ACTION (FINAL SLIDE TREATMENT):
+${P09B.CTA_ONLY_INSTRUCTION(ctaText)}
+CTA ACCENT COLOR: ${accentColor}
 `.trim()
 }
 
-/**
- * Builds the final clean prompt for the image generation API.
- * Follows the 5-rule system for refined carousel generation.
- */
 export function buildFinalPrompt({
     composition,
     brandColors,
@@ -156,19 +178,14 @@ export function buildFinalPrompt({
     ctaUrl,
     includeLogo,
     isSequentialSlide,
-    visualAnalysis
+    visualAnalysis,
+    language
 }: FinalPromptParams): string {
-
-    // 1. Clean the blueprint (remove CONTEXTO, VALORES, etc.)
     let cleanedBlueprint = cleanLayoutPrompt(composition.layoutPrompt)
-
-    // 2. Replace {DYNAMIC_MOOD} placeholder
     cleanedBlueprint = cleanedBlueprint.replace('{DYNAMIC_MOOD}', currentMood)
+    cleanedBlueprint = injectColorsIntoBlueprint(cleanedBlueprint)
+    cleanedBlueprint = stripPaperCanvasHints(stripColorGuidance(cleanedBlueprint))
 
-    // 3. Inject brand colors into blueprint
-    cleanedBlueprint = injectColorsIntoBlueprint(cleanedBlueprint, brandColors.background)
-
-    // 4. Build the consolidated prompt
     const continuityInstruction = isSequentialSlide
         ? `CONTINUITY: Keep the same professional person (man/woman) and suit style as seen in Reference Image 2. Change only the action/background.`
         : ''
@@ -177,76 +194,64 @@ export function buildFinalPrompt({
         ? buildLogoDirective(logoPosition, currentSlide, totalSlides)
         : ''
 
-    // CTA block for final slide only
     const isLastSlide = currentSlide === totalSlides
     const ctaBlock = (isLastSlide && ctaText)
         ? buildCtaDirective(ctaText, ctaUrl, brandColors.accent)
         : ''
 
-    const visualRefBlock = visualAnalysis
-        ? `
-VISUAL REFERENCE (PRIMARY SOURCE OF TRUTH):
-${visualAnalysis}
-⚠️ CREATIVE DIRECTION: This visual description defines the aesthetic universe for this image. Match the Subject, Lighting, Keywords, Colors, and Medium described above. The SCENE must feel like it belongs to this same visual world – same style, same mood, same medium, same color palette. DO NOT invent a different aesthetic.
-`
+    const cleanedVisualAnalysis = visualAnalysis
+        ? stripPaperCanvasHints(stripColorGuidance(visualAnalysis.replace(/Colors?:[^\n]+/gi, '').trim()))
+        : ''
+    const { lighting: referenceLighting, traits: referenceTraits } = cleanedVisualAnalysis
+        ? extractStyleTraits(cleanedVisualAnalysis)
+        : { lighting: undefined, traits: undefined }
+
+    const visualRefBlock = referenceTraits || referenceLighting
+        ? `VISUAL REFERENCE (PRIMARY SOURCE OF TRUTH):
+${referenceLighting ? `Lighting: ${referenceLighting}.` : ''}
+${referenceTraits ? `Style Traits: ${referenceTraits}.` : ''}
+CREATIVE DIRECTION: Apply the STYLE TRAITS and LIGHTING only. Ignore any implied support (paper/canvas/white) and follow the Brand Color Palette.`
         : ''
 
-    return `
-⚠️ CRITICAL RENDERING RULES (ABSOLUTE - ZERO TOLERANCE):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-THE FOLLOWING MUST NEVER APPEAR AS VISIBLE TEXT IN THE IMAGE:
-❌ Template/layout names: "Notebook", "Minimalist", "Bold", "Classic", etc.
-❌ Hex color codes: #F0E500, #141210, #FFFFFF, etc.
-❌ Font names: "Inter", "Roboto", "Arial", "Montserrat", etc.
-❌ Technical terms: "LAYOUT BLUEPRINT", "BRAND COLORS", "SCENE", "MOOD", "CTA"
-❌ Instructions or section headers from this prompt
-❌ Any text that looks like code, configuration, or metadata
+    const analysisForMatch = cleanedVisualAnalysis || visualAnalysis || ''
+    const scene = (() => {
+        const baseScene = slideData.visualPrompt || slideData.description
+        if (!visualAnalysis) return stripPaperCanvasHints(stripColorGuidance(baseScene))
 
-✅ ONLY RENDER TEXT FROM THE "TEXT:" FIELD BELOW
-✅ Everything else is INVISIBLE composition/style guidance
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const illustrationKeywords = ['illustration', 'vector', 'cartoon', 'flat', 'cel-shad', 'digital art', '2d', 'graphic style', 'animation']
+        const isIllustrationRef = illustrationKeywords.some(kw => analysisForMatch.toLowerCase().includes(kw))
 
----
-${visualRefBlock}
-LAYOUT BLUEPRINT: ${composition.name || 'Custom Layout'}
-${cleanedBlueprint}
+        if (isIllustrationRef) {
+            const cleanedScene = baseScene
+                .replace(/fotograf|photo|editorial|estilo fotograf|imagen real|realistic/gi, '')
+                .replace(/^\s*,\s*/, '')
+                .trim()
+            const illustrated = `Ilustracion vectorial estilo ${analysisForMatch.match(/Keywords:\s*([^.]+)/)?.[1]?.split(',')[0] || 'flat design'}. ${cleanedScene}`
+            return stripPaperCanvasHints(stripColorGuidance(illustrated))
+        }
+        return stripPaperCanvasHints(stripColorGuidance(baseScene))
+    })()
 
-BRAND COLORS: Background ${brandColors.background}, Accent ${brandColors.accent}${brandColors.text ? `, Text ${brandColors.text}` : ''}.
+    const template = FINAL_IMAGE_PROMPT_TEMPLATE
+    const languageBlock = LANGUAGE_ENFORCEMENT_INSTRUCTION((language || 'es').toLowerCase())
+    const textColor = brandColors.text || '#141210'
 
-SCENE: ${(() => {
-            const baseScene = slideData.visualPrompt || slideData.description
-            if (!visualAnalysis) return baseScene
-
-            // Check if reference is an illustration/vector style
-            const illustrationKeywords = ['illustration', 'vector', 'cartoon', 'flat', 'cel-shad', 'digital art', '2d', 'graphic style', 'animation']
-            const isIllustrationRef = illustrationKeywords.some(kw => visualAnalysis.toLowerCase().includes(kw))
-
-            if (isIllustrationRef) {
-                // Remove photo-related words and prepend illustration style
-                const cleanedScene = baseScene
-                    .replace(/fotograf[íi]a|photo|editorial|estilo fotogr[áa]fico|imagen real|realistic/gi, '')
-                    .replace(/^\s*,\s*/, '')
-                    .trim()
-                return `Ilustración vectorial estilo ${visualAnalysis.match(/Keywords:\s*([^.]+)/)?.[1]?.split(',')[0] || 'flat design'}. ${cleanedScene}`
-            }
-            return baseScene
-        })()}
-
-MOOD: ${currentMood}
-
-TEXT: "${slideData.title}"${slideData.description ? ` - "${slideData.description}"` : ''} in White and ${brandColors.accent}.
-
-${ctaBlock}
-
-${logoBlock}
-
-${continuityInstruction}
-`.trim()
+    return template
+        .replace('{{LANGUAGE_BLOCK}}', languageBlock)
+        .replace('{{VISUAL_REF_BLOCK}}', visualRefBlock ? `${visualRefBlock}
+` : '')
+        .replace('{{LAYOUT_BLUEPRINT}}', cleanedBlueprint)
+        .replace('{{BACKGROUND_COLOR}}', brandColors.background)
+        .replace('{{TEXT_COLOR}}', textColor)
+        .replace('{{ACCENT_COLOR}}', brandColors.accent)
+        .replace('{{SCENE}}', scene)
+        .replace('{{MOOD}}', currentMood)
+        .replace('{{TEXT}}', `"${slideData.title}"${slideData.description ? ` - "${slideData.description}"` : ''}.`)
+        .replace('{{CTA_BLOCK}}', ctaBlock)
+        .replace('{{LOGO_BLOCK}}', logoBlock)
+        .replace('{{CONTINUITY}}', continuityInstruction)
 }
 
-/**
- * Generates a random seed for image consistency across carousel slides.
- */
 export function generateCarouselSeed(): number {
     return Math.floor(Math.random() * 999999) + 1
 }

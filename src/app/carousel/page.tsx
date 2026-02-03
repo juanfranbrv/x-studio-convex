@@ -564,6 +564,12 @@ export default function CarouselPage() {
         // Build per-slide debug info
         const slideDebug = slidesForPrompt.map((slide, idx) => {
             const currentMood = getMoodForSlide(idx, slideCount)
+            const isLastSlide = idx === slideCount - 1
+            const urlPattern = /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+\.(?:com|es|org|net|io|co)[^\s]*)/i
+            const urlMatch = slide.description?.match(urlPattern)
+            const extractedUrl = urlMatch ? urlMatch[0] : undefined
+            const brandUrl = activeBrandKit?.url?.trim()
+            const finalUrl = brandUrl || extractedUrl
             const prompt = buildFinalPrompt({
                 composition: compositionPreset as any,
                 brandColors,
@@ -574,6 +580,8 @@ export default function CarouselPage() {
                 logoPosition: extractLogoPosition(compositionPreset?.layoutPrompt || ''),
                 includeLogo: Boolean(settings.selectedLogoUrl),
                 isSequentialSlide: idx > 0,
+                ctaText: isLastSlide ? (slide.title || 'Más info') : undefined,
+                ctaUrl: isLastSlide ? finalUrl : undefined,
                 visualAnalysis: settings?.aiImageDescription
             })
 

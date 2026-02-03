@@ -434,7 +434,37 @@ async function decomposeIntoSlides(
         }
 
         const startIdx = text.indexOf('{')
-        if (startIdx === -1) return null
+        if (startIdx === -1) {
+            const arrayStart = text.indexOf('[')
+            if (arrayStart === -1) return null
+            let bracketCount = 0
+            let inStr = false
+            let esc = false
+            for (let i = arrayStart; i < text.length; i++) {
+                const ch = text[i]
+                if (inStr) {
+                    if (esc) {
+                        esc = false
+                    } else if (ch === '\\') {
+                        esc = true
+                    } else if (ch === '"') {
+                        inStr = false
+                    }
+                    continue
+                }
+                if (ch === '"') {
+                    inStr = true
+                    continue
+                }
+                if (ch === '[') bracketCount++
+                if (ch === ']') bracketCount--
+                if (bracketCount === 0) {
+                    const arrayText = text.slice(arrayStart, i + 1)
+                    return `{"slides": ${arrayText}}`
+                }
+            }
+            return null
+        }
 
         let braceCount = 0
         let inStr = false
@@ -700,17 +730,8 @@ async function generateSlideImage(
     const brandWrapper = { name: brand.brand_name, brand_dna: brand }
 
     // Build context array for reference images
+    // NOTE: We intentionally avoid passing reference images to prevent literal copying.
     const context: Array<{ type: string; value: string; label?: string }> = []
-    if (selectedImageUrls && selectedImageUrls.length > 0) {
-        selectedImageUrls.slice(0, 2).forEach((url, idx) => {
-            context.push({ type: 'image', value: url, label: `Referencia ${idx + 1}` })
-        })
-    }
-    if (consistencyRefUrls && consistencyRefUrls.length > 0) {
-        consistencyRefUrls.forEach((url, idx) => {
-            context.push({ type: 'image', value: url, label: `Continuidad Visual ${idx + 1}` })
-        })
-    }
     if (selectedLogoUrl) {
         context.push({ type: 'logo', value: selectedLogoUrl, label: 'Logo' })
     }
@@ -858,34 +879,14 @@ export async function generateCarouselAction(
                     includeLogo: !!(includeLogoOnSlides && selectedLogoUrl),
                     isSequentialSlide: i > 0, // true for slides 2-5
                     // CTA for final slide only
-                    ctaText: (isLastSlide && slideContent.role === 'cta') ? slideContent.title : undefined,
+                    ctaText: isLastSlide ? (slideContent.title || 'Más info') : undefined,
                     ctaUrl: isLastSlide ? finalUrl : undefined,
-                    visualAnalysis: aiImageDescription
+                    visualAnalysis: aiImageDescription,
+                    language: input.language || detectLanguage(prompt) || 'es'
                 })
 
                 // Rule 4: Reference Chain Logic
                 const contextReferences: Array<{ type: string; value: string; label?: string; weight?: number }> = []
-
-                // A. Master Template (High weight 0.8 for Structure)
-                // If a master layout image exists in brand kit, use it
-                if (selectedImageUrls && selectedImageUrls.length > 0) {
-                    contextReferences.push({
-                        type: 'image',
-                        value: selectedImageUrls[0],
-                        label: 'Master Layout Structure',
-                        weight: 0.8
-                    })
-                }
-
-                // B. Sequential Continuity (Slide 1 as reference for slides 2-5)
-                if (i > 0 && generatedImageUrls[0]) {
-                    contextReferences.push({
-                        type: 'image',
-                        value: generatedImageUrls[0], // Always reference Slide 1 (Hero)
-                        label: 'Slide 1 Style Reference',
-                        weight: 0.4
-                    })
-                }
 
                 // C. Logo (MAXIMUM priority - weight 1.0)
                 if (includeLogoOnSlides && selectedLogoUrl) {
