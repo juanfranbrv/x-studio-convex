@@ -21,6 +21,7 @@ export function PromptDebugModal({
     promptData
 }: PromptDebugModalProps) {
     const [copied, setCopied] = useState(false)
+    const [copiedAll, setCopiedAll] = useState(false)
     const [activeSlide, setActiveSlide] = useState(0)
 
     const handleCopy = async () => {
@@ -31,6 +32,13 @@ export function PromptDebugModal({
         setTimeout(() => setCopied(false), 2000)
     }
 
+    const handleCopyAll = async () => {
+        if (!promptData?.finalPrompt) return
+        await navigator.clipboard.writeText(promptData.finalPrompt)
+        setCopiedAll(true)
+        setTimeout(() => setCopiedAll(false), 2000)
+    }
+
     if (!promptData) return null
 
     const hasSlideDebug = promptData.slideDebug && promptData.slideDebug.length > 0
@@ -38,6 +46,9 @@ export function PromptDebugModal({
     const displayPrompt = currentSlideData?.prompt || promptData.finalPrompt
     const characterCount = displayPrompt.length
     const estimatedTokens = Math.ceil(characterCount / 4)
+    const fullPrompt = promptData.finalPrompt || ''
+    const fullCharCount = fullPrompt.length
+    const fullEstimatedTokens = Math.ceil(fullCharCount / 4)
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -108,8 +119,9 @@ export function PromptDebugModal({
                 {/* Content Area - Two Column Layout */}
                 <div className="flex-1 overflow-hidden flex gap-4 py-4">
                     {/* LEFT: Prompt Text - Wide and Tall */}
-                    <div className="w-[65%] flex flex-col space-y-2 min-w-0">
-                        <div className="flex items-center justify-between shrink-0">
+                    <div className="w-[65%] flex flex-col gap-4 min-w-0 min-h-0">
+                        <div className="flex flex-col gap-2 min-h-0 flex-1">
+                            <div className="flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-2">
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                                     Prompt {hasSlideDebug ? `Slide ${activeSlide + 1}` : 'Final'}
@@ -144,11 +156,50 @@ export function PromptDebugModal({
                                 </Button>
                             </div>
                         </div>
-                        <div className="relative flex-1 overflow-hidden">
+                        <div className="relative flex-1 overflow-hidden min-h-0">
                             <pre className="h-full p-4 bg-black/90 text-green-400 rounded-lg text-xs leading-relaxed overflow-y-auto font-mono whitespace-pre-wrap break-words">
                                 {displayPrompt}
                             </pre>
                         </div>
+                        </div>
+
+                        {hasSlideDebug && fullPrompt && (
+                            <div className="flex flex-col gap-2 min-h-0 flex-1">
+                                <div className="flex items-center justify-between shrink-0">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                        Prompt completo (todas las slides)
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground">
+                                            {fullCharCount} chars â€¢ ~{fullEstimatedTokens} tokens
+                                        </span>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleCopyAll}
+                                            className="h-7 px-2"
+                                        >
+                                            {copiedAll ? (
+                                                <>
+                                                    <Check className="w-3 h-3 mr-1" />
+                                                    Copiado
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="w-3 h-3 mr-1" />
+                                                    Copiar todo
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div className="relative flex-1 overflow-hidden min-h-0">
+                                    <pre className="h-full p-4 bg-black/90 text-green-400 rounded-lg text-xs leading-relaxed overflow-y-auto font-mono whitespace-pre-wrap break-words">
+                                        {fullPrompt}
+                                    </pre>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* RIGHT: Metadata + References */}
