@@ -68,6 +68,7 @@ Within that same layout, enforce a strong text hierarchy:
 
 {{VISUAL_REF_BLOCK}}
 IMPORTANT: Ignore any color palette mentioned in the visual reference. Use ONLY the Brand Color Palette defined below.
+STYLE TRANSFER (MANDATORY): The reference image is provided as an actual image input. Transfer its visual style to the generated image. Match lighting, texture, medium, lens/optics, grain, and overall mood. Keep the SUBJECT/TEXT content from this slide, but make it look like it was created in the exact same style as the reference.
 
 ╔═════════════════════════════════════════════════════════════════╗
 ║  LAYOUT BLUEPRINT (GLOBAL)                                      ║

@@ -28,6 +28,14 @@ export interface CarouselSlide {
     description: string
     status: 'pending' | 'generating' | 'done' | 'error'
     error?: string
+    debugPrompt?: string
+    debugReferences?: DebugImageReference[]
+}
+
+export interface DebugImageReference {
+    type: string
+    label?: string
+    url: string
 }
 
 export interface GenerateCarouselInput {
@@ -704,7 +712,7 @@ async function generateSlideImage(
     compositionId?: string,
     structureId?: string,
     consistencyRefUrls?: string[]
-): Promise<string> {
+): Promise<{ imageUrl: string; prompt: string; references: DebugImageReference[] }> {
     const brandContext = buildCarouselBrandContext(brand, selectedColors, selectedLogoUrl)
     const compositionPreset = (structureId && compositionId)
         ? getNarrativeComposition(structureId, compositionId)
@@ -732,6 +740,12 @@ async function generateSlideImage(
     // Build context array for reference images
     // NOTE: We intentionally avoid passing reference images to prevent literal copying.
     const context: Array<{ type: string; value: string; label?: string }> = []
+
+    if (selectedImageUrls && selectedImageUrls.length > 0) {
+        selectedImageUrls.forEach((url, idx) => {
+            context.push({ type: 'image', value: url, label: `Reference Image ${idx + 1}` })
+        })
+    }
     if (selectedLogoUrl) {
         context.push({ type: 'logo', value: selectedLogoUrl, label: 'Logo' })
     }
@@ -742,7 +756,13 @@ async function generateSlideImage(
         context
     })
 
-    return imageUrl
+    const references: DebugImageReference[] = context.map(ref => ({
+        type: ref.type,
+        label: ref.label,
+        url: ref.value
+    }))
+
+    return { imageUrl, prompt: fullPrompt, references }
 }
 
 /**
@@ -887,6 +907,31 @@ export async function generateCarouselAction(
 
                 // Rule 4: Reference Chain Logic
                 const contextReferences: Array<{ type: string; value: string; label?: string; weight?: number }> = []
+
+                // A. Reference images (style/layout guidance)
+                if (selectedImageUrls && selectedImageUrls.length > 0) {
+                    selectedImageUrls.forEach((url, idx) => {
+                        contextReferences.push({
+                            type: 'image',
+                            value: url,
+                            label: `Reference Image ${idx + 1}`,
+                            weight: 0.9
+                        })
+                    })
+                }
+
+                // B. Consistency reference (generated slide 1)
+                if (consistencyRefUrls && consistencyRefUrls.length > 0) {
+                    consistencyRefUrls.forEach((url, idx) => {
+                        if (!url) return
+                        contextReferences.push({
+                            type: 'image',
+                            value: url,
+                            label: `Slide 1 Style Reference ${idx + 1}`,
+                            weight: 0.4
+                        })
+                    })
+                }
 
                 // C. Logo (MAXIMUM priority - weight 1.0)
                 if (includeLogoOnSlides && selectedLogoUrl) {
@@ -1065,11 +1110,11 @@ export async function regenerateSlideAction(
     aiImageDescription?: string,
     selectedImageUrls?: string[],
     consistencyRefUrls?: string[]
-): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
+): Promise<{ success: boolean; imageUrl?: string; error?: string; debugPrompt?: string; debugReferences?: DebugImageReference[] }> {
     try {
         console.log(`Regenerating slide ${slideIndex + 1} for ${brandDNA.brand_name}...`)
 
-        const imageUrl = await generateSlideImage(
+        const { imageUrl, prompt, references } = await generateSlideImage(
             slideContent,
             totalSlides,
             style,
@@ -1085,7 +1130,7 @@ export async function regenerateSlideAction(
             consistencyRefUrls
         )
 
-        return { success: true, imageUrl }
+        return { success: true, imageUrl, debugPrompt: prompt, debugReferences: references }
 
     } catch (error) {
         return {

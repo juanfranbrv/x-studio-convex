@@ -20,7 +20,8 @@ import {
     Loader2,
     Fingerprint,
     ImageDown,
-    SquareArrowDown
+    SquareArrowDown,
+    Bug
 } from 'lucide-react'
 import JSZip from 'jszip'
 import {
@@ -34,6 +35,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { CarouselSlide } from '@/app/actions/generate-carousel'
 import { DigitalStaticLoader } from '../DigitalStaticLoader'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface CarouselCanvasPanelProps {
     slides: CarouselSlide[]
@@ -90,6 +92,8 @@ export function CarouselCanvasPanel({
     const [loaderVariant, setLoaderVariant] = useState(0)
     const [loaderSeed, setLoaderSeed] = useState(() => Date.now())
     const loaderVisibleRef = useRef(false)
+    const [debugOpen, setDebugOpen] = useState(false)
+    const [debugSlide, setDebugSlide] = useState<CarouselSlide | null>(null)
 
     // Track viewport for responsive heights
     useEffect(() => {
@@ -133,6 +137,12 @@ export function CarouselCanvasPanel({
             description: nextDescription
         })
         setIsEditingScript(false)
+    }
+
+    const handleOpenDebug = () => {
+        if (!currentSlide) return
+        setDebugSlide(currentSlide)
+        setDebugOpen(true)
     }
 
     const appendBrandText = (currentValue: string, value: string) => {
@@ -451,6 +461,22 @@ export function CarouselCanvasPanel({
                             </div>
                         )}
 
+                        {/* Debug Prompt Trigger (Top Right) */}
+                        {currentSlide?.imageUrl && (
+                            <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleOpenDebug}
+                                    className="h-9 w-9 rounded-full bg-background/80 backdrop-blur border border-border shadow-sm hover:shadow-md transition-all hover:scale-[1.03] active:scale-[0.98]"
+                                    title="Ver prompt y referencias"
+                                >
+                                    <Bug className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        )}
+
                         {/* Content */}
                         {!currentSlide ? (
                             <div className="flex flex-col items-center justify-center text-muted-foreground p-12 text-center">
@@ -653,6 +679,60 @@ export function CarouselCanvasPanel({
                     </div>
                 )}
             </div>
+
+            <Dialog open={debugOpen} onOpenChange={setDebugOpen}>
+                <DialogContent
+                    className="flex flex-col h-[calc(100vh-3rem)] top-6 bottom-6 left-auto right-6 translate-x-0 translate-y-0"
+                    style={{ width: '620px', maxWidth: 'calc(100vw - 3rem)' }}
+                >
+                    <DialogHeader>
+                        <DialogTitle>
+                            Debug de prompt - Slide {debugSlide ? debugSlide.index + 1 : currentIndex + 1}
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-6 overflow-y-auto pr-1">
+                        <div className="space-y-3">
+                            <div className="text-sm uppercase tracking-wider text-muted-foreground">
+                                ImÃ¡genes enviadas en la llamada
+                            </div>
+                            {debugSlide?.debugReferences && debugSlide.debugReferences.length > 0 ? (
+                                <div className="flex flex-wrap gap-3">
+                                    {debugSlide.debugReferences.map((ref, idx) => (
+                                        <div key={`${ref.type}-${idx}`} className="w-24 space-y-1">
+                                            <div className="w-24 h-24 rounded-lg overflow-hidden border border-border bg-muted/50">
+                                                <img
+                                                    src={ref.url}
+                                                    alt={ref.label || ref.type}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="text-xs text-muted-foreground truncate">
+                                                {ref.label || ref.type}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-muted-foreground">
+                                    No se enviaron imÃ¡genes en esta llamada.
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="text-sm uppercase tracking-wider text-muted-foreground">
+                                Prompt enviado al modelo
+                            </div>
+                            <div className="flex-1 overflow-y-auto rounded-lg border border-border bg-muted/30 p-4">
+                                <pre className="whitespace-pre-wrap text-sm leading-relaxed font-mono text-foreground">
+                                    {debugSlide?.debugPrompt || 'No hay prompt registrado para este slide.'}
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

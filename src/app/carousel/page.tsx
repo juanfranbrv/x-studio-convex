@@ -457,7 +457,16 @@ export default function CarouselPage() {
                 if (result.success && result.imageUrl) {
                     generatedImageUrls.push(result.imageUrl)
                     doneCount += 1
-                    setSlides(prev => prev.map(s => s.index === slideContent.index ? { ...s, imageUrl: result.imageUrl, status: 'done' as const } : s))
+                    setSlides(prev => prev.map(s => s.index === slideContent.index
+                        ? {
+                            ...s,
+                            imageUrl: result.imageUrl,
+                            status: 'done' as const,
+                            debugPrompt: result.debugPrompt,
+                            debugReferences: result.debugReferences
+                        }
+                        : s
+                    ))
                     setGeneratedCount(doneCount)
                     setCurrentSlideIndex(slideContent.index)
                 } else {
@@ -706,7 +715,9 @@ export default function CarouselPage() {
                 newSlides[index] = {
                     ...newSlides[index],
                     imageUrl: result.imageUrl,
-                    status: 'done'
+                    status: 'done',
+                    debugPrompt: result.debugPrompt,
+                    debugReferences: result.debugReferences
                 }
                 setSlides(newSlides)
                 toast({
