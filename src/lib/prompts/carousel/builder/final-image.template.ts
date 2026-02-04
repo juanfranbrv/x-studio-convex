@@ -31,7 +31,7 @@ THE FOLLOWING MUST NEVER APPEAR AS VISIBLE TEXT IN THE IMAGE:
 - Template/layout names (e.g., "Notebook", "Minimalist", "Bold", "Classic")
 - Hex color codes (e.g., #F0E500, #141210, #FFFFFF)
 - Font names (e.g., "Inter", "Roboto", "Arial", "Montserrat")
-- Technical terms (e.g., "LAYOUT BLUEPRINT", "BRAND COLORS", "SCENE", "MOOD", "CTA")
+- Technical terms (e.g., "LAYOUT BLUEPRINT", "BRAND COLORS", "SUBJECT", "MOOD", "CTA")
 - Instructions or section headers from this prompt
 - Any text that looks like code, configuration, or metadata
 ONLY RENDER TEXT FROM THE "TEXT:" FIELD BELOW.
@@ -45,7 +45,7 @@ Everything else is INVISIBLE composition/style guidance.
 - Keep identical typography scale, font style, weight, and hierarchy across slides.
 - Keep the same text box size, position, margins, grid, and alignment.
 - Keep the same background treatment, shapes, and layout proportions.
-- ONLY change the primary subject/scene to match the slide TEXT and SCENE.
+- ONLY change the primary subject to match the slide TEXT and SUBJECT.
 - Do NOT introduce new layout patterns or new typographic systems.
 - Copy the same camera/lighting mood and post-process treatment (contrast, grain, saturation).
 - If a reference shows a split layout, boxed text, or panel, keep that exact structure.
@@ -106,7 +106,7 @@ Below is the STRICT color palette for this generation. Use these specific values
 ║  PRIORITY 04 - SLIDE-SPECIFIC CONTENT (CURRENT)                 ║
 ╚═════════════════════════════════════════════════════════════════╝
 
-SCENE: {{SCENE}}
+SUBJECT: {{SUBJECT}}
 MOOD: {{MOOD}}
 TEXT: {{TEXT}}
 

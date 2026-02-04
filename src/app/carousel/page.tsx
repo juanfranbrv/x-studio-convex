@@ -31,6 +31,8 @@ import { extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt
 import { FeedbackButton } from '@/components/studio/FeedbackButton'
 import { cn } from '@/lib/utils'
 import { Id } from '../../../convex/_generated/dataModel'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 export default function CarouselPage() {
     const router = useRouter()
@@ -80,6 +82,13 @@ export default function CarouselPage() {
     const [pendingGenerateSettings, setPendingGenerateSettings] = useState<CarouselSettings | null>(null)
     const [isCancelingAnalyze, setIsCancelingAnalyze] = useState(false)
     const [isCancelingGenerate, setIsCancelingGenerate] = useState(false)
+    const [errorModal, setErrorModal] = useState<{
+        open: boolean
+        title: string
+        message: string
+        suggestedSlideCount?: number
+    }>({ open: false, title: '', message: '' })
+    const [slideCountOverride, setSlideCountOverride] = useState<number | null>(null)
     const cancelGenerationRef = useRef(false)
     const cancelAnalyzeRef = useRef(false)
 
@@ -113,6 +122,38 @@ export default function CarouselPage() {
 
         return raw
     }, [analysisIntent])
+
+    const extractSuggestedSlideCount = (message: string) => {
+        const matches = message.match(/\b(\d+)\b/g) || []
+        const numbers = matches.map(Number).filter(n => Number.isFinite(n) && n > 0)
+        if (numbers.length === 0) return undefined
+        return Math.max(...numbers)
+    }
+
+    const simplifyErrorMessage = (message: string, suggested?: number) => {
+        const lower = message.toLowerCase()
+        if (lower.includes('reto de 7') || lower.includes('slide por día') || lower.includes('n+2') || lower.includes('requested_slide_count')) {
+            if (suggested) {
+                return `Este tipo de carrusel requiere al menos ${suggested} diapositivas (gancho + contenido + CTA). Ajusta el número para continuar.`
+            }
+            return 'Este tipo de carrusel requiere más diapositivas de las seleccionadas. Ajusta el número para continuar.'
+        }
+        if (lower.includes('modelo de inteligencia') || lower.includes('modelo de imagen')) {
+            return 'Falta configuración de IA. Revisa el panel de Admin.'
+        }
+        return 'No se pudo completar la acción. Revisa la configuración e inténtalo de nuevo.'
+    }
+
+    const openErrorModal = (title: string, message: string) => {
+        const suggestedSlideCount = extractSuggestedSlideCount(message)
+        const simplified = simplifyErrorMessage(message, suggestedSlideCount)
+        setErrorModal({
+            open: true,
+            title,
+            message: simplified,
+            suggestedSlideCount
+        })
+    }
 
     const brandKitTexts = useMemo(() => {
         if (!activeBrandKit) return []
@@ -151,11 +192,10 @@ export default function CarouselPage() {
         cancelAnalyzeRef.current = false
         if (!settings.prompt.trim() || !activeBrandKit || !aiConfig?.intelligenceModel) {
             if (!silent) {
-                toast({
-                    title: 'Falta configuracion de IA',
-                    description: 'No hay un modelo de inteligencia configurado en el panel de Admin.',
-                    variant: 'destructive'
-                })
+                openErrorModal(
+                    'Falta configuración de IA',
+                    'No hay un modelo de inteligencia configurado en el panel de Admin.'
+                )
             }
             return null
         }
@@ -225,11 +265,10 @@ export default function CarouselPage() {
             }
             console.error('Carousel analysis error:', error)
             if (!silent) {
-                toast({
-                    title: 'Error',
-                    description: error instanceof Error ? error.message : 'No se pudo analizar el carrusel.',
-                    variant: 'destructive'
-                })
+                openErrorModal(
+                    'Error al analizar',
+                    error instanceof Error ? error.message : 'No se pudo analizar el carrusel.'
+                )
             }
             return null
         } finally {
@@ -253,29 +292,20 @@ export default function CarouselPage() {
 
     const handleAnalyze = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
-            toast({
-                title: 'Error',
-                description: 'Por favor, introduce un tema para el carrusel.',
-                variant: 'destructive'
-            })
+            openErrorModal('Error', 'Por favor, introduce un tema para el carrusel.')
             return
         }
 
         if (!activeBrandKit) {
-            toast({
-                title: 'Error',
-                description: 'Selecciona un Brand Kit primero.',
-                variant: 'destructive'
-            })
+            openErrorModal('Error', 'Selecciona un Brand Kit primero.')
             return
         }
 
         if (!aiConfig?.intelligenceModel) {
-            toast({
-                title: 'Falta configuracion de IA',
-                description: 'No hay un modelo de inteligencia configurado en el panel de Admin.',
-                variant: 'destructive'
-            })
+            openErrorModal(
+                'Falta configuración de IA',
+                'No hay un modelo de inteligencia configurado en el panel de Admin.'
+            )
             return
         }
         await performAnalyze(settings)
@@ -285,11 +315,10 @@ export default function CarouselPage() {
         if (!carouselSettings || !activeBrandKit) return
         if (isCaptionLocked) return
         if (!aiConfig?.intelligenceModel) {
-            toast({
-                title: 'Falta configuracion de IA',
-                description: 'No hay un modelo de inteligencia configurado en el panel de Admin.',
-                variant: 'destructive'
-            })
+            openErrorModal(
+                'Falta configuración de IA',
+                'No hay un modelo de inteligencia configurado en el panel de Admin.'
+            )
             return
         }
 
@@ -312,11 +341,10 @@ export default function CarouselPage() {
             }
         } catch (error) {
             console.error('Caption regeneration error:', error)
-            toast({
-                title: 'Error',
-                description: error instanceof Error ? error.message : 'No se pudo regenerar el caption.',
-                variant: 'destructive'
-            })
+            openErrorModal(
+                'Error',
+                error instanceof Error ? error.message : 'No se pudo regenerar el caption.'
+            )
         } finally {
             setIsCaptionGenerating(false)
         }
@@ -325,29 +353,20 @@ export default function CarouselPage() {
     const executeGenerate = useCallback(async (settings: CarouselSettings) => {
         cancelGenerationRef.current = false
         if (!settings.prompt.trim()) {
-            toast({
-                title: 'Error',
-                description: 'Por favor, introduce un tema para el carrusel.',
-                variant: 'destructive'
-            })
+            openErrorModal('Error', 'Por favor, introduce un tema para el carrusel.')
             return
         }
 
         if (!activeBrandKit) {
-            toast({
-                title: 'Error',
-                description: 'Selecciona un Brand Kit primero.',
-                variant: 'destructive'
-            })
+            openErrorModal('Error', 'Selecciona un Brand Kit primero.')
             return
         }
 
         if (!aiConfig?.imageModel) {
-            toast({
-                title: 'Falta configuracion de IA',
-                description: 'No hay un modelo de imagen configurado en el panel de Admin.',
-                variant: 'destructive'
-            })
+            openErrorModal(
+                'Falta configuración de IA',
+                'No hay un modelo de imagen configurado en el panel de Admin.'
+            )
             return
         }
 
@@ -465,11 +484,10 @@ export default function CarouselPage() {
                 return
             }
             console.error('Carousel generation error:', error)
-            toast({
-                title: 'Error',
-                description: error instanceof Error ? error.message : 'No se pudo generar el carrusel.',
-                variant: 'destructive'
-            })
+            openErrorModal(
+                'Error al generar',
+                error instanceof Error ? error.message : 'No se pudo generar el carrusel.'
+            )
         } finally {
             setIsGenerating(false)
             if (cancelGenerationRef.current) {
@@ -492,29 +510,20 @@ export default function CarouselPage() {
 
     const handleGenerate = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
-            toast({
-                title: 'Error',
-                description: 'Por favor, introduce un tema para el carrusel.',
-                variant: 'destructive'
-            })
+            openErrorModal('Error', 'Por favor, introduce un tema para el carrusel.')
             return
         }
 
         if (!activeBrandKit) {
-            toast({
-                title: 'Error',
-                description: 'Selecciona un Brand Kit primero.',
-                variant: 'destructive'
-            })
+            openErrorModal('Error', 'Selecciona un Brand Kit primero.')
             return
         }
 
         if (!aiConfig?.imageModel) {
-            toast({
-                title: 'Falta configuracion de IA',
-                description: 'No hay un modelo de imagen configurado en el panel de Admin.',
-                variant: 'destructive'
-            })
+            openErrorModal(
+                'Falta configuración de IA',
+                'No hay un modelo de imagen configurado en el panel de Admin.'
+            )
             return
         }
 
@@ -531,11 +540,7 @@ export default function CarouselPage() {
         }
 
         if (!slidesForPrompt) {
-            toast({
-                title: 'Error',
-                description: 'No se pudo preparar el guion para el preview del prompt.',
-                variant: 'destructive'
-            })
+            openErrorModal('Error', 'No se pudo preparar el guion para el preview del prompt.')
             return
         }
 
@@ -714,11 +719,10 @@ export default function CarouselPage() {
 
         } catch (error) {
             console.error('Slide regeneration error:', error)
-            toast({
-                title: 'Error',
-                description: error instanceof Error ? error.message : 'No se pudo regenerar el slide.',
-                variant: 'destructive'
-            })
+            openErrorModal(
+                'Error',
+                error instanceof Error ? error.message : 'No se pudo regenerar el slide.'
+            )
         } finally {
             setIsRegenerating(false)
             setRegeneratingIndex(null)
@@ -835,6 +839,8 @@ export default function CarouselPage() {
                     analysisIntent={analysisIntent}
                     analysisIntentLabel={analysisIntentLabel}
                     isAdmin={isAdmin}
+                    slideCountOverride={slideCountOverride}
+                    onSlideCountOverrideApplied={() => setSlideCountOverride(null)}
                 />
             </div>
 
@@ -844,6 +850,35 @@ export default function CarouselPage() {
                 onConfirm={confirmGeneration}
                 promptData={debugPromptData}
             />
+
+            <Dialog open={errorModal.open} onOpenChange={(open) => setErrorModal(prev => ({ ...prev, open }))}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-destructive">
+                            {errorModal.title}
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground whitespace-pre-wrap">
+                            {errorModal.message}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2">
+                        {errorModal.suggestedSlideCount ? (
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setSlideCountOverride(errorModal.suggestedSlideCount || null)
+                                    setErrorModal(prev => ({ ...prev, open: false }))
+                                }}
+                            >
+                                Ajustar a {errorModal.suggestedSlideCount} diapositivas
+                            </Button>
+                        ) : null}
+                        <Button onClick={() => setErrorModal(prev => ({ ...prev, open: false }))}>
+                            Entendido
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </DashboardLayout>
     )
 }

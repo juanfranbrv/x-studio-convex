@@ -644,6 +644,22 @@ export async function generateContentImageUnified(
     return await generateBrandImage(brand, prompt, options)
 }
 
+// Raw prompt image generation without brand prompt injection
+export async function generateImageFromPromptRaw(
+    prompt: string,
+    model: string,
+    aspectRatio?: string
+): Promise<string> {
+    if (!model) {
+        throw new Error('Missing image model')
+    }
+
+    const normalized = model.startsWith('wisdom/') ? model.replace('wisdom/', '') : model
+    const parts: any[] = [{ text: prompt }]
+
+    return await generateWisdomImage(parts, normalized, aspectRatio)
+}
+
 // =============================================================================
 // VIDEO GENERATION (Veo 3.1 via Wisdom Gate)
 // =============================================================================

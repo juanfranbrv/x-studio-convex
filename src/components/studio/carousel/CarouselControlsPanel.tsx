@@ -66,6 +66,8 @@ interface CarouselControlsPanelProps {
     analysisIntent?: string
     analysisIntentLabel?: string
     isAdmin?: boolean
+    slideCountOverride?: number | null
+    onSlideCountOverrideApplied?: () => void
 }
 
 const SectionHeader = ({
@@ -119,7 +121,9 @@ export function CarouselControlsPanel({
     analysisStructure,
     analysisIntent,
     analysisIntentLabel,
-    isAdmin = false
+    isAdmin = false,
+    slideCountOverride,
+    onSlideCountOverrideApplied
 }: CarouselControlsPanelProps) {
     const createPreset = useMutation(api.presets.create)
     const presetsData = useQuery(api.presets.list, userId ? {
@@ -281,6 +285,35 @@ export function CarouselControlsPanel({
             setCurrentStep(prev => (prev < 6 ? 6 : prev))
         }
     }, [hasReferenceSelection, showAllSteps])
+
+    useEffect(() => {
+        if (!slideCountOverride) return
+        if (slideCountOverride === slideCount) {
+            onSlideCountOverrideApplied?.()
+            return
+        }
+        const newCount = Math.max(1, Math.min(15, slideCountOverride))
+        setSlideCount(newCount)
+        if (prompt.trim()) {
+            setNeedsReanalysis(true)
+            setCurrentStep(2)
+            setLastAnalyzedPrompt(prompt.trim())
+            if (!isAnalyzing && !isGenerating) {
+                onAnalyze(buildSettings({ slideCount: newCount }))
+            }
+        } else {
+            setCurrentStep(2)
+        }
+        onSlideCountOverrideApplied?.()
+    }, [
+        slideCountOverride,
+        slideCount,
+        prompt,
+        isAnalyzing,
+        isGenerating,
+        onAnalyze,
+        onSlideCountOverrideApplied
+    ])
 
     useEffect(() => {
         if (showAllSteps) return

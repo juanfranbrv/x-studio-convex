@@ -214,7 +214,7 @@ CREATIVE DIRECTION: Apply the STYLE TRAITS and LIGHTING only. Ignore any implied
         : ''
 
     const analysisForMatch = cleanedVisualAnalysis || visualAnalysis || ''
-    const scene = (() => {
+    const subject = (() => {
         const baseScene = slideData.visualPrompt || slideData.description
         if (!visualAnalysis) return stripPaperCanvasHints(stripColorGuidance(baseScene))
 
@@ -244,7 +244,7 @@ CREATIVE DIRECTION: Apply the STYLE TRAITS and LIGHTING only. Ignore any implied
         .replace('{{BACKGROUND_COLOR}}', brandColors.background)
         .replace('{{TEXT_COLOR}}', textColor)
         .replace('{{ACCENT_COLOR}}', brandColors.accent)
-        .replace('{{SCENE}}', scene)
+        .replace('{{SUBJECT}}', subject)
         .replace('{{MOOD}}', currentMood)
         .replace('{{TEXT}}', `"${slideData.title}"${slideData.description ? ` - "${slideData.description}"` : ''}.`)
         .replace('{{CTA_BLOCK}}', ctaBlock)

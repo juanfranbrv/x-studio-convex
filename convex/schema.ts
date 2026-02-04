@@ -116,6 +116,30 @@ export default defineSchema({
   }).index("by_brand", ["brand_id"])
     .index("by_brand_latest", ["brand_id", "isLatest"]),
 
+  carousels: defineTable({
+    brand_id: v.optional(v.id("brand_dna")),
+    styleDNA: v.optional(v.any()),
+    adapter: v.optional(v.any()),
+    brandLock: v.any(),
+    layoutSpec: v.any(),
+    created_at: v.string(),
+    updated_at: v.optional(v.string()),
+  }).index("by_brand", ["brand_id"]),
+
+  slides: defineTable({
+    carousel_id: v.id("carousels"),
+    slide: v.number(),
+    narrative_raw: v.optional(v.any()),
+    narrative_sanitized: v.optional(v.any()),
+    lint_report: v.optional(v.any()),
+    compiled_prompt: v.optional(v.any()),
+    status: v.optional(v.string()),
+    errors: v.optional(v.any()),
+    created_at: v.string(),
+    updated_at: v.optional(v.string()),
+  }).index("by_carousel", ["carousel_id"])
+    .index("by_carousel_slide", ["carousel_id", "slide"]),
+
   presets: defineTable({
     userId: v.optional(v.string()), // clerk_id, optional for system presets
     brandId: v.optional(v.id("brand_dna")), // Scoped to a specific brand kit
