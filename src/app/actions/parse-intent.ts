@@ -250,6 +250,30 @@ function organizeParsedOutput(
     }
 }
 
+function buildSafeFallbackParsedOutput(
+    userText: string,
+    brandWebsite?: string,
+    intentId?: string
+): ParsedIntentResult {
+    const inferredIntent =
+        (intentId && INTENT_CATALOG.some((i) => i.id === intentId) ? intentId : undefined) ||
+        inferIntentFromText(userText) ||
+        DEFAULT_FALLBACK_INTENT
+
+    const base: ParsedIntentResult = {
+        detectedIntent: inferredIntent,
+        detectedLanguage: 'es',
+        confidence: 0.25,
+        headline: '',
+        cta: '',
+        ctaUrl: brandWebsite?.trim() || '',
+        caption: sanitizeUrlsInText(userText),
+        imageTexts: [{ label: 'Texto principal', value: sanitizeUrlsInText(userText), type: 'custom' }],
+    }
+
+    return organizeParsedOutput(base, userText, brandWebsite)
+}
+
 /**
  * Robustly extracts the first JSON object found in a string.
  * Handles noise before/after the JSON and handles markdown blocks.
@@ -280,6 +304,84 @@ function extractJson(text: string): string {
     }
 
     return cleaned
+}
+
+/**
+ * Best-effort JSON repair for common LLM formatting failures.
+ * Only quotes plain unquoted values after ":" while preserving valid JSON tokens.
+ */
+function repairJsonString(raw: string): string {
+    let result = ''
+    let inString = false
+    let escape = false
+    let expectingValue = false
+
+    for (let i = 0; i < raw.length; i++) {
+        const ch = raw[i]
+
+        if (inString) {
+            result += ch
+            if (escape) {
+                escape = false
+            } else if (ch === '\\') {
+                escape = true
+            } else if (ch === '"') {
+                inString = false
+            }
+            continue
+        }
+
+        if (ch === '"') {
+            inString = true
+            result += ch
+            continue
+        }
+
+        if (expectingValue) {
+            if (/\s/.test(ch)) {
+                result += ch
+                continue
+            }
+
+            if (ch === '{' || ch === '[' || ch === '-' || /[0-9]/.test(ch)) {
+                expectingValue = false
+                result += ch
+                continue
+            }
+
+            if (ch === 't' || ch === 'f' || ch === 'n') {
+                expectingValue = false
+                result += ch
+                continue
+            }
+
+            const start = i
+            let end = i
+            for (; end < raw.length; end++) {
+                const current = raw[end]
+                if (current === ',' || current === '}' || current === ']') {
+                    break
+                }
+            }
+
+            const rawValue = raw.slice(start, end).trim()
+            const escaped = rawValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+            result += `"${escaped}"`
+            expectingValue = false
+            i = end - 1
+            continue
+        }
+
+        if (ch === ':') {
+            expectingValue = true
+            result += ch
+            continue
+        }
+
+        result += ch
+    }
+
+    return result
 }
 
 function inferIntentFromText(userText: string): string | undefined {
@@ -442,7 +544,8 @@ export async function parseLazyIntentAction({
         const allLayouts = Object.values(LAYOUTS_BY_INTENT).flat()
         const layout = layoutId ? allLayouts.find(l => l.id === layoutId) : undefined
         if (!intelligenceModel) {
-            throw new Error('Missing intelligence model configuration')
+            console.warn('[LazyPrompt] Missing intelligence model. Using deterministic fallback parser.')
+            return buildSafeFallbackParsedOutput(userText, brandWebsite, intentId)
         }
         const modelToUse = intelligenceModel
         console.log(`[LazyPrompt] Parsing with model ${modelToUse} ${intent ? `for intent: ${intent.name}` : 'with auto-detection'}`)
@@ -470,7 +573,18 @@ export async function parseLazyIntentAction({
 
         // 5. Parse Response (Robustly)
         const cleanJson = extractJson(jsonResponse)
-        const parsed: ParsedIntentResult = JSON.parse(cleanJson)
+        let parsed: ParsedIntentResult
+        try {
+            parsed = JSON.parse(cleanJson)
+        } catch (firstError) {
+            try {
+                parsed = JSON.parse(repairJsonString(cleanJson))
+            } catch (secondError) {
+                const firstMessage = firstError instanceof Error ? firstError.message : String(firstError)
+                const secondMessage = secondError instanceof Error ? secondError.message : String(secondError)
+                throw new Error(`Invalid JSON from intent parser (${firstMessage}) -> repair failed (${secondMessage})`)
+            }
+        }
 
         const validIntentIds = new Set<IntentCategory>(INTENT_CATALOG.map(i => i.id))
         const isIntentCategory = (value?: string): value is IntentCategory =>
@@ -552,7 +666,7 @@ export async function parseLazyIntentAction({
         return organized
     } catch (error) {
         console.error('[LazyPrompt] Error:', error)
-        return { error: `Failed to parse intent: ${error instanceof Error ? error.message : String(error)}` }
+        return buildSafeFallbackParsedOutput(userText, brandWebsite, intentId)
     }
 }
 
