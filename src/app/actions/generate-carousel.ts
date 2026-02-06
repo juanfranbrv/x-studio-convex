@@ -921,6 +921,10 @@ export async function generateCarouselAction(
                 }
 
                 // B. Consistency reference (generated slide 1)
+                const consistencyRefUrls =
+                    generatedImageUrls.length > 0 && generatedImageUrls[0]
+                        ? [generatedImageUrls[0]]
+                        : []
                 if (consistencyRefUrls && consistencyRefUrls.length > 0) {
                     consistencyRefUrls.forEach((url, idx) => {
                         if (!url) return
