@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/../convex/_generated/api";
+import type { Id } from "@/../convex/_generated/dataModel";
 import type {
   BrandLock,
   LayoutSpec,
@@ -89,8 +90,10 @@ export async function POST(request: NextRequest) {
 
     validateLayoutSpec(layoutSpec);
 
+    const normalizedBrandId = brandId as Id<"brand_dna"> | undefined;
+
     const carouselId = await convex.mutation(api.pipeline.createCarousel, {
-      brandId,
+      brandId: normalizedBrandId,
       brandLock,
       layoutSpec,
     });

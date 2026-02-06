@@ -16,7 +16,7 @@ function assertSanitized(narrative: SanitizedNarrativeOut) {
 }
 
 function enforceNoForbiddenTokens(narrative: SanitizedNarrativeOut): SanitizedNarrativeOut {
-  const fieldsToCheck: Array<[keyof SanitizedNarrativeOut, string | undefined]> = [
+  const fieldsToCheck: Array<["subject" | "context", string | undefined]> = [
     ["subject", narrative.subject],
     ["context", narrative.context],
   ];

@@ -16,6 +16,7 @@ export async function updateUserBrandKit(brandKitId: string, brandData: BrandDNA
 
         await fetchMutation(api.brands.updateBrandDNADoc, {
             id: brandKitId as Id<'brand_dna'>,
+            clerk_user_id: userId,
             updates: {
                 brand_name: brandData.brand_name,
                 tagline: brandData.tagline,
