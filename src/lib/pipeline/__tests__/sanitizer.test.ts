@@ -7,7 +7,7 @@ describe("sanitizer", () => {
     const narrative: NarrativeOut = {
       slide: 1,
       subject: "Fondo negro mate con tipografia",
-      context: "diseño premium con render",
+      context: "diseÃ±o premium con render",
       emotion: ["dramatic lighting", "calma"],
     };
 

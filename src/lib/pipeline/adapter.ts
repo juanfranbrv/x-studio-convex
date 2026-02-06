@@ -30,7 +30,7 @@ export function buildStyleToBrandAdapter(
 
   if (renderMentionsPaper && !fondoIsWhite) {
     materialTranslationRules.push(
-      `Tratar el sustrato como papel teñido con el color fondo (${brand.palette.fondo}) en lugar de blanco.`
+      `Tratar el sustrato como papel teÃ±ido con el color fondo (${brand.palette.fondo}) en lugar de blanco.`
     );
   }
 
@@ -48,7 +48,7 @@ export function buildStyleToBrandAdapter(
 
   if (style.family === "watercolor" || style.family === "oil_paint") {
     applicationRules.push(
-      "Preservar comportamiento del medio (lavados, pinceladas) sin añadir tecnicas externas."
+      "Preservar comportamiento del medio (lavados, pinceladas) sin aÃ±adir tecnicas externas."
     );
   }
 
