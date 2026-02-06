@@ -4,6 +4,10 @@ interface Generation {
     id: string
     image_url: string
     created_at: string
+    prompt_used?: string
+    request_payload?: Record<string, unknown>
+    error_title?: string
+    error_fallback?: string
 }
 
 interface ThumbnailHistoryProps {

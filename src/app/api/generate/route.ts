@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         // Parse request body
         // Parse request body
         const body = await request.json()
-        let { prompt, headline, cta, platform, brandDNA, context, model, layoutReference, aspectRatio, selectedColors } = body as {
+        let { prompt, headline, cta, platform, brandDNA, context, model, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt } = body as {
             prompt: string
             headline?: string
             cta?: string
@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
             layoutReference?: string
             aspectRatio?: string
             selectedColors?: any[]
+            promptAlreadyBuilt?: boolean
         }
 
         // Robust Server-Side Fallback: If model is missing, fetch from DB
@@ -84,7 +85,12 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        console.log('[API] Generate Request:', { model, promptLength: prompt?.length, brand: brandDNA?.brand_name })
+        const provider = model?.startsWith('wisdom/')
+            ? 'Wisdom'
+            : model?.startsWith('google/')
+                ? 'Google Oficial'
+                : 'Google Oficial'
+        console.log(`\n╔══════════════════════════════════════════════╗\n║ IMAGE REQUEST (SERVER)\n║ Provider: ${provider}\n║ Model: ${model || 'NO_CONFIG'}\n║ Prompt Length: ${prompt?.length || 0}\n║ Brand: ${brandDNA?.brand_name || 'N/A'}\n╚══════════════════════════════════════════════╝`)
 
         if (!prompt) {
             return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
@@ -94,7 +100,7 @@ export async function POST(request: NextRequest) {
         const imageUrl = await generateContentImageUnified(
             { name: brandDNA.brand_name || 'Brand', brand_dna: brandDNA },
             prompt,
-            { headline, cta, platform, context, model, layoutReference, aspectRatio, selectedColors }
+            { headline, cta, platform, context, model, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt }
         )
 
         // Consume credit after successful generation

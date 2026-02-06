@@ -176,7 +176,7 @@ export interface SelectedColor {
 }
 
 export type TextAssetType = 'cta' | 'tagline' | 'url' | 'hook' | 'custom'
-export type ReferenceImageRole = 'style' | 'content' | 'logo'
+export type ReferenceImageRole = 'style' | 'style_content' | 'content' | 'logo'
 export type TypographyFamilyClass = 'sans' | 'serif' | 'slab' | 'mono' | 'script' | 'display'
 export type TypographyWeight = 'light' | 'regular' | 'semibold' | 'bold' | 'black'
 export type TypographyWidth = 'condensed' | 'normal' | 'extended'

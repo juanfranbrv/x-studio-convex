@@ -671,13 +671,8 @@ export default function AdminPage() {
                                                     onChange={(e) => setEditingSettings(prev => ({ ...prev, model_image_generation: e.target.value }))}
                                                 >
                                                     <option value="wisdom/gemini-3-pro-image-preview">Gemini 3 Pro Image (Wisdom)</option>
-                                                    <option value="wisdom/qwen-image">Qwen Image (Alibaba)</option>
-                                                    <option value="wisdom/kolors">Kolors (Kwai)</option>
-                                                    <option value="wisdom/wanx-v1">Wanx (Alibaba)</option>
-                                                    <option value="wisdom/seedream-4.0">Seedream 4.0 (Wisdom)</option>
-                                                    <option value="google/gemini-3-pro">Gemini 3 Pro (Google Legacy)</option>
-                                                    <option value="google/gemini-2.5-flash">Gemini 2.5 Flash (Google Legacy)</option>
-                                                    <option value="google/imagen-3-fast">Imagen 3 Fast</option>
+                                                    <option value="google/gemini-3-pro-image-preview">Nano Banana Pro / Gemini 3 Pro Image (Google Oficial)</option>
+                                                    <option value="google/gemini-2.5-flash-image">Nano Banana / Gemini 2.5 Flash Image (Google Oficial)</option>
                                                 </select>
                                                 <Button
                                                     size="sm"
@@ -698,8 +693,8 @@ export default function AdminPage() {
                                                     value={editingSettings['model_intelligence'] ?? settings?.find(s => s.key === 'model_intelligence')?.value ?? "wisdom/gemini-2.5-flash"}
                                                     onChange={(e) => setEditingSettings(prev => ({ ...prev, model_intelligence: e.target.value }))}
                                                 >
-                                                    <option value="wisdom/gemini-3-pro">Gemini 3 Pro (Wisdom)</option>
-                                                    <option value="wisdom/gemini-3-flash">Gemini 3 Flash (Wisdom)</option>
+                                                    <option value="wisdom/gemini-3-pro-preview">Gemini 3 Pro (Wisdom)</option>
+                                                    <option value="wisdom/gemini-3-flash-preview">Gemini 3 Flash (Wisdom)</option>
                                                     <option value="wisdom/gemini-2.5-flash">Gemini 2.5 Flash (Wisdom)</option>
                                                     <option value="gemini-3-pro-preview">Gemini 3 Pro (Google Official)</option>
                                                     <option value="gemini-3-flash-preview">Gemini 3 Flash (Google Official)</option>

@@ -317,11 +317,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         brandKitIds: string[],
         roles: Record<string, ReferenceImageRole>
     ) => {
-        const uploadedStyle = uploadedImages.find((id) => roles[id] === 'style')
+        const isStyleRole = (role?: ReferenceImageRole) => role === 'style' || role === 'style_content'
+        const uploadedStyle = uploadedImages.find((id) => isStyleRole(roles[id]))
         if (uploadedStyle) {
             return { id: uploadedStyle, source: 'upload' as const }
         }
-        const brandKitStyle = brandKitIds.find((id) => roles[id] === 'style')
+        const brandKitStyle = brandKitIds.find((id) => isStyleRole(roles[id]))
         if (brandKitStyle) {
             return { id: brandKitStyle, source: 'brandkit' as const }
         }
@@ -333,10 +334,17 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         brandKitIds: string[],
         roles: Record<string, ReferenceImageRole>
     ) => {
-        return [...uploadedImages, ...brandKitIds].some((id) => roles[id] === 'style')
+        return [...uploadedImages, ...brandKitIds].some((id) => {
+            const role = roles[id]
+            return role === 'style' || role === 'style_content'
+        })
     }
 
-    const analyzeImageBase64 = useCallback(async (base64: string, mimeType: string) => {
+    const analyzeImageBase64 = useCallback(async (
+        base64: string,
+        mimeType: string,
+        expectedRef?: { id: string; source: 'upload' | 'brandkit' }
+    ) => {
         try {
             const response = await fetch('/api/analyze-image', {
                 method: 'POST',
@@ -352,9 +360,16 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             if (result.success && result.data) {
                 setState(prev => ({
                     ...prev,
-                    visionAnalysis: result.data,
-                    firstVisionAnalysis: prev.firstVisionAnalysis || result.data,
-                    isAnalyzing: false,
+                    ...(expectedRef && (
+                        prev.firstReferenceId !== expectedRef.id ||
+                        prev.firstReferenceSource !== expectedRef.source
+                    )
+                        ? {}
+                        : {
+                            visionAnalysis: result.data,
+                            firstVisionAnalysis: result.data,
+                        }),
+                    isAnalyzing: false
                 }))
             } else {
                 throw new Error(result.error || 'Vision analysis failed')
@@ -382,7 +397,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 format: 'image/jpeg'
             })
 
-            await analyzeImageBase64(base64, blob.type || 'image/jpeg')
+            await analyzeImageBase64(base64, blob.type || 'image/jpeg', { id: url, source: 'brandkit' })
         } catch (error) {
             setState(prev => ({
                 ...prev,
@@ -400,7 +415,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             setState(prev => ({ ...prev, isAnalyzing: true, error: null }))
             const match = /^data:([^;]+);base64,/.exec(state.firstReferenceId)
             const mimeType = match?.[1] || 'image/jpeg'
-            analyzeImageBase64(state.firstReferenceId, mimeType)
+            analyzeImageBase64(state.firstReferenceId, mimeType, {
+                id: state.firstReferenceId,
+                source: 'upload'
+            })
             return
         }
 
@@ -559,7 +577,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             }
 
             if (shouldAnalyzeAsStyle) {
-                await analyzeImageBase64(base64, file.type || 'image/jpeg')
+                await analyzeImageBase64(base64, file.type || 'image/jpeg', { id: base64, source: 'upload' })
             } else {
                 setState(prev => ({ ...prev, isAnalyzing: false }))
             }
@@ -628,7 +646,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 setState(prev => ({
                     ...prev,
                     visionAnalysis: result.data,
-                    firstVisionAnalysis: prev.firstVisionAnalysis || result.data,
+                    firstVisionAnalysis: result.data,
                     isAnalyzing: false,
                 }))
             } else {
@@ -749,9 +767,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             if (!isSelected) return prev
 
             const nextRoles = { ...prev.referenceImageRoles }
-            if (role === 'style') {
+            if (role === 'style' || role === 'style_content') {
                 ;[...prev.uploadedImages, ...prev.selectedBrandKitImageIds].forEach((id) => {
-                    if (nextRoles[id] === 'style') nextRoles[id] = 'content'
+                    if (id === imageId) return
+                    if (nextRoles[id] === 'style' || nextRoles[id] === 'style_content') nextRoles[id] = 'content'
                 })
             }
             nextRoles[imageId] = role
@@ -1317,9 +1336,31 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
         // TEXT CONTENT (Part of P9 - Mandatory)
         const textParts: string[] = []
+        const contactParts: string[] = []
+        const contactLabelRegex = /\b(tel[e?]fono|telefono|m[o?]vil|movil|phone|whatsapp|email|e-mail|correo|mail|url|web|website|sitio|instagram|tiktok|linkedin|youtube|x|twitter|facebook|usuario|user|handle)\b/i
+        const hasEmail = (value: string) => /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(value)
+        const hasUrl = (value: string) => /(https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,}(\/|$))/i.test(value)
+        const hasHandle = (value: string) => /(^|\s)@[a-z0-9._]{2,}/i.test(value)
+        const hasPhone = (value: string) => {
+            const digits = value.replace(/\D/g, '')
+            if (digits.length < 7) return false
+            return /(\+?\d[\d\s().-]{6,}\d)/.test(value) || /^(\+?\d{7,})$/.test(digits)
+        }
+        const isContactField = (label: string, value: string, type?: TextAsset['type']) => {
+            const normalizedLabel = label.trim()
+            if (type === 'url') return true
+            if (type === 'cta') return false
+            return (
+                contactLabelRegex.test(normalizedLabel) ||
+                hasEmail(value) ||
+                hasUrl(value) ||
+                hasHandle(value) ||
+                hasPhone(value)
+            )
+        }
         const headlineValue = activeState.headline?.trim()
         if (headlineValue && headlineValue !== NO_TEXT_TOKEN) {
-            textParts.push(`• HEADLINE: "${headlineValue}"`)
+            textParts.push(`- HEADLINE: "${headlineValue}"`)
         }
 
         const ctaValue = activeState.cta?.trim()
@@ -1334,8 +1375,6 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             }
         }
 
-
-
         Object.entries(activeState.customTexts).forEach(([id, val]) => {
             // Support strings or arrays (greedy parser sometimes returns arrays)
             const stringVal = Array.isArray(val) ? val.join(', ') : String(val ?? '')
@@ -1347,7 +1386,12 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 if (fieldMeta?.mapsTo) return
 
                 const displayLabel = fieldMeta?.label || id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-                textParts.push(`• ${displayLabel}: "${cleanVal}"`)
+                const entry = `- ${displayLabel}: "${cleanVal}"`
+                if (isContactField(displayLabel, cleanVal)) {
+                    contactParts.push(entry)
+                } else {
+                    textParts.push(entry)
+                }
             }
         })
 
@@ -1355,23 +1399,40 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         activeState.selectedTextAssets.forEach(asset => {
             if (asset.type === 'cta' || asset.type === 'url') return
             if (asset.value?.trim()) {
-                textParts.push(`• ${asset.label.toUpperCase()}: "${asset.value.trim()}"`)
+                const assetLabel = asset.label.toUpperCase()
+                const assetValue = asset.value.trim()
+                const entry = `- ${assetLabel}: "${assetValue}"`
+                if (isContactField(assetLabel, assetValue, asset.type)) {
+                    contactParts.push(entry)
+                } else {
+                    textParts.push(entry)
+                }
             }
         })
 
-        if (textParts.length > 0) {
+        if (textParts.length > 0 || contactParts.length > 0) {
             brandDNA.push(P09.MANDATORY_TEXT_HEADER)
             brandDNA.push(P09.TEXT_FIT_SAFETY_RULES)
+            brandDNA.push(P09.TEXT_TYPOGRAPHY_LOCK)
             if (activeState.ctaUrl?.trim()) {
                 brandDNA.push(P09B.CRITICAL_HIERARCHY_INSTRUCTION(activeState.ctaUrl))
             }
-            brandDNA.push(...textParts, ``)
+            if (textParts.length > 0) {
+                brandDNA.push(...textParts, ``)
+            }
+            if (contactParts.length > 0) {
+                brandDNA.push(
+                    P09.CONTACT_INFO_LAYOUT_RULES,
+                    `CONTACT INFORMATION (SEPARATE BLOCK):`,
+                    ...contactParts,
+                    ``
+                )
+            }
         } else if (activeState.rawMessage) {
-            brandDNA.push(P09.MANDATORY_TEXT_HEADER, `(No explícitos, extraer de la INTENCIÓN ORIGINAL)`, ``)
+            brandDNA.push(P09.MANDATORY_TEXT_HEADER, `(No expl??citos, extraer de la INTENCI??N ORIGINAL)`, ``)
         } else {
             brandDNA.push(P09.NO_TEXT_WARNING, ``)
         }
-
         if (activeState.rawMessage) {
             brandDNA.push(`USER ORIGINAL INTENTION / RAW CONTEXT:`, `"${activeState.rawMessage}"`, ``)
         }
@@ -1510,33 +1571,15 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // PRIORITY 5 - VISUAL STYLE & AESTHETIC
         // ═══════════════════════════════════════════════════════════════
         const customStyle = activeState.customStyle?.trim()
-        const styleDirectives: string[] = []
-        const typographyDirection = buildSimpleTypographyDirection(activeState.typography, activeState.firstVisionAnalysis)
-        const visualDirectiveLine = buildVisualStyleDirective(
-            customStyle,
-            activeState.firstVisionAnalysis
-        )
+        const styleSignals = extractStyleSignals(customStyle, activeState.firstVisionAnalysis)
+        const typographyDirection = buildSimpleTypographyDirection(activeState.typography, styleSignals)
+        const visualDirectiveLine = buildVisualStyleDirective(customStyle, activeState.firstVisionAnalysis)
 
-        if (customStyle) {
-            styleDirectives.push(customStyle)
-        }
-
-        if (activeState.firstVisionAnalysis?.keywords?.length) {
-            const combinedVisionStyle = activeState.firstVisionAnalysis.keywords.join(', ')
-            if (combinedVisionStyle.trim()) {
-                styleDirectives.push(combinedVisionStyle)
-            }
-        }
-
-        if (styleDirectives.length > 0 || typographyDirection) {
-            const uniqueStyles = Array.from(new Set(styleDirectives))
+        if (styleSignals.length > 0 || typographyDirection) {
             sections.push(
                 P05.PRIORITY_HEADER,
                 ``,
                 visualDirectiveLine,
-                uniqueStyles.length > 0
-                    ? `STYLE SIGNALS FROM REFERENCE: ${uniqueStyles.join(', ')}`
-                    : `STYLE SIGNALS FROM REFERENCE: Keep the visual language clean, bold, and highly readable.`,
                 `COLOR DOMINANCE RULE: Style cues define form, line quality, texture and composition. PRIORITY 4 brand palette controls final hue decisions. Do not override brand colors with fixed external color schemes.`,
                 ``,
                 typographyDirection ? `${typographyDirection}` : ``,
@@ -1970,53 +2013,14 @@ function fileToBase64(file: File): Promise<string> {
 
 function buildSimpleTypographyDirection(
     typography?: TypographyProfile | null,
-    analysis?: GenerationState['firstVisionAnalysis'] | null
+    styleSignals: string[] = []
 ): string {
     if (!typography) return ''
-    const familyMap: Record<TypographyProfile['familyClass'], string> = {
-        sans: 'a clean geometric sans-serif',
-        serif: 'a high-legibility serif with clear contrast',
-        slab: 'a slab-serif with strong structural presence',
-        mono: 'a monospaced family with controlled rhythm',
-        script: 'a restrained script with readable letterforms',
-        display: 'a bold display family with compact impact'
+    if (styleSignals.length > 0) {
+        // Radical mode: when a style reference exists, avoid nudging typography at all.
+        return ''
     }
-
-    const weightMap: Record<TypographyProfile['weight'], string> = {
-        light: 'light',
-        regular: 'regular',
-        semibold: 'semibold',
-        bold: 'bold',
-        black: 'black'
-    }
-
-    const casingMap: Record<TypographyProfile['casing'], string> = {
-        uppercase: 'uppercase',
-        title: 'title case',
-        sentence: 'sentence case'
-    }
-
-    const spacingMap: Record<TypographyProfile['spacing'], string> = {
-        tight: 'tight tracking',
-        normal: 'balanced tracking',
-        wide: 'wide tracking'
-    }
-
-    const titleEffect =
-        typography.contrast === 'high' || typography.familyClass === 'display' || typography.weight === 'black'
-            ? 'Apply a crisp outline (1-2px, high contrast within brand palette) plus a subtle short drop shadow to improve separation.'
-            : 'Apply a very subtle outline or micro-shadow only when needed for legibility.'
-
-    const bodyEffect =
-        typography.familyClass === 'script'
-            ? 'Keep body text in a simpler companion family from the same visual tone, with no outline and no decorative effects.'
-            : 'Keep body text clean and undecorated (no heavy outline, no dramatic shadow).'
-
-    const analysisHint = analysis?.keywords?.length
-        ? `Inferred from reference cues: ${analysis.keywords.slice(0, 6).join(', ')}.`
-        : 'Inferred from the visual character of the style reference.'
-
-    return `TYPOGRAPHY DIRECTION: ${analysisHint} HEADLINE TYPOGRAPHY: Use ${familyMap[typography.familyClass]} in ${weightMap[typography.weight]} weight, ${casingMap[typography.casing]}, ${spacingMap[typography.spacing]}. ${titleEffect} BODY TYPOGRAPHY: Use the same superfamily or a neutral companion in regular/semibold weight with high readability and stable spacing. ${bodyEffect}`
+    return `TYPOGRAPHY DIRECTION: Keep typography simple and readable.`
 }
 
 function buildVisualStyleDirective(
@@ -2026,14 +2030,14 @@ function buildVisualStyleDirective(
     const referenceSignals = (analysis?.keywords || [])
         .map((k) => k.trim())
         .filter(Boolean)
-    const tokens = [customStyle?.trim(), ...referenceSignals]
-        .filter((t): t is string => Boolean(t && t.length > 0))
-        .join(' ')
-        .toLowerCase()
+    const tokens = [customStyle?.trim(), ...referenceSignals].join(' ').toLowerCase()
 
     const has = (keywords: string[]) => keywords.some((k) => tokens.includes(k))
     const artDirectionAnchors: string[] = []
 
+    if (has(['pop art', 'comic', 'halftone', 'ben-day', 'print texture'])) {
+        artDirectionAnchors.push('Pop Art/comic print language with controlled halftone behavior')
+    }
     if (has(['vector', 'flat', 'cel', 'cartoon', 'illustration'])) {
         artDirectionAnchors.push('contemporary vector illustration language from children media and mobile game key art')
     }
@@ -2056,9 +2060,52 @@ function buildVisualStyleDirective(
     const styleSource =
         referenceSignals.length > 0
             ? referenceSignals.join(', ')
-            : 'the style reference and the selected brand language'
+            : (customStyle?.trim() || 'the style reference and the selected brand language')
 
-    return `STYLE DIRECTIVES: Render the image in this exact aesthetic direction based on ${styleSource}. Enforce clear silhouette hierarchy, confident contour lines, simplified shape language, controlled depth layering, and even readable lighting. Keep finishes clean and matte, with a commercial-ready clarity and playful energy.${anchorClause}`
+    const isPhotographicStyle = has([
+        'photo',
+        'photorealistic',
+        'portraiture',
+        'stock photography',
+        'studio lighting',
+        'high-key',
+        'realistic'
+    ])
+
+    if (isPhotographicStyle) {
+        return `STYLE DIRECTIVES: Render the image in this exact aesthetic direction based on ${styleSource}. Keep a photographic treatment with real-world materials, natural perspective, and coherent light behavior. Preserve commercial clarity, controlled contrast, and clean finishing without converting the scene into illustration, comic linework, or stylized sketch rendering.`
+    }
+
+    return `STYLE DIRECTIVES: Render the image in this exact aesthetic direction based on ${styleSource}. Enforce clear silhouette hierarchy, confident contour lines, simplified shape language, and controlled depth layering with readable lighting. Keep the output commercially clear, energetic, and visually coherent.${anchorClause}`
+}
+
+function extractStyleSignals(
+    customStyle?: string,
+    analysis?: GenerationState['firstVisionAnalysis'] | null
+): string[] {
+    const raw = [customStyle || '', ...(analysis?.keywords || [])]
+        .join(' ')
+        .toLowerCase()
+
+    const has = (tokens: string[]) => tokens.some((token) => raw.includes(token))
+    const signals: string[] = []
+
+    if (has(['pop art', 'roy lichtenstein', 'comic'])) signals.push('pop-art comic language')
+    if (has(['halftone', 'ben-day', 'dot pattern', 'printed dots'])) signals.push('halftone print texture accents')
+    if (has(['outline', 'thick line', 'bold black'])) signals.push('thick high-contrast contour outlines')
+    if (has(['flat color', 'color blocking', 'flat shading'])) signals.push('flat color blocking with minimal gradients')
+    if (has(['cell shaded', 'cel-shaded', 'hard shadow'])) signals.push('hard-edged cel-style shadows')
+    if (has(['retro', 'vintage', 'nostalgic'])) signals.push('retro commercial mood')
+    if (has(['energetic', 'dynamic', 'high contrast', 'high-impact'])) signals.push('energetic high-impact composition')
+    if (has(['frontal', 'close-up'])) signals.push('frontal close-up composition')
+    if (has(['vector', 'illustration', 'cartoon'])) signals.push('clean vector illustration finish')
+
+    const blockedColorTerms = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'magenta', 'cyan', 'primary', 'secondary']
+    return Array.from(
+        new Set(
+            signals.filter((entry) => !blockedColorTerms.some((term) => entry.includes(term)))
+        )
+    ).slice(0, 8)
 }
 
 function inferTypographyFromVision(analysis?: GenerationState['firstVisionAnalysis'] | null): TypographyProfile {

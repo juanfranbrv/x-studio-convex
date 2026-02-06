@@ -79,8 +79,11 @@ export function TypographySection({
         }
 
         if (allFonts.length > 0) {
+            const canAddFamily = (family: string) =>
+                fonts.filter(ef => ef.family === family).length < 2;
+
             const filtered = allFonts.filter(f =>
-                f.toLowerCase().includes(fontSearch.toLowerCase()) && !fonts.some(ef => ef.family === f)
+                f.toLowerCase().includes(fontSearch.toLowerCase()) && canAddFamily(f)
             ).slice(0, 50);
             setSearchResults(filtered);
         } else if (hasFetched && allFonts.length === 0) {

@@ -105,19 +105,22 @@ export function ImageReferenceSelector({
     }
 
     const getNextRole = (role: ReferenceImageRole): ReferenceImageRole => {
-        if (role === 'style') return 'content'
+        if (role === 'style') return 'style_content'
+        if (role === 'style_content') return 'content'
         if (role === 'content') return 'logo'
         return 'style'
     }
 
     const roleLabel = (role: ReferenceImageRole) => {
         if (role === 'style') return 'Estilo'
+        if (role === 'style_content') return 'Estilo+Contenido'
         if (role === 'logo') return 'Logo'
         return 'Contenido'
     }
 
     const roleChipClasses = (role: ReferenceImageRole) => {
         if (role === 'style') return 'bg-violet-500/85 text-white'
+        if (role === 'style_content') return 'bg-fuchsia-500/85 text-white'
         if (role === 'logo') return 'bg-amber-500/85 text-white'
         return 'bg-sky-500/85 text-white'
     }
@@ -199,7 +202,7 @@ export function ImageReferenceSelector({
                                             const currentRole = referenceImageRoles[img] || 'content'
                                             onReferenceRoleChange(img, getNextRole(currentRole))
                                         }}
-                                        title="Cambiar rol: Estilo / Contenido / Logo"
+                                        title="Cambiar rol: Estilo / Estilo+Contenido / Contenido / Logo"
                                         className={cn(
                                             "absolute top-1 left-1 text-[9px] px-2 py-0.5 rounded-full font-semibold transition-all z-10",
                                             roleChipClasses(referenceImageRoles[img] || 'content')
@@ -350,7 +353,7 @@ export function ImageReferenceSelector({
                                                 onReferenceRoleChange(img.id, getNextRole(currentRole))
                                             }
                                         }}
-                                        title="Cambiar rol: Estilo / Contenido / Logo"
+                                        title="Cambiar rol: Estilo / Estilo+Contenido / Contenido / Logo"
                                         className={cn(
                                             "absolute top-1 left-1 text-[9px] px-2 py-0.5 rounded-full font-semibold transition-all z-30 cursor-pointer",
                                             roleChipClasses(referenceImageRoles[img.id] || 'content')
@@ -404,7 +407,7 @@ export function ImageReferenceSelector({
             {/* CUSTOM STYLE INPUT (optional) */}
             {onReferenceRoleChange && (
                 <p className="mt-3 text-[10px] text-muted-foreground">
-                    Tip: pulsa la etiqueta de cada imagen seleccionada para cambiar su rol (`Estilo`, `Contenido` o `Logo`).
+                    Tip: pulsa la etiqueta de cada imagen seleccionada para cambiar su rol (`Estilo`, `Estilo+Contenido`, `Contenido` o `Logo`).
                 </p>
             )}
             {onCustomStyleChange && (

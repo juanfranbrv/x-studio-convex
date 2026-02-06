@@ -10,9 +10,11 @@ import { DebugPromptData } from '@/lib/creation-flow-types'
 interface PromptDebugModalProps {
     open: boolean
     onClose: () => void
-    onConfirm: () => void
+    onConfirm: (editedPrompt?: string) => void
     promptData: DebugPromptData | null
     viewOnly?: boolean
+    editablePrompt?: string
+    onEditablePromptChange?: (value: string) => void
 }
 
 export function PromptDebugModal({
@@ -20,15 +22,30 @@ export function PromptDebugModal({
     onClose,
     onConfirm,
     promptData,
-    viewOnly = false
+    viewOnly = false,
+    editablePrompt,
+    onEditablePromptChange
 }: PromptDebugModalProps) {
     const [copied, setCopied] = useState(false)
     const [copiedAll, setCopiedAll] = useState(false)
     const [activeSlide, setActiveSlide] = useState(0)
 
+    const hasSlideDebug = Boolean(promptData?.slideDebug && promptData.slideDebug.length > 0)
+    const currentSlideData = hasSlideDebug ? promptData?.slideDebug?.[activeSlide] : null
+    const displayPrompt = currentSlideData?.prompt || promptData?.finalPrompt || ''
+    const editableValue = editablePrompt ?? displayPrompt
+    const promptForDisplay = !viewOnly && !hasSlideDebug ? editableValue : displayPrompt
+    const characterCount = promptForDisplay.length
+    const estimatedTokens = Math.ceil(characterCount / 4)
+    const fullPrompt = promptData?.finalPrompt || ''
+    const fullCharCount = fullPrompt.length
+    const fullEstimatedTokens = Math.ceil(fullCharCount / 4)
+
     const handleCopy = async () => {
         if (!promptData) return
-        const textToCopy = promptData.slideDebug?.[activeSlide]?.prompt || promptData.finalPrompt
+        const textToCopy = !viewOnly && !hasSlideDebug
+            ? editableValue
+            : (promptData.slideDebug?.[activeSlide]?.prompt || promptData.finalPrompt)
         await navigator.clipboard.writeText(textToCopy)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
@@ -42,15 +59,12 @@ export function PromptDebugModal({
     }
 
     if (!promptData) return null
-
-    const hasSlideDebug = promptData.slideDebug && promptData.slideDebug.length > 0
-    const currentSlideData = hasSlideDebug ? promptData.slideDebug![activeSlide] : null
-    const displayPrompt = currentSlideData?.prompt || promptData.finalPrompt
-    const characterCount = displayPrompt.length
-    const estimatedTokens = Math.ceil(characterCount / 4)
-    const fullPrompt = promptData.finalPrompt || ''
-    const fullCharCount = fullPrompt.length
-    const fullEstimatedTokens = Math.ceil(fullCharCount / 4)
+    const effectiveModel = promptData.model || 'No configurado'
+    const providerLabel = effectiveModel.startsWith('wisdom/')
+        ? 'Wisdom'
+        : effectiveModel.startsWith('google/')
+            ? 'Google Oficial'
+            : 'Google Oficial'
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -161,9 +175,17 @@ export function PromptDebugModal({
                             </div>
                         </div>
                         <div className="relative flex-1 overflow-hidden min-h-0">
-                            <pre className="h-full p-4 bg-black/90 text-green-400 rounded-lg text-xs leading-relaxed overflow-y-auto font-mono whitespace-pre-wrap break-words">
-                                {displayPrompt}
-                            </pre>
+                            {!viewOnly && !hasSlideDebug ? (
+                                <textarea
+                                    value={editableValue}
+                                    onChange={(e) => onEditablePromptChange?.(e.target.value)}
+                                    className="h-full w-full p-4 bg-black/90 text-green-400 rounded-lg text-xs leading-relaxed overflow-y-auto font-mono whitespace-pre-wrap break-words resize-none border border-border focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                />
+                            ) : (
+                                <pre className="h-full p-4 bg-black/90 text-green-400 rounded-lg text-xs leading-relaxed overflow-y-auto font-mono whitespace-pre-wrap break-words">
+                                    {displayPrompt}
+                                </pre>
+                            )}
                         </div>
                         </div>
 
@@ -237,6 +259,11 @@ export function PromptDebugModal({
 
                         {/* Metadata Section */}
                         <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg shrink-0">
+                            <div className="col-span-2 p-3 rounded border bg-background/70">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Modelo que se enviará</p>
+                                <p className="text-sm font-semibold mt-1 break-all">{effectiveModel}</p>
+                                <p className="text-xs text-muted-foreground mt-1">Proveedor: {providerLabel}</p>
+                            </div>
                             <div>
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Plataforma</p>
                                 <p className="text-sm font-medium">{promptData.platform || 'No especificada'}</p>
@@ -317,7 +344,7 @@ export function PromptDebugModal({
                                 Cancelar Generación
                             </Button>
                             <Button
-                                onClick={onConfirm}
+                                onClick={() => onConfirm(!hasSlideDebug ? editableValue : undefined)}
                                 className="bg-primary"
                             >
                                 <Sparkles className="w-4 h-4 mr-2" />

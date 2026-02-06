@@ -20,6 +20,7 @@ export interface ImageGenerationOptions {
     aspectRatio?: string
     seed?: number // Consistent seed for carousel generation
     selectedColors?: Array<{ color: string; role: string } | string>
+    promptAlreadyBuilt?: boolean
 }
 
 export function buildImagePrompt(

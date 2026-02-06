@@ -140,8 +140,8 @@ const WISDOM_BASE_URL = 'https://wisdom-gate.juheapi.com'
 
 export const WISDOM_MODELS = {
     TEXT: {
-        'gemini-3-pro': 'Gemini 3 Pro (Wisdom)',
-        'gemini-3-flash': 'Gemini 3 Flash (Wisdom)',
+        'gemini-3-pro-preview': 'Gemini 3 Pro (Wisdom)',
+        'gemini-3-flash-preview': 'Gemini 3 Flash (Wisdom)',
         'gemini-2.5-flash': 'Gemini 2.5 Flash (Wisdom)',
     },
     IMAGE: {
@@ -527,6 +527,63 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
     }
 }
 
+async function generateGoogleImage(parts: any[], model: string, aspectRatio?: string): Promise<string> {
+    try {
+        if (!process.env.GEMINI_IMAGE_API_KEY) {
+            throw new Error('Missing GEMINI_IMAGE_API_KEY for Google image generation')
+        }
+
+        const validRatios = ['1:1', '3:2', '2:3', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9']
+        let targetRatio = '1:1'
+
+        if (aspectRatio) {
+            if (validRatios.includes(aspectRatio)) {
+                targetRatio = aspectRatio
+            } else {
+                switch (aspectRatio) {
+                    case '1.91:1':
+                        targetRatio = '16:9'
+                        break
+                    case '1.2:1':
+                        targetRatio = '5:4'
+                        break
+                    default:
+                        targetRatio = '1:1'
+                }
+            }
+        }
+
+        // Keep backward compatibility for legacy admin values.
+        const normalizedModel = model === 'gemini-3-pro' ? 'gemini-3-pro-image-preview' : model
+        const imageModel = imageGenAI.getGenerativeModel({ model: normalizedModel })
+
+        const response = await imageModel.generateContent({
+            contents: [{ role: 'user', parts }],
+            generationConfig: {
+                responseModalities: ['IMAGE'],
+                imageConfig: {
+                    aspectRatio: targetRatio,
+                    imageSize: '1K'
+                }
+            }
+        } as any)
+
+        const candidate = response?.response?.candidates?.[0]
+        if (candidate) {
+            for (const part of candidate.content?.parts || []) {
+                if (part.inlineData?.data) {
+                    return `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`
+                }
+            }
+        }
+
+        throw new Error('No image found in Google image response')
+    } catch (error) {
+        console.error('Google Image Generation Error:', error)
+        throw error
+    }
+}
+
 // Unified Generator Function
 export async function generateTextUnified(
     brand: { name: string; brand_dna: BrandDNA },
@@ -536,14 +593,16 @@ export async function generateTextUnified(
     systemPromptOverride?: string // NEW: Allow specialized tasks to set their own persona
 ): Promise<string> {
     const systemPrompt = typeof systemPromptOverride === 'string' ? systemPromptOverride : buildBrandSystemPrompt(brand)
+    const modelName = String(model || '').trim()
+    const modelNameLower = modelName.toLowerCase()
 
-    if (model.startsWith('wisdom/')) {
-        const wisdomModel = model.replace('wisdom/', '')
+    if (modelNameLower.startsWith('wisdom/')) {
+        const wisdomModel = modelName.replace(/^wisdom\//i, '')
         return await generateWisdomText(prompt, wisdomModel, systemPrompt, images)
     }
 
     // Default to Google
-    const selectedModel = genAI.getGenerativeModel({ model: model })
+    const selectedModel = genAI.getGenerativeModel({ model: modelName })
     const parts: any[] = [{ text: `${systemPrompt}\n\nSOLICITUD DEL USUARIO:\n${prompt}` }]
 
     if (images && images.length > 0) {
@@ -577,9 +636,13 @@ export async function generateContentImageUnified(
     prompt: string,
     options: ImageGenerationOptions = {}
 ): Promise<string> {
-    const modelName = options.model || DEFAULT_IMAGE_MODEL
+    const rawModelName = options.model || DEFAULT_IMAGE_MODEL
+    const modelName = String(rawModelName).trim()
+    const modelNameLower = modelName.toLowerCase()
+    console.log(`\n╔══════════════════════════════════════════════╗\n║ IMAGE MODEL ROUTER\n║ Requested: ${modelName || 'NO_CONFIG'}\n╚══════════════════════════════════════════════╝`)
 
-    if (modelName.startsWith('wisdom/')) {
+    if (modelNameLower.startsWith('wisdom/')) {
+        console.log(`[Image Unified] Provider route: wisdom (${modelName})`)
         let wisdomModel = modelName.replace('wisdom/', '')
 
         // Failsafe: Map known incorrect model names to valid ones
@@ -587,7 +650,9 @@ export async function generateContentImageUnified(
             console.warn('⚠️ Correcting invalid model name: gemini-3.0-pro-image-01-preview -> gemini-3-pro-image-preview')
             wisdomModel = 'gemini-3-pro-image-preview'
         }
-        const enhancedPrompt = buildImagePrompt(brand, prompt, options)
+        const enhancedPrompt = options.promptAlreadyBuilt
+            ? prompt
+            : buildImagePrompt(brand, prompt, options)
 
         // Prepare parts similar to generateBrandImage to ensure parity
         const promptParts: any[] = [{ text: enhancedPrompt }]
@@ -640,8 +705,44 @@ export async function generateContentImageUnified(
         }
     }
 
-    // Fallback to existing Google Implementation
-    return await generateBrandImage(brand, prompt, options)
+    if (modelNameLower.startsWith('google/')) {
+        console.log(`[Image Unified] Provider route: google (${modelName})`)
+        const googleModelRaw = modelName.replace('google/', '')
+        const enhancedPrompt = options.promptAlreadyBuilt
+            ? prompt
+            : buildImagePrompt(brand, prompt, options)
+        const promptParts: any[] = [{ text: enhancedPrompt }]
+
+        if (options.context && options.context.length > 0) {
+            const imageItems = options.context.filter(c => c.type === 'image' || c.type === 'logo')
+            if (imageItems.length > 0) {
+                const imagePartsPromises = imageItems.map(async (item) => {
+                    if (!item.value) return null
+                    return await urlToPart(item.value)
+                })
+                const imageParts = await Promise.all(imagePartsPromises)
+                imageParts.forEach(part => {
+                    if (part) promptParts.push(part)
+                })
+            }
+        }
+
+        if (options.layoutReference) {
+            let layoutUrl = options.layoutReference
+            if (layoutUrl.startsWith('/')) {
+                const baseUrl = typeof window !== 'undefined'
+                    ? window.location.origin
+                    : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
+                layoutUrl = `${baseUrl}${layoutUrl}`
+            }
+            const layoutPart = await urlToPart(layoutUrl)
+            if (layoutPart) promptParts.push(layoutPart)
+        }
+
+        return await generateGoogleImage(promptParts, googleModelRaw, options.aspectRatio)
+    }
+
+    throw new Error(`Image model provider no soportado o inválido: "${modelName}"`)
 }
 
 // Raw prompt image generation without brand prompt injection
@@ -880,3 +981,4 @@ export async function checkVideoOperationStatus(operationName: string): Promise<
         }
     }
 }
+

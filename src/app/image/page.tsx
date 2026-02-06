@@ -18,16 +18,18 @@ import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
 import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import { SOCIAL_FORMATS, type DebugPromptData } from '@/lib/creation-flow-types'
-import { Loader2, Plus, Sparkles } from 'lucide-react'
+import { Loader2, Plus, RotateCcw, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 import { buildEditPrompt } from '@/lib/prompts/image-edit'
+import { buildImagePrompt } from '@/lib/prompt-builder'
 import { parseLazyIntentAction } from '@/app/actions/parse-intent'
 import { IntentCategory, TextAsset } from '@/lib/creation-flow-types'
 import { useUI } from '@/contexts/UIContext'
 import { hexToHslString } from '@/lib/color-utils'
 import { FeedbackButton } from '@/components/studio/FeedbackButton'
 import { Id } from '../../../convex/_generated/dataModel'
+import type { BrandDNA } from '@/lib/brand-types'
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
@@ -36,6 +38,10 @@ interface Generation {
     id: string
     image_url: string
     created_at: string
+    prompt_used?: string
+    request_payload?: Record<string, unknown>
+    error_title?: string
+    error_fallback?: string
 }
 
 export type ContextType = 'color' | 'logo' | 'template' | 'image' | 'font' | 'text' | 'link' | 'contact'
@@ -79,11 +85,22 @@ export default function ImagePage() {
     // Debug Modal States
     const [showDebugModal, setShowDebugModal] = useState(false)
     const [debugPromptData, setDebugPromptData] = useState<DebugPromptData | null>(null)
+    const [editableDebugPrompt, setEditableDebugPrompt] = useState('')
     const [isDebugViewOnly, setIsDebugViewOnly] = useState(false)
     const [pendingGenerationData, setPendingGenerationData] = useState<any>(null)
+    const [pendingRetryRequest, setPendingRetryRequest] = useState<{
+        payload: Record<string, unknown>
+        errorTitle: string
+        errorFallback: string
+    } | null>(null)
+    const [lastGenerationRequest, setLastGenerationRequest] = useState<{
+        payload: Record<string, unknown>
+        errorTitle: string
+        errorFallback: string
+    } | null>(null)
 
     // Local session history
-    const [sessionGenerations, setSessionGenerations] = useState<any[]>([])
+    const [sessionGenerations, setSessionGenerations] = useState<Generation[]>([])
 
     // Sync history
     const displayGenerations = useMemo(() => {
@@ -101,6 +118,8 @@ export default function ImagePage() {
             setDebugPromptData(null)
             setSelectedContext([])
             setPromptValue('')
+            setPendingRetryRequest(null)
+            setLastGenerationRequest(null)
         }
     } as UseCreationFlowOptions)
 
@@ -111,8 +130,188 @@ export default function ImagePage() {
             creationFlow.reset()
             setDebugPromptData(null)
             setPromptValue('')
+            setPendingRetryRequest(null)
+            setLastGenerationRequest(null)
         }
     }, [activeBrandKit?.id])
+
+    const executeGenerationRequest = async (
+        requestPayload: Record<string, unknown>,
+        errorTitle: string,
+        errorFallback: string
+    ) => {
+        const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestPayload),
+        })
+
+        if (response.ok) {
+            const result = await response.json()
+            creationFlow.setGeneratedImage(result.imageUrl)
+
+            setSessionGenerations(prev => [{
+                id: Date.now().toString(),
+                image_url: result.imageUrl,
+                created_at: new Date().toISOString(),
+                prompt_used: typeof requestPayload.prompt === 'string' ? requestPayload.prompt : '',
+                request_payload: { ...requestPayload },
+                error_title: errorTitle,
+                error_fallback: errorFallback
+            }, ...prev])
+            return
+        }
+
+        const errorData = await response.json().catch(() => ({ error: errorFallback }))
+        toast({
+            title: errorTitle,
+            description: errorData.error || errorFallback,
+            variant: "destructive",
+        })
+    }
+
+    const buildFinalModelPrompt = (requestPayload: Record<string, unknown>): string => {
+        const requestPrompt = typeof requestPayload.prompt === 'string' ? requestPayload.prompt : ''
+        if (!requestPrompt) return ''
+
+        if (requestPayload.promptAlreadyBuilt === true) {
+            return requestPrompt
+        }
+
+        const brandDNA = requestPayload.brandDNA as BrandDNA | undefined
+        if (!brandDNA) return requestPrompt
+
+        return buildImagePrompt(
+            { name: brandDNA.brand_name || 'Brand', brand_dna: brandDNA },
+            requestPrompt,
+            {
+                headline: typeof requestPayload.headline === 'string' ? requestPayload.headline : undefined,
+                cta: typeof requestPayload.cta === 'string' ? requestPayload.cta : undefined,
+                platform: requestPayload.platform as 'instagram' | 'tiktok' | 'youtube' | 'linkedin' | undefined,
+                context: Array.isArray(requestPayload.context) ? requestPayload.context as any[] : [],
+                model: typeof requestPayload.model === 'string' ? requestPayload.model : undefined,
+                layoutReference: typeof requestPayload.layoutReference === 'string' ? requestPayload.layoutReference : undefined,
+                aspectRatio: typeof requestPayload.aspectRatio === 'string' ? requestPayload.aspectRatio : undefined,
+                selectedColors: Array.isArray(requestPayload.selectedColors)
+                    ? requestPayload.selectedColors as Array<{ color: string; role: string } | string>
+                    : []
+            }
+        )
+    }
+
+    const buildGenerationRequestPayload = (data: {
+        platform?: string
+        headline?: string
+        cta?: string
+        prompt: string
+        model?: string
+        promptAlreadyBuilt?: boolean
+    }) => {
+        if (!activeBrandKit) return null
+
+        const selectedImages = (activeBrandKit.images || [])
+            .filter(img => img.selected !== false)
+            .map(img => img.url)
+
+        const finalContext: ContextElement[] = [...selectedContext]
+        const styleReferenceImages: string[] = []
+        const getReferenceRole = (imageId: string) => creationFlow.state.referenceImageRoles?.[imageId] || 'content'
+        const isStyleRole = (role: string) => role === 'style' || role === 'style_content'
+
+        if (creationFlow.state.uploadedImages.length > 0) {
+            creationFlow.state.uploadedImages.forEach((imgUrl, idx) => {
+                const role = getReferenceRole(imgUrl)
+                if (isStyleRole(role)) styleReferenceImages.push(imgUrl)
+                if (role === 'style') return
+
+                const hasImg = finalContext.some(c => c.id === `flow-upload-${idx}`)
+                if (!hasImg) {
+                    finalContext.push({
+                        id: `flow-upload-${idx}`,
+                        type: role === 'logo' ? 'logo' : 'image',
+                        value: imgUrl,
+                        label: role === 'logo' ? `Logo auxiliar ${idx + 1}` : `Referencia ${idx + 1}`
+                    })
+                }
+            })
+        }
+
+        if (creationFlow.state.selectedBrandKitImageIds.length > 0) {
+            creationFlow.state.selectedBrandKitImageIds.forEach((imgUrl, idx) => {
+                const role = getReferenceRole(imgUrl)
+                if (isStyleRole(role)) styleReferenceImages.push(imgUrl)
+                if (role === 'style') return
+
+                const hasImg = finalContext.some(c => c.id === `flow-brandkit-${idx}`)
+                if (!hasImg) {
+                    finalContext.push({
+                        id: `flow-brandkit-${idx}`,
+                        type: role === 'logo' ? 'logo' : 'image',
+                        value: imgUrl,
+                        label: role === 'logo' ? `Logo BrandKit ${idx + 1}` : `Imagen BrandKit ${idx + 1}`
+                    })
+                }
+            })
+        }
+
+        if (logoInclusion && creationFlow.state.selectedLogoId) {
+            const logo = activeBrandKit.logos?.find((l, idx) =>
+                (l as any).id === creationFlow.state.selectedLogoId || `logo-${idx}` === creationFlow.state.selectedLogoId
+            )
+            const logoUrl = logo?.url || null
+            if (logoUrl) {
+                const hasLogo = finalContext.some(c => c.type === 'logo')
+                if (!hasLogo) {
+                    finalContext.push({
+                        id: 'flow-logo',
+                        type: 'logo',
+                        value: logoUrl,
+                        label: 'Logo'
+                    })
+                }
+            }
+        }
+
+        if (creationFlow.state.generatedImage) {
+            const hasReference = finalContext.some(c => c.id === 'edit-reference')
+            if (!hasReference) {
+                finalContext.push({
+                    id: 'edit-reference',
+                    type: 'image',
+                    value: creationFlow.state.generatedImage,
+                    label: 'Imagen actual'
+                })
+            }
+        }
+
+        const effectivePrompt = data.promptAlreadyBuilt
+            ? data.prompt
+            : (creationFlow.state.generatedImage ? buildEditPrompt(data.prompt) : data.prompt)
+
+        const requestPayload = {
+            ...data,
+            prompt: effectivePrompt,
+            promptAlreadyBuilt: Boolean(data.promptAlreadyBuilt),
+            brandDNA: {
+                ...activeBrandKit,
+                images: selectedImages
+            },
+            logoInclusion,
+            context: finalContext,
+            model: data.model || creationFlow.state.selectedImageModel,
+            layoutReference: creationFlow.selectedLayoutMeta?.referenceImage,
+            aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
+            selectedColors: creationFlow.state.selectedBrandColors
+        } as Record<string, unknown>
+
+        return {
+            requestPayload,
+            styleReferenceImage: styleReferenceImages[0],
+            attachedImages: finalContext
+                .filter((item) => item.type === 'image' || item.type === 'logo')
+                .map((item) => item.value)
+        }
+    }
 
     const handleNewBrandKit = () => {
         router.push('/brand-kit?action=new')
@@ -162,7 +361,7 @@ export default function ImagePage() {
             if (result.detectedIntent && !creationFlow.state.selectedIntent) {
                 creationFlow.selectIntent(result.detectedIntent as IntentCategory)
                 toast({
-                    title: "✨ Intención detectada",
+                    title: "ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒâ€šÃ‚Â¨ IntenciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n detectada",
                     description: `Detectamos que quieres crear: ${result.detectedIntent}`,
                 })
             }
@@ -262,103 +461,24 @@ export default function ImagePage() {
         cta?: string
         prompt: string
         model?: string
+        promptAlreadyBuilt?: boolean
     }) => {
         if (!activeBrandKit) return
 
         setIsGenerating(true)
         try {
-            const selectedImages = (activeBrandKit.images || [])
-                .filter(img => img.selected !== false)
-                .map(img => img.url)
+            const prepared = buildGenerationRequestPayload(data)
+            if (!prepared) return
 
-            const finalContext: ContextElement[] = [...selectedContext]
-            const styleReferenceImages: string[] = []
-            const getReferenceRole = (imageId: string) => creationFlow.state.referenceImageRoles?.[imageId] || 'content'
-
-            // Add uploaded images as product references
-            if (creationFlow.state.uploadedImages.length > 0) {
-                creationFlow.state.uploadedImages.forEach((imgUrl, idx) => {
-                    const role = getReferenceRole(imgUrl)
-                    if (role === 'style') {
-                        styleReferenceImages.push(imgUrl)
-                        return
-                    }
-                    const hasImg = finalContext.some(c => c.id === `flow-upload-${idx}`)
-                    if (!hasImg) {
-                        finalContext.push({
-                            id: `flow-upload-${idx}`,
-                            type: role === 'logo' ? 'logo' : 'image',
-                            value: imgUrl,
-                            label: role === 'logo'
-                                ? `Logo auxiliar ${idx + 1}`
-                                : `Referencia ${idx + 1}`
-                        })
-                    }
-                })
-            }
-
-            // Add brand kit selected images as references
-            if (creationFlow.state.selectedBrandKitImageIds.length > 0) {
-                creationFlow.state.selectedBrandKitImageIds.forEach((imgUrl, idx) => {
-                    const role = getReferenceRole(imgUrl)
-                    if (role === 'style') {
-                        styleReferenceImages.push(imgUrl)
-                        return
-                    }
-                    const hasImg = finalContext.some(c => c.id === `flow-brandkit-${idx}`)
-                    if (!hasImg) {
-                        finalContext.push({
-                            id: `flow-brandkit-${idx}`,
-                            type: role === 'logo' ? 'logo' : 'image',
-                            value: imgUrl,
-                            label: role === 'logo'
-                                ? `Logo BrandKit ${idx + 1}`
-                                : `Imagen BrandKit ${idx + 1}`
-                        })
-                    }
-                })
-            }
-
-            if (logoInclusion && creationFlow.state.selectedLogoId) {
-                const logo = activeBrandKit.logos?.find((l, idx) =>
-                    (l as any).id === creationFlow.state.selectedLogoId || `logo-${idx}` === creationFlow.state.selectedLogoId
-                )
-                const logoUrl = logo?.url || null
-                if (logoUrl) {
-                    const hasLogo = finalContext.some(c => c.type === 'logo')
-                    if (!hasLogo) {
-                        finalContext.push({
-                            id: 'flow-logo',
-                            type: 'logo',
-                            value: logoUrl,
-                            label: 'Logo'
-                        })
-                    }
-                }
-            }
-
-            if (creationFlow.state.generatedImage) {
-                const hasReference = finalContext.some(c => c.id === 'edit-reference')
-                if (!hasReference) {
-                    finalContext.push({
-                        id: 'edit-reference',
-                        type: 'image',
-                        value: creationFlow.state.generatedImage,
-                        label: 'Imagen actual'
-                    })
-                }
-            }
-
-            const effectivePrompt = creationFlow.state.generatedImage ? buildEditPrompt(data.prompt) : data.prompt
+            const { requestPayload, styleReferenceImage, attachedImages } = prepared
             const selectedFormat = SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)
+            const finalModelPrompt = buildFinalModelPrompt(requestPayload)
 
             setDebugPromptData({
-                finalPrompt: effectivePrompt,
+                finalPrompt: finalModelPrompt,
                 logoUrl: activeBrandKit?.logos?.[0]?.url,
-                referenceImageUrl: styleReferenceImages[0],
-                attachedImages: finalContext
-                    .filter((item) => item.type === 'image' || item.type === 'logo')
-                    .map((item) => item.value),
+                referenceImageUrl: styleReferenceImage,
+                attachedImages,
                 selectedStyles: creationFlow.state.selectedStyles,
                 headline: creationFlow.state.headline,
                 cta: creationFlow.state.cta,
@@ -369,25 +489,30 @@ export default function ImagePage() {
                 aspectRatio: selectedFormat?.aspectRatio
             })
 
-            console.log('[Client] Generating with State Model:', creationFlow.state.selectedImageModel)
+            const effectiveModel = data.model || creationFlow.state.selectedImageModel
+            const effectiveProvider = effectiveModel?.startsWith('wisdom/')
+                ? 'Wisdom'
+                : effectiveModel?.startsWith('google/')
+                    ? 'Google Oficial'
+                    : 'Google Oficial'
+            console.log(`\nÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬â€\nÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ IMAGE REQUEST (CLIENT)\nÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ Provider: ${effectiveProvider}\nÃƒÂ¢Ã¢â‚¬Â¢Ã¢â‚¬Ëœ Model: ${effectiveModel || 'NO_CONFIG'}\nÃƒÂ¢Ã¢â‚¬Â¢Ã…Â¡ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â`)
+
+            const requestPayloadForApi = {
+                ...requestPayload,
+                prompt: finalModelPrompt,
+                promptAlreadyBuilt: true
+            }
+
+            setLastGenerationRequest({
+                payload: requestPayloadForApi,
+                errorTitle: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                errorFallback: "Error al generar la imagen"
+            })
 
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...data,
-                    prompt: effectivePrompt,
-                    brandDNA: {
-                        ...activeBrandKit,
-                        images: selectedImages
-                    },
-                    logoInclusion,
-                    context: finalContext,
-                    model: data.model || creationFlow.state.selectedImageModel, // Removed hardcoded fallback to test state
-                    layoutReference: creationFlow.selectedLayoutMeta?.referenceImage,
-                    aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
-                    selectedColors: creationFlow.state.selectedBrandColors
-                }),
+                body: JSON.stringify(requestPayloadForApi),
             })
 
             if (response.ok) {
@@ -402,7 +527,7 @@ export default function ImagePage() {
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al generar la imagen' }))
                 toast({
-                    title: "Error de generación",
+                    title: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n",
                     description: errorData.error || 'Error al generar la imagen',
                     variant: "destructive",
                 })
@@ -410,7 +535,7 @@ export default function ImagePage() {
         } catch (error: any) {
             console.error('Generation failed:', error)
             toast({
-                title: "Error de generación",
+                title: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n",
                 description: error.message || 'No se pudo generar la imagen.',
                 variant: "destructive",
             })
@@ -436,7 +561,10 @@ export default function ImagePage() {
             const selectedStyleRef = [
                 ...creationFlow.state.uploadedImages,
                 ...creationFlow.state.selectedBrandKitImageIds
-            ].find((id) => (creationFlow.state.referenceImageRoles?.[id] || 'content') === 'style')
+            ].find((id) => {
+                const role = creationFlow.state.referenceImageRoles?.[id] || 'content'
+                return role === 'style' || role === 'style_content'
+            })
 
             setDebugPromptData({
                 finalPrompt: fullPrompt,
@@ -449,21 +577,36 @@ export default function ImagePage() {
                 platform: creationFlow.state.selectedPlatform || undefined,
                 format: creationFlow.state.selectedFormat || undefined,
                 intent: creationFlow.state.selectedIntent || undefined,
-                model: creationFlow.state.selectedImageModel || "wisdom/gemini-3-pro-image-preview",
+                model: creationFlow.state.selectedImageModel,
                 aspectRatio: selectedFormat?.aspectRatio
+            })
+
+            const effectiveModel = creationFlow.state.selectedImageModel
+            const effectiveProvider = effectiveModel?.startsWith('wisdom/')
+                ? 'Wisdom'
+                : effectiveModel?.startsWith('google/')
+                    ? 'Google Oficial'
+                    : 'Google Oficial'
+            console.log(`\nÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â\nÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ IMAGE REQUEST (CLIENT)\nÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ Provider: ${effectiveProvider}\nÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ Model: ${effectiveModel || 'NO_CONFIG'}\nÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â`)
+
+            const requestPayload = {
+                prompt: fullPrompt,
+                brandDNA: activeBrandKit,
+                context: editContext,
+                model: creationFlow.state.selectedImageModel,
+                aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
+                selectedColors: creationFlow.state.selectedBrandColors
+            }
+            setLastGenerationRequest({
+                payload: requestPayload,
+                errorTitle: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                errorFallback: "Error al editar la imagen"
             })
 
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    prompt: fullPrompt,
-                    brandDNA: activeBrandKit,
-                    context: editContext,
-                    model: creationFlow.state.selectedImageModel || "wisdom/gemini-3-pro-image-preview",
-                    aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
-                    selectedColors: creationFlow.state.selectedBrandColors
-                }),
+                body: JSON.stringify(requestPayload),
             })
 
             if (response.ok) {
@@ -478,7 +621,7 @@ export default function ImagePage() {
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al editar la imagen' }))
                 toast({
-                    title: "Error de edición",
+                    title: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n",
                     description: errorData.error || 'Error al editar la imagen',
                     variant: "destructive",
                 })
@@ -486,7 +629,7 @@ export default function ImagePage() {
         } catch (error: any) {
             console.error('Edit failed:', error)
             toast({
-                title: "Error de edición",
+                title: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n",
                 description: error.message || 'No se pudo editar la imagen.',
                 variant: "destructive",
             })
@@ -522,6 +665,7 @@ export default function ImagePage() {
         cta?: string
         prompt: string
         model?: string
+        promptAlreadyBuilt?: boolean
     }) => {
         if (!isAdmin) {
             await handleGenerate(data)
@@ -529,20 +673,17 @@ export default function ImagePage() {
         }
 
         setIsDebugViewOnly(false)
-        const selectedStyleRef = [
-            ...state.uploadedImages,
-            ...state.selectedBrandKitImageIds
-        ].find((id) => (state.referenceImageRoles?.[id] || 'content') === 'style')
-        const visualRefsForPreview = [
-            ...state.uploadedImages,
-            ...state.selectedBrandKitImageIds
-        ].filter((id) => (state.referenceImageRoles?.[id] || 'content') !== 'style')
+        const prepared = buildGenerationRequestPayload(data)
+        if (!prepared) return
+
+        const { requestPayload, styleReferenceImage, attachedImages } = prepared
+        const finalModelPrompt = buildFinalModelPrompt(requestPayload)
+
         setDebugPromptData({
-            finalPrompt: data.prompt,
+            finalPrompt: finalModelPrompt,
             logoUrl: activeBrandKit?.logos?.[0]?.url,
-            referenceImageUrl: selectedStyleRef,
-            // Combine uploaded images and brand kit images
-            attachedImages: visualRefsForPreview,
+            referenceImageUrl: styleReferenceImage,
+            attachedImages,
             selectedStyles: state.selectedStyles,
             headline: state.headline,
             cta: state.cta,
@@ -550,15 +691,60 @@ export default function ImagePage() {
             format: state.selectedFormat || undefined,
             intent: state.selectedIntent || undefined,
         })
-        setPendingGenerationData(data)
+        setEditableDebugPrompt(finalModelPrompt)
+        setPendingGenerationData({
+            ...data,
+            prompt: finalModelPrompt,
+            promptAlreadyBuilt: true
+        })
         setShowDebugModal(true)
     }
 
-    const confirmGeneration = async () => {
+    const confirmGeneration = async (editedPrompt?: string) => {
         setIsDebugViewOnly(false)
         setShowDebugModal(false)
+        if (pendingRetryRequest) {
+            const promptFromPayload = typeof pendingRetryRequest.payload.prompt === 'string'
+                ? pendingRetryRequest.payload.prompt
+                : ''
+            const promptToSend = editedPrompt?.trim() ? editedPrompt : promptFromPayload
+            const retryPayload = {
+                ...pendingRetryRequest.payload,
+                prompt: promptToSend
+            }
+
+            setIsGenerating(true)
+            try {
+                setLastGenerationRequest({
+                    payload: retryPayload,
+                    errorTitle: pendingRetryRequest.errorTitle,
+                    errorFallback: pendingRetryRequest.errorFallback
+                })
+                await executeGenerationRequest(
+                    retryPayload,
+                    pendingRetryRequest.errorTitle,
+                    pendingRetryRequest.errorFallback
+                )
+            } catch (error: any) {
+                console.error('Retry confirm failed:', error)
+                toast({
+                    title: "Error al reintentar",
+                    description: error?.message || 'No se pudo volver a tirar.',
+                    variant: "destructive",
+                })
+            } finally {
+                setIsGenerating(false)
+                setPendingRetryRequest(null)
+            }
+            return
+        }
+
         if (pendingGenerationData) {
-            await handleGenerate(pendingGenerationData)
+            const promptToSend = editedPrompt?.trim() ? editedPrompt : pendingGenerationData.prompt
+            await handleGenerate({
+                ...pendingGenerationData,
+                prompt: promptToSend
+            })
             setPendingGenerationData(null)
         }
     }
@@ -566,6 +752,8 @@ export default function ImagePage() {
     const cancelGeneration = () => {
         setShowDebugModal(false)
         setPendingGenerationData(null)
+        setPendingRetryRequest(null)
+        setEditableDebugPrompt('')
         if (!isDebugViewOnly) {
             setDebugPromptData(null)
         }
@@ -582,6 +770,7 @@ export default function ImagePage() {
             return
         }
         setIsDebugViewOnly(true)
+        setEditableDebugPrompt(debugPromptData.finalPrompt || '')
         setShowDebugModal(true)
     }
 
@@ -596,6 +785,26 @@ export default function ImagePage() {
         // Mode 2: Generate new image
         const prompt = creationFlow.buildGenerationPrompt()
         await handleGenerateWithDebug({ prompt })
+    }
+
+    const handleRetryLastPrompt = async () => {
+        if (!lastGenerationRequest) {
+            toast({
+                title: "Sin prompt previo",
+                description: "Genera o refina una imagen primero para volver a tirar.",
+                variant: "destructive",
+            })
+            return
+        }
+
+        const retryPrompt = typeof lastGenerationRequest.payload.prompt === 'string'
+            ? lastGenerationRequest.payload.prompt
+            : ''
+        setIsDebugViewOnly(false)
+        setEditableDebugPrompt(retryPrompt)
+        setPendingGenerationData(null)
+        setPendingRetryRequest(lastGenerationRequest)
+        setShowDebugModal(true)
     }
 
     if (loading) {
@@ -663,7 +872,25 @@ export default function ImagePage() {
                                 <ThumbnailHistory
                                     generations={displayGenerations}
                                     currentImageUrl={creationFlow.state.generatedImage}
-                                    onSelectGeneration={(gen) => creationFlow.setGeneratedImage(gen.image_url)}
+                                    onSelectGeneration={(gen) => {
+                                        creationFlow.setGeneratedImage(gen.image_url)
+                                        if (gen.request_payload) {
+                                            setLastGenerationRequest({
+                                                payload: { ...gen.request_payload },
+                                                errorTitle: gen.error_title || "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                                                errorFallback: gen.error_fallback || "Error al generar la imagen"
+                                            })
+                                        } else if (gen.prompt_used) {
+                                            setLastGenerationRequest(prev => ({
+                                                payload: {
+                                                    ...(prev?.payload || {}),
+                                                    prompt: gen.prompt_used
+                                                },
+                                                errorTitle: prev?.errorTitle || "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                                                errorFallback: prev?.errorFallback || "Error al generar la imagen"
+                                            }))
+                                        }
+                                    }}
                                 />
                             </div >
                         </div >
@@ -730,23 +957,40 @@ export default function ImagePage() {
                             "w-full md:w-[27%] p-4 flex flex-col justify-end",
                             panelPosition === 'right' ? "border-l border-white/5" : "border-r border-white/5"
                         )}>
-                            <Button
-                                onClick={handleUnifiedAction}
-                                disabled={isGenerating || (!canGenerate && !creationFlow.state.generatedImage)}
-                                className="w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
-                            >
-                                {isGenerating ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                        Generando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="w-5 h-5 mr-2" />
-                                        {creationFlow.state.generatedImage ? 'Refinar Imagen' : 'Generar Imagen'}
-                                    </>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    onClick={handleUnifiedAction}
+                                    disabled={isGenerating || (!canGenerate && !creationFlow.state.generatedImage)}
+                                    className={cn(
+                                        "h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold",
+                                        creationFlow.state.generatedImage ? "flex-1" : "w-full"
+                                    )}
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                            Generando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-5 h-5 mr-2" />
+                                            {creationFlow.state.generatedImage ? 'Refinar Imagen' : 'Generar Imagen'}
+                                        </>
+                                    )}
+                                </Button>
+
+                                {creationFlow.state.generatedImage && (
+                                    <Button
+                                        variant="secondary"
+                                        onClick={handleRetryLastPrompt}
+                                        disabled={isGenerating || !lastGenerationRequest}
+                                        className="flex-1 h-[44px] font-semibold transition-all"
+                                    >
+                                        <RotateCcw className="w-4 h-4 mr-2" />
+                                        Volver a tirar
+                                    </Button>
                                 )}
-                            </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -758,8 +1002,8 @@ export default function ImagePage() {
                         </div>
                         <h2 className="text-2xl font-semibold">Selecciona un Brand Kit</h2>
                         <p className="text-muted-foreground">
-                            Para empezar a diseñar en el panel de Imagen, necesitas seleccionar un Brand Kit.
-                            Si aún no tienes uno, créalo en la sección "Brand Kit".
+                            Para empezar a diseÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â±ar en el panel de Imagen, necesitas seleccionar un Brand Kit.
+                            Si aÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºn no tienes uno, crÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©alo en la secciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n "Brand Kit".
                         </p>
                     </div>
                 </div>
@@ -772,9 +1016,12 @@ export default function ImagePage() {
                 onConfirm={confirmGeneration}
                 promptData={debugPromptData}
                 viewOnly={isDebugViewOnly}
+                editablePrompt={editableDebugPrompt}
+                onEditablePromptChange={setEditableDebugPrompt}
             />
 
 
         </DashboardLayout >
     )
 }
+

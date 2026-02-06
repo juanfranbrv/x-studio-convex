@@ -235,9 +235,12 @@ function organizeParsedOutput(
         })
     }
 
-    const bodyBlock = fragments.join('\n').trim()
-    const imageTexts = bodyBlock
-        ? [{ label: 'Texto principal', value: bodyBlock, type: 'custom' as const }]
+    const imageTexts = fragments.length > 0
+        ? fragments.map((fragment, idx) => ({
+            label: idx === 0 ? 'Texto principal' : `Texto ${idx + 1}`,
+            value: fragment,
+            type: 'custom' as const
+        }))
         : []
 
     return {
@@ -544,8 +547,7 @@ export async function parseLazyIntentAction({
         const allLayouts = Object.values(LAYOUTS_BY_INTENT).flat()
         const layout = layoutId ? allLayouts.find(l => l.id === layoutId) : undefined
         if (!intelligenceModel) {
-            console.warn('[LazyPrompt] Missing intelligence model. Using deterministic fallback parser.')
-            return buildSafeFallbackParsedOutput(userText, brandWebsite, intentId)
+            throw new Error('[LazyPrompt] Missing intelligence model configuration')
         }
         const modelToUse = intelligenceModel
         console.log(`[LazyPrompt] Parsing with model ${modelToUse} ${intent ? `for intent: ${intent.name}` : 'with auto-detection'}`)
@@ -666,7 +668,7 @@ export async function parseLazyIntentAction({
         return organized
     } catch (error) {
         console.error('[LazyPrompt] Error:', error)
-        return buildSafeFallbackParsedOutput(userText, brandWebsite, intentId)
+        throw error
     }
 }
 
