@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { action, mutation } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { action, internalMutation, internalQuery, mutation, type ActionCtx } from "./_generated/server";
 import type { NarrativeOut, StyleDNA } from "../src/lib/pipeline/types";
 import { sanitizeGuidance, sanitizeNarrative } from "../src/lib/pipeline/sanitizer";
 import { normalizeStyleDNA } from "../src/lib/pipeline/styleNormalization";
@@ -18,18 +19,64 @@ function normalizeModel(model: string): string {
   return model.startsWith("wisdom/") ? model.replace("wisdom/", "") : model;
 }
 
-async function fetchModelFromSettings(ctx: any, key: string): Promise<string> {
-  const record = await ctx.db
-    .query("app_settings")
-    .withIndex("by_key", (q: any) => q.eq("key", key))
-    .first();
-
-  if (!record?.value || typeof record.value !== "string") {
-    throw new Error(`Missing AI model configuration for ${key}`);
-  }
-
-  return record.value;
+async function fetchModelFromSettings(ctx: ActionCtx, key: string): Promise<string> {
+  return await ctx.runQuery(internal.pipeline.getStringSetting, { key });
 }
+
+export const getStringSetting = internalQuery({
+  args: {
+    key: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const record = await ctx.db
+      .query("app_settings")
+      .withIndex("by_key", (q) => q.eq("key", args.key))
+      .first();
+
+    if (!record?.value || typeof record.value !== "string") {
+      throw new Error(`Missing AI model configuration for ${args.key}`);
+    }
+
+    return record.value;
+  },
+});
+
+export const patchCarouselStyleDNA = internalMutation({
+  args: {
+    carouselId: v.id("carousels"),
+    styleDNA: v.any(),
+    updatedAt: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.carouselId, {
+      styleDNA: args.styleDNA,
+      updated_at: args.updatedAt,
+    });
+  },
+});
+
+export const insertNarrativeSlide = internalMutation({
+  args: {
+    carouselId: v.id("carousels"),
+    slide: v.number(),
+    narrativeRaw: v.any(),
+    narrativeSanitized: v.any(),
+    lintReport: v.any(),
+    status: v.string(),
+    createdAt: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("slides", {
+      carousel_id: args.carouselId,
+      slide: args.slide,
+      narrative_raw: args.narrativeRaw,
+      narrative_sanitized: args.narrativeSanitized,
+      lint_report: args.lintReport,
+      status: args.status,
+      created_at: args.createdAt,
+    });
+  },
+});
 
 async function urlToInlineData(url: string): Promise<{ inlineData: { data: string; mimeType: string } }> {
   const response = await fetch(url);
@@ -171,9 +218,10 @@ export const analyzeReferenceImage = action({
     const parsed = ensureStyleDNAShape(JSON.parse(rawText));
     const normalized = normalizeStyleDNA(parsed);
 
-    await ctx.db.patch(args.carouselId, {
+    await ctx.runMutation(internal.pipeline.patchCarouselStyleDNA, {
+      carouselId: args.carouselId,
       styleDNA: normalized,
-      updated_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
 
     return normalized;
@@ -225,14 +273,14 @@ export const generateNarrativeSlide = action({
       },
     });
 
-    await ctx.db.insert("slides", {
-      carousel_id: args.carouselId,
+    await ctx.runMutation(internal.pipeline.insertNarrativeSlide, {
+      carouselId: args.carouselId,
       slide: args.slide,
-      narrative_raw: rawNarrative,
-      narrative_sanitized: sanitized,
-      lint_report: sanitized.lint,
+      narrativeRaw: rawNarrative,
+      narrativeSanitized: sanitized,
+      lintReport: sanitized.lint,
       status: "narrative_generated",
-      created_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     });
 
     return sanitized;
