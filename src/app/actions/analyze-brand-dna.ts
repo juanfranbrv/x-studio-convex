@@ -2218,6 +2218,10 @@ async function processAndUploadImage(
  */
 export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false, clerkUserId?: string): Promise<AnalyzeBrandDNAResponse> {
     try {
+        if (!clerkUserId) {
+            return { success: false, error: 'Usuario no autenticado' };
+        }
+
         // Limpieza de consola y banner visual
         console.clear();
         console.log('\n');
@@ -2240,7 +2244,7 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         if (!forceRefresh) {
             try {
                 // CONVEX MIGRATION: using fetchQuery
-                const existingData = await fetchQuery(api.brands.getBrandDNA, { url });
+                const existingData = await fetchQuery(api.brands.getBrandDNA, { url, clerk_user_id: clerkUserId });
 
                 // Si ya tenemos datos Y tienen text_assets, podemos retornar temprano
                 if (existingData && existingData.text_assets) {
@@ -2266,7 +2270,7 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         if (!forceRefresh) {
             try {
                 // CONVEX MIGRATION: Reuse getBrandDNA query
-                const cachedData = await fetchQuery(api.brands.getBrandDNA, { url });
+                const cachedData = await fetchQuery(api.brands.getBrandDNA, { url, clerk_user_id: clerkUserId });
 
                 if (cachedData && cachedData.debug?.screenshot_url) {
                     console.log('✅ Found cached screenshot! Will reuse it but re-analyze everything else.');
@@ -2829,7 +2833,7 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
                 preferred_language: result.preferred_language,
                 api_trace: result.api_trace,
                 debug: result.debug,
-                clerk_user_id: clerkUserId || undefined, // Assuming clerkUserId is defined elsewhere, or user.id is passed
+                clerk_user_id: clerkUserId,
                 updated_at: new Date().toISOString()
             };
 

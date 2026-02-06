@@ -17,7 +17,11 @@ import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
 import { useState, useRef, useEffect } from 'react'
 import { useUI } from '@/contexts/UIContext'
-import { GenerationState, INTENT_CATALOG, IntentCategory } from '@/lib/creation-flow-types'
+import {
+    GenerationState,
+    INTENT_CATALOG,
+    IntentCategory,
+} from '@/lib/creation-flow-types'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
 import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -123,6 +127,7 @@ export function ControlsPanel({
         setAiImageDescription,
         toggleBrandKitImage,
         clearBrandKitImages,
+        setReferenceImageRole,
         reset,
         loadPreset,
         addTextAsset,
@@ -180,6 +185,9 @@ export function ControlsPanel({
         try {
             const intentLabel = state.selectedIntent || undefined
             const rawMessage = promptValue.trim() || state.rawMessage || undefined
+            const persistedReferenceRoles = Object.fromEntries(
+                Object.entries(state.referenceImageRoles || {}).filter(([key]) => !key.startsWith('data:'))
+            )
 
             await createPreset({
                 userId,
@@ -207,7 +215,9 @@ export function ControlsPanel({
                     imageSourceMode: state.imageSourceMode,
                     aiImageDescription: state.aiImageDescription || undefined,
                     selectedBrandKitImageIds: state.selectedBrandKitImageIds.length > 0 ? state.selectedBrandKitImageIds : undefined,
+                    referenceImageRoles: Object.keys(persistedReferenceRoles).length > 0 ? persistedReferenceRoles : undefined,
                     additionalInstructions: state.additionalInstructions || undefined,
+                    typography: state.typography,
                     presetType: 'image',
                 },
                 icon: 'Star'
@@ -411,6 +421,8 @@ export function ControlsPanel({
                                     selectedBrandKitImageIds={state.selectedBrandKitImageIds}
                                     onToggleBrandKitImage={toggleBrandKitImage}
                                     onClearBrandKitImages={clearBrandKitImages}
+                                    referenceImageRoles={state.referenceImageRoles}
+                                    onReferenceRoleChange={setReferenceImageRole}
                                     aiImageDescription={state.aiImageDescription}
                                     onAiDescriptionChange={setAiImageDescription}
                                     customStyle={state.customStyle}
@@ -438,9 +450,9 @@ export function ControlsPanel({
                         )}
 
                         {/* STEP 6: LOGO & COLORS - Unified */}
-                        {(state.currentStep >= 6 || state.hasGeneratedImage) && (
+                        {(state.currentStep >= 5 || state.hasGeneratedImage) && (
                             <div ref={step6Ref} className="relative glass-card p-4 space-y-6">
-                                <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 6 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
+                                <FloatingAssistance isVisible={assistanceEnabled && state.currentStep >= 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
                                 <div className="space-y-3">
                                     <SectionHeader icon={Fingerprint} title="Logo" />
                                     <BrandingConfigurator

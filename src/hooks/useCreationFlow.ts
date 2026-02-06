@@ -8,6 +8,7 @@ import {
     type GenerationState,
     type LayoutOption,
     type LayoutTextField,
+    type TypographyProfile,
     INITIAL_GENERATION_STATE,
     INTENT_CATALOG,
     STYLE_CHIPS_BY_SUBJECT,
@@ -19,6 +20,7 @@ import {
     SOCIAL_FORMATS,
     SocialPlatform,
     ColorRole,
+    ReferenceImageRole,
     SelectedColor,
     TextAsset,
 } from '@/lib/creation-flow-types'
@@ -41,11 +43,7 @@ import * as P06 from '@/lib/prompts/priorities/p06-subject-context'
 import { P06B } from '@/lib/prompts/priorities/p06b-ai-image-description'
 import * as P05 from '@/lib/prompts/priorities/p05-visual-style'
 import * as P04 from '@/lib/prompts/priorities/p04-brand-colors'
-import * as P03 from '@/lib/prompts/priorities/p03-content-type'
 import * as P02 from '@/lib/prompts/priorities/p02-technical-specs'
-
-// Intent prompts
-import * as IntentPrompts from '@/lib/prompts/intents'
 
 export const NO_TEXT_TOKEN = '[NO_TEXT]'
 
@@ -282,6 +280,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             // Reset downstream selections
             uploadedImages: [],
             uploadedImageFiles: [],
+            selectedBrandKitImageIds: [],
+            referenceImageRoles: {},
+            aiImageDescription: '',
             selectedTheme: null,
             visionAnalysis: null,
             firstVisionAnalysis: null,
@@ -311,14 +312,28 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     const MAX_REFERENCE_IMAGES = 10
 
-    const pickFirstReference = (uploadedImages: string[], brandKitIds: string[]) => {
-        if (uploadedImages.length > 0) {
-            return { id: uploadedImages[0], source: 'upload' as const }
+    const pickStyleReference = (
+        uploadedImages: string[],
+        brandKitIds: string[],
+        roles: Record<string, ReferenceImageRole>
+    ) => {
+        const uploadedStyle = uploadedImages.find((id) => roles[id] === 'style')
+        if (uploadedStyle) {
+            return { id: uploadedStyle, source: 'upload' as const }
         }
-        if (brandKitIds.length > 0) {
-            return { id: brandKitIds[0], source: 'brandkit' as const }
+        const brandKitStyle = brandKitIds.find((id) => roles[id] === 'style')
+        if (brandKitStyle) {
+            return { id: brandKitStyle, source: 'brandkit' as const }
         }
         return { id: null, source: null }
+    }
+
+    const hasActiveStyleRole = (
+        uploadedImages: string[],
+        brandKitIds: string[],
+        roles: Record<string, ReferenceImageRole>
+    ) => {
+        return [...uploadedImages, ...brandKitIds].some((id) => roles[id] === 'style')
     }
 
     const analyzeImageBase64 = useCallback(async (base64: string, mimeType: string) => {
@@ -395,21 +410,54 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }
     }, [state.firstReferenceId, state.firstReferenceSource, state.firstVisionAnalysis, state.isAnalyzing, analyzeImageBase64, analyzeImageFromUrl])
 
+    // Auto-populate typography from style reference analysis when in auto mode
+    useEffect(() => {
+        if (state.typography.mode !== 'auto') return
+        const inferred = inferTypographyFromVision(state.firstVisionAnalysis)
+        setState(prev => {
+            if (prev.typography.mode !== 'auto') return prev
+            const nextTypography: TypographyProfile = { ...prev.typography, ...inferred, mode: 'auto' }
+            const unchanged =
+                prev.typography.familyClass === nextTypography.familyClass &&
+                prev.typography.weight === nextTypography.weight &&
+                prev.typography.width === nextTypography.width &&
+                prev.typography.casing === nextTypography.casing &&
+                prev.typography.spacing === nextTypography.spacing &&
+                prev.typography.contrast === nextTypography.contrast &&
+                prev.typography.tone === nextTypography.tone
+            if (unchanged) return prev
+            return { ...prev, typography: nextTypography }
+        })
+    }, [state.firstVisionAnalysis, state.typography.mode])
+
     // Add an uploaded image (max 10 total across sources)
     const addUploadedImage = useCallback((url: string) => {
         setState(prev => {
             const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
             if (totalImages >= MAX_REFERENCE_IMAGES) return prev
             if (prev.uploadedImages.includes(url)) return prev
-            const shouldSetFirst = !prev.firstReferenceId
+            const defaultRole: ReferenceImageRole = hasActiveStyleRole(
+                prev.uploadedImages,
+                prev.selectedBrandKitImageIds,
+                prev.referenceImageRoles
+            ) ? 'content' : 'style'
+            const nextRoles = { ...prev.referenceImageRoles, [url]: defaultRole }
+            const pickedStyle = pickStyleReference(
+                [...prev.uploadedImages, url],
+                prev.selectedBrandKitImageIds,
+                nextRoles
+            )
+            const shouldResetAnalysis =
+                pickedStyle.id !== prev.firstReferenceId || pickedStyle.source !== prev.firstReferenceSource
             return {
                 ...prev,
                 uploadedImages: [...prev.uploadedImages, url],
-                currentStep: Math.max(prev.currentStep, 6),
-                firstReferenceId: shouldSetFirst ? url : prev.firstReferenceId,
-                firstReferenceSource: shouldSetFirst ? 'upload' : prev.firstReferenceSource,
-                firstVisionAnalysis: shouldSetFirst ? null : prev.firstVisionAnalysis,
-                visionAnalysis: shouldSetFirst ? null : prev.visionAnalysis
+                currentStep: Math.max(prev.currentStep, 5),
+                referenceImageRoles: nextRoles,
+                firstReferenceId: pickedStyle.id,
+                firstReferenceSource: pickedStyle.source,
+                firstVisionAnalysis: shouldResetAnalysis ? null : prev.firstVisionAnalysis,
+                visionAnalysis: shouldResetAnalysis ? null : prev.visionAnalysis
             }
         })
     }, [])
@@ -419,30 +467,19 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => {
             const nextUploadedImages = prev.uploadedImages.filter(u => u !== url)
             const nextUploadedFiles = prev.uploadedImageFiles.filter((_, i) => prev.uploadedImages[i] !== url)
-            const removingFirst = prev.firstReferenceSource === 'upload' && prev.firstReferenceId === url
-
-            let nextFirstId = prev.firstReferenceId
-            let nextFirstSource = prev.firstReferenceSource
-
-            if (removingFirst) {
-                nextFirstId = null
-                nextFirstSource = null
-            }
-
-            if (!nextFirstId) {
-                const picked = pickFirstReference(nextUploadedImages, prev.selectedBrandKitImageIds)
-                nextFirstId = picked.id
-                nextFirstSource = picked.source
-            }
-
-            const resetAnalysis = removingFirst || nextFirstId !== prev.firstReferenceId
+            const nextRoles = { ...prev.referenceImageRoles }
+            delete nextRoles[url]
+            const pickedStyle = pickStyleReference(nextUploadedImages, prev.selectedBrandKitImageIds, nextRoles)
+            const resetAnalysis =
+                pickedStyle.id !== prev.firstReferenceId || pickedStyle.source !== prev.firstReferenceSource
 
             return {
                 ...prev,
                 uploadedImages: nextUploadedImages,
                 uploadedImageFiles: nextUploadedFiles,
-                firstReferenceId: nextFirstId,
-                firstReferenceSource: nextFirstSource,
+                referenceImageRoles: nextRoles,
+                firstReferenceId: pickedStyle.id,
+                firstReferenceSource: pickedStyle.source,
                 firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
                 visionAnalysis: resetAnalysis ? null : prev.visionAnalysis
             }
@@ -454,30 +491,21 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => {
             const nextUploadedImages: string[] = []
             const nextUploadedFiles: File[] = []
-            let nextFirstId = prev.firstReferenceId
-            let nextFirstSource = prev.firstReferenceSource
-
-            if (prev.firstReferenceSource === 'upload') {
-                nextFirstId = null
-                nextFirstSource = null
-            }
-
-            if (!nextFirstId) {
-                const picked = pickFirstReference(nextUploadedImages, prev.selectedBrandKitImageIds)
-                nextFirstId = picked.id
-                nextFirstSource = picked.source
-            }
-
-            const resetAnalysis = prev.firstReferenceSource === 'upload' || nextFirstId !== prev.firstReferenceId
+            const nextRoles = { ...prev.referenceImageRoles }
+            prev.uploadedImages.forEach((id) => delete nextRoles[id])
+            const pickedStyle = pickStyleReference(nextUploadedImages, prev.selectedBrandKitImageIds, nextRoles)
+            const resetAnalysis =
+                pickedStyle.id !== prev.firstReferenceId || pickedStyle.source !== prev.firstReferenceSource
 
             return {
                 ...prev,
                 uploadedImages: nextUploadedImages,
                 uploadedImageFiles: nextUploadedFiles,
+                referenceImageRoles: nextRoles,
                 visionAnalysis: resetAnalysis ? null : prev.visionAnalysis,
                 firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
-                firstReferenceId: nextFirstId,
-                firstReferenceSource: nextFirstSource
+                firstReferenceId: pickedStyle.id,
+                firstReferenceSource: pickedStyle.source
             }
         })
     }, [])
@@ -500,20 +528,41 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 format: 'image/jpeg'
             })
 
-            setState(prev => ({
-                ...prev,
-                uploadedImages: [...prev.uploadedImages, base64],
-                uploadedImageFiles: [...prev.uploadedImageFiles, file],
-                currentStep: 6, // Auto-advance to Step 6 (Brand) after upload
-                firstReferenceId: prev.firstReferenceId || base64,
-                firstReferenceSource: prev.firstReferenceSource || 'upload'
-            }))
+            let shouldAnalyzeAsStyle = false
+            setState(prev => {
+                const defaultRole: ReferenceImageRole = hasActiveStyleRole(
+                    prev.uploadedImages,
+                    prev.selectedBrandKitImageIds,
+                    prev.referenceImageRoles
+                ) ? 'content' : 'style'
+                shouldAnalyzeAsStyle = defaultRole === 'style'
+                const nextRoles = { ...prev.referenceImageRoles, [base64]: defaultRole }
+                const pickedStyle = pickStyleReference([...prev.uploadedImages, base64], prev.selectedBrandKitImageIds, nextRoles)
+                const resetAnalysis =
+                    pickedStyle.id !== prev.firstReferenceId || pickedStyle.source !== prev.firstReferenceSource
+
+                return {
+                    ...prev,
+                    uploadedImages: [...prev.uploadedImages, base64],
+                    uploadedImageFiles: [...prev.uploadedImageFiles, file],
+                    currentStep: 6, // Auto-advance to Step 6 (Brand) after upload
+                    referenceImageRoles: nextRoles,
+                    firstReferenceId: pickedStyle.id,
+                    firstReferenceSource: pickedStyle.source,
+                    firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
+                    visionAnalysis: resetAnalysis ? null : prev.visionAnalysis
+                }
+            })
 
             if (optionsRef.current?.onImageUploaded) {
                 optionsRef.current.onImageUploaded(file)
             }
 
-            await analyzeImageBase64(base64, file.type || 'image/jpeg')
+            if (shouldAnalyzeAsStyle) {
+                await analyzeImageBase64(base64, file.type || 'image/jpeg')
+            } else {
+                setState(prev => ({ ...prev, isAnalyzing: false }))
+            }
         } catch (error) {
             setState(prev => ({
                 ...prev,
@@ -599,6 +648,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             ...prev,
             uploadedImages: [],
             uploadedImageFiles: [],
+            selectedBrandKitImageIds: [],
+            referenceImageRoles: {},
             visionAnalysis: null,
             firstVisionAnalysis: null,
             firstReferenceId: null,
@@ -625,30 +676,19 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             if (isSelected) {
                 // Remove from selection
                 const nextBrandKitIds = prev.selectedBrandKitImageIds.filter(id => id !== imageId)
-                const removingFirst = prev.firstReferenceSource === 'brandkit' && prev.firstReferenceId === imageId
-
-                let nextFirstId = prev.firstReferenceId
-                let nextFirstSource = prev.firstReferenceSource
-
-                if (removingFirst) {
-                    nextFirstId = null
-                    nextFirstSource = null
-                }
-
-                if (!nextFirstId) {
-                    const picked = pickFirstReference(prev.uploadedImages, nextBrandKitIds)
-                    nextFirstId = picked.id
-                    nextFirstSource = picked.source
-                }
-
-                const resetAnalysis = removingFirst || nextFirstId !== prev.firstReferenceId
+                const nextRoles = { ...prev.referenceImageRoles }
+                delete nextRoles[imageId]
+                const pickedStyle = pickStyleReference(prev.uploadedImages, nextBrandKitIds, nextRoles)
+                const resetAnalysis =
+                    pickedStyle.id !== prev.firstReferenceId || pickedStyle.source !== prev.firstReferenceSource
 
                 return {
                     ...prev,
                     selectedBrandKitImageIds: nextBrandKitIds,
+                    referenceImageRoles: nextRoles,
                     generatedImage: null,
-                    firstReferenceId: nextFirstId,
-                    firstReferenceSource: nextFirstSource,
+                    firstReferenceId: pickedStyle.id,
+                    firstReferenceSource: pickedStyle.source,
                     firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
                     visionAnalysis: resetAnalysis ? null : prev.visionAnalysis
                 }
@@ -656,16 +696,25 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 // Add to selection (if under limit)
                 const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
                 if (totalImages >= MAX_REFERENCE_IMAGES) return prev
-                const shouldSetFirst = !prev.firstReferenceId
+                const defaultRole: ReferenceImageRole = hasActiveStyleRole(
+                    prev.uploadedImages,
+                    prev.selectedBrandKitImageIds,
+                    prev.referenceImageRoles
+                ) ? 'content' : 'style'
+                const nextRoles = { ...prev.referenceImageRoles, [imageId]: defaultRole }
+                const pickedStyle = pickStyleReference(prev.uploadedImages, [...prev.selectedBrandKitImageIds, imageId], nextRoles)
+                const resetAnalysis =
+                    pickedStyle.id !== prev.firstReferenceId || pickedStyle.source !== prev.firstReferenceSource
                 return {
                     ...prev,
                     selectedBrandKitImageIds: [...prev.selectedBrandKitImageIds, imageId],
+                    referenceImageRoles: nextRoles,
                     generatedImage: null,
-                    currentStep: Math.max(prev.currentStep, 6),
-                    firstReferenceId: shouldSetFirst ? imageId : prev.firstReferenceId,
-                    firstReferenceSource: shouldSetFirst ? 'brandkit' : prev.firstReferenceSource,
-                    firstVisionAnalysis: shouldSetFirst ? null : prev.firstVisionAnalysis,
-                    visionAnalysis: shouldSetFirst ? null : prev.visionAnalysis
+                    currentStep: Math.max(prev.currentStep, 5),
+                    firstReferenceId: pickedStyle.id,
+                    firstReferenceSource: pickedStyle.source,
+                    firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
+                    visionAnalysis: resetAnalysis ? null : prev.visionAnalysis
                 }
             }
         })
@@ -675,30 +724,50 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const clearBrandKitImages = useCallback(() => {
         setState(prev => {
             const nextBrandKitIds: string[] = []
-            let nextFirstId = prev.firstReferenceId
-            let nextFirstSource = prev.firstReferenceSource
-
-            if (prev.firstReferenceSource === 'brandkit') {
-                nextFirstId = null
-                nextFirstSource = null
-            }
-
-            if (!nextFirstId) {
-                const picked = pickFirstReference(prev.uploadedImages, nextBrandKitIds)
-                nextFirstId = picked.id
-                nextFirstSource = picked.source
-            }
-
-            const resetAnalysis = prev.firstReferenceSource === 'brandkit' || nextFirstId !== prev.firstReferenceId
+            const nextRoles = { ...prev.referenceImageRoles }
+            prev.selectedBrandKitImageIds.forEach((id) => delete nextRoles[id])
+            const pickedStyle = pickStyleReference(prev.uploadedImages, nextBrandKitIds, nextRoles)
+            const resetAnalysis =
+                pickedStyle.id !== prev.firstReferenceId || pickedStyle.source !== prev.firstReferenceSource
 
             return {
                 ...prev,
                 selectedBrandKitImageIds: nextBrandKitIds,
+                referenceImageRoles: nextRoles,
                 generatedImage: null,
-                firstReferenceId: nextFirstId,
-                firstReferenceSource: nextFirstSource,
+                firstReferenceId: pickedStyle.id,
+                firstReferenceSource: pickedStyle.source,
                 firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
                 visionAnalysis: resetAnalysis ? null : prev.visionAnalysis
+            }
+        })
+    }, [])
+
+    const setReferenceImageRole = useCallback((imageId: string, role: ReferenceImageRole) => {
+        setState(prev => {
+            const isSelected = prev.uploadedImages.includes(imageId) || prev.selectedBrandKitImageIds.includes(imageId)
+            if (!isSelected) return prev
+
+            const nextRoles = { ...prev.referenceImageRoles }
+            if (role === 'style') {
+                ;[...prev.uploadedImages, ...prev.selectedBrandKitImageIds].forEach((id) => {
+                    if (nextRoles[id] === 'style') nextRoles[id] = 'content'
+                })
+            }
+            nextRoles[imageId] = role
+
+            const pickedStyle = pickStyleReference(prev.uploadedImages, prev.selectedBrandKitImageIds, nextRoles)
+            const resetAnalysis =
+                pickedStyle.id !== prev.firstReferenceId || pickedStyle.source !== prev.firstReferenceSource
+
+            return {
+                ...prev,
+                referenceImageRoles: nextRoles,
+                firstReferenceId: pickedStyle.id,
+                firstReferenceSource: pickedStyle.source,
+                firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
+                visionAnalysis: resetAnalysis ? null : prev.visionAnalysis,
+                generatedImage: null
             }
         })
     }, [])
@@ -798,7 +867,36 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             ...prev,
             customStyle: style,
             generatedImage: null,
-            currentStep: style.trim() ? Math.max(prev.currentStep, 6) : prev.currentStep
+            currentStep: style.trim() ? Math.max(prev.currentStep, 5) : prev.currentStep
+        }))
+    }, [])
+
+    const setTypographyMode = useCallback((mode: TypographyProfile['mode']) => {
+        setState(prev => {
+            if (mode === 'auto') {
+                const inferred = inferTypographyFromVision(prev.firstVisionAnalysis)
+                return {
+                    ...prev,
+                    typography: { ...prev.typography, ...inferred, mode: 'auto' },
+                    generatedImage: null
+                }
+            }
+            return {
+                ...prev,
+                typography: { ...prev.typography, mode },
+                generatedImage: null
+            }
+        })
+    }, [])
+
+    const setTypographyField = useCallback((
+        field: Exclude<keyof TypographyProfile, 'mode'>,
+        value: TypographyProfile[Exclude<keyof TypographyProfile, 'mode'>]
+    ) => {
+        setState(prev => ({
+            ...prev,
+            typography: { ...prev.typography, [field]: value },
+            generatedImage: null
         }))
     }, [])
 
@@ -1180,7 +1278,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         // When reference images are provided (brand kit OR uploaded), instruct the model to detect
         // and properly hierarchy any logos found (collaborators, sponsors, institutions, etc.)
-        const hasReferenceImages = activeState.selectedBrandKitImageIds.length > 0 || activeState.uploadedImages.length > 0
+        const referenceRoles = activeState.referenceImageRoles || {}
+        const visualReferenceIds = [...activeState.uploadedImages, ...activeState.selectedBrandKitImageIds]
+            .filter((id) => (referenceRoles[id] || 'content') !== 'style')
+        const hasReferenceImages = visualReferenceIds.length > 0
         if (hasReferenceImages) {
             sections.push(
                 P10B.PRIORITY_HEADER,
@@ -1260,6 +1361,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
         if (textParts.length > 0) {
             brandDNA.push(P09.MANDATORY_TEXT_HEADER)
+            brandDNA.push(P09.TEXT_FIT_SAFETY_RULES)
             if (activeState.ctaUrl?.trim()) {
                 brandDNA.push(P09B.CRITICAL_HIERARCHY_INSTRUCTION(activeState.ctaUrl))
             }
@@ -1409,6 +1511,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         const customStyle = activeState.customStyle?.trim()
         const styleDirectives: string[] = []
+        const typographyDirection = buildSimpleTypographyDirection(activeState.typography, activeState.firstVisionAnalysis)
+        const visualDirectiveLine = buildVisualStyleDirective(
+            customStyle,
+            activeState.firstVisionAnalysis
+        )
 
         if (customStyle) {
             styleDirectives.push(customStyle)
@@ -1421,12 +1528,19 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             }
         }
 
-        if (styleDirectives.length > 0) {
+        if (styleDirectives.length > 0 || typographyDirection) {
             const uniqueStyles = Array.from(new Set(styleDirectives))
             sections.push(
                 P05.PRIORITY_HEADER,
                 ``,
-                `STYLE DIRECTIVES: ${uniqueStyles.join(', ')}`,
+                visualDirectiveLine,
+                uniqueStyles.length > 0
+                    ? `STYLE SIGNALS FROM REFERENCE: ${uniqueStyles.join(', ')}`
+                    : `STYLE SIGNALS FROM REFERENCE: Keep the visual language clean, bold, and highly readable.`,
+                `COLOR DOMINANCE RULE: Style cues define form, line quality, texture and composition. PRIORITY 4 brand palette controls final hue decisions. Do not override brand colors with fixed external color schemes.`,
+                ``,
+                typographyDirection ? `${typographyDirection}` : ``,
+                `STYLE SOURCE RULE: The style reference was analyzed as text-only guidance. DO NOT reproduce its exact subject/object unless explicitly requested in the mandatory text.`,
                 ``,
                 P05.STYLE_REQUIREMENT,
                 ``
@@ -1484,51 +1598,6 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
             sections.push(P04.COLOR_USAGE_GUIDELINES)
             sections.push(``)
-        }
-
-        // ═══════════════════════════════════════════════════════════════
-        // PRIORITY 7 - COMPOSITION & LAYOUT (Dynamic from selected layout)
-        // ═══════════════════════════════════════════════════════════════
-        if (state.selectedLayout && state.selectedIntent) {
-            // Find selected layout definition
-            const intentLayouts = LAYOUTS_BY_INTENT[state.selectedIntent]
-            const layoutDef = intentLayouts?.find(l => l.id === state.selectedLayout)
-
-            if (layoutDef?.structuralPrompt) {
-                sections.push(
-                    `╔═════════════════════════════════════════════════════════════════╗`,
-                    `║  PRIORITY 7 - COMPOSITION & LAYOUT                            ║`,
-                    `╚═════════════════════════════════════════════════════════════════╝`,
-                    ``,
-                    layoutDef.structuralPrompt,
-                    ``
-                )
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════
-        // PRIORITY 3 - CONTENT TYPE & MARKETING INTENT
-        // ═══════════════════════════════════════════════════════════════
-        if (currentIntent) {
-            const intentPromptKey = `${currentIntent.id.toUpperCase()}_PROMPT`
-            const intentPrompt = (IntentPrompts as any)[intentPromptKey]
-
-            sections.push(
-                P03.PRIORITY_HEADER,
-                ``,
-                `TYPE: ${currentIntent.name}`,
-                `DESCRIPTION: ${currentIntent.description}`,
-                ``
-            )
-
-            if (intentPrompt) {
-                sections.push(
-                    `--- INTENT COMPOSITION GUIDELINES ---`,
-                    intentPrompt,
-                    `--- END INTENT GUIDELINES ---`,
-                    ``
-                )
-            }
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -1611,7 +1680,9 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                     selectedTheme: state.selectedTheme,
                     imageSourceMode: state.imageSourceMode,
                     selectedBrandKitImageIds: state.selectedBrandKitImageIds,
+                    referenceImageRoles: state.referenceImageRoles,
                     aiImageDescription: state.aiImageDescription,
+                    typography: state.typography,
                     // Styles & Layout
                     selectedStyles: state.selectedStyles,
                     selectedLayout: state.selectedLayout,
@@ -1631,6 +1702,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 // Persistence is handled at the page/component level (e.g. ImagePage.tsx)
                 // after the actual generation is complete and we have the final URL.
                 // This prevents double-saves and document size conflicts.
+                Object.keys(stateSnapshot.referenceImageRoles || {}).forEach((key) => {
+                    if (key.startsWith('data:')) {
+                        delete (stateSnapshot.referenceImageRoles as Record<string, ReferenceImageRole>)[key]
+                    }
+                })
             }
 
             return prompt
@@ -1688,6 +1764,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             ...INITIAL_GENERATION_STATE,
             caption: '', // NEW: Ensure caption is reset for presets
             ...presetState,
+            referenceImageRoles: presetState.referenceImageRoles || {},
             hasGeneratedImage: Boolean(presetState.generatedImage),
             currentStep: presetState.currentStep ?? computeStepFromPreset(presetState),
             // Ensure clean technical state
@@ -1717,7 +1794,9 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             selectedTheme: state.selectedTheme,
             imageSourceMode: state.imageSourceMode,
             selectedBrandKitImageIds: state.selectedBrandKitImageIds,
+            referenceImageRoles: state.referenceImageRoles,
             aiImageDescription: state.aiImageDescription,
+            typography: state.typography,
             selectedStyles: state.selectedStyles,
             selectedLayout: state.selectedLayout,
             selectedLogoId: state.selectedLogoId,
@@ -1745,6 +1824,9 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
         snapshot.uploadedImages = snapshot.uploadedImages.map(stripIfLargeBase64).filter(Boolean) as string[]
         snapshot.generatedImage = stripIfLargeBase64(snapshot.generatedImage)
+        snapshot.referenceImageRoles = Object.fromEntries(
+            Object.entries(snapshot.referenceImageRoles || {}).filter(([key]) => !key.startsWith('data:'))
+        ) as Record<string, ReferenceImageRole>
 
         return snapshot
     }, [state])
@@ -1763,6 +1845,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 cta: prev.cta,
                 ctaUrl: prev.ctaUrl,
                 caption: prev.caption,
+                typography: { ...prev.typography },
                 customTexts: { ...prev.customTexts },
                 selectedTextAssets: [...prev.selectedTextAssets]
             }
@@ -1830,6 +1913,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         setImageSourceMode,
         toggleBrandKitImage,
         clearBrandKitImages,
+        setReferenceImageRole,
         setAiImageDescription,
         selectTheme,
         toggleStyle,
@@ -1844,6 +1928,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         setAdditionalInstructions,
         setRawMessage,
         setCustomStyle,
+        setTypographyMode,
+        setTypographyField,
         setCustomText,
         toggleNoText,
         generateFieldCopy,
@@ -1880,4 +1966,147 @@ function fileToBase64(file: File): Promise<string> {
         reader.onerror = reject
         reader.readAsDataURL(file)
     })
+}
+
+function buildSimpleTypographyDirection(
+    typography?: TypographyProfile | null,
+    analysis?: GenerationState['firstVisionAnalysis'] | null
+): string {
+    if (!typography) return ''
+    const familyMap: Record<TypographyProfile['familyClass'], string> = {
+        sans: 'a clean geometric sans-serif',
+        serif: 'a high-legibility serif with clear contrast',
+        slab: 'a slab-serif with strong structural presence',
+        mono: 'a monospaced family with controlled rhythm',
+        script: 'a restrained script with readable letterforms',
+        display: 'a bold display family with compact impact'
+    }
+
+    const weightMap: Record<TypographyProfile['weight'], string> = {
+        light: 'light',
+        regular: 'regular',
+        semibold: 'semibold',
+        bold: 'bold',
+        black: 'black'
+    }
+
+    const casingMap: Record<TypographyProfile['casing'], string> = {
+        uppercase: 'uppercase',
+        title: 'title case',
+        sentence: 'sentence case'
+    }
+
+    const spacingMap: Record<TypographyProfile['spacing'], string> = {
+        tight: 'tight tracking',
+        normal: 'balanced tracking',
+        wide: 'wide tracking'
+    }
+
+    const titleEffect =
+        typography.contrast === 'high' || typography.familyClass === 'display' || typography.weight === 'black'
+            ? 'Apply a crisp outline (1-2px, high contrast within brand palette) plus a subtle short drop shadow to improve separation.'
+            : 'Apply a very subtle outline or micro-shadow only when needed for legibility.'
+
+    const bodyEffect =
+        typography.familyClass === 'script'
+            ? 'Keep body text in a simpler companion family from the same visual tone, with no outline and no decorative effects.'
+            : 'Keep body text clean and undecorated (no heavy outline, no dramatic shadow).'
+
+    const analysisHint = analysis?.keywords?.length
+        ? `Inferred from reference cues: ${analysis.keywords.slice(0, 6).join(', ')}.`
+        : 'Inferred from the visual character of the style reference.'
+
+    return `TYPOGRAPHY DIRECTION: ${analysisHint} HEADLINE TYPOGRAPHY: Use ${familyMap[typography.familyClass]} in ${weightMap[typography.weight]} weight, ${casingMap[typography.casing]}, ${spacingMap[typography.spacing]}. ${titleEffect} BODY TYPOGRAPHY: Use the same superfamily or a neutral companion in regular/semibold weight with high readability and stable spacing. ${bodyEffect}`
+}
+
+function buildVisualStyleDirective(
+    customStyle?: string,
+    analysis?: GenerationState['firstVisionAnalysis'] | null
+): string {
+    const referenceSignals = (analysis?.keywords || [])
+        .map((k) => k.trim())
+        .filter(Boolean)
+    const tokens = [customStyle?.trim(), ...referenceSignals]
+        .filter((t): t is string => Boolean(t && t.length > 0))
+        .join(' ')
+        .toLowerCase()
+
+    const has = (keywords: string[]) => keywords.some((k) => tokens.includes(k))
+    const artDirectionAnchors: string[] = []
+
+    if (has(['vector', 'flat', 'cel', 'cartoon', 'illustration'])) {
+        artDirectionAnchors.push('contemporary vector illustration language from children media and mobile game key art')
+    }
+    if (has(['geometric', 'grid', 'minimal'])) {
+        artDirectionAnchors.push('modernist reduction principles similar to Swiss-influenced poster composition')
+    }
+    if (has(['editorial', 'magazine', 'serif', 'headline'])) {
+        artDirectionAnchors.push('editorial hierarchy discipline inspired by modern publishing systems')
+    }
+    if (has(['dynamic', 'energy', 'motion', 'impact'])) {
+        artDirectionAnchors.push('high-energy compositional rhythm common in commercial campaign illustration')
+    }
+
+    const uniqueAnchors = Array.from(new Set(artDirectionAnchors)).slice(0, 3)
+    const anchorClause =
+        uniqueAnchors.length > 0
+            ? ` Use these art-direction anchors: ${uniqueAnchors.join('; ')}.`
+            : ''
+
+    const styleSource =
+        referenceSignals.length > 0
+            ? referenceSignals.join(', ')
+            : 'the style reference and the selected brand language'
+
+    return `STYLE DIRECTIVES: Render the image in this exact aesthetic direction based on ${styleSource}. Enforce clear silhouette hierarchy, confident contour lines, simplified shape language, controlled depth layering, and even readable lighting. Keep finishes clean and matte, with a commercial-ready clarity and playful energy.${anchorClause}`
+}
+
+function inferTypographyFromVision(analysis?: GenerationState['firstVisionAnalysis'] | null): TypographyProfile {
+    const joined = `${analysis?.subjectLabel || ''} ${(analysis?.keywords || []).join(' ')}`.toLowerCase()
+    const has = (tokens: string[]) => tokens.some((t) => joined.includes(t))
+
+    let familyClass: TypographyProfile['familyClass'] = 'sans'
+    if (has(['serif', 'editorial', 'classic', 'heritage'])) familyClass = 'serif'
+    else if (has(['slab', 'poster'])) familyClass = 'slab'
+    else if (has(['mono', 'code', 'terminal'])) familyClass = 'mono'
+    else if (has(['script', 'handwritten', 'calligraphy'])) familyClass = 'script'
+    else if (has(['display', 'impact', 'headline'])) familyClass = 'display'
+
+    let weight: TypographyProfile['weight'] = 'semibold'
+    if (has(['light', 'thin'])) weight = 'light'
+    else if (has(['regular', 'neutral'])) weight = 'regular'
+    else if (has(['bold'])) weight = 'bold'
+    else if (has(['black', 'heavy', 'impact'])) weight = 'black'
+
+    let width: TypographyProfile['width'] = 'normal'
+    if (has(['condensed', 'compressed'])) width = 'condensed'
+    else if (has(['extended', 'wide'])) width = 'extended'
+
+    let casing: TypographyProfile['casing'] = 'title'
+    if (has(['uppercase', 'all caps'])) casing = 'uppercase'
+    else if (has(['sentence'])) casing = 'sentence'
+
+    let spacing: TypographyProfile['spacing'] = 'normal'
+    if (has(['tight', 'compact'])) spacing = 'tight'
+    else if (has(['wide spacing', 'tracking'])) spacing = 'wide'
+
+    const contrast: TypographyProfile['contrast'] =
+        has(['high contrast', 'editorial']) || familyClass === 'serif' ? 'high' : 'low'
+
+    let tone: TypographyProfile['tone'] = 'corporate'
+    if (has(['tech', 'digital', 'futur'])) tone = 'tech'
+    else if (has(['editorial', 'magazine'])) tone = 'editorial'
+    else if (has(['classic', 'traditional'])) tone = 'classic'
+    else if (has(['human', 'friendly', 'organic'])) tone = 'humanist'
+
+    return {
+        mode: 'auto',
+        familyClass,
+        weight,
+        width,
+        casing,
+        spacing,
+        contrast,
+        tone
+    }
 }

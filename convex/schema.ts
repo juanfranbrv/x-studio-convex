@@ -102,6 +102,7 @@ export default defineSchema({
     clerk_user_id: v.optional(v.string()),
     updated_at: v.string(),
   }).index("by_url", ["url"])
+    .index("by_url_user", ["url", "clerk_user_id"])
     .index("by_clerk_id", ["clerk_user_id"]),
 
   generations: defineTable({

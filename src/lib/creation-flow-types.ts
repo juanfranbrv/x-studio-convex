@@ -176,6 +176,25 @@ export interface SelectedColor {
 }
 
 export type TextAssetType = 'cta' | 'tagline' | 'url' | 'hook' | 'custom'
+export type ReferenceImageRole = 'style' | 'content' | 'logo'
+export type TypographyFamilyClass = 'sans' | 'serif' | 'slab' | 'mono' | 'script' | 'display'
+export type TypographyWeight = 'light' | 'regular' | 'semibold' | 'bold' | 'black'
+export type TypographyWidth = 'condensed' | 'normal' | 'extended'
+export type TypographyCasing = 'uppercase' | 'title' | 'sentence'
+export type TypographySpacing = 'tight' | 'normal' | 'wide'
+export type TypographyContrast = 'low' | 'high'
+export type TypographyTone = 'corporate' | 'editorial' | 'tech' | 'classic' | 'humanist'
+
+export interface TypographyProfile {
+    mode: 'auto' | 'manual'
+    familyClass: TypographyFamilyClass
+    weight: TypographyWeight
+    width: TypographyWidth
+    casing: TypographyCasing
+    spacing: TypographySpacing
+    contrast: TypographyContrast
+    tone: TypographyTone
+}
 
 export interface TextAsset {
     id: string
@@ -833,7 +852,9 @@ export interface GenerationState {
     // Image Reference Options
     imageSourceMode: 'upload' | 'brandkit' | 'generate' // Which image source is active
     selectedBrandKitImageIds: string[] // IDs of selected brand kit images (max 10)
+    referenceImageRoles: Record<string, ReferenceImageRole> // Role by image ID/URL/base64
     aiImageDescription: string // Description for AI to generate reference image
+    typography: TypographyProfile
 
     // Step 7: Final Format
     // (Moved to Step 0)
@@ -877,7 +898,18 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     selectedTextAssets: [],
     imageSourceMode: 'upload',
     selectedBrandKitImageIds: [],
+    referenceImageRoles: {},
     aiImageDescription: '',
+    typography: {
+        mode: 'auto',
+        familyClass: 'sans',
+        weight: 'semibold',
+        width: 'normal',
+        casing: 'title',
+        spacing: 'normal',
+        contrast: 'low',
+        tone: 'corporate'
+    },
     isGenerating: false,
     generatedImage: null,
     hasGeneratedImage: false,

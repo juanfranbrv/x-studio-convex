@@ -5,7 +5,7 @@ import { Upload, Image as ImageIcon, Loader2, X, Sparkles, Palette, Check, Plus 
 import { cn } from '@/lib/utils'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
-import type { VisionAnalysis } from '@/lib/creation-flow-types'
+import type { VisionAnalysis, ReferenceImageRole } from '@/lib/creation-flow-types'
 
 type ImageSourceMode = 'upload' | 'brandkit' | 'generate'
 
@@ -26,6 +26,8 @@ interface ImageReferenceSelectorProps {
     selectedBrandKitImageIds?: string[]
     onToggleBrandKitImage?: (imageId: string) => void
     onClearBrandKitImages?: () => void
+    referenceImageRoles?: Record<string, ReferenceImageRole>
+    onReferenceRoleChange?: (imageId: string, role: ReferenceImageRole) => void
     // AI Generation
     aiImageDescription?: string
     onAiDescriptionChange?: (description: string) => void
@@ -50,6 +52,8 @@ export function ImageReferenceSelector({
     selectedBrandKitImageIds = [],
     onToggleBrandKitImage,
     onClearBrandKitImages,
+    referenceImageRoles = {},
+    onReferenceRoleChange,
     aiImageDescription = '',
     onAiDescriptionChange,
     customStyle = '',
@@ -98,6 +102,24 @@ export function ImageReferenceSelector({
         if (onModeChange) {
             onModeChange(val as ImageSourceMode)
         }
+    }
+
+    const getNextRole = (role: ReferenceImageRole): ReferenceImageRole => {
+        if (role === 'style') return 'content'
+        if (role === 'content') return 'logo'
+        return 'style'
+    }
+
+    const roleLabel = (role: ReferenceImageRole) => {
+        if (role === 'style') return 'Estilo'
+        if (role === 'logo') return 'Logo'
+        return 'Contenido'
+    }
+
+    const roleChipClasses = (role: ReferenceImageRole) => {
+        if (role === 'style') return 'bg-violet-500/85 text-white'
+        if (role === 'logo') return 'bg-amber-500/85 text-white'
+        return 'bg-sky-500/85 text-white'
     }
 
     return (
@@ -167,6 +189,23 @@ export function ImageReferenceSelector({
                                         className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-red-500 transition-all z-10 opacity-0 group-hover:opacity-100"
                                     >
                                         <X className="w-3 h-3" />
+                                    </button>
+                                )}
+                                {onReferenceRoleChange && (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            const currentRole = referenceImageRoles[img] || 'content'
+                                            onReferenceRoleChange(img, getNextRole(currentRole))
+                                        }}
+                                        title="Cambiar rol: Estilo / Contenido / Logo"
+                                        className={cn(
+                                            "absolute top-1 left-1 text-[9px] px-2 py-0.5 rounded-full font-semibold transition-all z-10",
+                                            roleChipClasses(referenceImageRoles[img] || 'content')
+                                        )}
+                                    >
+                                        {roleLabel(referenceImageRoles[img] || 'content')}
                                     </button>
                                 )}
                                 <div className="absolute bottom-1 left-1 bg-black/50 text-white text-[8px] px-1.5 py-0.5 rounded-full">
@@ -288,15 +327,41 @@ export function ImageReferenceSelector({
                                                 : "border-slate-200 dark:border-white/10 opacity-50 cursor-not-allowed"
                                     )}
                                 >
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-10" />
-                                    <img
-                                        src={img.url}
-                                        alt={img.name || 'Brand image'}
-                                        className="w-full h-full object-cover"
-                                    />
-                                    {isSelected && (
-                                        <div className="absolute inset-0 bg-primary/30 flex items-center justify-center backdrop-blur-[1px] z-20">
-                                            <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg transform scale-100 animate-in zoom-in duration-200">
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-10" />
+                                <img
+                                    src={img.url}
+                                    alt={img.name || 'Brand image'}
+                                    className="w-full h-full object-cover"
+                                />
+                                {isSelected && onReferenceRoleChange && (
+                                    <div
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            const currentRole = referenceImageRoles[img.id] || 'content'
+                                            onReferenceRoleChange(img.id, getNextRole(currentRole))
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                const currentRole = referenceImageRoles[img.id] || 'content'
+                                                onReferenceRoleChange(img.id, getNextRole(currentRole))
+                                            }
+                                        }}
+                                        title="Cambiar rol: Estilo / Contenido / Logo"
+                                        className={cn(
+                                            "absolute top-1 left-1 text-[9px] px-2 py-0.5 rounded-full font-semibold transition-all z-30 cursor-pointer",
+                                            roleChipClasses(referenceImageRoles[img.id] || 'content')
+                                        )}
+                                    >
+                                        {roleLabel(referenceImageRoles[img.id] || 'content')}
+                                    </div>
+                                )}
+                                {isSelected && (
+                                    <div className="absolute inset-0 bg-primary/30 flex items-center justify-center backdrop-blur-[1px] z-20">
+                                        <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg transform scale-100 animate-in zoom-in duration-200">
                                                 <Check className="w-4 h-4 stroke-[3]" />
                                             </div>
                                         </div>
@@ -337,6 +402,11 @@ export function ImageReferenceSelector({
             </TabsContent>
 
             {/* CUSTOM STYLE INPUT (optional) */}
+            {onReferenceRoleChange && (
+                <p className="mt-3 text-[10px] text-muted-foreground">
+                    Tip: pulsa la etiqueta de cada imagen seleccionada para cambiar su rol (`Estilo`, `Contenido` o `Logo`).
+                </p>
+            )}
             {onCustomStyleChange && (
                 <div className="mt-4 pt-2">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2 pl-1">

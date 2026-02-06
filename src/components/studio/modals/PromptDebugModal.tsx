@@ -12,13 +12,15 @@ interface PromptDebugModalProps {
     onClose: () => void
     onConfirm: () => void
     promptData: DebugPromptData | null
+    viewOnly?: boolean
 }
 
 export function PromptDebugModal({
     open,
     onClose,
     onConfirm,
-    promptData
+    promptData,
+    viewOnly = false
 }: PromptDebugModalProps) {
     const [copied, setCopied] = useState(false)
     const [copiedAll, setCopiedAll] = useState(false)
@@ -67,7 +69,9 @@ export function PromptDebugModal({
                         )}
                     </DialogTitle>
                     <DialogDescription>
-                        Revisa el prompt exacto que se enviará al modelo de IA
+                        {viewOnly
+                            ? 'Revisa el prompt exacto que se envió al modelo de IA'
+                            : 'Revisa el prompt exacto que se enviará al modelo de IA'}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -300,19 +304,27 @@ export function PromptDebugModal({
 
                 {/* Footer Actions */}
                 <DialogFooter className="gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={onClose}
-                    >
-                        Cancelar Generación
-                    </Button>
-                    <Button
-                        onClick={onConfirm}
-                        className="bg-primary"
-                    >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Enviar Prompt
-                    </Button>
+                    {viewOnly ? (
+                        <Button variant="outline" onClick={onClose}>
+                            Cerrar
+                        </Button>
+                    ) : (
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={onClose}
+                            >
+                                Cancelar Generación
+                            </Button>
+                            <Button
+                                onClick={onConfirm}
+                                className="bg-primary"
+                            >
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Enviar Prompt
+                            </Button>
+                        </>
+                    )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

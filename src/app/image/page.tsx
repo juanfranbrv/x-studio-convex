@@ -79,6 +79,7 @@ export default function ImagePage() {
     // Debug Modal States
     const [showDebugModal, setShowDebugModal] = useState(false)
     const [debugPromptData, setDebugPromptData] = useState<DebugPromptData | null>(null)
+    const [isDebugViewOnly, setIsDebugViewOnly] = useState(false)
     const [pendingGenerationData, setPendingGenerationData] = useState<any>(null)
 
     // Local session history
@@ -217,7 +218,9 @@ export default function ImagePage() {
                 })
             }
 
-            if (result.customTexts) {
+            // If parser already returned a consolidated imageTexts block,
+            // do not re-expand customTexts into extra layers.
+            if (result.customTexts && aiAssets.length === 0) {
                 Object.entries(result.customTexts).forEach(([key, value]) => {
                     if (value && typeof value === 'string' && value.trim()) {
                         addAsset(key.replace(/_/g, ' '), value, 'custom')
@@ -269,17 +272,26 @@ export default function ImagePage() {
                 .map(img => img.url)
 
             const finalContext: ContextElement[] = [...selectedContext]
+            const styleReferenceImages: string[] = []
+            const getReferenceRole = (imageId: string) => creationFlow.state.referenceImageRoles?.[imageId] || 'content'
 
             // Add uploaded images as product references
             if (creationFlow.state.uploadedImages.length > 0) {
                 creationFlow.state.uploadedImages.forEach((imgUrl, idx) => {
+                    const role = getReferenceRole(imgUrl)
+                    if (role === 'style') {
+                        styleReferenceImages.push(imgUrl)
+                        return
+                    }
                     const hasImg = finalContext.some(c => c.id === `flow-upload-${idx}`)
                     if (!hasImg) {
                         finalContext.push({
                             id: `flow-upload-${idx}`,
-                            type: 'image',
+                            type: role === 'logo' ? 'logo' : 'image',
                             value: imgUrl,
-                            label: idx === 0 ? 'Producto' : `Referencia ${idx + 1}`
+                            label: role === 'logo'
+                                ? `Logo auxiliar ${idx + 1}`
+                                : `Referencia ${idx + 1}`
                         })
                     }
                 })
@@ -288,13 +300,20 @@ export default function ImagePage() {
             // Add brand kit selected images as references
             if (creationFlow.state.selectedBrandKitImageIds.length > 0) {
                 creationFlow.state.selectedBrandKitImageIds.forEach((imgUrl, idx) => {
+                    const role = getReferenceRole(imgUrl)
+                    if (role === 'style') {
+                        styleReferenceImages.push(imgUrl)
+                        return
+                    }
                     const hasImg = finalContext.some(c => c.id === `flow-brandkit-${idx}`)
                     if (!hasImg) {
                         finalContext.push({
                             id: `flow-brandkit-${idx}`,
-                            type: 'image',
+                            type: role === 'logo' ? 'logo' : 'image',
                             value: imgUrl,
-                            label: `Imagen BrandKit ${idx + 1}`
+                            label: role === 'logo'
+                                ? `Logo BrandKit ${idx + 1}`
+                                : `Imagen BrandKit ${idx + 1}`
                         })
                     }
                 })
@@ -331,6 +350,24 @@ export default function ImagePage() {
             }
 
             const effectivePrompt = creationFlow.state.generatedImage ? buildEditPrompt(data.prompt) : data.prompt
+            const selectedFormat = SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)
+
+            setDebugPromptData({
+                finalPrompt: effectivePrompt,
+                logoUrl: activeBrandKit?.logos?.[0]?.url,
+                referenceImageUrl: styleReferenceImages[0],
+                attachedImages: finalContext
+                    .filter((item) => item.type === 'image' || item.type === 'logo')
+                    .map((item) => item.value),
+                selectedStyles: creationFlow.state.selectedStyles,
+                headline: creationFlow.state.headline,
+                cta: creationFlow.state.cta,
+                platform: creationFlow.state.selectedPlatform || undefined,
+                format: creationFlow.state.selectedFormat || undefined,
+                intent: creationFlow.state.selectedIntent || undefined,
+                model: data.model || creationFlow.state.selectedImageModel,
+                aspectRatio: selectedFormat?.aspectRatio
+            })
 
             console.log('[Client] Generating with State Model:', creationFlow.state.selectedImageModel)
 
@@ -395,6 +432,26 @@ export default function ImagePage() {
             }]
 
             const fullPrompt = buildEditPrompt(editPrompt)
+            const selectedFormat = SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)
+            const selectedStyleRef = [
+                ...creationFlow.state.uploadedImages,
+                ...creationFlow.state.selectedBrandKitImageIds
+            ].find((id) => (creationFlow.state.referenceImageRoles?.[id] || 'content') === 'style')
+
+            setDebugPromptData({
+                finalPrompt: fullPrompt,
+                logoUrl: activeBrandKit?.logos?.[0]?.url,
+                referenceImageUrl: selectedStyleRef,
+                attachedImages: [creationFlow.state.generatedImage],
+                selectedStyles: creationFlow.state.selectedStyles,
+                headline: creationFlow.state.headline,
+                cta: creationFlow.state.cta,
+                platform: creationFlow.state.selectedPlatform || undefined,
+                format: creationFlow.state.selectedFormat || undefined,
+                intent: creationFlow.state.selectedIntent || undefined,
+                model: creationFlow.state.selectedImageModel || "wisdom/gemini-3-pro-image-preview",
+                aspectRatio: selectedFormat?.aspectRatio
+            })
 
             const response = await fetch('/api/generate', {
                 method: 'POST',
@@ -471,14 +528,21 @@ export default function ImagePage() {
             return
         }
 
+        setIsDebugViewOnly(false)
+        const selectedStyleRef = [
+            ...state.uploadedImages,
+            ...state.selectedBrandKitImageIds
+        ].find((id) => (state.referenceImageRoles?.[id] || 'content') === 'style')
+        const visualRefsForPreview = [
+            ...state.uploadedImages,
+            ...state.selectedBrandKitImageIds
+        ].filter((id) => (state.referenceImageRoles?.[id] || 'content') !== 'style')
         setDebugPromptData({
             finalPrompt: data.prompt,
             logoUrl: activeBrandKit?.logos?.[0]?.url,
+            referenceImageUrl: selectedStyleRef,
             // Combine uploaded images and brand kit images
-            attachedImages: [
-                ...state.uploadedImages,
-                ...state.selectedBrandKitImageIds // Assuming these are URLs as per handleGenerate usage
-            ],
+            attachedImages: visualRefsForPreview,
             selectedStyles: state.selectedStyles,
             headline: state.headline,
             cta: state.cta,
@@ -491,6 +555,7 @@ export default function ImagePage() {
     }
 
     const confirmGeneration = async () => {
+        setIsDebugViewOnly(false)
         setShowDebugModal(false)
         if (pendingGenerationData) {
             await handleGenerate(pendingGenerationData)
@@ -501,7 +566,23 @@ export default function ImagePage() {
     const cancelGeneration = () => {
         setShowDebugModal(false)
         setPendingGenerationData(null)
-        setDebugPromptData(null)
+        if (!isDebugViewOnly) {
+            setDebugPromptData(null)
+        }
+        setIsDebugViewOnly(false)
+    }
+
+    const handleOpenPromptDebug = () => {
+        if (!debugPromptData?.finalPrompt) {
+            toast({
+                title: "Sin prompt disponible",
+                description: "Genera o edita una imagen primero para ver el prompt enviado.",
+                variant: "destructive"
+            })
+            return
+        }
+        setIsDebugViewOnly(true)
+        setShowDebugModal(true)
     }
 
     const handleUnifiedAction = async () => {
@@ -572,6 +653,8 @@ export default function ImagePage() {
                                     hidePromptArea={true}
                                     onSelectLogo={creationFlow.selectLogo}
                                     onClearUploadedImage={creationFlow.clearImage}
+                                    onOpenPromptDebug={handleOpenPromptDebug}
+                                    showPromptDebugTrigger={Boolean(creationFlow.state.generatedImage && debugPromptData?.finalPrompt)}
                                 />
                             </div>
 
@@ -688,6 +771,7 @@ export default function ImagePage() {
                 onClose={cancelGeneration}
                 onConfirm={confirmGeneration}
                 promptData={debugPromptData}
+                viewOnly={isDebugViewOnly}
             />
 
 

@@ -23,6 +23,7 @@ Antes de tomar cualquier acción o responder:
 3.  **Confirmación Explícita**: Si dudas, pregunta.
 4.  **Humor**: Finaliza tus respuestas con un comentario ingenioso o broma ligera relacionada con la tarea. y estos iconos "💚💚💚💚💚"
 5.  **Transparencia**: Explica qué haces y por qué.
+6.  **Generalización Obligatoria**: No crear parches específicos para ejemplos concretos. Siempre buscar soluciones generales y escalables.
 
 ### 3. Autonomía con Herramientas (CLI & MCP)
 **CRÍTICO**: Si puedes hacerlo tú, **HAZLO TÚ**.

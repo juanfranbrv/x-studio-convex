@@ -16,19 +16,23 @@ export const list = query({
 
         // 2. Get User Presets scoped to Brand Kit (if brandId provided)
         let userPresets: any[] = [];
-        if (args.brandId) {
+        if (args.brandId && args.userId) {
             userPresets = await ctx.db
                 .query("presets")
                 .withIndex("by_brand", (q) => q.eq("brandId", args.brandId))
                 .order("desc")
-                .collect();
+                .collect()
+                .then((items) =>
+                    items.filter((preset: any) => preset.userId === args.userId && !preset.isSystem)
+                );
         } else if (args.userId) {
             // Fallback: if no brandId but userId (though we prefer brand scoping now)
             userPresets = await ctx.db
                 .query("presets")
                 .withIndex("by_user", (q) => q.eq("userId", args.userId))
                 .order("desc")
-                .collect();
+                .collect()
+                .then((items) => items.filter((preset: any) => !preset.isSystem));
         }
 
         // Default System Presets (Mock data for UI visualization)
@@ -110,7 +114,10 @@ export const create = mutation({
             const existingPresets = await ctx.db
                 .query("presets")
                 .withIndex("by_brand", (q) => q.eq("brandId", args.brandId))
-                .collect();
+                .collect()
+                .then((items) =>
+                    items.filter((preset: any) => preset.userId === args.userId && !preset.isSystem)
+                );
 
             const sameType = existingPresets.filter((preset: any) => {
                 const type = typeof preset?.state?.presetType === "string" ? preset.state.presetType : "image";

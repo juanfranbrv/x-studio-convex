@@ -2,8 +2,8 @@
 
 import { fetchQuery } from 'convex/nextjs';
 import { api } from '../../../convex/_generated/api';
-import { Id } from '../../../convex/_generated/dataModel';
 import type { BrandDNA, BrandKitSummary } from '@/lib/brand-types';
+import { auth } from '@clerk/nextjs/server';
 
 /**
  * Normaliza el array de imágenes para asegurar que siempre sea un array de objetos con url y selected.
@@ -52,8 +52,13 @@ export async function getAllUserBrandKits(clerkUserId: string): Promise<{
     error?: string;
 }> {
     try {
+        const { userId } = await auth();
+        if (!userId || userId !== clerkUserId) {
+            return { success: false, error: 'No autorizado' };
+        }
+
         // CONVEX MIGRATION: fetchQuery
-        const brands = await fetchQuery(api.brands.getBrandDNAByClerkId, { clerk_user_id: clerkUserId });
+        const brands = await fetchQuery(api.brands.getBrandDNAByClerkId, { clerk_user_id: userId });
 
         // Client-side sort by updated_at desc since we can't easily index sort in Convex yet
         const sortedBrands = (brands || []).sort((a: any, b: any) => {
@@ -89,7 +94,15 @@ export async function getUserBrandKitById(brandKitId: string): Promise<{
     error?: string;
 }> {
     try {
-        const data = await fetchQuery(api.brands.getBrandDNAById, { id: brandKitId as Id<"brand_dna"> });
+        const { userId } = await auth();
+        if (!userId) {
+            return { success: false, error: 'No autorizado' };
+        }
+
+        // Robust path: resolve from the current user's own list to avoid
+        // stale/legacy IDs and keep strict user isolation.
+        const ownBrands = await fetchQuery(api.brands.getBrandDNAByClerkId, { clerk_user_id: userId });
+        const data = (ownBrands || []).find((b: any) => String(b._id) === String(brandKitId));
 
         if (!data) {
             return { success: false, error: 'Brand Kit no encontrado' };
@@ -139,7 +152,12 @@ export async function getUserBrandKit(clerkUserId: string): Promise<{
     error?: string;
 }> {
     try {
-        const brands = await fetchQuery(api.brands.getBrandDNAByClerkId, { clerk_user_id: clerkUserId });
+        const { userId } = await auth();
+        if (!userId || userId !== clerkUserId) {
+            return { success: false, exists: false, error: 'No autorizado' };
+        }
+
+        const brands = await fetchQuery(api.brands.getBrandDNAByClerkId, { clerk_user_id: userId });
 
         if (!brands || brands.length === 0) {
             return { success: true, exists: false };

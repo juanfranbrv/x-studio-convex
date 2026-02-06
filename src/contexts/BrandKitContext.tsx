@@ -54,11 +54,13 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                 // 3. First from list
                 if (result.data.length > 0 && !activeBrandKit) {
                     const lastBrandId = userRecord?.current_brand_id
-                    const brandToSelect = (lastBrandId && result.data.find(b => b.id === lastBrandId))
-                        ? lastBrandId
+                    const hasPersistedBrand = Boolean(lastBrandId && result.data.find(b => b.id === lastBrandId))
+                    const brandToSelect = hasPersistedBrand
+                        ? (lastBrandId as string)
                         : result.data[0].id
 
-                    await setActiveBrandKit(brandToSelect, false) // false = don't re-persist what we just loaded
+                    // Si el persisted id ya no existe, curamos el estado guardando uno válido
+                    await setActiveBrandKit(brandToSelect, !hasPersistedBrand)
                 }
             }
         } catch (error) {
@@ -84,6 +86,20 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                 }
             } else {
                 console.error('[CONTEXT] Failed to load brand kit:', id, result.error);
+                // Fallback defensivo: si el id es legacy/huérfano, intenta con el primero válido
+                if (brandKits.length > 0) {
+                    const fallbackId = brandKits[0].id
+                    if (fallbackId && fallbackId !== id) {
+                        const fallback = await getUserBrandKitById(fallbackId)
+                        if (fallback.success && fallback.data) {
+                            setActiveBrandKitState(fallback.data)
+                            if (user?.id) {
+                                updateLastBrand({ clerk_id: user.id, brandId: fallbackId })
+                                    .catch(err => console.error('[CONTEXT] Failed to persist fallback brand:', err))
+                            }
+                        }
+                    }
+                }
             }
         } catch (error) {
             console.error('Error loading brand kit:', error)

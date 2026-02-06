@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
 // Helper: get a setting value with fallback
 async function getSetting(ctx: any, key: string, fallback: number): Promise<number> {
@@ -28,6 +29,13 @@ export const setCurrentBrand = mutation({
             .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
             .first();
         if (!user) throw new Error("User not found");
+
+        const brand = await ctx.db.get(args.brandId as Id<"brand_dna">);
+        if (!brand) throw new Error("Brand kit not found");
+        if (brand.clerk_user_id !== args.clerk_id) {
+            throw new Error("Unauthorized brand selection");
+        }
+
         await ctx.db.patch(user._id, { current_brand_id: args.brandId });
         return { success: true };
     },

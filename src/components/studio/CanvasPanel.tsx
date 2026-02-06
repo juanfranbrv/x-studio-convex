@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/image/page'
-import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, ImagePlus, SquareArrowDown, ImageDown } from 'lucide-react'
+import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, ImagePlus, SquareArrowDown, ImageDown, Bug } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
@@ -85,6 +85,8 @@ export interface CanvasPanelProps {
     hidePromptArea?: boolean
     onSelectLogo?: (id: string | null) => void
     onClearUploadedImage?: () => void
+    onOpenPromptDebug?: () => void
+    showPromptDebugTrigger?: boolean
 }
 
 export function CanvasPanel({
@@ -113,7 +115,9 @@ export function CanvasPanel({
     onUpdateTextAsset,
     hidePromptArea = false,
     onSelectLogo,
-    onClearUploadedImage
+    onClearUploadedImage,
+    onOpenPromptDebug,
+    showPromptDebugTrigger = false
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const { activeBrandKit } = useBrandKit()
@@ -602,6 +606,20 @@ export function CanvasPanel({
                         {/* Main Content Area */}
                         {currentImage ? (
                             <div className="relative w-full h-full overflow-hidden rounded-sm z-20">
+                                {showPromptDebugTrigger && onOpenPromptDebug && (
+                                    <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={onOpenPromptDebug}
+                                            className="h-9 w-9 rounded-full bg-background/80 backdrop-blur border border-border shadow-sm hover:shadow-md transition-all hover:scale-[1.03] active:scale-[0.98]"
+                                            title="Ver prompt enviado"
+                                        >
+                                            <Bug className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                )}
                                 <div className="w-full h-full flex items-center justify-center text-center">
                                     <motion.div
                                         key={currentImage}

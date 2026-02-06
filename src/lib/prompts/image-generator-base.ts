@@ -50,6 +50,8 @@ Si la solicitud del usuario es breve o ambigua, APLICA LOS RECURSOS AUTOMÁTICAM
 - NO alucines productos que no estén en las imágenes de contexto.
 - Si hay una imagen de PRODUCTO PRINCIPAL, úsala tal cual, no la recrees.
 - CONTROL DE TEXTO RADICAL: Solo incluye los textos listados explícitamente. PROHIBIDO "Lorem Ipsum" o rellenos.
+- AUTO-FIT TIPOGRÁFICO OBLIGATORIO: ningún texto puede quedar cortado. Si el titular es largo, reduce tamaño y haz salto de línea hasta que el 100% del texto sea visible.
+- SAFE MARGINS DE TEXTO: deja al menos un 8% de margen respecto a bordes del lienzo y evita recortes de ascenders/descenders.
 - PROHIBICIÓN DE COLORES EXTRAÑOS: NO uses colores que no estén en la paleta de marca. Si la plantilla tiene elementos rojos y la marca no tiene rojo, cámbialos al color primario de la marca ({{colorList}}).
 - Fidelidad estructural absoluta al layout de referencia, pero con estética 100% de la marca.
 ---------------------------------------------------------

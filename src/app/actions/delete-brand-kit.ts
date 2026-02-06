@@ -3,6 +3,7 @@
 import { fetchMutation } from 'convex/nextjs';
 import { api } from '../../../convex/_generated/api';
 import { Id } from '../../../convex/_generated/dataModel';
+import { auth } from '@clerk/nextjs/server';
 
 /**
  * Elimina un Brand Kit por su ID
@@ -12,7 +13,15 @@ export async function deleteBrandKit(brandKitId: string): Promise<{
     error?: string;
 }> {
     try {
-        await fetchMutation(api.brands.deleteBrandDNA, { id: brandKitId as Id<"brand_dna"> });
+        const { userId } = await auth();
+        if (!userId) {
+            return { success: false, error: 'No autorizado' };
+        }
+
+        await fetchMutation(api.brands.deleteBrandDNA, {
+            id: brandKitId as Id<'brand_dna'>,
+            clerk_user_id: userId,
+        });
 
         return { success: true };
     } catch (err) {

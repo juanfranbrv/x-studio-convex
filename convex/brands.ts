@@ -64,11 +64,15 @@ export const updateBrandDNA = mutation({
 });
 
 export const getBrandDNA = query({
-    args: { url: v.string() },
+    args: { url: v.string(), clerk_user_id: v.optional(v.string()) },
     handler: async (ctx, args) => {
+        if (!args.clerk_user_id) {
+            return null;
+        }
+
         return await ctx.db
             .query("brand_dna")
-            .withIndex("by_url", (q) => q.eq("url", args.url))
+            .withIndex("by_url_user", (q) => q.eq("url", args.url).eq("clerk_user_id", args.clerk_user_id))
             .first();
     },
 });
@@ -98,13 +102,13 @@ export const upsertBrandDNA = mutation({
         preferred_language: v.optional(v.string()),
         api_trace: v.optional(v.any()),
         debug: v.optional(v.any()),
-        clerk_user_id: v.optional(v.string()),
+        clerk_user_id: v.string(),
         updated_at: v.string(),
     },
     handler: async (ctx, args) => {
         const existing = await ctx.db
             .query("brand_dna")
-            .withIndex("by_url", (q) => q.eq("url", args.url))
+            .withIndex("by_url_user", (q) => q.eq("url", args.url).eq("clerk_user_id", args.clerk_user_id))
             .first();
 
         if (existing) {
@@ -169,10 +173,11 @@ export const getBrandDNAByClerkId = query({
 });
 
 export const getBrandDNAById = query({
-    args: { id: v.id("brand_dna") },
+    args: { id: v.id("brand_dna"), clerk_user_id: v.string() },
     handler: async (ctx, args) => {
         const brand = await ctx.db.get(args.id);
         if (!brand) return null;
+        if (brand.clerk_user_id !== args.clerk_user_id) return null;
 
         // URL resolution helpers (same as getBrandDNAByClerkId)
         const needsResolve = (url: string) => !url.startsWith("http") || url.includes("/_storage/");
@@ -213,6 +218,7 @@ export const getBrandDNAById = query({
 export const updateBrandDNADoc = mutation({
     args: {
         id: v.id("brand_dna"),
+        clerk_user_id: v.string(),
         updates: v.object({
             brand_name: v.optional(v.string()),
             tagline: v.optional(v.string()),
@@ -239,13 +245,19 @@ export const updateBrandDNADoc = mutation({
         }),
     },
     handler: async (ctx, args) => {
+        const existing = await ctx.db.get(args.id);
+        if (!existing) throw new Error("Brand kit not found");
+        if (existing.clerk_user_id !== args.clerk_user_id) throw new Error("Unauthorized");
         await ctx.db.patch(args.id, args.updates);
     },
 });
 
 export const deleteBrandDNA = mutation({
-    args: { id: v.id("brand_dna") },
+    args: { id: v.id("brand_dna"), clerk_user_id: v.string() },
     handler: async (ctx, args) => {
+        const existing = await ctx.db.get(args.id);
+        if (!existing) throw new Error("Brand kit not found");
+        if (existing.clerk_user_id !== args.clerk_user_id) throw new Error("Unauthorized");
         await ctx.db.delete(args.id);
     },
 });
@@ -276,5 +288,25 @@ export const createEmptyBrandKit = mutation({
         });
 
         return brandId;
+    },
+});
+
+export const cloneBrandDNAToUser = mutation({
+    args: {
+        source_id: v.id("brand_dna"),
+        target_clerk_user_id: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const source = await ctx.db.get(args.source_id);
+        if (!source) throw new Error("Source brand kit not found");
+
+        const { _id, _creationTime, ...data } = source as any;
+        const now = new Date().toISOString();
+
+        return await ctx.db.insert("brand_dna", {
+            ...data,
+            clerk_user_id: args.target_clerk_user_id,
+            updated_at: now,
+        });
     },
 });

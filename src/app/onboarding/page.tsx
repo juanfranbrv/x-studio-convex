@@ -76,6 +76,10 @@ export default function OnboardingPage() {
     const handleFinish = async () => {
         setIsSaving(true)
         try {
+            if (!user?.id) {
+                throw new Error('Usuario no autenticado')
+            }
+
             // CONVEX MIGRATION: Save to brand_dna table
             // We use upsertBrandDNA which maps to the table used by the dashboard
             await upsertBrandDNA({
@@ -94,7 +98,7 @@ export default function OnboardingPage() {
                 // Ensure other required fields are present (even if empty) if schema requires them
                 // Schema has updated_at as required string.
                 updated_at: new Date().toISOString(),
-                clerk_user_id: user?.id
+                clerk_user_id: user.id
             })
 
             router.push('/image')

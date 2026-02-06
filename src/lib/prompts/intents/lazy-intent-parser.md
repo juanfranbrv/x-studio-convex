@@ -65,7 +65,7 @@ OUTPUT JSON ONLY:
   "ctaUrl": "string",
   "caption": "string",
   "imageTexts": [
-    { "label": "Subtitulo", "value": "string", "type": "tagline" }
+    { "label": "Texto principal", "value": "string", "type": "custom" }
   ],
   "suggestions": [
     {
@@ -94,13 +94,21 @@ RULES
    - Add emojis and hashtags.
    - MUST end with ctaUrl if it exists.
 7. imageTexts:
-   - 0-4 secondary text suggestions for the image.
-   - Use type: "tagline", "hook", or "custom".
+   - Return EXACTLY 1 consolidated block in `imageTexts[0]` with:
+     - `label`: "Texto principal"
+     - `type`: "custom"
+     - `value`: multi-line, clean, non-duplicated body copy for the ad.
+   - This block should contain the relevant informative/supporting copy only.
+   - DO NOT duplicate headline, cta, or ctaUrl inside this block.
 8. detectedIntent must be one of the allowed ids above. Never invent new ones.
 9. If intent is not provided, detect it. If it is provided, respect it.
 10. Language: you MUST output in USER_LANGUAGE. Ignore any brand language preference.
 11. URL FORMAT: ctaUrl and any URLs in caption MUST be plain text (e.g., "https://example.com"). NEVER use markdown link format like "[text](url)". Just output the raw URL. Markdown links break the UI and will be considered a failure. Output raw, clean URLs ONLY.
-12. SUGGESTIONS STRATEGY:
+12. RECALL-FIRST EXTRACTION (CRITICAL): If in doubt, INCLUDE text instead of dropping it. It's better to return extra candidate text than to miss important user-provided text.
+13. LITERAL PRESERVATION: Preserve verbatim user literals that may be important for the final design: phone numbers, quoted phrases, explicit slogans, promo lines, event details, and hard constraints.
+14. PHONE RULE: If the user writes a phone/WhatsApp number, include it in output (either in `imageTexts` or `customTexts`) so it can reach preview and generation.
+15. LOSSLESS BIAS: Never omit a concrete text fragment explicitly written by the user if it could plausibly belong to the visual composition.
+16. SUGGESTIONS STRATEGY:
     - Generate EXACTLY 2 distinct suggestions in the `suggestions` array.
     - Suggestion 1 ("Enfoque Directo/Visual"): A punchy, short, high-impact version.
     - Suggestion 2 ("Enfoque Storytelling/Empático" or "Enfoque Analítico"): A value-added version that connects emotionally or provides deep analysis.

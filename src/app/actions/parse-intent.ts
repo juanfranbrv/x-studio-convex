@@ -54,6 +54,8 @@ const INTENT_ALIASES: Record<string, string> = {
     challenge: 'reto',
 }
 
+const DEFAULT_FALLBACK_INTENT: IntentCategory = 'servicio'
+
 function normalizeText(text: string): string {
     return text
         .toLowerCase()
@@ -117,13 +119,144 @@ function sanitizeUrlsInText(text?: string): string {
     return cleaned
 }
 
+function canonicalPhone(value: string): string {
+    return value.replace(/\D/g, '')
+}
+
+function canonicalText(value: string): string {
+    return sanitizeUrlsInText(value)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim()
+}
+
+function isDuplicateBySimilarity(candidate: string, existing: string[]): boolean {
+    for (const ex of existing) {
+        if (!ex) continue
+        if (candidate === ex) return true
+        if (candidate.length >= 16 && ex.includes(candidate)) return true
+        if (ex.length >= 16 && candidate.includes(ex)) return true
+    }
+    return false
+}
+
+function extractLineCandidates(text: string): string[] {
+    const rawLines = text
+        .split(/\r?\n+/g)
+        .map((l) => l.trim())
+        .filter(Boolean)
+
+    // Keep concrete/user-authored lines, avoid very short noise and number-only fragments
+    const filtered = rawLines.filter((l) => {
+        if (l.length < 8 || l.length > 160) return false
+        const digits = l.replace(/\D/g, '')
+        const alpha = l.replace(/[^a-zA-ZÀ-ÿ]/g, '')
+        if (digits.length >= 7 && alpha.length < 3) return false
+        return true
+    })
+    return Array.from(new Set(filtered))
+}
+
+function organizeParsedOutput(
+    parsed: ParsedIntentResult,
+    userText: string,
+    brandWebsite?: string
+): ParsedIntentResult {
+    const aiImageTexts = Array.isArray(parsed.imageTexts) ? parsed.imageTexts : []
+    const userLines = extractLineCandidates(userText)
+    const userUrls = Array.from(userText.matchAll(/(https?:\/\/[^\s\])}]+)/g)).map((m) => sanitizeUrl(m[1]))
+    const firstUserUrl = userUrls.find(Boolean)
+
+    let headline = sanitizeUrlsInText(parsed.headline).trim()
+    if (!headline) {
+        const fallbackHeadline = userLines.find((line) => !/https?:\/\//i.test(line) && canonicalPhone(line).length < 7)
+        if (fallbackHeadline) headline = fallbackHeadline
+    }
+
+    const ctaUrl = sanitizeUrl(parsed.ctaUrl) || firstUserUrl || (brandWebsite?.trim() || '')
+    const cta = sanitizeUrlsInText(parsed.cta).trim()
+
+    const blocked = [headline, cta, ctaUrl]
+        .map((v) => canonicalText(v))
+        .filter(Boolean)
+
+    const fragments: string[] = []
+    const seenCanon = new Set<string>()
+    const seenPhones = new Set<string>()
+
+    const splitCandidateLines = (value: string): string[] =>
+        value
+            .split(/\r?\n+/g)
+            .map((line) => line.trim())
+            .filter(Boolean)
+
+    const pushFragment = (raw: string) => {
+        const clean = sanitizeUrlsInText(raw).trim()
+        if (!clean) return
+        if (/^https?:\/\//i.test(clean)) return
+
+        const phone = canonicalPhone(clean)
+        if (phone.length >= 7) {
+            // Keep only one normalized phone line in the block.
+            if (Array.from(seenPhones).some((p) => p === phone || p.includes(phone) || phone.includes(p))) return
+            seenPhones.add(phone)
+        }
+
+        const canon = canonicalText(clean)
+        if (!canon) return
+        if (blocked.some((b) => b === canon || b.includes(canon) || canon.includes(b))) return
+        if (seenCanon.has(canon)) return
+        if (isDuplicateBySimilarity(canon, Array.from(seenCanon))) return
+
+        seenCanon.add(canon)
+        fragments.push(clean)
+    }
+
+    // 1) Prefer model-organized content first.
+    aiImageTexts.forEach((item) => {
+        splitCandidateLines(item?.value || '').forEach(pushFragment)
+    })
+
+    // 2) Add model custom text support, line by line.
+    if (parsed.customTexts) {
+        Object.values(parsed.customTexts).forEach((value) => {
+            if (typeof value === 'string') {
+                splitCandidateLines(value).forEach(pushFragment)
+            }
+        })
+    }
+
+    // 3) Fallback: if model returned little, use user-authored lines.
+    if (fragments.length === 0) {
+        userLines.forEach((line) => {
+            pushFragment(line)
+        })
+    }
+
+    const bodyBlock = fragments.join('\n').trim()
+    const imageTexts = bodyBlock
+        ? [{ label: 'Texto principal', value: bodyBlock, type: 'custom' as const }]
+        : []
+
+    return {
+        ...parsed,
+        headline,
+        cta,
+        ctaUrl,
+        imageTexts,
+        customTexts: undefined
+    }
+}
+
 /**
  * Robustly extracts the first JSON object found in a string.
  * Handles noise before/after the JSON and handles markdown blocks.
  */
 function extractJson(text: string): string {
     // 1. Remove markdown code blocks if present
-    let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim()
+    const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim()
 
     // 2. Find the first '{' and the last matching '}'
     const startIdx = cleaned.indexOf('{')
@@ -360,6 +493,10 @@ export async function parseLazyIntentAction({
             }
         }
 
+        if (!detected) {
+            detected = DEFAULT_FALLBACK_INTENT
+        }
+
         if (intentId && isIntentCategory(intentId)) {
             parsed.detectedIntent = intentId
         } else if (detected) {
@@ -409,10 +546,14 @@ export async function parseLazyIntentAction({
             parsed.ctaUrl = brandWebsite.trim()
         }
 
-        return parsed
+        // 8. Final organization layer:
+        // keep headline/cta/url and collapse the rest into one coherent preview block.
+        const organized = organizeParsedOutput(parsed, userText, brandWebsite)
+        return organized
     } catch (error) {
         console.error('[LazyPrompt] Error:', error)
         return { error: `Failed to parse intent: ${error instanceof Error ? error.message : String(error)}` }
     }
 }
+
 

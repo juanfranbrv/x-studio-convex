@@ -5,13 +5,17 @@ import { api } from '../../../convex/_generated/api';
 import { Id } from '../../../convex/_generated/dataModel';
 import { BrandDNA } from '@/lib/brand-types';
 import { revalidatePath } from 'next/cache';
+import { auth } from '@clerk/nextjs/server';
 
 export async function updateUserBrandKit(brandKitId: string, brandData: BrandDNA) {
     try {
-        console.log(`💾 Guardando Brand Kit ID: ${brandKitId}`);
+        const { userId } = await auth();
+        if (!userId) {
+            return { success: false, error: 'No autorizado' };
+        }
 
         await fetchMutation(api.brands.updateBrandDNADoc, {
-            id: brandKitId as Id<"brand_dna">,
+            id: brandKitId as Id<'brand_dna'>,
             updates: {
                 brand_name: brandData.brand_name,
                 tagline: brandData.tagline,
@@ -39,8 +43,9 @@ export async function updateUserBrandKit(brandKitId: string, brandData: BrandDNA
         revalidatePath('/dashboard');
         revalidatePath('/brand-kit');
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error inesperado al actualizar brand kit:', error);
-        return { success: false, error: error.message || 'Error desconocido' };
+        const message = error instanceof Error ? error.message : 'Error desconocido';
+        return { success: false, error: message };
     }
 }
