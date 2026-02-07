@@ -55,6 +55,8 @@ const INTENT_ALIASES: Record<string, string> = {
 }
 
 const DEFAULT_FALLBACK_INTENT: IntentCategory = 'servicio'
+const EMOJI_REGEX = /[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/gu
+const EMOJI_TEST_REGEX = /[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/u
 
 function normalizeText(text: string): string {
     return text
@@ -117,6 +119,73 @@ function sanitizeUrlsInText(text?: string): string {
     )
 
     return cleaned
+}
+
+function pickCaptionEmojis(intentId?: string): [string, string] {
+    switch (intentId) {
+        case 'oferta':
+        case 'servicio':
+        case 'lanzamiento':
+        case 'escaparate':
+        case 'catalogo':
+            return ['🚀', '✅']
+        case 'logro':
+        case 'equipo':
+        case 'cita':
+        case 'talento':
+        case 'bts':
+            return ['💚', '✨']
+        case 'reto':
+        case 'pregunta':
+            return ['🔥', '💬']
+        case 'comunicado':
+        case 'evento':
+        case 'lista':
+        case 'comparativa':
+        case 'efemeride':
+        case 'dato':
+        case 'pasos':
+        case 'definicion':
+            return ['📌', '🧠']
+        default:
+            return ['✨', '📣']
+    }
+}
+
+function ensureCaptionHasEmojis(caption?: string, intentId?: string): string {
+    const sanitized = sanitizeUrlsInText(caption).trim()
+    if (!sanitized) return ''
+
+    const [primaryEmoji, secondaryEmoji] = pickCaptionEmojis(intentId)
+    const emojiMatches = sanitized.match(EMOJI_REGEX) || []
+    if (emojiMatches.length >= 2) return sanitized
+
+    const sentences = sanitized
+        .split(/(?<=[.!?])\s+/g)
+        .map((s) => s.trim())
+        .filter(Boolean)
+
+    if (sentences.length === 0) return `${primaryEmoji} ${sanitized}`
+
+    if (emojiMatches.length === 0) {
+        sentences[0] = `${primaryEmoji} ${sentences[0]}`
+    }
+
+    const currentJoined = sentences.join(' ')
+    const currentMatches = currentJoined.match(EMOJI_REGEX) || []
+    if (currentMatches.length < 2) {
+        if (sentences.length > 1) {
+            if (!EMOJI_TEST_REGEX.test(sentences[1])) {
+                sentences[1] = `${secondaryEmoji} ${sentences[1]}`
+            }
+        } else if (!EMOJI_TEST_REGEX.test(sentences[0])) {
+            sentences[0] = `${secondaryEmoji} ${sentences[0]}`
+        } else {
+            sentences[0] = `${secondaryEmoji} ${sentences[0]}`
+        }
+    }
+
+    return sentences.join(' ')
 }
 
 function canonicalPhone(value: string): string {
@@ -251,6 +320,102 @@ function organizeParsedOutput(
         imageTexts,
         customTexts: undefined
     }
+}
+
+function buildSuggestionFromBase(
+    base: ParsedIntentResult,
+    mode: 'direct' | 'emotional',
+    coreSubject?: string
+) {
+    const baseImageTexts = Array.isArray(base.imageTexts) ? base.imageTexts : []
+    const subjectSuffix = coreSubject ? ` (${coreSubject})` : ''
+    const title = mode === 'direct'
+        ? `Enfoque Directo${subjectSuffix}`
+        : `Enfoque Emocional${subjectSuffix}`
+    const subtitle = mode === 'direct'
+        ? 'Mensaje claro y accionable, orientado a conversion y comprension inmediata.'
+        : 'Mensaje inspirador y cercano, reforzando beneficio percibido y conexion emocional.'
+
+    return {
+        title,
+        subtitle,
+        modifications: {
+            headline: base.headline || '',
+            cta: base.cta || '',
+            ctaUrl: base.ctaUrl || '',
+            caption: base.caption || '',
+            imageTexts: baseImageTexts
+        }
+    }
+}
+
+function extractCoreSubject(userText: string): string {
+    const lines = extractLineCandidates(userText)
+        .filter((line) => !/https?:\/\//i.test(line))
+        .filter((line) => canonicalPhone(line).length < 7)
+    return lines[0]?.trim().slice(0, 60) || ''
+}
+
+function normalizeSuggestions(
+    parsedSuggestions: ParsedIntentResult['suggestions'],
+    organizedBase: ParsedIntentResult,
+    userText: string
+): ParsedIntentResult['suggestions'] {
+    const source = Array.isArray(parsedSuggestions) ? parsedSuggestions : []
+    const coreSubject = extractCoreSubject(userText)
+
+    const normalized = source.map((suggestion) => {
+        const modifications = { ...(suggestion?.modifications || {}) } as Record<string, unknown>
+        const imageTexts = Array.isArray(modifications.imageTexts) ? modifications.imageTexts : organizedBase.imageTexts
+
+        return {
+            title: typeof suggestion?.title === 'string' && suggestion.title.trim()
+                ? suggestion.title.trim()
+                : buildSuggestionFromBase(organizedBase, 'direct', coreSubject)?.title,
+            subtitle: typeof suggestion?.subtitle === 'string' && suggestion.subtitle.trim()
+                ? suggestion.subtitle.trim()
+                : 'Variante optimizada para este objetivo.',
+            modifications: {
+                headline: sanitizeUrlsInText(modifications.headline) || organizedBase.headline || '',
+                cta: sanitizeUrlsInText(modifications.cta) || organizedBase.cta || '',
+                ctaUrl: sanitizeUrl(modifications.ctaUrl) || organizedBase.ctaUrl || '',
+                caption: ensureCaptionHasEmojis(
+                    sanitizeUrlsInText(modifications.caption) || organizedBase.caption || '',
+                    organizedBase.detectedIntent
+                ),
+                imageTexts: Array.isArray(imageTexts)
+                    ? imageTexts.map((item: unknown) => {
+                        const typedItem = (item && typeof item === 'object') ? (item as Record<string, unknown>) : {}
+                        return {
+                            label: typeof typedItem.label === 'string' && typedItem.label.trim() ? typedItem.label : 'Texto principal',
+                            value: sanitizeUrlsInText(String(typedItem.value || '')),
+                            type: typedItem.type === 'tagline' || typedItem.type === 'hook' ? typedItem.type : 'custom'
+                        }
+                    })
+                    : []
+            }
+        }
+    }).filter((item) => item.modifications.headline || item.modifications.caption || (item.modifications.imageTexts?.length ?? 0) > 0)
+
+    if (normalized.length >= 2) {
+        return normalized.slice(0, 2)
+    }
+
+    const fallbackDirect = buildSuggestionFromBase(organizedBase, 'direct', coreSubject)
+    const fallbackEmotional = buildSuggestionFromBase(organizedBase, 'emotional', coreSubject)
+    const seeded = [...normalized]
+
+    if (seeded.length === 0) {
+        seeded.push(fallbackDirect, fallbackEmotional)
+    } else if (seeded.length === 1) {
+        const existingTitle = seeded[0].title?.toLowerCase() || ''
+        const second = existingTitle.includes('emoc')
+            ? fallbackDirect
+            : fallbackEmotional
+        seeded.push(second)
+    }
+
+    return seeded.slice(0, 2)
 }
 
 function buildSafeFallbackParsedOutput(
@@ -627,32 +792,13 @@ export async function parseLazyIntentAction({
 
         // 6. Sanitize URLs and Captions (AI occasionally ignores prompt rules)
         parsed.ctaUrl = sanitizeUrl(parsed.ctaUrl)
-        parsed.caption = sanitizeUrlsInText(parsed.caption)
+        parsed.caption = ensureCaptionHasEmojis(parsed.caption, parsed.detectedIntent)
 
         if (parsed.imageTexts && Array.isArray(parsed.imageTexts)) {
             parsed.imageTexts = parsed.imageTexts.map(item => ({
                 ...item,
                 value: sanitizeUrlsInText(item.value)
             }))
-        }
-
-        if (parsed.suggestions && Array.isArray(parsed.suggestions)) {
-            parsed.suggestions = parsed.suggestions.map(suggestion => {
-                const modifications = { ...(suggestion.modifications || {}) }
-                if (typeof modifications.ctaUrl === 'string') {
-                    modifications.ctaUrl = sanitizeUrl(modifications.ctaUrl)
-                }
-                if (typeof modifications.caption === 'string') {
-                    modifications.caption = sanitizeUrlsInText(modifications.caption)
-                }
-                if (Array.isArray(modifications.imageTexts)) {
-                    modifications.imageTexts = modifications.imageTexts.map((item: any) => ({
-                        ...item,
-                        value: sanitizeUrlsInText(item?.value)
-                    }))
-                }
-                return { ...suggestion, modifications }
-            })
         }
 
         // 7. Brand Consistency check for URLs
@@ -665,6 +811,7 @@ export async function parseLazyIntentAction({
         // 8. Final organization layer:
         // keep headline/cta/url and collapse the rest into one coherent preview block.
         const organized = organizeParsedOutput(parsed, userText, brandWebsite)
+        organized.suggestions = normalizeSuggestions(parsed.suggestions, organized, userText)
         return organized
     } catch (error) {
         console.error('[LazyPrompt] Error:', error)

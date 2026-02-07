@@ -1894,16 +1894,76 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             }
 
             const modifications = { ...prev.suggestions[suggestionIndex].modifications } as any
+            const mappedIntentFields = new Set(
+                (currentIntent?.requiredFields || [])
+                    .filter((field) => field.mapsTo === 'headline' || field.mapsTo === 'cta')
+                    .map((field) => field.id)
+            )
+            const splitLines = (value: unknown): string[] => {
+                if (typeof value !== 'string') return []
+                return value
+                    .split(/\r?\n+/g)
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+            }
+            const normalizedSuggestionLines: Array<{ label: string; value: string; type: 'custom' }> = []
+            const seenLineValues = new Set<string>()
+            const pushLine = (label: string, value: string) => {
+                const cleanValue = value.trim()
+                if (!cleanValue) return
+                const key = cleanValue.toLowerCase()
+                if (seenLineValues.has(key)) return
+                seenLineValues.add(key)
+                normalizedSuggestionLines.push({ label, value: cleanValue, type: 'custom' })
+            }
 
             // If AI provided 'imageTexts', map them to 'selectedTextAssets' for our state
             if (modifications.imageTexts && Array.isArray(modifications.imageTexts)) {
-                modifications.selectedTextAssets = modifications.imageTexts.map((item: any, idx: number) => ({
-                    id: `ai-sugg-${Date.now()}-${idx}`,
-                    type: item.type || 'custom',
-                    label: item.label || 'Texto',
-                    value: item.value || ''
-                }))
+                modifications.imageTexts.forEach((item: any) => {
+                    const baseLabel = typeof item?.label === 'string' && item.label.trim() ? item.label.trim() : 'Texto'
+                    const lines = splitLines(item?.value)
+                    if (lines.length <= 1) {
+                        pushLine(baseLabel, String(item?.value || ''))
+                        return
+                    }
+                    lines.forEach((line, lineIdx) => {
+                        const label = lineIdx === 0 ? baseLabel : `Texto ${normalizedSuggestionLines.length + 1}`
+                        pushLine(label, line)
+                    })
+                })
                 delete modifications.imageTexts
+            }
+
+            if (modifications.customTexts && typeof modifications.customTexts === 'object') {
+                Object.entries(modifications.customTexts).forEach(([key, value]) => {
+                    splitLines(value).forEach((line, lineIdx) => {
+                        const label = lineIdx === 0 ? key.replace(/_/g, ' ') : `Texto ${normalizedSuggestionLines.length + 1}`
+                        pushLine(label, line)
+                    })
+                })
+            }
+
+            if (normalizedSuggestionLines.length > 0) {
+                modifications.selectedTextAssets = normalizedSuggestionLines.map((item, idx) => ({
+                    id: `ai-sugg-${Date.now()}-${idx}`,
+                    type: item.type,
+                    label: item.label,
+                    value: item.value
+                }))
+                // Avoid duplicate visual layers: when suggestion lines are rendered
+                // as text assets, keep only mapped intent fields in customTexts.
+                if (modifications.customTexts && typeof modifications.customTexts === 'object') {
+                    const mappedOnly = Object.fromEntries(
+                        Object.entries(modifications.customTexts).filter(([key]) => mappedIntentFields.has(key))
+                    ) as Record<string, string>
+                    if (Object.keys(mappedOnly).length > 0) {
+                        modifications.customTexts = mappedOnly
+                    } else {
+                        delete modifications.customTexts
+                    }
+                } else {
+                    delete modifications.customTexts
+                }
             }
 
             return {
@@ -1913,7 +1973,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 generatedImage: null // Invalidate image as text changed
             }
         })
-    }, [])
+    }, [currentIntent])
 
     const undoSuggestion = useCallback(() => {
         setState(prev => {
