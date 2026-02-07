@@ -827,6 +827,7 @@ export interface GenerationState {
         subtitle: string
         modifications: Partial<GenerationState> // Recursive Partial of state to apply
     }>
+    imagePromptSuggestions: string[]
     originalState?: Partial<GenerationState> | null // Snapshot of state before applying suggestion
     isAnalyzing: boolean
 
@@ -881,6 +882,7 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     firstReferenceId: null,
     firstReferenceSource: null,
     suggestions: undefined,
+    imagePromptSuggestions: [],
     originalState: null,
     isAnalyzing: false,
     selectedStyles: [],

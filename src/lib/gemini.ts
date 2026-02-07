@@ -95,7 +95,9 @@ export async function generateBrandImage(
 
     // Add context images if any
     if (options.context && options.context.length > 0) {
-        const imageItems = options.context.filter(c => c.type === 'image' || c.type === 'logo')
+        const imageItems = options.context.filter(
+            c => c.type === 'image' || c.type === 'logo' || c.type === 'aux_logo'
+        )
 
         if (imageItems.length > 0) {
             console.log(`Processing ${imageItems.length} context images...`)
@@ -659,7 +661,9 @@ export async function generateContentImageUnified(
 
         // Process Context Images/Logos (Fetch & convert to Base64)
         if (options.context && options.context.length > 0) {
-            const imageItems = options.context.filter(c => c.type === 'image' || c.type === 'logo')
+            const imageItems = options.context.filter(
+                c => c.type === 'image' || c.type === 'logo' || c.type === 'aux_logo'
+            )
 
             if (imageItems.length > 0) {
                 console.log(`Processing ${imageItems.length} context images for Wisdom...`)
@@ -714,7 +718,9 @@ export async function generateContentImageUnified(
         const promptParts: any[] = [{ text: enhancedPrompt }]
 
         if (options.context && options.context.length > 0) {
-            const imageItems = options.context.filter(c => c.type === 'image' || c.type === 'logo')
+            const imageItems = options.context.filter(
+                c => c.type === 'image' || c.type === 'logo' || c.type === 'aux_logo'
+            )
             if (imageItems.length > 0) {
                 const imagePartsPromises = imageItems.map(async (item) => {
                     if (!item.value) return null

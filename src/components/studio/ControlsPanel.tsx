@@ -425,6 +425,7 @@ export function ControlsPanel({
                                     onReferenceRoleChange={setReferenceImageRole}
                                     aiImageDescription={state.aiImageDescription}
                                     onAiDescriptionChange={setAiImageDescription}
+                                    suggestedImagePrompts={state.imagePromptSuggestions}
                                     customStyle={state.customStyle}
                                     onCustomStyleChange={setCustomStyle}
                                     mode={state.imageSourceMode}

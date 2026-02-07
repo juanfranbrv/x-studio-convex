@@ -340,6 +340,18 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         })
     }
 
+    const hasUploadedStyleRole = (
+        uploadedImages: string[],
+        roles: Record<string, ReferenceImageRole>,
+        excludeId?: string
+    ) => {
+        return uploadedImages.some((id) => {
+            if (excludeId && id === excludeId) return false
+            const role = roles[id]
+            return role === 'style' || role === 'style_content'
+        })
+    }
+
     const analyzeImageBase64 = useCallback(async (
         base64: string,
         mimeType: string,
@@ -458,7 +470,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 prev.uploadedImages,
                 prev.selectedBrandKitImageIds,
                 prev.referenceImageRoles
-            ) ? 'content' : 'style'
+            )
+                ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                : 'style'
             const nextRoles = { ...prev.referenceImageRoles, [url]: defaultRole }
             const pickedStyle = pickStyleReference(
                 [...prev.uploadedImages, url],
@@ -552,7 +566,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                     prev.uploadedImages,
                     prev.selectedBrandKitImageIds,
                     prev.referenceImageRoles
-                ) ? 'content' : 'style'
+                )
+                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                    : 'style'
                 shouldAnalyzeAsStyle = defaultRole === 'style'
                 const nextRoles = { ...prev.referenceImageRoles, [base64]: defaultRole }
                 const pickedStyle = pickStyleReference([...prev.uploadedImages, base64], prev.selectedBrandKitImageIds, nextRoles)
@@ -718,7 +734,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                     prev.uploadedImages,
                     prev.selectedBrandKitImageIds,
                     prev.referenceImageRoles
-                ) ? 'content' : 'style'
+                )
+                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                    : 'style'
                 const nextRoles = { ...prev.referenceImageRoles, [imageId]: defaultRole }
                 const pickedStyle = pickStyleReference(prev.uploadedImages, [...prev.selectedBrandKitImageIds, imageId], nextRoles)
                 const resetAnalysis =
@@ -767,13 +785,42 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             if (!isSelected) return prev
 
             const nextRoles = { ...prev.referenceImageRoles }
-            if (role === 'style' || role === 'style_content') {
+            const isTargetUpload = prev.uploadedImages.includes(imageId)
+            const isTargetBrandKit = prev.selectedBrandKitImageIds.includes(imageId)
+            let safeRole: ReferenceImageRole =
+                prev.imageSourceMode === 'generate' && (role === 'content' || role === 'style_content')
+                    ? 'style'
+                    : role
+
+            // Priority by block order:
+            // Upload references (upper block) cannot be overridden by lower block (brand kit)
+            // when assigning style ownership.
+            if (
+                isTargetBrandKit &&
+                (safeRole === 'style' || safeRole === 'style_content') &&
+                hasUploadedStyleRole(prev.uploadedImages, nextRoles, imageId)
+            ) {
+                safeRole = prev.imageSourceMode === 'generate'
+                    ? 'logo'
+                    : (nextRoles[imageId] === 'style' || nextRoles[imageId] === 'style_content'
+                        ? 'content'
+                        : (nextRoles[imageId] || 'content'))
+            }
+
+            if (safeRole === 'style' || safeRole === 'style_content') {
                 ;[...prev.uploadedImages, ...prev.selectedBrandKitImageIds].forEach((id) => {
                     if (id === imageId) return
-                    if (nextRoles[id] === 'style' || nextRoles[id] === 'style_content') nextRoles[id] = 'content'
+                    if (nextRoles[id] === 'style' || nextRoles[id] === 'style_content') {
+                        const isOtherUpload = prev.uploadedImages.includes(id)
+                        // Never demote upper-block style from a lower-block assignment.
+                        if (isTargetBrandKit && isOtherUpload) return
+                        if (isTargetUpload || !isOtherUpload) {
+                            nextRoles[id] = prev.imageSourceMode === 'generate' ? 'logo' : 'content'
+                        }
+                    }
                 })
             }
-            nextRoles[imageId] = role
+            nextRoles[imageId] = safeRole
 
             const pickedStyle = pickStyleReference(prev.uploadedImages, prev.selectedBrandKitImageIds, nextRoles)
             const resetAnalysis =
@@ -1571,9 +1618,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // PRIORITY 5 - VISUAL STYLE & AESTHETIC
         // ═══════════════════════════════════════════════════════════════
         const customStyle = activeState.customStyle?.trim()
-        const styleSignals = extractStyleSignals(customStyle, activeState.firstVisionAnalysis)
+        const styleAnalysis = activeState.firstVisionAnalysis ?? activeState.visionAnalysis
+        const styleSignals = extractStyleSignals(customStyle, styleAnalysis)
         const typographyDirection = buildSimpleTypographyDirection(activeState.typography, styleSignals)
-        const visualDirectiveLine = buildVisualStyleDirective(customStyle, activeState.firstVisionAnalysis)
+        const visualDirectiveLine = buildVisualStyleDirective(customStyle, styleAnalysis)
 
         if (styleSignals.length > 0 || typographyDirection) {
             sections.push(
@@ -1839,6 +1887,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             selectedBrandKitImageIds: state.selectedBrandKitImageIds,
             referenceImageRoles: state.referenceImageRoles,
             aiImageDescription: state.aiImageDescription,
+            imagePromptSuggestions: state.imagePromptSuggestions,
             typography: state.typography,
             selectedStyles: state.selectedStyles,
             selectedLayout: state.selectedLayout,
@@ -1876,6 +1925,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
 
     const setSuggestions = useCallback((suggestions: GenerationState['suggestions']) => {
         setState(prev => ({ ...prev, suggestions }))
+    }, [])
+
+    const setImagePromptSuggestions = useCallback((imagePromptSuggestions: string[]) => {
+        setState(prev => ({ ...prev, imagePromptSuggestions }))
     }, [])
 
     const applySuggestion = useCallback((suggestionIndex: number) => {
@@ -2051,6 +2104,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         loadPreset,
         // Suggestions
         setSuggestions,
+        setImagePromptSuggestions,
         applySuggestion,
         undoSuggestion,
         // Constants
@@ -2112,8 +2166,10 @@ function buildVisualStyleDirective(
     }
 
     const uniqueAnchors = Array.from(new Set(artDirectionAnchors)).slice(0, 3)
+    const hasReferenceStyleExtraction = referenceSignals.length > 0
+    const allowAnchors = !hasReferenceStyleExtraction && !!customStyle?.trim()
     const anchorClause =
-        uniqueAnchors.length > 0
+        allowAnchors && uniqueAnchors.length > 0
             ? ` Use these art-direction anchors: ${uniqueAnchors.join('; ')}.`
             : ''
 
@@ -2122,21 +2178,7 @@ function buildVisualStyleDirective(
             ? referenceSignals.join(', ')
             : (customStyle?.trim() || 'the style reference and the selected brand language')
 
-    const isPhotographicStyle = has([
-        'photo',
-        'photorealistic',
-        'portraiture',
-        'stock photography',
-        'studio lighting',
-        'high-key',
-        'realistic'
-    ])
-
-    if (isPhotographicStyle) {
-        return `STYLE DIRECTIVES: Render the image in this exact aesthetic direction based on ${styleSource}. Keep a photographic treatment with real-world materials, natural perspective, and coherent light behavior. Preserve commercial clarity, controlled contrast, and clean finishing without converting the scene into illustration, comic linework, or stylized sketch rendering.`
-    }
-
-    return `STYLE DIRECTIVES: Render the image in this exact aesthetic direction based on ${styleSource}. Enforce clear silhouette hierarchy, confident contour lines, simplified shape language, and controlled depth layering with readable lighting. Keep the output commercially clear, energetic, and visually coherent.${anchorClause}`
+    return `STYLE DIRECTIVES: Render the image in this exact aesthetic direction based on ${styleSource}. Match the reference medium faithfully (photographic, illustrative, painterly, or hybrid) and preserve coherent visual construction, controlled contrast, clean finishing, and readable layering while respecting the detected stylistic language.${anchorClause}`
 }
 
 function extractStyleSignals(

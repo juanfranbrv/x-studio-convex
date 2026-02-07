@@ -69,6 +69,9 @@ OUTPUT JSON ONLY:
   "cta": "string",
   "ctaUrl": "string",
   "caption": "string",
+  "imagePromptSuggestions": [
+    "string"
+  ],
   "imageTexts": [
     { "label": "Texto principal", "value": "string", "type": "custom" }
   ],
@@ -137,3 +140,7 @@ RULES
     - Are all critical literals preserved?
     - Are both suggestions genuinely different in approach?
     - Are both suggestions complete packages (headline + cta + caption + imageTexts)?
+19. imagePromptSuggestions:
+    - Return 1 to 3 concise prompts describing image direction (style, scene, mood, composition hints).
+    - Keep them practical and generation-ready.
+    - Keep consistency with Brand Kit voice and target audience.

@@ -15,6 +15,9 @@ export function buildContextInstructions(context: Array<{ type: string; value: s
             case 'logo':
                 contextInstructions += `- ${tagRef} (Logo): Insertar este logo.\n`
                 break
+            case 'aux_logo':
+                contextInstructions += `- ${tagRef} (Logo auxiliar): DEBE aparecer en el diseño como sello secundario de colaborador/organismo. Es obligatorio incluirlo cuando esté presente. NO sustituir ni competir con el logo principal de marca.\n`
+                break
             case 'image':
                 contextInstructions += `- ${tagRef}: ESTE ES EL PRODUCTO PRINCIPAL. Debe aparecer de forma prominente e integrada orgánicamente en la escena. Respeta su forma, color y detalles técnicos.\n`
                 break

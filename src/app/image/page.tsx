@@ -44,7 +44,7 @@ interface Generation {
     error_fallback?: string
 }
 
-export type ContextType = 'color' | 'logo' | 'template' | 'image' | 'font' | 'text' | 'link' | 'contact'
+export type ContextType = 'color' | 'logo' | 'aux_logo' | 'template' | 'image' | 'font' | 'text' | 'link' | 'contact'
 
 export interface ContextElement {
     id: string
@@ -228,7 +228,7 @@ export default function ImagePage() {
                 if (!hasImg) {
                     finalContext.push({
                         id: `flow-upload-${idx}`,
-                        type: role === 'logo' ? 'logo' : 'image',
+                        type: role === 'logo' ? 'aux_logo' : 'image',
                         value: imgUrl,
                         label: role === 'logo' ? `Logo auxiliar ${idx + 1}` : `Referencia ${idx + 1}`
                     })
@@ -246,9 +246,9 @@ export default function ImagePage() {
                 if (!hasImg) {
                     finalContext.push({
                         id: `flow-brandkit-${idx}`,
-                        type: role === 'logo' ? 'logo' : 'image',
+                        type: role === 'logo' ? 'aux_logo' : 'image',
                         value: imgUrl,
-                        label: role === 'logo' ? `Logo BrandKit ${idx + 1}` : `Imagen BrandKit ${idx + 1}`
+                        label: role === 'logo' ? `Logo auxiliar BrandKit ${idx + 1}` : `Imagen BrandKit ${idx + 1}`
                     })
                 }
             })
@@ -308,7 +308,7 @@ export default function ImagePage() {
             requestPayload,
             styleReferenceImage: styleReferenceImages[0],
             attachedImages: finalContext
-                .filter((item) => item.type === 'image' || item.type === 'logo')
+                .filter((item) => item.type === 'image' || item.type === 'logo' || item.type === 'aux_logo')
                 .map((item) => item.value)
         }
     }
@@ -433,6 +433,11 @@ export default function ImagePage() {
                 creationFlow.setSuggestions(result.suggestions)
             } else {
                 creationFlow.setSuggestions(undefined)
+            }
+            if (Array.isArray(result.imagePromptSuggestions)) {
+                creationFlow.setImagePromptSuggestions(result.imagePromptSuggestions)
+            } else {
+                creationFlow.setImagePromptSuggestions([])
             }
 
             setHighlightedFields(newHighlights)
@@ -643,20 +648,10 @@ export default function ImagePage() {
         email => email.emailAddress === ADMIN_EMAIL
     ) ?? false
 
-    // Simplified canGenerate logic for the new 2-column layout
-    // Button should be enabled only after the Colors card is visible
+    // Rule: once the final Branding card (Logo/Colors) is reachable, Generate must be enabled.
     const { state } = creationFlow
-    const hasReachedColorsStep = state.currentStep >= 6 || state.hasGeneratedImage
-    const canGenerate = Boolean(
-        hasReachedColorsStep && (
-            state.selectedIntent !== null ||
-            state.selectedStyles.length > 0 ||
-            state.customStyle.trim() !== '' ||
-            state.headline ||
-            state.cta ||
-            state.uploadedImages.length > 0
-        )
-    )
+    const hasReachedBrandingStep = state.currentStep >= 5 || state.hasGeneratedImage
+    const canGenerate = Boolean(hasReachedBrandingStep)
 
     // Wrapped handleGenerate with debug modal intercept (admin only)
     const handleGenerateWithDebug = async (data: {
@@ -845,7 +840,7 @@ export default function ImagePage() {
                                     onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
                                     draggedElement={null}
                                     isGenerating={isGenerating}
-                                    aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio || "1:1"}
+                                    aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio || "4:5"}
                                     creationState={creationFlow.state}
                                     editPrompt=""
                                     onEditPromptChange={() => { }}

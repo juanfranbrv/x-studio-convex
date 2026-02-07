@@ -98,7 +98,7 @@ export function CanvasPanel({
     onAddContext,
     draggedElement,
     isGenerating,
-    aspectRatio = "1:1",
+    aspectRatio = "4:5",
     creationState,
     editPrompt,
     onEditPromptChange,
@@ -671,7 +671,7 @@ export function CanvasPanel({
                         {/* PREVIEW OVERLAYS (Reference Image & Logo) */}
                         {!currentImage && creationState && (
                             <>
-                                {/* Reference Images Strip (Top Left) - Combined from uploads + brand kit */}
+                                {/* Reference Images by role */}
                                 {(() => {
                                     // Combine uploaded images and brand kit selections
                                     const uploadedImgs = creationState.uploadedImages.map((url, i) => ({ url, source: 'upload' as const, key: `u-${i}` }))
@@ -681,36 +681,68 @@ export function CanvasPanel({
                                         source: 'brandkit' as const,
                                         key: `bk-${i}`
                                     }))
-                                    const allImages = [...uploadedImgs, ...brandKitImgs]
+                                    const allImages = [...uploadedImgs, ...brandKitImgs].map((item) => ({
+                                        ...item,
+                                        role: creationState.referenceImageRoles?.[item.url] || 'content'
+                                    }))
 
-                                    if (allImages.length === 0) return null
+                                    const contentImages = allImages.filter((item) => item.role === 'content' || item.role === 'style_content')
+                                    const styleImages = allImages.filter((item) => item.role === 'style')
+                                    const auxLogos = allImages.filter((item) => item.role === 'logo')
+
+                                    const renderStrip = (
+                                        images: Array<{ url: string; source: 'upload' | 'brandkit'; key: string }>,
+                                        positionClass: string,
+                                        badgeClass: string,
+                                        variant: 'default' | 'style' = 'default'
+                                    ) => {
+                                        if (images.length === 0) return null
+                                        return (
+                                            <div className={cn("absolute z-20 flex gap-2 flex-wrap max-w-[220px]", positionClass)}>
+                                                {images.slice(0, 6).map((item, idx) => (
+                                                    <div
+                                                        key={item.key}
+                                                        className={cn(
+                                                            "relative group",
+                                                            variant === 'style' && "transition-transform duration-300 hover:-translate-y-0.5"
+                                                        )}
+                                                    >
+                                                        <img
+                                                            src={item.url}
+                                                            alt={`Ref ${idx + 1}`}
+                                                            className={cn(
+                                                                "object-cover shadow-xl",
+                                                                variant === 'style'
+                                                                    ? "w-[56px] h-[72px] rounded-xl ring-2 ring-violet-300/60 -rotate-3 group-hover:rotate-0 transition-transform duration-300"
+                                                                    : "w-11 h-14 rounded-lg ring-1 ring-white/20"
+                                                            )}
+                                                        />
+                                                        <div className={cn("absolute bottom-0 inset-x-0 text-[5px] text-white text-center py-0.5 backdrop-blur-sm rounded-b-lg", badgeClass)}>
+                                                            {item.source === 'brandkit' ? 'BK' : idx + 1}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {images.length > 6 && (
+                                                    <div className="w-11 h-14 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-white text-[10px] font-bold ring-1 ring-white/20">
+                                                        +{images.length - 6}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    }
 
                                     return (
-                                        <div className="absolute top-4 left-4 z-20 flex gap-2 flex-wrap max-w-[220px]">
-                                            {allImages.slice(0, 6).map((item, idx) => (
-                                                <div key={item.key} className="relative group">
-                                                    <img
-                                                        src={item.url}
-                                                        alt={`Ref ${idx + 1}`}
-                                                        className="w-11 h-14 object-cover rounded-lg ring-1 ring-white/20 shadow-xl"
-                                                    />
-                                                    <div className={`absolute bottom-0 inset-x-0 text-[5px] text-white text-center py-0.5 backdrop-blur-sm rounded-b-lg ${item.source === 'brandkit' ? 'bg-primary/70' : 'bg-black/50'}`}>
-                                                        {item.source === 'brandkit' ? 'BK' : idx + 1}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {allImages.length > 6 && (
-                                                <div className="w-11 h-14 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-white text-[10px] font-bold ring-1 ring-white/20">
-                                                    +{allImages.length - 6}
-                                                </div>
-                                            )}
-                                        </div>
+                                        <>
+                                            {renderStrip(contentImages, "top-4 right-4", "bg-sky-600/80")}
+                                            {renderStrip(styleImages, "bottom-6 left-4", "bg-violet-600/80", "style")}
+                                            {renderStrip(auxLogos, "bottom-6 right-4", "bg-amber-600/80")}
+                                        </>
                                     )
                                 })()}
 
-                                {/* Logo (Top Right) */}
+                                {/* Logo (Top Left) */}
                                 {selectedLogoUrl && (
-                                    <div className="absolute top-4 right-4 z-20 group">
+                                    <div className="absolute top-4 left-4 z-20 group">
                                         <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
                                             <img
                                                 src={selectedLogoUrl}
@@ -723,7 +755,7 @@ export function CanvasPanel({
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => onSelectLogo(null)}
-                                                className="absolute -top-2 -left-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                                                className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
                                             >
                                                 <X className="w-3 h-3" />
                                             </Button>

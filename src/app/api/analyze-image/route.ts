@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
             const rawKeywords = Array.isArray(parsed.keywords)
                 ? parsed.keywords.filter((k: unknown) => typeof k === 'string')
                 : (typeof parsed.keywords === 'string' ? [parsed.keywords] : [])
-            const normalizedKeywords = rawKeywords.length > 1 ? [rawKeywords.join(', ')] : rawKeywords
+            const normalizedKeywords = normalizeStyleKeywords(rawKeywords)
 
             analysis = {
                 subject: validateSubject(parsed.subject),
@@ -92,6 +92,24 @@ export async function POST(request: NextRequest) {
             { status: 500 }
         )
     }
+}
+
+function normalizeStyleKeywords(rawKeywords: string[]): string[] {
+    if (!rawKeywords || rawKeywords.length === 0) return []
+
+    const merged = rawKeywords.join(' ').replace(/\s+/g, ' ').trim()
+    if (!merged) return []
+
+    const cleaned = merged
+        .replace(/```json|```/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+    const fallback =
+        'photorealistic commercial treatment with controlled contrast, coherent natural lighting, clean finishing, balanced texture, and professional art direction focused on readability and visual clarity'
+
+    const safeText = cleaned.length > 24 ? cleaned : fallback
+    return [safeText]
 }
 
 function validateSubject(subject: string): DetectedSubject {

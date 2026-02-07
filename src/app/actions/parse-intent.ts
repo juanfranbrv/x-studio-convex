@@ -13,6 +13,7 @@ export interface ParsedIntentResult {
     ctaUrl?: string          // NEW: Separate field for the URL
     caption?: string         // NEW: Social media caption
     imageTexts?: Array<{ label: string; value: string; type?: 'tagline' | 'hook' | 'custom' }>
+    imagePromptSuggestions?: string[]
     customTexts?: Record<string, string>
     suggestions?: Array<{
         title: string
@@ -119,6 +120,11 @@ function sanitizeUrlsInText(text?: string): string {
     )
 
     return cleaned
+}
+
+function sanitizePromptSuggestion(value: unknown): string {
+    if (typeof value !== 'string') return ''
+    return sanitizeUrlsInText(value).replace(/\s+/g, ' ').trim().slice(0, 220)
 }
 
 function pickCaptionEmojis(intentId?: string): [string, string] {
@@ -416,6 +422,44 @@ function normalizeSuggestions(
     }
 
     return seeded.slice(0, 2)
+}
+
+function buildImagePromptSuggestions(
+    parsed: ParsedIntentResult,
+    organizedBase: ParsedIntentResult
+): string[] {
+    const fromModel = Array.isArray(parsed.imagePromptSuggestions)
+        ? parsed.imagePromptSuggestions.map(sanitizePromptSuggestion).filter(Boolean)
+        : []
+
+    if (fromModel.length > 0) {
+        return Array.from(new Set(fromModel)).slice(0, 3)
+    }
+
+    const fromSuggestions = Array.isArray(parsed.suggestions)
+        ? parsed.suggestions
+            .map((s) => {
+                const modifications = (s?.modifications || {}) as Record<string, unknown>
+                const head = sanitizePromptSuggestion(modifications.headline)
+                const textBlock = Array.isArray(modifications.imageTexts)
+                    ? sanitizePromptSuggestion((modifications.imageTexts[0] as Record<string, unknown>)?.value)
+                    : ''
+                return [head, textBlock].filter(Boolean).join('. ')
+            })
+            .map((v) => sanitizePromptSuggestion(v))
+            .filter(Boolean)
+        : []
+
+    if (fromSuggestions.length > 0) {
+        return Array.from(new Set(fromSuggestions)).slice(0, 3)
+    }
+
+    const fallback = [organizedBase.headline, organizedBase.cta]
+        .map(sanitizePromptSuggestion)
+        .filter(Boolean)
+        .join('. ')
+
+    return fallback ? [fallback] : []
 }
 
 function buildSafeFallbackParsedOutput(
@@ -800,6 +844,12 @@ export async function parseLazyIntentAction({
                 value: sanitizeUrlsInText(item.value)
             }))
         }
+        if (parsed.imagePromptSuggestions && Array.isArray(parsed.imagePromptSuggestions)) {
+            parsed.imagePromptSuggestions = parsed.imagePromptSuggestions
+                .map(sanitizePromptSuggestion)
+                .filter(Boolean)
+                .slice(0, 3)
+        }
 
         // 7. Brand Consistency check for URLs
         // ONLY fallback to Brand Website if ctaUrl is missing or a placeholder.
@@ -812,6 +862,7 @@ export async function parseLazyIntentAction({
         // keep headline/cta/url and collapse the rest into one coherent preview block.
         const organized = organizeParsedOutput(parsed, userText, brandWebsite)
         organized.suggestions = normalizeSuggestions(parsed.suggestions, organized, userText)
+        organized.imagePromptSuggestions = buildImagePromptSuggestions(parsed, organized)
         return organized
     } catch (error) {
         console.error('[LazyPrompt] Error:', error)
