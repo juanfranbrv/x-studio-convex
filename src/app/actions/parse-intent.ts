@@ -333,7 +333,13 @@ function buildSuggestionFromBase(
     mode: 'direct' | 'emotional',
     coreSubject?: string
 ) {
-    const baseImageTexts = Array.isArray(base.imageTexts) ? base.imageTexts : []
+    const baseImageTexts = Array.isArray(base.imageTexts)
+        ? base.imageTexts.map((item) => ({
+            label: item?.label || 'Texto principal',
+            value: sanitizeUrlsInText(item?.value || ''),
+            type: item?.type || 'custom'
+        }))
+        : []
     const subjectSuffix = coreSubject ? ` (${coreSubject})` : ''
     const title = mode === 'direct'
         ? `Enfoque Directo${subjectSuffix}`
@@ -373,6 +379,10 @@ function normalizeSuggestions(
     const normalized = source.map((suggestion) => {
         const modifications = { ...(suggestion?.modifications || {}) } as Record<string, unknown>
         const imageTexts = Array.isArray(modifications.imageTexts) ? modifications.imageTexts : organizedBase.imageTexts
+        const headlineText = typeof modifications.headline === 'string' ? modifications.headline : ''
+        const ctaText = typeof modifications.cta === 'string' ? modifications.cta : ''
+        const ctaUrlText = typeof modifications.ctaUrl === 'string' ? modifications.ctaUrl : ''
+        const captionText = typeof modifications.caption === 'string' ? modifications.caption : ''
 
         return {
             title: typeof suggestion?.title === 'string' && suggestion.title.trim()
@@ -382,11 +392,11 @@ function normalizeSuggestions(
                 ? suggestion.subtitle.trim()
                 : 'Variante optimizada para este objetivo.',
             modifications: {
-                headline: sanitizeUrlsInText(modifications.headline) || organizedBase.headline || '',
-                cta: sanitizeUrlsInText(modifications.cta) || organizedBase.cta || '',
-                ctaUrl: sanitizeUrl(modifications.ctaUrl) || organizedBase.ctaUrl || '',
+                headline: sanitizeUrlsInText(headlineText) || organizedBase.headline || '',
+                cta: sanitizeUrlsInText(ctaText) || organizedBase.cta || '',
+                ctaUrl: sanitizeUrl(ctaUrlText) || organizedBase.ctaUrl || '',
                 caption: ensureCaptionHasEmojis(
-                    sanitizeUrlsInText(modifications.caption) || organizedBase.caption || '',
+                    sanitizeUrlsInText(captionText) || organizedBase.caption || '',
                     organizedBase.detectedIntent
                 ),
                 imageTexts: Array.isArray(imageTexts)
