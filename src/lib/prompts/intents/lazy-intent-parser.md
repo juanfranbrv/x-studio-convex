@@ -141,6 +141,7 @@ RULES
     - Are both suggestions genuinely different in approach?
     - Are both suggestions complete packages (headline + cta + caption + imageTexts)?
 19. imagePromptSuggestions:
-    - Return 1 to 3 concise prompts describing image direction (style, scene, mood, composition hints).
-    - Keep them practical and generation-ready.
+    - Return 1 to 3 concise prompts describing ONLY semantic content: subject, action, setting, and key contextual objects.
+    - DO NOT include style/design/visual instructions (no color, lighting, mood, composition, camera, rendering, artistic references).
+    - Keep them practical and generation-ready as neutral scene briefs.
     - Keep consistency with Brand Kit voice and target audience.

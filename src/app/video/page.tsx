@@ -1,18 +1,17 @@
-'use client'
+﻿'use client'
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { VideoControlsPanel, VideoSettings } from '@/components/studio/video/VideoControlsPanel'
 import { VideoCanvasPanel } from '@/components/studio/video/VideoCanvasPanel'
-import { generateVideoAction } from '@/app/actions/generate-video'
+
+const VIDEO_MODULE_ENABLED = false
 
 export default function VideoPage() {
     const router = useRouter()
-    const { user } = useUser()
     const { activeBrandKit, brandKits, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const { toast } = useToast()
 
@@ -26,6 +25,15 @@ export default function VideoPage() {
     }
 
     const handleGenerate = useCallback(async (settings: VideoSettings) => {
+        if (!VIDEO_MODULE_ENABLED) {
+            setAspectRatio(settings.aspectRatio)
+            toast({
+                title: 'Modulo en construccion',
+                description: 'El modulo de video aun no esta operativo. Estamos terminandolo.',
+            })
+            return
+        }
+
         if (!settings.prompt.trim()) {
             toast({
                 title: 'Error',
@@ -36,32 +44,13 @@ export default function VideoPage() {
         }
 
         setIsGenerating(true)
-        setProgress('Iniciando generación...')
+        setProgress('Iniciando generacion...')
         setAspectRatio(settings.aspectRatio)
         setVideoUrl(null)
 
         try {
             setProgress('Procesando con Veo 3.1...')
-
-            const result = await generateVideoAction({
-                prompt: settings.prompt,
-                startFrame: settings.startFrame,
-                endFrame: settings.endFrame,
-                aspectRatio: settings.aspectRatio,
-                resolution: settings.resolution,
-                durationSeconds: settings.durationSeconds
-            })
-
-            if (result.success && result.videoUrl) {
-                setVideoUrl(result.videoUrl)
-                toast({
-                    title: '✅ Video generado',
-                    description: 'Tu video está listo para ver y descargar.'
-                })
-            } else {
-                throw new Error(result.error || 'Error desconocido')
-            }
-
+            throw new Error('Modulo de video temporalmente no operativo.')
         } catch (error) {
             console.error('Video generation error:', error)
             toast({
@@ -84,21 +73,22 @@ export default function VideoPage() {
             onNewBrandKit={handleNewBrandKit}
         >
             <div className="flex h-full">
-                {/* Canvas Panel (Preview) */}
                 <VideoCanvasPanel
                     videoUrl={videoUrl}
                     isGenerating={isGenerating}
                     progress={progress}
                     aspectRatio={aspectRatio}
+                    maintenanceMode={!VIDEO_MODULE_ENABLED}
                 />
 
-                {/* Controls Panel (Right Side) */}
                 <VideoControlsPanel
                     onGenerate={handleGenerate}
                     isGenerating={isGenerating}
                     progress={progress}
+                    maintenanceMode={!VIDEO_MODULE_ENABLED}
                 />
             </div>
         </DashboardLayout>
     )
 }
+

@@ -1618,7 +1618,17 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // PRIORITY 5 - VISUAL STYLE & AESTHETIC
         // ═══════════════════════════════════════════════════════════════
         const customStyle = activeState.customStyle?.trim()
-        const styleAnalysis = activeState.firstVisionAnalysis ?? activeState.visionAnalysis
+        const selectedReferenceIds = [
+            ...(activeState.uploadedImages || []),
+            ...(activeState.selectedBrandKitImageIds || [])
+        ]
+        const hasActiveStyleReference = selectedReferenceIds.some((id) => {
+            const role = activeState.referenceImageRoles?.[id]
+            return role === 'style' || role === 'style_content'
+        })
+        const styleAnalysis = hasActiveStyleReference
+            ? (activeState.firstVisionAnalysis ?? activeState.visionAnalysis)
+            : null
         const styleSignals = extractStyleSignals(customStyle, styleAnalysis)
         const typographyDirection = buildSimpleTypographyDirection(activeState.typography, styleSignals)
         const visualDirectiveLine = buildVisualStyleDirective(customStyle, styleAnalysis)

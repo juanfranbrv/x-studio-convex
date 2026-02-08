@@ -124,7 +124,43 @@ function sanitizeUrlsInText(text?: string): string {
 
 function sanitizePromptSuggestion(value: unknown): string {
     if (typeof value !== 'string') return ''
-    return sanitizeUrlsInText(value).replace(/\s+/g, ' ').trim().slice(0, 220)
+    return removeVisualStyleHints(
+        sanitizeUrlsInText(value).replace(/\s+/g, ' ').trim()
+    ).slice(0, 220)
+}
+
+function removeVisualStyleHints(text: string): string {
+    if (!text) return ''
+
+    const blockedTokens = [
+        'style', 'aesthetic', 'mood', 'vibe', 'look', 'visual',
+        'color', 'palette', 'tone', 'contrast', 'saturation', 'hue',
+        'lighting', 'light', 'shadow', 'cinematic', 'film', 'grain',
+        'texture', 'composition', 'framing', 'depth of field', 'bokeh',
+        'close-up', 'close up', 'wide shot', 'soft focus',
+        'realistic', 'photorealistic', 'illustration', 'illustrative',
+        'vector', 'comic', 'cartoon', 'watercolor', 'oil painting',
+        'corporate aesthetic', 'studio quality'
+    ]
+
+    const clauses = text
+        .split(/[,;]+/g)
+        .map((c) => c.trim())
+        .filter(Boolean)
+        .filter((clause) => {
+            const lower = clause.toLowerCase()
+            return !blockedTokens.some((token) => lower.includes(token))
+        })
+
+    const cleaned = clauses.join(', ').trim()
+    if (cleaned) return cleaned
+
+    // Last-resort fallback: keep only likely semantic scaffold
+    return text
+        .replace(/\b(with|in|using)\b[^,.;]*(style|aesthetic|mood|look|lighting|color|palette|composition|texture|realistic|illustration|comic)\b[^,.;]*/gi, '')
+        .replace(/\s+/g, ' ')
+        .replace(/^[,.\s]+|[,.\s]+$/g, '')
+        .trim()
 }
 
 function pickCaptionEmojis(intentId?: string): [string, string] {

@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/image/page'
-import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, ImagePlus, SquareArrowDown, ImageDown, Bug } from 'lucide-react'
+import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, ImagePlus, SquareArrowDown, ImageDown, Bug, Sparkles, Paintbrush } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
@@ -51,6 +51,126 @@ export interface Generation {
 
 import { GenerateButton } from './creation-flow/GenerateButton'
 import { TextLayersEditor } from './TextLayersEditor'
+
+function AiPromptIcon({ className }: { className?: string }) {
+    return (
+        <svg
+            viewBox="0 0 120 120"
+            className={className}
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+        >
+            <rect x="26" y="26" width="68" height="68" rx="12" fill="currentColor" />
+            <text
+                x="60"
+                y="68"
+                textAnchor="middle"
+                fontSize="22"
+                fontFamily="monospace"
+                fill="white"
+            >
+                AI
+            </text>
+            <g stroke="currentColor" strokeWidth="4" strokeLinecap="round">
+                <line x1="8" y1="34" x2="26" y2="34" />
+                <line x1="8" y1="52" x2="26" y2="52" />
+                <line x1="8" y1="70" x2="26" y2="70" />
+                <line x1="8" y1="88" x2="26" y2="88" />
+                <line x1="94" y1="34" x2="112" y2="34" />
+                <line x1="94" y1="52" x2="112" y2="52" />
+                <line x1="94" y1="70" x2="112" y2="70" />
+                <line x1="94" y1="88" x2="112" y2="88" />
+                <line x1="34" y1="8" x2="34" y2="26" />
+                <line x1="52" y1="8" x2="52" y2="26" />
+                <line x1="70" y1="8" x2="70" y2="26" />
+                <line x1="88" y1="8" x2="88" y2="26" />
+                <line x1="34" y1="94" x2="34" y2="112" />
+                <line x1="52" y1="94" x2="52" y2="112" />
+                <line x1="70" y1="94" x2="70" y2="112" />
+                <line x1="88" y1="94" x2="88" y2="112" />
+            </g>
+            <g fill="currentColor">
+                <circle cx="8" cy="34" r="4.5" />
+                <circle cx="8" cy="52" r="4.5" />
+                <circle cx="8" cy="70" r="4.5" />
+                <circle cx="8" cy="88" r="4.5" />
+                <circle cx="112" cy="34" r="4.5" />
+                <circle cx="112" cy="52" r="4.5" />
+                <circle cx="112" cy="70" r="4.5" />
+                <circle cx="112" cy="88" r="4.5" />
+                <circle cx="34" cy="8" r="4.5" />
+                <circle cx="52" cy="8" r="4.5" />
+                <circle cx="70" cy="8" r="4.5" />
+                <circle cx="88" cy="8" r="4.5" />
+                <circle cx="34" cy="112" r="4.5" />
+                <circle cx="52" cy="112" r="4.5" />
+                <circle cx="70" cy="112" r="4.5" />
+                <circle cx="88" cy="112" r="4.5" />
+            </g>
+        </svg>
+    )
+}
+
+function StyleReferenceCorner({ url }: { url: string }) {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [boxSize, setBoxSize] = useState({ w: 0, h: 0 })
+    const [naturalSize, setNaturalSize] = useState({ w: 1, h: 1 })
+
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el) return
+
+        const update = () => {
+            setBoxSize({ w: el.clientWidth, h: el.clientHeight })
+        }
+
+        update()
+        const ro = new ResizeObserver(update)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
+
+    const ratio = naturalSize.w / naturalSize.h || 1
+    let renderW = boxSize.w
+    let renderH = renderW / ratio
+    if (renderH > boxSize.h) {
+        renderH = boxSize.h
+        renderW = renderH * ratio
+    }
+
+    const imgTop = Math.max(0, boxSize.h - renderH)
+    const iconSize = 40
+    const iconLeft = Math.max(0, renderW - iconSize - 4)
+    const iconTop = imgTop + 4
+
+    return (
+        <div ref={containerRef} className="absolute -left-10 bottom-10 z-20 w-[28%] aspect-square pointer-events-none overflow-visible">
+            <div
+                className="absolute left-0"
+                style={{ top: `${imgTop}px`, width: `${renderW}px`, height: `${renderH}px` }}
+            >
+                <img
+                    src={url}
+                    alt="Referencia de estilo"
+                    className="w-full h-full object-contain object-left-bottom"
+                    onLoad={(e) => {
+                        const target = e.currentTarget
+                        if (target.naturalWidth && target.naturalHeight) {
+                            setNaturalSize({ w: target.naturalWidth, h: target.naturalHeight })
+                        }
+                    }}
+                />
+                <div
+                    className="absolute rounded-full bg-background/90 border-2 border-primary/35 text-primary shadow-md flex items-center justify-center"
+                    style={{ width: `${iconSize}px`, height: `${iconSize}px`, right: '4px', top: '4px' }}
+                >
+                    <Paintbrush className="w-5 h-5" />
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export interface CanvasPanelProps {
     currentImage: string | null
@@ -524,7 +644,10 @@ export function CanvasPanel({
                     {/* Canvas Container */}
                     <div
                         ref={containerRef}
-                        className="relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-hidden"
+                        className={cn(
+                            "relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero",
+                            currentImage ? "overflow-hidden" : "overflow-visible"
+                        )}
                         style={(() => {
                             const [w, h] = aspectRatio.split(':').map(Number);
                             const ratio = w / h;
@@ -689,6 +812,8 @@ export function CanvasPanel({
                                     const contentImages = allImages.filter((item) => item.role === 'content' || item.role === 'style_content')
                                     const styleImages = allImages.filter((item) => item.role === 'style')
                                     const auxLogos = allImages.filter((item) => item.role === 'logo')
+                                    const hasAiPromptReference = creationState.imageSourceMode === 'generate'
+                                    const contentPreviewImage = contentImages[0]
 
                                     const renderStrip = (
                                         images: Array<{ url: string; source: 'upload' | 'brandkit'; key: string }>,
@@ -713,13 +838,20 @@ export function CanvasPanel({
                                                             className={cn(
                                                                 "object-cover shadow-xl",
                                                                 variant === 'style'
-                                                                    ? "w-[56px] h-[72px] rounded-xl ring-2 ring-violet-300/60 -rotate-3 group-hover:rotate-0 transition-transform duration-300"
-                                                                    : "w-11 h-14 rounded-lg ring-1 ring-white/20"
+                                                                    ? "w-[64px] h-[84px] rounded-2xl border-2 border-violet-300/70 ring-4 ring-violet-500/15 bg-white p-1 -rotate-6 group-hover:rotate-0 transition-transform duration-300"
+                                                                    : "w-14 h-14 object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.28)]"
                                                             )}
                                                         />
-                                                        <div className={cn("absolute bottom-0 inset-x-0 text-[5px] text-white text-center py-0.5 backdrop-blur-sm rounded-b-lg", badgeClass)}>
-                                                            {item.source === 'brandkit' ? 'BK' : idx + 1}
-                                                        </div>
+                                                        {variant === 'style' && (
+                                                            <div className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-violet-600 text-white text-[9px] font-bold flex items-center justify-center shadow-md ring-2 ring-white/70">
+                                                                <Sparkles className="w-2.5 h-2.5" />
+                                                            </div>
+                                                        )}
+                                                        {variant === 'style' && (
+                                                            <div className={cn("absolute bottom-0 inset-x-0 text-[5px] text-white text-center py-0.5 backdrop-blur-sm rounded-b-lg", badgeClass)}>
+                                                                {`ESTILO ${item.source === 'brandkit' ? 'BK' : idx + 1}`}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                                 {images.length > 6 && (
@@ -731,25 +863,45 @@ export function CanvasPanel({
                                         )
                                     }
 
+                                    const renderStyleCorner = (
+                                        images: Array<{ url: string; source: 'upload' | 'brandkit'; key: string }>
+                                    ) => {
+                                        if (images.length === 0) return null
+                                        const mainStyle = images[0]
+                                        return (
+                                            <StyleReferenceCorner url={mainStyle.url} />
+                                        )
+                                    }
+
                                     return (
                                         <>
-                                            {renderStrip(contentImages, "top-4 right-4", "bg-sky-600/80")}
-                                            {renderStrip(styleImages, "bottom-6 left-4", "bg-violet-600/80", "style")}
+                                            {renderStyleCorner(styleImages)}
                                             {renderStrip(auxLogos, "bottom-6 right-4", "bg-amber-600/80")}
+                                            {(hasAiPromptReference || !!contentPreviewImage) && (
+                                                <div className="absolute top-2 right-4 z-40 pointer-events-none">
+                                                    {hasAiPromptReference ? (
+                                                        <AiPromptIcon className="w-[90px] h-[90px] text-primary drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]" />
+                                                    ) : (
+                                                        <img
+                                                            src={contentPreviewImage!.url}
+                                                            alt="Contenido principal"
+                                                            className="w-[90px] h-[90px] object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]"
+                                                        />
+                                                    )}
+                                                </div>
+                                            )}
                                         </>
                                     )
                                 })()}
 
                                 {/* Logo (Top Left) */}
                                 {selectedLogoUrl && (
-                                    <div className="absolute top-4 left-4 z-20 group">
-                                        <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
-                                            <img
-                                                src={selectedLogoUrl}
-                                                alt="Logo"
-                                                className="w-full h-full object-contain drop-shadow"
-                                            />
-                                        </div>
+                                    <div className="absolute -top-2 left-4 z-20 group">
+                                        <img
+                                            src={selectedLogoUrl}
+                                            alt="Logo"
+                                            className="w-[90px] h-[90px] object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
+                                        />
                                         {onSelectLogo && (
                                             <Button
                                                 variant="ghost"

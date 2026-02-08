@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { DEFAULT_LAYOUTS, LAYOUTS_BY_INTENT, type LayoutOption } from '@/lib/creation-flow-types';
 import { LayoutThumbnail } from './LayoutThumbnail';
@@ -25,14 +26,70 @@ interface CanvasGhostOverlayProps {
  */
 export function CanvasGhostOverlay({ layoutId, className }: CanvasGhostOverlayProps) {
     if (!layoutId) return null;
+    const frameRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [normalizedScale, setNormalizedScale] = useState(1);
+
+    useEffect(() => {
+        const frameEl = frameRef.current;
+        const contentEl = contentRef.current;
+        if (!frameEl || !contentEl) return;
+
+        let raf = 0;
+        const COVERAGE = 0.84;
+        const MIN_SCALE = 0.72;
+        const MAX_SCALE = 1.42;
+
+        const recalc = () => {
+            const frameRect = frameEl.getBoundingClientRect();
+            if (!frameRect.width || !frameRect.height) return;
+
+            const painted = getPaintedBounds(contentEl);
+            if (!painted || painted.width < 4 || painted.height < 4) {
+                setNormalizedScale(1);
+                return;
+            }
+
+            const targetW = frameRect.width * COVERAGE;
+            const targetH = frameRect.height * COVERAGE;
+
+            const sx = targetW / painted.width;
+            const sy = targetH / painted.height;
+            const next = clamp(Math.min(sx, sy), MIN_SCALE, MAX_SCALE);
+            setNormalizedScale(next);
+        };
+
+        const scheduleRecalc = () => {
+            cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(recalc);
+        };
+
+        scheduleRecalc();
+        const ro = new ResizeObserver(scheduleRecalc);
+        ro.observe(frameEl);
+        ro.observe(contentEl);
+        const settleTimer = window.setTimeout(scheduleRecalc, 140);
+
+        return () => {
+            cancelAnimationFrame(raf);
+            window.clearTimeout(settleTimer);
+            ro.disconnect();
+        };
+    }, [layoutId]);
 
     return (
         <div className={cn(
             "absolute inset-0 pointer-events-none flex items-center justify-center",
             className
         )}>
-            <div className="w-full h-full relative">
-                {getGhostVisual(layoutId)}
+            <div ref={frameRef} className="w-full h-full relative">
+                <div
+                    ref={contentRef}
+                    className="absolute inset-0 origin-center transform-gpu transition-transform duration-300"
+                    style={{ transform: `scale(${normalizedScale})` }}
+                >
+                    {getGhostVisual(layoutId)}
+                </div>
             </div>
         </div>
     );
@@ -430,11 +487,92 @@ function DefaultGhost() {
 function ThumbnailGhost({ layout }: { layout: LayoutOption }) {
     return (
         <div className="w-full h-full flex items-center justify-center">
-            <div className="w-[96%] h-[96%] opacity-80">
-                <div className="w-full h-full scale-[2.1] origin-center transform-gpu">
+            <div className="w-[94%] h-[94%] opacity-80">
+                <div className="w-full h-full scale-[1.3] origin-center transform-gpu transition-transform duration-300">
                     <LayoutThumbnail layout={layout} variant="ghost" className="bg-transparent shadow-none" />
                 </div>
             </div>
         </div>
     );
+}
+
+function clamp(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, value));
+}
+
+function alphaFromCssColor(value: string): number {
+    if (!value || value === 'transparent') return 0;
+    const rgba = value.match(/rgba?\(([^)]+)\)/i);
+    if (!rgba) return 1;
+    const parts = rgba[1].split(',').map(v => v.trim());
+    if (parts.length < 4) return 1;
+    const alpha = Number(parts[3]);
+    return Number.isFinite(alpha) ? alpha : 1;
+}
+
+function hasVisibleBorder(style: CSSStyleDeclaration): boolean {
+    const widths = [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth]
+        .map(v => Number.parseFloat(v || '0'));
+    const colors = [style.borderTopColor, style.borderRightColor, style.borderBottomColor, style.borderLeftColor];
+    return widths.some((w, idx) => w > 0.5 && alphaFromCssColor(colors[idx] || '') > 0.02);
+}
+
+function hasVisibleText(el: HTMLElement): boolean {
+    for (const node of Array.from(el.childNodes)) {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) return true;
+    }
+    return false;
+}
+
+function isVisuallyPainted(el: HTMLElement): boolean {
+    const style = getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity || '1') < 0.02) {
+        return false;
+    }
+
+    const tag = el.tagName.toLowerCase();
+    if (tag === 'svg' || tag === 'path' || tag === 'rect' || tag === 'circle' || tag === 'line' || tag === 'polygon' || tag === 'img' || tag === 'canvas') {
+        return true;
+    }
+
+    const hasBackground = alphaFromCssColor(style.backgroundColor) > 0.02;
+    const hasBorder = hasVisibleBorder(style);
+    const hasShadow = style.boxShadow && style.boxShadow !== 'none';
+    const textPainted = hasVisibleText(el);
+
+    return hasBackground || hasBorder || hasShadow || textPainted;
+}
+
+function getPaintedBounds(root: HTMLElement): { width: number; height: number } | null {
+    const rootRect = root.getBoundingClientRect();
+    let minX = Number.POSITIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+
+    const all = root.querySelectorAll<HTMLElement>('*');
+    all.forEach((el) => {
+        if (!isVisuallyPainted(el)) return;
+        const rect = el.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1) return;
+
+        const x1 = rect.left - rootRect.left;
+        const y1 = rect.top - rootRect.top;
+        const x2 = rect.right - rootRect.left;
+        const y2 = rect.bottom - rootRect.top;
+
+        minX = Math.min(minX, x1);
+        minY = Math.min(minY, y1);
+        maxX = Math.max(maxX, x2);
+        maxY = Math.max(maxY, y2);
+    });
+
+    if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
+        return null;
+    }
+
+    return {
+        width: Math.max(0, maxX - minX),
+        height: Math.max(0, maxY - minY),
+    };
 }
