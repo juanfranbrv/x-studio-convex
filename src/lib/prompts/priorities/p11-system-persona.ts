@@ -1,9 +1,9 @@
-/**
+﻿/**
  * PRIORITY-BASED PROMPT CONSTRUCTION - SYSTEM PERSONA (P11)
- * 
+ *
  * Defines the expert role and core capabilities of the AI.
  * This establishes the mindset and quality standards for the generation.
- * 
+ *
  * @priority 11 - Meta-Instruction / Role Definition
  * @section System Persona
  */

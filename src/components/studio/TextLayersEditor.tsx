@@ -87,9 +87,9 @@ export function TextLayersEditor({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDeleteLayer('headline', 'headline')}
-                            className="absolute right-4 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive z-10"
+                            className="absolute right-4 top-0 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
                         >
-                            <X className="w-4 h-4" />
+                            <X className="w-3 h-3" />
                         </Button>
                     )}
                 </div>
@@ -121,9 +121,9 @@ export function TextLayersEditor({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer(key, 'custom')}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive z-10"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
                             >
-                                <X className="w-5 h-5" />
+                                <X className="w-3 h-3" />
                             </Button>
                         </div>
                     ))}
@@ -157,9 +157,9 @@ export function TextLayersEditor({
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => onDeleteLayer(asset.id, 'asset')}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive z-10"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="w-3 h-3" />
                                 </Button>
                             </div>
                         ))}
@@ -232,7 +232,7 @@ export function TextLayersEditor({
             <div className="flex-none flex flex-col items-center justify-center pb-8 pointer-events-auto">
                 <div className="group relative flex flex-col items-center gap-3">
                     {/* CTA Text (small, above URL) */}
-                    <div className="relative flex items-center gap-3 px-5 py-2 rounded-full bg-muted/60 text-muted-foreground border border-border shadow-sm">
+                    <div className="group relative flex items-center gap-3 px-5 py-2 rounded-full bg-muted/60 text-muted-foreground border border-border shadow-sm">
                         <MousePointerClick className="w-4.5 h-4.5 text-muted-foreground flex-shrink-0" />
                         <input
                             value={cta || ''}
@@ -245,15 +245,15 @@ export function TextLayersEditor({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer('cta', 'cta')}
-                                className="ml-1 h-7 w-7 text-muted-foreground hover:text-destructive"
+                                className="ml-1 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
                             >
-                                <X className="w-4 h-4" />
+                                <X className="w-3 h-3" />
                             </Button>
                         )}
                     </div>
 
                     {/* URL Chip (dominant, framed) */}
-                    <div className="relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-muted/70 border border-primary/30 shadow-md">
+                    <div className="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-muted/70 border border-primary/30 shadow-md">
                         <Link2 className={`w-5 h-5 ${ctaUrl ? 'text-primary' : 'text-muted-foreground'}`} />
                         <input
                             type="text"
@@ -267,9 +267,9 @@ export function TextLayersEditor({
                             <button
                                 aria-label="Clear URL"
                                 onClick={() => onCtaUrlChange?.('')}
-                                className="text-muted-foreground hover:text-destructive transition-colors p-0.5"
+                                className="h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
                             >
-                                <X className="w-4.5 h-4.5" />
+                                <X className="w-3 h-3" />
                             </button>
                         )}
                     </div>

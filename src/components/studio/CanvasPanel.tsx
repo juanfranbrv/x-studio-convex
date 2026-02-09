@@ -112,7 +112,13 @@ function AiPromptIcon({ className }: { className?: string }) {
     )
 }
 
-function StyleReferenceCorner({ url }: { url: string }) {
+function StyleReferenceCorner({
+    url,
+    onRemove,
+}: {
+    url: string
+    onRemove?: () => void
+}) {
     const containerRef = useRef<HTMLDivElement>(null)
     const [boxSize, setBoxSize] = useState({ w: 0, h: 0 })
     const [naturalSize, setNaturalSize] = useState({ w: 1, h: 1 })
@@ -141,13 +147,13 @@ function StyleReferenceCorner({ url }: { url: string }) {
 
     const imgTop = Math.max(0, boxSize.h - renderH)
     const iconSize = 40
-    const iconLeft = Math.max(0, renderW - iconSize - 4)
-    const iconTop = imgTop + 4
-
     return (
-        <div ref={containerRef} className="absolute -left-10 bottom-10 z-20 w-[28%] aspect-square pointer-events-none overflow-visible">
+        <div
+            ref={containerRef}
+            className="absolute z-50 w-[28%] aspect-square overflow-visible -left-10 bottom-10 pointer-events-auto"
+        >
             <div
-                className="absolute left-0"
+                className="absolute left-0 group"
                 style={{ top: `${imgTop}px`, width: `${renderW}px`, height: `${renderH}px` }}
             >
                 <img
@@ -167,6 +173,21 @@ function StyleReferenceCorner({ url }: { url: string }) {
                 >
                     <Paintbrush className="w-5 h-5" />
                 </div>
+                {onRemove && (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            onRemove()
+                        }}
+                        className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg z-50 pointer-events-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                        <X className="w-2.5 h-2.5" />
+                    </Button>
+                )}
             </div>
         </div>
     )
@@ -205,6 +226,8 @@ export interface CanvasPanelProps {
     hidePromptArea?: boolean
     onSelectLogo?: (id: string | null) => void
     onClearUploadedImage?: () => void
+    onRemoveReferenceImage?: (url: string) => void
+    onDisableAiPromptReference?: () => void
     onOpenPromptDebug?: () => void
     showPromptDebugTrigger?: boolean
 }
@@ -236,6 +259,8 @@ export function CanvasPanel({
     hidePromptArea = false,
     onSelectLogo,
     onClearUploadedImage,
+    onRemoveReferenceImage,
+    onDisableAiPromptReference,
     onOpenPromptDebug,
     showPromptDebugTrigger = false
 }: CanvasPanelProps) {
@@ -645,8 +670,8 @@ export function CanvasPanel({
                     <div
                         ref={containerRef}
                         className={cn(
-                            "relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero",
-                            currentImage ? "overflow-hidden" : "overflow-visible"
+                            "relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot shrink-0 rounded-aero",
+                            "overflow-visible"
                         )}
                         style={(() => {
                             const [w, h] = aspectRatio.split(':').map(Number);
@@ -792,7 +817,7 @@ export function CanvasPanel({
                         )}
 
                         {/* PREVIEW OVERLAYS (Reference Image & Logo) */}
-                        {!currentImage && creationState && (
+                        {!currentImage && !isGenerating && creationState && (
                             <>
                                 {/* Reference Images by role */}
                                 {(() => {
@@ -810,7 +835,7 @@ export function CanvasPanel({
                                     }))
 
                                     const contentImages = allImages.filter((item) => item.role === 'content' || item.role === 'style_content')
-                                    const styleImages = allImages.filter((item) => item.role === 'style')
+                                    const styleImages = allImages.filter((item) => item.role === 'style' || item.role === 'style_content')
                                     const auxLogos = allImages.filter((item) => item.role === 'logo')
                                     const hasAiPromptReference = creationState.imageSourceMode === 'generate'
                                     const contentPreviewImage = contentImages[0]
@@ -852,6 +877,17 @@ export function CanvasPanel({
                                                                 {`ESTILO ${item.source === 'brandkit' ? 'BK' : idx + 1}`}
                                                             </div>
                                                         )}
+                                                        {onRemoveReferenceImage && (
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => onRemoveReferenceImage(item.url)}
+                                                                className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                            >
+                                                                <X className="w-2.5 h-2.5" />
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 ))}
                                                 {images.length > 6 && (
@@ -869,7 +905,10 @@ export function CanvasPanel({
                                         if (images.length === 0) return null
                                         const mainStyle = images[0]
                                         return (
-                                            <StyleReferenceCorner url={mainStyle.url} />
+                                            <StyleReferenceCorner
+                                                url={mainStyle.url}
+                                                onRemove={onRemoveReferenceImage ? () => onRemoveReferenceImage(mainStyle.url) : undefined}
+                                            />
                                         )
                                     }
 
@@ -878,15 +917,41 @@ export function CanvasPanel({
                                             {renderStyleCorner(styleImages)}
                                             {renderStrip(auxLogos, "bottom-6 right-4", "bg-amber-600/80")}
                                             {(hasAiPromptReference || !!contentPreviewImage) && (
-                                                <div className="absolute top-2 right-4 z-40 pointer-events-none">
+                                                <div className="absolute top-2 right-4 z-40">
                                                     {hasAiPromptReference ? (
-                                                        <AiPromptIcon className="w-[90px] h-[90px] text-primary drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]" />
+                                                        <div className="relative group">
+                                                            <AiPromptIcon className="w-[54px] h-[54px] text-primary drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]" />
+                                                            {onDisableAiPromptReference && (
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={onDisableAiPromptReference}
+                                                                    className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                >
+                                                                    <X className="w-2.5 h-2.5" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
                                                     ) : (
-                                                        <img
-                                                            src={contentPreviewImage!.url}
-                                                            alt="Contenido principal"
-                                                            className="w-[90px] h-[90px] object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]"
-                                                        />
+                                                        <div className="relative group">
+                                                            <img
+                                                                src={contentPreviewImage!.url}
+                                                                alt="Contenido principal"
+                                                                className="w-[90px] h-[90px] object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]"
+                                                            />
+                                                            {onRemoveReferenceImage && (
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => onRemoveReferenceImage(contentPreviewImage!.url)}
+                                                                    className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                >
+                                                                    <X className="w-2.5 h-2.5" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </div>
                                             )}
@@ -896,7 +961,7 @@ export function CanvasPanel({
 
                                 {/* Logo (Top Left) */}
                                 {selectedLogoUrl && (
-                                    <div className="absolute -top-2 left-4 z-20 group">
+                                    <div className="absolute top-1 left-4 z-20 group">
                                         <img
                                             src={selectedLogoUrl}
                                             alt="Logo"
@@ -907,9 +972,9 @@ export function CanvasPanel({
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => onSelectLogo(null)}
-                                                className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                                                className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30 hover:bg-destructive hover:text-destructive-foreground"
                                             >
-                                                <X className="w-3 h-3" />
+                                                <X className="w-2.5 h-2.5" />
                                             </Button>
                                         )}
                                     </div>

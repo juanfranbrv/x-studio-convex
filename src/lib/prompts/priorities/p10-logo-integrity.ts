@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PRIORITY-BASED PROMPT CONSTRUCTION - LOGO INTEGRITY (P10)
  * 
  * Critical rules for logo rendering that take ABSOLUTE PRECEDENCE over all other instructions.
@@ -18,5 +18,4 @@ export const LOGO_INTEGRITY_RULES = `LOGO INTEGRITY REQUIREMENTS:
 1. SACRED ELEMENT: Logo must be rendered as an immutable, crystal-clear overlay
 2. ZERO STYLIZATION: NO grain, blur, texture, lighting effects, or artistic filters
 3. GEOMETRIC FIDELITY: Maintain 1:1 original proportions. NO 3D, skewing, or warping
-4. But you can change colors or invert them to match the background
-5. Whenever possible, remove the background color from the logo for better integration.`
+4. But you can change colors or invert them to match the background`
