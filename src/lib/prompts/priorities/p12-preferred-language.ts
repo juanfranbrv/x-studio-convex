@@ -1,16 +1,16 @@
-/**
+﻿/**
  * PRIORITY-BASED PROMPT CONSTRUCTION - PREFERRED LANGUAGE (P12)
- * 
+ *
  * Enforces the use of the user's input language for all generated content.
  * This ensures the output follows the language the user actually requested.
- * 
+ *
  * @priority 12 - Language Enforcement (Highest Priority after System Persona)
  * @section Preferred Language
  */
 
 import { COPY_LANGUAGE_NOTE_TEMPLATE, LANGUAGE_ENFORCEMENT_TEMPLATE } from './p12-preferred-language.prompt'
 
-export const PRIORITY_HEADER = `╔═════════════════════════════════════════════════════════════════╝
+export const PRIORITY_HEADER = `╔═════════════════════════════════════════════════════════════════╗
 ║  PRIORITY 12 - PREFERRED LANGUAGE ENFORCEMENT                   ║
 ╚═════════════════════════════════════════════════════════════════╝`
 

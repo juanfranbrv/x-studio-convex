@@ -87,9 +87,9 @@ export function TextLayersEditor({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDeleteLayer('headline', 'headline')}
-                            className="absolute right-4 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive z-10"
+                            className="absolute right-4 top-0 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
                         >
-                            <X className="w-4 h-4" />
+                            <X className="w-3 h-3" />
                         </Button>
                     )}
                 </div>
@@ -121,9 +121,9 @@ export function TextLayersEditor({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer(key, 'custom')}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive z-10"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
                             >
-                                <X className="w-5 h-5" />
+                                <X className="w-3 h-3" />
                             </Button>
                         </div>
                     ))}
@@ -131,39 +131,36 @@ export function TextLayersEditor({
 
                 {/* Brand-based Text Assets (PROMPT TEXTS moved from Panel) */}
                 {visibleTextAssets.length > 0 && (
-                    <div className="w-full flex flex-col items-center gap-2 pt-2">
+                    <div className="w-full flex flex-col items-center gap-1 pt-1">
                         {visibleTextAssets.map((asset) => (
-                            <div key={asset.id} className="group relative w-full max-w-2xl pointer-events-auto flex items-start justify-center gap-2 px-4">
-                                <div className="flex-1 flex items-start gap-3 px-4 py-2 bg-foreground/5 rounded-2xl ring-1 ring-foreground/10 hover:ring-foreground/20 transition-all">
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground opacity-70 pt-1 flex-shrink-0">{asset.label}</span>
-                                    <textarea
-                                        value={asset.value || ''}
-                                        onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
-                                        className="flex-1 bg-transparent border-none font-medium text-foreground focus:ring-0 resize-none overflow-hidden min-h-[1.2em] leading-relaxed"
-                                        style={{ fontSize: 'min(2cqw, 2cqh, 12px)' }}
-                                        placeholder={`Valor para ${asset.label}...`}
-                                        rows={1}
-                                        onInput={(e) => {
-                                            const target = e.target as HTMLTextAreaElement;
-                                            target.style.height = 'auto';
-                                            target.style.height = target.scrollHeight + 'px';
-                                        }}
-                                        ref={(el) => {
-                                            if (el) {
-                                                el.style.height = 'auto';
-                                                el.style.height = el.scrollHeight + 'px';
-                                            }
-                                        }}
-                                    />
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => onDeleteLayer(asset.id, 'asset')}
-                                        className="h-5 w-5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                    >
-                                        <X className="w-3 h-3" />
-                                    </Button>
-                                </div>
+                            <div key={asset.id} className="group relative w-full max-w-3xl px-[8cqw] pointer-events-auto">
+                                <textarea
+                                    value={asset.value || ''}
+                                    onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
+                                    className="w-full bg-transparent border-none text-center font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.1em] leading-tight transition-all drop-shadow-sm py-0.5"
+                                    style={{ fontSize: 'min(3cqw, 3cqh, 18px)' }}
+                                    placeholder={`Valor para ${asset.label}...`}
+                                    rows={1}
+                                    onInput={(e) => {
+                                        const target = e.target as HTMLTextAreaElement;
+                                        target.style.height = 'auto';
+                                        target.style.height = (target.scrollHeight + 2) + 'px';
+                                    }}
+                                    ref={(el) => {
+                                        if (el) {
+                                            el.style.height = 'auto';
+                                            el.style.height = (el.scrollHeight + 2) + 'px';
+                                        }
+                                    }}
+                                />
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onDeleteLayer(asset.id, 'asset')}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                                >
+                                    <X className="w-3 h-3" />
+                                </Button>
                             </div>
                         ))}
                     </div>
@@ -235,7 +232,7 @@ export function TextLayersEditor({
             <div className="flex-none flex flex-col items-center justify-center pb-8 pointer-events-auto">
                 <div className="group relative flex flex-col items-center gap-3">
                     {/* CTA Text (small, above URL) */}
-                    <div className="relative flex items-center gap-3 px-5 py-2 rounded-full bg-muted/60 text-muted-foreground border border-border shadow-sm">
+                    <div className="group relative flex items-center gap-3 px-5 py-2 rounded-full bg-muted/60 text-muted-foreground border border-border shadow-sm">
                         <MousePointerClick className="w-4.5 h-4.5 text-muted-foreground flex-shrink-0" />
                         <input
                             value={cta || ''}
@@ -248,15 +245,15 @@ export function TextLayersEditor({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer('cta', 'cta')}
-                                className="ml-1 h-7 w-7 text-muted-foreground hover:text-destructive"
+                                className="ml-1 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
                             >
-                                <X className="w-4 h-4" />
+                                <X className="w-3 h-3" />
                             </Button>
                         )}
                     </div>
 
                     {/* URL Chip (dominant, framed) */}
-                    <div className="relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-muted/70 border border-primary/30 shadow-md">
+                    <div className="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-muted/70 border border-primary/30 shadow-md">
                         <Link2 className={`w-5 h-5 ${ctaUrl ? 'text-primary' : 'text-muted-foreground'}`} />
                         <input
                             type="text"
@@ -270,9 +267,9 @@ export function TextLayersEditor({
                             <button
                                 aria-label="Clear URL"
                                 onClick={() => onCtaUrlChange?.('')}
-                                className="text-muted-foreground hover:text-destructive transition-colors p-0.5"
+                                className="h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
                             >
-                                <X className="w-4.5 h-4.5" />
+                                <X className="w-3 h-3" />
                             </button>
                         )}
                     </div>

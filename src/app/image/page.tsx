@@ -17,7 +17,7 @@ import { CaptionCard } from '@/components/studio/CaptionCard'
 import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
 import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow'
 import { uploadBrandImage } from '@/app/actions/upload-image'
-import { SOCIAL_FORMATS, type DebugPromptData } from '@/lib/creation-flow-types'
+import { SOCIAL_FORMATS, ALL_IMAGE_LAYOUTS, BASIC_MODE_LAYOUT_IDS, type DebugPromptData } from '@/lib/creation-flow-types'
 import { Loader2, Plus, RotateCcw, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
@@ -206,6 +206,7 @@ export default function ImagePage() {
         prompt: string
         model?: string
         promptAlreadyBuilt?: boolean
+        forcedLayoutId?: string
     }) => {
         if (!activeBrandKit) return null
 
@@ -288,6 +289,9 @@ export default function ImagePage() {
             ? data.prompt
             : (creationFlow.state.generatedImage ? buildEditPrompt(data.prompt) : data.prompt)
 
+        const effectiveLayoutId = data.forcedLayoutId || creationFlow.state.selectedLayout
+        const effectiveLayoutMeta = ALL_IMAGE_LAYOUTS.find((l) => l.id === effectiveLayoutId)
+
         const requestPayload = {
             ...data,
             prompt: effectivePrompt,
@@ -299,7 +303,7 @@ export default function ImagePage() {
             logoInclusion,
             context: finalContext,
             model: data.model || creationFlow.state.selectedImageModel,
-            layoutReference: creationFlow.selectedLayoutMeta?.referenceImage,
+            layoutReference: effectiveLayoutMeta?.referenceImage,
             aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
             selectedColors: creationFlow.state.selectedBrandColors
         } as Record<string, unknown>
@@ -467,6 +471,7 @@ export default function ImagePage() {
         prompt: string
         model?: string
         promptAlreadyBuilt?: boolean
+        forcedLayoutId?: string
     }) => {
         if (!activeBrandKit) return
 
@@ -490,6 +495,8 @@ export default function ImagePage() {
                 platform: creationFlow.state.selectedPlatform || undefined,
                 format: creationFlow.state.selectedFormat || undefined,
                 intent: creationFlow.state.selectedIntent || undefined,
+                layoutId: data.forcedLayoutId || creationFlow.state.selectedLayout || undefined,
+                layoutName: ALL_IMAGE_LAYOUTS.find((l) => l.id === (data.forcedLayoutId || creationFlow.state.selectedLayout))?.name,
                 model: data.model || creationFlow.state.selectedImageModel,
                 aspectRatio: selectedFormat?.aspectRatio
             })
@@ -582,6 +589,8 @@ export default function ImagePage() {
                 platform: creationFlow.state.selectedPlatform || undefined,
                 format: creationFlow.state.selectedFormat || undefined,
                 intent: creationFlow.state.selectedIntent || undefined,
+                layoutId: creationFlow.state.selectedLayout || undefined,
+                layoutName: ALL_IMAGE_LAYOUTS.find((l) => l.id === creationFlow.state.selectedLayout)?.name,
                 model: creationFlow.state.selectedImageModel,
                 aspectRatio: selectedFormat?.aspectRatio
             })
@@ -661,6 +670,7 @@ export default function ImagePage() {
         prompt: string
         model?: string
         promptAlreadyBuilt?: boolean
+        forcedLayoutId?: string
     }) => {
         if (!isAdmin) {
             await handleGenerate(data)
@@ -685,6 +695,8 @@ export default function ImagePage() {
             platform: state.selectedPlatform || undefined,
             format: state.selectedFormat || undefined,
             intent: state.selectedIntent || undefined,
+            layoutId: data.forcedLayoutId || state.selectedLayout || undefined,
+            layoutName: ALL_IMAGE_LAYOUTS.find((l) => l.id === (data.forcedLayoutId || state.selectedLayout))?.name,
         })
         setEditableDebugPrompt(finalModelPrompt)
         setPendingGenerationData({
@@ -770,6 +782,28 @@ export default function ImagePage() {
     }
 
     const handleUnifiedAction = async () => {
+        const getNextAutoBasicLayoutId = () => {
+            const ids = BASIC_MODE_LAYOUT_IDS
+            if (!ids.length) return null
+            const current = creationFlow.state.selectedLayout
+            if (!current) return null
+            const idx = ids.indexOf(current)
+            if (idx === -1) return null
+            return ids[(idx + 1) % ids.length]
+        }
+
+        const buildPromptForAttempt = () => {
+            const nextLayoutId = getNextAutoBasicLayoutId()
+            if (nextLayoutId) {
+                creationFlow.selectLayout(nextLayoutId)
+                return {
+                    prompt: creationFlow.buildGenerationPrompt({ selectedLayout: nextLayoutId }),
+                    forcedLayoutId: nextLayoutId
+                }
+            }
+            return { prompt: creationFlow.buildGenerationPrompt() }
+        }
+
         // Mode 1: Edit existing image
         if (creationFlow.state.generatedImage && editPrompt.trim()) {
             await handleEditImage(editPrompt)
@@ -778,8 +812,8 @@ export default function ImagePage() {
         }
 
         // Mode 2: Generate new image
-        const prompt = creationFlow.buildGenerationPrompt()
-        await handleGenerateWithDebug({ prompt })
+        const nextAttempt = buildPromptForAttempt()
+        await handleGenerateWithDebug(nextAttempt)
     }
 
     const handleRetryLastPrompt = async () => {
@@ -792,14 +826,39 @@ export default function ImagePage() {
             return
         }
 
-        const retryPrompt = typeof lastGenerationRequest.payload.prompt === 'string'
-            ? lastGenerationRequest.payload.prompt
-            : ''
-        setIsDebugViewOnly(false)
-        setEditableDebugPrompt(retryPrompt)
-        setPendingGenerationData(null)
-        setPendingRetryRequest(lastGenerationRequest)
-        setShowDebugModal(true)
+        const ids = BASIC_MODE_LAYOUT_IDS
+        const current = creationFlow.state.selectedLayout
+        const idx = current ? ids.indexOf(current) : -1
+        const nextLayoutId = idx >= 0 ? ids[(idx + 1) % ids.length] : null
+        if (nextLayoutId) {
+            creationFlow.selectLayout(nextLayoutId)
+        }
+        const prompt = creationFlow.buildGenerationPrompt(
+            nextLayoutId ? { selectedLayout: nextLayoutId } : undefined
+        )
+        await handleGenerateWithDebug({
+            prompt,
+            forcedLayoutId: nextLayoutId || undefined
+        })
+    }
+
+    const handleRemoveReferenceFromPreview = (imageUrl: string) => {
+        let removed = false
+        if (creationFlow.state.uploadedImages.includes(imageUrl)) {
+            creationFlow.removeUploadedImage(imageUrl)
+            removed = true
+        }
+        if (creationFlow.state.selectedBrandKitImageIds.includes(imageUrl)) {
+            creationFlow.toggleBrandKitImage(imageUrl)
+            removed = true
+        }
+        if (!removed) {
+            console.warn('[Preview Remove] No se encontro referencia para URL:', imageUrl.slice(0, 80))
+        }
+    }
+
+    const handleDisableAiPromptReference = () => {
+        creationFlow.setImageSourceMode('upload')
     }
 
     if (loading) {
@@ -857,8 +916,10 @@ export default function ImagePage() {
                                     hidePromptArea={true}
                                     onSelectLogo={creationFlow.selectLogo}
                                     onClearUploadedImage={creationFlow.clearImage}
+                                    onRemoveReferenceImage={handleRemoveReferenceFromPreview}
+                                    onDisableAiPromptReference={handleDisableAiPromptReference}
                                     onOpenPromptDebug={handleOpenPromptDebug}
-                                    showPromptDebugTrigger={Boolean(creationFlow.state.generatedImage && debugPromptData?.finalPrompt)}
+                                    showPromptDebugTrigger={Boolean(isAdmin && creationFlow.state.generatedImage && debugPromptData?.finalPrompt)}
                                 />
                             </div>
 

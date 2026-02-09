@@ -35,6 +35,7 @@ interface LayoutThumbnailProps {
     intent?: string;
     className?: string;
     variant?: 'default' | 'ghost';
+    renderMode?: 'classic' | 'uniform';
 }
 
 /**
@@ -42,7 +43,7 @@ interface LayoutThumbnailProps {
  * Each layout has its own distinctive visual representation.
  * Uses theme primary color for consistent branding.
  */
-export function LayoutThumbnail({ layout, intent, className, variant = 'default' }: LayoutThumbnailProps) {
+export function LayoutThumbnail({ layout, intent, className, variant = 'default', renderMode = 'classic' }: LayoutThumbnailProps) {
     const { id } = layout;
 
     return (
@@ -52,10 +53,101 @@ export function LayoutThumbnail({ layout, intent, className, variant = 'default'
             className
         )}>
             <div className="w-full h-full relative">
-                {getLayoutVisual(id)}
+                {renderMode === 'uniform' ? getUniformLayoutVisual(id) : getLayoutVisual(id)}
             </div>
         </div>
     );
+}
+
+function getUniformLayoutVisual(id: string) {
+    const key = id.toLowerCase()
+
+    if (key.includes('grid') || key.includes('mosaic') || key.includes('workshop') || key.includes('catalogo')) {
+        return (
+            <div className="w-full h-full grid grid-cols-3 grid-rows-3 gap-1 p-1.5">
+                <div className="col-span-2 row-span-2 rounded-md bg-primary/35" />
+                <div className="rounded-md bg-primary/22" />
+                <div className="rounded-md bg-primary/22" />
+                <div className="col-span-2 rounded-md bg-primary/16" />
+                <div className="rounded-md bg-primary/28" />
+            </div>
+        )
+    }
+
+    if (key.includes('split') || key.includes('benefit') || key.includes('versus') || key.includes('comparison')) {
+        return (
+            <div className="w-full h-full p-1.5 flex gap-1">
+                <div className="w-[42%] rounded-md bg-primary/20 flex flex-col justify-center gap-1 px-1.5">
+                    <div className="h-1 rounded-full bg-primary/42" />
+                    <div className="h-1 rounded-full w-[70%] bg-primary/28" />
+                </div>
+                <div className="w-[58%] rounded-md bg-primary/32" />
+            </div>
+        )
+    }
+
+    if (key.includes('list') || key.includes('check') || key.includes('memo')) {
+        return (
+            <div className="w-full h-full p-1.5 flex flex-col gap-1.5 justify-center">
+                {[0.85, 0.7, 0.75].map((w, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-primary/50" />
+                        <div className="h-1.5 rounded-full bg-primary/24" style={{ width: `${w * 100}%` }} />
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
+    if (key.includes('process') || key.includes('timeline') || key.includes('pasos')) {
+        return (
+            <div className="w-full h-full px-2 py-3 flex items-center justify-center">
+                <div className="w-full flex items-center">
+                    <div className="w-4 h-4 rounded-full bg-primary/45 flex items-center justify-center text-[8px] text-primary-foreground font-bold">1</div>
+                    <div className="flex-1 h-1 bg-primary/20 rounded-full" />
+                    <div className="w-4 h-4 rounded-full bg-primary/35 flex items-center justify-center text-[8px] text-primary-foreground font-bold">2</div>
+                    <div className="flex-1 h-1 bg-primary/20 rounded-full" />
+                    <div className="w-4 h-4 rounded-full bg-primary/30 flex items-center justify-center text-[8px] text-primary-foreground font-bold">3</div>
+                </div>
+            </div>
+        )
+    }
+
+    if (key.includes('spotlight') || key.includes('radial') || key.includes('hero') || key.includes('pricing')) {
+        return (
+            <div className="w-full h-full flex items-center justify-center p-2 relative">
+                <div className="absolute inset-2 rounded-full bg-primary/10" />
+                <div className="absolute inset-[28%] rounded-full bg-primary/20" />
+                <div className="absolute inset-[40%] rounded-full bg-primary/45" />
+            </div>
+        )
+    }
+
+    if (key.includes('card') || key.includes('frame') || key.includes('tarjeta') || key.includes('clean')) {
+        return (
+            <div className="w-full h-full p-1.5 relative">
+                <div className="absolute inset-[18%] rounded-md bg-primary/16 rotate-[-5deg]" />
+                <div className="absolute inset-[12%] rounded-md border-2 border-primary/35 bg-primary/8 rotate-[2deg]" />
+                <div className="absolute inset-[8%] rounded-md bg-primary/22">
+                    <div className="absolute top-2 left-2 right-3 h-1.5 bg-primary/40 rounded-full" />
+                    <div className="absolute top-4 left-2 right-5 h-1.5 bg-primary/28 rounded-full" />
+                </div>
+            </div>
+        )
+    }
+
+    if (key.includes('stat') || key.includes('dato') || key.includes('metric') || key.includes('big') || key.includes('dashboard')) {
+        return (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 p-2">
+                <div className="text-primary/80 text-3xl font-black leading-none">73%</div>
+                <div className="h-1.5 w-[72%] bg-primary/24 rounded-full" />
+            </div>
+        )
+    }
+
+    // Fallback robusto: usar el thumbnail clásico específico del layout
+    // para evitar iconos repetidos cuando el ID no cae en una familia uniforme.
+    return getLayoutVisual(id)
 }
 
 function getLayoutVisual(id: string) {
@@ -64,6 +156,11 @@ function getLayoutVisual(id: string) {
     if (id === 'clean') return <CleanLayout />;
     if (id === 'full-bleed') return <FullBleedLayout />;
     if (id === 'frame') return <FrameLayout />;
+    if (id === 'basic-editorial-columns') return <BasicEditorialColumnsLayout />;
+    if (id === 'basic-mosaic-flow') return <BasicMosaicFlowLayout />;
+    if (id === 'basic-spotlight-radial') return <BasicSpotlightRadialLayout />;
+    if (id === 'basic-stacked-cards') return <BasicStackedCardsLayout />;
+    if (id === 'basic-diagonal-energy') return <BasicDiagonalEnergyLayout />;
 
     // === DEFINICION layouts ===
     if (id === 'def-classic') return <DictionaryLayout />;
@@ -510,6 +607,73 @@ function FrameLayout() {
                     <div className="absolute inset-x-1 bottom-1 h-1 bg-white/70 rounded-full" />
                 </div>
             </div>
+        </div>
+    );
+}
+
+function BasicEditorialColumnsLayout() {
+    return (
+        <div className="w-full h-full p-1 flex gap-1">
+            <div className="w-[62%] h-full rounded-sm bg-primary/25 relative">
+                <div className="absolute top-1 left-1 right-2 h-1 bg-primary/45 rounded-full" />
+                <div className="absolute top-3 left-1 right-3 h-1 bg-primary/30 rounded-full" />
+                <div className="absolute top-5 left-1 right-4 h-1 bg-primary/20 rounded-full" />
+            </div>
+            <div className="w-[38%] h-full rounded-sm bg-primary/12 flex flex-col gap-1 p-1">
+                <div className="h-1.5 rounded-full bg-primary/35" />
+                <div className="h-1.5 rounded-full bg-primary/25" />
+                <div className="h-1.5 rounded-full bg-primary/20" />
+            </div>
+        </div>
+    );
+}
+
+function BasicMosaicFlowLayout() {
+    return (
+        <div className="w-full h-full grid grid-cols-3 grid-rows-3 gap-0.5 p-1">
+            <div className="col-span-2 row-span-2 rounded-sm bg-primary/35" />
+            <div className="rounded-sm bg-primary/20" />
+            <div className="rounded-sm bg-primary/25" />
+            <div className="col-span-2 rounded-sm bg-primary/15" />
+            <div className="rounded-sm bg-primary/28" />
+            <div className="rounded-sm bg-primary/18" />
+        </div>
+    );
+}
+
+function BasicSpotlightRadialLayout() {
+    return (
+        <div className="w-full h-full flex items-center justify-center p-1 relative">
+            <div className="absolute inset-1 rounded-full bg-primary/10" />
+            <div className="absolute inset-[22%] rounded-full bg-primary/18" />
+            <div className="absolute inset-[38%] rounded-full bg-primary/38" />
+            <div className="absolute top-2 left-2 h-1 w-5 bg-primary/28 rounded-full" />
+            <div className="absolute bottom-2 right-2 h-1 w-4 bg-primary/22 rounded-full" />
+        </div>
+    );
+}
+
+function BasicStackedCardsLayout() {
+    return (
+        <div className="w-full h-full p-1 relative">
+            <div className="absolute inset-[22%] rounded-sm bg-primary/15 rotate-[-6deg]" />
+            <div className="absolute inset-[16%] rounded-sm bg-primary/22 rotate-[3deg]" />
+            <div className="absolute inset-[10%] rounded-sm bg-primary/35">
+                <div className="absolute top-2 left-2 right-3 h-1 bg-primary/45 rounded-full" />
+                <div className="absolute top-4 left-2 right-5 h-1 bg-primary/30 rounded-full" />
+            </div>
+        </div>
+    );
+}
+
+function BasicDiagonalEnergyLayout() {
+    return (
+        <div className="w-full h-full p-1 relative overflow-hidden rounded-sm">
+            <div className="absolute -left-2 top-1 h-2 w-16 bg-primary/35 rotate-[-22deg] rounded-full" />
+            <div className="absolute -left-1 top-4 h-2 w-14 bg-primary/22 rotate-[-22deg] rounded-full" />
+            <div className="absolute left-4 bottom-2 h-2 w-12 bg-primary/18 rotate-[-22deg] rounded-full" />
+            <div className="absolute right-1 top-1 w-3 h-3 rounded-full bg-primary/55" />
+            <div className="absolute right-2 bottom-2 w-2 h-2 rounded-full bg-primary/30" />
         </div>
     );
 }

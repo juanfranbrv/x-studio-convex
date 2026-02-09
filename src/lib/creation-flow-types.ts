@@ -109,6 +109,8 @@ export interface DebugPromptData {
     platform?: string
     format?: string
     intent?: string
+    layoutId?: string
+    layoutName?: string
     // Carousel-specific: per-slide debug
     seed?: number
     model?: string
@@ -564,7 +566,159 @@ export const DEFAULT_LAYOUTS: LayoutOption[] = [
         promptInstruction: 'Natural composition without structural constraints.',
         structuralPrompt: '',
     },
+    {
+        id: 'basic-editorial-columns',
+        name: 'Editorial',
+        description: 'Columnas limpias',
+        svgIcon: 'Columns2',
+        textZone: 'left',
+        promptInstruction: 'Editorial split layout with clear dual-column hierarchy.',
+        structuralPrompt: `
+## Composición: Editorial por Columnas
+
+**Estructura:** Dos columnas principales con jerarquía clara y respiración visual.
+
+### Jerarquía visual:
+1. **Protagonista:** Zona principal en columna dominante.
+2. **Secundario:** Columna de apoyo para bloques de lectura breve.
+3. **Detalle:** Separadores suaves y ritmo vertical consistente.
+
+### Distribución:
+- Columna dominante + columna secundaria equilibrada.
+- Márgenes internos uniformes.
+- Lectura en flujo descendente natural.
+
+### Evitar:
+Superposición de bloques, simetría rígida sin jerarquía, densidad excesiva.
+`,
+    },
+    {
+        id: 'basic-mosaic-flow',
+        name: 'Mosaico',
+        description: 'Bloques dinámicos',
+        svgIcon: 'Grid2X2',
+        textZone: 'center',
+        promptInstruction: 'Asymmetric mosaic with modular blocks and readable hierarchy.',
+        structuralPrompt: `
+## Composición: Mosaico Fluido
+
+**Estructura:** Retícula modular asimétrica con bloques de distinto peso visual.
+
+### Jerarquía visual:
+1. **Protagonista:** Módulo dominante para el mensaje clave.
+2. **Secundario:** Módulos medianos para apoyo.
+3. **Detalle:** Micro-bloques como acentos estructurales.
+
+### Distribución:
+- Patrón modular con variación controlada de tamaños.
+- Espacios de respiro entre módulos.
+- Flujo visual en Z suave.
+
+### Evitar:
+Retícula uniforme de catálogo, fragmentación caótica, choques de escala.
+`,
+    },
+    {
+        id: 'basic-spotlight-radial',
+        name: 'Radial',
+        description: 'Foco central',
+        svgIcon: 'CircleDot',
+        textZone: 'center',
+        promptInstruction: 'Centered radial focus with peripheral support zones.',
+        structuralPrompt: `
+## Composición: Spotlight Radial
+
+**Estructura:** Núcleo central dominante con periferia limpia de soporte.
+
+### Jerarquía visual:
+1. **Protagonista:** Centro de atención en el eje del canvas.
+2. **Secundario:** Información alrededor en anillos de prioridad.
+3. **Detalle:** Conectores sutiles hacia el núcleo.
+
+### Distribución:
+- Centro fuerte con periferia equilibrada.
+- Uso amplio de espacio negativo.
+- Lectura centrípeta (borde -> centro) y centrífuga (centro -> apoyo).
+
+### Evitar:
+Centro débil, periferia saturada, elementos flotantes sin anclaje.
+`,
+    },
+    {
+        id: 'basic-stacked-cards',
+        name: 'Tarjetas',
+        description: 'Capas suaves',
+        svgIcon: 'PanelsTopLeft',
+        textZone: 'center',
+        promptInstruction: 'Layered card composition with depth and clear reading order.',
+        structuralPrompt: `
+## Composición: Tarjetas Apiladas
+
+**Estructura:** Capas superpuestas con profundidad suave y jerarquía por planos.
+
+### Jerarquía visual:
+1. **Protagonista:** Tarjeta frontal con el mensaje principal.
+2. **Secundario:** Tarjetas traseras como contexto visual.
+3. **Detalle:** Alineaciones y offsets mínimos para ritmo.
+
+### Distribución:
+- Plano frontal dominante.
+- Planos de apoyo desplazados con coherencia.
+- Orden de lectura de adelante hacia atrás.
+
+### Evitar:
+Exceso de capas, perspectiva agresiva, desalineación arbitraria.
+`,
+    },
+    {
+        id: 'basic-diagonal-energy',
+        name: 'Diagonal',
+        description: 'Impulso visual',
+        svgIcon: 'MoveDiagonal',
+        textZone: 'top-left',
+        promptInstruction: 'Diagonal compositional axis with clear directional momentum.',
+        structuralPrompt: `
+## Composición: Eje Diagonal
+
+**Estructura:** Diagonal principal como columna vertebral del diseño.
+
+### Jerarquía visual:
+1. **Protagonista:** Punto de mayor peso en uno de los extremos de la diagonal.
+2. **Secundario:** Bloques de apoyo distribuidos sobre el recorrido.
+3. **Detalle:** Elementos de transición que refuerzan dirección.
+
+### Distribución:
+- Flujo diagonal dominante (arriba-izquierda -> abajo-derecha o inverso).
+- Contrapeso en esquina opuesta para estabilidad.
+- Espacios limpios fuera del eje principal.
+
+### Evitar:
+Ejes cruzados, dirección ambigua, acumulación central plana.
+`,
+    },
 ]
+
+// Layouts usados en el modo basico (orden editable).
+// Puedes mover cualquier layout existente a este modo anadiendo su ID aqui.
+export const BASIC_MODE_LAYOUT_IDS: string[] = [
+    'default-free',
+    'basic-editorial-columns',
+    'basic-mosaic-flow',
+    'basic-spotlight-radial',
+    'basic-stacked-cards',
+    'basic-diagonal-energy',
+    'comunicado-modern', // Asimetrico Tech
+    'servicio-benefit',  // Split Hero
+]
+
+export const ALL_IMAGE_LAYOUTS: LayoutOption[] = [
+    ...DEFAULT_LAYOUTS,
+    ...Object.values(LAYOUTS_BY_INTENT).flatMap((list) => list ?? []),
+]
+
+export const BASIC_MODE_LAYOUTS: LayoutOption[] = BASIC_MODE_LAYOUT_IDS
+    .map((id) => ALL_IMAGE_LAYOUTS.find((layout) => layout.id === id))
+    .filter((layout): layout is LayoutOption => Boolean(layout))
 
 // -----------------------------------------------------------------------------
 // SOCIAL MEDIA FORMATS

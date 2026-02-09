@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
@@ -75,7 +75,7 @@ export function PromptDebugModal({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-primary" />
-                        Debug: Prompt de Generación
+                        Debug: Prompt de GeneraciÃ³n
                         {hasSlideDebug && (
                             <span className="ml-2 text-sm font-normal text-muted-foreground">
                                 (Slide {activeSlide + 1} de {promptData.slideDebug!.length})
@@ -84,8 +84,8 @@ export function PromptDebugModal({
                     </DialogTitle>
                     <DialogDescription>
                         {viewOnly
-                            ? 'Revisa el prompt exacto que se envió al modelo de IA'
-                            : 'Revisa el prompt exacto que se enviará al modelo de IA'}
+                            ? 'Revisa el prompt exacto que se enviÃ³ al modelo de IA'
+                            : 'Revisa el prompt exacto que se enviarÃ¡ al modelo de IA'}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -123,12 +123,12 @@ export function PromptDebugModal({
                         </Button>
                         {promptData.seed && (
                             <span className="ml-4 text-xs text-muted-foreground">
-                                🎲 Seed: <code className="bg-muted px-1 rounded">{promptData.seed}</code>
+                                ðŸŽ² Seed: <code className="bg-muted px-1 rounded">{promptData.seed}</code>
                             </span>
                         )}
                         {promptData.model && (
                             <span className="text-xs text-muted-foreground">
-                                🤖 Model: <code className="bg-muted px-1 rounded">{promptData.model}</code>
+                                ðŸ¤– Model: <code className="bg-muted px-1 rounded">{promptData.model}</code>
                             </span>
                         )}
                     </div>
@@ -146,13 +146,13 @@ export function PromptDebugModal({
                                 </p>
                                 {currentSlideData?.mood && (
                                     <span className="text-xs bg-amber-500/20 text-amber-600 px-2 py-0.5 rounded">
-                                        🎭 {currentSlideData.mood.substring(0, 40)}...
+                                        ðŸŽ­ {currentSlideData.mood.substring(0, 40)}...
                                     </span>
                                 )}
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-xs text-muted-foreground">
-                                    {characterCount} chars • ~{estimatedTokens} tokens
+                                    {characterCount} chars â€¢ ~{estimatedTokens} tokens
                                 </span>
                                 <Button
                                     variant="ghost"
@@ -197,7 +197,7 @@ export function PromptDebugModal({
                                     </p>
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs text-muted-foreground">
-                                            {fullCharCount} chars â€¢ ~{fullEstimatedTokens} tokens
+                                            {fullCharCount} chars Ã¢â‚¬Â¢ ~{fullEstimatedTokens} tokens
                                         </span>
                                         <Button
                                             variant="ghost"
@@ -234,7 +234,7 @@ export function PromptDebugModal({
                         {currentSlideData?.references && currentSlideData.references.length > 0 && (
                             <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                    🖼️ Referencias API ({currentSlideData.references.length})
+                                    ðŸ–¼ï¸ Referencias API ({currentSlideData.references.length})
                                 </p>
                                 <div className="space-y-2">
                                     {currentSlideData.references.map((ref, idx) => (
@@ -260,7 +260,7 @@ export function PromptDebugModal({
                         {/* Metadata Section */}
                         <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg shrink-0">
                             <div className="col-span-2 p-3 rounded border bg-background/70">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Modelo que se enviará</p>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Modelo que se enviarÃ¡</p>
                                 <p className="text-sm font-semibold mt-1 break-all">{effectiveModel}</p>
                                 <p className="text-xs text-muted-foreground mt-1">Proveedor: {providerLabel}</p>
                             </div>
@@ -273,8 +273,17 @@ export function PromptDebugModal({
                                 <p className="text-sm font-medium">{promptData.format || promptData.aspectRatio || 'No especificado'}</p>
                             </div>
                             <div>
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Intención</p>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">IntenciÃ³n</p>
                                 <p className="text-sm font-medium">{promptData.intent || 'No especificada'}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Composición</p>
+                                <p className="text-sm font-medium">
+                                    {promptData.layoutName || promptData.layoutId || 'No especificada'}
+                                </p>
+                                {promptData.layoutId && promptData.layoutName && (
+                                    <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">{promptData.layoutId}</p>
+                                )}
                             </div>
                             <div>
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Estilos</p>
@@ -285,7 +294,7 @@ export function PromptDebugModal({
                         {/* Legacy Image Thumbnails (fallback) */}
                         {!hasSlideDebug && (promptData.logoUrl || promptData.referenceImageUrl || (promptData.attachedImages && promptData.attachedImages.length > 0)) && (
                             <div className="space-y-4">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Imágenes Adjuntas</p>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">ImÃ¡genes Adjuntas</p>
                                 <div className="flex gap-4 flex-wrap">
                                     {promptData.logoUrl && (
                                         <div className="space-y-1">
@@ -341,7 +350,7 @@ export function PromptDebugModal({
                                 variant="outline"
                                 onClick={onClose}
                             >
-                                Cancelar Generación
+                                Cancelar GeneraciÃ³n
                             </Button>
                             <Button
                                 onClick={() => onConfirm(!hasSlideDebug ? editableValue : undefined)}

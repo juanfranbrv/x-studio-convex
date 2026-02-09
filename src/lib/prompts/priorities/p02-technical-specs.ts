@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PRIORITY-BASED PROMPT CONSTRUCTION - TECHNICAL SPECS (P2)
  *
  * Output format and technical specifications.
@@ -7,11 +7,11 @@
  * @section Technical Specifications
  */
 
-export const PRIORITY_HEADER = `+------------------------------------------------------------------+
-|  PRIORITY 2 - TECHNICAL SPECIFICATIONS                           |
-+------------------------------------------------------------------+`
+export const PRIORITY_HEADER = `╔═════════════════════════════════════════════════════════════════╗
+║  PRIORITY 2 - TECHNICAL SPECIFICATIONS                          ║
+╚═════════════════════════════════════════════════════════════════╝`
 
-export const COMPOSITION_RULES = `BACKGROUND: ALWAYS use a SOLID COLOR or GRADIENT background. NEVER use transparency, transparency grids, checkered patterns (gray/white squares), or simulate transparent backgrounds in any way. The image must be a complete, ready-to-use marketing asset with a fully rendered background.
+export const COMPOSITION_RULES = `BACKGROUND: NEVER use transparency, transparency grids, checkered patterns (gray/white squares), or simulate transparent backgrounds in any way. The image must be a complete, ready-to-use marketing asset with a fully rendered background.
 OUTPUT: Complete, finished marketing image ready for social media. No transparency, no placeholders, no mock-ups.
 TEXT RENDERING: NEVER render meta labels like "CTA", "URL", "SUBJECT", "KEYWORDS", "PRIORITY", or "STYLE DIRECTIVES" as visible text. NEVER render internal font names/families (e.g., "Google Sans Flex", "Roboto Flex") as visible text. Only render the actual provided content.
 +=================================================================+
@@ -33,13 +33,13 @@ STRICT LAYOUT RULES (NO PARAGRAPHS):
 
    - ALLOWED SHAPES (Choose one):
      A) Heavy Modern Chevron (e.g., a bold ">" or arrow-head)
-     B) Solid Geometric Square (\u25A0)
-     C) Thick Minimalist Checkmark (\u2714 - stylized, not handwritten)
-     D) Solid Diamond/Rhombus (\u25C6)
+     B) Solid Geometric Square (■)
+     C) Thick Minimalist Checkmark (✔ - stylized, not handwritten)
+     D) Solid Diamond/Rhombus (◆)
      E) Arrow inside a solid Circle
-     F) Thick Horizontal Pill/Dash (\u25AC)
+     F) Thick Horizontal Pill/Dash (▬)
      G) Solid Hexagon (Industrial/Nut shape)
-     H) Right-Pointing Play Triangle (\u25B6)
+     H) Right-Pointing Play Triangle (▶)
      I) Bold Forward Slash (/) (Swiss Design style)
      J) Outlined Square with Thick Stroke (Box style)
      K) Bold Plus Sign (+) (Swiss Cross style)

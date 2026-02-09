@@ -16,6 +16,8 @@ import {
     ARTISTIC_STYLE_GROUPS,
     LAYOUTS_BY_INTENT,
     DEFAULT_LAYOUTS,
+    BASIC_MODE_LAYOUTS,
+    ALL_IMAGE_LAYOUTS,
     THEME_CATALOG,
     SOCIAL_FORMATS,
     SocialPlatform,
@@ -58,6 +60,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const aiConfig = useQuery(api.settings.getAIConfig)
     const [state, setState] = useState<GenerationState>(INITIAL_GENERATION_STATE)
     const optionsRef = useRef(options)
+    const basicLayoutRotationIndexRef = useRef(0)
 
     // Keep options reference up to date to avoid stale closures in callbacks
     useEffect(() => {
@@ -251,9 +254,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
     const selectIntent = useCallback((intent: IntentCategory) => {
         const intentMeta = INTENT_CATALOG.find(i => i.id === intent)
-        // Auto-select the first layout (Libre) for this intent
-        const intentLayouts = LAYOUTS_BY_INTENT[intent] || DEFAULT_LAYOUTS
-        const defaultLayoutId = intentLayouts.length > 0 ? intentLayouts[0].id : null
+        const safeBasicLayouts = BASIC_MODE_LAYOUTS.length > 0 ? BASIC_MODE_LAYOUTS : DEFAULT_LAYOUTS
+        const nextBasicLayout = safeBasicLayouts[basicLayoutRotationIndexRef.current % safeBasicLayouts.length]
+        const defaultLayoutId = nextBasicLayout?.id || safeBasicLayouts[0]?.id || null
+        basicLayoutRotationIndexRef.current += 1
 
         setState(prev => {
             const preserveHeadline = Boolean(prev.headline && prev.headline !== NO_TEXT_TOKEN)
@@ -289,7 +293,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             firstReferenceId: null,
             firstReferenceSource: null,
             selectedStyles: [],
-            selectedLayout: null, // FORCE USER TO SELECT LAYOUT. Do not auto-select.
+            selectedLayout: defaultLayoutId, // BASIC MODE: auto-select a safe rotating layout.
             generatedImage: null,
             hasGeneratedImage: false,
 
@@ -297,7 +301,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             selectedFormat: null,
             selectedPlatform: null,
 
-                currentStep: 2, // Auto-advance to Step 2 (Composition/Layout)
+                currentStep: 2, // Show composition step first; UI will auto-advance in basic mode.
             }
         })
     }, [])
@@ -1279,11 +1283,12 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         return combinedStyles
     }, [state.visionAnalysis, activeBrandKit])
 
+    // Advanced mode catalog (intent-aware). Basic mode uses internal rotating safe layouts.
     const availableLayouts: LayoutOption[] = state.selectedIntent
         ? (LAYOUTS_BY_INTENT[state.selectedIntent] || DEFAULT_LAYOUTS)
         : DEFAULT_LAYOUTS
 
-    const selectedLayoutMeta = availableLayouts.find(l => l.id === state.selectedLayout)
+    const selectedLayoutMeta = ALL_IMAGE_LAYOUTS.find(l => l.id === state.selectedLayout)
 
     // -------------------------------------------------------------------------
     // PROMPT CONSTRUCTION
@@ -1298,16 +1303,6 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         const sections: string[] = []
 
         // ═══════════════════════════════════════════════════════════════
-        // PRIORITY 11 - SYSTEM PERSONA
-        // ═══════════════════════════════════════════════════════════════
-        sections.push(
-            P11.PRIORITY_HEADER,
-            ``,
-            P11.SYSTEM_PERSONA_INSTRUCTION,
-            ``
-        )
-
-        // ═══════════════════════════════════════════════════════════════
         // PRIORITY 12 - PREFERRED LANGUAGE ENFORCEMENT
         // ═══════════════════════════════════════════════════════════════
         const userLanguage = detectLanguage(
@@ -1317,6 +1312,16 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             P12.PRIORITY_HEADER,
             ``,
             P12.LANGUAGE_ENFORCEMENT_INSTRUCTION(userLanguage),
+            ``
+        )
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRIORITY 11 - SYSTEM PERSONA
+        // ═══════════════════════════════════════════════════════════════
+        sections.push(
+            P11.PRIORITY_HEADER,
+            ``,
+            P11.SYSTEM_PERSONA_INSTRUCTION,
             ``
         )
 
@@ -1505,10 +1510,9 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 7 - COMPOSITION & LAYOUT (Dynamic from selected layout)
         // ═══════════════════════════════════════════════════════════════
-        if (state.selectedLayout && state.selectedIntent) {
-            // Find selected layout definition
-            const intentLayouts = LAYOUTS_BY_INTENT[state.selectedIntent]
-            const layoutDef = intentLayouts?.find(l => l.id === state.selectedLayout)
+        if (state.selectedLayout) {
+            // Busca en todos los layouts para soportar composiciones basicas cross-intent.
+            const layoutDef = ALL_IMAGE_LAYOUTS.find((l) => l.id === state.selectedLayout)
 
             if (layoutDef?.structuralPrompt) {
                 sections.push(
@@ -1618,7 +1622,17 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // PRIORITY 5 - VISUAL STYLE & AESTHETIC
         // ═══════════════════════════════════════════════════════════════
         const customStyle = activeState.customStyle?.trim()
-        const styleAnalysis = activeState.firstVisionAnalysis ?? activeState.visionAnalysis
+        const selectedReferenceIds = [
+            ...(activeState.uploadedImages || []),
+            ...(activeState.selectedBrandKitImageIds || [])
+        ]
+        const hasActiveStyleReference = selectedReferenceIds.some((id) => {
+            const role = activeState.referenceImageRoles?.[id]
+            return role === 'style' || role === 'style_content'
+        })
+        const styleAnalysis = hasActiveStyleReference
+            ? (activeState.firstVisionAnalysis ?? activeState.visionAnalysis)
+            : null
         const styleSignals = extractStyleSignals(customStyle, styleAnalysis)
         const typographyDirection = buildSimpleTypographyDirection(activeState.typography, styleSignals)
         const visualDirectiveLine = buildVisualStyleDirective(customStyle, styleAnalysis)

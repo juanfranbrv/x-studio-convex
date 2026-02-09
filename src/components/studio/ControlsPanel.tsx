@@ -15,20 +15,23 @@ import { SavePresetDialog } from './creation-flow/SavePresetDialog'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import {
     GenerationState,
-    INTENT_CATALOG,
     IntentCategory,
+    ALL_IMAGE_LAYOUTS,
+    BASIC_MODE_LAYOUT_IDS,
+    LayoutOption,
 } from '@/lib/creation-flow-types'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
 import { cn } from '@/lib/utils'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { getRecommendedAdvancedLayouts } from '@/lib/layout-recommendation'
 
 const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = {
     1: { title: "Tu Idea", description: "Escribe tu idea y pulsa el boton para crear la publicación" },
-    2: { title: "Composición", description: "Elige la composición base. Si eliges \"Libre\", la IA crea la estructura por ti." },
+    2: { title: "Composición", description: "En modo básico la composición se elige automáticamente con variación segura." },
     3: { title: "Formato", description: "Selecciona las dimensiones según la red social." },
     4: { title: "Imagen", description: "Sube una referencia o usa una del Brand Kit." },
     6: { title: "Marca", description: "Elige la variante del logo y ajusta la paleta cromática." }
@@ -88,6 +91,7 @@ export function ControlsPanel({
     const { panelPosition, assistanceEnabled } = useUI()
     const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
     const [isSavingPreset, setIsSavingPreset] = useState(false)
+    const [layoutMode, setLayoutMode] = useState<'basic' | 'advanced'>('basic')
     const createPreset = useMutation(api.presets.create)
     const { activeBrandKit } = useBrandKit()
 
@@ -107,7 +111,6 @@ export function ControlsPanel({
     const {
         state,
         availableLayouts,
-        selectIntent,
         selectLayout,
         selectLogo,
         setHeadline,
@@ -176,6 +179,77 @@ export function ControlsPanel({
         onPromptChange(typeof presetState.rawMessage === 'string' ? presetState.rawMessage : '')
     }
 
+    const basicModeIds = new Set(BASIC_MODE_LAYOUT_IDS)
+    const recommendationContext = useMemo(() => {
+        const chunks = [
+            promptValue,
+            state.rawMessage,
+            state.headline,
+            state.cta,
+            state.caption,
+            ...Object.values(state.customTexts || {}),
+        ]
+            .map((v) => (typeof v === 'string' ? v.trim() : ''))
+            .filter(Boolean)
+        return chunks.join('\n')
+    }, [promptValue, state.rawMessage, state.headline, state.cta, state.caption, state.customTexts])
+
+    const recommendedAdvancedLayouts: LayoutOption[] = useMemo(() => {
+        if (!state.selectedIntent) return []
+        return getRecommendedAdvancedLayouts(ALL_IMAGE_LAYOUTS, {
+            selectedIntent: state.selectedIntent,
+            rawContext: recommendationContext,
+        }, 6)
+    }, [recommendationContext, state.selectedIntent])
+
+    const allAdvancedLayouts: LayoutOption[] = (() => {
+        const recommendedIds = new Set(recommendedAdvancedLayouts.map((l) => l.id))
+        const rest = ALL_IMAGE_LAYOUTS.filter((l) => {
+            if (recommendedIds.has(l.id)) return false
+            const id = l.id.toLowerCase()
+            const name = l.name.toLowerCase()
+            if (id.endsWith('-free') || id.includes('default-free')) return false
+            if (name.includes('libre')) return false
+            return true
+        })
+        const dedup = new Map<string, LayoutOption>()
+        rest.forEach((layout) => {
+            if (!dedup.has(layout.id)) dedup.set(layout.id, layout)
+        })
+        return Array.from(dedup.values())
+    })()
+
+    const pickRandomBasicLayout = useCallback((currentLayoutId: string | null) => {
+        if (BASIC_MODE_LAYOUT_IDS.length === 0) return null
+        const candidates = BASIC_MODE_LAYOUT_IDS.filter((id) => id !== currentLayoutId)
+        const pool = candidates.length > 0 ? candidates : BASIC_MODE_LAYOUT_IDS
+        const idx = Math.floor(Math.random() * pool.length)
+        return pool[idx] ?? BASIC_MODE_LAYOUT_IDS[0]
+    }, [])
+
+    const handleLayoutModeSwitch = useCallback((checked: boolean) => {
+        const nextMode: 'basic' | 'advanced' = checked ? 'advanced' : 'basic'
+        setLayoutMode(nextMode)
+
+        if (nextMode === 'basic') {
+            const nextBasicLayoutId = pickRandomBasicLayout(state.selectedLayout)
+            if (nextBasicLayoutId) {
+                selectLayout(nextBasicLayoutId)
+                creationFlow.setStep(2)
+            }
+        }
+    }, [creationFlow, pickRandomBasicLayout, selectLayout, state.selectedLayout])
+
+    useEffect(() => {
+        if (layoutMode !== 'basic') return
+        if (state.currentStep !== 2) return
+        if (!state.selectedLayout) return
+        const timer = window.setTimeout(() => {
+            creationFlow.setStep(3)
+        }, 320)
+        return () => window.clearTimeout(timer)
+    }, [creationFlow, layoutMode, state.currentStep, state.selectedLayout])
+
     const handleSavePreset = async (name: string) => {
         if (!userId || !state.selectedIntent) {
             toast({ title: "Error", description: "Faltan datos para guardar el preset.", variant: "destructive" })
@@ -234,7 +308,7 @@ export function ControlsPanel({
 
     return (
         <div className="w-full md:w-[27%] h-full controls-panel flex flex-col shrink-0 relative group/panel">
-            <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-6">
+            <div className="flex-1 overflow-y-auto thin-scrollbar [scrollbar-gutter:stable] p-4 space-y-6">
 
                 {/* SECTION: Presets */}
                 <div className="glass-card p-4">
@@ -355,32 +429,41 @@ export function ControlsPanel({
                                     icon={Layout}
                                     title="Composición"
                                     extra={
-                                        <Select value={state.selectedIntent ?? ''} onValueChange={(value) => value && selectIntent(value as IntentCategory)}>
-                                            <SelectTrigger
-                                                size="sm"
-                                                className="h-6 px-2 text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 rounded-full shadow-none"
-                                            >
-                                                <SelectValue placeholder="Intent" />
-                                            </SelectTrigger>
-                                            <SelectContent align="end">
-                                                {INTENT_CATALOG.map((intent) => (
-                                                    <SelectItem key={intent.id} value={intent.id}>
-                                                        <span className="flex items-center justify-between w-full gap-2">
-                                                            <span>{intent.name}</span>
-                                                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                                                                {intent.group}
-                                                            </span>
-                                                        </span>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className={cn("text-[10px] font-medium", layoutMode === 'advanced' ? "text-primary" : "text-muted-foreground")}>
+                                                Avanzado
+                                            </span>
+                                            <Switch
+                                                checked={layoutMode === 'advanced'}
+                                                onCheckedChange={handleLayoutModeSwitch}
+                                                aria-label="Activar modo avanzado de composición"
+                                            />
+                                        </div>
                                     }
                                 />
-                                <LayoutSelector availableLayouts={availableLayouts} selectedLayout={state.selectedLayout} onSelectLayout={selectLayout} intent={state.selectedIntent as IntentCategory} />
-                                <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
-                                    La composición define la estructura visual del diseño. Si eliges “Libre”, el modelo decide la disposición.
-                                </p>
+                                {layoutMode === 'advanced' ? (
+                                    <div className="space-y-2">
+                                        <div className="max-h-[420px] overflow-y-auto thin-scrollbar pr-1">
+                                            <LayoutSelector
+                                                availableLayouts={availableLayouts}
+                                                recommendedLayouts={recommendedAdvancedLayouts}
+                                                allLayouts={allAdvancedLayouts}
+                                                selectedLayout={state.selectedLayout}
+                                                onSelectLayout={selectLayout}
+                                                intent={state.selectedIntent as IntentCategory}
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                            Modo avanzado: selección manual con priorización por intención.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
+                                        <p className="text-[11px] text-primary font-medium leading-relaxed">
+                                            Modo básico activo. La composición se elige automáticamente con variación segura.
+                                        </p>
+                                    </div>
+                                )}
                                 {state.currentStep === 2 && state.selectedLayout && (
                                     <div className="flex justify-end mt-3">
                                         <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(3)} className="h-7 text-xs">Siguiente, Formato</Button>
