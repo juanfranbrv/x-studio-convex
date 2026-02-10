@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useUser } from '@clerk/nextjs';
@@ -41,15 +41,15 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 const LOADING_MESSAGES = [
-    "Iniciando motores de análisis...",
+    "Iniciando motores de anÃ¡lisis...",
     "Conectando con Microlink API...",
     "Capturando esencia visual de la web...",
-    "Extrayendo paleta técnica (DOM)...",
+    "Extrayendo paleta tÃ©cnica (DOM)...",
     "Analizando candidatos a logo...",
-    "Descubriendo tipografías en CSS...",
+    "Descubriendo tipografÃ­as en CSS...",
     "Extrayendo ADN de marca con IA...",
     "Generando activos y paletas finales...",
-    "Puliendo los últimos detalles..."
+    "Puliendo los Ãºltimos detalles..."
 ];
 
 const TECHNICAL_LOGS = [
@@ -57,7 +57,7 @@ const TECHNICAL_LOGS = [
     "[NETWORK] Connecting to headfull browser cluster...",
     "[DOM] Analyzing 428 nodes for color frequency...",
     "[IMAGE] Processing full-page screenshot (1920x1080)...",
-    "[AI] Running Gemini-1.5-Flash vision analysis...",
+    "[AI] Injecting multimodal payload into vision-core pipeline...",
     "[STYLE] Extracting computed CSS variables...",
     "[LOGO] Scoring candidates based on prominence...",
     "[CONSENSUS] Running Delta-E clustering algorithm...",
@@ -86,6 +86,12 @@ function BrandKitPageContent() {
     const [progress, setProgress] = useState(0);
     const [loadingScreenshot, setLoadingScreenshot] = useState<string | null>(null);
     const [isSocialUrl, setIsSocialUrl] = useState(false);
+
+    const isValidBrandId = (value: unknown): value is string => {
+        if (typeof value !== 'string') return false;
+        const normalized = value.trim().toLowerCase();
+        return normalized.length > 0 && normalized !== 'undefined' && normalized !== 'null';
+    };
 
     // Multi-profile state
     const [showNewKitForm, setShowNewKitForm] = useState(false);
@@ -160,20 +166,21 @@ function BrandKitPageContent() {
 
             const result = await response.json();
 
-            if (result.success && result.data?.id) {
+            const createdId = result?.data?.id;
+            if (result.success && isValidBrandId(createdId)) {
                 setShowNewKitForm(false);
 
                 // Wait for Convex propagation
                 await new Promise(resolve => setTimeout(resolve, 1500));
 
                 // Navigate to the new brand kit
-                window.location.href = `/brand-kit?id=${result.data.id}`;
+                window.location.href = `/brand-kit?id=${createdId}`;
             } else {
-                setError(result.error || 'No se pudo crear el Brand Kit manual.');
+                setError(result.error || 'No se pudo crear el kit de marca manual.');
             }
         } catch (err) {
             console.error('Error creating manual brand kit:', err);
-            setError('Ocurrió un error al crear el Brand Kit.');
+            setError('Ocurrio un error al crear el kit de marca.');
         } finally {
             setLoading(false);
         }
@@ -219,6 +226,75 @@ function BrandKitPageContent() {
         }
     }, [contextLoading, brandKits, searchParams, router]);
 
+    // Si llega un id por query param (ej. tras crear un kit), forzamos seleccion de ese kit.
+    useEffect(() => {
+        if (contextLoading) return;
+
+        const requestedBrandId = searchParams.get('id');
+        if (!isValidBrandId(requestedBrandId)) return;
+        if (activeBrandKit?.id === requestedBrandId) {
+            const newParams = new URLSearchParams(searchParams.toString());
+            newParams.delete('id');
+            router.replace(`/brand-kit${newParams.toString() ? `?${newParams.toString()}` : ''}`);
+            setShowNewKitForm(false);
+            return;
+        }
+
+        let cancelled = false;
+        const trySelectRequestedBrand = async () => {
+            const attempts = 8;
+            for (let i = 0; i < attempts; i++) {
+                if (cancelled) return;
+                // Strict mode: never fallback to previously active kit.
+                const ok = await setActiveBrandKit(requestedBrandId, true, false);
+                if (ok) return;
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            console.error('Could not select newly created kit de marca:', requestedBrandId);
+        };
+
+        void trySelectRequestedBrand();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [contextLoading, brandKits, activeBrandKit?.id, searchParams, router, setActiveBrandKit]);
+
+    // Fallback cuando analyzeBrandDNA no devuelve id: seleccionar por URL creada.
+    useEffect(() => {
+        if (contextLoading) return;
+
+        const requestedUrl = searchParams.get('selectUrl');
+        if (!requestedUrl) return;
+
+        const decodedUrl = decodeURIComponent(requestedUrl);
+        if (activeBrandKit?.url === decodedUrl) {
+            const newParams = new URLSearchParams(searchParams.toString());
+            newParams.delete('selectUrl');
+            router.replace(`/brand-kit${newParams.toString() ? `?${newParams.toString()}` : ''}`);
+            setShowNewKitForm(false);
+            return;
+        }
+
+        const byUrl = brandKits.find((b) => b.url === decodedUrl);
+        if (!byUrl?.id) return;
+
+        let cancelled = false;
+        const trySelectByUrl = async () => {
+            const attempts = 8;
+            for (let i = 0; i < attempts; i++) {
+                if (cancelled) return;
+                const ok = await setActiveBrandKit(byUrl.id, true, false);
+                if (ok) return;
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            console.error('Could not select newly created kit de marca by url:', decodedUrl);
+        };
+
+        void trySelectByUrl();
+        return () => { cancelled = true; };
+    }, [contextLoading, brandKits, activeBrandKit?.url, searchParams, router, setActiveBrandKit]);
+
     // Handle case where active brand kit changes
     useEffect(() => {
         if (activeBrandKit && !searchParams.get('action')) {
@@ -230,13 +306,13 @@ function BrandKitPageContent() {
         try {
             await deleteBrandKitById(brandId);
             toast({
-                title: "✅ Brand Kit eliminado",
-                description: "El Brand Kit se ha eliminado correctamente.",
+                title: "Kit de marca eliminado",
+                description: "El kit de marca se ha eliminado correctamente.",
             });
         } catch (err: any) {
             toast({
-                title: "❌ Error al eliminar",
-                description: err.message || "No se pudo eliminar el Brand Kit.",
+                title: "Error al eliminar",
+                description: err.message || "No se pudo eliminar el kit de marca.",
                 variant: "destructive",
             });
         }
@@ -250,12 +326,12 @@ function BrandKitPageContent() {
 
             if (success) {
                 toast({
-                    title: "✅ Nombre actualizado",
-                    description: "El nombre del Brand Kit se ha actualizado correctamente.",
+                    title: "Nombre actualizado",
+                    description: "El nombre del kit de marca se ha actualizado correctamente.",
                 });
             } else {
                 toast({
-                    title: "❌ Error al actualizar",
+                    title: "Error al actualizar",
                     description: "No se pudo actualizar el nombre.",
                     variant: "destructive",
                 });
@@ -263,8 +339,8 @@ function BrandKitPageContent() {
         } catch (error) {
             console.error('Error updating brand name:', error);
             toast({
-                title: "❌ Error",
-                description: "Ocurrió un error al actualizar el nombre.",
+                title: "Error",
+                description: "OcurriÃ³ un error al actualizar el nombre.",
                 variant: "destructive",
             });
         }
@@ -280,7 +356,7 @@ function BrandKitPageContent() {
         setShowRegenerateConfirm(false);
         const targetUrl = url || activeBrandKit?.url;
         if (!targetUrl || !user?.id) {
-            console.warn('❌ Cannot regenerate: No URL found', { url, activeBrandKitUrl: activeBrandKit?.url });
+            console.warn('âŒ Cannot regenerate: No URL found', { url, activeBrandKitUrl: activeBrandKit?.url });
             return;
         }
 
@@ -304,15 +380,15 @@ function BrandKitPageContent() {
                 }
 
                 toast({
-                    title: "✅ Brand Kit regenerado",
-                    description: "El análisis se ha completado correctamente.",
+                    title: "Kit de marca regenerado",
+                    description: "El anÃ¡lisis se ha completado correctamente.",
                 });
             } else {
-                setError(response.error || 'No se pudo regenerar el Brand Kit.');
+                setError(response.error || 'No se pudo regenerar el kit de marca.');
             }
         } catch (err) {
             console.error('Unexpected error during regenerate:', err);
-            setError('Ocurrió un error inesperado al regenerar.');
+            setError('OcurriÃ³ un error inesperado al regenerar.');
         } finally {
             setLoading(false);
             setLoadingScreenshot(null);
@@ -329,32 +405,40 @@ function BrandKitPageContent() {
 
         try {
             const response = await analyzeBrandDNA(url, true, user.id);
+            const createdId = response?.data?.id;
 
             if (response.success && response.data) {
-                console.log('[NEW BRAND KIT] ✅ Created successfully!', response.data.id);
+                console.log('[NEW BRAND KIT] Analysis completed:', { id: createdId, url: response.data.url });
 
                 // Hide form immediately
                 setShowNewKitForm(false);
 
                 // CRITICAL: Wait for Convex to propagate
-                console.log('[NEW BRAND KIT] ⏳ Waiting 2 seconds for Convex propagation...');
+                console.log('[NEW BRAND KIT] â³ Waiting 2 seconds for Convex propagation...');
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
                 // FORCE NAVIGATION to the new brand kit using URL parameter
-                console.log('[NEW BRAND KIT] 🎯 Forcing navigation to new kit:', response.data.id);
+                if (!isValidBrandId(createdId) && !response.data.url) {
+                    setError('No se pudo identificar el kit de marca recien creado.');
+                    return;
+                }
+                const targetParam = isValidBrandId(createdId)
+                    ? `id=${createdId}`
+                    : `selectUrl=${encodeURIComponent(response.data.url)}`;
+                console.log('[NEW BRAND KIT] Forcing navigation param:', targetParam);
                 const debugParam = searchParams.get('debug') === 'true' ? '&debug=true' : '';
-                window.location.href = `/brand-kit?id=${response.data.id}${debugParam}`;
+                window.location.href = `/brand-kit?${targetParam}${debugParam}`;
 
                 toast({
-                    title: "✅ Brand Kit creado",
+                    title: "Kit de marca creado",
                     description: "Cargando resultados...",
                 });
             } else {
-                setError(response.error || 'No se pudo crear el Brand Kit.');
+                setError(response.error || 'No se pudo crear el kit de marca.');
             }
         } catch (err) {
-            console.error('❌ Unexpected error during submit:', err);
-            setError('Ocurrió un error inesperado.');
+            console.error('âŒ Unexpected error during submit:', err);
+            setError('OcurriÃ³ un error inesperado.');
         } finally {
             setLoading(false);
         }
@@ -373,7 +457,7 @@ function BrandKitPageContent() {
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="text-center animate-in fade-in zoom-in duration-500">
                         <Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin mx-auto" />
-                        <p className="text-[var(--text-secondary)] mt-4 text-sm font-medium">Cargando tus Brand Kits...</p>
+                        <p className="text-[var(--text-secondary)] mt-4 text-sm font-medium">Cargando tus kits de marca...</p>
                     </div>
                 </div>
             </DashboardLayout>
@@ -390,7 +474,7 @@ function BrandKitPageContent() {
         >
             <main className="p-6 md:p-12 max-w-7xl mx-auto">
 
-                {/* Si no tiene Brand Kits o está creando uno nuevo */}
+                {/* Si no tiene Brand Kits o estÃ¡ creando uno nuevo */}
                 {((brandKits.length === 0 || showNewKitForm) && !loading) && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -415,12 +499,15 @@ function BrandKitPageContent() {
                             </motion.div>
 
                             <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                                {brandKits.length === 0 ? '¡Bienvenido a X Imagen!' : 'Crear Nuevo Brand Kit'}
+                                {brandKits.length === 0 ? 'Bienvenido a X Imagen' : 'Crear nuevo kit de marca'}
                             </h2>
                             <p className="text-muted-foreground mb-8 max-w-lg mx-auto text-lg">
                                 {brandKits.length === 0
-                                    ? 'Extrae el ADN visual de cualquier marca en segundos. Introduce una URL para comenzar.'
-                                    : 'Analiza una nueva marca y extrae automáticamente su identidad visual.'}
+                                    ? 'Tu kit de marca es la base para obtener resultados consistentes en Imagen, Carrusel y Video.'
+                                    : 'Antes de generar contenido, dedica unos minutos a construir un kit de marca completo y coherente.'}
+                            </p>
+                            <p className="text-muted-foreground/90 mb-8 max-w-2xl mx-auto text-sm leading-relaxed">
+                                Cuanto mejor definido este tu kit de marca (colores, tono, tipografias y referencias), mejor funcionaran todos los modulos de creacion.
                             </p>
 
                             {/* URL Input */}
@@ -468,10 +555,10 @@ function BrandKitPageContent() {
                                         className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-600 dark:text-amber-400"
                                     >
                                         <p className="text-sm font-medium mb-2">
-                                            📱 Las redes sociales no se pueden analizar automáticamente
+                                            ðŸ“± Las redes sociales no se pueden analizar automÃ¡ticamente
                                         </p>
                                         <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mb-3">
-                                            Las URLs de Instagram, Facebook, TikTok y otras redes sociales no permiten la extracción automática de estilos.
+                                            Las URLs de Instagram, Facebook, TikTok y otras redes sociales no permiten la extracciÃ³n automÃ¡tica de estilos.
                                         </p>
                                         <Button
                                             type="button"
@@ -494,7 +581,7 @@ function BrandKitPageContent() {
                                     onClick={handleManualCreation}
                                     className="underline underline-offset-4 hover:text-foreground transition-colors"
                                 >
-                                    No tengo URL, construiré mi Kit de Marca manualmente
+                                    No tengo web, construire mi kit de marca manualmente
                                 </button>
                             </p>
 
@@ -736,7 +823,7 @@ function BrandKitPageContent() {
                                     {progress >= 20 && progress < 40 && "Conectando con el motor visual..."}
                                     {progress >= 40 && progress < 60 && "Extrayendo ADN de marca..."}
                                     {progress >= 60 && progress < 80 && "Procesando activos visuales..."}
-                                    {progress >= 80 && progress < 95 && "Generando paletas de diseño..."}
+                                    {progress >= 80 && progress < 95 && "Generando paletas de diseÃ±o..."}
                                     {progress >= 95 && "Finalizando el Kit de Marca..."}
                                 </motion.h3>
 
@@ -749,7 +836,7 @@ function BrandKitPageContent() {
                                     >
                                         {[...TECHNICAL_LOGS, ...TECHNICAL_LOGS, ...TECHNICAL_LOGS].map((log, i) => (
                                             <div key={i} className="flex items-center gap-2 text-muted-foreground/40 text-sm font-mono">
-                                                <span className="text-primary/40">▸</span>
+                                                <span className="text-primary/40">â–¸</span>
                                                 <span className="truncate">{log}</span>
                                             </div>
                                         ))}
@@ -782,7 +869,7 @@ function BrandKitPageContent() {
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 0.8 }}
                                 >
-                                    FIRE-SC Engine v4.0 • Gemini 1.5 Flash • Headless-Chromium
+                                    FIRE-SC Engine v4.0 â€¢ Vision-Core Runtime â€¢ Headless-Chromium
                                 </motion.p>
                             </motion.div>
                         </div>
@@ -805,7 +892,7 @@ function BrandKitPageContent() {
                     </div>
                 )}
 
-                {/* AlertDialog de Confirmación de Regeneración - REDESIGNED */}
+                {/* AlertDialog de ConfirmaciÃ³n de RegeneraciÃ³n - REDESIGNED */}
                 <AlertDialog open={showRegenerateConfirm} onOpenChange={setShowRegenerateConfirm}>
                     <AlertDialogContent className="max-w-md shadow-2xl p-0 overflow-hidden gap-0">
                         <div className="p-6 pb-2">
@@ -814,10 +901,10 @@ function BrandKitPageContent() {
                                     <div className="p-2.5 rounded-full bg-amber-500/10 text-amber-500">
                                         <TriangleAlert className="w-6 h-6 animate-pulse" />
                                     </div>
-                                    ¿Regenerar Brand Kit?
+                                    Regenerar kit de marca
                                 </AlertDialogTitle>
                                 <AlertDialogDescription className="text-muted-foreground pt-4 text-base leading-relaxed">
-                                    Esta acción volverá a analizar el sitio web <span className='font-semibold text-foreground'>{activeBrandKit?.url}</span> desde cero.
+                                    Esta accion volvera a analizar el sitio web <span className='font-semibold text-foreground'>{activeBrandKit?.url}</span> desde cero.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                         </div>
@@ -826,7 +913,7 @@ function BrandKitPageContent() {
                             <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-4 flex gap-3">
                                 <TriangleAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                 <p className="text-sm text-red-500/90 font-medium">
-                                    ¡Cuidado! Se perderán permanentemente todos los cambios manuales que hayas realizado en este perfil.
+                                    Cuidado: se perderan permanentemente todos los cambios manuales que hayas realizado en este perfil.
                                 </p>
                             </div>
                         </div>
@@ -840,7 +927,7 @@ function BrandKitPageContent() {
                                 className="shadow-lg transition-all active:scale-95"
                             >
                                 <RefreshCcw className="w-4 h-4 mr-2" />
-                                Sí, regenerar ahora
+                                Si, regenerar ahora
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
@@ -861,3 +948,5 @@ export default function BrandKitPage() {
         </Suspense>
     );
 }
+
+

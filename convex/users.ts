@@ -28,7 +28,11 @@ export const setCurrentBrand = mutation({
             .query("users")
             .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
             .first();
-        if (!user) throw new Error("User not found");
+        // Primer acceso: la fila de users puede no existir todavia por una carrera de inicializacion.
+        // Evitamos error ruidoso y dejamos que el cliente reintente tras upsertUser.
+        if (!user) {
+            return { success: false, reason: "user_not_found" as const };
+        }
 
         const brand = await ctx.db.get(args.brandId as Id<"brand_dna">);
         if (!brand) throw new Error("Brand kit not found");

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react'
 import { useUser } from '@clerk/nextjs'
@@ -16,7 +16,7 @@ interface BrandKitContextType {
     loading: boolean
 
     // Acciones
-    setActiveBrandKit: (id: string) => Promise<void>
+    setActiveBrandKit: (id: string, shouldPersist?: boolean, allowFallback?: boolean) => Promise<boolean>
     reloadBrandKits: (isSilent?: boolean) => Promise<void>
     deleteBrandKitById: (id: string) => Promise<void>
     updateActiveBrandKit: (data: Partial<BrandDNA>) => Promise<boolean>
@@ -32,13 +32,33 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true)
 
     // Convex hooks
-    const userRecord = useQuery(api.users.getUser, user?.id ? { clerk_id: user.id } : "skip")
+    const userRecord = useQuery(api.users.getUser, user?.id ? { clerk_id: user.id } : 'skip')
     const updateLastBrand = useMutation(api.users.setCurrentBrand)
+    const upsertUser = useMutation(api.users.upsertUser)
 
     // Track if we have already attempted initial load
     const initialLoadAttempted = useRef(false)
 
-    // Cargar todos los Brand Kits del usuario
+    const ensureConvexUser = async () => {
+        if (!user?.id) return false
+        if (userRecord) return true
+
+        const userEmail = user.emailAddresses[0]?.emailAddress
+        if (!userEmail) return false
+
+        try {
+            await upsertUser({
+                clerk_id: user.id,
+                email: userEmail,
+            })
+            return true
+        } catch (error) {
+            console.warn('[CONTEXT] Could not create user before persisting brand:', error)
+            return false
+        }
+    }
+
+    // Cargar todos los kits de marca del usuario
     const loadBrandKits = async (isSilent = false) => {
         if (!user?.id) return
 
@@ -48,7 +68,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
             if (result.success && result.data) {
                 setBrandKits(result.data)
 
-                // Preference: 
+                // Preference:
                 // 1. Current Active (if already set)
                 // 2. Persisted Last Brand (from userRecord)
                 // 3. First from list
@@ -59,7 +79,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                         ? (lastBrandId as string)
                         : result.data[0].id
 
-                    // Si el persisted id ya no existe, curamos el estado guardando uno válido
+                    // Si el persisted id ya no existe, curamos el estado guardando uno valido
                     await setActiveBrandKit(brandToSelect, !hasPersistedBrand)
                 }
             }
@@ -70,30 +90,44 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    // Cambiar el Brand Kit activo
-    const setActiveBrandKit = async (id: string, shouldPersist = true) => {
-        console.log(`[CONTEXT] Setting active brand kit: ${id} (persist: ${shouldPersist})`);
+    // Cambiar el kit de marca activo
+    const setActiveBrandKit = async (
+        id: string,
+        shouldPersist = true,
+        allowFallback = true
+    ): Promise<boolean> => {
+        console.log(`[CONTEXT] Setting active brand kit: ${id} (persist: ${shouldPersist}, fallback: ${allowFallback})`)
         try {
             const result = await getUserBrandKitById(id)
             if (result.success && result.data) {
-                console.log('[CONTEXT] Brand kit loaded successfully:', result.data.brand_name);
+                console.log('[CONTEXT] Brand kit loaded successfully:', result.data.brand_name)
                 setActiveBrandKitState(result.data)
 
                 // Persist choice in Convex if requested and user exists
                 if (shouldPersist && user?.id) {
-                    updateLastBrand({ clerk_id: user.id, brandId: id })
-                        .catch(err => console.error('[CONTEXT] Failed to persist last brand:', err))
+                    const canPersist = userRecord ? true : await ensureConvexUser()
+                    if (canPersist) {
+                        updateLastBrand({ clerk_id: user.id, brandId: id })
+                            .catch(err => console.error('[CONTEXT] Failed to persist last brand:', err))
+                    }
                 }
-            } else {
-                console.error('[CONTEXT] Failed to load brand kit:', id, result.error);
-                // Fallback defensivo: si el id es legacy/huérfano, intenta con el primero válido
-                if (brandKits.length > 0) {
-                    const fallbackId = brandKits[0].id
-                    if (fallbackId && fallbackId !== id) {
-                        const fallback = await getUserBrandKitById(fallbackId)
-                        if (fallback.success && fallback.data) {
-                            setActiveBrandKitState(fallback.data)
-                            if (user?.id) {
+
+                return true
+            }
+
+            console.error('[CONTEXT] Failed to load brand kit:', id, result.error)
+            if (!allowFallback) return false
+
+            // Fallback defensivo: si el id es legacy/huerfano, intenta con el primero valido
+            if (brandKits.length > 0) {
+                const fallbackId = brandKits[0].id
+                if (fallbackId && fallbackId !== id) {
+                    const fallback = await getUserBrandKitById(fallbackId)
+                    if (fallback.success && fallback.data) {
+                        setActiveBrandKitState(fallback.data)
+                        if (user?.id) {
+                            const canPersist = userRecord ? true : await ensureConvexUser()
+                            if (canPersist) {
                                 updateLastBrand({ clerk_id: user.id, brandId: fallbackId })
                                     .catch(err => console.error('[CONTEXT] Failed to persist fallback brand:', err))
                             }
@@ -101,17 +135,20 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                     }
                 }
             }
+
+            return false
         } catch (error) {
             console.error('Error loading brand kit:', error)
+            return false
         }
     }
 
-    // Recargar la lista de Brand Kits
+    // Recargar la lista de kits de marca
     const reloadBrandKits = async (isSilent = true) => {
         await loadBrandKits(isSilent)
     }
 
-    // Eliminar un Brand Kit
+    // Eliminar un kit de marca
     const deleteBrandKitById = async (id: string) => {
         try {
             const result = await deleteBrandKit(id)
@@ -119,7 +156,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                 // Recargar la lista
                 await loadBrandKits()
 
-                // Si el Brand Kit eliminado era el activo, limpiar
+                // Si el kit eliminado era el activo, limpiar
                 if (activeBrandKit?.id === id) {
                     setActiveBrandKitState(null)
                 }
@@ -129,7 +166,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    // Actualizar el Brand Kit activo (y persistir)
+    // Actualizar el kit de marca activo (y persistir)
     const updateActiveBrandKit = async (data: Partial<BrandDNA>) => {
         if (!activeBrandKit || !activeBrandKit.id) return false
 
@@ -150,12 +187,12 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    // Sincronizar estado localmente sin persistir (útil tras un guardado externo)
+    // Sincronizar estado localmente sin persistir (util tras un guardado externo)
     const syncActiveBrandKit = (data: BrandDNA) => {
         setActiveBrandKitState(data)
     }
 
-    // Cargar Brand Kits cuando el usuario y sus datos de Convex estén disponibles
+    // Cargar kits cuando usuario y datos de Convex esten disponibles
     useEffect(() => {
         if (isLoaded && user && userRecord !== undefined && !initialLoadAttempted.current) {
             initialLoadAttempted.current = true

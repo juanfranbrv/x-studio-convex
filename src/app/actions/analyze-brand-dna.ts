@@ -10,7 +10,7 @@ import { api } from "../../../convex/_generated/api";
 import { model, groqModel } from '@/lib/ai';
 import fs from 'fs';
 import path from 'path';
-import { clusterColors, deltaE, categorizeColorRole, getHarmonyBonus } from '@/lib/color-utils';
+import { clusterColors, deltaE, getHarmonyBonus, hexToHsl, hexToRgb } from '@/lib/color-utils';
 import { buildBrandAnalysisPrompt } from '@/lib/prompts/actions/brand-analyst';
 import { BrandDNASchema } from '@/lib/prompts/schemas/brand-dna-schema';
 import { WEIGHTED_DOM_SCRIPT } from '@/lib/prompts/automation/weighted-dom';
@@ -170,13 +170,14 @@ function createFinalPalette(
         });
     };
 
-    // Base weights updated as per USER request:
-    addVotes(visualPalette, 'visual', 0.50);    // 50% Visual Grid
-    addVotes(weightedPalette, 'weighted', 0.15); // 15% Weighted DOM
-    addVotes(logoPalette, 'logo', 0.15);         // 15% Logo Audit
-    addVotes(designPalette, 'design', 0.10);     // 10% Design Intent
-    addVotes(svgPalette, 'svg', 0.05);           // 5% SVG Palette
-    addVotes(codePalette, 'code', 0.05);         // 5% Code Palette
+    // Base weights tuned for stronger visual + logo influence.
+    // Remaining sources scaled proportionally.
+    addVotes(visualPalette, 'visual', 0.60);      // 60% Visual Grid
+    addVotes(logoPalette, 'logo', 0.20);          // 20% Logo Audit
+    addVotes(weightedPalette, 'weighted', 0.0857); // 8.57% Weighted DOM
+    addVotes(designPalette, 'design', 0.0571);     // 5.71% Design Intent
+    addVotes(svgPalette, 'svg', 0.0286);           // 2.86% SVG Palette
+    addVotes(codePalette, 'code', 0.0286);         // 2.86% Code Palette
 
     // 2. Hierarchical Clustering (Delta E < 10)
     // We group colors into "Consensus Clusters"
@@ -205,16 +206,133 @@ function createFinalPalette(
         };
     });
 
-    // 4. Role & Harmony Post-Processing
-    const sorted = finalScored.sort((a, b) => b.score - a.score).slice(0, 10);
+    // 4. Consolidate very similar colors to avoid near-duplicates in final palette
+    const consolidated = mergeCloseConsensusColors(finalScored).slice(0, 10);
+    const shortlist = consolidated.slice(0, 6);
 
-    // Assign roles
-    const paletteWithRoles = sorted.map(item => ({
+    // Assign studio-compatible roles: one Fondo, one Texto, rest Acento.
+    const paletteWithRoles = assignStudioColorRoles(shortlist);
+
+    return paletteWithRoles;
+}
+
+function relativeLuminance(hex: string): number {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return 0;
+    const normalize = (v: number) => {
+        const c = v / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const r = normalize(rgb.r);
+    const g = normalize(rgb.g);
+    const b = normalize(rgb.b);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function assignStudioColorRoles(
+    colors: { color: string; sources: string[]; score: number }[]
+): { color: string; sources: string[]; score: number; role: 'Fondo' | 'Texto' | 'Acento' }[] {
+    if (!colors.length) return [];
+
+    // Regla de producto: el primer color siempre es Fondo.
+    const ordered = [...colors].sort((a, b) => b.score - a.score);
+    const backgroundIdx = 0;
+
+    // Regla de producto: Texto = el color mas oscuro entre los restantes.
+    let textIdx = ordered.length > 1 ? 1 : 0;
+    let lowestLuminance = Number.POSITIVE_INFINITY;
+    for (let i = 1; i < ordered.length; i++) {
+        const lum = relativeLuminance(ordered[i].color);
+        if (lum < lowestLuminance) {
+            lowestLuminance = lum;
+            textIdx = i;
+        }
+    }
+
+    return ordered.map((item, i) => ({
         ...item,
-        role: categorizeColorRole(item.color, sorted)
+        role: i === backgroundIdx ? 'Fondo' : i === textIdx ? 'Texto' : 'Acento',
     }));
+}
 
-    return paletteWithRoles.slice(0, 6);
+function hueDistance(a: number, b: number): number {
+    const diff = Math.abs(a - b);
+    return Math.min(diff, 360 - diff);
+}
+
+function isSimilarForConsensus(hexA: string, hexB: string): boolean {
+    // Fast exact-ish match in RGB distance.
+    if (deltaE(hexA, hexB) <= 30) return true;
+
+    const hslA = hexToHsl(hexA);
+    const hslB = hexToHsl(hexB);
+    if (!hslA || !hslB) return false;
+
+    const bothNearNeutral = hslA.s < 25 && hslB.s < 25;
+    if (bothNearNeutral) {
+        return Math.abs(hslA.l - hslB.l) <= 12;
+    }
+
+    // Same hue-family collapse (e.g. multiple yellows with different lightness).
+    return (
+        hueDistance(hslA.h, hslB.h) <= 14 &&
+        Math.abs(hslA.s - hslB.s) <= 25 &&
+        Math.abs(hslA.l - hslB.l) <= 35
+    );
+}
+
+function weightedAverageHex(items: { color: string; score: number }[]): string {
+    let rAcc = 0;
+    let gAcc = 0;
+    let bAcc = 0;
+    let total = 0;
+
+    for (const item of items) {
+        const rgb = hexToRgb(item.color);
+        if (!rgb) continue;
+        const w = Math.max(item.score, 0.0001);
+        rAcc += rgb.r * w;
+        gAcc += rgb.g * w;
+        bAcc += rgb.b * w;
+        total += w;
+    }
+
+    if (total <= 0) return '#000000';
+    const r = Math.round(rAcc / total);
+    const g = Math.round(gAcc / total);
+    const b = Math.round(bAcc / total);
+    return `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+}
+
+function mergeCloseConsensusColors(
+    colors: { color: string; sources: string[]; score: number }[]
+): { color: string; sources: string[]; score: number }[] {
+    const sorted = [...colors].sort((a, b) => b.score - a.score);
+    const merged: { color: string; sources: string[]; score: number }[] = [];
+
+    for (const current of sorted) {
+        const target = merged.find((m) => isSimilarForConsensus(current.color, m.color));
+        if (!target) {
+            merged.push({
+                color: current.color,
+                sources: [...new Set(current.sources)],
+                score: current.score,
+            });
+            continue;
+        }
+
+        const newScore = target.score + current.score;
+        const averagedColor = weightedAverageHex([
+            { color: target.color, score: target.score },
+            { color: current.color, score: current.score },
+        ]);
+
+        target.color = averagedColor;
+        target.score = newScore;
+        target.sources = [...new Set([...target.sources, ...current.sources])];
+    }
+
+    return merged.sort((a, b) => b.score - a.score);
 }
 
 import type { BrandDNA, AnalyzeBrandDNAResponse } from '@/lib/brand-types';
@@ -2711,7 +2829,7 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         console.log(`📷 Total imágenes procesadas: ${galleryImages.length}`);
 
 
-        // Weights (6 Sources): Design 40%, Weighted 20%, Visual 15%, Logo 15%, SVG 5%, Code 5%
+        // Weights (6 Sources): Visual 60%, Logo 20%, Weighted 8.57%, Design 5.71%, SVG 2.86%, Code 2.86%
         console.log(`🎯 Creando paleta consolidada final (6 fuentes)...`);
 
         // Consolidar paleta para el consenso final de 6 fuentes
@@ -2780,12 +2898,12 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
                 raw_visual_total: visualPalette.length,
                 raw_allColors_total: allColors.length,
                 consensus_weights: {
-                    visual: 0.50,
-                    weighted: 0.15,
-                    logo: 0.15,
-                    design: 0.10,
-                    svg: 0.05,
-                    code: 0.05
+                    visual: 0.60,
+                    logo: 0.20,
+                    weighted: 0.0857,
+                    design: 0.0571,
+                    svg: 0.0286,
+                    code: 0.0286
                 }
             },
         };

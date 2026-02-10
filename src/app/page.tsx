@@ -212,6 +212,16 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
                 </div>
               )}
             </div>
+            {!hasAccess && (
+              <div className="mt-5 text-center">
+                <Link
+                  href="/brand-kit?action=new"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
+                >
+                  Ya tengo cuenta, Llévame al Estudio.
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 
@@ -275,3 +285,4 @@ function FeatureCard({ icon, title, description, delay }: { icon: React.ReactNod
     </div>
   )
 }
+

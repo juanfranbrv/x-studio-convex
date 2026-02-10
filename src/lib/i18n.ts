@@ -79,7 +79,7 @@ const resources = {
                 edit: 'Editar',
                 create: 'Crear',
                 switchBrand: 'Cambiar marca',
-                newBrand: 'Nueva marca',
+                newBrand: 'Nuevo kit de marca',
             },
         },
     },

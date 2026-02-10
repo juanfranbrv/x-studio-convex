@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
@@ -20,6 +20,7 @@ import { useBrandKit } from '@/contexts/BrandKitContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { uploadBrandImage } from '@/app/actions/upload-image';
 import { updateUserBrandKit } from '@/app/actions/update-user-brand-kit';
+import { hexToRgb } from '@/lib/color-utils';
 
 import { Save, Download, CheckCircle, RotateCcw, AlertCircle, X, Check, Pencil, Plus, Bug } from 'lucide-react';
 
@@ -31,10 +32,61 @@ interface BrandDNABoardProps {
     onSaveSuccess?: () => void;
 }
 
+function colorLuminance(hex?: string): number {
+    if (!hex) return 1;
+    const rgb = hexToRgb(hex);
+    if (!rgb) return 1;
+    return (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+}
+
+function normalizeStudioColorRoles(payload: BrandDNA): BrandDNA {
+    const colors = Array.isArray(payload.colors) ? [...payload.colors] : [];
+    if (colors.length === 0) return payload;
+
+    const roleNormalized = colors.map((c) => {
+        const role = (c.role || '').toString().trim().toLowerCase();
+        let normalizedRole: 'Fondo' | 'Texto' | 'Acento' = 'Acento';
+        if (role.includes('fondo') || role.includes('background')) normalizedRole = 'Fondo';
+        else if (role.includes('texto') || role.includes('text')) normalizedRole = 'Texto';
+        return { ...c, role: normalizedRole };
+    });
+
+    const hasFondo = roleNormalized.some((c) => c.role === 'Fondo');
+    const hasTexto = roleNormalized.some((c) => c.role === 'Texto');
+
+    // Si la paleta no cumple contrato, la reescribimos con la regla de producto.
+    if (!hasFondo || !hasTexto) {
+        // Fondo = primer color
+        roleNormalized[0] = { ...roleNormalized[0], role: 'Fondo' };
+
+        // Texto = color mas oscuro entre el resto
+        if (roleNormalized.length > 1) {
+            let darkestIdx = 1;
+            let darkestLum = colorLuminance(roleNormalized[1].color);
+            for (let i = 2; i < roleNormalized.length; i++) {
+                const lum = colorLuminance(roleNormalized[i].color);
+                if (lum < darkestLum) {
+                    darkestLum = lum;
+                    darkestIdx = i;
+                }
+            }
+            roleNormalized.forEach((c, i) => {
+                if (i === 0) return;
+                roleNormalized[i] = { ...c, role: i === darkestIdx ? 'Texto' : 'Acento' };
+            });
+        }
+    }
+
+    return {
+        ...payload,
+        colors: roleNormalized,
+    };
+}
+
 export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate, onNewBrandKit, onSaveSuccess }: BrandDNABoardProps) {
     const { user } = useUser();
     const { syncActiveBrandKit } = useBrandKit();
-    const [data, setData] = useState<BrandDNA>(initialData);
+    const [data, setData] = useState<BrandDNA>(() => normalizeStudioColorRoles(initialData));
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -50,16 +102,21 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
     const [isEditingUrl, setIsEditingUrl] = useState(false);
     const [urlEdit, setUrlEdit] = useState(initialData.url || '');
     const [showDebug, setShowDebug] = useState(isDebug);
+    const canUseDebugAudit = isDebug;
+
+    useEffect(() => {
+        setData(normalizeStudioColorRoles(initialData));
+    }, [initialData]);
 
 
     const handleSave = async (isAuto = false) => {
         if (!user || !hasUnsavedChanges) return;
         if (!data.id) {
-            console.error('❌ Cannot save: Brand Kit ID is missing.', data);
+            console.error('âŒ Cannot save: Brand Kit ID is missing.', data);
             setErrorModal({
                 open: true,
                 title: 'Error de Identificador',
-                message: 'No se puede guardar porque falta el ID del Brand Kit. Intente recargar la página o regenerar.'
+                message: 'No se puede guardar porque falta el ID del Brand Kit. Intente recargar la pÃ¡gina o regenerar.'
             });
             return;
         }
@@ -219,7 +276,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         if (currentCount + files.length > 6) {
             setErrorModal({
                 open: true,
-                title: 'Límite Excedido',
+                title: 'LÃ­mite Excedido',
                 message: 'Solo puedes tener hasta 6 logos.'
             });
             return;
@@ -432,14 +489,14 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                                 </div>
                             )}
                             {/* Website URL display / Edit */}
-                            <span className="text-muted-foreground/40">·</span>
+                            <span className="text-muted-foreground/40">Â·</span>
                             <div className="flex items-center gap-1.5 group/url">
                                 {isEditingUrl ? (
                                     <div className="flex items-center gap-1.5">
                                         <Input
                                             value={urlEdit}
                                             onChange={(e) => setUrlEdit(e.target.value)}
-                                            placeholder="Añadir sitio web..."
+                                            placeholder="AÃ±adir sitio web..."
                                             className="text-xs h-7 px-2 w-[180px] border-primary"
                                             autoFocus
                                             onKeyDown={(e) => {
@@ -494,7 +551,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                                                 setIsEditingUrl(true);
                                             }}
                                             className="opacity-0 group-hover/url:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
-                                            title={data.url ? "Editar URL" : "Añadir URL"}
+                                            title={data.url ? "Editar URL" : "AÃ±adir URL"}
                                         >
                                             {data.url ? (
                                                 <Pencil className="w-3 h-3 text-muted-foreground hover:text-primary" />
@@ -515,18 +572,20 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                             Regenerar
                         </Button>
                     )}
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                            "text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-all gap-2 h-9",
-                            showDebug && "text-emerald-500 bg-emerald-500/10"
-                        )}
-                        onClick={() => setShowDebug(!showDebug)}
-                    >
-                        <Bug className="w-4 h-4" />
-                        Auditoría
-                    </Button>
+                    {canUseDebugAudit && (
+    <Button
+        variant="ghost"
+        size="sm"
+        className={cn(
+            "text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-all gap-2 h-9",
+            showDebug && "text-emerald-500 bg-emerald-500/10"
+        )}
+        onClick={() => setShowDebug(!showDebug)}
+    >
+        <Bug className="w-4 h-4" />
+        Auditoria
+    </Button>
+)}
                     <Button variant="outline" size="sm" onClick={handleExportJSON} className="gap-2 h-9">
                         <Download className="w-4 h-4" />
                         Exportar
@@ -673,7 +732,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             </div>
 
             {/* Technical Audit (Debug) */}
-            {showDebug && <TechnicalAudit trace={data.api_trace} isVisible={showDebug} />}
+            {canUseDebugAudit && showDebug && <TechnicalAudit trace={data.api_trace} isVisible={showDebug} debugData={data.debug} />}
 
             {/* Lightbox */}
             {
@@ -714,3 +773,4 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         </div >
     );
 }
+
