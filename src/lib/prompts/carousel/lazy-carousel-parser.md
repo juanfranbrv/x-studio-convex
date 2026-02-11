@@ -46,11 +46,12 @@ REGLAS CLAVE
   - Si existe URL de marca en el contexto, incl?yela en el CTA.
 - Si el usuario exige "uno por diapositiva" y adem?s hay que incluir GANCHO y CTA, el m?nimo de slides es N+2.
   - Si REQUESTED_SLIDE_COUNT es menor al m?nimo, responde con ERROR y explica el motivo.
-- Genera textos finales (no placeholders) y la composici?n de cada slide.
+- Genera textos finales (no placeholders) y define la arquitectura visual de cada slide.
 - La composici?n debe ser coherente: misma plantilla base, jerarqu?a y ritmo visual.
 - Genera un CAPTION final para la publicaci?n, coherente con el carrusel.
 - Si no puedes devolver EXACTAMENTE N slides, responde con ERROR y explica el motivo.
-- **REGLA VISUAL CRITICA**: Si existe VISUAL REFERENCE arriba, el campo "visualPrompt" de CADA slide DEBE describir una escena en el MISMO estilo y medio de esa referencia. Si la referencia es "vector illustration", NO generes "Fotografia". Copia el estilo, iluminacion, colores y medio EXACTOS.
+- **REGLA VISUAL CRITICA**: Si existe VISUAL REFERENCE arriba, el campo "visualPrompt" de CADA slide DEBE describir una escena en el MISMO estilo y medio de esa referencia. Si la referencia es "vector illustration", NO generes "Fotografia". Copia el medio y rasgos visuales (iluminacion/textura/profundidad) sin imponer colores concretos fuera del kit.
+- PROHIBIDO usar nombres de tipografias/fuentes (ej: Google Sans Flex, Roboto, Inter) dentro de title, description, caption o visualPrompt.
 
 INTENTOS (IDs permitidos):
 A. Vender (Ventas)
@@ -169,7 +170,7 @@ FORMATO DE SALIDA (JSON ?NICO, sin markdown):
       "role": "hook | content | cta",
       "title": "T?tulo corto",
       "description": "Texto breve del slide (1-2 frases).",
-      "composition": "Descripci?n de composici?n: jerarqu?a, zonas de texto/imagen, bloques, etc.",
+      "composition": "Blueprint arquitectonico del slide: reticula, areas, jerarquia, anclajes y margenes (sin colores, sin tipografias, sin estilo cromatico).",
       "visualPrompt": "Instrucci?n visual detallada. SI existe VISUAL REFERENCE arriba, DEBE describir una escena en el MISMO estilo y medio (ilustracion/foto) de esa referencia. NO inventes fotografia si la referencia es ilustracion.",
       "focus": "Foco principal del slide"
     }
@@ -188,4 +189,6 @@ REGLAS DE SALIDA
 - No inventes IDs de intentos ni estructuras.
 - No repitas el headline o CTA exactos en m?ltiples slides.
 - Si hay URL de marca en el contexto, ?sala en el CTA del ?ltimo slide.
+- En "composition" queda PROHIBIDO mencionar colores, hex, tipografias, materiales, estilos o atmosfera; solo arquitectura visual.
+- En "visualPrompt" no fijes colores concretos ni paletas; el color lo gobierna el kit de marca.
 - FORMATO DE URLs: Todas las URLs deben ser texto plano (ej: "https://example.com"). NUNCA uses formato markdown como "[texto](url)". Las URLs en formato markdown rompen la interfaz y se considerar? un fallo.

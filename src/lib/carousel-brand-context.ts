@@ -38,10 +38,9 @@ export function buildCarouselBrandContext(
         parts.push(`ESTETICA VISUAL: ${brand.visual_aesthetic.join(', ')}`)
     }
 
-    // Fonts
+    // Typography system (without exposing font-family names to avoid text leakage in generated copy)
     if (brand.fonts?.length) {
-        const fontNames = brand.fonts.map(f => f.family).join(', ')
-        parts.push(`TIPOGRAFIAS: ${fontNames}`)
+        parts.push('TIPOGRAFIAS: Mantener el sistema tipografico de la marca (jerarquia y consistencia), sin mencionar nombres de fuentes en el contenido visible.')
     }
 
     // Logo instruction

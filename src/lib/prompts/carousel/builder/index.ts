@@ -64,9 +64,10 @@ ${narrative.summary}
 **Composition ID**: "${composition.id}"
 
 ### Design Guidelines
-1. **Flat & Monochrome**: Use the brand's primary color with varying opacities.
-2. **Abstract & Geometric**: Avoid complex illustrations. Use shapes (circles, squares, lines) to represent concepts.
+1. **Architecture First**: Define only grid, zones, anchors, hierarchy and spacing rhythm.
+2. **Abstract & Geometric**: Avoid scene-level art direction in composition fields; focus on structure.
 3. **Semantic Alignment**: The layout MUST reinforce the slide's specific message (e.g., use a "Bridge" layout for a transition slide).
+4. **No Color Instructions in Layout**: Never include hex codes, color names, or palette directives inside composition/layout descriptions.
 
 ### Consistency Contract (Critical)
 - All slides must share the SAME base layout, typography scale, and spacing system.
@@ -88,6 +89,7 @@ The output must be a single JSON object with a "slides" array. Each slide object
 ## Important
 - **Strict JSON**: Return ONLY valid JSON. No markdown code blocks like \`\`\`json.
 - **Visuals**: Ensure "composition_id" matches the intended visual metaphor for that slide.
+- **No Font Names in Copy**: Never include font family names (e.g., Google Sans Flex, Inter, Roboto) inside title/content/visualPrompt.
 ${ctx.includeLogo ? LOGO_PROTECTION_RULE : ''}
 ${BRAND_DNA_RULE}
 ${BRAND_COLORS_RULE}

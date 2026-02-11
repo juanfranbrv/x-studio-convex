@@ -430,7 +430,13 @@ export default function CarouselPage() {
                 const slideContent = normalizedSlides[i]
                 setSlides(prev => prev.map(s => s.index === slideContent.index ? { ...s, status: 'generating' as const } : s))
 
-                const consistencyRefUrls = i > 0 && generatedImageUrls[0] ? [generatedImageUrls[0]] : undefined
+                const consistencyRefUrls: string[] = []
+                if (i > 0 && generatedImageUrls[0]) {
+                    consistencyRefUrls.push(generatedImageUrls[0])
+                }
+                if (i > 0 && generatedImageUrls[i - 1]) {
+                    consistencyRefUrls.push(generatedImageUrls[i - 1])
+                }
                 const selectedLogoUrl = settings.includeLogoOnSlides ? settings.selectedLogoUrl : undefined
 
                 const result = await regenerateSlideAction(
@@ -447,7 +453,7 @@ export default function CarouselPage() {
                     settings.structureId,
                     settings.aiImageDescription,
                     settings.selectedImageUrls,
-                    consistencyRefUrls
+                    consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined
                 )
 
                 if (cancelGenerationRef.current) {
@@ -693,6 +699,14 @@ export default function CarouselPage() {
             }
 
             const selectedLogoUrl = carouselSettings.includeLogoOnSlides ? carouselSettings.selectedLogoUrl : undefined
+            const consistencyRefUrls: string[] = []
+            if (index > 0 && slides[0]?.imageUrl) {
+                consistencyRefUrls.push(slides[0].imageUrl)
+            }
+            if (index > 0 && slides[index - 1]?.imageUrl) {
+                consistencyRefUrls.push(slides[index - 1].imageUrl)
+            }
+
             const result = await regenerateSlideAction(
                 index,
                 slideContent,
@@ -707,7 +721,7 @@ export default function CarouselPage() {
                 carouselSettings.structureId,
                 carouselSettings.aiImageDescription,
                 carouselSettings.selectedImageUrls,
-                undefined
+                consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined
             )
 
             if (result.success && result.imageUrl) {

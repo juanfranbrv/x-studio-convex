@@ -5,13 +5,14 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Star, Bookmark as BookmarkIcon, SquarePlus, Square } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import { ImageReferenceSelector } from '@/components/studio/creation-flow/ImageReferenceSelector'
 import { resizeImage } from '@/lib/image-utils'
-import { CAROUSEL_STRUCTURES, getNarrativeStructure } from '@/lib/carousel-structures'
+import { CAROUSEL_STRUCTURES, getAutomaticBasicComposition, getNarrativeStructure } from '@/lib/carousel-structures'
 import { CarouselCompositionSelector } from '@/components/studio/carousel/CarouselCompositionSelector'
 import { BrandingConfigurator } from '@/components/studio/creation-flow/BrandingConfigurator'
 import type { SelectedColor } from '@/lib/creation-flow-types'
@@ -41,6 +42,8 @@ export interface CarouselSettings {
     selectedImageUrls: string[]
     includeLogoOnSlides: boolean
 }
+
+type CompositionMode = 'basic' | 'advanced'
 
 interface CarouselControlsPanelProps {
     onAnalyze: (settings: CarouselSettings) => Promise<void>
@@ -99,6 +102,28 @@ const STYLE_OPTIONS = [
     { id: 'elegant', label: 'Elegante' },
 ]
 
+function pickCompositionId(
+    structureId: string,
+    mode: CompositionMode,
+    selectedId: string | undefined,
+    seed: string,
+    basicSelectedId?: string | null
+): string {
+    const structure = getNarrativeStructure(structureId) || CAROUSEL_STRUCTURES[0]
+    if (!structure) return 'free'
+
+    if (mode === 'basic') {
+        const basics = structure.compositions.filter((composition) => composition.mode === 'basic')
+        return getAutomaticBasicComposition(structure.id, seed)?.id || basics[0]?.id || structure.compositions[0]?.id || 'free'
+    }
+
+    const selectable = structure.compositions
+    if (selectedId && selectable.some((composition) => composition.id === selectedId)) {
+        return selectedId
+    }
+    return selectable[0]?.id || structure.compositions[0]?.id || 'free'
+}
+
 export function CarouselControlsPanel({
     onAnalyze,
     onGenerate,
@@ -139,10 +164,20 @@ export function CarouselControlsPanel({
     const [style, setStyle] = useState('minimal')
     const [slides, setSlides] = useState<SlideConfig[]>([])
     const [structureId, setStructureId] = useState<string>(analysisStructure?.id || 'problema-solucion')
+    const [compositionMode, setCompositionMode] = useState<CompositionMode>('basic')
+    const [basicSelectedCompositionId, setBasicSelectedCompositionId] = useState<string | null>(null)
     const [hasUserSelectedStructure, setHasUserSelectedStructure] = useState(false)
     const [lastAnalysisStructureId, setLastAnalysisStructureId] = useState<string | null>(analysisStructure?.id || null)
     const currentStructure = getNarrativeStructure(structureId) || CAROUSEL_STRUCTURES[0]
-    const [compositionId, setCompositionId] = useState(currentStructure?.compositions[0]?.id || 'free')
+    const [compositionId, setCompositionId] = useState(
+        pickCompositionId(
+            structureId,
+            'basic',
+            currentStructure?.compositions[0]?.id,
+            `${structureId}|5`,
+            null
+        )
+    )
     const [editingSlide, setEditingSlide] = useState<number | null>(null)
     const [editText, setEditText] = useState('')
 
@@ -168,6 +203,8 @@ export function CarouselControlsPanel({
     const canAnalyze = prompt.trim().length > 0 && !isAnalyzing && !isGenerating && brandKit !== null
     const canContinueFromImage = imageSourceMode !== 'generate' || Boolean(aiImageDescription.trim())
     const isStepVisible = (step: number) => showAllSteps || currentStep >= step
+    const basicCompositions = (currentStructure?.compositions || []).filter((composition) => composition.mode === 'basic')
+    const advancedCompositions = currentStructure?.compositions || []
 
     // Get brand logos
     const brandLogos = brandKit?.logos || []
@@ -250,21 +287,42 @@ export function CarouselControlsPanel({
             setLastAnalysisStructureId(nextId)
             setHasUserSelectedStructure(false)
         }
-        if (!hasUserSelectedStructure && analysisStructure?.id && analysisStructure.id !== structureId) {
-            const found = getNarrativeStructure(analysisStructure.id)
-            if (found) {
-                setStructureId(found.id)
-                setCompositionId(found.compositions[0]?.id || 'free')
-            }
-        }
-    }, [analysisStructure, structureId, hasUserSelectedStructure, lastAnalysisStructureId])
+    }, [analysisStructure, lastAnalysisStructureId])
 
     useEffect(() => {
         const refreshed = getNarrativeStructure(structureId)
         if (refreshed && refreshed.compositions.length > 0) {
-            setCompositionId(refreshed.compositions[0].id)
+            setCompositionId(
+                pickCompositionId(
+                    structureId,
+                    compositionMode,
+                    compositionId,
+                    `${structureId}|${prompt.trim()}|${slideCount}`,
+                    basicSelectedCompositionId
+                )
+            )
         }
-    }, [structureId])
+    }, [structureId, compositionMode, compositionId, prompt, slideCount, basicSelectedCompositionId])
+
+    useEffect(() => {
+        if (!basicSelectedCompositionId) return
+        if (basicCompositions.some((composition) => composition.id === basicSelectedCompositionId)) return
+        setBasicSelectedCompositionId(null)
+    }, [basicSelectedCompositionId, basicCompositions])
+
+    useEffect(() => {
+        if (compositionMode !== 'basic') return
+        const autoId = pickCompositionId(
+            structureId,
+            'basic',
+            compositionId,
+            `${structureId}|${prompt.trim()}|${slideCount}`,
+            basicSelectedCompositionId
+        )
+        if (autoId !== compositionId) {
+            setCompositionId(autoId)
+        }
+    }, [compositionMode, structureId, compositionId, prompt, slideCount, basicSelectedCompositionId])
 
     useEffect(() => {
         if (showAllSteps) {
@@ -279,6 +337,13 @@ export function CarouselControlsPanel({
             setCurrentStep(prev => (prev < 3 ? 3 : prev))
         }
     }, [analysisStructure?.id, lastAnalyzedPrompt, prompt])
+
+    useEffect(() => {
+        if (showAllSteps) return
+        if (compositionMode !== 'basic') return
+        if (currentStep < 3) return
+        setCurrentStep(prev => (prev < 4 ? 4 : prev))
+    }, [compositionMode, currentStep, showAllSteps])
 
     useEffect(() => {
         if (!showAllSteps && hasReferenceSelection) {
@@ -491,9 +556,20 @@ export function CarouselControlsPanel({
     }, [selectedLogoId, includeLogoOnSlides, brandLogos, primaryLogo, onSelectedLogoChange])
 
     const buildSettings = (overrides: Partial<CarouselSettings> = {}) => {
-        const finalSlides = slides.length === slideCount
+        const promptValue = overrides.prompt ?? prompt
+        const slideCountValue = overrides.slideCount ?? slideCount
+        const structureIdValue = overrides.structureId ?? structureId
+        const resolvedCompositionId = pickCompositionId(
+            structureIdValue,
+            compositionMode,
+            overrides.compositionId ?? compositionId,
+            `${structureIdValue}|${promptValue.trim()}|${slideCountValue}`,
+            basicSelectedCompositionId
+        )
+
+        const finalSlides = slides.length === slideCountValue
             ? slides
-            : Array.from({ length: slideCount }, (_, i) => slides[i] || { index: i })
+            : Array.from({ length: slideCountValue }, (_, i) => slides[i] || { index: i })
 
         const selectedImageUrls =
             imageSourceMode === 'upload'
@@ -503,15 +579,15 @@ export function CarouselControlsPanel({
                     : []
 
         const baseSettings = {
-            prompt,
-            slideCount,
-            aspectRatio,
+            prompt: promptValue,
+            slideCount: slideCountValue,
+            aspectRatio: overrides.aspectRatio ?? aspectRatio,
             style: STYLE_OPTIONS.find(s => s.id === style)?.label || 'Minimalista',
             slides: finalSlides,
-            compositionId,
-            structureId,
-            imageSourceMode,
-            aiImageDescription: aiImageDescription.trim() || undefined,
+            compositionId: resolvedCompositionId,
+            structureId: structureIdValue,
+            imageSourceMode: overrides.imageSourceMode ?? imageSourceMode,
+            aiImageDescription: (overrides.aiImageDescription ?? aiImageDescription).trim() || undefined,
             selectedLogoUrl: resolveSelectedLogoUrl(),
             selectedColors: selectedColors.length > 0 ? selectedColors : brandColors.slice(0, 3).map(c => ({
                 color: c.color,
@@ -543,8 +619,17 @@ export function CarouselControlsPanel({
         setSlides([])
         const defaultStructureId = analysisStructure?.id || 'problema-solucion'
         setStructureId(defaultStructureId)
-        const freshStructure = getNarrativeStructure(defaultStructureId) || CAROUSEL_STRUCTURES[0]
-        setCompositionId(freshStructure?.compositions[0]?.id || 'free')
+        setCompositionMode('basic')
+        setCompositionId(
+            pickCompositionId(
+                defaultStructureId,
+                'basic',
+                undefined,
+                `${defaultStructureId}|5`,
+                null
+            )
+        )
+        setBasicSelectedCompositionId(null)
         setSelectedLogoId(brandLogos.length > 0 ? 'logo-0' : null)
         setSelectedColors([])
         setSelectedBrandKitImageIds([])
@@ -564,13 +649,32 @@ export function CarouselControlsPanel({
         setSlideCount(state.slideCount || 5)
         setAspectRatio(state.aspectRatio || '4:5')
         setStyle(state.style || 'minimal')
+        const nextMode: CompositionMode = state.compositionMode === 'advanced' ? 'advanced' : 'basic'
+        setCompositionMode(nextMode)
         if (state.structureId) {
-            setStructureId(state.structureId)
-            const nextStructure = getNarrativeStructure(state.structureId)
-            setCompositionId(state.compositionId || nextStructure?.compositions[0]?.id || 'free')
+            const nextStructureId = state.structureId
+            setStructureId(nextStructureId)
+            setCompositionId(
+                pickCompositionId(
+                    nextStructureId,
+                    nextMode,
+                    state.compositionId,
+                    `${nextStructureId}|${(state.prompt || '').trim()}|${state.slideCount || 5}`,
+                    state.basicSelectedCompositionId ?? null
+                )
+            )
         } else if (state.compositionId) {
-            setCompositionId(state.compositionId)
+            setCompositionId(
+                pickCompositionId(
+                    structureId,
+                    nextMode,
+                    state.compositionId,
+                    `${structureId}|${(state.prompt || '').trim()}|${state.slideCount || slideCount}`,
+                    state.basicSelectedCompositionId ?? null
+                )
+            )
         }
+        setBasicSelectedCompositionId(state.basicSelectedCompositionId ?? null)
         setImageSourceMode(state.imageSourceMode || 'upload')
         setAiImageDescription(state.aiImageDescription || '')
         setSelectedBrandKitImageIds(state.selectedBrandKitImageIds || [])
@@ -617,6 +721,8 @@ export function CarouselControlsPanel({
                     style,
                     structureId,
                     compositionId,
+                    compositionMode,
+                    basicSelectedCompositionId,
                     imageSourceMode,
                     aiImageDescription: aiImageDescription || undefined,
                     selectedBrandKitImageIds,
@@ -719,7 +825,7 @@ export function CarouselControlsPanel({
                     />
                     <div className="relative">
                         <Textarea
-                            placeholder="Ej: Quiero dar valor real. Sácame los 5 errores típicos que cometemos los españoles al hablar inglés y cómo corregirlos. Algo que la gente quiera guardar para repasar luego."
+                            placeholder="Ej: Quiero dar valor real. SÃ¡came los 5 errores tÃ­picos que cometemos los espaÃ±oles al hablar inglÃ©s y cÃ³mo corregirlos. Algo que la gente quiera guardar para repasar luego."
                             value={prompt}
                             onChange={(e) => {
                                 const nextPrompt = e.target.value
@@ -764,7 +870,7 @@ export function CarouselControlsPanel({
                                         variant="outline"
                                         onClick={onCancelAnalyze}
                                         className="h-7 w-7"
-                                        title="Detener análisis"
+                                        title="Detener anÃ¡lisis"
                                     >
                                         <Square className="w-3.5 h-3.5" />
                                     </Button>
@@ -797,48 +903,83 @@ export function CarouselControlsPanel({
                 <div ref={(el) => { stepRefs.current[3] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader
                         icon={Layout}
-                        title="Composición"
+                        title="Composicion"
                         extra={
-                            <Select
-                                value={structureId}
-                                onValueChange={(value) => {
-                                    setHasUserSelectedStructure(true)
-                                    setStructureId(value)
-                                }}
-                            >
-                                <SelectTrigger
-                                    size="sm"
-                                    className="h-6 px-2 text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 rounded-full shadow-none"
-                                >
-                                    <SelectValue placeholder="Estructura" />
-                                </SelectTrigger>
-                                <SelectContent align="end">
-                                    {CAROUSEL_STRUCTURES.map((structure) => (
-                                        <SelectItem key={structure.id} value={structure.id}>
-                                            <span className="flex items-center justify-between w-full gap-2">
-                                                <span>{structure.name}</span>
-                                                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                                                    {structure.id}
-                                                </span>
-                                            </span>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-2">
+                                <span className={cn("text-[10px] font-medium", compositionMode === 'advanced' ? "text-primary" : "text-muted-foreground")}>
+                                    Avanzado
+                                </span>
+                                <Switch
+                                    checked={compositionMode === 'advanced'}
+                                    onCheckedChange={(checked) => {
+                                        const nextMode: CompositionMode = checked ? 'advanced' : 'basic'
+                                        setCompositionMode(nextMode)
+                                        setCompositionId(
+                                            pickCompositionId(
+                                                structureId,
+                                                nextMode,
+                                                compositionId,
+                                                `${structureId}|${prompt.trim()}|${slideCount}`,
+                                                basicSelectedCompositionId
+                                            )
+                                        )
+                                    }}
+                                    aria-label="Activar modo avanzado de composicion"
+                                />
+                            </div>
                         }
                     />
-                    <CarouselCompositionSelector
-                        key={structureId}
-                        compositions={currentStructure?.compositions || []}
-                        selectedId={compositionId}
-                        onSelect={(id) => {
-                            setCompositionId(id)
-                            setCurrentStep(prev => (prev < 4 ? 4 : prev))
+                    <Select
+                        value={structureId}
+                        onValueChange={(value) => {
+                            setHasUserSelectedStructure(true)
+                            setStructureId(value)
                         }}
-                    />
-                    <p className="text-[11px] text-muted-foreground leading-snug">
-                        Define la forma de distribuir el contenido en cada diapositiva.
-                    </p>
+                    >
+                        <SelectTrigger
+                            size="sm"
+                            className="h-6 px-2 text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 rounded-full shadow-none"
+                        >
+                            <SelectValue placeholder="Estructura" />
+                        </SelectTrigger>
+                        <SelectContent align="end">
+                            {CAROUSEL_STRUCTURES.map((structure) => (
+                                <SelectItem key={structure.id} value={structure.id}>
+                                    <span className="flex items-center justify-between w-full gap-2">
+                                        <span>{structure.name}</span>
+                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                            {structure.id}
+                                        </span>
+                                    </span>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {compositionMode === 'advanced' ? (
+                        <>
+                            <CarouselCompositionSelector
+                                key={`${structureId}-advanced`}
+                                compositions={advancedCompositions}
+                                selectedId={compositionId}
+                                onSelect={(id) => {
+                                    setCompositionId(id)
+                                    setCurrentStep(prev => (prev < 4 ? 4 : prev))
+                                }}
+                            />
+                            <p className="text-[11px] text-muted-foreground leading-snug">
+                                Modo avanzado: eliges manualmente la composicion.
+                            </p>
+                        </>
+                    ) : (
+                        <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 space-y-1.5">
+                            <p className="text-[11px] text-primary font-medium leading-relaxed">
+                                Modo basico activo. El sistema selecciona internamente la composicion mas adecuada segun tu prompt, con criterio determinista (no azar puro), sin mostrarla al usuario final.
+                            </p>
+                            <p className="text-[11px] text-primary/80 leading-relaxed">
+                                La arquitectura se asigna en segundo plano y se mantiene consistente durante todo el carrusel.
+                            </p>
+                        </div>
+                    )}
                 </div>
                 )}
 
@@ -857,11 +998,11 @@ export function CarouselControlsPanel({
                             <div className="w-8 h-10 rounded bg-muted border border-border" />
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold">Vertical Estándar (Retrato)</span>
+                                    <span className="text-xs font-semibold">Vertical EstÃ¡ndar (Retrato)</span>
                                     <span className="text-[10px] font-medium text-muted-foreground">4:5</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1350 · el estándar más seguro para evitar recortes en dispositivos antiguos o Meta Ads.
+                                    1080x1350 Â· el estÃ¡ndar mÃ¡s seguro para evitar recortes en dispositivos antiguos o Meta Ads.
                                 </p>
                             </div>
                         </button>
@@ -879,7 +1020,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">3:4</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1440 · +6.6% pantalla · domina el feed y encaja con la nueva cuadrícula vertical.
+                                    1080x1440 Â· +6.6% pantalla Â· domina el feed y encaja con la nueva cuadrÃ­cula vertical.
                                 </p>
                             </div>
                         </button>
@@ -897,7 +1038,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">1:1</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1080 · formato original y clásico para composiciones equilibradas.
+                                    1080x1080 Â· formato original y clÃ¡sico para composiciones equilibradas.
                                 </p>
                             </div>
                         </button>
@@ -972,7 +1113,7 @@ export function CarouselControlsPanel({
                             <div className="flex items-center justify-between pt-1">
                                 <div className="space-y-0.5">
                                     <p className="text-sm font-medium">Aplicar logo en todas</p>
-                                    <p className="text-xs text-muted-foreground">Misma posición y tamaño</p>
+                                    <p className="text-xs text-muted-foreground">Misma posiciÃ³n y tamaÃ±o</p>
                                 </div>
                                 <button
                                     onClick={() => setIncludeLogoOnSlides(!includeLogoOnSlides)}
@@ -1051,7 +1192,7 @@ export function CarouselControlsPanel({
                             variant="outline"
                             size="icon"
                             className="h-9 w-9"
-                            title="Detener generación"
+                            title="Detener generaciÃ³n"
                         >
                             <Square className="w-4 h-4" />
                         </Button>

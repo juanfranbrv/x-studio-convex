@@ -3,7 +3,7 @@
 import { generateContentImageUnified } from '@/lib/gemini'
 import { generateTextUnified } from '@/lib/gemini'
 import type { BrandDNA } from '@/lib/brand-types'
-import { buildCarouselDecompositionPrompt, buildCarouselImagePrompt } from '@/lib/prompts/carousel'
+import { buildCarouselDecompositionPrompt } from '@/lib/prompts/carousel'
 import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
 import { CAROUSEL_STRUCTURES, getNarrativeComposition, getNarrativeStructure } from '@/lib/carousel-structures'
 import { buildCarouselPrompt } from '@/lib/prompts/carousel/builder'
@@ -432,53 +432,13 @@ async function decomposeIntoSlides(
         return result
     }
 
-    /**
-     * Extracts JSON content from a response string (handles code fences).
-     */
-    function extractJsonFromResponse(text: string): string | null {
-        const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
-        if (fenced?.[1]) {
-            return fenced[1].trim()
-        }
-
-        const startIdx = text.indexOf('{')
-        if (startIdx === -1) {
-            const arrayStart = text.indexOf('[')
-            if (arrayStart === -1) return null
-            let bracketCount = 0
-            let inStr = false
-            let esc = false
-            for (let i = arrayStart; i < text.length; i++) {
-                const ch = text[i]
-                if (inStr) {
-                    if (esc) {
-                        esc = false
-                    } else if (ch === '\\') {
-                        esc = true
-                    } else if (ch === '"') {
-                        inStr = false
-                    }
-                    continue
-                }
-                if (ch === '"') {
-                    inStr = true
-                    continue
-                }
-                if (ch === '[') bracketCount++
-                if (ch === ']') bracketCount--
-                if (bracketCount === 0) {
-                    const arrayText = text.slice(arrayStart, i + 1)
-                    return `{"slides": ${arrayText}}`
-                }
-            }
-            return null
-        }
-
-        let braceCount = 0
+    function extractBalancedBlock(input: string, startIdx: number, openChar: '{' | '[', closeChar: '}' | ']'): string | null {
+        if (startIdx < 0 || startIdx >= input.length || input[startIdx] !== openChar) return null
+        let depth = 0
         let inStr = false
         let esc = false
-        for (let i = startIdx; i < text.length; i++) {
-            const ch = text[i]
+        for (let i = startIdx; i < input.length; i++) {
+            const ch = input[i]
             if (inStr) {
                 if (esc) {
                     esc = false
@@ -493,11 +453,76 @@ async function decomposeIntoSlides(
                 inStr = true
                 continue
             }
-            if (ch === '{') braceCount++
-            if (ch === '}') braceCount--
-            if (braceCount === 0) {
-                return text.slice(startIdx, i + 1)
+            if (ch === openChar) depth++
+            if (ch === closeChar) depth--
+            if (depth === 0) {
+                return input.slice(startIdx, i + 1)
             }
+        }
+        return null
+    }
+
+    function normalizeJsonLikeText(raw: string): string {
+        return raw
+            .replace(/^\uFEFF/, '')
+            .replace(/[\u201C\u201D]/g, '"')
+            .replace(/[\u2018\u2019]/g, "'")
+            .replace(/,\s*([}\]])/g, '$1')
+            .trim()
+    }
+
+    /**
+     * Extracts JSON content from a response string (handles code fences and loose outputs).
+     */
+    function extractJsonFromResponse(text: string): string | null {
+        if (!text || !text.trim()) return null
+        const normalized = normalizeJsonLikeText(text)
+
+        const fenced = normalized.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+        if (fenced?.[1]) {
+            return normalizeJsonLikeText(fenced[1])
+        }
+
+        const openFence = normalized.match(/```(?:json)?\s*([\s\S]*)$/i)
+        if (openFence?.[1]) {
+            const fencedTail = normalizeJsonLikeText(openFence[1])
+            if (fencedTail.startsWith('{') || fencedTail.startsWith('[')) {
+                return fencedTail
+            }
+        }
+
+        const firstObjectIdx = normalized.indexOf('{')
+        if (firstObjectIdx !== -1) {
+            const objectBlock = extractBalancedBlock(normalized, firstObjectIdx, '{', '}')
+            if (objectBlock) {
+                return normalizeJsonLikeText(objectBlock)
+            }
+        }
+
+        const slidesKeyMatch = normalized.match(/"?slides"?\s*:\s*\[/i)
+        if (slidesKeyMatch?.index !== undefined) {
+            const arrayStart = normalized.indexOf('[', slidesKeyMatch.index)
+            if (arrayStart !== -1) {
+                const slidesArray = extractBalancedBlock(normalized, arrayStart, '[', ']')
+                if (slidesArray) {
+                    return normalizeJsonLikeText(`{"slides": ${slidesArray}}`)
+                }
+            }
+        }
+
+        const firstArrayIdx = normalized.indexOf('[')
+        if (firstArrayIdx !== -1) {
+            const arrayBlock = extractBalancedBlock(normalized, firstArrayIdx, '[', ']')
+            if (arrayBlock) {
+                const candidate = normalizeJsonLikeText(arrayBlock)
+                if (/\{[\s\S]*\}/.test(candidate)) {
+                    return `{"slides": ${candidate}}`
+                }
+            }
+        }
+
+        if (normalized.startsWith('{') || normalized.startsWith('[')) {
+            return normalized
         }
 
         return null
@@ -641,10 +666,12 @@ async function decomposeIntoSlides(
     }
 
     try {
-        for (let attempt = 0; attempt < 2; attempt++) {
+        for (let attempt = 0; attempt < 3; attempt++) {
             const promptToUse = attempt === 0
                 ? decompositionPrompt
-                : `${decompositionPrompt}\n\nREINTENTO: Devuelve EXACTAMENTE ${requested} slides válidos. La slide final debe contener un CTA con verbo de acción claro (ej: inscríbete, visita, escríbenos) y URL si existe. Si fallas, responde con ERROR.`
+                : attempt === 1
+                    ? `${decompositionPrompt}\n\nREINTENTO: Devuelve EXACTAMENTE ${requested} slides validos. La slide final debe contener un CTA con verbo de accion claro (ej: inscribete, visita, escribenos) y URL si existe. Si fallas, responde con ERROR.`
+                    : `${decompositionPrompt}\n\nULTIMO REINTENTO CRITICO: Responde SOLO JSON VALIDO. Sin markdown, sin texto extra, sin explicaciones. Debe empezar por '{' y terminar por '}'. Incluye SIEMPRE { "slides": [...], "caption": "...", "structure": {...}, "detectedIntent": "..." }. Si no puedes, responde exactamente: ERROR`
 
             const response = await generateTextUnified(
                 brandWrapper,
@@ -661,7 +688,9 @@ async function decomposeIntoSlides(
             // Extract JSON with robust parsing
             const jsonString = extractJsonFromResponse(response)
             if (!jsonString) {
-                if (attempt === 1) throw new Error('No valid JSON found in response')
+                const preview = response.slice(0, 220).replace(/\s+/g, ' ')
+                console.error(`[Carousel JSON] attempt=${attempt + 1} no valid JSON extracted. preview="${preview}"`)
+                if (attempt === 2) throw new Error('No valid JSON found in response')
                 continue
             }
             let parsed: any
@@ -675,14 +704,14 @@ async function decomposeIntoSlides(
                     parsed = JSON.parse(repairJsonString(jsonString))
                 } catch (repairError) {
                     console.error('JSON parse failed. Raw response snippet:', jsonString.substring(0, 200))
-                    if (attempt === 1) throw new Error(`Invalid JSON from AI: ${(firstError as Error).message}`)
+                    if (attempt === 2) throw new Error(`Invalid JSON from AI: ${(firstError as Error).message}`)
                     continue
                 }
             }
             try {
                 return normalizeParsed(parsed)
             } catch (err) {
-                if (attempt === 1) throw err
+                if (attempt === 2) throw err
                 continue
             }
         }
@@ -701,7 +730,6 @@ async function decomposeIntoSlides(
 async function generateSlideImage(
     slideContent: SlideContent,
     totalSlides: number,
-    style: string,
     aspectRatio: string,
     brand: BrandDNA,
     model: string,
@@ -713,41 +741,82 @@ async function generateSlideImage(
     structureId?: string,
     consistencyRefUrls?: string[]
 ): Promise<{ imageUrl: string; prompt: string; references: DebugImageReference[] }> {
-    const brandContext = buildCarouselBrandContext(brand, selectedColors, selectedLogoUrl)
-    const compositionPreset = (structureId && compositionId)
-        ? getNarrativeComposition(structureId, compositionId)
-        : undefined
-    const fullPrompt = buildCarouselImagePrompt({
-        slideIndex: slideContent.index,
+    const specificCompId = compositionId || slideContent.composition
+    const composition = (structureId && specificCompId)
+        ? getNarrativeComposition(structureId, specificCompId)
+        : {
+            layoutPrompt: "Standard clean social media composition with clear text area.",
+            name: "Free Layout"
+        }
+
+    const findColorByRole = (role: string, fallback: string) => {
+        if (!selectedColors || selectedColors.length === 0) return fallback
+        const palette = selectedColors as { color?: string; role?: string }[]
+        const match = palette.find(c => c?.role === role)
+        return (match?.color || fallback)
+    }
+
+    const brandColors = {
+        background: findColorByRole('Fondo', '#141210'),
+        accent: findColorByRole('Acento', '#F0E500'),
+        text: findColorByRole('Texto', '#FFFFFF')
+    }
+
+    const isLastSlide = slideContent.index === totalSlides - 1
+    const urlPattern = /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+\.(?:com|es|org|net|io|co)[^\s]*)/i
+    const extractedUrl = slideContent.description?.match(urlPattern)?.[0]
+    const brandUrl = brand.url?.trim()
+    const finalUrl = brandUrl || extractedUrl
+
+    const moodCurve = 'problem-solution'
+    const currentMood = getMoodForSlide(slideContent.index, totalSlides, slideContent.role, moodCurve)
+
+    const fullPrompt = buildFinalPrompt({
+        composition: composition as any,
+        brandColors,
+        slideData: slideContent,
+        currentMood,
+        currentSlide: slideContent.index + 1,
         totalSlides,
-        brandName: brand.brand_name,
-        brandContext,
-        title: slideContent.title,
-        description: slideContent.description,
-        visualPrompt: slideContent.visualPrompt,
-        composition: slideContent.composition,
-        focus: slideContent.focus,
-        role: slideContent.role,
-        style,
-        aspectRatio,
+        logoPosition: extractLogoPosition(composition?.layoutPrompt || ''),
         includeLogo: Boolean(selectedLogoUrl),
-        aiImageDescription,
-        compositionPreset: compositionPreset?.layoutPrompt
+        isSequentialSlide: slideContent.index > 0,
+        ctaText: isLastSlide ? (slideContent.title || 'Mas info') : undefined,
+        ctaUrl: isLastSlide ? finalUrl : undefined,
+        visualAnalysis: aiImageDescription,
+        language: brand.preferred_language || detectLanguage(slideContent.title || slideContent.description || '') || 'es',
+        fonts: brand.fonts
     })
 
     const brandWrapper = { name: brand.brand_name, brand_dna: brand }
 
     // Build context array for reference images
     // NOTE: We intentionally avoid passing reference images to prevent literal copying.
-    const context: Array<{ type: string; value: string; label?: string }> = []
+    const context: Array<{ type: string; value: string; label?: string; weight?: number }> = []
 
+    const hasConsistencyRef = Boolean(consistencyRefUrls?.length)
     if (selectedImageUrls && selectedImageUrls.length > 0) {
         selectedImageUrls.forEach((url, idx) => {
-            context.push({ type: 'image', value: url, label: `Reference Image ${idx + 1}` })
+            context.push({
+                type: 'image',
+                value: url,
+                label: `Reference Image ${idx + 1}${hasConsistencyRef ? ' (style support only)' : ''}`,
+                weight: hasConsistencyRef ? 0.2 : 0.8
+            })
+        })
+    }
+    if (consistencyRefUrls && consistencyRefUrls.length > 0) {
+        consistencyRefUrls.forEach((url, idx) => {
+            context.push({
+                type: 'image',
+                value: url,
+                label: idx === 0 ? 'Master Layout (Slide 1)' : `Continuity (Previous Slide ${idx})`,
+                weight: idx === 0 ? 1.0 : 0.55
+            })
         })
     }
     if (selectedLogoUrl) {
-        context.push({ type: 'logo', value: selectedLogoUrl, label: 'Logo' })
+        context.push({ type: 'logo', value: selectedLogoUrl, label: 'Logo', weight: 1.0 })
     }
 
     const imageUrl = await generateContentImageUnified(brandWrapper, fullPrompt, {
@@ -902,37 +971,44 @@ export async function generateCarouselAction(
                     ctaText: isLastSlide ? (slideContent.title || 'Más info') : undefined,
                     ctaUrl: isLastSlide ? finalUrl : undefined,
                     visualAnalysis: aiImageDescription,
-                    language: input.language || detectLanguage(prompt) || 'es'
+                    language: input.language || detectLanguage(prompt) || 'es',
+                    fonts: brandDNA.fonts
                 })
 
                 // Rule 4: Reference Chain Logic
                 const contextReferences: Array<{ type: string; value: string; label?: string; weight?: number }> = []
 
                 // A. Reference images (style/layout guidance)
+                const hasMasterLayoutRef = generatedImageUrls.length > 0 && Boolean(generatedImageUrls[0])
+
                 if (selectedImageUrls && selectedImageUrls.length > 0) {
                     selectedImageUrls.forEach((url, idx) => {
                         contextReferences.push({
                             type: 'image',
                             value: url,
-                            label: `Reference Image ${idx + 1}`,
-                            weight: 0.9
+                            label: `Reference Image ${idx + 1}${hasMasterLayoutRef ? ' (style support only)' : ''}`,
+                            weight: hasMasterLayoutRef ? 0.2 : 0.85
                         })
                     })
                 }
 
                 // B. Consistency reference (generated slide 1)
-                const consistencyRefUrls =
-                    generatedImageUrls.length > 0 && generatedImageUrls[0]
-                        ? [generatedImageUrls[0]]
-                        : []
+                const consistencyRefUrls: string[] = []
+                if (generatedImageUrls.length > 0 && generatedImageUrls[0]) {
+                    consistencyRefUrls.push(generatedImageUrls[0])
+                }
+                const previousSlideUrl = i > 0 ? generatedImageUrls[i - 1] : undefined
+                if (previousSlideUrl) {
+                    consistencyRefUrls.push(previousSlideUrl)
+                }
                 if (consistencyRefUrls && consistencyRefUrls.length > 0) {
                     consistencyRefUrls.forEach((url, idx) => {
                         if (!url) return
                         contextReferences.push({
                             type: 'image',
                             value: url,
-                            label: `Slide 1 Style Reference ${idx + 1}`,
-                            weight: 0.4
+                            label: idx === 0 ? 'Master Layout (Slide 1)' : `Continuity (Previous Slide ${idx})`,
+                            weight: idx === 0 ? 1.0 : 0.55
                         })
                     })
                 }
@@ -1121,7 +1197,6 @@ export async function regenerateSlideAction(
         const { imageUrl, prompt, references } = await generateSlideImage(
             slideContent,
             totalSlides,
-            style,
             aspectRatio,
             brandDNA,
             imageModel,
@@ -1143,3 +1218,4 @@ export async function regenerateSlideAction(
         }
     }
 }
+

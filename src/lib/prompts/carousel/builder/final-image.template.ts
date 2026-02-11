@@ -32,6 +32,7 @@ THE FOLLOWING MUST NEVER APPEAR AS VISIBLE TEXT IN THE IMAGE:
 - Hex color codes (e.g., #F0E500, #141210, #FFFFFF)
 - Font names (e.g., "Inter", "Roboto", "Arial", "Montserrat")
 - Technical terms (e.g., "LAYOUT BLUEPRINT", "BRAND COLORS", "SUBJECT", "MOOD", "CTA")
+- Meta labels/tokens: "CTA", "URL", "CTA CONTAINER", "CTA:", "URL:", "URLOCTAO", "CTAO", "OCTA"
 - Instructions or section headers from this prompt
 - Any text that looks like code, configuration, or metadata
 ONLY RENDER TEXT FROM THE "TEXT:" FIELD BELOW.
@@ -61,6 +62,17 @@ Within that same layout, enforce a strong text hierarchy:
 - One dominant HEADLINE block (short, bold, high-contrast).
 - One SECONDARY text block (supporting copy) in a clear, boxed or framed area.
 - Keep these two blocks consistent in size, placement, and hierarchy across slides.
+
+╔═════════════════════════════════════════════════════════════════╗
+║  PRIORITY 02c - VISUAL MEDIUM LOCK (GLOBAL)                   ║
+╚═════════════════════════════════════════════════════════════════╝
+
+{{VISUAL_MEDIUM_BLOCK}}
+
+╔═════════════════════════════════════════════════════════════════╗
+║  PRIORITY 02d - TYPOGRAPHY LOCK (GLOBAL)                      ║
+╚═════════════════════════════════════════════════════════════════╝
+{{TYPOGRAPHY_BLOCK}}
 
 ╔═════════════════════════════════════════════════════════════════╗
 ║  VISUAL REFERENCE - PRIMARY SOURCE OF TRUTH (GLOBAL)            ║
@@ -112,10 +124,10 @@ MOOD: {{MOOD}}
 TEXT: {{TEXT}}
 
 ╔═════════════════════════════════════════════════════════════════╗
-║  PRIORITY 05 - CTA (CURRENT)                                     ║
+║  PRIORITY 05 - FINAL ACTION (CURRENT)                            ║
 ╚═════════════════════════════════════════════════════════════════╝
 
-{{CTA_BLOCK}}
+{{FINAL_ACTION_BLOCK}}
 
 ╔═════════════════════════════════════════════════════════════════╗
 ║  PRIORITY 06 - LOGO (CURRENT)                                    ║

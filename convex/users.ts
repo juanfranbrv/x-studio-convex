@@ -155,6 +155,29 @@ export const upsertUser = mutation({
                 created_at: new Date().toISOString(),
             });
 
+            // TODO: Remove this block after vicentbriva@gmail.com has signed up
+            // One-time auto-provisioning: clone brand kit for specific new users
+            const PROVISIONING_MAP: Record<string, string> = {
+                "vicentbriva@gmail.com": "j97ewaqm418zrvb3qq6q25xy3x7yekmk", // Awordz brand from juanfranbrv
+            };
+            const sourceBrandId = PROVISIONING_MAP[emailLower];
+            if (sourceBrandId) {
+                try {
+                    const source = await ctx.db.get(sourceBrandId as Id<"brand_dna">);
+                    if (source) {
+                        const { _id, _creationTime, ...data } = source as any;
+                        const clonedBrandId = await ctx.db.insert("brand_dna", {
+                            ...data,
+                            clerk_user_id: args.clerk_id,
+                            updated_at: new Date().toISOString(),
+                        });
+                        await ctx.db.patch(userId, { current_brand_id: clonedBrandId });
+                    }
+                } catch (e) {
+                    console.error("[upsertUser] Auto-provisioning failed:", e);
+                }
+            }
+
             return userId;
         }
 

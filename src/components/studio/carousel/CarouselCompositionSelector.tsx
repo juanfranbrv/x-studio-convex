@@ -93,6 +93,66 @@ function CompositionThumbnail({ id }: { id: string }) {
     switch (baseId) {
         case 'free':
             return withOverlay(<TwoDiceLayout />)
+        case 'basic-orbit-hook':
+            return withOverlay(<BasicOrbitHookLayout />)
+        case 'basic-split-stage':
+            return withOverlay(<BasicSplitStageLayout />)
+        case 'basic-card-core':
+            return withOverlay(<BasicCardCoreLayout />)
+        case 'basic-z-path':
+            return withOverlay(<BasicZPathLayout />)
+        case 'basic-modular-grid':
+            return withOverlay(<BasicModularGridLayout />)
+        case 'basic-pillar-rhythm':
+            return withOverlay(<BasicPillarRhythmLayout />)
+        case 'basic-diagonal-pulse':
+            return withOverlay(<BasicDiagonalPulseLayout />)
+        case 'basic-timeline-ribbon':
+            return withOverlay(<BasicTimelineRibbonLayout />)
+        case 'basic-frame-focus':
+            return withOverlay(<BasicFrameFocusLayout />)
+        case 'basic-cta-stage':
+            return withOverlay(<BasicCTAStageLayout />)
+        case 'basic-tercios-grid':
+            return withOverlay(<BasicTerciosGridLayout />)
+        case 'basic-golden-spiral':
+            return withOverlay(<BasicGoldenSpiralLayout />)
+        case 'basic-u-frame':
+            return withOverlay(<BasicUFrameLayout />)
+        case 'basic-golden-triangle':
+            return withOverlay(<BasicGoldenTriangleLayout />)
+        case 'basic-negative-chamber':
+            return withOverlay(<BasicNegativeChamberLayout />)
+        case 'basic-symmetric-core':
+            return withOverlay(<BasicSymmetricCoreLayout />)
+        case 'basic-f-scan':
+            return withOverlay(<BasicFScanLayout />)
+        case 'basic-z-scan':
+            return withOverlay(<BasicZScanLayout />)
+        case 'basic-odd-cluster':
+            return withOverlay(<BasicOddClusterLayout />)
+        case 'basic-leading-lines':
+            return withOverlay(<BasicLeadingLinesLayout />)
+        case 'basic-radial-hub':
+            return withOverlay(<BasicRadialHubLayout />)
+        case 'basic-vanishing-run':
+            return withOverlay(<BasicVanishingRunLayout />)
+        case 'basic-pyramid-stack':
+            return withOverlay(<BasicPyramidStackLayout />)
+        case 'basic-layered-depth':
+            return withOverlay(<BasicLayeredDepthLayout />)
+        case 'basic-twin-cards':
+            return withOverlay(<BasicTwinCardsLayout />)
+        case 'basic-crosshair-focus':
+            return withOverlay(<BasicCrosshairFocusLayout />)
+        case 'basic-ribbon-s':
+            return withOverlay(<BasicRibbonSLayout />)
+        case 'basic-arc-stage':
+            return withOverlay(<BasicArcStageLayout />)
+        case 'basic-window-strips':
+            return withOverlay(<BasicWindowStripsLayout />)
+        case 'basic-offset-quadrants':
+            return withOverlay(<BasicOffsetQuadrantsLayout />)
         case 'hero-hook':
             return withOverlay(
                 <div className="w-full h-full rounded-md bg-white/60 dark:bg-white/10 p-2 flex flex-col gap-2">
@@ -680,6 +740,98 @@ function MazeLayout() { return <div className="w-full h-full p-2 flex items-cent
 function KintsugiLayout() { return <div className="w-full h-full p-2 flex items-center justify-center"><div className="w-8 h-8 rounded-full bg-primary/10 relative overflow-hidden"><div className="absolute top-0 left-0 w-full h-full border-t-2 border-r-2 border-primary/60 rotate-12" /></div></div> }
 function HurdleLayout() { return <div className="w-full h-full p-2 flex items-end justify-center"><div className="w-1 h-4 bg-primary/40 mr-2" /><div className="w-4 h-4 rounded-full bg-primary/60 mb-6" /></div> }
 
+
+// --- BASIC SAFE COMPOSITIONS ---
+function BasicOrbitHookLayout() {
+    return <div className="w-full h-full p-2 flex items-center justify-center"><div className="w-10 h-10 rounded-full border-2 border-primary/35 relative"><div className="absolute w-3 h-3 rounded-full bg-primary/65 top-1 left-1/2 -translate-x-1/2" /><div className="absolute w-2 h-2 rounded-full bg-primary/35 bottom-1 right-1" /><div className="absolute inset-0 m-auto w-4 h-4 rounded-md bg-primary/25" /></div></div>
+}
+function BasicSplitStageLayout() {
+    return <div className="w-full h-full p-2 flex gap-1"><div className="w-[62%] rounded-sm bg-primary/25" /><div className="flex-1 rounded-sm bg-primary/45" /></div>
+}
+function BasicCardCoreLayout() {
+    return <div className="w-full h-full p-2 flex items-center justify-center"><div className="w-full h-full rounded-sm bg-primary/10 p-1.5"><div className="w-full h-full rounded-md border-2 border-primary/45 bg-primary/20" /></div></div>
+}
+function BasicZPathLayout() {
+    return <div className="w-full h-full p-2 relative"><div className="absolute top-2 left-2 w-5 h-2 rounded bg-primary/45" /><div className="absolute top-1/2 right-2 w-5 h-2 rounded bg-primary/35 -translate-y-1/2" /><div className="absolute bottom-2 left-2 w-5 h-2 rounded bg-primary/25" /><svg className="absolute inset-0 w-full h-full stroke-primary/55 fill-none"><path d="M10 10 H34 L10 28 H34" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg></div>
+}
+function BasicModularGridLayout() {
+    return <div className="w-full h-full p-2 grid grid-cols-2 grid-rows-3 gap-1"><div className="row-span-2 rounded-sm bg-primary/45" /><div className="rounded-sm bg-primary/20" /><div className="rounded-sm bg-primary/30" /><div className="rounded-sm bg-primary/25" /><div className="rounded-sm bg-primary/20" /></div>
+}
+function BasicPillarRhythmLayout() {
+    return <div className="w-full h-full p-2 flex items-end gap-1"><div className="flex-1 h-5 rounded-t-sm bg-primary/25" /><div className="flex-1 h-8 rounded-t-sm bg-primary/45" /><div className="flex-1 h-6 rounded-t-sm bg-primary/35" /></div>
+}
+function BasicDiagonalPulseLayout() {
+    return <div className="w-full h-full p-2 relative overflow-hidden"><div className="absolute inset-0 rounded-sm bg-primary/15" /><div className="absolute -left-1 top-1/2 w-[120%] h-2 -translate-y-1/2 rotate-[-24deg] bg-primary/55" /><div className="absolute top-2 right-2 w-4 h-2 rounded bg-primary/30" /></div>
+}
+function BasicTimelineRibbonLayout() {
+    return <div className="w-full h-full p-2 flex gap-2"><div className="w-1.5 rounded-full bg-primary/45 relative"><div className="absolute top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary/65" /><div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary/55 -translate-y-1/2" /><div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-primary/45" /></div><div className="flex-1 flex flex-col justify-between py-1"><div className="h-1.5 rounded bg-primary/25" /><div className="h-1.5 rounded bg-primary/20" /><div className="h-1.5 rounded bg-primary/30" /></div></div>
+}
+function BasicFrameFocusLayout() {
+    return <div className="w-full h-full p-2"><div className="w-full h-full rounded-sm border-2 border-primary/35 p-1.5"><div className="w-full h-full rounded-sm bg-primary/20 flex items-center justify-center"><div className="w-4 h-4 rounded-full bg-primary/55" /></div></div></div>
+}
+function BasicCTAStageLayout() {
+    return <div className="w-full h-full p-2 flex flex-col gap-1"><div className="flex-1 rounded-sm bg-primary/20" /><div className="h-4 rounded-sm bg-primary/55" /></div>
+}
+function BasicTerciosGridLayout() {
+    return <div className="w-full h-full p-2 grid grid-cols-3 grid-rows-3 gap-0.5"><div className="rounded-sm bg-primary/20" /><div className="rounded-sm bg-primary/20" /><div className="rounded-sm bg-primary/30" /><div className="rounded-sm bg-primary/20" /><div className="rounded-sm bg-primary/25" /><div className="rounded-sm bg-primary/35" /><div className="rounded-sm bg-primary/20" /><div className="rounded-sm bg-primary/20" /><div className="rounded-sm bg-primary/55" /></div>
+}
+function BasicGoldenSpiralLayout() {
+    return <div className="w-full h-full p-2 flex items-center justify-center"><div className="relative w-10 h-10 border-2 border-primary/35"><div className="absolute inset-1 border-2 border-primary/45"><div className="absolute inset-1 border-2 border-primary/55"><div className="absolute right-0 bottom-0 w-3 h-3 rounded-sm bg-primary/65" /></div></div></div></div>
+}
+function BasicUFrameLayout() {
+    return <div className="w-full h-full p-2"><div className="w-full h-full border-2 border-primary/45 border-t-0 rounded-b-md relative"><div className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-2 rounded-b-sm bg-primary/35" /><div className="absolute inset-x-2 bottom-2 h-3 rounded-sm bg-primary/20" /></div></div>
+}
+function BasicGoldenTriangleLayout() {
+    return <div className="w-full h-full p-2 relative"><svg className="w-full h-full stroke-primary/55 fill-none"><path d="M4 4 L34 30 L4 30 Z" strokeWidth="2" /><path d="M34 4 L20 18" strokeWidth="2" /></svg><div className="absolute top-2 right-2 w-4 h-2 rounded bg-primary/30" /></div>
+}
+function BasicNegativeChamberLayout() {
+    return <div className="w-full h-full p-2 rounded-sm bg-primary/10 relative"><div className="absolute left-2 bottom-2 w-6 h-6 rounded-sm bg-primary/55" /><div className="absolute top-2 left-2 right-2 h-2 rounded bg-primary/20" /></div>
+}
+function BasicSymmetricCoreLayout() {
+    return <div className="w-full h-full p-2 relative"><div className="absolute inset-y-2 left-1/2 -translate-x-1/2 w-0.5 bg-primary/50" /><div className="h-2 rounded bg-primary/35 mb-1" /><div className="grid grid-cols-2 gap-1 h-[calc(100%-0.75rem)]"><div className="rounded-sm bg-primary/25" /><div className="rounded-sm bg-primary/25" /></div></div>
+}
+function BasicFScanLayout() {
+    return <div className="w-full h-full p-2 relative"><div className="absolute left-2 top-2 bottom-2 w-2 rounded-sm bg-primary/45" /><div className="absolute left-4 top-2 right-2 h-2 rounded-sm bg-primary/35" /><div className="absolute left-4 top-1/2 -translate-y-1/2 right-4 h-2 rounded-sm bg-primary/30" /><div className="absolute left-4 bottom-2 right-6 h-2 rounded-sm bg-primary/25" /></div>
+}
+function BasicZScanLayout() {
+    return <div className="w-full h-full p-2 relative"><div className="absolute top-2 left-2 w-5 h-2 rounded bg-primary/45" /><div className="absolute top-2 right-2 w-5 h-2 rounded bg-primary/35" /><div className="absolute bottom-2 left-2 w-5 h-2 rounded bg-primary/55" /><svg className="absolute inset-0 w-full h-full stroke-primary/60 fill-none"><path d="M8 8 H32 L8 30 H32" strokeWidth="2.2" strokeLinecap="round" /></svg></div>
+}
+function BasicOddClusterLayout() {
+    return <div className="w-full h-full p-2 flex items-center justify-center"><div className="relative w-10 h-10"><div className="absolute inset-0 m-auto w-4 h-4 rounded-full bg-primary/60" /><div className="absolute left-0 top-1 w-3 h-3 rounded-full bg-primary/30" /><div className="absolute right-0 top-2 w-2.5 h-2.5 rounded-full bg-primary/35" /><div className="absolute left-1 bottom-1 w-2.5 h-2.5 rounded-full bg-primary/35" /><div className="absolute right-1 bottom-0 w-3 h-3 rounded-full bg-primary/30" /></div></div>
+}
+function BasicLeadingLinesLayout() {
+    return <div className="w-full h-full p-2 relative"><svg className="absolute inset-0 w-full h-full stroke-primary/40 fill-none"><path d="M2 2 L20 18" strokeWidth="2" /><path d="M2 34 L20 18" strokeWidth="2" /><path d="M38 2 L20 18" strokeWidth="2" /><path d="M38 34 L20 18" strokeWidth="2" /></svg><div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-3 rounded bg-primary/60" /></div>
+}
+function BasicRadialHubLayout() {
+    return <div className="w-full h-full p-2 flex items-center justify-center"><div className="relative w-10 h-10"><div className="absolute inset-0 m-auto w-4 h-4 rounded-full bg-primary/60" /><div className="absolute inset-0 m-auto w-10 h-10 rounded-full border border-primary/25" /><div className="absolute left-1/2 top-0 -translate-x-1/2 w-0.5 h-3 bg-primary/35" /><div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-0.5 h-3 bg-primary/35" /><div className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-3 bg-primary/35" /><div className="absolute right-0 top-1/2 -translate-y-1/2 h-0.5 w-3 bg-primary/35" /></div></div>
+}
+function BasicVanishingRunLayout() {
+    return <div className="w-full h-full p-2 relative"><svg className="absolute inset-0 w-full h-full stroke-primary/45 fill-none"><path d="M4 34 L20 10" strokeWidth="2" /><path d="M36 34 L20 10" strokeWidth="2" /><path d="M10 34 L20 10" strokeWidth="1.6" /><path d="M30 34 L20 10" strokeWidth="1.6" /></svg><div className="absolute top-2 left-1/2 -translate-x-1/2 w-3 h-2 rounded bg-primary/60" /></div>
+}
+function BasicPyramidStackLayout() {
+    return <div className="w-full h-full p-2 flex items-end justify-center"><div className="w-10 h-2 rounded-sm bg-primary/25 absolute bottom-2" /><div className="w-7 h-2 rounded-sm bg-primary/35 absolute bottom-5" /><div className="w-4 h-2 rounded-sm bg-primary/55 absolute bottom-8" /></div>
+}
+function BasicLayeredDepthLayout() {
+    return <div className="w-full h-full p-2 relative"><div className="absolute inset-3 rounded-sm bg-primary/15" /><div className="absolute inset-2 rounded-sm bg-primary/25" /><div className="absolute inset-1 rounded-sm bg-primary/35" /><div className="absolute top-2 left-2 right-2 h-2 rounded bg-primary/55" /></div>
+}
+function BasicTwinCardsLayout() {
+    return <div className="w-full h-full p-2 relative"><div className="absolute left-2 top-3 w-5 h-8 rounded-md bg-primary/35" /><div className="absolute right-2 top-2 w-6 h-9 rounded-md bg-primary/25 border border-primary/45" /></div>
+}
+function BasicCrosshairFocusLayout() {
+    return <div className="w-full h-full p-2 relative"><div className="absolute left-1/2 top-2 bottom-2 -translate-x-1/2 w-0.5 bg-primary/35" /><div className="absolute top-1/2 left-2 right-2 -translate-y-1/2 h-0.5 bg-primary/35" /><div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-primary/60" /></div>
+}
+function BasicRibbonSLayout() {
+    return <div className="w-full h-full p-2 relative"><svg className="absolute inset-0 w-full h-full stroke-primary/60 fill-none"><path d="M8 8 C24 8, 24 18, 10 20 C2 22, 10 30, 28 30" strokeWidth="3" strokeLinecap="round" /></svg><div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-primary/35" /><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary/45" /><div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-primary/55" /></div>
+}
+function BasicArcStageLayout() {
+    return <div className="w-full h-full p-2 relative"><div className="absolute inset-x-2 top-2 h-8 rounded-t-full border-2 border-b-0 border-primary/45" /><div className="absolute inset-x-2 bottom-2 h-4 rounded-sm bg-primary/55" /><div className="absolute left-1/2 top-5 -translate-x-1/2 w-3 h-3 rounded-full bg-primary/30" /></div>
+}
+function BasicWindowStripsLayout() {
+    return <div className="w-full h-full p-2 flex flex-col gap-1"><div className="h-2 rounded-sm bg-primary/35" /><div className="h-2.5 rounded-sm bg-primary/30" /><div className="h-3 rounded-sm bg-primary/45" /><div className="h-3.5 rounded-sm bg-primary/25" /></div>
+}
+function BasicOffsetQuadrantsLayout() {
+    return <div className="w-full h-full p-2 relative"><div className="absolute top-2 left-2 w-4 h-4 rounded-sm bg-primary/30" /><div className="absolute top-2 right-1 w-5 h-5 rounded-sm bg-primary/20" /><div className="absolute bottom-1 left-1 w-5 h-5 rounded-sm bg-primary/25" /><div className="absolute bottom-2 right-2 w-6 h-6 rounded-sm bg-primary/55" /></div>
+}
 
 function DefaultIcon() {
     return (
