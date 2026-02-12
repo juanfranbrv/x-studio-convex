@@ -66,6 +66,25 @@ Cuando Juanfran diga **"sincroniza"**, ejecuta automáticamente:
 4.  `git checkout develop` (volver a develop para seguir trabajando)
 5.  **Informar al finalizar**: Indica detalladamente qué has hecho, el estado actual del proyecto (si hay errores de build, etc.) y confirma en qué rama te encuentras.
 
+### 8.1 Comando "deploy"
+Cuando Juanfran diga **"deploy"**, se considera **autorización explícita** para ejecutar flujo completo de release:
+1.  Guardar rama actual en variable (`$currentBranch`) para volver al final.
+2.  `git add -A`
+3.  `git commit -m "<mensaje automático o el último propuesto en conversación>"`
+4.  `git checkout main`
+5.  `git merge $currentBranch`
+6.  `git push origin main`
+7.  Deploy a producción (Vercel) y verificar estado:
+    - `vercel --prod --yes --token 2IlaVhRb2zFoA2EUn3b7VXoN`
+    - `vercel list --token 2IlaVhRb2zFoA2EUn3b7VXoN`
+8.  **Verificación estricta de build**:
+    - Confirmar que el deployment en Vercel termina en estado `READY`.
+    - Si el build/deploy falla, **iterar automáticamente**: diagnosticar, corregir código, commitear, push y redeploy hasta que el estado final sea `READY`.
+    - No dar por finalizada la tarea mientras Vercel no esté en verde.
+9.  Volver a la rama original:
+    - `git checkout $currentBranch`
+10.  **Informar al finalizar**: commit creado, merge realizado, resultado de push/deploy, estado de verificación en Vercel y rama final activa.
+
 ### 9. Workflow de Verificación y Commits
 - **Verificación obligatoria**: Al implementar cualquier cambio, **SIEMPRE** pide a Juanfran que lo compruebe.
 - **Ciclo de Commit**: Solo cuando Juanfran confirme que el cambio funciona correctamente y es de su agrado, propondrás el commit de los cambios.

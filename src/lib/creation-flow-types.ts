@@ -1052,7 +1052,7 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     additionalInstructions: '',
     customStyle: '',
     selectedTextAssets: [],
-    imageSourceMode: 'upload',
+    imageSourceMode: 'generate',
     selectedBrandKitImageIds: [],
     referenceImageRoles: {},
     aiImageDescription: '',

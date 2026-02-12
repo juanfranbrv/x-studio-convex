@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { GeneratedCopyCard } from '@/components/studio/GeneratedCopyCard'
+import { useToast } from '@/hooks/use-toast'
 import {
     ChevronLeft,
     ChevronRight,
@@ -21,7 +22,9 @@ import {
     Fingerprint,
     ImageDown,
     SquareArrowDown,
-    Bug
+    Bug,
+    Video,
+    Music
 } from 'lucide-react'
 import JSZip from 'jszip'
 import {
@@ -94,6 +97,10 @@ export function CarouselCanvasPanel({
     const loaderVisibleRef = useRef(false)
     const [debugOpen, setDebugOpen] = useState(false)
     const [debugSlide, setDebugSlide] = useState<CarouselSlide | null>(null)
+    const [isExportingVideo, setIsExportingVideo] = useState(false)
+    const [videoExportProgress, setVideoExportProgress] = useState(0)
+    const [videoExportPhase, setVideoExportPhase] = useState('')
+    const { toast } = useToast()
 
     // Track viewport for responsive heights
     useEffect(() => {
@@ -271,6 +278,270 @@ export function CarouselCanvasPanel({
         URL.revokeObjectURL(zipUrl)
     }
 
+    const getCanvasDimensions = (ratio: '1:1' | '4:5' | '3:4') => {
+        if (ratio === '1:1') return { width: 1080, height: 1080 }
+        if (ratio === '4:5') return { width: 1080, height: 1350 }
+        return { width: 1080, height: 1440 }
+    }
+
+    const loadImageToCanvasSource = async (url: string): Promise<{ img: HTMLImageElement; revoke?: () => void }> => {
+        let objectUrl: string | undefined
+        try {
+            const response = await fetch(url)
+            if (!response.ok) {
+                throw new Error(`No se pudo descargar la slide (${response.status})`)
+            }
+            const blob = await response.blob()
+            objectUrl = URL.createObjectURL(blob)
+        } catch {
+            objectUrl = undefined
+        }
+
+        const src = objectUrl || url
+
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const image = new Image()
+            image.crossOrigin = 'anonymous'
+            image.onload = () => resolve(image)
+            image.onerror = () => reject(new Error(`No se pudo cargar la imagen: ${url}`))
+            image.src = src
+        })
+
+        return {
+            img,
+            revoke: objectUrl ? () => URL.revokeObjectURL(objectUrl as string) : undefined
+        }
+    }
+
+    const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+    const pickVideoMimeType = () => {
+        const candidates = [
+            'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+            'video/mp4',
+            'video/webm;codecs=vp9,opus',
+            'video/webm;codecs=vp8,opus',
+            'video/webm'
+        ]
+        return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || ''
+    }
+
+    const buildMusicTrack = async (musicUrl: string): Promise<{
+        stream: MediaStream
+        cleanup: () => void
+        start: () => Promise<void>
+    }> => {
+        const audioContext = new AudioContext()
+        const destination = audioContext.createMediaStreamDestination()
+        const audioElement = new Audio(musicUrl)
+        audioElement.crossOrigin = 'anonymous'
+        audioElement.preload = 'auto'
+        audioElement.loop = true
+        audioElement.volume = 0.9
+
+        const sourceNode = audioContext.createMediaElementSource(audioElement)
+        sourceNode.connect(destination)
+
+        return {
+            stream: destination.stream,
+            cleanup: () => {
+                try {
+                    audioElement.pause()
+                    audioElement.src = ''
+                } catch { }
+                try {
+                    sourceNode.disconnect()
+                } catch { }
+                try {
+                    destination.disconnect()
+                } catch { }
+                void audioContext.close()
+            },
+            start: async () => {
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume()
+                }
+                await audioElement.play()
+            }
+        }
+    }
+
+    const exportCarouselVideo = async (withMusic: boolean) => {
+        const completedSlidesOrdered = [...slides]
+            .filter((slide) => slide.status === 'done' && Boolean(slide.imageUrl))
+            .sort((a, b) => a.index - b.index)
+
+        if (completedSlidesOrdered.length === 0) {
+            toast({
+                title: 'No hay slides exportables',
+                description: 'Genera al menos una slide antes de exportar video.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        const hasAllSlides = completedSlidesOrdered.length === slides.length
+        if (!hasAllSlides) {
+            toast({
+                title: 'Faltan slides por generar',
+                description: 'Para un MP4 completo, termina de generar todas las slides.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        const musicUrl = withMusic
+            ? (window.prompt('URL directa de musica (mp3/wav/m4a). Deja vacio para cancelar:') || '').trim()
+            : ''
+
+        if (withMusic && !musicUrl) return
+
+        const mimeType = pickVideoMimeType()
+        if (!mimeType) {
+            toast({
+                title: 'Navegador no compatible',
+                description: 'Este navegador no permite grabar video del canvas.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        const { width, height } = getCanvasDimensions(aspectRatio)
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+            toast({
+                title: 'Error de canvas',
+                description: 'No se pudo inicializar el render del video.',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        setIsExportingVideo(true)
+        setVideoExportProgress(5)
+        setVideoExportPhase('Preparando exportacion')
+        toast({
+            title: 'Exportando video',
+            description: 'Estamos montando el MP4 del carrusel. Puede tardar un poco.'
+        })
+
+        const fps = 30
+        const videoStream = canvas.captureStream(fps)
+        let music: Awaited<ReturnType<typeof buildMusicTrack>> | null = null
+        let outputStream: MediaStream = videoStream
+        const chunks: BlobPart[] = []
+
+        try {
+            if (musicUrl) {
+                music = await buildMusicTrack(musicUrl)
+                outputStream = new MediaStream([
+                    ...videoStream.getVideoTracks(),
+                    ...music.stream.getAudioTracks()
+                ])
+            }
+
+            const recorder = new MediaRecorder(outputStream, {
+                mimeType,
+                videoBitsPerSecond: 8_000_000
+            })
+
+            recorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.push(event.data)
+                }
+            }
+
+            const recordDone = new Promise<void>((resolve, reject) => {
+                recorder.onstop = () => resolve()
+                recorder.onerror = () => reject(new Error('Fallo al grabar el video'))
+            })
+
+            setVideoExportProgress(15)
+            setVideoExportPhase('Cargando slides')
+            const loaded = await Promise.all(
+                completedSlidesOrdered.map((slide) => loadImageToCanvasSource(slide.imageUrl as string))
+            )
+
+            recorder.start(250)
+            if (music) {
+                await music.start()
+            }
+
+            const totalDurationMs = loaded.reduce((sum, _slide, idx) => sum + (idx === loaded.length - 1 ? 6000 : 4000), 0)
+            let renderedMs = 0
+            let lastProgressUpdate = 0
+            setVideoExportProgress(22)
+            setVideoExportPhase('Renderizando video')
+
+            for (let i = 0; i < loaded.length; i++) {
+                const durationMs = i === loaded.length - 1 ? 6000 : 4000
+                const start = performance.now()
+                while (performance.now() - start < durationMs) {
+                    const now = performance.now()
+                    const elapsedInSlide = Math.min(durationMs, now - start)
+                    if (now - lastProgressUpdate > 120) {
+                        const progress = 22 + Math.round(((renderedMs + elapsedInSlide) / totalDurationMs) * 68)
+                        setVideoExportProgress(Math.min(90, progress))
+                        lastProgressUpdate = now
+                    }
+                    ctx.clearRect(0, 0, width, height)
+                    ctx.drawImage(loaded[i].img, 0, 0, width, height)
+                    await wait(1000 / fps)
+                }
+                renderedMs += durationMs
+            }
+
+            setVideoExportProgress(94)
+            setVideoExportPhase('Finalizando archivo')
+            recorder.stop()
+            await recordDone
+            loaded.forEach((item) => item.revoke?.())
+
+            const blob = new Blob(chunks, { type: mimeType })
+            const downloadUrl = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            const extension = mimeType.includes('mp4') ? 'mp4' : 'webm'
+
+            const date = new Date()
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+            const safeBrandName = (brandName || 'carousel').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+            const safeHook = (hook || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 30) || 'video'
+
+            link.href = downloadUrl
+            link.download = `${safeBrandName}-${safeHook}-${dateStr}.${extension}`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            URL.revokeObjectURL(downloadUrl)
+            setVideoExportProgress(100)
+            setVideoExportPhase('Completado')
+
+            toast({
+                title: extension === 'mp4' ? 'MP4 exportado' : 'Video exportado',
+                description: extension === 'mp4'
+                    ? 'Listo para publicar en Facebook/TikTok.'
+                    : 'Tu navegador exporto WebM. Si quieres MP4, probamos otra estrategia de encoding.'
+            })
+        } catch (error) {
+            console.error('Video export error:', error)
+            toast({
+                title: 'Error al exportar video',
+                description: error instanceof Error ? error.message : 'No se pudo generar el video.',
+                variant: 'destructive'
+            })
+        } finally {
+            if (music) music.cleanup()
+            setTimeout(() => {
+                setVideoExportProgress(0)
+                setVideoExportPhase('')
+            }, 350)
+            setIsExportingVideo(false)
+        }
+    }
+
     const effectiveZoom = useMemo(() => {
         return zoom // Simplified for carousel as we don't have the same baseScale complexity yet
     }, [zoom])
@@ -324,6 +595,14 @@ export function CarouselCanvasPanel({
                             <DropdownMenuItem onClick={() => onRegenerateSlide(currentIndex)} disabled={!currentSlide || isRegenerating}>
                                 <RefreshCw className={cn("w-4 h-4 mr-2", isRegenerating && "animate-spin")} />
                                 Regenerar slide actual
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => exportCarouselVideo(false)} disabled={isExportingVideo || completedSlides === 0}>
+                                <Video className={cn("w-4 h-4 mr-2", isExportingVideo && "animate-pulse")} />
+                                Exportar video (4s / 6s)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => exportCarouselVideo(true)} disabled={isExportingVideo || completedSlides === 0}>
+                                <Music className={cn("w-4 h-4 mr-2", isExportingVideo && "animate-pulse")} />
+                                Exportar video con musica
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                                 <Share2 className="w-4 h-4 mr-2" />
@@ -729,6 +1008,38 @@ export function CarouselCanvasPanel({
                                     {debugSlide?.debugPrompt || 'No hay prompt registrado para este slide.'}
                                 </pre>
                             </div>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isExportingVideo} onOpenChange={() => { }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Generando video del carrusel</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                            {videoExportPhase || 'Procesando'}
+                        </p>
+                        <div className="grid grid-cols-10 gap-1.5">
+                            {Array.from({ length: 30 }).map((_, idx) => {
+                                const threshold = Math.round(((idx + 1) / 30) * 100)
+                                const active = videoExportProgress >= threshold
+                                return (
+                                    <div
+                                        key={`video-progress-square-${idx}`}
+                                        className={cn(
+                                            'h-3 rounded-sm transition-all duration-200',
+                                            active ? 'bg-primary shadow-sm' : 'bg-muted'
+                                        )}
+                                    />
+                                )
+                            })}
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Progreso</span>
+                            <span className="font-mono">{videoExportProgress}%</span>
                         </div>
                     </div>
                 </DialogContent>

@@ -12,6 +12,7 @@ import {
     Plus,
     Wand2,
     RefreshCw,
+    Type,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Textarea } from '@/components/ui/textarea'
@@ -168,11 +169,21 @@ export function ImageReferenceSelector({
         const role = referenceImageRoles[id]
         return role === 'style' || role === 'style_content'
     })
+    const hasVisualStyle = [...uploadedImages, ...selectedBrandKitImageIds].some((id) => {
+        const role = referenceImageRoles[id]
+        return role === 'style' || role === 'style_content'
+    })
+    const hasManualStyle = Boolean(customStyle.trim())
+    const isManualStyleBlocked = hasVisualStyle
 
     const getRoleCycleForImage = (imageId: string): ReferenceImageRole[] => {
         const baseCycle: ReferenceImageRole[] = isAiContentMode
             ? ['style', 'logo']
             : ['style', 'style_content', 'content', 'logo']
+        const cycleWithoutStyle = baseCycle.filter((role) => role !== 'style' && role !== 'style_content')
+        if (hasManualStyle) {
+            return cycleWithoutStyle.length > 0 ? cycleWithoutStyle : ['content']
+        }
         const isBrandKitImage = selectedBrandKitImageIds.includes(imageId)
         if (isBrandKitImage && hasUploadedStyle) {
             return baseCycle.filter((role) => role !== 'style' && role !== 'style_content')
@@ -204,16 +215,17 @@ export function ImageReferenceSelector({
     return (
         <div className="space-y-4">
             <div className="rounded-2xl border border-border/70 bg-muted/30 p-3.5 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <Wand2 className="w-3.5 h-3.5" />
+                        Contenido generado con IA
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Switch checked={isAiContentMode} onCheckedChange={handleToggleAiContentMode} />
+                    </div>
+                </div>
                 {hasSuggestions ? (
                     <>
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-primary">
-                                <Wand2 className="w-3.5 h-3.5" />
-                                Propuesta IA del Analisis
-                            </div>
-                            {isAiContentMode && <span className="text-[10px] font-semibold text-primary">Contenido principal: IA</span>}
-                        </div>
-
                         <div className="flex flex-wrap items-center gap-1.5">
                             {suggestedImagePrompts.map((_, idx) => (
                                 <button
@@ -234,25 +246,14 @@ export function ImageReferenceSelector({
                     </>
                 ) : (
                     <>
-                        <div className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            <Wand2 className="w-3.5 h-3.5" />
-                            Propuesta IA del Analisis
-                        </div>
                         <div className="rounded-xl border border-dashed border-border bg-background px-3 py-3">
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Aun no hay una propuesta visual sugerida. Pulsa Analizar para que el modelo proponga una direccion de imagen.
+                                Aún no hay una propuesta visual sugerida. Pulsa Analizar para que el modelo proponga una dirección de imagen.
                             </p>
                         </div>
                     </>
                 )}
                 <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Generar con IA</p>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-muted-foreground">{isAiContentMode ? 'Activo' : 'Inactivo'}</span>
-                            <Switch checked={isAiContentMode} onCheckedChange={handleToggleAiContentMode} />
-                        </div>
-                    </div>
                 <Textarea
                     id="ai-image-description"
                     value={aiImageDescription}
@@ -273,7 +274,7 @@ export function ImageReferenceSelector({
                 <div className="flex items-center justify-between px-0.5">
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                         <Sparkles className="w-3 h-3 text-primary" />
-                        La IA generarA una imagen con esta descripciOn
+                        La IA generará una imagen con esta descripción
                     </p>
                     {hasSuggestions && (
                         <button
@@ -305,7 +306,7 @@ export function ImageReferenceSelector({
                 </div>
                 {isAiContentMode && (
                     <p className="text-[10px] text-muted-foreground">
-                        Modo IA activo: las referencias solo pueden marcarse como `Estilo` o `Logo Aux`.
+                        Modo IA activo: las referencias solo pueden marcarse como `Estilo` o `Logo Aux` para mantener consistencia visual en la generación.
                     </p>
                 )}
             </div>
@@ -313,7 +314,10 @@ export function ImageReferenceSelector({
 
             <div className={cn('space-y-3 rounded-2xl border p-3.5 transition-all', mode === 'upload' ? 'border-primary/40 bg-primary/5' : 'border-border/70 bg-muted/20')}>
                 <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Subir referencias</p>
+                    <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <Upload className="w-3.5 h-3.5" />
+                        Subir referencias
+                    </p>
                 </div>
 
                 {uploadedImages.length > 0 && (
@@ -365,7 +369,7 @@ export function ImageReferenceSelector({
                             {isDragging ? <Upload className="w-4 h-4" /> : uploadedImages.length > 0 ? <Plus className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
                         </div>
                         <p className="text-xs font-semibold text-foreground">
-                            {isDragging ? 'Suelta las imagenes' : uploadedImages.length > 0 ? 'Anadir mas imagenes' : 'Sube tus referencias'}
+                            {isDragging ? 'Suelta las imágenes' : uploadedImages.length > 0 ? 'Añadir más imágenes' : 'Sube tus referencias'}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
                             {uploadedImages.length > 0 ? `${MAX_REFERENCE_IMAGES - totalSelected} disponibles` : 'Arrastra o haz clic (max. 10)'}
@@ -375,7 +379,7 @@ export function ImageReferenceSelector({
 
                 {!canAddMore && (
                     <div className="text-center py-2 px-3 bg-muted rounded-lg border border-border">
-                        <p className="text-[10px] text-muted-foreground">Maximo de {MAX_REFERENCE_IMAGES} imagenes alcanzado</p>
+                        <p className="text-[10px] text-muted-foreground">Máximo de {MAX_REFERENCE_IMAGES} imágenes alcanzado</p>
                     </div>
                 )}
 
@@ -396,7 +400,10 @@ export function ImageReferenceSelector({
 
             <div className={cn('space-y-3 rounded-2xl border p-3.5 transition-all', mode === 'brandkit' ? 'border-primary/40 bg-primary/5' : 'border-border/70 bg-muted/20')}>
                 <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Kit de Marca</p>
+                    <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <Palette className="w-3.5 h-3.5" />
+                        Kit de Marca
+                    </p>
                     <div className="flex items-center gap-2">
                         {selectedBrandKitImageIds.length > 0 && (
                             <button
@@ -473,7 +480,7 @@ export function ImageReferenceSelector({
                         <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                             <Palette className="w-4 h-4 text-muted-foreground" />
                         </div>
-                        <p className="text-[10px] text-muted-foreground">No hay imagenes en el Kit de Marca</p>
+                        <p className="text-[10px] text-muted-foreground">No hay imágenes en el Kit de Marca</p>
                     </div>
                 )}
             </div>
@@ -488,28 +495,54 @@ export function ImageReferenceSelector({
             )}
 
             {onCustomStyleChange && (
-                <div className="pt-1">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-2 pl-1">
-                        Otro estilo en mente?
-                    </label>
+                <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-3.5 transition-all">
+                    <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <Type className="w-3.5 h-3.5" />
+                        Estilo por texto
+                    </p>
                     <div className="relative group">
                         <input
                             type="text"
                             value={customStyle}
-                            onChange={(e) => onCustomStyleChange(e.target.value)}
-                            onFocus={() => setMode('generate')}
-                            placeholder="Ej: Cyberpunk, Acuarela, Lego..."
+                            onChange={(e) => {
+                                if (isManualStyleBlocked) return
+                                onCustomStyleChange(e.target.value)
+                            }}
+                            onFocus={() => {
+                                if (isManualStyleBlocked) return
+                                setMode('generate')
+                            }}
+                            placeholder="Escribe aquí el estilo (ej: Cyberpunk, Acuarela, Lego...)"
+                            disabled={isManualStyleBlocked}
                             className={cn(
                                 'w-full h-11 px-4 rounded-xl bg-background border border-border',
                                 'text-sm transition-all duration-300 placeholder:text-muted-foreground/70',
                                 'focus:ring-2 focus:ring-primary/20 focus:border-primary/50',
-                                'hover:border-border/80'
+                                'hover:border-border/80',
+                                isManualStyleBlocked && 'opacity-60 cursor-not-allowed'
                             )}
                         />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                            {customStyle ? <Check className="w-4 h-4 text-primary" /> : <RefreshCw className="w-4 h-4 opacity-50" />}
-                        </div>
+                        {customStyle && !isManualStyleBlocked ? (
+                            <button
+                                type="button"
+                                onClick={() => onCustomStyleChange('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                aria-label="Limpiar estilo por texto"
+                                title="Limpiar"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        ) : (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                                {customStyle ? <Check className="w-4 h-4 text-primary" /> : <RefreshCw className="w-4 h-4 opacity-50" />}
+                            </div>
+                        )}
                     </div>
+                    {isManualStyleBlocked && (
+                        <p className="text-[10px] text-muted-foreground">
+                            Ya hay una referencia visual marcada como `Estilo`. Quita ese rol para habilitar esta fuente manual.
+                        </p>
+                    )}
                 </div>
             )}
 

@@ -659,7 +659,10 @@ export default function ImagePage() {
 
     // Rule: once the final Branding card (Logo/Colors) is reachable, Generate must be enabled.
     const { state } = creationFlow
-    const hasReachedBrandingStep = state.currentStep >= 5 || state.hasGeneratedImage
+    const hasReachedBrandingStep =
+        state.currentStep >= 5 ||
+        (state.currentStep >= 4 && state.imageSourceMode === 'generate') ||
+        state.hasGeneratedImage
     const canGenerate = Boolean(hasReachedBrandingStep)
 
     // Wrapped handleGenerate with debug modal intercept (admin only)
@@ -826,20 +829,23 @@ export default function ImagePage() {
             return
         }
 
-        const ids = BASIC_MODE_LAYOUT_IDS
-        const current = creationFlow.state.selectedLayout
-        const idx = current ? ids.indexOf(current) : -1
-        const nextLayoutId = idx >= 0 ? ids[(idx + 1) % ids.length] : null
-        if (nextLayoutId) {
-            creationFlow.selectLayout(nextLayoutId)
+        setIsGenerating(true)
+        try {
+            await executeGenerationRequest(
+                { ...lastGenerationRequest.payload },
+                lastGenerationRequest.errorTitle,
+                lastGenerationRequest.errorFallback
+            )
+        } catch (error: any) {
+            console.error('Retry request failed:', error)
+            toast({
+                title: "Error al reintentar",
+                description: error?.message || "No se pudo generar otra imagen con los mismos ajustes.",
+                variant: "destructive",
+            })
+        } finally {
+            setIsGenerating(false)
         }
-        const prompt = creationFlow.buildGenerationPrompt(
-            nextLayoutId ? { selectedLayout: nextLayoutId } : undefined
-        )
-        await handleGenerateWithDebug({
-            prompt,
-            forcedLayoutId: nextLayoutId || undefined
-        })
     }
 
     const handleRemoveReferenceFromPreview = (imageUrl: string) => {
@@ -992,7 +998,7 @@ export default function ImagePage() {
                         panelPosition === 'right' ? "flex-row" : "flex-row-reverse"
                     )}>
                         {/* Left: Text Area (Matches Canvas width) */}
-                        <div className="flex-1 p-4 flex items-end">
+                        <div className="flex-1 p-4 flex items-end gap-2">
                             <Textarea
                                 placeholder={creationFlow.state.generatedImage ? "Describe los cambios para editar la imagen..." : "Configura tu imagen en el panel derecho..."}
                                 value={editPrompt}
@@ -1002,10 +1008,22 @@ export default function ImagePage() {
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey) {
                                         e.preventDefault()
-                                        handleUnifiedAction()
+                                        if (creationFlow.state.generatedImage && editPrompt.trim()) {
+                                            handleEditImage(editPrompt)
+                                        }
                                     }
                                 }}
                             />
+                            {creationFlow.state.generatedImage && (
+                                <Button
+                                    onClick={() => handleEditImage(editPrompt)}
+                                    disabled={isGenerating || !editPrompt.trim()}
+                                    className="h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold px-4 whitespace-nowrap"
+                                >
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Realizar corrección
+                                </Button>
+                            )}
                         </div>
 
                         {/* Right: Generate Button (Matches ControlsPanel width) */}
@@ -1013,14 +1031,29 @@ export default function ImagePage() {
                             "w-full md:w-[27%] p-4 flex flex-col justify-end",
                             panelPosition === 'right' ? "border-l border-white/5" : "border-r border-white/5"
                         )}>
-                            <div className="flex items-center gap-2">
+                            {creationFlow.state.generatedImage ? (
+                                <Button
+                                    onClick={handleRetryLastPrompt}
+                                    disabled={isGenerating || !lastGenerationRequest}
+                                    className="w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                            Generando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RotateCcw className="w-4 h-4 mr-2" />
+                                            Generar otra con mismos ajustes
+                                        </>
+                                    )}
+                                </Button>
+                            ) : (
                                 <Button
                                     onClick={handleUnifiedAction}
-                                    disabled={isGenerating || (!canGenerate && !creationFlow.state.generatedImage)}
-                                    className={cn(
-                                        "h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold",
-                                        creationFlow.state.generatedImage ? "flex-1" : "w-full"
-                                    )}
+                                    disabled={isGenerating || !canGenerate}
+                                    className="w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
                                 >
                                     {isGenerating ? (
                                         <>
@@ -1030,23 +1063,11 @@ export default function ImagePage() {
                                     ) : (
                                         <>
                                             <Sparkles className="w-5 h-5 mr-2" />
-                                            {creationFlow.state.generatedImage ? 'Refinar Imagen' : 'Generar Imagen'}
+                                            Generar Imagen
                                         </>
                                     )}
                                 </Button>
-
-                                {creationFlow.state.generatedImage && (
-                                    <Button
-                                        variant="secondary"
-                                        onClick={handleRetryLastPrompt}
-                                        disabled={isGenerating || !lastGenerationRequest}
-                                        className="flex-1 h-[44px] font-semibold transition-all"
-                                    >
-                                        <RotateCcw className="w-4 h-4 mr-2" />
-                                        Volver a tirar
-                                    </Button>
-                                )}
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>

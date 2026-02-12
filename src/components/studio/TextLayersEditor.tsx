@@ -97,7 +97,7 @@ export function TextLayersEditor({
                 {/* Intent-based Custom Texts */}
                 <div className="w-full flex flex-col items-center gap-4">
                     {Object.entries(customTexts).map(([key, value]) => (
-                        <div key={key} className="group relative w-full max-w-3xl px-[8cqw] pointer-events-auto">
+                        <div key={key} className="group relative mx-auto w-[min(64%,38ch)] pointer-events-auto">
                             <textarea
                                 value={value || ''}
                                 onChange={(e) => onCustomTextChange(key, e.target.value)}
@@ -121,9 +121,9 @@ export function TextLayersEditor({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer(key, 'custom')}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
                             >
-                                <X className="w-3 h-3" />
+                                <X className="w-2.5 h-2.5" />
                             </Button>
                         </div>
                     ))}
@@ -133,7 +133,7 @@ export function TextLayersEditor({
                 {visibleTextAssets.length > 0 && (
                     <div className="w-full flex flex-col items-center gap-1 pt-1">
                         {visibleTextAssets.map((asset) => (
-                            <div key={asset.id} className="group relative w-full max-w-3xl px-[8cqw] pointer-events-auto">
+                            <div key={asset.id} className="group relative mx-auto w-[min(64%,38ch)] pointer-events-auto">
                                 <textarea
                                     value={asset.value || ''}
                                     onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
@@ -157,9 +157,9 @@ export function TextLayersEditor({
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => onDeleteLayer(asset.id, 'asset')}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
                                 >
-                                    <X className="w-3 h-3" />
+                                    <X className="w-2.5 h-2.5" />
                                 </Button>
                             </div>
                         ))}

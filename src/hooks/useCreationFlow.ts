@@ -218,25 +218,35 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => ({ ...prev, currentStep: Math.max(1, prev.currentStep - 1) }))
     }, [])
 
+    const invalidateFromStep = useCallback((prev: GenerationState, originStep: number) => ({
+        generatedImage: null as string | null,
+        hasGeneratedImage: false,
+        currentStep: prev.hasGeneratedImage ? originStep : prev.currentStep,
+    }), [])
+
     // -------------------------------------------------------------------------
     // STEP 0: Platform and Format Selection
     // -------------------------------------------------------------------------
 
     const selectPlatform = useCallback((platform: SocialPlatform) => {
-        // When platform changes, auto-select the first available format for that platform
-        const firstFormat = SOCIAL_FORMATS.find(f => f.platform === platform)
         setState(prev => ({
             ...prev,
             selectedPlatform: platform,
-            selectedFormat: firstFormat?.id || null,
-            generatedImage: null,
-            currentStep: firstFormat ? 4 : prev.currentStep
+            selectedFormat: null,
+            ...invalidateFromStep(prev, 3),
+            currentStep: prev.hasGeneratedImage ? 3 : Math.max(prev.currentStep, 3)
         }))
-    }, [])
+    }, [invalidateFromStep])
 
     const selectFormat = useCallback((formatId: string) => {
-        setState(prev => ({ ...prev, selectedFormat: formatId, generatedImage: null, currentStep: 4 })) // Auto-advance to Step 4 (Image Reference)
-    }, [])
+        setState(prev => ({
+            ...prev,
+            selectedPlatform: prev.selectedPlatform ?? 'instagram',
+            selectedFormat: formatId,
+            ...invalidateFromStep(prev, 3),
+            currentStep: prev.hasGeneratedImage ? 3 : Math.max(prev.currentStep, 4)
+        })) // Auto-advance to Step 4 (Image Reference)
+    }, [invalidateFromStep])
 
     // -------------------------------------------------------------------------
     // STEP 1: Intent Selection
@@ -470,13 +480,16 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
             if (totalImages >= MAX_REFERENCE_IMAGES) return prev
             if (prev.uploadedImages.includes(url)) return prev
-            const defaultRole: ReferenceImageRole = hasActiveStyleRole(
+            const hasManualStyle = Boolean(prev.customStyle?.trim())
+            const defaultRole: ReferenceImageRole = hasManualStyle
+                ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                : hasActiveStyleRole(
                 prev.uploadedImages,
                 prev.selectedBrandKitImageIds,
                 prev.referenceImageRoles
             )
-                ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
-                : 'style'
+                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                    : 'style'
             const nextRoles = { ...prev.referenceImageRoles, [url]: defaultRole }
             const pickedStyle = pickStyleReference(
                 [...prev.uploadedImages, url],
@@ -488,7 +501,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             return {
                 ...prev,
                 uploadedImages: [...prev.uploadedImages, url],
-                currentStep: Math.max(prev.currentStep, 5),
+                ...invalidateFromStep(prev, 4),
+                currentStep: prev.hasGeneratedImage ? 4 : Math.max(prev.currentStep, 5),
                 referenceImageRoles: nextRoles,
                 firstReferenceId: pickedStyle.id,
                 firstReferenceSource: pickedStyle.source,
@@ -496,7 +510,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 visionAnalysis: shouldResetAnalysis ? null : prev.visionAnalysis
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     // Remove an uploaded image by URL
     const removeUploadedImage = useCallback((url: string) => {
@@ -513,6 +527,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 ...prev,
                 uploadedImages: nextUploadedImages,
                 uploadedImageFiles: nextUploadedFiles,
+                ...invalidateFromStep(prev, 4),
                 referenceImageRoles: nextRoles,
                 firstReferenceId: pickedStyle.id,
                 firstReferenceSource: pickedStyle.source,
@@ -520,7 +535,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 visionAnalysis: resetAnalysis ? null : prev.visionAnalysis
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     // Clear all uploaded images
     const clearUploadedImages = useCallback(() => {
@@ -537,6 +552,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 ...prev,
                 uploadedImages: nextUploadedImages,
                 uploadedImageFiles: nextUploadedFiles,
+                ...invalidateFromStep(prev, 4),
                 referenceImageRoles: nextRoles,
                 visionAnalysis: resetAnalysis ? null : prev.visionAnalysis,
                 firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
@@ -544,7 +560,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 firstReferenceSource: pickedStyle.source
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     const uploadImage = useCallback(async (file: File) => {
         const currentTotal = state.uploadedImages.length + state.selectedBrandKitImageIds.length
@@ -553,7 +569,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             return
         }
 
-        setState(prev => ({ ...prev, isAnalyzing: true, error: null, generatedImage: null }))
+        setState(prev => ({
+            ...prev,
+            ...invalidateFromStep(prev, 4),
+            isAnalyzing: true,
+            error: null
+        }))
 
         try {
             // Resize and compress image on client side to avoid 10MB payload limit
@@ -566,13 +587,16 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
             let shouldAnalyzeAsStyle = false
             setState(prev => {
-                const defaultRole: ReferenceImageRole = hasActiveStyleRole(
+                const hasManualStyle = Boolean(prev.customStyle?.trim())
+                const defaultRole: ReferenceImageRole = hasManualStyle
+                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                    : hasActiveStyleRole(
                     prev.uploadedImages,
                     prev.selectedBrandKitImageIds,
                     prev.referenceImageRoles
                 )
-                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
-                    : 'style'
+                        ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                        : 'style'
                 shouldAnalyzeAsStyle = defaultRole === 'style'
                 const nextRoles = { ...prev.referenceImageRoles, [base64]: defaultRole }
                 const pickedStyle = pickStyleReference([...prev.uploadedImages, base64], prev.selectedBrandKitImageIds, nextRoles)
@@ -583,7 +607,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                     ...prev,
                     uploadedImages: [...prev.uploadedImages, base64],
                     uploadedImageFiles: [...prev.uploadedImageFiles, file],
-                    currentStep: 6, // Auto-advance to Step 6 (Brand) after upload
+                    ...invalidateFromStep(prev, 4),
+                    currentStep: prev.hasGeneratedImage ? 4 : Math.max(prev.currentStep, 6), // Auto-advance to Step 6 (Brand) after upload
                     referenceImageRoles: nextRoles,
                     firstReferenceId: pickedStyle.id,
                     firstReferenceSource: pickedStyle.source,
@@ -608,14 +633,14 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 error: error instanceof Error ? error.message : 'Error analyzing image',
             }))
         }
-    }, [state.uploadedImages.length, state.selectedBrandKitImageIds.length, analyzeImageBase64]) // Added dependencies
+    }, [state.uploadedImages.length, state.selectedBrandKitImageIds.length, analyzeImageBase64, invalidateFromStep]) // Added dependencies
 
     const selectTheme = useCallback((theme: SeasonalTheme) => {
         const themeMeta = THEME_CATALOG.find(t => t.id === theme)
         setState(prev => ({
             ...prev,
             selectedTheme: theme,
-            generatedImage: null,
+            ...invalidateFromStep(prev, 4),
             // Create a pseudo VisionAnalysis from theme
             visionAnalysis: themeMeta ? {
                 subject: 'abstract',
@@ -626,10 +651,15 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 confidence: 1,
             } : null,
         }))
-    }, [])
+    }, [invalidateFromStep])
 
     const setImageFromUrl = useCallback(async (url: string) => {
-        setState(prev => ({ ...prev, isAnalyzing: true, error: null, generatedImage: null }))
+        setState(prev => ({
+            ...prev,
+            ...invalidateFromStep(prev, 4),
+            isAnalyzing: true,
+            error: null
+        }))
         try {
             // Fetch image and convert to blob then to base64
             const response = await fetch(url)
@@ -679,11 +709,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 error: error instanceof Error ? error.message : 'Error processing image from kit',
             }))
         }
-    }, [])
+    }, [invalidateFromStep])
 
     const clearImage = useCallback(() => {
         setState(prev => ({
             ...prev,
+            ...invalidateFromStep(prev, 4),
             uploadedImages: [],
             uploadedImageFiles: [],
             selectedBrandKitImageIds: [],
@@ -695,7 +726,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             selectedStyles: [],
             selectedLayout: null,
         }))
-    }, [])
+    }, [invalidateFromStep])
 
 
 
@@ -704,8 +735,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // -------------------------------------------------------------------------
 
     const setImageSourceMode = useCallback((mode: 'upload' | 'brandkit' | 'generate') => {
-        setState(prev => ({ ...prev, imageSourceMode: mode, generatedImage: null }))
-    }, [])
+        setState(prev => ({
+            ...prev,
+            imageSourceMode: mode,
+            ...invalidateFromStep(prev, 4)
+        }))
+    }, [invalidateFromStep])
 
     // Toggle selection of a brand kit image (multi-select, max 10 total)
     const toggleBrandKitImage = useCallback((imageId: string) => {
@@ -724,7 +759,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                     ...prev,
                     selectedBrandKitImageIds: nextBrandKitIds,
                     referenceImageRoles: nextRoles,
-                    generatedImage: null,
+                    ...invalidateFromStep(prev, 4),
                     firstReferenceId: pickedStyle.id,
                     firstReferenceSource: pickedStyle.source,
                     firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
@@ -734,13 +769,16 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 // Add to selection (if under limit)
                 const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
                 if (totalImages >= MAX_REFERENCE_IMAGES) return prev
-                const defaultRole: ReferenceImageRole = hasActiveStyleRole(
+                const hasManualStyle = Boolean(prev.customStyle?.trim())
+                const defaultRole: ReferenceImageRole = hasManualStyle
+                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                    : hasActiveStyleRole(
                     prev.uploadedImages,
                     prev.selectedBrandKitImageIds,
                     prev.referenceImageRoles
                 )
-                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
-                    : 'style'
+                        ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                        : 'style'
                 const nextRoles = { ...prev.referenceImageRoles, [imageId]: defaultRole }
                 const pickedStyle = pickStyleReference(prev.uploadedImages, [...prev.selectedBrandKitImageIds, imageId], nextRoles)
                 const resetAnalysis =
@@ -749,8 +787,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                     ...prev,
                     selectedBrandKitImageIds: [...prev.selectedBrandKitImageIds, imageId],
                     referenceImageRoles: nextRoles,
-                    generatedImage: null,
-                    currentStep: Math.max(prev.currentStep, 5),
+                    ...invalidateFromStep(prev, 4),
+                    currentStep: prev.hasGeneratedImage ? 4 : Math.max(prev.currentStep, 5),
                     firstReferenceId: pickedStyle.id,
                     firstReferenceSource: pickedStyle.source,
                     firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
@@ -758,7 +796,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 }
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     // Clear all brand kit image selections
     const clearBrandKitImages = useCallback(() => {
@@ -774,19 +812,20 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 ...prev,
                 selectedBrandKitImageIds: nextBrandKitIds,
                 referenceImageRoles: nextRoles,
-                generatedImage: null,
+                ...invalidateFromStep(prev, 4),
                 firstReferenceId: pickedStyle.id,
                 firstReferenceSource: pickedStyle.source,
                 firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
                 visionAnalysis: resetAnalysis ? null : prev.visionAnalysis
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     const setReferenceImageRole = useCallback((imageId: string, role: ReferenceImageRole) => {
         setState(prev => {
             const isSelected = prev.uploadedImages.includes(imageId) || prev.selectedBrandKitImageIds.includes(imageId)
             if (!isSelected) return prev
+            const hasManualStyle = Boolean(prev.customStyle?.trim())
 
             const nextRoles = { ...prev.referenceImageRoles }
             const isTargetUpload = prev.uploadedImages.includes(imageId)
@@ -795,6 +834,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 prev.imageSourceMode === 'generate' && (role === 'content' || role === 'style_content')
                     ? 'style'
                     : role
+            if (hasManualStyle && (safeRole === 'style' || safeRole === 'style_content')) {
+                safeRole = prev.imageSourceMode === 'generate' ? 'logo' : 'content'
+            }
 
             // Priority by block order:
             // Upload references (upper block) cannot be overridden by lower block (brand kit)
@@ -832,19 +874,24 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
             return {
                 ...prev,
+                customStyle: (safeRole === 'style' || safeRole === 'style_content') ? '' : prev.customStyle,
                 referenceImageRoles: nextRoles,
                 firstReferenceId: pickedStyle.id,
                 firstReferenceSource: pickedStyle.source,
                 firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
                 visionAnalysis: resetAnalysis ? null : prev.visionAnalysis,
-                generatedImage: null
+                ...invalidateFromStep(prev, 4)
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     const setAiImageDescription = useCallback((description: string) => {
-        setState(prev => ({ ...prev, aiImageDescription: description, generatedImage: null }))
-    }, [])
+        setState(prev => ({
+            ...prev,
+            aiImageDescription: description,
+            ...invalidateFromStep(prev, 4)
+        }))
+    }, [invalidateFromStep])
 
     // -------------------------------------------------------------------------
     // STEP 3: Style Selection
@@ -860,19 +907,26 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             return {
                 ...prev,
                 selectedStyles: newStyles,
-                generatedImage: null, // Invalidate to force new generation
-                currentStep: newStyles.length > 0 ? 6 : prev.currentStep // Auto-advance to Step 6 (Texts) if style selected
+                ...invalidateFromStep(prev, 4), // Invalidate to force new generation
+                currentStep: prev.hasGeneratedImage
+                    ? 4
+                    : (newStyles.length > 0 ? 6 : prev.currentStep) // Auto-advance to Step 6 (Texts) if style selected
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     // -------------------------------------------------------------------------
     // STEP 4: Layout Selection
     // -------------------------------------------------------------------------
 
     const selectLayout = useCallback((layoutId: string) => {
-        setState(prev => ({ ...prev, selectedLayout: layoutId, generatedImage: null, currentStep: 3 })) // Auto-advance to Step 3 (Format)
-    }, [])
+        setState(prev => ({
+            ...prev,
+            selectedLayout: layoutId,
+            ...invalidateFromStep(prev, 2),
+            currentStep: prev.hasGeneratedImage ? 2 : Math.max(prev.currentStep, 3)
+        })) // Auto-advance to Step 3 (Format)
+    }, [invalidateFromStep])
 
     // -------------------------------------------------------------------------
     // STEP 5: Final Format Selection
@@ -885,8 +939,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // -------------------------------------------------------------------------
 
     const selectLogo = useCallback((logoId: string | null) => {
-        setState(prev => ({ ...prev, selectedLogoId: logoId, generatedImage: null }))
-    }, [])
+        setState(prev => ({
+            ...prev,
+            selectedLogoId: logoId,
+            ...invalidateFromStep(prev, 5)
+        }))
+    }, [invalidateFromStep])
 
     const setHeadline = useCallback((headline: string) => {
         setState(prev => {
@@ -929,17 +987,35 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     const setRawMessage = useCallback((message: string) => {
-        setState(prev => ({ ...prev, rawMessage: message }))
-    }, [])
-
-    const setCustomStyle = useCallback((style: string) => {
         setState(prev => ({
             ...prev,
-            customStyle: style,
-            generatedImage: null,
-            currentStep: style.trim() ? Math.max(prev.currentStep, 5) : prev.currentStep
+            rawMessage: message,
+            ...invalidateFromStep(prev, 1),
+            currentStep: 1
         }))
-    }, [])
+    }, [invalidateFromStep])
+
+    const setCustomStyle = useCallback((style: string) => {
+        setState(prev => {
+            const hasVisualStyle = [...prev.uploadedImages, ...prev.selectedBrandKitImageIds].some((id) => {
+                const role = prev.referenceImageRoles[id]
+                return role === 'style' || role === 'style_content'
+            })
+            const nextStyle = style || ''
+            if (nextStyle.trim() && hasVisualStyle) {
+                return prev
+            }
+
+            return {
+                ...prev,
+                customStyle: nextStyle,
+                ...invalidateFromStep(prev, 4),
+                currentStep: prev.hasGeneratedImage
+                    ? 4
+                    : (nextStyle.trim() ? Math.max(prev.currentStep, 5) : prev.currentStep)
+            }
+        })
+    }, [invalidateFromStep])
 
     const setTypographyMode = useCallback((mode: TypographyProfile['mode']) => {
         setState(prev => {
@@ -1072,7 +1148,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 return {
                     ...prev,
                     selectedBrandColors: [...prev.selectedBrandColors, { color: normalizedColor, role: forceRole || 'Acento' }],
-                    generatedImage: null
+                    ...invalidateFromStep(prev, 5)
                 }
             } else {
                 // Already selected: cycle roles or remove
@@ -1083,7 +1159,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 if (forceRole) {
                     const newColors = [...prev.selectedBrandColors]
                     newColors[index] = { ...newColors[index], role: forceRole }
-                    return { ...prev, selectedBrandColors: newColors, generatedImage: null }
+                    return { ...prev, selectedBrandColors: newColors, ...invalidateFromStep(prev, 5) }
                 }
 
                 const roleIndex = roles.indexOf(currentRole)
@@ -1105,12 +1181,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                     return {
                         ...prev,
                         selectedBrandColors: newColors,
-                        generatedImage: null
+                        ...invalidateFromStep(prev, 5)
                     }
                 }
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     const removeBrandColor = useCallback((color: string) => {
         console.log('[useCreationFlow] removeBrandColor called with:', color)
@@ -1126,10 +1202,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             return {
                 ...prev,
                 selectedBrandColors: newColors,
-                generatedImage: null
+                ...invalidateFromStep(prev, 5)
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     const addCustomColor = useCallback((color: string) => {
         const normalizedColor = color.startsWith('#') ? color.toLowerCase() : `#${color.toLowerCase()}`
@@ -1142,10 +1218,10 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             return {
                 ...prev,
                 selectedBrandColors: [...prev.selectedBrandColors, { color: normalizedColor, role: 'Acento' }],
-                generatedImage: null
+                ...invalidateFromStep(prev, 5)
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     // -------------------------------------------------------------------------
     // TEXT ASSETS MANAGEMENT
@@ -1833,7 +1909,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         setState(prev => ({
             ...prev,
             generatedImage: url,
-            hasGeneratedImage: url ? true : prev.hasGeneratedImage,
+            hasGeneratedImage: Boolean(url),
         }))
     }, [])
 
@@ -2037,10 +2113,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 ...prev,
                 originalState,
                 ...modifications,
-                generatedImage: null // Invalidate image as text changed
+                ...invalidateFromStep(prev, 1), // Invalidate image as text changed
+                currentStep: prev.hasGeneratedImage ? 1 : prev.currentStep
             }
         })
-    }, [currentIntent])
+    }, [currentIntent, invalidateFromStep])
 
     const undoSuggestion = useCallback(() => {
         setState(prev => {
@@ -2049,10 +2126,11 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 ...prev,
                 ...prev.originalState,
                 originalState: null,
-                generatedImage: null
+                ...invalidateFromStep(prev, 1),
+                currentStep: prev.hasGeneratedImage ? 1 : prev.currentStep
             }
         })
-    }, [])
+    }, [invalidateFromStep])
 
     return {
         // State

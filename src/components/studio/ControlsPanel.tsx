@@ -106,7 +106,12 @@ export function ControlsPanel({
         userId,
         brandId: activeBrandKit?.id as any
     } : 'skip')
-    const hasPresets = (presetsData?.user?.length ?? 0) > 0
+    const isImagePreset = useCallback((preset: { state?: { presetType?: string } } | null | undefined) => {
+        const type = preset?.state?.presetType
+        // Backward compatibility: presets without explicit type are treated as image
+        return typeof type !== 'string' || type === 'image'
+    }, [])
+    const hasPresets = (presetsData?.user?.some(isImagePreset) ?? false)
 
     const {
         state,
@@ -175,6 +180,8 @@ export function ControlsPanel({
     }, [])
 
     const handleSelectPreset = (presetState: Partial<GenerationState>) => {
+        const presetType = (presetState as { presetType?: unknown })?.presetType
+        if (presetType === 'carousel') return
         loadPreset(presetState)
         onPromptChange(typeof presetState.rawMessage === 'string' ? presetState.rawMessage : '')
     }
@@ -235,10 +242,9 @@ export function ControlsPanel({
             const nextBasicLayoutId = pickRandomBasicLayout(state.selectedLayout)
             if (nextBasicLayoutId) {
                 selectLayout(nextBasicLayoutId)
-                creationFlow.setStep(2)
             }
         }
-    }, [creationFlow, pickRandomBasicLayout, selectLayout, state.selectedLayout])
+    }, [pickRandomBasicLayout, selectLayout, state.selectedLayout])
 
     useEffect(() => {
         if (layoutMode !== 'basic') return
@@ -296,7 +302,7 @@ export function ControlsPanel({
                 },
                 icon: 'Star'
             })
-            toast({ title: "Guardado", description: "Tu configuraciÃ³n se ha guardado." })
+            toast({ title: "Guardado", description: "Tu configuración se ha guardado." })
             setIsSaveDialogOpen(false)
         } catch (error) {
             console.error('Error saving preset:', error)
@@ -329,7 +335,12 @@ export function ControlsPanel({
                     </div>
                     {hasPresets ? (
                         <>
-                            <PresetsCarousel onSelectPreset={handleSelectPreset} onReset={reset} userId={userId} />
+                            <PresetsCarousel
+                                onSelectPreset={handleSelectPreset}
+                                onReset={reset}
+                                userId={userId}
+                                filterPreset={isImagePreset}
+                            />
                             <p className="text-xs text-muted-foreground mt-2">
                                 Guarda y reutiliza tus configuraciones favoritas.
                             </p>
@@ -477,11 +488,16 @@ export function ControlsPanel({
                             <div ref={step3Ref} className={cn("relative", state.currentStep === 3 ? "glass-card p-4" : "glass-card p-4 opacity-70 hover:opacity-100 transition-opacity")}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 3 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[3]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step3Ref} />
                                 <SectionHeader icon={Layers} title="Formato" />
-                                <SocialFormatSelector selectedPlatform={state.selectedPlatform} selectedFormat={state.selectedFormat} onSelectPlatform={selectPlatform} onSelectFormat={selectFormat} />
-                                {state.currentStep === 3 && state.selectedFormat && (
-                                    <div className="flex justify-end mt-3">
-                                        <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(4)} className="h-7 text-xs">Siguiente, Imagen</Button>
-                                    </div>
+                                <SocialFormatSelector
+                                    selectedPlatform={state.selectedPlatform}
+                                    selectedFormat={state.selectedFormat}
+                                    onSelectPlatform={selectPlatform}
+                                    onSelectFormat={selectFormat}
+                                />
+                                {!state.selectedFormat && (
+                                    <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+                                        Selecciona la plataforma y un formato para continuar.
+                                    </p>
                                 )}
                             </div>
                         )}
@@ -490,7 +506,7 @@ export function ControlsPanel({
                         {(state.currentStep >= 4 || state.hasGeneratedImage) && (
                             <div ref={step4Ref} className={cn("relative", state.currentStep === 4 ? "glass-card p-4" : "glass-card p-4 opacity-70 hover:opacity-100 transition-opacity")}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 4 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[4]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step4Ref} />
-                                <SectionHeader icon={ImagePlus} title="Imagen de Referencia" />
+                                <SectionHeader icon={ImagePlus} title="Imagenes" />
                                 <ImageReferenceSelector
                                     uploadedImages={state.uploadedImages}
                                     visionAnalysis={state.visionAnalysis ?? null}
@@ -517,24 +533,11 @@ export function ControlsPanel({
                                 <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
                                     Sube una referencia o usa una del Brand Kit.
                                 </p>
-                                {state.currentStep === 4 && (
-                                    <div className="flex justify-end mt-3">
-                                        <Button
-                                            size="sm"
-                                            variant="secondary"
-                                            onClick={() => creationFlow.setStep(6)}
-                                            className="h-7 text-xs"
-                                            disabled={state.imageSourceMode === 'generate' && !state.aiImageDescription?.trim()}
-                                        >
-                                            Siguiente, Marca
-                                        </Button>
-                                    </div>
-                                )}
                             </div>
                         )}
 
                         {/* STEP 6: LOGO & COLORS - Unified */}
-                        {(state.currentStep >= 5 || state.hasGeneratedImage) && (
+                        {(state.currentStep >= 5 || (state.currentStep >= 4 && state.imageSourceMode === 'generate') || state.hasGeneratedImage) && (
                             <div ref={step6Ref} className="relative glass-card p-4 space-y-6">
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep >= 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
                                 <div className="space-y-3">
@@ -595,8 +598,11 @@ function SuggestionsList({
     return (
         <TooltipProvider delayDuration={300}>
             <div className="mt-2 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-500">
-                {hasOriginalState && (
-                    <div className="flex justify-end pr-1">
+                <div className="flex items-center justify-between px-1">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80">
+                        Opciones alternativas
+                    </p>
+                    {hasOriginalState ? (
                         <Button
                             variant="ghost"
                             size="sm"
@@ -606,8 +612,8 @@ function SuggestionsList({
                             <RotateCcw className="w-2.5 h-2.5" />
                             VOLVER AL ORIGINAL
                         </Button>
-                    </div>
-                )}
+                    ) : <span />}
+                </div>
                 {suggestions.map((suggestion, idx) => (
                     <Tooltip key={idx}>
                         <TooltipTrigger asChild>

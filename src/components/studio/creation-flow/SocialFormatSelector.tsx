@@ -25,6 +25,7 @@ interface SocialFormatSelectorProps {
     selectedFormat: string | null
     onSelectPlatform: (platform: SocialPlatform) => void
     onSelectFormat: (formatId: string) => void
+    lockedPlatform?: SocialPlatform
 }
 
 const PLATFORM_CONFIG: Record<SocialPlatform, { icon: any; label: string; color: string }> = {
@@ -41,26 +42,34 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
     selectedPlatform,
     selectedFormat,
     onSelectPlatform,
-    onSelectFormat
+    onSelectFormat,
+    lockedPlatform
 }) => {
-    const availableFormats = SOCIAL_FORMATS.filter(f => f.platform === selectedPlatform)
+    const effectivePlatform = lockedPlatform ?? selectedPlatform
+    const availableFormats = SOCIAL_FORMATS.filter(f => f.platform === effectivePlatform)
 
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-center gap-2">
                 {(Object.entries(PLATFORM_CONFIG) as [SocialPlatform, any][]).map(([id, config]) => {
                     const Icon = config.icon
-                    const isSelected = selectedPlatform === id
+                    const isSelected = effectivePlatform === id
+                    const isLocked = Boolean(lockedPlatform)
                     return (
                         <button
                             key={id}
-                            onClick={() => onSelectPlatform(id)}
+                            onClick={() => {
+                                if (isLocked) return
+                                onSelectPlatform(id)
+                            }}
                             title={config.label}
+                            aria-disabled={isLocked}
                             className={cn(
                                 "relative flex items-center justify-center p-3 rounded-full transition-all duration-300",
                                 isSelected
                                     ? "bg-primary/10 shadow-[0_4px_12px_hsl(var(--primary)/0.2)] scale-110 ring-1 ring-primary/30 dark:bg-primary/20 dark:ring-primary/40"
-                                    : "bg-transparent hover:bg-black/5 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                                    : "bg-transparent hover:bg-black/5 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300",
+                                isLocked && "cursor-default"
                             )}
                         >
                             <Icon className={cn(
@@ -74,7 +83,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
                 })}
             </div>
 
-            {selectedPlatform && (
+            {effectivePlatform && (
                 <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                     {availableFormats.map((format) => {
                         const isSelected = selectedFormat === format.id
