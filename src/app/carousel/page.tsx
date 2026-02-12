@@ -700,11 +700,13 @@ export default function CarouselPage() {
 
             const selectedLogoUrl = carouselSettings.includeLogoOnSlides ? carouselSettings.selectedLogoUrl : undefined
             const consistencyRefUrls: string[] = []
-            if (index > 0 && slides[0]?.imageUrl) {
-                consistencyRefUrls.push(slides[0].imageUrl)
+            const firstSlideImageUrl = slides[0]?.imageUrl
+            if (index > 0 && firstSlideImageUrl) {
+                consistencyRefUrls.push(firstSlideImageUrl)
             }
-            if (index > 0 && slides[index - 1]?.imageUrl) {
-                consistencyRefUrls.push(slides[index - 1].imageUrl)
+            const previousSlideImageUrl = slides[index - 1]?.imageUrl
+            if (index > 0 && previousSlideImageUrl) {
+                consistencyRefUrls.push(previousSlideImageUrl)
             }
 
             const result = await regenerateSlideAction(
