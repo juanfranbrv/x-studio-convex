@@ -787,7 +787,8 @@ export async function parseLazyIntentAction({
     brandWebsite,
     intentId,
     layoutId,
-    intelligenceModel
+    intelligenceModel,
+    variationSeed
 }: {
     userText: string
     brandDNA: any
@@ -795,6 +796,7 @@ export async function parseLazyIntentAction({
     intentId?: string
     layoutId?: string
     intelligenceModel?: string
+    variationSeed?: number
 }): Promise<ParsedIntentResult> {
     try {
         // 1. Prepare Metadata
@@ -809,6 +811,22 @@ export async function parseLazyIntentAction({
 
         // 2. Build Prompt Parts (Include system prompt in body for maximum adherence across all models)
         const prompt = buildIntentParserPrompt(userText, brandWebsite, brandDNA, intent, layout)
+        const creativeLenses = [
+            'beneficio directo y claridad accionable',
+            'prueba social y credibilidad concreta',
+            'urgencia suave y oportunidad inmediata',
+            'narrativa breve de problema-solucion',
+            'tono conversacional con propuesta clara',
+            'enfoque aspiracional con llamada precisa',
+        ] as const
+        const seed = Number.isFinite(variationSeed) ? Number(variationSeed) : Date.now()
+        const selectedLens = creativeLenses[Math.abs(seed) % creativeLenses.length]
+        const promptWithVariation = `${prompt}
+
+CREATIVE VARIATION MODE:
+- Mantén intactos todos los datos literales críticos (URLs, teléfonos, precios, fechas, condiciones).
+- Esta ejecución debe priorizar el ángulo: ${selectedLens}.
+- Las 2 sugerencias deben diferenciarse claramente entre sí y no ser reformulaciones mínimas.`
 
         // 3. Prepare Brand Context
         const brandName = brandDNA?.brand_name || brandDNA?.name || 'la marca'
@@ -820,10 +838,11 @@ export async function parseLazyIntentAction({
         // 4. Call AI with specialized System Instruction (Empty override to avoid persona blending)
         const jsonResponse = await generateTextUnified(
             brandContextForAI as any,
-            prompt,
+            promptWithVariation,
             modelToUse,
             [], // No images for intent parsing
-            "" // SILENCE generic persona to avoid hallucinations
+            "", // SILENCE generic persona to avoid hallucinations
+            { temperature: 0.9, topP: 0.92 }
         )
 
         console.log(`[LazyPrompt] Received JSON: ${jsonResponse.substring(0, 500)}...`)

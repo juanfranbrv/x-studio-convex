@@ -162,6 +162,38 @@ function getLayoutVisual(id: string) {
     if (id === 'basic-stacked-cards') return <BasicStackedCardsLayout />;
     if (id === 'basic-diagonal-energy') return <BasicDiagonalEnergyLayout />;
 
+    // === LAB v6 layouts (image advanced mode) ===
+    if (id === 'lab-v6-carril-escenario') return <BasicEditorialColumnsLayout />;
+    if (id === 'lab-v6-escalera-bisagra') return <ProcessLayout />;
+    if (id === 'lab-v6-cuadrantes-vacio') return <BasicMosaicFlowLayout />;
+    if (id === 'lab-v6-diagonal-plegada') return <BasicDiagonalEnergyLayout />;
+    if (id === 'lab-v6-orbita-lateral') return <BasicSpotlightRadialLayout />;
+    if (id === 'lab-v6-split-bahia') return <SplitLayout />;
+    if (id === 'lab-v6-marco-perimetral') return <BasicStackedCardsLayout />;
+    if (id === 'lab-v6-reticula-ruptura') return <BentoGridLayout />;
+    if (id === 'lab-v6-ventana-desplazada') return <FrameLayout />;
+    if (id === 'lab-v6-banda-serpenteante') return <PasosZigzagLayout />;
+    if (id === 'lab-v6-orbita-concentrica') return <CircularLayout />;
+    if (id === 'lab-v6-diptico-puente') return <ComparisonLayout />;
+    if (id === 'lab-v6-islas-contrapeso') return <EcosystemLayout />;
+    if (id === 'lab-v6-capsulas-ritmo') return <ListLayout />;
+    if (id === 'lab-v6-umbral-lateral') return <ComunicadoCardLayout />;
+    if (id === 'lab-v6-rejilla-hub') return <DashboardLayout />;
+    if (id === 'lab-v6-columna-eco') return <PasosVerticalLayout />;
+    if (id === 'lab-v6-bisel-esquina') return <EscaparateDiagonalLayout />;
+    if (id === 'lab-v6-cinta-cascada') return <TimelineLayout />;
+    if (id === 'lab-v6-anillo-pivot') return <EscaparateRadialLayout />;
+    if (id === 'lab-v6-rail-pie-editorial') return <ComunicadoEditorialLayout />;
+    if (id === 'lab-v6-mosaico-hero') return <CatalogoGridLayout />;
+    if (id === 'lab-v6-puerta-estrecha') return <ComunicadoMemoLayout />;
+    if (id === 'lab-v6-marco-bisagra') return <EscaparateMarcoLayout />;
+    if (id === 'lab-v6-offset-perimetral') return <EscaparateGridLayout />;
+    if (id === 'lab-v6-celda-satelite') return <Escaparate360Layout />;
+    if (id === 'lab-v6-vacio-esquina') return <ComunicadoMinimalLayout />;
+    if (id === 'lab-v6-banda-doble') return <OfertaBannerLayout />;
+    if (id === 'lab-v6-escalon-zeta') return <PasosTimelineLayout />;
+    if (id === 'lab-v6-ventana-constelacion') return <EscaparateGoboLayout />;
+
     // === DEFINICION layouts ===
     if (id === 'def-classic') return <DictionaryLayout />;
     if (id === 'def-minimal') return <BigTypoLayout />;

@@ -23,6 +23,21 @@ export function ThumbnailHistory({
 }: ThumbnailHistoryProps) {
     if (generations.length === 0) return null
 
+    const getSkillLabel = (gen: Generation) => {
+        const payload = gen.request_payload || {}
+        const skill = payload.compositionSkill as
+            | { name?: string; version?: string }
+            | undefined
+        if (skill?.version) {
+            return `${skill.name || 'skill'} v${skill.version}`
+        }
+        const layoutSkillVersion = payload.layoutSkillVersion as string | undefined
+        if (layoutSkillVersion) {
+            return `composiciones v${layoutSkillVersion}`
+        }
+        return null
+    }
+
     return (
         <div className="glass-card p-3">
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
@@ -31,6 +46,7 @@ export function ThumbnailHistory({
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {generations.map((gen) => {
                     const isSelected = currentImageUrl === gen.image_url
+                    const skillLabel = getSkillLabel(gen)
                     return (
                         <button
                             key={gen.id}
@@ -47,6 +63,11 @@ export function ThumbnailHistory({
                                     className="w-full h-full object-cover"
                                 />
                             </div>
+                            {skillLabel ? (
+                                <span className="absolute left-1 right-1 bottom-1 rounded bg-black/75 px-1 py-0.5 text-[8px] font-medium leading-none text-white truncate">
+                                    {skillLabel}
+                                </span>
+                            ) : null}
                             {isSelected && (
                                 <div className="absolute inset-0 bg-primary/10" />
                             )}

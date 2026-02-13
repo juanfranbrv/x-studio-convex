@@ -291,6 +291,13 @@ export default function ImagePage() {
 
         const effectiveLayoutId = data.forcedLayoutId || creationFlow.state.selectedLayout
         const effectiveLayoutMeta = ALL_IMAGE_LAYOUTS.find((l) => l.id === effectiveLayoutId)
+        const compositionSkill = effectiveLayoutMeta?.skillVersion
+            ? {
+                name: 'composiciones',
+                version: effectiveLayoutMeta.skillVersion,
+                layoutId: effectiveLayoutMeta.id,
+            }
+            : undefined
 
         const requestPayload = {
             ...data,
@@ -303,6 +310,10 @@ export default function ImagePage() {
             logoInclusion,
             context: finalContext,
             model: data.model || creationFlow.state.selectedImageModel,
+            layoutId: effectiveLayoutMeta?.id,
+            layoutName: effectiveLayoutMeta?.name,
+            layoutSkillVersion: effectiveLayoutMeta?.skillVersion,
+            compositionSkill,
             layoutReference: effectiveLayoutMeta?.referenceImage,
             aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
             selectedColors: creationFlow.state.selectedBrandColors
@@ -347,7 +358,8 @@ export default function ImagePage() {
                 brandWebsite: activeBrandKit?.url,
                 intelligenceModel: modelToUse,
                 intentId: creationFlow.currentIntent?.id,
-                layoutId: creationFlow.selectedLayoutMeta?.id
+                layoutId: creationFlow.selectedLayoutMeta?.id,
+                variationSeed: Date.now()
             })
 
             if (result.error) {
@@ -474,6 +486,14 @@ export default function ImagePage() {
         forcedLayoutId?: string
     }) => {
         if (!activeBrandKit) return
+        if (creationFlow.state.isAnalyzing) {
+            toast({
+                title: "Analizando referencia",
+                description: "Espera a que termine el análisis antes de generar.",
+                variant: "destructive",
+            })
+            return
+        }
 
         setIsGenerating(true)
         try {
@@ -497,6 +517,8 @@ export default function ImagePage() {
                 intent: creationFlow.state.selectedIntent || undefined,
                 layoutId: data.forcedLayoutId || creationFlow.state.selectedLayout || undefined,
                 layoutName: ALL_IMAGE_LAYOUTS.find((l) => l.id === (data.forcedLayoutId || creationFlow.state.selectedLayout))?.name,
+                layoutSkillName: 'composiciones',
+                layoutSkillVersion: ALL_IMAGE_LAYOUTS.find((l) => l.id === (data.forcedLayoutId || creationFlow.state.selectedLayout))?.skillVersion,
                 model: data.model || creationFlow.state.selectedImageModel,
                 aspectRatio: selectedFormat?.aspectRatio
             })
@@ -534,7 +556,11 @@ export default function ImagePage() {
                 setSessionGenerations(prev => [{
                     id: Date.now().toString(),
                     image_url: result.imageUrl,
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    prompt_used: typeof requestPayloadForApi.prompt === 'string' ? requestPayloadForApi.prompt : '',
+                    request_payload: { ...requestPayloadForApi },
+                    error_title: "Error de generación",
+                    error_fallback: "Error al generar la imagen"
                 }, ...prev])
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al generar la imagen' }))
@@ -591,6 +617,8 @@ export default function ImagePage() {
                 intent: creationFlow.state.selectedIntent || undefined,
                 layoutId: creationFlow.state.selectedLayout || undefined,
                 layoutName: ALL_IMAGE_LAYOUTS.find((l) => l.id === creationFlow.state.selectedLayout)?.name,
+                layoutSkillName: 'composiciones',
+                layoutSkillVersion: ALL_IMAGE_LAYOUTS.find((l) => l.id === creationFlow.state.selectedLayout)?.skillVersion,
                 model: creationFlow.state.selectedImageModel,
                 aspectRatio: selectedFormat?.aspectRatio
             })
@@ -608,6 +636,16 @@ export default function ImagePage() {
                 brandDNA: activeBrandKit,
                 context: editContext,
                 model: creationFlow.state.selectedImageModel,
+                layoutId: creationFlow.state.selectedLayout || undefined,
+                layoutName: ALL_IMAGE_LAYOUTS.find((l) => l.id === creationFlow.state.selectedLayout)?.name,
+                layoutSkillVersion: ALL_IMAGE_LAYOUTS.find((l) => l.id === creationFlow.state.selectedLayout)?.skillVersion,
+                compositionSkill: ALL_IMAGE_LAYOUTS.find((l) => l.id === creationFlow.state.selectedLayout)?.skillVersion
+                    ? {
+                        name: 'composiciones',
+                        version: ALL_IMAGE_LAYOUTS.find((l) => l.id === creationFlow.state.selectedLayout)?.skillVersion,
+                        layoutId: creationFlow.state.selectedLayout || undefined,
+                    }
+                    : undefined,
                 aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
                 selectedColors: creationFlow.state.selectedBrandColors
             }
@@ -630,7 +668,11 @@ export default function ImagePage() {
                 setSessionGenerations(prev => [{
                     id: Date.now().toString(),
                     image_url: result.imageUrl,
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    prompt_used: typeof requestPayload.prompt === 'string' ? requestPayload.prompt : '',
+                    request_payload: { ...requestPayload },
+                    error_title: "Error de edición",
+                    error_fallback: "Error al editar la imagen"
                 }, ...prev])
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al editar la imagen' }))
@@ -663,7 +705,7 @@ export default function ImagePage() {
         state.currentStep >= 5 ||
         (state.currentStep >= 4 && state.imageSourceMode === 'generate') ||
         state.hasGeneratedImage
-    const canGenerate = Boolean(hasReachedBrandingStep)
+    const canGenerate = Boolean(hasReachedBrandingStep && !state.isAnalyzing)
 
     // Wrapped handleGenerate with debug modal intercept (admin only)
     const handleGenerateWithDebug = async (data: {
@@ -700,6 +742,8 @@ export default function ImagePage() {
             intent: state.selectedIntent || undefined,
             layoutId: data.forcedLayoutId || state.selectedLayout || undefined,
             layoutName: ALL_IMAGE_LAYOUTS.find((l) => l.id === (data.forcedLayoutId || state.selectedLayout))?.name,
+            layoutSkillName: 'composiciones',
+            layoutSkillVersion: ALL_IMAGE_LAYOUTS.find((l) => l.id === (data.forcedLayoutId || state.selectedLayout))?.skillVersion,
         })
         setEditableDebugPrompt(finalModelPrompt)
         setPendingGenerationData({
@@ -824,6 +868,14 @@ export default function ImagePage() {
             toast({
                 title: "Sin prompt previo",
                 description: "Genera o refina una imagen primero para volver a tirar.",
+                variant: "destructive",
+            })
+            return
+        }
+        if (creationFlow.state.isAnalyzing) {
+            toast({
+                title: "Analizando referencia",
+                description: "Espera a que termine el análisis antes de generar.",
                 variant: "destructive",
             })
             return
@@ -989,6 +1041,8 @@ export default function ImagePage() {
                             onUnifiedAction={handleUnifiedAction}
                             onAnalyze={() => handleSmartAnalyze()}
                             userId={user?.id}
+                            isAdmin={isAdmin}
+                            adminEmail={user?.emailAddresses?.[0]?.emailAddress}
                         />
                     </div>
 
@@ -1034,7 +1088,7 @@ export default function ImagePage() {
                             {creationFlow.state.generatedImage ? (
                                 <Button
                                     onClick={handleRetryLastPrompt}
-                                    disabled={isGenerating || !lastGenerationRequest}
+                                    disabled={isGenerating || !lastGenerationRequest || creationFlow.state.isAnalyzing}
                                     className="w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
                                 >
                                     {isGenerating ? (

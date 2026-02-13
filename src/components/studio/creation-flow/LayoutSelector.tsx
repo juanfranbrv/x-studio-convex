@@ -5,6 +5,11 @@ import { motion } from 'framer-motion'
 import type { LayoutOption, IntentCategory } from '@/lib/creation-flow-types'
 import { LayoutThumbnail } from './LayoutThumbnail'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+    getLayoutRatingStats,
+    type LayoutRatingStoreEntry,
+} from '@/lib/layout-ratings'
+
 
 interface LayoutSelectorProps {
     availableLayouts: LayoutOption[]
@@ -13,6 +18,8 @@ interface LayoutSelectorProps {
     selectedLayout: string | null
     onSelectLayout: (layoutId: string) => void
     intent?: IntentCategory
+    isAdmin?: boolean
+    layoutRatings?: Record<string, LayoutRatingStoreEntry>
 }
 
 export function LayoutSelector({
@@ -21,7 +28,9 @@ export function LayoutSelector({
     allLayouts,
     selectedLayout,
     onSelectLayout,
-    intent
+    intent,
+    isAdmin = false,
+    layoutRatings = {},
 }: LayoutSelectorProps) {
     if (availableLayouts.length === 0) {
         return null
@@ -79,7 +88,7 @@ export function LayoutSelector({
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => onSelectLayout(layout.id)}
-                                className={cn(
+                            className={cn(
                                     'group relative flex flex-col transition-all duration-300',
                                     'rounded-xl overflow-hidden text-left',
                                     'border backdrop-blur-sm',
@@ -88,6 +97,18 @@ export function LayoutSelector({
                                         : 'border-slate-200/80 bg-white/60 hover:bg-white/90 hover:border-slate-300/80 hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:border-white/20'
                                 )}
                             >
+                                {isAdmin && (
+                                    <div className="absolute right-1.5 top-1.5 z-20 rounded-md border border-border/70 bg-background/85 px-1.5 py-0.5 backdrop-blur">
+                                        {(() => {
+                                            const stats = getLayoutRatingStats(layout.id, layoutRatings)
+                                            return (
+                                                <span className="text-[9px] font-semibold text-foreground">
+                                                    {stats.average.toFixed(1)} · {stats.totalPoints}/{stats.uses || 0}
+                                                </span>
+                                            )
+                                        })()}
+                                    </div>
+                                )}
                                 {opts?.recommended && (
                                     <span className="absolute top-1.5 left-1.5 z-10 rounded-full bg-primary/90 text-primary-foreground text-[8px] px-1.5 py-0.5 uppercase tracking-wide font-semibold">
                                         Recom.
@@ -119,6 +140,14 @@ export function LayoutSelector({
                                     )}>
                                         {layout.name}
                                     </span>
+                                    {isAdmin && (
+                                        <span className="text-[8px] block text-center leading-none mt-0.5 text-muted-foreground">
+                                            {(() => {
+                                                const stats = getLayoutRatingStats(layout.id, layoutRatings)
+                                                return `${stats.totalPoints} pts totales`
+                                            })()}
+                                        </span>
+                                    )}
                                     <span className={cn(
                                         'text-[8px] block truncate text-center mt-0.5',
                                         isSelected ? 'text-primary/70' : 'text-muted-foreground'

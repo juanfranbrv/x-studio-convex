@@ -15,19 +15,29 @@ import { SavePresetDialog } from './creation-flow/SavePresetDialog'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import {
     GenerationState,
     IntentCategory,
-    ALL_IMAGE_LAYOUTS,
     BASIC_MODE_LAYOUT_IDS,
+    LAB_ADVANCED_LAYOUTS,
     LayoutOption,
 } from '@/lib/creation-flow-types'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
-import { getRecommendedAdvancedLayouts } from '@/lib/layout-recommendation'
+import {
+    clearLegacyLayoutRatingStorage,
+    getLayoutRatingStats,
+    hasLayoutRatingsMigrationRun,
+    markLayoutRatingsMigrationAsDone,
+    readLegacyLayoutMarks,
+    readLegacyLayoutRatings,
+    type LayoutRatingStoreEntry,
+} from '@/lib/layout-ratings'
+
+const RESET_USES4_FLAG = 'admin_layout_ratings_reset_uses4_done_v1'
 
 const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = {
     1: { title: "Tu Idea", description: "Escribe tu idea y pulsa el boton para crear la publicación" },
@@ -71,6 +81,8 @@ interface ControlsPanelProps {
     onUnifiedAction: () => void
     onAnalyze: () => Promise<any>
     userId?: string
+    isAdmin?: boolean
+    adminEmail?: string
 }
 
 export function ControlsPanel({
@@ -86,6 +98,8 @@ export function ControlsPanel({
     onUnifiedAction,
     onAnalyze,
     userId,
+    isAdmin = false,
+    adminEmail,
 }: ControlsPanelProps) {
     const { toast } = useToast()
     const { panelPosition, assistanceEnabled } = useUI()
@@ -93,7 +107,14 @@ export function ControlsPanel({
     const [isSavingPreset, setIsSavingPreset] = useState(false)
     const [layoutMode, setLayoutMode] = useState<'basic' | 'advanced'>('basic')
     const createPreset = useMutation(api.presets.create)
+    const upsertLayoutVote = useMutation(api.layoutRatings.upsertLayoutVote)
+    const migrateLegacyRatings = useMutation(api.layoutRatings.migrateLegacyRatings)
+    const resetLayoutRatings = useMutation(api.layoutRatings.resetLayoutRatings)
     const { activeBrandKit } = useBrandKit()
+    const layoutRatingsRows = useQuery(
+        api.layoutRatings.listLayoutRatings,
+        isAdmin && adminEmail ? { admin_email: adminEmail, layoutIdPrefix: 'lab-v6-' } : 'skip'
+    )
 
     // REFS FOR STEPS (To anchor the Floating Assistance via Portals)
     const step1Ref = useRef<HTMLDivElement>(null)
@@ -142,6 +163,17 @@ export function ControlsPanel({
         removeTextAsset,
         updateTextAsset,
     } = creationFlow
+    const currentGenerationKey = (state.generatedImage || '').trim()
+    const hasVotedCurrentGeneration = useQuery(
+        api.layoutRatings.hasLayoutVoteForGeneration,
+        isAdmin && adminEmail && state.selectedLayout && currentGenerationKey
+            ? {
+                admin_email: adminEmail,
+                layoutId: state.selectedLayout,
+                generationKey: currentGenerationKey,
+            }
+            : 'skip'
+    )
 
     const lastInitBrandId = useRef<string | null>(null)
 
@@ -187,44 +219,18 @@ export function ControlsPanel({
     }
 
     const basicModeIds = new Set(BASIC_MODE_LAYOUT_IDS)
-    const recommendationContext = useMemo(() => {
-        const chunks = [
-            promptValue,
-            state.rawMessage,
-            state.headline,
-            state.cta,
-            state.caption,
-            ...Object.values(state.customTexts || {}),
-        ]
-            .map((v) => (typeof v === 'string' ? v.trim() : ''))
-            .filter(Boolean)
-        return chunks.join('\n')
-    }, [promptValue, state.rawMessage, state.headline, state.cta, state.caption, state.customTexts])
-
-    const recommendedAdvancedLayouts: LayoutOption[] = useMemo(() => {
-        if (!state.selectedIntent) return []
-        return getRecommendedAdvancedLayouts(ALL_IMAGE_LAYOUTS, {
-            selectedIntent: state.selectedIntent,
-            rawContext: recommendationContext,
-        }, 6)
-    }, [recommendationContext, state.selectedIntent])
-
-    const allAdvancedLayouts: LayoutOption[] = (() => {
-        const recommendedIds = new Set(recommendedAdvancedLayouts.map((l) => l.id))
-        const rest = ALL_IMAGE_LAYOUTS.filter((l) => {
-            if (recommendedIds.has(l.id)) return false
-            const id = l.id.toLowerCase()
-            const name = l.name.toLowerCase()
-            if (id.endsWith('-free') || id.includes('default-free')) return false
-            if (name.includes('libre')) return false
-            return true
-        })
-        const dedup = new Map<string, LayoutOption>()
-        rest.forEach((layout) => {
-            if (!dedup.has(layout.id)) dedup.set(layout.id, layout)
-        })
-        return Array.from(dedup.values())
-    })()
+    const advancedLabLayouts: LayoutOption[] = LAB_ADVANCED_LAYOUTS
+    const layoutRatingStore: Record<string, LayoutRatingStoreEntry> = (layoutRatingsRows || []).reduce(
+        (acc: Record<string, LayoutRatingStoreEntry>, row: { layoutId: string; totalPoints: number; uses: number; votes: number }) => {
+            acc[row.layoutId] = {
+                totalPoints: row.totalPoints,
+                uses: row.uses,
+                votes: row.votes,
+            }
+            return acc
+        },
+        {}
+    )
 
     const pickRandomBasicLayout = useCallback((currentLayoutId: string | null) => {
         if (BASIC_MODE_LAYOUT_IDS.length === 0) return null
@@ -255,6 +261,119 @@ export function ControlsPanel({
         }, 320)
         return () => window.clearTimeout(timer)
     }, [creationFlow, layoutMode, state.currentStep, state.selectedLayout])
+
+    useEffect(() => {
+        if (!isAdmin || !adminEmail || hasLayoutRatingsMigrationRun()) return
+
+        const legacyMarks = readLegacyLayoutMarks()
+        const legacyRatings = readLegacyLayoutRatings()
+        const hasMarks = Object.keys(legacyMarks).length > 0
+        const hasRatings = Object.keys(legacyRatings).length > 0
+
+        if (!hasMarks && !hasRatings) {
+            markLayoutRatingsMigrationAsDone()
+            return
+        }
+
+        let cancelled = false
+
+        const runMigration = async () => {
+            try {
+                await migrateLegacyRatings({
+                    admin_email: adminEmail,
+                    marks: hasMarks ? legacyMarks : undefined,
+                    ratings: hasRatings ? legacyRatings : undefined,
+                })
+                if (!cancelled) {
+                    clearLegacyLayoutRatingStorage()
+                    markLayoutRatingsMigrationAsDone()
+                    toast({
+                        title: 'Ratings migrados a Convex',
+                        description: 'Se importaron votos y marcas previas de composiciones.',
+                    })
+                }
+            } catch (error) {
+                console.error('Layout ratings migration failed:', error)
+            }
+        }
+
+        runMigration()
+        return () => {
+            cancelled = true
+        }
+    }, [adminEmail, isAdmin, migrateLegacyRatings, toast])
+
+    useEffect(() => {
+        if (!isAdmin || !adminEmail || typeof window === 'undefined') return
+        if (window.localStorage.getItem(RESET_USES4_FLAG) === '1') return
+
+        let cancelled = false
+        const runReset = async () => {
+            try {
+                const result = await resetLayoutRatings({
+                    admin_email: adminEmail,
+                    layoutIdPrefix: 'lab-v6-',
+                    exactUses: 4,
+                })
+                if (!cancelled) {
+                    window.localStorage.setItem(RESET_USES4_FLAG, '1')
+                    if (result?.updated > 0) {
+                        toast({
+                            title: 'Ratings corregidos',
+                            description: `Se pusieron a 0 ${result.updated} composiciones con 4 usos.`,
+                        })
+                    }
+                }
+            } catch (error) {
+                console.error('resetLayoutRatings failed:', error)
+            }
+        }
+
+        runReset()
+        return () => {
+            cancelled = true
+        }
+    }, [adminEmail, isAdmin, resetLayoutRatings, toast])
+
+    const selectedLayoutRatingStats = state.selectedLayout
+        ? getLayoutRatingStats(state.selectedLayout, layoutRatingStore)
+        : null
+
+    const handleAdminLayoutVote = async (score: number) => {
+        if (!isAdmin || !adminEmail || !state.selectedLayout || !currentGenerationKey) return
+        if (hasVotedCurrentGeneration) {
+            toast({
+                title: 'Ya votada',
+                description: 'Esta generación ya tiene voto para esta composición.',
+            })
+            return
+        }
+        try {
+            const nextStats = await upsertLayoutVote({
+                admin_email: adminEmail,
+                layoutId: state.selectedLayout,
+                score,
+                generationKey: currentGenerationKey,
+            })
+            if (nextStats.alreadyVoted) {
+                toast({
+                    title: 'Ya votada',
+                    description: 'Esta generación ya tenía voto registrado.',
+                })
+                return
+            }
+            toast({
+                title: 'Voto registrado',
+                description: `${score}/5 · media ${nextStats.average.toFixed(2)} · usos ${nextStats.uses}`,
+            })
+        } catch (error: any) {
+            toast({
+                title: 'Error al guardar voto',
+                description: error?.message || 'No se pudo registrar la votación.',
+                variant: 'destructive',
+            })
+        }
+    }
 
     const handleSavePreset = async (name: string) => {
         if (!userId || !state.selectedIntent) {
@@ -456,17 +575,52 @@ export function ControlsPanel({
                                     <div className="space-y-2">
                                         <div className="max-h-[420px] overflow-y-auto thin-scrollbar pr-1">
                                             <LayoutSelector
-                                                availableLayouts={availableLayouts}
-                                                recommendedLayouts={recommendedAdvancedLayouts}
-                                                allLayouts={allAdvancedLayouts}
+                                                availableLayouts={advancedLabLayouts}
                                                 selectedLayout={state.selectedLayout}
                                                 onSelectLayout={selectLayout}
                                                 intent={state.selectedIntent as IntentCategory}
+                                                isAdmin={isAdmin}
+                                                layoutRatings={layoutRatingStore}
                                             />
                                         </div>
                                         <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                            Modo avanzado: selección manual con priorización por intención.
+                                            Modo avanzado: selección manual de composiciones LAB agnósticas de intent.
                                         </p>
+                                        {isAdmin && state.selectedLayout && selectedLayoutRatingStats && (
+                                            <div className="rounded-xl border border-border/70 bg-muted/30 px-3 py-2.5 space-y-2">
+                                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                                                    Rating Admin
+                                                </p>
+                                                <p className="text-[11px] text-foreground">
+                                                    Media: <span className="font-semibold">{selectedLayoutRatingStats.average.toFixed(2)}</span> ·
+                                                    Puntos: <span className="font-semibold">{selectedLayoutRatingStats.totalPoints}</span> ·
+                                                    Usos: <span className="font-semibold">{selectedLayoutRatingStats.uses}</span>
+                                                </p>
+                                                <p className="text-[10px] text-muted-foreground">
+                                                    Ratio: {selectedLayoutRatingStats.totalPoints}/{selectedLayoutRatingStats.uses || 0}
+                                                </p>
+                                                {state.hasGeneratedImage && (
+                                                    <div className="flex items-center gap-1.5">
+                                                        {[0, 1, 2, 3, 4, 5].map((score) => (
+                                                            <Button
+                                                                key={score}
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleAdminLayoutVote(score)}
+                                                                className="h-6 min-w-6 px-1.5 text-[10px]"
+                                                                disabled={Boolean(hasVotedCurrentGeneration)}
+                                                            >
+                                                                {score}
+                                                            </Button>
+                                                        ))}
+                                                        <span className="text-[10px] text-muted-foreground ml-1">
+                                                            {hasVotedCurrentGeneration ? 'Ya votada esta generación' : 'Vota 0–5'}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">

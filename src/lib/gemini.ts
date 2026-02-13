@@ -290,7 +290,18 @@ async function generateWisdomOpenAIImage(prompt: string, model: string, aspectRa
     }
 }
 
-async function generateWisdomText(prompt: string, model: string, systemPrompt?: string, images?: string[]): Promise<string> {
+export interface TextGenerationOptions {
+    temperature?: number
+    topP?: number
+}
+
+async function generateWisdomText(
+    prompt: string,
+    model: string,
+    systemPrompt?: string,
+    images?: string[],
+    options?: TextGenerationOptions
+): Promise<string> {
     try {
         console.log(`Generating Wisdom Text with model: ${model}`)
 
@@ -336,7 +347,8 @@ async function generateWisdomText(prompt: string, model: string, systemPrompt?: 
                 const requestBody: any = {
                     contents,
                     generationConfig: {
-                        temperature: 0.7
+                        temperature: options?.temperature ?? 0.7,
+                        ...(typeof options?.topP === 'number' ? { topP: options.topP } : {}),
                     }
                 }
 
@@ -592,7 +604,8 @@ export async function generateTextUnified(
     prompt: string,
     model: string = 'gemini-3-flash-preview', // Default to native Google
     images?: string[],
-    systemPromptOverride?: string // NEW: Allow specialized tasks to set their own persona
+    systemPromptOverride?: string, // NEW: Allow specialized tasks to set their own persona
+    options?: TextGenerationOptions
 ): Promise<string> {
     const systemPrompt = typeof systemPromptOverride === 'string' ? systemPromptOverride : buildBrandSystemPrompt(brand)
     const modelName = String(model || '').trim()
@@ -600,7 +613,7 @@ export async function generateTextUnified(
 
     if (modelNameLower.startsWith('wisdom/')) {
         const wisdomModel = modelName.replace(/^wisdom\//i, '')
-        return await generateWisdomText(prompt, wisdomModel, systemPrompt, images)
+        return await generateWisdomText(prompt, wisdomModel, systemPrompt, images, options)
     }
 
     // Default to Google
@@ -627,7 +640,11 @@ export async function generateTextUnified(
                 parts
             }
         ],
-        generationConfig: { responseMimeType: "application/json" }
+        generationConfig: {
+            responseMimeType: "application/json",
+            ...(typeof options?.temperature === 'number' ? { temperature: options.temperature } : {}),
+            ...(typeof options?.topP === 'number' ? { topP: options.topP } : {}),
+        }
     })
     return result.response.text()
 }

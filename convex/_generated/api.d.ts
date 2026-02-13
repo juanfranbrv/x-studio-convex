@@ -14,6 +14,7 @@ import type * as brands from "../brands.js";
 import type * as feedback from "../feedback.js";
 import type * as generations from "../generations.js";
 import type * as initPresets from "../initPresets.js";
+import type * as layoutRatings from "../layoutRatings.js";
 import type * as pipeline from "../pipeline.js";
 import type * as presets from "../presets.js";
 import type * as settings from "../settings.js";
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   feedback: typeof feedback;
   generations: typeof generations;
   initPresets: typeof initPresets;
+  layoutRatings: typeof layoutRatings;
   pipeline: typeof pipeline;
   presets: typeof presets;
   settings: typeof settings;

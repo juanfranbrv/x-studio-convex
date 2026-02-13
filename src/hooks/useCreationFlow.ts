@@ -49,6 +49,31 @@ import * as P02 from '@/lib/prompts/priorities/p02-technical-specs'
 
 export const NO_TEXT_TOKEN = '[NO_TEXT]'
 
+const sanitizeStructuralPromptForModel = (raw?: string | null): string => {
+    if (!raw) return ''
+
+    const normalized = raw
+        .replace(/\r/g, '\n')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .filter((line) => {
+            // Remove markdown headings and metadata labels that confuse the image model.
+            if (/^#{1,6}\s/.test(line)) return false
+            if (/^\*\*(arquetipo|twist|estructura|jerarqu[ií]a visual|distribuci[oó]n|variation knobs|do-not-break)\*\*:/i.test(line)) return false
+            if (/^(arquetipo|twist|estructura|jerarqu[ií]a visual|distribuci[oó]n|variation knobs|do-not-break)\s*:/i.test(line)) return false
+            if (/^(nombre|composici[oó]n|composition prompt|blueprint|icono)\s*:/i.test(line)) return false
+            return true
+        })
+        .map((line) => line.replace(/^(\d+\.\s+|[-*]\s+)/, ''))
+        .map((line) => line.replace(/\*\*/g, ''))
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+    return normalized
+}
+
 export interface UseCreationFlowOptions {
     onImageUploaded?: (file: File) => void
     onReset?: () => void
@@ -309,7 +334,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
             // CRITICAL: Clear all downstream step data to enforce sequential flow
             selectedFormat: null,
-            selectedPlatform: null,
+            selectedPlatform: 'instagram',
 
                 currentStep: 2, // Show composition step first; UI will auto-advance in basic mode.
             }
@@ -923,8 +948,11 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => ({
             ...prev,
             selectedLayout: layoutId,
+            // Step 3 defaults: platform preset, format must be explicitly chosen.
+            selectedPlatform: 'instagram',
+            selectedFormat: null,
             ...invalidateFromStep(prev, 2),
-            currentStep: prev.hasGeneratedImage ? 2 : Math.max(prev.currentStep, 3)
+            currentStep: 3
         })) // Auto-advance to Step 3 (Format)
     }, [invalidateFromStep])
 
@@ -1590,13 +1618,14 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             // Busca en todos los layouts para soportar composiciones basicas cross-intent.
             const layoutDef = ALL_IMAGE_LAYOUTS.find((l) => l.id === state.selectedLayout)
 
-            if (layoutDef?.structuralPrompt) {
+            const structuralPrompt = sanitizeStructuralPromptForModel(layoutDef?.structuralPrompt)
+            if (structuralPrompt) {
                 sections.push(
                     `╔═════════════════════════════════════════════════════════════════╗`,
                     `║  PRIORITY 7 - COMPOSITION & LAYOUT                            ║`,
                     `╚═════════════════════════════════════════════════════════════════╝`,
                     ``,
-                    layoutDef.structuralPrompt,
+                    structuralPrompt,
                     ``
                 )
             }

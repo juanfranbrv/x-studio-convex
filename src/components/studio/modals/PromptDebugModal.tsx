@@ -284,6 +284,11 @@ export function PromptDebugModal({
                                 {promptData.layoutId && promptData.layoutName && (
                                     <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">{promptData.layoutId}</p>
                                 )}
+                                {(promptData.layoutSkillName || promptData.layoutSkillVersion) && (
+                                    <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+                                        {`Skill: ${promptData.layoutSkillName || 'composiciones'} v${promptData.layoutSkillVersion || 'n/a'}`}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Estilos</p>
