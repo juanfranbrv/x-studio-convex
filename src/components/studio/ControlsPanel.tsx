@@ -607,7 +607,7 @@ export function ControlsPanel({
                                                     </SelectContent>
                                                 </Select>
                                             </div>
-                                            <div className="max-h-[700px] overflow-y-auto thin-scrollbar pr-1">
+                                            <div className="w-full">
                                                 <LayoutSelector
                                                     availableLayouts={compositionCatalogLayouts}
                                                     selectedLayout={state.selectedLayout}
