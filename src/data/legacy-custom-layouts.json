@@ -1,0 +1,12 @@
+[
+  {
+    "id": "oferta-free",
+    "name": "Libre",
+    "description": "Sin indicación",
+    "svgIcon": "casino",
+    "textZone": "center",
+    "promptInstruction": "Natural composition without structural constraints.",
+    "structuralPrompt": "",
+    "skillVersion": "legacy"
+  }
+]

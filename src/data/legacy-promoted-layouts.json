@@ -1,0 +1,52 @@
+[
+  {
+    "id": "bts-before",
+    "name": "Antes/Después",
+    "description": "Evolución",
+    "svgIcon": "antigravity",
+    "textZone": "center",
+    "promptInstruction": "Transformation before and after.",
+    "structuralPrompt": "## Composición: Project Evolution Timeline\r\n\r\n**Estructura:** Transformación antes y después.\r\n\r\n### Jerarquía Visual\r\n1. **Principal:** Dos o más etapas del mismo proyecto\r\n2. **Secundario:** Flechas de progreso o línea de tiempo conectando estados\r\n3. **Terciario:** Etiquetas \"Inicio\" y \"Ahora\" o de etapa\r\n\r\n### Distribución\r\n- Etapa anterior del trabajo\r\n- Etapa actual o final\r\n- Indicador visual de progreso\r\n\r\n### Estilo\r\n- **Textura:** Documentación de proceso, historia de progreso\r\n- **Iluminación:** Consistente para mostrar el cambio real\r\n- **Paleta:** Etapa temprana desaturada vs final saturado\r\n\r\n### Evitar\r\nLínea de tiempo confusa, imágenes aleatorias sin relación.",
+    "skillVersion": "legacy"
+  },
+  {
+    "id": "bts-desk",
+    "name": "Escritorio",
+    "description": "Workspace",
+    "svgIcon": "Coffee",
+    "textZone": "center",
+    "promptInstruction": "Creative desk setup with scattered items.",
+    "structuralPrompt": "## Composición: Creative Desk Layout\r\n\r\n**Estructura:** Configuración de escritorio creativo con elementos dispersos.\r\n\r\n### Jerarquía Visual\r\n1. **Principal:** Toma cenital o amplia de un escritorio creativo desordenado\r\n2. **Secundario:** Bocetos dispersos, taza de café, herramientas, referencias\r\n3. **Terciario:** Pantalla o cuaderno mostrando el proyecto principal\r\n\r\n### Distribución\r\n- Superficie completa del escritorio como lienzo\r\n- Herramientas creativas y materiales dispersos\r\n- Trabajo en curso visible en pantalla/papel\r\n\r\n### Estilo\r\n- **Textura:** Fotografía \"knolling\" o caos organizado\r\n- **Iluminación:** Luz natural de ventana, ambiente cálido\r\n- **Paleta:** Madera, papel, café, tinta - colores reales de espacio de trabajo\r\n\r\n### Evitar\r\nEscritorio vacío y limpio, oficina estéril, desorden falso.",
+    "skillVersion": "legacy"
+  },
+  {
+    "id": "cita-float",
+    "name": "Flotante",
+    "description": "3D Text",
+    "svgIcon": "antigravity",
+    "textZone": "center",
+    "promptInstruction": "Floating 3D quote text.",
+    "structuralPrompt": "## Composición: Antes y Despues\r\n**Estructura:** Composicion guiada por antes y despues con foco en Flotante | 3D Text | Floating 3D quote text. | ID:cita-float. Deja margen para que el modelo improvise la escena mientras respeta la jerarquia general.\r\n\r\n### Jerarquía Visual\r\n1. Elemento principal claro, con apoyos que no compiten.\r\n2. Segundo nivel con informacion de contexto, por ejemplo sello, dato breve o apoyo funcional.\r\n3. Detalle final que refuerza el mensaje sin saturar, por ejemplo un gesto o icono secundario.\r\n\r\n### Distribución\r\n- Bloques grandes y limpios con espacios respirables.\r\n- Ritmo visual estable que facilite el escaneo, con alineaciones consistentes.\r\n- Zona de texto protegida sin elementos invasivos, con margen de seguridad.\r\n- Logo principal en esquina inferior con peso secundario.\r\n\r\n### Evitar\r\nEvitar ruido visual, superposiciones agresivas y microdetalles.",
+    "skillVersion": "legacy"
+  },
+  {
+    "id": "cita-frame",
+    "name": "Pop Sticker",
+    "description": "Doodles & Contornos",
+    "svgIcon": "person_celebrate",
+    "textZone": "center",
+    "promptInstruction": "Playful sticker-bomb layout with bold outlined typography and doodles.",
+    "structuralPrompt": "## Composición: Ruta en Z\r\n**Estructura:** Composicion guiada por ruta en z con foco en Pop Sticker | Doodles & Contornos | Playful sticker-bomb layout with bold outlined typography and doodles. | ID:cita-frame. Deja margen para que el modelo improvise la escena mientras respeta la jerarquia general.\r\n\r\n### Jerarquía Visual\r\n1. Elemento principal claro, con apoyos que no compiten.\r\n2. Segundo nivel con informacion de contexto, por ejemplo sello, dato breve o apoyo funcional.\r\n3. Detalle final que refuerza el mensaje sin saturar, por ejemplo un gesto o icono secundario.\r\n\r\n### Distribución\r\n- Bloques grandes y limpios con espacios respirables.\r\n- Ritmo visual estable que facilite el escaneo, con alineaciones consistentes.\r\n- Zona de texto protegida sin elementos invasivos, con margen de seguridad.\r\n- Logo principal en esquina inferior con peso secundario.\r\n\r\n### Evitar\r\nEvitar ruido visual, superposiciones agresivas y microdetalles.",
+    "skillVersion": "legacy"
+  },
+  {
+    "id": "oferta-free",
+    "name": "Libre",
+    "description": "Sin indicación",
+    "svgIcon": "casino",
+    "textZone": "center",
+    "promptInstruction": "Natural composition without structural constraints.",
+    "structuralPrompt": "",
+    "skillVersion": "legacy"
+  }
+]

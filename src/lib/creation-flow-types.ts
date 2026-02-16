@@ -332,6 +332,11 @@ export const INTENT_CATALOG: IntentMeta[] = [
     { id: 'reto', name: 'El Reto', description: RETO_DESCRIPTION, extendedDescription: RETO_EXTENDED_DESCRIPTION, group: 'engagement', icon: 'Gamepad2', requiresImage: false, requiredFields: RETO_REQUIRED_FIELDS },
 ]
 
+export const INTENT_OPTIONS = INTENT_CATALOG.map(intent => ({
+    id: intent.id,
+    label: intent.name
+}))
+
 // -----------------------------------------------------------------------------
 // THEMES (for non-image intents)
 // -----------------------------------------------------------------------------

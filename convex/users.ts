@@ -1,0 +1,207 @@
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+
+// Helper: get a setting value with fallback
+async function getSetting(ctx: any, key: string, fallback: number): Promise<number> {
+    const setting = await ctx.db
+        .query("app_settings")
+        .withIndex("by_key", (q: any) => q.eq("key", key))
+        .first();
+    return setting?.value ?? fallback;
+}
+
+export const getUser = query({
+    args: { clerk_id: v.string() },
+    handler: async (ctx, args) => {
+        return await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
+            .first();
+    },
+});
+
+export const setCurrentBrand = mutation({
+    args: { clerk_id: v.string(), brandId: v.string() },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
+            .first();
+        // Primer acceso: la fila de users puede no existir todavia por una carrera de inicializacion.
+        // Evitamos error ruidoso y dejamos que el cliente reintente tras upsertUser.
+        if (!user) {
+            return { success: false, reason: "user_not_found" as const };
+        }
+
+        const brand = await ctx.db.get(args.brandId as Id<"brand_dna">);
+        if (!brand) throw new Error("Brand kit not found");
+        if (brand.clerk_user_id !== args.clerk_id) {
+            throw new Error("Unauthorized brand selection");
+        }
+
+        await ctx.db.patch(user._id, { current_brand_id: args.brandId });
+        return { success: true };
+    },
+});
+
+// Query: get user's credit balance and status
+export const getCredits = query({
+    args: { clerk_id: v.string() },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
+            .first();
+
+        if (!user) return null;
+
+        const lowThreshold = await getSetting(ctx, "low_credits_threshold", 10);
+
+        return {
+            credits: user.credits,
+            isLow: user.credits < lowThreshold,
+            status: user.status,
+            role: user.role,
+        };
+    },
+});
+
+// Mutation: consume credits when generating
+export const consumeCredits = mutation({
+    args: {
+        clerk_id: v.string(),
+        amount: v.optional(v.number()), // If not provided, uses credits_per_generation setting
+        metadata: v.optional(v.any()),
+    },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
+            .first();
+
+        if (!user) throw new Error("User not found");
+        if (user.status !== "active") throw new Error("User not active");
+
+        const creditsToConsume = args.amount ?? await getSetting(ctx, "credits_per_generation", 1);
+
+        if (user.credits < creditsToConsume) throw new Error("Insufficient credits");
+
+        const newBalance = user.credits - creditsToConsume;
+        const lowThreshold = await getSetting(ctx, "low_credits_threshold", 10);
+
+        await ctx.db.patch(user._id, { credits: newBalance });
+
+        await ctx.db.insert("credit_transactions", {
+            user_id: user._id,
+            type: "consume",
+            amount: -creditsToConsume,
+            balance_after: newBalance,
+            metadata: args.metadata,
+            created_at: new Date().toISOString(),
+        });
+
+        return { success: true, newBalance, isLow: newBalance < lowThreshold };
+    },
+});
+
+export const upsertUser = mutation({
+    args: {
+        clerk_id: v.string(),
+        email: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const existing = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
+            .first();
+
+        if (existing) {
+            await ctx.db.patch(existing._id, { email: args.email });
+            return existing._id;
+        }
+
+        // Check if email is approved in beta_requests
+        const emailLower = args.email.toLowerCase().trim();
+        const betaRequest = await ctx.db
+            .query("beta_requests")
+            .withIndex("by_email", (q) => q.eq("email", emailLower))
+            .first();
+
+        // Check if admin email
+        const ADMIN_EMAILS = ["juanfranbrv@gmail.com"];
+        const isAdmin = ADMIN_EMAILS.includes(emailLower);
+
+        if (betaRequest?.status === "approved" || isAdmin) {
+            // Approved user - create with active status and initial credits
+            const initialCredits = await getSetting(ctx, "beta_initial_credits", 100);
+
+            const userId = await ctx.db.insert("users", {
+                clerk_id: args.clerk_id,
+                email: args.email,
+                created_at: new Date().toISOString(),
+                credits: initialCredits,
+                status: "active",
+                role: isAdmin ? "admin" : "beta",
+            });
+
+            // Record the credit grant
+            await ctx.db.insert("credit_transactions", {
+                user_id: userId,
+                type: "grant",
+                amount: initialCredits,
+                balance_after: initialCredits,
+                metadata: { reason: "Beta activation on first login" },
+                created_at: new Date().toISOString(),
+            });
+
+            // TODO: Remove this block after vicentbriva@gmail.com has signed up
+            // One-time auto-provisioning: clone brand kit for specific new users
+            const PROVISIONING_MAP: Record<string, string> = {
+                "vicentbriva@gmail.com": "j97ewaqm418zrvb3qq6q25xy3x7yekmk", // Awordz brand from juanfranbrv
+            };
+            const sourceBrandId = PROVISIONING_MAP[emailLower];
+            if (sourceBrandId) {
+                try {
+                    const source = await ctx.db.get(sourceBrandId as Id<"brand_dna">);
+                    if (source) {
+                        const { _id, _creationTime, ...data } = source as any;
+                        const clonedBrandId = await ctx.db.insert("brand_dna", {
+                            ...data,
+                            clerk_user_id: args.clerk_id,
+                            updated_at: new Date().toISOString(),
+                        });
+                        await ctx.db.patch(userId, { current_brand_id: clonedBrandId });
+                    }
+                } catch (e) {
+                    console.error("[upsertUser] Auto-provisioning failed:", e);
+                }
+            }
+
+            return userId;
+        }
+
+        // Not approved - don't create user, throw error
+        throw new Error("No tienes acceso a la beta. Solicita acceso en la página principal.");
+    },
+});
+
+// Mutation: mark onboarding as completed
+export const completeOnboarding = mutation({
+    args: { clerk_id: v.string() },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
+            .first();
+
+        if (!user) throw new Error("User not found");
+
+        await ctx.db.patch(user._id, {
+            onboarding_completed: true,
+            onboarding_completed_at: new Date().toISOString(),
+        });
+
+        return { success: true };
+    },
+});
