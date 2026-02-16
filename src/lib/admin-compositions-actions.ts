@@ -18,7 +18,7 @@ function fromForm(formData: FormData): LayoutOption | null {
     const name = norm(formData.get('name'))
     const description = norm(formData.get('description'))
     const promptInstruction = norm(formData.get('promptInstruction'))
-    if (!id || !name || !description || !promptInstruction) return null
+    if (!id || !name || !description) return null
 
     return {
         id,

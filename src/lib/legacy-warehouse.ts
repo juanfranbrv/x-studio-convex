@@ -37,8 +37,6 @@ function normalizeLayout(input: Partial<LayoutOption> | null | undefined): Layou
     const structuralPrompt = String(input?.structuralPrompt || '').trim()
     const skillVersion = String(input?.skillVersion || 'legacy').trim() || 'legacy'
 
-    if (!promptInstruction) return null
-
     return {
         id,
         name,
