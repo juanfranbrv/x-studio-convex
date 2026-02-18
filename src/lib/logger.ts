@@ -10,7 +10,7 @@ const levelStyle: Record<LogLevel, (text: string) => string> = {
     debug: chalk.bgMagenta.white,
 }
 
-const lineStyle: Record<LogLevel, chalk.Chalk> = {
+const lineStyle: Record<LogLevel, (text: string) => string> = {
     info: chalk.cyan,
     success: chalk.green,
     warn: chalk.yellow,
