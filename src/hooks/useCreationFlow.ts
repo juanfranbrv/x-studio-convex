@@ -2033,14 +2033,14 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             return step
         }
 
-        const inferredIntent = presetState.selectedIntent || inferIntentFromLayout(presetState.selectedLayout || null)
+        const inferredIntent = presetState.selectedIntent || inferIntentFromLayout(presetState.selectedLayout || null) || null
         const defaultPlatform = presetState.selectedPlatform || 'instagram'
         const defaultFormat = presetState.selectedFormat
             || SOCIAL_FORMATS.find((format) => format.platform === defaultPlatform)?.id
             || null
         const computedStep = presetState.currentStep ?? computeStepFromPreset({
             ...presetState,
-            selectedIntent: inferredIntent || presetState.selectedIntent,
+            selectedIntent: inferredIntent || presetState.selectedIntent || null,
         })
         const expandedStep = Math.max(computedStep, 6)
 
