@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
@@ -137,7 +137,7 @@ export default function AdminPage() {
         setIsProcessing(true)
         try {
             await activateUser({ admin_email: userEmail, user_id: userId })
-            toast({ title: 'Usuario activado', description: 'Se le asignaron los créditos iniciales.' })
+            toast({ title: 'Usuario activado', description: 'Se le asignaron los crÃ©ditos iniciales.' })
         } catch (error: any) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' })
         }
@@ -156,13 +156,13 @@ export default function AdminPage() {
     }
 
     const handleDeleteUser = async (userId: Id<"users">, email: string) => {
-        if (!confirm(`¿Estás seguro de que quieres ELIMINAR PERMANENTEMENTE al usuario ${email}?\n\nEsta acción no se puede deshacer.`)) {
+        if (!confirm(`Â¿EstÃ¡s seguro de que quieres ELIMINAR PERMANENTEMENTE al usuario ${email}?\n\nEsta acciÃ³n no se puede deshacer.`)) {
             return
         }
         setIsProcessing(true)
         try {
             await deleteUser({ admin_email: userEmail, user_id: userId })
-            toast({ title: '🗑️ Usuario eliminado', description: `${email} ha sido eliminado permanentemente` })
+            toast({ title: 'ðŸ—‘ï¸ Usuario eliminado', description: `${email} ha sido eliminado permanentemente` })
         } catch (error: any) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' })
         }
@@ -179,7 +179,7 @@ export default function AdminPage() {
                 amount: parseInt(creditAmount),
                 reason: creditReason || undefined
             })
-            toast({ title: 'Créditos ajustados' })
+            toast({ title: 'CrÃ©ditos ajustados' })
             setAdjustDialogOpen(false)
             setCreditAmount('')
             setCreditReason('')
@@ -193,7 +193,7 @@ export default function AdminPage() {
     const handleSaveSetting = async (key: string, value: number | string) => {
         try {
             await updateSetting({ key, value })
-            toast({ title: 'Configuración guardada' })
+            toast({ title: 'ConfiguraciÃ³n guardada' })
         } catch (error: any) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' })
         }
@@ -223,8 +223,8 @@ export default function AdminPage() {
                             </Button>
                         </Link>
                         <div>
-                            <h1 className="text-3xl font-bold">Panel de Administración</h1>
-                            <p className="text-muted-foreground">Gestión de usuarios y créditos</p>
+                            <h1 className="text-3xl font-bold">Panel de AdministraciÃ³n</h1>
+                            <p className="text-muted-foreground">GestiÃ³n de usuarios y crÃ©ditos</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -274,7 +274,7 @@ export default function AdminPage() {
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium">Créditos Totales</CardTitle>
+                            <CardTitle className="text-sm font-medium">CrÃ©ditos Totales</CardTitle>
                             <Coins className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -300,7 +300,7 @@ export default function AdminPage() {
                             <Activity className="h-4 w-4" /> Transacciones
                         </TabsTrigger>
                         <TabsTrigger value="settings" className="gap-2">
-                            <Settings className="h-4 w-4" /> Configuración
+                            <Settings className="h-4 w-4" /> ConfiguraciÃ³n
                         </TabsTrigger>
                         <TabsTrigger value="links" className="gap-2">
                             <ExternalLink className="h-4 w-4" /> Enlaces
@@ -354,7 +354,7 @@ export default function AdminPage() {
                                                                     admin_email: userEmail,
                                                                     request_id: request._id
                                                                 })
-                                                                toast({ title: '✅ Acceso aprobado', description: `${request.email} ahora puede acceder` })
+                                                                toast({ title: 'âœ… Acceso aprobado', description: `${request.email} ahora puede acceder` })
                                                             } catch (e: any) {
                                                                 toast({ title: 'Error', description: e.message, variant: 'destructive' })
                                                             }
@@ -449,8 +449,8 @@ export default function AdminPage() {
                     <TabsContent value="users">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Gestión de Usuarios</CardTitle>
-                                <CardDescription>Activa, suspende y ajusta créditos de usuarios</CardDescription>
+                                <CardTitle>GestiÃ³n de Usuarios</CardTitle>
+                                <CardDescription>Activa, suspende y ajusta crÃ©ditos de usuarios</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <Table>
@@ -458,7 +458,7 @@ export default function AdminPage() {
                                         <TableRow>
                                             <TableHead>Email</TableHead>
                                             <TableHead>Status</TableHead>
-                                            <TableHead>Créditos</TableHead>
+                                            <TableHead>CrÃ©ditos</TableHead>
                                             <TableHead>Registro</TableHead>
                                             <TableHead className="text-right">Acciones</TableHead>
                                         </TableRow>
@@ -511,7 +511,7 @@ export default function AdminPage() {
                                                             setAdjustDialogOpen(true)
                                                         }}
                                                     >
-                                                        <Coins className="h-4 w-4 mr-1" /> Créditos
+                                                        <Coins className="h-4 w-4 mr-1" /> CrÃ©ditos
                                                     </Button>
                                                     <Button
                                                         size="sm"
@@ -544,7 +544,7 @@ export default function AdminPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Historial de Transacciones</CardTitle>
-                                <CardDescription>Últimas 20 transacciones de créditos</CardDescription>
+                                <CardDescription>Ãšltimas 20 transacciones de crÃ©ditos</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <Table>
@@ -592,8 +592,8 @@ export default function AdminPage() {
                     <TabsContent value="settings">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Configuración del Sistema</CardTitle>
-                                <CardDescription>Valores configurables para créditos</CardDescription>
+                                <CardTitle>ConfiguraciÃ³n del Sistema</CardTitle>
+                                <CardDescription>Valores configurables para crÃ©ditos</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 {settings?.filter(s => s.key !== 'theme_primary' && s.key !== 'theme_secondary' && s.key !== 'model_image_generation' && s.key !== 'model_intelligence').map((setting) => (
@@ -625,9 +625,9 @@ export default function AdminPage() {
 
 {(!settings || settings.length === 0) && (
                                     <div className="text-center py-8">
-                                        <p className="text-muted-foreground mb-4">No hay configuración. Inicializar valores por defecto:</p>
+                                        <p className="text-muted-foreground mb-4">No hay configuraciÃ³n. Inicializar valores por defecto:</p>
                                         <Button onClick={() => initializeSettings({ admin_email: userEmail })}>
-                                            Inicializar Configuración
+                                            Inicializar ConfiguraciÃ³n
                                         </Button>
                                     </div>
                                 )}
@@ -639,17 +639,17 @@ export default function AdminPage() {
                     <TabsContent value="links">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Enlaces de Gestión</CardTitle>
-                                <CardDescription>Accesos directos a las plataformas de control de la aplicación</CardDescription>
+                                <CardTitle>Enlaces de GestiÃ³n</CardTitle>
+                                <CardDescription>Accesos directos a las plataformas de control de la aplicaciÃ³n</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {[
-                                        { name: 'Vercel', url: 'https://vercel.com/juanfranbrvs-projects/x-studio-convex', desc: 'Despliegues, logs y dominios' },
+                                        { name: 'Vercel', url: 'https://vercel.com/juanfranbrvs-projects/x-studio', desc: 'Despliegues, logs y dominios' },
                                         { name: 'Convex', url: 'https://dashboard.convex.dev', desc: 'Base de datos y funciones backend' },
-                                        { name: 'Clerk', url: 'https://dashboard.clerk.com', desc: 'Autenticación y usuarios' },
+                                        { name: 'Clerk', url: 'https://dashboard.clerk.com', desc: 'AutenticaciÃ³n y usuarios' },
                                         { name: 'Google AI Studio', url: 'https://aistudio.google.com', desc: 'API Keys y modelos Gemini' },
-                                        { name: 'GitHub', url: 'https://github.com/juanfranbrv/x-studio-convex', desc: 'Repositorio de código fuente' }
+                                        { name: 'GitHub', url: 'https://github.com/juanfranbrv/x-studio', desc: 'Repositorio de cÃ³digo fuente' }
                                     ].map((link) => (
                                         <a
                                             key={link.name}
@@ -684,7 +684,7 @@ export default function AdminPage() {
                             </Card>
                             <Card>
                                 <CardHeader className="pb-2">
-                                    <CardTitle className="text-sm font-medium text-green-500">😊 Positivo</CardTitle>
+                                    <CardTitle className="text-sm font-medium text-green-500">ðŸ˜Š Positivo</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-2xl font-bold text-green-500">{feedbackStats?.positive ?? 0}</div>
@@ -692,7 +692,7 @@ export default function AdminPage() {
                             </Card>
                             <Card>
                                 <CardHeader className="pb-2">
-                                    <CardTitle className="text-sm font-medium text-yellow-500">😐 Neutral</CardTitle>
+                                    <CardTitle className="text-sm font-medium text-yellow-500">ðŸ˜ Neutral</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-2xl font-bold text-yellow-500">{feedbackStats?.neutral ?? 0}</div>
@@ -700,7 +700,7 @@ export default function AdminPage() {
                             </Card>
                             <Card>
                                 <CardHeader className="pb-2">
-                                    <CardTitle className="text-sm font-medium text-red-500">😞 Negativo</CardTitle>
+                                    <CardTitle className="text-sm font-medium text-red-500">ðŸ˜ž Negativo</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-2xl font-bold text-red-500">{feedbackStats?.negative ?? 0}</div>
@@ -712,7 +712,7 @@ export default function AdminPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Feedback Reciente</CardTitle>
-                                <CardDescription>Últimas valoraciones de los usuarios</CardDescription>
+                                <CardDescription>Ãšltimas valoraciones de los usuarios</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <Table>
@@ -720,7 +720,7 @@ export default function AdminPage() {
                                         <TableRow>
                                             <TableHead>Fecha</TableHead>
                                             <TableHead>Usuario</TableHead>
-                                            <TableHead>Valoración</TableHead>
+                                            <TableHead>ValoraciÃ³n</TableHead>
                                             <TableHead>Intent</TableHead>
                                             <TableHead className="max-w-[300px]">Comentario</TableHead>
                                         </TableRow>
@@ -736,7 +736,7 @@ export default function AdminPage() {
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className="text-xl">
-                                                        {fb.rating === 'positive' ? '😊' : fb.rating === 'neutral' ? '😐' : '😞'}
+                                                        {fb.rating === 'positive' ? 'ðŸ˜Š' : fb.rating === 'neutral' ? 'ðŸ˜' : 'ðŸ˜ž'}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>
@@ -756,7 +756,7 @@ export default function AdminPage() {
                                         {(!feedbackList || feedbackList.length === 0) && (
                                             <TableRow>
                                                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                                    No hay feedback todavía
+                                                    No hay feedback todavÃ­a
                                                 </TableCell>
                                             </TableRow>
                                         )}
@@ -770,7 +770,7 @@ export default function AdminPage() {
                     <TabsContent value="compositions" className="space-y-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-lg font-medium">Gestión de Catálogo</h3>
+                                <h3 className="text-lg font-medium">GestiÃ³n de CatÃ¡logo</h3>
                                 <p className="text-sm text-muted-foreground">Explora y edita las estructuras de las publicaciones.</p>
                             </div>
                             <Link href="/admin/compositions">
@@ -800,9 +800,9 @@ export default function AdminPage() {
             <Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Ajustar Créditos</DialogTitle>
+                        <DialogTitle>Ajustar CrÃ©ditos</DialogTitle>
                         <DialogDescription>
-                            Ingresa un número positivo para añadir o negativo para quitar créditos.
+                            Ingresa un nÃºmero positivo para aÃ±adir o negativo para quitar crÃ©ditos.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -835,7 +835,7 @@ export default function AdminPage() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label>Razón (opcional)</Label>
+                            <Label>RazÃ³n (opcional)</Label>
                             <Input
                                 value={creditReason}
                                 onChange={(e) => setCreditReason(e.target.value)}
@@ -857,3 +857,4 @@ export default function AdminPage() {
         </div>
     )
 }
+
