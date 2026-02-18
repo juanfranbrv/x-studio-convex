@@ -81,6 +81,7 @@ export interface AnalyzeCarouselResult {
     optimalSlideCount?: number
     detectedIntent?: string
     caption?: string
+    suggestions?: CarouselSuggestion[]
     error?: string
 }
 
@@ -88,6 +89,17 @@ export interface GenerateCarouselResult {
     success: boolean
     slides: CarouselSlide[]
     error?: string
+}
+
+export interface CarouselSuggestion {
+    title: string
+    subtitle: string
+    slides: SlideContent[]
+    hook?: string
+    structure?: { id?: string; name?: string }
+    optimalSlideCount?: number
+    detectedIntent?: string
+    caption?: string
 }
 
 
@@ -115,6 +127,7 @@ async function decomposeIntoSlides(
     optimalSlideCount?: number
     detectedIntent?: string
     caption?: string
+    suggestions?: CarouselSuggestion[]
 }> {
     // Auto-detect language from user prompt (like image module does)
     const detectedLanguage = detectLanguage(prompt) || 'es'
@@ -343,19 +356,132 @@ async function decomposeIntoSlides(
         return text.replace(/https?:\/\/[^\s)]+|www\.[^\s)]+/gi, trimmed)
     }
 
+    function normalizeSmartQuotes(raw: string): string {
+        return raw
+            .replace(/[\u201C\u201D]/g, '"')
+            .replace(/[\u2018\u2019]/g, "'")
+            .replace(/\u00A0/g, ' ')
+    }
+
+    function stripTrailingCommas(raw: string): string {
+        return raw.replace(/,\s*([}\]])/g, '$1')
+    }
+
+    function normalizeSingleQuotedStrings(raw: string): string {
+        let result = ''
+        let inDouble = false
+        let inSingle = false
+        let escape = false
+
+        for (let i = 0; i < raw.length; i++) {
+            const ch = raw[i]
+
+            if (inSingle) {
+                if (escape) {
+                    escape = false
+                    result += ch
+                    continue
+                }
+                if (ch === '\\') {
+                    escape = true
+                    result += ch
+                    continue
+                }
+                if (ch === "'") {
+                    inSingle = false
+                    result += '"'
+                    continue
+                }
+                result += ch
+                continue
+            }
+
+            if (inDouble) {
+                result += ch
+                if (escape) {
+                    escape = false
+                } else if (ch === '\\') {
+                    escape = true
+                } else if (ch === '"') {
+                    inDouble = false
+                }
+                continue
+            }
+
+            if (ch === "'") {
+                inSingle = true
+                result += '"'
+                continue
+            }
+
+            if (ch === '"') {
+                inDouble = true
+                result += ch
+                continue
+            }
+
+            result += ch
+        }
+
+        return result
+    }
+
+    function escapeNewlinesInStrings(raw: string): string {
+        let result = ''
+        let inString = false
+        let escape = false
+
+        for (let i = 0; i < raw.length; i++) {
+            const ch = raw[i]
+
+            if (inString) {
+                if (ch === '\n') {
+                    result += '\\n'
+                    continue
+                }
+                if (ch === '\r') {
+                    continue
+                }
+                result += ch
+                if (escape) {
+                    escape = false
+                } else if (ch === '\\') {
+                    escape = true
+                } else if (ch === '"') {
+                    inString = false
+                }
+                continue
+            }
+
+            if (ch === '"') {
+                inString = true
+                result += ch
+                continue
+            }
+
+            result += ch
+        }
+
+        return result
+    }
+
     /**
-     * Best-effort JSON repair for unquoted string values (common AI failure).
-     * This is intentionally conservative: it only quotes values that are
-     * clearly not valid JSON primitives/objects/arrays.
+     * Best-effort JSON repair for common LLM formatting failures.
+     * Only quotes plain unquoted values after ":" while preserving valid JSON tokens.
      */
     function repairJsonString(raw: string): string {
+        let normalized = normalizeSmartQuotes(raw)
+        normalized = normalizeSingleQuotedStrings(normalized)
+        normalized = escapeNewlinesInStrings(normalized)
+        normalized = stripTrailingCommas(normalized)
+
         let result = ''
         let inString = false
         let escape = false
         let expectingValue = false
 
-        for (let i = 0; i < raw.length; i++) {
-            const ch = raw[i]
+        for (let i = 0; i < normalized.length; i++) {
+            const ch = normalized[i]
 
             if (inString) {
                 result += ch
@@ -381,38 +507,28 @@ async function decomposeIntoSlides(
                     continue
                 }
 
-                // Valid JSON starters for values
                 if (ch === '{' || ch === '[' || ch === '-' || /[0-9]/.test(ch)) {
                     expectingValue = false
                     result += ch
                     continue
                 }
+
                 if (ch === 't' || ch === 'f' || ch === 'n') {
                     expectingValue = false
                     result += ch
                     continue
                 }
 
-                // Unquoted string value: quote until separator (comma or closing brace/bracket)
                 const start = i
                 let end = i
-                for (; end < raw.length; end++) {
-                    const current = raw[end]
+                for (; end < normalized.length; end++) {
+                    const current = normalized[end]
                     if (current === ',' || current === '}' || current === ']') {
-                        if (current === ',') {
-                            let j = end + 1
-                            while (j < raw.length && /\s/.test(raw[j])) j++
-                            if (raw[j] === '"') {
-                                break
-                            }
-                            // Comma is likely part of the value; keep scanning
-                        } else {
-                            break
-                        }
+                        break
                     }
                 }
 
-                const rawValue = raw.slice(start, end).trim()
+                const rawValue = normalized.slice(start, end).trim()
                 const escaped = rawValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
                 result += `"${escaped}"`
                 expectingValue = false
@@ -665,6 +781,24 @@ async function decomposeIntoSlides(
         }
     }
 
+    const normalizeSuggestion = (raw: any): CarouselSuggestion | null => {
+        if (!raw || typeof raw !== 'object') return null
+        const title = typeof raw.title === 'string' ? raw.title.trim() : ''
+        const subtitle = typeof raw.subtitle === 'string' ? raw.subtitle.trim() : ''
+        if (!title || !subtitle) return null
+        const normalized = normalizeParsed(raw)
+        return {
+            title,
+            subtitle,
+            slides: normalized.slides,
+            hook: normalized.hook,
+            structure: normalized.structure,
+            optimalSlideCount: normalized.optimalSlideCount,
+            detectedIntent: normalized.detectedIntent,
+            caption: normalized.caption
+        }
+    }
+
     try {
         for (let attempt = 0; attempt < 3; attempt++) {
             const promptToUse = attempt === 0
@@ -709,7 +843,14 @@ async function decomposeIntoSlides(
                 }
             }
             try {
-                return normalizeParsed(parsed)
+                const normalized = normalizeParsed(parsed)
+                const suggestions = Array.isArray(parsed?.suggestions)
+                    ? parsed.suggestions.map(normalizeSuggestion).filter(Boolean) as CarouselSuggestion[]
+                    : []
+                return {
+                    ...normalized,
+                    suggestions
+                }
             } catch (err) {
                 if (attempt === 2) throw err
                 continue
@@ -1119,7 +1260,8 @@ export async function analyzeCarouselAction(
             structure: decomposition.structure,
             optimalSlideCount: decomposition.optimalSlideCount,
             detectedIntent: decomposition.detectedIntent,
-            caption: decomposition.caption
+            caption: decomposition.caption,
+            suggestions: decomposition.suggestions || []
         }
     } catch (error) {
         console.error('Carousel analysis error:', error)

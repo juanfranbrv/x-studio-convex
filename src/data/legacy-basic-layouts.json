@@ -6,7 +6,7 @@
     "svgIcon": "antigravity",
     "textZone": "center",
     "promptInstruction": "Transformation before and after.",
-    "structuralPrompt": "## Composición: Project Evolution Timeline\r\n\r\n**Estructura:** Transformación antes y después.\r\n\r\n### Jerarquía Visual\r\n1. **Principal:** Dos o más etapas del mismo proyecto\r\n2. **Secundario:** Flechas de progreso o línea de tiempo conectando estados\r\n3. **Terciario:** Etiquetas \"Inicio\" y \"Ahora\" o de etapa\r\n\r\n### Distribución\r\n- Etapa anterior del trabajo\r\n- Etapa actual o final\r\n- Indicador visual de progreso\r\n\r\n### Estilo\r\n- **Textura:** Documentación de proceso, historia de progreso\r\n- **Iluminación:** Consistente para mostrar el cambio real\r\n- **Paleta:** Etapa temprana desaturada vs final saturado\r\n\r\n### Evitar\r\nLínea de tiempo confusa, imágenes aleatorias sin relación.",
+    "structuralPrompt": "## Composición: Project Evolution Timeline\r\n\r\n**Estructura:** Transformación antes y después.\r\n\r\n### Jerarquía Visual\r\n1. **Principal:** Dos o más etapas del mismo proyecto.\r\n2. **Secundario:** Flechas de progreso o línea de tiempo conectando estados\r\n3. **Terciario:** Etiquetas \"Inicio\" y \"Ahora\" o de etapa\r\n\r\n### Distribución\r\n- Etapa anterior del trabajo\r\n- Etapa actual o final\r\n- Indicador visual de progreso\r\n\r\n### Estilo\r\n- **Textura:** Documentación de proceso, historia de progreso\r\n- **Iluminación:** Consistente para mostrar el cambio real\r\n- **Paleta:** Etapa temprana desaturada vs final saturado\r\n\r\n### Evitar\r\nLínea de tiempo confusa, imágenes aleatorias sin relación.",
     "skillVersion": "legacy"
   },
   {

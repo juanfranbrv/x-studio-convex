@@ -39,9 +39,8 @@ import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useUI } from '@/contexts/UIContext'
 import { generateSocialPost } from '@/app/actions/generate-social-post'
 import { WireframeRenderer } from './previews/WireframeRenderer'
-import { CanvasGhostOverlay } from './creation-flow/CanvasGhostOverlay'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
-import { GenerationState, TextAsset } from '@/lib/creation-flow-types'
+import { ALL_IMAGE_LAYOUTS, GenerationState, TextAsset } from '@/lib/creation-flow-types'
 
 export interface Generation {
     id: string
@@ -109,6 +108,29 @@ function AiPromptIcon({ className }: { className?: string }) {
                 <circle cx="88" cy="112" r="4.5" />
             </g>
         </svg>
+    )
+}
+
+function renderLayoutIcon(svgIcon: string) {
+    const trimmed = (svgIcon || '').trim()
+    if (!trimmed) return null
+
+    if (trimmed.startsWith('<svg')) {
+        return (
+            <div
+                className="w-[85%] h-[85%] text-primary/25 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block"
+                dangerouslySetInnerHTML={{ __html: trimmed }}
+            />
+        )
+    }
+
+    return (
+        <span
+            className="material-symbols-outlined text-primary/25 leading-none"
+            style={{ fontSize: '55vmin' }}
+        >
+            {trimmed}
+        </span>
     )
 }
 
@@ -230,6 +252,7 @@ export interface CanvasPanelProps {
     onDisableAiPromptReference?: () => void
     onOpenPromptDebug?: () => void
     showPromptDebugTrigger?: boolean
+    layoutIconOverrides?: Record<string, string>
 }
 
 export function CanvasPanel({
@@ -262,7 +285,8 @@ export function CanvasPanel({
     onRemoveReferenceImage,
     onDisableAiPromptReference,
     onOpenPromptDebug,
-    showPromptDebugTrigger = false
+    showPromptDebugTrigger = false,
+    layoutIconOverrides = {},
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const { activeBrandKit } = useBrandKit()
@@ -282,6 +306,17 @@ export function CanvasPanel({
         if (!found) return null
         return typeof found === 'string' ? found : found.url
     }, [activeBrandKit?.logos, creationState.selectedLogoId])
+
+    const selectedLayoutIcon = useMemo(() => {
+        const layoutId = creationState.selectedLayout
+        if (!layoutId) return null
+        const override = layoutIconOverrides[layoutId]
+        if (override && override !== 'Layout') return override
+        const layout = ALL_IMAGE_LAYOUTS.find((item) => item.id === layoutId)
+        const icon = layout?.svgIcon || null
+        if (!icon || icon === 'Layout') return null
+        return icon
+    }, [creationState.selectedLayout, layoutIconOverrides])
 
     // Track viewport height for responsive canvas
     useEffect(() => {
@@ -482,12 +517,13 @@ export function CanvasPanel({
 
         const caption = (creationState.caption || generatedCopy || '').trim()
         const hashtags = generatedHashtags.length > 0 ? generatedHashtags.join(' ') : ''
+        const urlText = creationState.ctaUrlEnabled ? (creationState.ctaUrl || '') : ''
         const textContent = [
             `COPY:\n${caption}`,
             `HASHTAGS:\n${hashtags}`,
             `HEADLINE:\n${creationState.headline || ''}`,
             `CTA:\n${creationState.cta || ''}`,
-            `URL:\n${creationState.ctaUrl || ''}`,
+            `URL:\n${urlText}`,
         ].join('\n\n').trimEnd()
 
         const imageResponse = await fetch(currentImage)
@@ -743,12 +779,11 @@ export function CanvasPanel({
                             )}
                         </AnimatePresence>
 
-                        {/* GHOST WIREFRAME BACKGROUND - Shows the selected layout structure */}
-                        {creationState?.selectedLayout && !isGenerating && !currentImage && (
-                            <CanvasGhostOverlay
-                                layoutId={creationState.selectedLayout}
-                                className="z-30 opacity-80"
-                            />
+                        {/* Composition Icon Overlay - subtle ghosted backdrop */}
+                        {selectedLayoutIcon && !isGenerating && !currentImage && (
+                            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none opacity-50">
+                                {renderLayoutIcon(selectedLayoutIcon)}
+                            </div>
                         )}
 
                         {/* Main Content Area */}
@@ -986,13 +1021,14 @@ export function CanvasPanel({
                         {!currentImage && (creationState.headline || creationState.cta || Object.keys(creationState.customTexts).length > 0 || creationState.selectedIntent) && (
                             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none">
                                 <div className="w-full h-full">
-                                    <TextLayersEditor
-                                        headline={creationState.headline}
-                                        cta={creationState.cta}
-                                        ctaUrl={creationState.ctaUrl}
-                                        customTexts={creationState.customTexts}
-                                        textAssets={creationState.selectedTextAssets}
-                                        brandKitTexts={brandKitTexts}
+                                        <TextLayersEditor
+                                            headline={creationState.headline}
+                                            cta={creationState.cta}
+                                            ctaUrl={creationState.ctaUrl}
+                                            ctaUrlEnabled={creationState.ctaUrlEnabled}
+                                            customTexts={creationState.customTexts}
+                                            textAssets={creationState.selectedTextAssets}
+                                            brandKitTexts={brandKitTexts}
                                         onHeadlineChange={(val) => onHeadlineChange?.(val)}
                                         onCtaChange={(val) => onCtaChange?.(val)}
                                         onCtaUrlChange={(val) => onCtaUrlChange?.(val)}

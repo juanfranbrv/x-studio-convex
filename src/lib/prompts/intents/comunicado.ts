@@ -312,7 +312,7 @@ export const COMUNICADO_LAYOUTS: LayoutOption[] = [
         id: 'comunicado-free',
         name: 'Libre',
         description: 'Sin indicación',
-        svgIcon: 'Sparkles',
+        svgIcon: 'help_center',
         textZone: 'center',
         promptInstruction: 'Natural composition without structural constraints.',
         structuralPrompt: '',

@@ -17,7 +17,8 @@ import {
     regenerateSlideAction,
     regenerateCarouselCaptionAction,
     CarouselSlide,
-    SlideContent
+    SlideContent,
+    CarouselSuggestion
 } from '@/app/actions/generate-carousel'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
@@ -80,6 +81,15 @@ export default function CarouselPage() {
     const [showDebugModal, setShowDebugModal] = useState(false)
     const [debugPromptData, setDebugPromptData] = useState<DebugPromptData | null>(null)
     const [pendingGenerateSettings, setPendingGenerateSettings] = useState<CarouselSettings | null>(null)
+    const [suggestions, setSuggestions] = useState<CarouselSuggestion[]>([])
+    const [originalAnalysis, setOriginalAnalysis] = useState<{
+        slides: CarouselSlide[]
+        scriptSlides: SlideContent[]
+        hook?: string
+        structure?: { id?: string; name?: string }
+        detectedIntent?: string
+        caption?: string
+    } | null>(null)
     const [isCancelingAnalyze, setIsCancelingAnalyze] = useState(false)
     const [isCancelingGenerate, setIsCancelingGenerate] = useState(false)
     const [errorModal, setErrorModal] = useState<{
@@ -183,6 +193,13 @@ export default function CarouselPage() {
     const [isRegenerating, setIsRegenerating] = useState(false)
     const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null)
 
+    const fingerprintSlides = useCallback((items: SlideContent[] | CarouselSlide[]) => {
+        return items
+            .map((s: any) => `${s.index}|${(s.title || '').trim()}|${(s.description || '').trim()}`)
+            .join('||')
+            .toLowerCase()
+    }, [])
+
     const handleUpdateSlideScript = useCallback((index: number, updates: { title?: string; description?: string }) => {
         setSlides(prev => prev.map(s => s.index === index ? { ...s, ...updates } : s))
         setScriptSlides(prev => prev ? prev.map(s => s.index === index ? { ...s, ...updates } : s) : prev)
@@ -205,6 +222,8 @@ export default function CarouselPage() {
         setCurrentSlideIndex(0)
         setAspectRatio(settings.aspectRatio)
         setCarouselSettings(settings)
+        setSuggestions([])
+        setOriginalAnalysis(null)
 
         try {
             const result = await analyzeCarouselAction({
@@ -244,12 +263,31 @@ export default function CarouselPage() {
             if (!isCaptionLocked) {
                 setCaption(result.caption || '')
             }
-            setSlides(result.slides.map(s => ({
+            const mappedSlides = result.slides.map(s => ({
                 index: s.index,
                 title: s.title,
                 description: s.description,
                 status: 'pending' as const
-            })))
+            }))
+            setSlides(mappedSlides)
+            const nextSuggestions = Array.isArray(result.suggestions) ? result.suggestions : []
+            const originalSignature = fingerprintSlides(result.slides)
+            const filteredSuggestions = nextSuggestions.filter((suggestion) => {
+                if (!suggestion?.slides) return false
+                return fingerprintSlides(suggestion.slides) !== originalSignature
+            })
+            setSuggestions(nextSuggestions)
+            setSuggestions(filteredSuggestions)
+            if (filteredSuggestions.length > 0) {
+                setOriginalAnalysis({
+                    slides: mappedSlides,
+                    scriptSlides: result.slides,
+                    hook: result.hook,
+                    structure: result.structure,
+                    detectedIntent: result.detectedIntent,
+                    caption: result.caption
+                })
+            }
 
             if (!silent) {
                 toast({
@@ -310,6 +348,47 @@ export default function CarouselPage() {
         }
         await performAnalyze(settings)
     }, [activeBrandKit, aiConfig?.intelligenceModel, performAnalyze, toast])
+
+    const applySuggestion = useCallback((index: number) => {
+        const suggestion = suggestions[index]
+        if (!suggestion) return
+        const mappedSlides = suggestion.slides.map(s => ({
+            index: s.index,
+            title: s.title,
+            description: s.description,
+            status: 'pending' as const
+        }))
+        setSlides(mappedSlides)
+        setScriptSlides(suggestion.slides)
+        setScriptSlideCount(suggestion.slides.length)
+        setAnalysisHook(suggestion.hook)
+        setAnalysisStructure(suggestion.structure)
+        setAnalysisIntent(suggestion.detectedIntent)
+        if (!isCaptionLocked) {
+            setCaption(suggestion.caption || '')
+        }
+        toast({
+            title: 'Sugerencia aplicada',
+            description: 'Se han actualizado los textos del carrusel.'
+        })
+    }, [suggestions, isCaptionLocked, toast])
+
+    const undoSuggestion = useCallback(() => {
+        if (!originalAnalysis) return
+        setSlides(originalAnalysis.slides)
+        setScriptSlides(originalAnalysis.scriptSlides)
+        setScriptSlideCount(originalAnalysis.scriptSlides.length)
+        setAnalysisHook(originalAnalysis.hook)
+        setAnalysisStructure(originalAnalysis.structure)
+        setAnalysisIntent(originalAnalysis.detectedIntent)
+        if (!isCaptionLocked) {
+            setCaption(originalAnalysis.caption || '')
+        }
+        toast({
+            title: 'Cambios revertidos',
+            description: 'Se ha vuelto al contenido original.'
+        })
+    }, [originalAnalysis, isCaptionLocked, toast])
 
     const handleRegenerateCaption = useCallback(async () => {
         if (!carouselSettings || !activeBrandKit) return
@@ -861,6 +940,10 @@ export default function CarouselPage() {
                     generatedCount={generatedCount}
                     totalSlides={slides.length || 5}
                     brandKit={activeBrandKit}
+                    suggestions={suggestions}
+                    onApplySuggestion={applySuggestion}
+                    onUndoSuggestion={undoSuggestion}
+                    hasOriginalSuggestion={!!originalAnalysis}
                     analysisHook={analysisHook}
                     analysisStructure={analysisStructure}
                     analysisIntent={analysisIntent}

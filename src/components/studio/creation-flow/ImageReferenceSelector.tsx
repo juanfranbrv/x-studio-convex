@@ -169,21 +169,13 @@ export function ImageReferenceSelector({
         const role = referenceImageRoles[id]
         return role === 'style' || role === 'style_content'
     })
-    const hasVisualStyle = [...uploadedImages, ...selectedBrandKitImageIds].some((id) => {
-        const role = referenceImageRoles[id]
-        return role === 'style' || role === 'style_content'
-    })
-    const hasManualStyle = Boolean(customStyle.trim())
-    const isManualStyleBlocked = hasVisualStyle
+    const isManualStyleBlocked = false
 
     const getRoleCycleForImage = (imageId: string): ReferenceImageRole[] => {
         const baseCycle: ReferenceImageRole[] = isAiContentMode
             ? ['style', 'logo']
             : ['style', 'style_content', 'content', 'logo']
         const cycleWithoutStyle = baseCycle.filter((role) => role !== 'style' && role !== 'style_content')
-        if (hasManualStyle) {
-            return cycleWithoutStyle.length > 0 ? cycleWithoutStyle : ['content']
-        }
         const isBrandKitImage = selectedBrandKitImageIds.includes(imageId)
         if (isBrandKitImage && hasUploadedStyle) {
             return baseCycle.filter((role) => role !== 'style' && role !== 'style_content')
@@ -538,11 +530,6 @@ export function ImageReferenceSelector({
                             </div>
                         )}
                     </div>
-                    {isManualStyleBlocked && (
-                        <p className="text-[10px] text-muted-foreground">
-                            Ya hay una referencia visual marcada como `Estilo`. Quita ese rol para habilitar esta fuente manual.
-                        </p>
-                    )}
                 </div>
             )}
 

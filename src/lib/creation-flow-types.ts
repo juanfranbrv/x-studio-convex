@@ -1388,6 +1388,8 @@ export interface GenerationState {
     headline: string
     cta: string
     ctaUrl: string // NEW: URL for the CTA
+    ctaUrlManual: boolean
+    ctaUrlEnabled: boolean
     caption: string // NEW: Social media caption
     customTexts: Record<string, string>
     selectedBrandColors: SelectedColor[]
@@ -1437,6 +1439,8 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     headline: '',
     cta: '',
     ctaUrl: '', // NEW: Init ctaUrl
+    ctaUrlManual: false,
+    ctaUrlEnabled: false,
     caption: '', // NEW: Init caption
     customTexts: {},
     selectedBrandColors: [],

@@ -154,7 +154,7 @@ EJEMPLOS RÃPIDOS:
 - Prompt: "Cita de Steve Jobs..." -> structure: "frase-celebre"
 - Prompt: "Aviso importante: cambio de aula y horario" -> structure: "comunicado-operativo"
 
-FORMATO DE SALIDA (JSON ?NICO, sin markdown):
+FORMATO DE SALIDA (JSON UNICO, sin markdown):
 {
   "detectedIntent": "intent_id",
   "hook": "string",
@@ -164,6 +164,27 @@ FORMATO DE SALIDA (JSON ?NICO, sin markdown):
   },
   "caption": "string",
   "optimalSlideCount": 5,
+  "suggestions": [
+    {
+      "title": "Titulo corto",
+      "subtitle": "Por que este enfoque funciona",
+      "detectedIntent": "intent_id",
+      "hook": "string",
+      "structure": { "id": "estructura_id", "name": "nombre_legible" },
+      "caption": "string",
+      "slides": [
+        {
+          "index": 0,
+          "role": "hook | content | cta",
+          "title": "Titulo corto",
+          "description": "Texto breve del slide (1-2 frases).",
+          "composition": "Blueprint arquitectonico del slide: reticula, areas, jerarquia, anclajes y margenes (sin colores, sin tipografias, sin estilo cromatico).",
+          "visualPrompt": "Instruccion visual detallada. SI existe VISUAL REFERENCE arriba, DEBE describir una escena en el MISMO estilo y medio (ilustracion/foto) de esa referencia. NO inventes fotografia si la referencia es ilustracion.",
+          "focus": "Foco principal del slide"
+        }
+      ]
+    }
+  ],
   "slides": [
     {
       "index": 0,
@@ -180,6 +201,10 @@ FORMATO DE SALIDA (JSON ?NICO, sin markdown):
 REGLAS DE SALIDA
 - Los ?ndices deben ir de 0 a optimalSlideCount-1.
 - El n?mero de slides debe coincidir con REQUESTED_SLIDE_COUNT (o 5 si es N/A).
+- Genera EXACTAMENTE 3 suggestions.
+- Cada suggestion debe tener title, subtitle, hook, caption, structure, detectedIntent y slides completos.
+- Las suggestions deben ser claramente diferentes entre si (enfoque, gancho y narrativa).
+- Ninguna suggestion puede repetir el contenido principal (hook, caption o textos de slides).
 - role debe ser: slide 0 = hook, ?ltima slide = cta, resto = content.
 - caption:
   - 2-4 frases.

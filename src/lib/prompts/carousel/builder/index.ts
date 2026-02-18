@@ -75,21 +75,36 @@ ${narrative.summary}
 - Do not introduce new layout patterns, type hierarchies, or background treatments.
 
 # Task
-Generate a JSON object representing the carousel slides. 
+Generate a JSON object representing the carousel slides.
 
 ## JSON Output Structure
-The output must be a single JSON object with a "slides" array. Each slide object must contain:
-- "id": number (1-index)
-- "type": string (intro, content, conclusion, etc.)
-- "title": string (punchy header)
-- "content": string (concise body text)
-- "composition_id": string (MUST be one of the IDs relevant to the narrative, or default "minimal")
-- "visualPrompt": string (detailed description of the scene that matches the Visual Reference attribute)
+The output must be a single JSON object with:
+- "detectedIntent": string
+- "hook": string
+- "structure": { "id": string, "name": string }
+- "caption": string
+- "optimalSlideCount": number
+- "slides": array of objects with:
+  - "index": number (0-based)
+  - "role": "hook" | "content" | "cta"
+  - "title": string
+  - "description": string
+  - "composition": string (layout blueprint only, no colors or typography)
+  - "visualPrompt": string (scene description aligned with the Visual Reference)
+  - "focus": string
+- "suggestions": array with EXACTLY 3 alternative packages, each containing:
+  - "title": string
+  - "subtitle": string
+  - "detectedIntent": string
+  - "hook": string
+  - "structure": { "id": string, "name": string }
+  - "caption": string
+  - "slides": array following the same schema above
 
 ## Important
 - **Strict JSON**: Return ONLY valid JSON. No markdown code blocks like \`\`\`json.
-- **Visuals**: Ensure "composition_id" matches the intended visual metaphor for that slide.
-- **No Font Names in Copy**: Never include font family names (e.g., Google Sans Flex, Inter, Roboto) inside title/content/visualPrompt.
+- **Visuals**: Ensure "composition" matches the intended visual metaphor for that slide.
+- **No Font Names in Copy**: Never include font family names (e.g., Google Sans Flex, Inter, Roboto) inside title/description/visualPrompt.
 ${ctx.includeLogo ? LOGO_PROTECTION_RULE : ''}
 ${BRAND_DNA_RULE}
 ${BRAND_COLORS_RULE}

@@ -6,7 +6,7 @@
     "svgIcon": "antigravity",
     "textZone": "center",
     "promptInstruction": "Transformation before and after.",
-    "structuralPrompt": "## Composición: Project Evolution Timeline\r\n\r\n**Estructura:** Transformación antes y después.\r\n\r\n### Jerarquía Visual\r\n1. **Principal:** Dos o más etapas del mismo proyecto\r\n2. **Secundario:** Flechas de progreso o línea de tiempo conectando estados\r\n3. **Terciario:** Etiquetas \"Inicio\" y \"Ahora\" o de etapa\r\n\r\n### Distribución\r\n- Etapa anterior del trabajo\r\n- Etapa actual o final\r\n- Indicador visual de progreso\r\n\r\n### Estilo\r\n- **Textura:** Documentación de proceso, historia de progreso\r\n- **Iluminación:** Consistente para mostrar el cambio real\r\n- **Paleta:** Etapa temprana desaturada vs final saturado\r\n\r\n### Evitar\r\nLínea de tiempo confusa, imágenes aleatorias sin relación.",
+    "structuralPrompt": "## Composición: Project Evolution Timeline\r\n\r\n**Estructura:** Transformación antes y después.\r\n\r\n### Jerarquía Visual\r\n1. **Principal:** Dos o más etapas del mismo proyecto.\r\n2. **Secundario:** Flechas de progreso o línea de tiempo conectando estados\r\n3. **Terciario:** Etiquetas \"Inicio\" y \"Ahora\" o de etapa\r\n\r\n### Distribución\r\n- Etapa anterior del trabajo\r\n- Etapa actual o final\r\n- Indicador visual de progreso\r\n\r\n### Estilo\r\n- **Textura:** Documentación de proceso, historia de progreso\r\n- **Iluminación:** Consistente para mostrar el cambio real\r\n- **Paleta:** Etapa temprana desaturada vs final saturado\r\n\r\n### Evitar\r\nLínea de tiempo confusa, imágenes aleatorias sin relación.",
     "skillVersion": "legacy"
   },
   {
@@ -40,6 +40,16 @@
     "skillVersion": "legacy"
   },
   {
+    "id": "escaparate-marco",
+    "name": "Marco",
+    "description": "Enmarcado arquitectónico",
+    "svgIcon": "garage_home",
+    "textZone": "center",
+    "promptInstruction": "Architectural framing with structural shadows.",
+    "structuralPrompt": "## Composición: Antes y Despues\r\n**Estructura:** Composicion guiada por antes y despues con foco en Marco | Enmarcado arquitectónico | Architectural framing with structural shadows. | ID:escaparate-marco. Deja margen para que el modelo improvise la escena mientras respeta la jerarquia general.\r\n\r\n### Jerarquía Visual\r\n1. Elemento principal claro, con apoyos que no compiten.\r\n2. Segundo nivel con informacion de contexto, por ejemplo sello, dato breve o apoyo funcional.\r\n3. Detalle final que refuerza el mensaje sin saturar, por ejemplo un gesto o icono secundario.\r\n\r\n### Distribución\r\n- Bloques grandes y limpios con espacios respirables.\r\n- Ritmo visual estable que facilite el escaneo, con alineaciones consistentes.\r\n- Zona de texto protegida sin elementos invasivos, con margen de seguridad.\r\n- Logo principal en esquina inferior con peso secundario.\r\n\r\n### Evitar\r\nEvitar ruido visual, superposiciones agresivas y microdetalles.",
+    "skillVersion": "legacy"
+  },
+  {
     "id": "oferta-free",
     "name": "Libre",
     "description": "Sin indicación",
@@ -47,6 +57,16 @@
     "textZone": "center",
     "promptInstruction": "Natural composition without structural constraints.",
     "structuralPrompt": "",
+    "skillVersion": "legacy"
+  },
+  {
+    "id": "tagline",
+    "name": "Libre",
+    "description": "Sin indicación",
+    "svgIcon": "help_center",
+    "textZone": "center",
+    "promptInstruction": "Natural composition without structural constraints.",
+    "structuralPrompt": "## Composición: Split Hero\r\n**Estructura:** Composicion guiada por split hero con foco en Libre | Sin indicación | Natural composition without structural constraints. | ID:tagline | UNICO:tagline. Deja margen para que el modelo improvise la escena mientras respeta la jerarquia general.\r\n\r\n### Jerarquía Visual\r\n1. Elemento principal claro, con apoyos que no compiten.\r\n2. Segundo nivel con informacion de contexto, por ejemplo sello, dato breve o apoyo funcional.\r\n3. Detalle final que refuerza el mensaje sin saturar, por ejemplo un gesto o icono secundario.\r\n\r\n### Distribución\r\n- Bloques grandes y limpios con espacios respirables.\r\n- Ritmo visual estable que facilite el escaneo, con alineaciones consistentes.\r\n- Zona de texto protegida sin elementos invasivos, con margen de seguridad.\r\n- Logo principal en esquina inferior con peso secundario.\r\n\r\n### Evitar\r\nEvitar ruido visual, superposiciones agresivas y microdetalles.",
     "skillVersion": "legacy"
   }
 ]

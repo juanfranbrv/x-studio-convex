@@ -7,9 +7,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Star, Bookmark as BookmarkIcon, SquarePlus, Square } from 'lucide-react'
+import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Star, Bookmark as BookmarkIcon, SquarePlus, Square, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
+import type { CarouselSuggestion } from '@/app/actions/generate-carousel'
 import { ImageReferenceSelector } from '@/components/studio/creation-flow/ImageReferenceSelector'
 import { resizeImage } from '@/lib/image-utils'
 import { CAROUSEL_STRUCTURES, getAutomaticBasicComposition, getNarrativeStructure } from '@/lib/carousel-structures'
@@ -20,6 +21,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { PresetsCarousel } from '@/components/studio/creation-flow/PresetsCarousel'
 import { SavePresetDialog } from '@/components/studio/creation-flow/SavePresetDialog'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 export interface SlideConfig {
     index: number
@@ -71,6 +73,10 @@ interface CarouselControlsPanelProps {
     isAdmin?: boolean
     slideCountOverride?: number | null
     onSlideCountOverrideApplied?: () => void
+    suggestions?: CarouselSuggestion[]
+    onApplySuggestion?: (index: number) => void
+    onUndoSuggestion?: () => void
+    hasOriginalSuggestion?: boolean
 }
 
 const SectionHeader = ({
@@ -148,7 +154,11 @@ export function CarouselControlsPanel({
     analysisIntentLabel,
     isAdmin = false,
     slideCountOverride,
-    onSlideCountOverrideApplied
+    onSlideCountOverrideApplied,
+    suggestions,
+    onApplySuggestion,
+    onUndoSuggestion,
+    hasOriginalSuggestion = false
 }: CarouselControlsPanelProps) {
     const createPreset = useMutation(api.presets.create)
     const presetsData = useQuery(api.presets.list, userId ? {
@@ -159,7 +169,7 @@ export function CarouselControlsPanel({
     const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
     const [isSavingPreset, setIsSavingPreset] = useState(false)
     const [prompt, setPrompt] = useState('')
-    const [slideCount, setSlideCount] = useState(5)
+    const [slideCount, setSlideCount] = useState(0)
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('4:5')
     const [style, setStyle] = useState('minimal')
     const [slides, setSlides] = useState<SlideConfig[]>([])
@@ -174,7 +184,7 @@ export function CarouselControlsPanel({
             structureId,
             'basic',
             currentStructure?.compositions[0]?.id,
-            `${structureId}|5`,
+            `${structureId}|0`,
             null
         )
     )
@@ -199,8 +209,8 @@ export function CarouselControlsPanel({
     const shouldReduceMotion = useReducedMotion()
     const selectedImageCount = uploadedImages.length + selectedBrandKitImageIds.length
     const hasReferenceSelection = selectedImageCount > 0 || (imageSourceMode === 'generate' && aiImageDescription.trim().length > 0)
-    const canGenerate = prompt.trim().length > 0 && !isGenerating && brandKit !== null && currentStep >= 7 && !needsReanalysis
-    const canAnalyze = prompt.trim().length > 0 && !isAnalyzing && !isGenerating && brandKit !== null
+    const canGenerate = prompt.trim().length > 0 && slideCount > 0 && !isGenerating && brandKit !== null && currentStep >= 7 && !needsReanalysis
+    const canAnalyze = prompt.trim().length > 0 && slideCount > 0 && !isAnalyzing && !isGenerating && brandKit !== null
     const canContinueFromImage = imageSourceMode !== 'generate' || Boolean(aiImageDescription.trim())
     const isStepVisible = (step: number) => showAllSteps || currentStep >= step
     const basicCompositions = (currentStructure?.compositions || []).filter((composition) => composition.mode === 'basic')
@@ -217,13 +227,14 @@ export function CarouselControlsPanel({
     const brandImages = (brandKit?.images || []).filter(img => img.url)
 
     const handleSlideCountChange = (delta: number) => {
-        const newCount = Math.max(1, Math.min(15, slideCount + delta))
+        const newCount = Math.max(0, Math.min(15, slideCount + delta))
         setSlideCount(newCount)
+        setCurrentStep(2)
         if (prompt.trim()) {
             setNeedsReanalysis(true)
             setCurrentStep(2)
             setLastAnalyzedPrompt(prompt.trim())
-            if (!isAnalyzing && !isGenerating) {
+            if (newCount > 0 && !isAnalyzing && !isGenerating) {
                 onAnalyze(buildSettings({ slideCount: newCount }))
             }
         } else {
@@ -600,12 +611,12 @@ export function CarouselControlsPanel({
     }
 
     const handleGenerate = () => {
-        if (!prompt.trim()) return
+        if (!prompt.trim() || slideCount < 1) return
         onGenerate(buildSettings())
     }
 
     const handleAnalyze = async () => {
-        if (!prompt.trim()) return
+        if (!prompt.trim() || slideCount < 1) return
         setNeedsReanalysis(true)
         setLastAnalyzedPrompt(prompt.trim())
         await onAnalyze(buildSettings())
@@ -613,7 +624,7 @@ export function CarouselControlsPanel({
 
     const handleReset = () => {
         setPrompt('')
-        setSlideCount(5)
+        setSlideCount(0)
         setAspectRatio('4:5')
         setStyle('minimal')
         setSlides([])
@@ -625,7 +636,7 @@ export function CarouselControlsPanel({
                 defaultStructureId,
                 'basic',
                 undefined,
-                `${defaultStructureId}|5`,
+                `${defaultStructureId}|0`,
                 null
             )
         )
@@ -646,7 +657,7 @@ export function CarouselControlsPanel({
     const handleSelectPreset = (state: any) => {
         if (!state || state.presetType !== 'carousel') return
         setPrompt(state.prompt || '')
-        setSlideCount(state.slideCount || 5)
+        setSlideCount(state.slideCount ?? 5)
         setAspectRatio(state.aspectRatio || '4:5')
         setStyle(state.style || 'minimal')
         const nextMode: CompositionMode = state.compositionMode === 'advanced' ? 'advanced' : 'basic'
@@ -659,7 +670,7 @@ export function CarouselControlsPanel({
                     nextStructureId,
                     nextMode,
                     state.compositionId,
-                    `${nextStructureId}|${(state.prompt || '').trim()}|${state.slideCount || 5}`,
+                    `${nextStructureId}|${(state.prompt || '').trim()}|${state.slideCount ?? 5}`,
                     state.basicSelectedCompositionId ?? null
                 )
             )
@@ -669,7 +680,7 @@ export function CarouselControlsPanel({
                     structureId,
                     nextMode,
                     state.compositionId,
-                    `${structureId}|${(state.prompt || '').trim()}|${state.slideCount || slideCount}`,
+                    `${structureId}|${(state.prompt || '').trim()}|${state.slideCount ?? slideCount}`,
                     state.basicSelectedCompositionId ?? null
                 )
             )
@@ -687,7 +698,7 @@ export function CarouselControlsPanel({
         if (state.prompt && !isAnalyzing && !isGenerating) {
             onAnalyze(buildSettings({
                 prompt: state.prompt,
-                slideCount: state.slideCount || 5,
+                slideCount: state.slideCount ?? 5,
                 aspectRatio: state.aspectRatio || '4:5',
                 style: state.style || 'minimal',
                 structureId: state.structureId || structureId,
@@ -783,7 +794,7 @@ export function CarouselControlsPanel({
                 <div ref={(el) => { stepRefs.current[1] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader icon={GalleryHorizontal} title="Numero de diapositivas" />
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(-1)} disabled={slideCount <= 1}>
+                        <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(-1)} disabled={slideCount <= 0}>
                             <Minus className="w-4 h-4" />
                         </Button>
                         <div className="flex-1 text-center">
@@ -795,13 +806,6 @@ export function CarouselControlsPanel({
                         </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">Entre 1 y 15 diapositivas.</p>
-                    {!showAllSteps && currentStep === 1 && (
-                        <div className="flex justify-end">
-                            <Button size="sm" variant="secondary" onClick={() => setCurrentStep(2)} className="h-7 text-xs">
-                                Siguiente, Tema
-                            </Button>
-                        </div>
-                    )}
                 </div>
                 )}
 
@@ -825,7 +829,7 @@ export function CarouselControlsPanel({
                     />
                     <div className="relative">
                         <Textarea
-                            placeholder="Ej: Quiero dar valor real. SÃ¡came los 5 errores tÃ­picos que cometemos los espaÃ±oles al hablar inglÃ©s y cÃ³mo corregirlos. Algo que la gente quiera guardar para repasar luego."
+                            placeholder="Ej: Quiero dar valor real. Sácame los 5 errores típicos que cometemos los españoles al hablar inglés y cómo corregirlos. Algo que la gente quiera guardar para repasar luego."
                             value={prompt}
                             onChange={(e) => {
                                 const nextPrompt = e.target.value
@@ -847,54 +851,47 @@ export function CarouselControlsPanel({
                             className="min-h-[100px] text-sm resize-none bg-background border border-border focus:ring-1 focus:ring-primary focus:border-primary pb-12 pr-2 transition-all"
                         />
                         <div className="absolute left-2 right-2 bottom-2 flex items-center gap-2">
-                            {isAnalyzing && (
-                                <div className="relative h-2 flex-1 overflow-hidden border border-primary/30 bg-primary/10">
-                                    <motion.div
-                                        className="absolute inset-y-0 left-0 bg-primary/50"
-                                        style={{ width: '100%', transformOrigin: '0% 50%' }}
-                                        animate={shouldReduceMotion ? { scaleX: 1 } : { scaleX: [0, 1] }}
-                                        transition={shouldReduceMotion ? { duration: 0 } : { duration: 40, ease: 'linear' }}
-                                    />
-                                    <motion.div
-                                        className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-primary/60 to-transparent"
-                                        animate={shouldReduceMotion ? { x: 0 } : { x: ['-40%', '140%'] }}
-                                        transition={shouldReduceMotion ? { duration: 0 } : { duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-                                    />
-                                </div>
-                            )}
-                            {isAnalyzing && onCancelAnalyze && (
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        type="button"
-                                        size="icon"
-                                        variant="outline"
-                                        onClick={onCancelAnalyze}
-                                        className="h-7 w-7"
-                                        title="Detener anÃ¡lisis"
-                                    >
-                                        <Square className="w-3.5 h-3.5" />
-                                    </Button>
-                                    <motion.span
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: isCancelingAnalyze ? 1 : 0 }}
-                                        transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
-                                        className="text-[10px] uppercase tracking-wider text-muted-foreground"
-                                    >
-                                        Cancelando...
-                                    </motion.span>
-                                </div>
-                            )}
+                            <div className="flex items-center gap-2">
+                                {isAnalyzing && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                                {isAnalyzing && onCancelAnalyze && (
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="link"
+                                            onClick={onCancelAnalyze}
+                                            className="h-6 px-1 text-[11px]"
+                                        >
+                                            Detener
+                                        </Button>
+                                        <motion.span
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: isCancelingAnalyze ? 1 : 0 }}
+                                            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
+                                            className="text-[10px] uppercase tracking-wider text-muted-foreground"
+                                        >
+                                            Cancelando...
+                                        </motion.span>
+                                    </div>
+                                )}
+                            </div>
                             <Button
                                 size="sm"
                                 onClick={handleAnalyze}
                                 disabled={!canAnalyze}
-                                className="h-8 px-4 text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
+                                className="ml-auto h-8 px-4 text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
                             >
                                 <Sparkles className="w-3.5 h-3.5 mr-2" />
                                 Analizar
                             </Button>
                         </div>
                     </div>
+                    <SuggestionsList
+                        suggestions={suggestions}
+                        hasOriginalState={hasOriginalSuggestion}
+                        onApply={(index) => onApplySuggestion?.(index)}
+                        onUndo={() => onUndoSuggestion?.()}
+                    />
                 </div>
                 )}
 
@@ -1221,5 +1218,64 @@ export function CarouselControlsPanel({
                 isSaving={isSavingPreset}
             />
         </div>
+    )
+}
+
+function SuggestionsList({
+    suggestions,
+    onApply,
+    onUndo,
+    hasOriginalState
+}: {
+    suggestions?: CarouselSuggestion[],
+    onApply: (index: number) => void,
+    onUndo: () => void,
+    hasOriginalState: boolean
+}) {
+    if (!suggestions || suggestions.length === 0) return null
+
+    return (
+        <TooltipProvider delayDuration={300}>
+            <div className="mt-2 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-500">
+                <div className="flex items-center justify-between px-1">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80">
+                        Opciones alternativas
+                    </p>
+                    {hasOriginalState ? (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={onUndo}
+                            className="h-5 px-1.5 text-[9px] text-muted-foreground hover:text-primary gap-1 opacity-60 hover:opacity-100 transition-opacity"
+                        >
+                            <RotateCcw className="w-2.5 h-2.5" />
+                            VOLVER AL ORIGINAL
+                        </Button>
+                    ) : <span />}
+                </div>
+                {suggestions.map((suggestion, idx) => (
+                    <Tooltip key={idx}>
+                        <TooltipTrigger asChild>
+                            <button
+                                onClick={() => onApply(idx)}
+                                className="group relative w-full flex items-center gap-2.5 p-2.5 rounded-lg border border-purple-100/50 bg-purple-50/50 hover:bg-white hover:border-purple-200 hover:shadow-sm transition-all duration-200 overflow-hidden text-left"
+                            >
+                                <span className="text-[11px] font-bold text-gray-900 shrink-0">
+                                    {suggestion.title}
+                                </span>
+                                <div className="h-3 w-[1px] bg-purple-200 shrink-0" />
+                                <span className="text-[11px] text-gray-500 truncate font-medium group-hover:text-purple-700 transition-colors">
+                                    {suggestion.subtitle}
+                                </span>
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" align="start" className="max-w-[260px] text-xs bg-muted text-foreground border border-border shadow-md">
+                            <p className="font-semibold text-foreground mb-1">{suggestion.title}</p>
+                            <p className="text-muted-foreground">{suggestion.subtitle}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                ))}
+            </div>
+        </TooltipProvider>
     )
 }

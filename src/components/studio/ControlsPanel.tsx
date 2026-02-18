@@ -7,10 +7,11 @@ import { SocialFormatSelector } from './creation-flow/SocialFormatSelector'
 import { BrandingConfigurator } from './creation-flow/BrandingConfigurator'
 import { ImageReferenceSelector } from './creation-flow/ImageReferenceSelector'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Sparkles, Layers, ImagePlus, Wand2, Loader2, Star, Fingerprint, Bookmark as BookmarkIcon, SquarePlus, RotateCcw } from 'lucide-react'
+import { Palette, Layout, Sparkles, Layers, ImagePlus, Wand2, Loader2, Star, Fingerprint, Bookmark as BookmarkIcon, SquarePlus, RotateCcw, Link2 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PresetsCarousel } from './creation-flow/PresetsCarousel'
 import { SavePresetDialog } from './creation-flow/SavePresetDialog'
@@ -118,7 +119,7 @@ export function ControlsPanel({
     const upsertLayoutVote = useMutation(api.layoutRatings.upsertLayoutVote)
     const migrateLegacyRatings = useMutation(api.layoutRatings.migrateLegacyRatings)
     const resetLayoutRatings = useMutation(api.layoutRatings.resetLayoutRatings)
-    const { activeBrandKit } = useBrandKit()
+    const { activeBrandKit, updateActiveBrandKit } = useBrandKit()
     const layoutRatingsRows = useQuery(
         api.layoutRatings.listLayoutRatings,
         isAdmin && adminEmail ? { admin_email: adminEmail, layoutIdPrefix: 'lab-v6-' } : 'skip'
@@ -150,10 +151,12 @@ export function ControlsPanel({
         setHeadline,
         setCta,
         setCtaUrl,
+        setCtaUrlEnabled,
         setCustomStyle,
         toggleBrandColor,
         removeBrandColor,
         addCustomColor,
+        refreshBrandColorsFromKit,
         selectPlatform,
         selectFormat,
         selectedLayoutMeta,
@@ -334,6 +337,8 @@ export function ControlsPanel({
         })
     }, [effectiveLayoutIntent, availableLayouts, layoutOverrides])
 
+    const canSavePreset = Boolean(state.selectedIntent && state.selectedPlatform && state.selectedFormat)
+
     useEffect(() => {
         if (!compositionMode) return
         setShowLabCatalog(compositionMode === 'advanced')
@@ -386,7 +391,7 @@ export function ControlsPanel({
     }
 
     const handleSavePreset = async (name: string) => {
-        if (!userId || !state.selectedIntent) {
+        if (!userId || !state.selectedIntent || !state.selectedPlatform || !state.selectedFormat) {
             toast({ title: "Error", description: "Faltan datos para guardar el preset.", variant: "destructive" })
             return
         }
@@ -417,6 +422,7 @@ export function ControlsPanel({
                     headline: state.headline || undefined,
                     cta: state.cta || undefined,
                     ctaUrl: state.ctaUrl || undefined,
+                    ctaUrlEnabled: state.ctaUrlEnabled,
                     caption: state.caption || undefined,
                     customTexts: state.customTexts,
                     selectedTextAssets: state.selectedTextAssets,
@@ -454,7 +460,7 @@ export function ControlsPanel({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setIsSaveDialogOpen(true)}
-                                disabled={!state.selectedIntent}
+                                disabled={!canSavePreset}
                                 className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
                             >
                                 <BookmarkIcon className="w-3 h-3" />
@@ -562,8 +568,8 @@ export function ControlsPanel({
                 {state.selectedIntent && (
                     <>
                         {/* STEP 2: LAYOUT */}
-                        {(state.currentStep >= 2 || state.hasGeneratedImage) && availableLayouts.length > 0 && (
-                            <div ref={step2Ref} className={cn("relative", state.currentStep === 2 ? "glass-card p-4" : "glass-card p-4 opacity-70 hover:opacity-100 transition-opacity")}>
+                        {availableLayouts.length > 0 && (
+                            <div ref={step2Ref} className="relative glass-card p-4">
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 2 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[2]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step2Ref} />
                                 <SectionHeader
                                     icon={Layout}
@@ -619,7 +625,7 @@ export function ControlsPanel({
                                     ) : (
                                         <div className="rounded-xl border border-border/70 bg-muted/25 px-3 py-2">
                                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                                Modo básico activo: la composición se selecciona automáticamente según el intent detectado.
+                                                Modo básico activo: el diseño se selecciona automáticamente según lo que escribas. Activa el modo avanzado si quieres más control.
                                             </p>
                                         </div>
                                     )}
@@ -633,8 +639,7 @@ export function ControlsPanel({
                         )}
 
                         {/* STEP 3: FORMAT */}
-                        {(state.currentStep >= 3 || state.hasGeneratedImage) && (
-                            <div ref={step3Ref} className={cn("relative", state.currentStep === 3 ? "glass-card p-4" : "glass-card p-4 opacity-70 hover:opacity-100 transition-opacity")}>
+                        <div ref={step3Ref} className="relative glass-card p-4">
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 3 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[3]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step3Ref} />
                                 <SectionHeader icon={Layers} title="Formato" />
                                 <SocialFormatSelector
@@ -648,12 +653,10 @@ export function ControlsPanel({
                                         Selecciona la plataforma y un formato para continuar.
                                     </p>
                                 )}
-                            </div>
-                        )}
+                        </div>
 
                         {/* STEP 4: IMAGE */}
-                        {(state.currentStep >= 4 || state.hasGeneratedImage) && (
-                            <div ref={step4Ref} className={cn("relative", state.currentStep === 4 ? "glass-card p-4" : "glass-card p-4 opacity-70 hover:opacity-100 transition-opacity")}>
+                        <div ref={step4Ref} className="relative glass-card p-4">
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 4 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[4]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step4Ref} />
                                 <SectionHeader icon={ImagePlus} title="Imagenes" />
                                 <ImageReferenceSelector
@@ -682,12 +685,10 @@ export function ControlsPanel({
                                 <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
                                     Sube una referencia o usa una del Brand Kit.
                                 </p>
-                            </div>
-                        )}
+                        </div>
 
                         {/* STEP 6: LOGO & COLORS - Unified */}
-                        {(state.currentStep >= 5 || (state.currentStep >= 4 && state.imageSourceMode === 'generate') || state.hasGeneratedImage) && (
-                            <div ref={step6Ref} className="relative glass-card p-4 space-y-6">
+                        <div ref={step6Ref} className="relative glass-card p-4 space-y-6">
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep >= 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
                                 <div className="space-y-3">
                                     <SectionHeader icon={Fingerprint} title="Logo" />
@@ -704,7 +705,21 @@ export function ControlsPanel({
                                 </div>
 
                                 <div className="space-y-3 border-t border-border/60 pt-4">
-                                    <SectionHeader icon={Palette} title="Colores" />
+                                    <SectionHeader
+                                        icon={Palette}
+                                        title="Colores"
+                                        extra={(
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={refreshBrandColorsFromKit}
+                                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                                            >
+                                                <RotateCcw className="w-3 h-3" />
+                                                Recargar
+                                            </Button>
+                                        )}
+                                    />
                                     <BrandingConfigurator
                                         selectedLayout={selectedLayoutMeta || null}
                                         selectedLogoId={state.selectedLogoId}
@@ -720,8 +735,35 @@ export function ControlsPanel({
                                         onlyShowSelectedColors={true}
                                     />
                                 </div>
-                            </div>
-                        )}
+
+                                <div className="space-y-3 border-t border-border/60 pt-4">
+                                    <SectionHeader
+                                        icon={Link2}
+                                        title="Enlace"
+                                        extra={(
+                                            <Switch
+                                                checked={state.ctaUrlEnabled}
+                                                onCheckedChange={(checked) => {
+                                                    setCtaUrlEnabled(checked, { useKitIfEmpty: true })
+                                                    updateActiveBrandKit?.({ cta_url_enabled: checked })
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                    {state.ctaUrlEnabled ? (
+                                        <Input
+                                            value={state.ctaUrl}
+                                            onChange={(e) => setCtaUrl(e.target.value)}
+                                            placeholder={activeBrandKit?.url?.trim() || 'tuweb.com'}
+                                            className="h-9 text-xs"
+                                        />
+                                    ) : (
+                                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                            Activa el enlace si quieres mostrar una URL en la publicación.
+                                        </p>
+                                    )}
+                                </div>
+                        </div>
                     </>
                 )}
             </div>

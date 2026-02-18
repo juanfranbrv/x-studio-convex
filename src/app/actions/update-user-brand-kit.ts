@@ -19,8 +19,10 @@ export async function updateUserBrandKit(brandKitId: string, brandData: BrandDNA
             clerk_user_id: userId,
             updates: {
                 brand_name: brandData.brand_name,
+                url: brandData.url,
                 tagline: brandData.tagline,
                 business_overview: brandData.business_overview,
+                cta_url_enabled: brandData.cta_url_enabled,
                 brand_values: brandData.brand_values,
                 tone_of_voice: brandData.tone_of_voice,
                 visual_aesthetic: brandData.visual_aesthetic,

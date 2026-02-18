@@ -310,7 +310,7 @@ export const CATALOGO_LAYOUTS: LayoutOption[] = [
         id: 'catalogo-free',
         name: 'Libre',
         description: 'Sin indicación',
-        svgIcon: 'Sparkles',
+        svgIcon: 'help_center',
         textZone: 'center',
         promptInstruction: 'Natural composition without structural constraints.',
         structuralPrompt: '',

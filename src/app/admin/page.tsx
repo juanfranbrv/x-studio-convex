@@ -35,62 +35,6 @@ import {
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 
-// Helper to convert HSL string (e.g. "243.4 75.4% 58.6%") to Hex
-const hslToHex = (hsl: string) => {
-    if (!hsl) return "#000000";
-    const values = hsl.split(' ').map(val => parseFloat(val));
-    const h = values[0];
-    const s = values[1];
-    const l = values[2];
-
-    const k = (n: number) => (n + h / 30) % 12;
-    const a = s * Math.min(l / 100, 1 - l / 100) / 100;
-    const f = (n: number) => l / 100 - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-
-    const toHex = (x: number) => {
-        const hex = Math.round(x * 255).toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
-    };
-
-    return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
-};
-
-// Helper to convert Hex to HSL string
-const hexToHsl = (hex: string) => {
-    let r = 0, g = 0, b = 0;
-    if (hex.length === 4) {
-        r = parseInt("0x" + hex[1] + hex[1]);
-        g = parseInt("0x" + hex[2] + hex[2]);
-        b = parseInt("0x" + hex[3] + hex[3]);
-    } else if (hex.length === 7) {
-        r = parseInt("0x" + hex[1] + hex[2]);
-        g = parseInt("0x" + hex[3] + hex[4]);
-        b = parseInt("0x" + hex[5] + hex[6]);
-    }
-
-    r /= 255;
-    g /= 255;
-    b /= 255;
-
-    const cmin = Math.min(r, g, b), cmax = Math.max(r, g, b), delta = cmax - cmin;
-    let h = 0, s = 0, l = 0;
-
-    if (delta === 0) h = 0;
-    else if (cmax === r) h = ((g - b) / delta) % 6;
-    else if (cmax === g) h = (b - r) / delta + 2;
-    else h = (r - g) / delta + 4;
-
-    h = Math.round(h * 60);
-    if (h < 0) h += 360;
-
-    l = (cmax + cmin) / 2;
-    s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
-
-    s = +(s * 100).toFixed(1);
-    l = +(l * 100).toFixed(1);
-
-    return `${h} ${s}% ${l}%`;
-};
 
 import { CompositionsSummaryTable } from '@/components/admin/CompositionsSummaryTable'
 
@@ -148,10 +92,6 @@ export default function AdminPage() {
 
     const [isProcessing, setIsProcessing] = useState(false)
 
-    // Manual color picker state
-    const [primaryColor, setPrimaryColor] = useState("#6366F1");
-    const [secondaryColor, setSecondaryColor] = useState("#EC4899");
-
     // Settings state
     const [editingSettings, setEditingSettings] = useState<Record<string, number | string>>({})
 
@@ -168,12 +108,6 @@ export default function AdminPage() {
             const settingsMap: Record<string, number | string> = {}
             settings.forEach(s => {
                 settingsMap[s.key] = s.value
-                if (s.key === 'theme_primary' && typeof s.value === 'string') {
-                    setPrimaryColor(hslToHex(s.value));
-                }
-                if (s.key === 'theme_secondary' && typeof s.value === 'string') {
-                    setSecondaryColor(hslToHex(s.value));
-                }
             })
             setEditingSettings(settingsMap)
         }
@@ -689,165 +623,7 @@ export default function AdminPage() {
                                     </div>
                                 ))}
 
-                                <div className="pt-6 border-t">
-                                    <h3 className="text-lg font-medium mb-4">Configuración de Modelos AI</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {/* Image Generation Model */}
-                                        <div className="space-y-3">
-                                            <Label>Modelo de Generación de Imagen</Label>
-                                            <div className="flex gap-2">
-                                                <select
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                    value={editingSettings['model_image_generation'] ?? settings?.find(s => s.key === 'model_image_generation')?.value ?? "wisdom/gemini-3-pro-image-preview"}
-                                                    onChange={(e) => setEditingSettings(prev => ({ ...prev, model_image_generation: e.target.value }))}
-                                                >
-                                                    <option value="wisdom/gemini-3-pro-image-preview">Gemini 3 Pro Image (Wisdom)</option>
-                                                    <option value="google/gemini-3-pro-image-preview">Nano Banana Pro / Gemini 3 Pro Image (Google Oficial)</option>
-                                                    <option value="google/gemini-2.5-flash-image">Nano Banana / Gemini 2.5 Flash Image (Google Oficial)</option>
-                                                </select>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => handleSaveSetting('model_image_generation', editingSettings['model_image_generation'] as string)}
-                                                >
-                                                    Guardar
-                                                </Button>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground">Modelo utilizado para generar las imágenes finales.</p>
-                                        </div>
-
-                                        {/* Intelligence/Logic Model */}
-                                        <div className="space-y-3">
-                                            <Label>Modelo de Inteligencia (Parsing)</Label>
-                                            <div className="flex gap-2">
-                                                <select
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                    value={editingSettings['model_intelligence'] ?? settings?.find(s => s.key === 'model_intelligence')?.value ?? "wisdom/gemini-2.5-flash"}
-                                                    onChange={(e) => setEditingSettings(prev => ({ ...prev, model_intelligence: e.target.value }))}
-                                                >
-                                                    <option value="wisdom/gemini-3-pro-preview">Gemini 3 Pro (Wisdom)</option>
-                                                    <option value="wisdom/gemini-3-flash-preview">Gemini 3 Flash (Wisdom)</option>
-                                                    <option value="wisdom/gemini-2.5-flash">Gemini 2.5 Flash (Wisdom)</option>
-                                                    <option value="gemini-3-pro-preview">Gemini 3 Pro (Google Official)</option>
-                                                    <option value="gemini-3-flash-preview">Gemini 3 Flash (Google Official)</option>
-                                                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Google Official)</option>
-                                                </select>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => handleSaveSetting('model_intelligence', editingSettings['model_intelligence'] as string)}
-                                                >
-                                                    Guardar
-                                                </Button>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground">Modelo utilizado para refinar prompts y extraer entidades.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-6 border-t">
-                                    <h3 className="text-lg font-medium mb-4">Personalizar Interfaz</h3>
-                                    <div className="flex flex-col gap-6">
-                                        <div className="flex flex-col gap-2">
-                                            <Label className="text-sm text-muted-foreground">Presets Rápidos</Label>
-                                            <div className="flex gap-4">
-                                                <button
-                                                    onClick={() => {
-                                                        handleSaveSetting("theme_primary", "142 70% 45%");
-                                                        handleSaveSetting("theme_secondary", "199 89% 48%");
-                                                    }}
-                                                    className="group relative h-10 w-10 rounded-full bg-gradient-to-br from-green-500 to-blue-500 hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                                                    title="Green & Blue"
-                                                >
-                                                    <span className="sr-only">Green & Blue</span>
-                                                </button>
-
-                                                <button
-                                                    onClick={() => {
-                                                        handleSaveSetting("theme_primary", "271 91% 65%");
-                                                        handleSaveSetting("theme_secondary", "32 98% 50%");
-                                                    }}
-                                                    className="group relative h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-orange-500 hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                    title="Purple & Orange"
-                                                >
-                                                    <span className="sr-only">Purple & Orange</span>
-                                                </button>
-
-                                                <button
-                                                    onClick={() => {
-                                                        handleSaveSetting("theme_primary", "243.4 75.4% 58.6%");
-                                                        handleSaveSetting("theme_secondary", "330 81% 60%");
-                                                    }}
-                                                    className="group relative h-10 w-10 rounded-full bg-gradient-to-br from-[hsl(243.4,75.4%,58.6%)] to-[hsl(330,81%,60%)] hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                    title="Indigo & Pink (Default)"
-                                                >
-                                                    <span className="sr-only">Indigo & Pink</span>
-                                                </button>
-
-                                                <button
-                                                    onClick={() => {
-                                                        handleSaveSetting("theme_primary", "0 84% 60%");
-                                                        handleSaveSetting("theme_secondary", "28 90% 55%");
-                                                    }}
-                                                    className="group relative h-10 w-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                    title="Red & Amber"
-                                                >
-                                                    <span className="sr-only">Red & Amber</span>
-                                                </button>
-
-                                                <button
-                                                    onClick={() => {
-                                                        handleSaveSetting("theme_primary", "200 90% 50%");
-                                                        handleSaveSetting("theme_secondary", "180 80% 45%");
-                                                    }}
-                                                    className="group relative h-10 w-10 rounded-full bg-gradient-to-br from-sky-500 to-teal-500 hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
-                                                    title="Ocean Breeze"
-                                                >
-                                                    <span className="sr-only">Ocean Breeze</span>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-8 max-w-md">
-                                            <div className="flex flex-col gap-3">
-                                                <Label>Color Primario</Label>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-lg overflow-hidden border shadow-sm relative ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                                                        <input
-                                                            type="color"
-                                                            value={primaryColor}
-                                                            onChange={(e) => {
-                                                                const hex = e.target.value;
-                                                                setPrimaryColor(hex);
-                                                                handleSaveSetting("theme_primary", hexToHsl(hex));
-                                                            }}
-                                                            className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] p-0 cursor-pointer border-none"
-                                                        />
-                                                    </div>
-                                                    <span className="text-sm font-mono text-muted-foreground uppercase">{primaryColor}</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex flex-col gap-3">
-                                                <Label>Color Secundario</Label>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-lg overflow-hidden border shadow-sm relative ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                                                        <input
-                                                            type="color"
-                                                            value={secondaryColor}
-                                                            onChange={(e) => {
-                                                                const hex = e.target.value;
-                                                                setSecondaryColor(hex);
-                                                                handleSaveSetting("theme_secondary", hexToHsl(hex));
-                                                            }}
-                                                            className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] p-0 cursor-pointer border-none"
-                                                        />
-                                                    </div>
-                                                    <span className="text-sm font-mono text-muted-foreground uppercase">{secondaryColor}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {(!settings || settings.length === 0) && (
+{(!settings || settings.length === 0) && (
                                     <div className="text-center py-8">
                                         <p className="text-muted-foreground mb-4">No hay configuración. Inicializar valores por defecto:</p>
                                         <Button onClick={() => initializeSettings({ admin_email: userEmail })}>

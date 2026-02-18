@@ -80,6 +80,7 @@ export default defineSchema({
     brand_name: v.string(),
     tagline: v.string(),
     business_overview: v.string(),
+    cta_url_enabled: v.optional(v.boolean()),
     brand_values: v.array(v.string()), // string[]
     tone_of_voice: v.array(v.string()), // string[]
     visual_aesthetic: v.array(v.string()), // string[]

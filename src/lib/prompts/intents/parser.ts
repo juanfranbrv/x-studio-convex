@@ -28,7 +28,8 @@ export function buildIntentParserPrompt(
   brandWebsite?: string,
   brandDNA?: BrandDNA | null,
   intent?: IntentMeta,
-  layout?: LayoutOption
+  layout?: LayoutOption,
+  previewTextContext?: string
 ): string {
   const brandContext = buildBrandContextBlock(brandDNA) || 'BRAND CONTEXT: (none)'
   const websiteContext = brandWebsite ? `BRAND WEBSITE:\n${brandWebsite}` : 'BRAND WEBSITE: (none)'
@@ -58,10 +59,15 @@ export function buildIntentParserPrompt(
 
   const intentContext = intentContextLines.join('\n')
 
+  const previewContext = previewTextContext?.trim()
+    ? `PREVIEW TEXTS (from current canvas):\n${previewTextContext.trim()}`
+    : 'PREVIEW TEXTS: (none)'
+
   return getPromptTemplate()
     .replaceAll('{{BRAND_CONTEXT}}', brandContext)
     .replaceAll('{{WEBSITE_CONTEXT}}', websiteContext)
     .replaceAll('{{INTENT_CONTEXT}}', intentContext)
+    .replaceAll('{{PREVIEW_CONTEXT}}', previewContext)
     .replaceAll('{{USER_LANGUAGE}}', userLanguage)
     .replaceAll('{{USER_REQUEST}}', userRequest)
 }

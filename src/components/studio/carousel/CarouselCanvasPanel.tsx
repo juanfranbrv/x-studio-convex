@@ -12,7 +12,6 @@ import {
     ChevronLeft,
     ChevronRight,
     RefreshCw,
-    Maximize,
     ZoomIn,
     ZoomOut,
     MoreHorizontal,
@@ -26,6 +25,7 @@ import {
     Video,
     Music
 } from 'lucide-react'
+import AspectRatioOutlinedIcon from '@mui/icons-material/AspectRatioOutlined'
 import JSZip from 'jszip'
 import {
     DropdownMenu,
@@ -574,7 +574,7 @@ export function CarouselCanvasPanel({
                             <ZoomIn className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7 ml-1" onClick={handleMaximizeZoom}>
-                            <Maximize className="w-4 h-4" />
+                            <AspectRatioOutlinedIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
                     </div>
 
@@ -701,9 +701,9 @@ export function CarouselCanvasPanel({
                             </>
                         )}
 
-                        {/* Reference Images Strip (Top Left) */}
+                        {/* Reference Images Strip (Top Right) */}
                         {!currentSlide?.imageUrl && referenceImages.length > 0 && (
-                            <div className="absolute top-4 left-4 z-20 flex gap-2 flex-wrap max-w-[220px]">
+                            <div className="absolute top-4 right-4 z-20 flex gap-2 flex-wrap max-w-[220px]">
                                 {referenceImages.slice(0, 6).map((item, idx) => (
                                     <div key={`${item.source}-${idx}`} className="relative group">
                                         <img
@@ -727,16 +727,14 @@ export function CarouselCanvasPanel({
                             </div>
                         )}
 
-                        {/* Logo Preview (Top Right) */}
+                        {/* Logo Preview (Top Left) */}
                         {selectedLogoUrl && !currentSlide?.imageUrl && (
-                            <div className="absolute top-4 right-4 z-20">
-                                <div className="w-20 h-20 rounded-lg flex items-center justify-center bg-white/10 backdrop-blur-sm ring-1 ring-white/20 shadow-lg p-2">
-                                    <img
-                                        src={selectedLogoUrl}
-                                        alt="Logo"
-                                        className="w-full h-full object-contain drop-shadow"
-                                    />
-                                </div>
+                            <div className="absolute top-1 left-4 z-20">
+                                <img
+                                    src={selectedLogoUrl}
+                                    alt="Logo"
+                                    className="w-[90px] h-[90px] object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
+                                />
                             </div>
                         )}
 

@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, unstable_noStore as noStore } from 'next/cache'
 import { getLegacyCompositions, type LegacyComposition } from '@/lib/legacy-compositions'
 import { readBasicLegacyLayouts, readPromotedLegacyLayouts, removeLegacyLayoutFromModes, setLegacyLayoutMode } from '@/lib/legacy-promotions'
 import { deleteCustomLegacyLayout, deleteLegacyLayoutOverride, removeLegacyLayoutFromWarehouse, restoreLegacyLayoutToWarehouse, upsertCustomLegacyLayout, upsertLegacyLayoutOverride } from '@/lib/legacy-warehouse'
@@ -229,6 +229,7 @@ export type CompositionSummary = {
 }
 
 export async function getCompositionsSummaryAction(): Promise<CompositionSummary[]> {
+    noStore()
     const [all, promoted, basic] = await Promise.all([
         getLegacyCompositions(),
         readPromotedLegacyLayouts(),

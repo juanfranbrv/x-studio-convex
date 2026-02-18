@@ -535,12 +535,12 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                                     <>
                                         {data.url ? (
                                             <a
-                                                href={data.url}
+                                                href={data.url.startsWith('http') ? data.url : `https://${data.url}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-xs text-primary/70 hover:text-primary transition-colors truncate max-w-[200px]"
                                             >
-                                                {data.url.replace(/^https?:\/\//, '')}
+                                                {data.url}
                                             </a>
                                         ) : (
                                             <span className="text-xs text-muted-foreground/50 italic">Sin sitio web</span>

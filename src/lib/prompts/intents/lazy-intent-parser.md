@@ -17,6 +17,8 @@ CONTEXT
 
 {{INTENT_CONTEXT}}
 
+{{PREVIEW_CONTEXT}}
+
 USER_LANGUAGE (must be respected):
 {{USER_LANGUAGE}}
 
@@ -70,6 +72,13 @@ OUTPUT JSON ONLY:
   "ctaUrl": "string",
   "caption": "string",
   "imagePromptSuggestions": [
+    "string",
+    "string",
+    "string",
+    "string",
+    "string",
+    "string",
+    "string",
     "string"
   ],
   "imageTexts": [
@@ -92,7 +101,7 @@ OUTPUT JSON ONLY:
 }
 
 RULES
-1. Use Brand Kit context as primary guidance (tone, audience, values, hooks, CTAs, brand context). Adapt vocabulary and persuasion style to target audience and brand voice.
+1. Use Brand Kit context as primary guidance (tone, audience, values, hooks, CTAs, brand context, slogan, text assets, visual keywords). Adapt vocabulary and persuasion style to target audience and brand voice.
 2. The user request is the source of truth. Never ignore it.
 3. Deep transformation required: do not just reformat. Improve clarity, persuasion and usefulness.
 4. Generate image texts that are practical and production-ready (short lines that can fit separate boxes).
@@ -123,8 +132,9 @@ RULES
 15. PHONE RULE: If the user writes a phone/WhatsApp number, include it in output (either in imageTexts or customTexts) so it can reach preview and generation.
 16. LOSSLESS BIAS: Never omit a concrete text fragment explicitly written by the user if it could plausibly belong to the visual composition.
 17. SUGGESTIONS STRATEGY:
-    - Generate EXACTLY 2 distinct suggestions in the suggestions array.
-    - The pair must be dynamic, adapted to intent + audience + brand voice.
+    - Generate EXACTLY 5 distinct suggestions in the suggestions array.
+    - Each suggestion MUST reflect Brand Kit elements: slogan/tagline when relevant, values, tone of voice, and any text assets provided.
+    - El trÃ­o debe ser dinÃ¡mico, adaptado a intent + audiencia + voz de marca.
     - Typical pattern (when appropriate): one more emotional/inspirational and one more direct/practical.
     - If another pair is better for the case (e.g., analytical vs conversational), use it.
     - FULL CONTENT RULE: Each suggestion MUST provide modifications for headline, caption and cta.
@@ -138,10 +148,15 @@ RULES
     - Does the output sound better than the raw user text?
     - Is the message concrete (not generic)?
     - Are all critical literals preserved?
-    - Are both suggestions genuinely different in approach?
-    - Are both suggestions complete packages (headline + cta + caption + imageTexts)?
+    - Are all three suggestions genuinely different in approach?
+    - Are all three suggestions complete packages (headline + cta + caption + imageTexts)?
 19. imagePromptSuggestions:
-    - Return 1 to 3 concise prompts describing ONLY semantic content: subject, action, setting, and key contextual objects.
+    - Return EXACTLY 8 concise prompts describing ONLY semantic content: subject, action, setting, and key contextual objects.
     - DO NOT include style/design/visual instructions (no color, lighting, mood, composition, camera, rendering, artistic references).
     - Keep them practical and generation-ready as neutral scene briefs.
-    - Keep consistency with Brand Kit voice and target audience.
+    - Use BOTH the detected intent and the PREVIEW TEXTS (if any) as hard anchors.
+    - If PREVIEW TEXTS include concrete nouns (places, services, people, products), include them in every prompt.
+    - Make each prompt clearly different in scenario, subject or situation (no minor rephrasings).
+    - Use the final headline/caption/imageTexts you just wrote as grounding context for these prompts.
+    - Creativity rule: avoid generic "person smiling" unless the intent specifically requires it. Prefer concrete scenes tied to the copy.
+    - Variation rule: each of the 8 prompts must change at least two of these: subject, location, action, supporting object.

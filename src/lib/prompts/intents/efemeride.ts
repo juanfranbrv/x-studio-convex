@@ -307,7 +307,7 @@ export const EFEMERIDE_LAYOUTS: LayoutOption[] = [
         id: 'efemeride-free',
         name: 'Libre',
         description: 'Sin indicación',
-        svgIcon: 'Sparkles',
+        svgIcon: 'help_center',
         textZone: 'center',
         promptInstruction: 'Natural composition without structural constraints.',
         structuralPrompt: '',

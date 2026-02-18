@@ -116,6 +116,33 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // Track if we've done the initial Brand Kit load in this component lifecycle
     const hasInitializedBrandKit = useRef(false)
 
+    const buildBrandColorsFromKit = useCallback((): SelectedColor[] => {
+        if (!activeBrandKit?.colors || activeBrandKit.colors.length === 0) return []
+        return (activeBrandKit.colors as any[]).map(c => {
+            const rawRole = ((c.role as string) || 'Acento').trim().toUpperCase()
+            let role: ColorRole = 'Acento'
+
+            if (rawRole.includes('TEXT')) role = 'Texto'
+            else if (rawRole.includes('FOND')) role = 'Fondo'
+            else if (rawRole.includes('ACENT')) role = 'Acento'
+
+            const hex = (c.color || c.hex || (typeof c === 'string' ? c : '')).toLowerCase()
+
+            return {
+                color: hex.startsWith('#') ? hex : `#${hex}`,
+                role
+            }
+        }).filter(c => c.color && c.color !== '#')
+    }, [activeBrandKit?.colors])
+
+    const normalizeUrlForCompare = useCallback((value?: string | null) => {
+        return (value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/^https?:\/\//, '')
+            .replace(/\/$/, '')
+    }, [])
+
     // Initialize defaults from Brand Kit (Colors and Text Assets)
     useEffect(() => {
         const brandId = activeBrandKit?.id || (activeBrandKit as any)?._id
@@ -142,22 +169,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
         // 1. Initialize Colors - Refresh whenever the brand kit changes or if we have none selected
         if (activeBrandKit.colors && activeBrandKit.colors.length > 0) {
-            const defaultColors = (activeBrandKit.colors as any[]).map(c => {
-                const rawRole = ((c.role as string) || 'Acento').trim().toUpperCase()
-                let role: ColorRole = 'Acento'
-
-                if (rawRole.includes('TEXT')) role = 'Texto'
-                else if (rawRole.includes('FOND')) role = 'Fondo'
-                else if (rawRole.includes('ACENT')) role = 'Acento'
-
-                // Robust hex extraction
-                const hex = (c.color || c.hex || (typeof c === 'string' ? c : '')).toLowerCase()
-
-                return {
-                    color: hex,
-                    role
-                }
-            }).filter(c => c.color && c.color !== '#')
+            const defaultColors = buildBrandColorsFromKit()
 
             if (defaultColors.length > 0) {
                 // Determine if we should overwrite. 
@@ -187,6 +199,20 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 nextState.selectedLogoId = 'logo-0'
                 hasChanges = true
             }
+
+            if (typeof activeBrandKit.cta_url_enabled === 'boolean') {
+                nextState.ctaUrlEnabled = activeBrandKit.cta_url_enabled
+                nextState.ctaUrlManual = false
+                if (!activeBrandKit.cta_url_enabled) {
+                    nextState.ctaUrl = ''
+                }
+                hasChanges = true
+            } else {
+                nextState.ctaUrlEnabled = false
+                nextState.ctaUrlManual = false
+                nextState.ctaUrl = ''
+                hasChanges = true
+            }
         }
 
         if (hasChanges) {
@@ -196,7 +222,19 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
         setLastInitBrandId(brandId)
         hasInitializedBrandKit.current = true
-    }, [activeBrandKit, lastInitBrandId, state.selectedBrandColors.length])
+    }, [activeBrandKit, buildBrandColorsFromKit, lastInitBrandId, state.selectedBrandColors.length])
+
+    // Ensure CTA URL always reflects the current Brand Kit URL from DB unless user overrides.
+    useEffect(() => {
+        const brandUrl = activeBrandKit?.url?.trim() || ''
+        if (!brandUrl) return
+        setState(prev => {
+            if (!prev.ctaUrlEnabled) return prev
+            if (prev.ctaUrlManual) return prev
+            if (prev.ctaUrl === brandUrl) return prev
+            return { ...prev, ctaUrl: brandUrl }
+        })
+    }, [activeBrandKit?.url])
 
     // -------------------------------------------------------------------------
     // CRITICAL: SEQUENTIAL FLOW ENFORCER
@@ -496,16 +534,13 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
             if (totalImages >= MAX_REFERENCE_IMAGES) return prev
             if (prev.uploadedImages.includes(url)) return prev
-            const hasManualStyle = Boolean(prev.customStyle?.trim())
-            const defaultRole: ReferenceImageRole = hasManualStyle
-                ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
-                : hasActiveStyleRole(
+            const defaultRole: ReferenceImageRole = hasActiveStyleRole(
                 prev.uploadedImages,
                 prev.selectedBrandKitImageIds,
                 prev.referenceImageRoles
             )
-                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
-                    : 'style'
+                ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                : 'style'
             const nextRoles = { ...prev.referenceImageRoles, [url]: defaultRole }
             const pickedStyle = pickStyleReference(
                 [...prev.uploadedImages, url],
@@ -785,16 +820,13 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 // Add to selection (if under limit)
                 const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
                 if (totalImages >= MAX_REFERENCE_IMAGES) return prev
-                const hasManualStyle = Boolean(prev.customStyle?.trim())
-                const defaultRole: ReferenceImageRole = hasManualStyle
-                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
-                    : hasActiveStyleRole(
+                const defaultRole: ReferenceImageRole = hasActiveStyleRole(
                     prev.uploadedImages,
                     prev.selectedBrandKitImageIds,
                     prev.referenceImageRoles
                 )
-                        ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
-                        : 'style'
+                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
+                    : 'style'
                 const nextRoles = { ...prev.referenceImageRoles, [imageId]: defaultRole }
                 const pickedStyle = pickStyleReference(prev.uploadedImages, [...prev.selectedBrandKitImageIds, imageId], nextRoles)
                 const resetAnalysis =
@@ -841,7 +873,6 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => {
             const isSelected = prev.uploadedImages.includes(imageId) || prev.selectedBrandKitImageIds.includes(imageId)
             if (!isSelected) return prev
-            const hasManualStyle = Boolean(prev.customStyle?.trim())
 
             const nextRoles = { ...prev.referenceImageRoles }
             const isTargetUpload = prev.uploadedImages.includes(imageId)
@@ -850,9 +881,6 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 prev.imageSourceMode === 'generate' && (role === 'content' || role === 'style_content')
                     ? 'style'
                     : role
-            if (hasManualStyle && (safeRole === 'style' || safeRole === 'style_content')) {
-                safeRole = prev.imageSourceMode === 'generate' ? 'logo' : 'content'
-            }
 
             // Priority by block order:
             // Upload references (upper block) cannot be overridden by lower block (brand kit)
@@ -890,7 +918,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
 
             return {
                 ...prev,
-                customStyle: (safeRole === 'style' || safeRole === 'style_content') ? '' : prev.customStyle,
+                customStyle: prev.customStyle,
                 referenceImageRoles: nextRoles,
                 firstReferenceId: pickedStyle.id,
                 firstReferenceSource: pickedStyle.source,
@@ -940,10 +968,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             ...prev,
             selectedLayout: layoutId,
             // Step 3 defaults: platform preset, format must be explicitly chosen.
-            selectedPlatform: 'instagram',
-            selectedFormat: null,
             ...invalidateFromStep(prev, 2),
-            currentStep: 3
+            currentStep: Math.max(prev.currentStep, 2)
         })) // Auto-advance to Step 3 (Format)
     }, [invalidateFromStep])
 
@@ -1006,33 +1032,56 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [])
 
     const setCtaUrl = useCallback((url: string) => {
-        setState(prev => ({ ...prev, ctaUrl: url || '' }))
+        setState(prev => ({
+            ...prev,
+            ctaUrl: url || '',
+            ctaUrlManual: true,
+            ctaUrlEnabled: true,
+        }))
     }, [])
+
+    const setCtaUrlEnabled = useCallback((enabled: boolean, options?: { useKitIfEmpty?: boolean }) => {
+        setState(prev => {
+            if (!enabled) {
+                return {
+                    ...prev,
+                    ctaUrlEnabled: false,
+                    ctaUrlManual: false,
+                    ctaUrl: '',
+                }
+            }
+
+            const kitUrl = activeBrandKit?.url?.trim() || ''
+            const shouldSeed = options?.useKitIfEmpty && !prev.ctaUrl?.trim() && kitUrl
+            return {
+                ...prev,
+                ctaUrlEnabled: true,
+                ...(shouldSeed ? { ctaUrl: kitUrl, ctaUrlManual: false } : null),
+            }
+        })
+    }, [activeBrandKit?.url])
 
     const setAdditionalInstructions = useCallback((instructions: string) => {
         setState(prev => ({ ...prev, additionalInstructions: instructions }))
     }, [])
 
     const setRawMessage = useCallback((message: string) => {
-        setState(prev => ({
-            ...prev,
-            rawMessage: message,
-            ...invalidateFromStep(prev, 1),
-            currentStep: 1
-        }))
+        setState(prev => {
+            if (message === prev.rawMessage) {
+                return prev
+            }
+            return {
+                ...prev,
+                rawMessage: message,
+                ...invalidateFromStep(prev, 1),
+                currentStep: 1
+            }
+        })
     }, [invalidateFromStep])
 
     const setCustomStyle = useCallback((style: string) => {
         setState(prev => {
-            const hasVisualStyle = [...prev.uploadedImages, ...prev.selectedBrandKitImageIds].some((id) => {
-                const role = prev.referenceImageRoles[id]
-                return role === 'style' || role === 'style_content'
-            })
             const nextStyle = style || ''
-            if (nextStyle.trim() && hasVisualStyle) {
-                return prev
-            }
-
             return {
                 ...prev,
                 customStyle: nextStyle,
@@ -1233,6 +1282,16 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             }
         })
     }, [invalidateFromStep])
+
+    const refreshBrandColorsFromKit = useCallback(() => {
+        const nextColors = buildBrandColorsFromKit()
+        if (nextColors.length === 0) return
+        setState(prev => ({
+            ...prev,
+            selectedBrandColors: nextColors,
+            ...invalidateFromStep(prev, 5),
+        }))
+    }, [buildBrandColorsFromKit, invalidateFromStep])
 
     const addCustomColor = useCallback((color: string) => {
         const normalizedColor = color.startsWith('#') ? color.toLowerCase() : `#${color.toLowerCase()}`
@@ -1512,7 +1571,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         }
 
         const ctaValue = activeState.cta?.trim()
-        const ctaUrl = activeState.ctaUrl?.trim()
+        const ctaUrl = activeState.ctaUrlEnabled ? activeState.ctaUrl?.trim() : ''
         if (ctaValue && ctaValue !== NO_TEXT_TOKEN) {
             if (ctaUrl) {
                 // URL is the HERO element, CTA label is secondary above it (from p09b-cta-url-hierarchy.ts)
@@ -1562,7 +1621,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             brandDNA.push(P09.MANDATORY_TEXT_HEADER)
             brandDNA.push(P09.TEXT_FIT_SAFETY_RULES)
             brandDNA.push(P09.TEXT_TYPOGRAPHY_LOCK)
-            if (activeState.ctaUrl?.trim()) {
+            if (activeState.ctaUrlEnabled && activeState.ctaUrl?.trim()) {
                 brandDNA.push(P09B.CRITICAL_HIERARCHY_INSTRUCTION(activeState.ctaUrl))
             }
             if (textParts.length > 0) {
@@ -1826,7 +1885,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         // FINAL COMPOSITION CHECK - URL VISIBILITY
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        if (activeState.ctaUrl?.trim()) {
+        if (activeState.ctaUrlEnabled && activeState.ctaUrl?.trim()) {
             sections.push(
                 ``,
                 P09B.FINAL_URL_VISIBILITY_INSTRUCTION(activeState.ctaUrl.trim()),
@@ -1948,6 +2007,15 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
     // -------------------------------------------------------------------------
 
     const loadPreset = useCallback((presetState: Partial<GenerationState>) => {
+        const inferIntentFromLayout = (layoutId?: string | null) => {
+            if (!layoutId) return null
+            const entries = Object.entries(LAYOUTS_BY_INTENT) as Array<[IntentCategory, LayoutOption[]]>
+            for (const [intentId, layouts] of entries) {
+                if (layouts?.some((layout) => layout.id === layoutId)) return intentId
+            }
+            return null
+        }
+
         const computeStepFromPreset = (preset: Partial<GenerationState>) => {
             let step = 1
             if (preset.selectedIntent) step = 2
@@ -1964,13 +2032,30 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             return step
         }
 
+        const inferredIntent = presetState.selectedIntent || inferIntentFromLayout(presetState.selectedLayout || null)
+        const defaultPlatform = presetState.selectedPlatform || 'instagram'
+        const defaultFormat = presetState.selectedFormat
+            || SOCIAL_FORMATS.find((format) => format.platform === defaultPlatform)?.id
+            || null
+        const computedStep = presetState.currentStep ?? computeStepFromPreset({
+            ...presetState,
+            selectedIntent: inferredIntent || presetState.selectedIntent,
+        })
+        const expandedStep = Math.max(computedStep, 6)
+
         setState(prev => ({
             ...INITIAL_GENERATION_STATE,
             caption: '', // NEW: Ensure caption is reset for presets
             ...presetState,
+            ctaUrl: activeBrandKit?.url?.trim() || presetState.ctaUrl || '',
+            ctaUrlManual: false,
+            ctaUrlEnabled: presetState.ctaUrlEnabled ?? Boolean(presetState.ctaUrl?.trim()),
+            selectedIntent: inferredIntent || presetState.selectedIntent,
+            selectedPlatform: presetState.selectedPlatform || defaultPlatform,
+            selectedFormat: presetState.selectedFormat || defaultFormat,
             referenceImageRoles: presetState.referenceImageRoles || {},
             hasGeneratedImage: Boolean(presetState.generatedImage),
-            currentStep: presetState.currentStep ?? computeStepFromPreset(presetState),
+            currentStep: expandedStep,
             // Ensure clean technical state
             isGenerating: false,
             isAnalyzing: false,
@@ -2008,6 +2093,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             headline: state.headline,
             cta: state.cta,
             caption: state.caption, // NEW
+            ctaUrl: state.ctaUrl,
+            ctaUrlEnabled: state.ctaUrlEnabled,
             customTexts: state.customTexts,
             selectedBrandColors: state.selectedBrandColors,
             rawMessage: state.rawMessage,
@@ -2053,6 +2140,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 headline: prev.headline,
                 cta: prev.cta,
                 ctaUrl: prev.ctaUrl,
+                ctaUrlEnabled: prev.ctaUrlEnabled,
                 caption: prev.caption,
                 typography: { ...prev.typography },
                 customTexts: { ...prev.customTexts },
@@ -2136,6 +2224,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 ...prev,
                 originalState,
                 ...modifications,
+                ...(modifications.ctaUrl ? { ctaUrlEnabled: true } : null),
                 ...invalidateFromStep(prev, 1), // Invalidate image as text changed
                 currentStep: prev.hasGeneratedImage ? 1 : prev.currentStep
             }
@@ -2196,6 +2285,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         setHeadline,
         setCta,
         setCtaUrl,
+        setCtaUrlEnabled,
         setCaption, // NEW
         setAdditionalInstructions,
         setRawMessage,
@@ -2208,6 +2298,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         onGenerateCustomFieldCopy: generateCustomFieldCopy,
         toggleBrandColor,
         removeBrandColor,
+        refreshBrandColorsFromKit,
         addCustomColor,
         setSelectedTextAssets,
         addTextAsset,
@@ -2283,16 +2374,18 @@ function buildVisualStyleDirective(
 
     const uniqueAnchors = Array.from(new Set(artDirectionAnchors)).slice(0, 3)
     const hasReferenceStyleExtraction = referenceSignals.length > 0
-    const allowAnchors = !hasReferenceStyleExtraction && !!customStyle?.trim()
+    const allowAnchors = !!customStyle?.trim()
     const anchorClause =
         allowAnchors && uniqueAnchors.length > 0
             ? ` Use these art-direction anchors: ${uniqueAnchors.join('; ')}.`
             : ''
 
     const styleSource =
-        referenceSignals.length > 0
-            ? referenceSignals.join(', ')
-            : (customStyle?.trim() || 'the style reference and the selected brand language')
+        referenceSignals.length > 0 && customStyle?.trim()
+            ? `${customStyle.trim()} + ${referenceSignals.join(', ')}`
+            : referenceSignals.length > 0
+                ? referenceSignals.join(', ')
+                : (customStyle?.trim() || 'the style reference and the selected brand language')
 
     return `STYLE DIRECTIVES: Render the image in this exact aesthetic direction based on ${styleSource}. Match the reference medium faithfully (photographic, illustrative, painterly, or hybrid) and preserve coherent visual construction, controlled contrast, clean finishing, and readable layering while respecting the detected stylistic language.${anchorClause}`
 }

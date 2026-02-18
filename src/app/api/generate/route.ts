@@ -4,6 +4,7 @@ import { generateContentImageUnified } from '@/lib/gemini'
 import type { BrandDNA } from '@/lib/brand-types'
 import { ConvexHttpClient } from 'convex/browser'
 import { api } from '@/../convex/_generated/api'
+import { log } from '@/lib/logger'
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 
@@ -72,16 +73,16 @@ export async function POST(request: NextRequest) {
 
         // Robust Server-Side Fallback: If model is missing, fetch from DB
         if (!model) {
-            console.log('[API] Model not provided by client, fetching from DB...')
+            log.info('API', 'Model not provided by client, fetching from DB...')
             try {
                 // Use the initialized convex client since we are in an API route
                 const aiConfig = await convex.query(api.settings.getAIConfig)
                 if (aiConfig && aiConfig.imageModel) {
                     model = aiConfig.imageModel
-                    console.log(`[API] Resolved model from DB: ${model}`)
+                    log.success('API', `Resolved model from DB: ${model}`)
                 }
             } catch (err) {
-                console.error('[API] Failed to fetch AI config:', err)
+                log.error('API', 'Failed to fetch AI config', err)
             }
         }
 
@@ -90,7 +91,8 @@ export async function POST(request: NextRequest) {
             : model?.startsWith('google/')
                 ? 'Google Oficial'
                 : 'Google Oficial'
-        console.log(`\n╔══════════════════════════════════════════════╗\n║ IMAGE REQUEST (SERVER)\n║ Provider: ${provider}\n║ Model: ${model || 'NO_CONFIG'}\n║ Prompt Length: ${prompt?.length || 0}\n║ Brand: ${brandDNA?.brand_name || 'N/A'}\n╚══════════════════════════════════════════════╝`)
+        const generationStartedAt = Date.now()
+        log.info('IMAGE', `Start | Provider=${provider} Model=${model || 'NO_CONFIG'} PromptLen=${prompt?.length || 0} Brand=${brandDNA?.brand_name || 'N/A'}`)
 
         if (!prompt) {
             return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
@@ -110,9 +112,12 @@ export async function POST(request: NextRequest) {
                 metadata: { action: 'image_generation', prompt: prompt.substring(0, 100) }
             })
         } catch (creditError) {
-            console.error('Failed to consume credit (image was generated):', creditError)
+            log.warn('API', 'Failed to consume credit (image was generated)', creditError)
             // Don't fail the request - image was generated, we just log the credit issue
         }
+
+        const elapsedMs = Date.now() - generationStartedAt
+        log.success('IMAGE', `Done | ${elapsedMs}ms`)
 
         return NextResponse.json({
             success: true,
@@ -121,7 +126,7 @@ export async function POST(request: NextRequest) {
         })
 
     } catch (error: any) {
-        console.error('Generation error:', error)
+        log.error('API', 'Generation error', error)
 
         const errorMessage = error.message || 'Failed to generate image'
 

@@ -163,7 +163,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     </div>
 
                     {isAdmin && (
-                        <Link href="/admin">
+                        <Link href="/admin" target="_blank" rel="noreferrer">
                             <Button
                                 variant="ghost"
                                 size="icon"

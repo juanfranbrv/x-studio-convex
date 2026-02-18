@@ -1,6 +1,7 @@
-'use server'
+﻿'use server'
 
 import { generateTextUnified } from '@/lib/gemini'
+import { log } from '@/lib/logger'
 import { buildIntentParserPrompt } from '@/lib/prompts/intents/parser'
 import { INTENT_CATALOG, MERGED_LAYOUTS_BY_INTENT, type IntentCategory } from '@/lib/creation-flow-types'
 
@@ -89,9 +90,12 @@ function sanitizeUrl(url?: string): string {
     // This handles hallucinated prefixes like "https[https://...]" or "https://bauset.https://bauset.es"
     const rawUrlMatches = Array.from(cleaned.matchAll(/(https?:\/\/[^\s\]\)]+)/g))
     if (rawUrlMatches.length > 0) {
-        return rawUrlMatches[rawUrlMatches.length - 1][1].trim()
+        const picked = rawUrlMatches[rawUrlMatches.length - 1][1].trim()
+        if (/^https?:\/\/$/i.test(picked)) return ''
+        return picked
     }
 
+    if (/^https?:\/\/$/i.test(cleaned)) return ''
     return cleaned
 }
 
@@ -120,6 +124,12 @@ function sanitizeUrlsInText(text?: string): string {
     )
 
     return cleaned
+}
+
+function replaceUrlsWithBrand(text: string, brandWebsite?: string): string {
+    if (!text) return ''
+    if (!brandWebsite) return text
+    return text.replace(/https?:\/\/[^\s\])}]+/gi, brandWebsite)
 }
 
 function sanitizePromptSuggestion(value: unknown): string {
@@ -262,7 +272,7 @@ function extractLineCandidates(text: string): string[] {
     const filtered = rawLines.filter((l) => {
         if (l.length < 8 || l.length > 160) return false
         const digits = l.replace(/\D/g, '')
-        const alpha = l.replace(/[^a-zA-ZÀ-ÿ]/g, '')
+        const alpha = l.replace(/[^\p{L}]/gu, '')
         if (digits.length >= 7 && alpha.length < 3) return false
         return true
     })
@@ -278,6 +288,7 @@ function organizeParsedOutput(
     const userLines = extractLineCandidates(userText)
     const userUrls = Array.from(userText.matchAll(/(https?:\/\/[^\s\])}]+)/g)).map((m) => sanitizeUrl(m[1]))
     const firstUserUrl = userUrls.find(Boolean)
+    const userProvidedUrl = Boolean(firstUserUrl)
 
     let headline = sanitizeUrlsInText(parsed.headline).trim()
     if (!headline) {
@@ -285,8 +296,15 @@ function organizeParsedOutput(
         if (fallbackHeadline) headline = fallbackHeadline
     }
 
-    const ctaUrl = sanitizeUrl(parsed.ctaUrl) || firstUserUrl || (brandWebsite?.trim() || '')
+    const safeBrandWebsite = sanitizeUrl(brandWebsite)
+    const effectiveCtaUrl = userProvidedUrl
+        ? (sanitizeUrl(parsed.ctaUrl) || firstUserUrl || '')
+        : (safeBrandWebsite?.trim() || sanitizeUrl(parsed.ctaUrl) || '')
+    const ctaUrl = effectiveCtaUrl
     const cta = sanitizeUrlsInText(parsed.cta).trim()
+    if (!userProvidedUrl && safeBrandWebsite) {
+        parsed.caption = replaceUrlsWithBrand(sanitizeUrlsInText(parsed.caption), safeBrandWebsite)
+    }
 
     const blocked = [headline, cta, ctaUrl]
         .map((v) => canonicalText(v))
@@ -306,22 +324,25 @@ function organizeParsedOutput(
         const clean = sanitizeUrlsInText(raw).trim()
         if (!clean) return
         if (/^https?:\/\//i.test(clean)) return
+        const normalizedClean = (!userProvidedUrl && safeBrandWebsite)
+            ? replaceUrlsWithBrand(clean, safeBrandWebsite)
+            : clean
 
-        const phone = canonicalPhone(clean)
+        const phone = canonicalPhone(normalizedClean)
         if (phone.length >= 7) {
             // Keep only one normalized phone line in the block.
             if (Array.from(seenPhones).some((p) => p === phone || p.includes(phone) || phone.includes(p))) return
             seenPhones.add(phone)
         }
 
-        const canon = canonicalText(clean)
+        const canon = canonicalText(normalizedClean)
         if (!canon) return
         if (blocked.some((b) => b === canon || b.includes(canon) || canon.includes(b))) return
         if (seenCanon.has(canon)) return
         if (isDuplicateBySimilarity(canon, Array.from(seenCanon))) return
 
         seenCanon.add(canon)
-        fragments.push(clean)
+        fragments.push(normalizedClean)
     }
 
     // 1) Prefer model-organized content first.
@@ -355,8 +376,8 @@ function organizeParsedOutput(
 
     return {
         ...parsed,
-        headline,
-        cta,
+        headline: (!userProvidedUrl && safeBrandWebsite) ? replaceUrlsWithBrand(headline, safeBrandWebsite) : headline,
+        cta: (!userProvidedUrl && safeBrandWebsite) ? replaceUrlsWithBrand(cta, safeBrandWebsite) : cta,
         ctaUrl,
         imageTexts,
         customTexts: undefined
@@ -365,7 +386,7 @@ function organizeParsedOutput(
 
 function buildSuggestionFromBase(
     base: ParsedIntentResult,
-    mode: 'direct' | 'emotional',
+    mode: 'direct' | 'emotional' | 'proof',
     coreSubject?: string
 ) {
     const baseImageTexts = Array.isArray(base.imageTexts)
@@ -378,10 +399,14 @@ function buildSuggestionFromBase(
     const subjectSuffix = coreSubject ? ` (${coreSubject})` : ''
     const title = mode === 'direct'
         ? `Enfoque Directo${subjectSuffix}`
-        : `Enfoque Emocional${subjectSuffix}`
+        : mode === 'proof'
+            ? `Enfoque de Credibilidad${subjectSuffix}`
+            : `Enfoque Emocional${subjectSuffix}`
     const subtitle = mode === 'direct'
         ? 'Mensaje claro y accionable, orientado a conversion y comprension inmediata.'
-        : 'Mensaje inspirador y cercano, reforzando beneficio percibido y conexion emocional.'
+        : mode === 'proof'
+            ? 'Apoya la promesa con pruebas, datos o elementos concretos para aumentar confianza.'
+            : 'Mensaje inspirador y cercano, reforzando beneficio percibido y conexion emocional.'
 
     return {
         title,
@@ -408,8 +433,14 @@ function normalizeSuggestions(
     organizedBase: ParsedIntentResult,
     userText: string
 ): ParsedIntentResult['suggestions'] {
+    const TARGET_COUNT = 5
     const source = Array.isArray(parsedSuggestions) ? parsedSuggestions : []
     const coreSubject = extractCoreSubject(userText)
+    const userUrls = Array.from(userText.matchAll(/(https?:\/\/[^\s\])}]+)/g)).map((m) => sanitizeUrl(m[1]))
+    const userProvidedUrl = Boolean(userUrls.find(Boolean))
+    const safeBrandWebsite = sanitizeUrl(organizedBase.ctaUrl)
+    const maybeReplace = (value: string) =>
+        (!userProvidedUrl && safeBrandWebsite) ? replaceUrlsWithBrand(value, safeBrandWebsite) : value
 
     const normalized = source.map((suggestion) => {
         const modifications = { ...(suggestion?.modifications || {}) } as Record<string, unknown>
@@ -427,11 +458,11 @@ function normalizeSuggestions(
                 ? suggestion.subtitle.trim()
                 : 'Variante optimizada para este objetivo.',
             modifications: {
-                headline: sanitizeUrlsInText(headlineText) || organizedBase.headline || '',
-                cta: sanitizeUrlsInText(ctaText) || organizedBase.cta || '',
-                ctaUrl: sanitizeUrl(ctaUrlText) || organizedBase.ctaUrl || '',
+                headline: maybeReplace(sanitizeUrlsInText(headlineText) || organizedBase.headline || ''),
+                cta: maybeReplace(sanitizeUrlsInText(ctaText) || organizedBase.cta || ''),
+                ctaUrl: (!userProvidedUrl && safeBrandWebsite) ? safeBrandWebsite : (sanitizeUrl(ctaUrlText) || organizedBase.ctaUrl || ''),
                 caption: ensureCaptionHasEmojis(
-                    sanitizeUrlsInText(captionText) || organizedBase.caption || '',
+                    maybeReplace(sanitizeUrlsInText(captionText) || organizedBase.caption || ''),
                     organizedBase.detectedIntent
                 ),
                 imageTexts: Array.isArray(imageTexts)
@@ -439,7 +470,7 @@ function normalizeSuggestions(
                         const typedItem = (item && typeof item === 'object') ? (item as Record<string, unknown>) : {}
                         return {
                             label: typeof typedItem.label === 'string' && typedItem.label.trim() ? typedItem.label : 'Texto principal',
-                            value: sanitizeUrlsInText(String(typedItem.value || '')),
+                            value: maybeReplace(sanitizeUrlsInText(String(typedItem.value || ''))),
                             type: typedItem.type === 'tagline' || typedItem.type === 'hook' ? typedItem.type : 'custom'
                         }
                     })
@@ -448,16 +479,19 @@ function normalizeSuggestions(
         }
     }).filter((item) => item.modifications.headline || item.modifications.caption || (item.modifications.imageTexts?.length ?? 0) > 0)
 
-    if (normalized.length >= 2) {
-        return normalized.slice(0, 2)
+    if (normalized.length >= TARGET_COUNT) {
+        return normalized.slice(0, TARGET_COUNT)
     }
 
     const fallbackDirect = buildSuggestionFromBase(organizedBase, 'direct', coreSubject)
     const fallbackEmotional = buildSuggestionFromBase(organizedBase, 'emotional', coreSubject)
+    const fallbackProof = buildSuggestionFromBase(organizedBase, 'proof', coreSubject)
+    const fallbackProof2 = buildSuggestionFromBase(organizedBase, 'proof', coreSubject)
+    const fallbackDirect2 = buildSuggestionFromBase(organizedBase, 'direct', coreSubject)
     const seeded = [...normalized]
 
     if (seeded.length === 0) {
-        seeded.push(fallbackDirect, fallbackEmotional)
+        seeded.push(fallbackDirect, fallbackEmotional, fallbackProof)
     } else if (seeded.length === 1) {
         const existingTitle = seeded[0].title?.toLowerCase() || ''
         const second = existingTitle.includes('emoc')
@@ -466,7 +500,11 @@ function normalizeSuggestions(
         seeded.push(second)
     }
 
-    return seeded.slice(0, 2)
+    if (seeded.length === 2) seeded.push(fallbackProof)
+    if (seeded.length === 3) seeded.push(fallbackProof2)
+    if (seeded.length === 4) seeded.push(fallbackDirect2)
+
+    return seeded.slice(0, TARGET_COUNT)
 }
 
 function buildImagePromptSuggestions(
@@ -478,7 +516,7 @@ function buildImagePromptSuggestions(
         : []
 
     if (fromModel.length > 0) {
-        return Array.from(new Set(fromModel)).slice(0, 3)
+        return Array.from(new Set(fromModel)).slice(0, 8)
     }
 
     const fromSuggestions = Array.isArray(parsed.suggestions)
@@ -496,15 +534,28 @@ function buildImagePromptSuggestions(
         : []
 
     if (fromSuggestions.length > 0) {
-        return Array.from(new Set(fromSuggestions)).slice(0, 3)
+        return Array.from(new Set(fromSuggestions)).slice(0, 8)
     }
 
-    const fallback = [organizedBase.headline, organizedBase.cta]
+    const captionSeed = (organizedBase.caption || '').split(/[.!?]\s+/g)[0] || ''
+    const imageTextSeed = Array.isArray(organizedBase.imageTexts) && organizedBase.imageTexts[0]
+        ? String(organizedBase.imageTexts[0].value || '').split(/\r?\n+/g)[0]
+        : ''
+
+    const rawSeeds = [
+        organizedBase.headline,
+        organizedBase.cta,
+        captionSeed,
+        imageTextSeed,
+        `${organizedBase.headline || organizedBase.cta} en una situacion real y concreta`.trim()
+    ]
+
+    const normalizedSeeds = rawSeeds
         .map(sanitizePromptSuggestion)
         .filter(Boolean)
-        .join('. ')
 
-    return fallback ? [fallback] : []
+    const uniqueSeeds = Array.from(new Set(normalizedSeeds))
+    return uniqueSeeds.slice(0, 8)
 }
 
 function buildSafeFallbackParsedOutput(
@@ -565,8 +616,8 @@ function extractJson(text: string): string {
 
 function normalizeSmartQuotes(raw: string): string {
     return raw
-        .replace(/[“”]/g, '"')
-        .replace(/[‘’]/g, "'")
+        .replace(/[â€œâ€]/g, '"')
+        .replace(/[â€˜â€™]/g, "'")
         .replace(/\u00A0/g, ' ')
 }
 
@@ -901,7 +952,8 @@ export async function parseLazyIntentAction({
     intentId,
     layoutId,
     intelligenceModel,
-    variationSeed
+    variationSeed,
+    previewTextContext
 }: {
     userText: string
     brandDNA: any
@@ -910,6 +962,7 @@ export async function parseLazyIntentAction({
     layoutId?: string
     intelligenceModel?: string
     variationSeed?: number
+    previewTextContext?: string
 }): Promise<ParsedIntentResult> {
     try {
         // 1. Prepare Metadata
@@ -920,10 +973,10 @@ export async function parseLazyIntentAction({
             throw new Error('[LazyPrompt] Missing intelligence model configuration')
         }
         const modelToUse = intelligenceModel
-        console.log(`[LazyPrompt] Parsing with model ${modelToUse} ${intent ? `for intent: ${intent.name}` : 'with auto-detection'}`)
+        log.info('LazyPrompt', `Parsing with model ${modelToUse} ${intent ? `for intent: ${intent.name}` : 'with auto-detection'}`)
 
         // 2. Build Prompt Parts (Include system prompt in body for maximum adherence across all models)
-        const prompt = buildIntentParserPrompt(userText, brandWebsite, brandDNA, intent, layout)
+        const prompt = buildIntentParserPrompt(userText, brandWebsite, brandDNA, intent, layout, previewTextContext)
         const creativeLenses = [
             'beneficio directo y claridad accionable',
             'prueba social y credibilidad concreta',
@@ -931,6 +984,9 @@ export async function parseLazyIntentAction({
             'narrativa breve de problema-solucion',
             'tono conversacional con propuesta clara',
             'enfoque aspiracional con llamada precisa',
+            'enfoque visual concreto con escena memorable',
+            'enfoque humano y emocional con gesto claro',
+            'enfoque de detalle tangible (objeto, lugar, accion)',
         ] as const
         const seed = Number.isFinite(variationSeed) ? Number(variationSeed) : Date.now()
         const selectedLens = creativeLenses[Math.abs(seed) % creativeLenses.length]
@@ -939,8 +995,7 @@ export async function parseLazyIntentAction({
 CREATIVE VARIATION MODE:
 - Mantén intactos todos los datos literales críticos (URLs, teléfonos, precios, fechas, condiciones).
 - Esta ejecución debe priorizar el ángulo: ${selectedLens}.
-- Las 2 sugerencias deben diferenciarse claramente entre sí y no ser reformulaciones mínimas.`
-
+- Las 3 sugerencias deben diferenciarse claramente entre sí y no ser reformulaciones mínimas.`
         // 3. Prepare Brand Context
         const brandName = brandDNA?.brand_name || brandDNA?.name || 'la marca'
         const brandContextForAI = {
@@ -958,7 +1013,7 @@ CREATIVE VARIATION MODE:
             { temperature: 0.9, topP: 0.92 }
         )
 
-        console.log(`[LazyPrompt] Received JSON: ${jsonResponse.substring(0, 500)}...`)
+        log.debug('LazyPrompt', 'Received JSON', jsonResponse.substring(0, 500))
 
         // 5. Parse Response (Robustly)
         const cleanJson = extractJson(jsonResponse)
@@ -1026,14 +1081,14 @@ CREATIVE VARIATION MODE:
             parsed.imagePromptSuggestions = parsed.imagePromptSuggestions
                 .map(sanitizePromptSuggestion)
                 .filter(Boolean)
-                .slice(0, 3)
+                .slice(0, 8)
         }
 
         // 7. Brand Consistency check for URLs
         // ONLY fallback to Brand Website if ctaUrl is missing or a placeholder.
         // If the AI provided a valid URL with subpaths, we MUST preserve it.
         if (brandWebsite && (!parsed.ctaUrl || parsed.ctaUrl.includes('[BRAND'))) {
-            parsed.ctaUrl = brandWebsite.trim()
+            parsed.ctaUrl = sanitizeUrl(brandWebsite.trim())
         }
 
         // 8. Final organization layer:
@@ -1043,7 +1098,7 @@ CREATIVE VARIATION MODE:
         organized.imagePromptSuggestions = buildImagePromptSuggestions(parsed, organized)
         return organized
     } catch (error) {
-        console.error('[LazyPrompt] Error:', error)
+        log.error('LazyPrompt', 'Error', error)
         throw error
     }
 }

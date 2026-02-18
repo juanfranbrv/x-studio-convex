@@ -311,7 +311,7 @@ export const ESCAPARATE_LAYOUTS: LayoutOption[] = [
         id: 'escaparate-free',
         name: 'Libre',
         description: 'Sin indicación',
-        svgIcon: 'Sparkles',
+        svgIcon: 'help_center',
         textZone: 'center',
         promptInstruction: 'Natural composition without structural constraints.',
         structuralPrompt: '',

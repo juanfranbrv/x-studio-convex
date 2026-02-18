@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { X, MousePointerClick, Fingerprint, Link2, Plus } from 'lucide-react'
@@ -24,6 +24,7 @@ interface TextLayersEditorProps {
     headline: string
     cta: string
     ctaUrl?: string
+    ctaUrlEnabled?: boolean
     customTexts: Record<string, string>
     textAssets?: TextAsset[]
     brandKitTexts?: BrandKitTextOption[]
@@ -40,6 +41,7 @@ export function TextLayersEditor({
     headline,
     cta,
     ctaUrl = '',
+    ctaUrlEnabled = true,
     customTexts,
     textAssets = [],
     brandKitTexts = [],
@@ -54,12 +56,24 @@ export function TextLayersEditor({
     const visibleTextAssets = textAssets.filter(asset => asset.type !== 'cta' && asset.type !== 'url')
     const headlineRef = useRef<HTMLTextAreaElement | null>(null)
 
-    useEffect(() => {
+    const resizeHeadline = useCallback(() => {
         const el = headlineRef.current
         if (!el) return
         el.style.height = 'auto'
         el.style.height = `${el.scrollHeight + 2}px`
-    }, [headline])
+    }, [])
+
+    useLayoutEffect(() => {
+        resizeHeadline()
+    }, [headline, resizeHeadline])
+
+    useEffect(() => {
+        const el = headlineRef.current
+        if (!el || typeof ResizeObserver === 'undefined') return
+        const observer = new ResizeObserver(() => resizeHeadline())
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [resizeHeadline])
 
     return (
         <div className="w-full h-full flex flex-col justify-between py-[4cqh] py-[2cqw] px-[6cqw] animate-in fade-in zoom-in-95 duration-500 overflow-y-auto overflow-x-hidden thin-scrollbar">
@@ -253,26 +267,28 @@ export function TextLayersEditor({
                     </div>
 
                     {/* URL Chip (dominant, framed) */}
-                    <div className="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-muted/70 border border-primary/30 shadow-md">
-                        <Link2 className={`w-5 h-5 ${ctaUrl ? 'text-primary' : 'text-muted-foreground'}`} />
-                        <input
-                            type="text"
-                            value={ctaUrl || ''}
-                            onChange={(e) => onCtaUrlChange?.(e.target.value)}
-                            className="bg-transparent text-[14px] text-primary font-semibold border-none focus:ring-0 focus:outline-none min-w-[220px] text-center font-mono placeholder:text-muted-foreground/60"
-                            placeholder="bauset.es/..."
-                            style={{ width: `${Math.max(220, (ctaUrl?.length || 18) * 9)}px` }}
-                        />
-                        {ctaUrl && (
-                            <button
-                                aria-label="Clear URL"
-                                onClick={() => onCtaUrlChange?.('')}
-                                className="h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                            >
-                                <X className="w-3 h-3" />
-                            </button>
-                        )}
-                    </div>
+                    {ctaUrlEnabled && (
+                        <div className="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-muted/70 border border-primary/30 shadow-md">
+                            <Link2 className={`w-5 h-5 ${ctaUrl ? 'text-primary' : 'text-muted-foreground'}`} />
+                            <input
+                                type="text"
+                                value={ctaUrl || ''}
+                                onChange={(e) => onCtaUrlChange?.(e.target.value)}
+                                className="bg-transparent text-[14px] text-primary font-semibold border-none focus:ring-0 focus:outline-none min-w-[220px] text-center font-mono placeholder:text-muted-foreground/60"
+                                placeholder="bauset.es/..."
+                                style={{ width: `${Math.max(220, (ctaUrl?.length || 18) * 9)}px` }}
+                            />
+                            {ctaUrl && (
+                                <button
+                                    aria-label="Clear URL"
+                                    onClick={() => onCtaUrlChange?.('')}
+                                    className="h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

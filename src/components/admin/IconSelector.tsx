@@ -113,14 +113,9 @@ export function IconSelector({ onSelect, onClose }: IconSelectorProps) {
                                     title={icon.name}
                                 >
                                     <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted group-hover:bg-primary/10">
-                                        <img
-                                            src={`https://fonts.gstatic.com/s/i/${icon.type === 'symbol' ? 'materialsymbolsoutlined' : 'materialicons'}/${icon.name}/v${icon.version}/24px.svg`}
-                                            alt={icon.name}
-                                            className="h-6 w-6 opacity-70 group-hover:opacity-100"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiIHJ5PSIyIj48L3JlY3Q+PC9zdmc+'
-                                            }}
-                                        />
+                                        <span className="material-symbols-outlined text-[24px] leading-none text-muted-foreground/80 group-hover:text-primary transition-colors">
+                                            {icon.name}
+                                        </span>
                                     </div>
                                     <div className="flex w-full items-center justify-center gap-1">
                                         <span className="truncate text-[10px] text-muted-foreground">{icon.name}</span>

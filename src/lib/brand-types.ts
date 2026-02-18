@@ -11,6 +11,7 @@ export interface BrandDNA {
     id?: string;
     url: string;
     brand_name: string;
+    cta_url_enabled?: boolean;
     tagline: string;
     business_overview: string;
     brand_values: string[];

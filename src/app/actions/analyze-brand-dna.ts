@@ -2353,7 +2353,8 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         console.log('\n');
 
 
-        // Validación básica de URL
+        const displayUrl = url.trim();
+        // Validacion basica de URL (solo para fetch)
         if (!url.startsWith('http')) {
             url = `https://${url}`;
         }
@@ -2362,11 +2363,26 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         if (!forceRefresh) {
             try {
                 // CONVEX MIGRATION: using fetchQuery
-                const existingData = await fetchQuery(api.brands.getBrandDNA, { url, clerk_user_id: clerkUserId });
+                let existingData = await fetchQuery(api.brands.getBrandDNA, { url: displayUrl, clerk_user_id: clerkUserId });
+                if (!existingData && displayUrl !== url) {
+                    existingData = await fetchQuery(api.brands.getBrandDNA, { url, clerk_user_id: clerkUserId });
+                }
 
                 // Si ya tenemos datos Y tienen text_assets, podemos retornar temprano
                 if (existingData && existingData.text_assets) {
-                    console.log('✅ Data found in DB with text_assets. Returning cached result.');
+                    console.log('Data found in DB with text_assets. Returning cached result.');
+                    if (displayUrl && existingData.url !== displayUrl) {
+                        try {
+                            await fetchMutation(api.brands.updateBrandDNADoc, {
+                                id: (existingData as any)._id,
+                                clerk_user_id: clerkUserId!,
+                                updates: { url: displayUrl, updated_at: new Date().toISOString() },
+                            });
+                        } catch (updateError) {
+                            console.warn('[analyzeBrandDNA] Failed to update display url:', updateError);
+                        }
+                        return { success: true, data: { ...(existingData as any), url: displayUrl } as BrandDNA };
+                    }
                     return { success: true, data: existingData as unknown as BrandDNA };
                 }
 
@@ -2855,7 +2871,7 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         }
 
         const result: BrandDNA = {
-            url,
+            url: displayUrl,
             brand_name: brandDNA.brand_name,
             tagline: brandDNA.tagline,
             business_overview: brandDNA.business_overview,

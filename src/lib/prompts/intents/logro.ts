@@ -52,7 +52,7 @@ export const LOGRO_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
         id: 'logro-free',
         name: 'Libre',
         description: 'Sin indicación',
-        svgIcon: 'Sparkles',
+        svgIcon: 'help_center',
         textZone: 'center',
         promptInstruction: 'Natural composition without structural constraints.',
         structuralPrompt: '',

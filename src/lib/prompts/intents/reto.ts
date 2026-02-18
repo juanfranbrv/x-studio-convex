@@ -46,7 +46,7 @@ export const RETO_LAYOUTS: Omit<LayoutOption, 'intent'>[] = [
         id: 'reto-free',
         name: 'Libre',
         description: 'Sin indicación',
-        svgIcon: 'Sparkles',
+        svgIcon: 'help_center',
         textZone: 'center',
         promptInstruction: 'Natural composition without structural constraints.',
         structuralPrompt: '',

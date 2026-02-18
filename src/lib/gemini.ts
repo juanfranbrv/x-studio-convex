@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { BrandDNA } from './brand-types'
 import { buildImagePrompt, ImageGenerationOptions } from './prompt-builder'
+import { log } from './logger'
 
 // Initialize Gemini clients
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -87,8 +88,7 @@ export async function generateBrandImage(
 
     // 2. Prepare Payload Parts from options
     const model = options.model || DEFAULT_IMAGE_MODEL
-    console.log('\n--- 🎨 GENERATING IMAGE WITH WISDOM GATE ---')
-    console.log('Model:', model)
+    log.info('IMAGE', `Start | Model=${model}`)
 
     // Build parts array for Wisdom API
     const parts: any[] = [{ text: enhancedPrompt }]
@@ -100,7 +100,7 @@ export async function generateBrandImage(
         )
 
         if (imageItems.length > 0) {
-            console.log(`Processing ${imageItems.length} context images...`)
+            log.info('IMAGE', `Context images: ${imageItems.length}`)
             // Convert urls/base64 to parts suitable for standard Gemini format
             // generateWisdomImage will handle final formatting if needed
             const imagePartsPromises = imageItems.map(async (item) => {
@@ -127,7 +127,7 @@ export async function generateBrandImage(
 
         const layoutPart = await urlToPart(layoutUrl)
         if (layoutPart) {
-            console.log('Layout reference added.')
+            log.info('IMAGE', 'Layout reference added')
             parts.push(layoutPart)
         }
     }
@@ -174,7 +174,7 @@ function getOpenAISize(aspectRatio?: string): string {
 
 async function generateWisdomChatImage(prompt: string, model: string): Promise<string> {
     try {
-        console.log(`🚀 [Wisdom] Generating via Chat Completion (Text-to-Image): ${model}`)
+        log.info('IMAGE', `Chat image generation: ${model}`)
         const response = await fetch(`${WISDOM_BASE_URL}/v1/chat/completions`, {
             method: 'POST',
             headers: {
@@ -204,7 +204,7 @@ async function generateWisdomChatImage(prompt: string, model: string): Promise<s
                 const parsed = JSON.parse(content)
                 const url = Array.isArray(parsed) ? parsed[0]?.url : parsed?.url
                 if (url) {
-                    console.log('✅ Extracted Image URL from JSON Content:', url)
+                    log.success('IMAGE', 'Extracted image URL from JSON', { url })
                     return url
                 }
             }
@@ -213,19 +213,19 @@ async function generateWisdomChatImage(prompt: string, model: string): Promise<s
         }
 
         // Try to find Markdown image URL ![alt](url) or just (url)
-        console.log('📥 Chat Response Content (Truncated):', content.substring(0, 200))
+        log.debug('IMAGE', 'Chat response content (truncated)', content.substring(0, 200))
 
         const urlMatch = content.match(/\((https?:\/\/[^\s\)"']+)\)/) || content.match(/(https?:\/\/[^\s\)"']+)/)
 
         if (urlMatch) {
-            console.log('✅ Extracted Image URL from Chat:', urlMatch[1])
+            log.success('IMAGE', 'Extracted image URL from chat', { url: urlMatch[1] })
             return urlMatch[1]
         }
 
         throw new Error('No image URL found in chat response. Response was text only.')
 
     } catch (error) {
-        console.error("Wisdom Chat Generation Error:", error)
+        log.error('IMAGE', 'Chat image generation error', error)
         throw error
     }
 }
@@ -238,8 +238,8 @@ async function generateWisdomOpenAIImage(prompt: string, model: string, aspectRa
             return await generateWisdomChatImage(prompt, model)
         }
 
-        console.log(`🚀 [Wisdom] Generating with OpenAI-compatible Model: ${model}`)
-        console.log(`   Endpoint: ${WISDOM_BASE_URL}/v1/images/generations`)
+        log.info('IMAGE', `OpenAI-compatible image model: ${model}`)
+        log.debug('IMAGE', `Endpoint: ${WISDOM_BASE_URL}/v1/images/generations`)
 
         const size = getOpenAISize(aspectRatio)
 
@@ -265,7 +265,7 @@ async function generateWisdomOpenAIImage(prompt: string, model: string, aspectRa
 
         if (!response.ok) {
             const errorText = await response.text()
-            console.error(`Wisdom OpenAI Image API failed: ${errorText}`)
+            log.error('IMAGE', 'OpenAI image API failed', errorText)
             throw new Error(`Wisdom Gate Error: ${errorText}`)
         }
 
@@ -285,7 +285,7 @@ async function generateWisdomOpenAIImage(prompt: string, model: string, aspectRa
         throw new Error('No image data found in Wisdom response')
 
     } catch (error) {
-        console.error('Wisdom Gate Image (OpenAI) Error:', error)
+        log.error('IMAGE', 'OpenAI image error', error)
         throw error
     }
 }
@@ -303,7 +303,7 @@ async function generateWisdomText(
     options?: TextGenerationOptions
 ): Promise<string> {
     try {
-        console.log(`Generating Wisdom Text with model: ${model}`)
+        log.info('TEXT', `Generating with model: ${model}`)
 
         // Construct Gemini-native payload
         const parts: any[] = []
@@ -320,7 +320,7 @@ async function generateWisdomText(
         const promptParts: any[] = []
 
         if (images && images.length > 0) {
-            console.log(`Processing ${images.length} images for text generation...`)
+            log.info('TEXT', `Processing ${images.length} images for text generation`)
             for (const img of images) {
                 const part = await urlToPart(img)
                 if (part) promptParts.push(part)
@@ -342,7 +342,7 @@ async function generateWisdomText(
 
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-                console.log(`[Text ${attempt + 1}/${maxRetries + 1}] Attempting Wisdom Gate API call (Native)...`)
+                log.info('TEXT', `[${attempt + 1}/${maxRetries + 1}] Attempting Wisdom Gate API call (Native)`)
 
                 const requestBody: any = {
                     contents,
@@ -386,18 +386,18 @@ async function generateWisdomText(
 
                     if (isSystemBusy && attempt < maxRetries) {
                         const delay = retryDelays[attempt]
-                        console.warn(`[Text Attempt ${attempt + 1}] Wisdom Gate busy, retrying in ${delay}ms...`)
+                        log.warn('TEXT', `[Attempt ${attempt + 1}] Wisdom Gate busy, retrying in ${delay}ms`)
                         lastError = new Error(errorMessage)
                         await new Promise(resolve => setTimeout(resolve, delay))
                         continue
                     }
 
-                    console.error(`Wisdom Text API failed: ${errorMessage}`)
+                    log.error('TEXT', 'Text API failed', errorMessage)
                     throw new Error(errorMessage)
                 }
 
                 // Success
-                console.log(`[Text Attempt ${attempt + 1}] Wisdom Gate API call succeeded`)
+                log.success('TEXT', `[Attempt ${attempt + 1}] Wisdom Gate API call succeeded`)
                 const data = await response.json()
 
                 // Extract text from Gemini response candidates
@@ -414,15 +414,15 @@ async function generateWisdomText(
         throw lastError || new Error('Unknown error during Wisdom Gate text API call')
 
     } catch (error) {
-        console.error('Wisdom Gate Text Generation Error:', error)
+        log.error('TEXT', 'Text generation error', error)
         throw error
     }
 }
 
 async function generateWisdomImage(parts: any[], model: string, aspectRatio?: string): Promise<string> {
     try {
-        console.log(`Generating Wisdom Image with model: ${model}`)
-        console.log(`Payload parts: ${parts.length}`)
+        log.info('IMAGE', `Generating with model: ${model}`)
+        log.debug('IMAGE', `Payload parts: ${parts.length}`)
 
         // UNIFIED LOGIC: ALWAYS Use Wisdom/Google Native Endpoint for ALL models
         // This ensures context images (logos, references) are passed correctly.
@@ -448,7 +448,7 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
                     default:
                         targetRatio = '1:1'
                 }
-                console.log(`Mapping custom ratio ${aspectRatio} to supported ${targetRatio}`)
+                log.warn('IMAGE', `Mapping custom ratio ${aspectRatio} to supported ${targetRatio}`)
             }
         }
 
@@ -459,7 +459,7 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
 
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-                console.log(`[${attempt + 1}/${maxRetries + 1}] Attempting Wisdom Gate API call...`)
+                log.info('IMAGE', `[${attempt + 1}/${maxRetries + 1}] Attempting Wisdom Gate API call`)
 
                 const response = await fetch(`${WISDOM_BASE_URL}/v1beta/models/${model}:generateContent`, {
                     method: 'POST',
@@ -495,19 +495,19 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
 
                     if (isSystemBusy && attempt < maxRetries) {
                         const delay = retryDelays[attempt]
-                        console.warn(`[${attempt + 1}/${maxRetries + 1}] Wisdom Gate busy, retrying in ${delay}ms...`)
+                        log.warn('IMAGE', `[${attempt + 1}/${maxRetries + 1}] Wisdom Gate busy, retrying in ${delay}ms`)
                         lastError = new Error(errorMessage)
                         await new Promise(resolve => setTimeout(resolve, delay))
                         continue // Retry
                     }
 
                     // Non-retryable error or max retries reached
-                    console.error(`Wisdom Image API failed: ${errorMessage}`)
+                    log.error('IMAGE', 'Image API failed', errorMessage)
                     throw new Error(errorMessage)
                 }
 
                 // Success - return the response data
-                console.log(`[${attempt + 1}/${maxRetries + 1}] Wisdom Gate API call succeeded`)
+                log.success('IMAGE', `[${attempt + 1}/${maxRetries + 1}] Wisdom Gate API call succeeded`)
                 const data = await response.json()
 
                 // Extract image from Google-style response
@@ -536,7 +536,7 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
         throw lastError || new Error('Unknown error during Wisdom Gate API call')
 
     } catch (error) {
-        console.error('Wisdom Gate Image Generation Error:', error)
+        log.error('IMAGE', 'Image generation error', error)
         throw error
     }
 }
@@ -655,18 +655,19 @@ export async function generateContentImageUnified(
     prompt: string,
     options: ImageGenerationOptions = {}
 ): Promise<string> {
+    const generationStart = Date.now()
     const rawModelName = options.model || DEFAULT_IMAGE_MODEL
     const modelName = String(rawModelName).trim()
     const modelNameLower = modelName.toLowerCase()
-    console.log(`\n╔══════════════════════════════════════════════╗\n║ IMAGE MODEL ROUTER\n║ Requested: ${modelName || 'NO_CONFIG'}\n╚══════════════════════════════════════════════╝`)
+    log.info('IMAGE', `Router | Requested=${modelName || 'NO_CONFIG'}`)
 
     if (modelNameLower.startsWith('wisdom/')) {
-        console.log(`[Image Unified] Provider route: wisdom (${modelName})`)
+        log.info('IMAGE', `Provider route: wisdom (${modelName})`)
         let wisdomModel = modelName.replace('wisdom/', '')
 
         // Failsafe: Map known incorrect model names to valid ones
         if (wisdomModel === 'gemini-3.0-pro-image-01-preview') {
-            console.warn('⚠️ Correcting invalid model name: gemini-3.0-pro-image-01-preview -> gemini-3-pro-image-preview')
+            log.warn('IMAGE', 'Correcting invalid model name: gemini-3.0-pro-image-01-preview -> gemini-3-pro-image-preview')
             wisdomModel = 'gemini-3-pro-image-preview'
         }
         const enhancedPrompt = options.promptAlreadyBuilt
@@ -683,7 +684,7 @@ export async function generateContentImageUnified(
             )
 
             if (imageItems.length > 0) {
-                console.log(`Processing ${imageItems.length} context images for Wisdom...`)
+                log.info('IMAGE', `Context images: ${imageItems.length}`)
                 const imagePartsPromises = imageItems.map(async (item) => {
                     if (!item.value) return null
                     // Use existing urlToPart helper
@@ -710,24 +711,28 @@ export async function generateContentImageUnified(
 
             const layoutPart = await urlToPart(layoutUrl)
             if (layoutPart) {
-                console.log('Layout reference image added to Wisdom parts.')
+                log.info('IMAGE', 'Layout reference added')
                 promptParts.push(layoutPart)
             }
         }
 
         if (wisdomModel === 'gemini-3-pro-image-preview' || wisdomModel.includes('gemini')) {
-            return await generateWisdomImage(promptParts, wisdomModel, options.aspectRatio)
+            const result = await generateWisdomImage(promptParts, wisdomModel, options.aspectRatio)
+            log.success('IMAGE', `Generation done in ${Date.now() - generationStart}ms`)
+            return result
         } else {
             // For Qwen, Kolors, Wanx, etc., use the OpenAI-compatible endpoint
             // Note: Context images might not be supported easily in standard OpenAI text-to-image payload 
             // without using specific image-to-image endpoints. 
             // For now, we pass just the prompt for these models as they are primarily text-to-image in this flow.
-            return await generateWisdomOpenAIImage(enhancedPrompt, wisdomModel, options.aspectRatio)
+            const result = await generateWisdomOpenAIImage(enhancedPrompt, wisdomModel, options.aspectRatio)
+            log.success('IMAGE', `Generation done in ${Date.now() - generationStart}ms`)
+            return result
         }
     }
 
     if (modelNameLower.startsWith('google/')) {
-        console.log(`[Image Unified] Provider route: google (${modelName})`)
+        log.info('IMAGE', `Provider route: google (${modelName})`)
         const googleModelRaw = modelName.replace('google/', '')
         const enhancedPrompt = options.promptAlreadyBuilt
             ? prompt
@@ -762,7 +767,9 @@ export async function generateContentImageUnified(
             if (layoutPart) promptParts.push(layoutPart)
         }
 
-        return await generateGoogleImage(promptParts, googleModelRaw, options.aspectRatio)
+        const result = await generateGoogleImage(promptParts, googleModelRaw, options.aspectRatio)
+        log.success('IMAGE', `Generation done in ${Date.now() - generationStart}ms`)
+        return result
     }
 
     throw new Error(`Image model provider no soportado o inválido: "${modelName}"`)
