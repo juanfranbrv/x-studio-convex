@@ -2,7 +2,11 @@
 
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import type { CarouselComposition } from '@/lib/carousel-structures'
+type CarouselComposition = {
+    id: string
+    name: string
+    description: string
+}
 
 interface CarouselCompositionSelectorProps {
     compositions: CarouselComposition[]

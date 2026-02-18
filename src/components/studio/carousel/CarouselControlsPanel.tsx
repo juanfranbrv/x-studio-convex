@@ -13,7 +13,7 @@ import type { BrandDNA } from '@/lib/brand-types'
 import type { CarouselSuggestion } from '@/app/actions/generate-carousel'
 import { ImageReferenceSelector } from '@/components/studio/creation-flow/ImageReferenceSelector'
 import { resizeImage } from '@/lib/image-utils'
-import { CAROUSEL_STRUCTURES, getAutomaticBasicComposition, getNarrativeStructure } from '@/lib/carousel-structures'
+import { getAutomaticBasicComposition } from '@/lib/carousel-selection'
 import { CarouselCompositionSelector } from '@/components/studio/carousel/CarouselCompositionSelector'
 import { BrandingConfigurator } from '@/components/studio/creation-flow/BrandingConfigurator'
 import type { SelectedColor } from '@/lib/creation-flow-types'
@@ -46,6 +46,40 @@ export interface CarouselSettings {
 }
 
 type CompositionMode = 'basic' | 'advanced'
+
+type DbStructure = {
+    structure_id: string
+    name: string
+    summary: string
+    order: number
+}
+
+type DbComposition = {
+    composition_id: string
+    structure_id?: string
+    scope: string
+    mode: string
+    name: string
+    description: string
+    layoutPrompt: string
+    order: number
+}
+
+type UiStructure = {
+    id: string
+    name: string
+    summary: string
+    order: number
+}
+
+type UiComposition = {
+    id: string
+    name: string
+    description: string
+    layoutPrompt: string
+    mode: 'basic' | 'advanced'
+    order: number
+}
 
 interface CarouselControlsPanelProps {
     onAnalyze: (settings: CarouselSettings) => Promise<void>
@@ -109,25 +143,25 @@ const STYLE_OPTIONS = [
 ]
 
 function pickCompositionId(
-    structureId: string,
+    compositions: UiComposition[],
     mode: CompositionMode,
     selectedId: string | undefined,
-    seed: string,
-    basicSelectedId?: string | null
+    seed: string
 ): string {
-    const structure = getNarrativeStructure(structureId) || CAROUSEL_STRUCTURES[0]
-    if (!structure) return 'free'
+    if (!compositions.length) return 'free'
 
     if (mode === 'basic') {
-        const basics = structure.compositions.filter((composition) => composition.mode === 'basic')
-        return getAutomaticBasicComposition(structure.id, seed)?.id || basics[0]?.id || structure.compositions[0]?.id || 'free'
+        const picked = getAutomaticBasicComposition(compositions, seed, {
+            prompt: seed.split('|')[1] || '',
+            slideCount: Number(seed.split('|')[2] || 0) || 5
+        })
+        return picked?.id || compositions[0]?.id || 'free'
     }
 
-    const selectable = structure.compositions
-    if (selectedId && selectable.some((composition) => composition.id === selectedId)) {
+    if (selectedId && compositions.some((composition) => composition.id === selectedId)) {
         return selectedId
     }
-    return selectable[0]?.id || structure.compositions[0]?.id || 'free'
+    return compositions[0]?.id || 'free'
 }
 
 export function CarouselControlsPanel({
@@ -165,6 +199,10 @@ export function CarouselControlsPanel({
         userId,
         brandId: brandKit?.id as any
     } : 'skip')
+    const structuresData = useQuery(api.carousel.listStructures, { includeInactive: false }) as DbStructure[] | undefined
+    const structures: UiStructure[] = (structuresData || [])
+        .map((s) => ({ id: s.structure_id, name: s.name, summary: s.summary, order: s.order }))
+        .sort((a, b) => a.order - b.order)
     const hasPresets = (presetsData?.user?.some((preset: any) => preset?.state?.presetType === 'carousel') ?? false)
     const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
     const [isSavingPreset, setIsSavingPreset] = useState(false)
@@ -173,19 +211,33 @@ export function CarouselControlsPanel({
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('4:5')
     const [style, setStyle] = useState('minimal')
     const [slides, setSlides] = useState<SlideConfig[]>([])
-    const [structureId, setStructureId] = useState<string>(analysisStructure?.id || 'problema-solucion')
+    const [structureId, setStructureId] = useState<string>(analysisStructure?.id || structures[0]?.id || 'problema-solucion')
     const [compositionMode, setCompositionMode] = useState<CompositionMode>('basic')
     const [basicSelectedCompositionId, setBasicSelectedCompositionId] = useState<string | null>(null)
     const [hasUserSelectedStructure, setHasUserSelectedStructure] = useState(false)
     const [lastAnalysisStructureId, setLastAnalysisStructureId] = useState<string | null>(analysisStructure?.id || null)
-    const currentStructure = getNarrativeStructure(structureId) || CAROUSEL_STRUCTURES[0]
+    const compositionsData = useQuery(api.carousel.listCompositions, {
+        structureId,
+        includeInactive: false,
+        includeGlobals: true
+    }) as DbComposition[] | undefined
+    const compositions: UiComposition[] = (compositionsData || [])
+        .map((c) => ({
+            id: c.composition_id,
+            name: c.name,
+            description: c.description,
+            layoutPrompt: c.layoutPrompt,
+            mode: (c.mode as 'basic' | 'advanced') || 'basic',
+            order: c.order
+        }))
+        .sort((a, b) => a.order - b.order)
+
     const [compositionId, setCompositionId] = useState(
         pickCompositionId(
-            structureId,
+            compositions,
             'basic',
-            currentStructure?.compositions[0]?.id,
-            `${structureId}|0`,
-            null
+            compositions[0]?.id,
+            `${structureId}|0`
         )
     )
     const [editingSlide, setEditingSlide] = useState<number | null>(null)
@@ -213,8 +265,8 @@ export function CarouselControlsPanel({
     const canAnalyze = prompt.trim().length > 0 && slideCount > 0 && !isAnalyzing && !isGenerating && brandKit !== null
     const canContinueFromImage = imageSourceMode !== 'generate' || Boolean(aiImageDescription.trim())
     const isStepVisible = (step: number) => showAllSteps || currentStep >= step
-    const basicCompositions = (currentStructure?.compositions || []).filter((composition) => composition.mode === 'basic')
-    const advancedCompositions = currentStructure?.compositions || []
+    const basicCompositions = compositions.filter((composition) => composition.mode === 'basic')
+    const advancedCompositions = compositions
 
     // Get brand logos
     const brandLogos = brandKit?.logos || []
@@ -301,19 +353,27 @@ export function CarouselControlsPanel({
     }, [analysisStructure, lastAnalysisStructureId])
 
     useEffect(() => {
-        const refreshed = getNarrativeStructure(structureId)
-        if (refreshed && refreshed.compositions.length > 0) {
-            setCompositionId(
-                pickCompositionId(
-                    structureId,
-                    compositionMode,
-                    compositionId,
-                    `${structureId}|${prompt.trim()}|${slideCount}`,
-                    basicSelectedCompositionId
-                )
-            )
+        if (!structures.length) return
+        if (hasUserSelectedStructure) return
+        if (!structureId || !structures.some((s) => s.id === structureId)) {
+            const next = analysisStructure?.id && structures.some((s) => s.id === analysisStructure.id)
+                ? analysisStructure.id
+                : structures[0]?.id
+            if (next) setStructureId(next)
         }
-    }, [structureId, compositionMode, compositionId, prompt, slideCount, basicSelectedCompositionId])
+    }, [structures, analysisStructure, hasUserSelectedStructure, structureId])
+
+    useEffect(() => {
+        if (compositions.length === 0) return
+        setCompositionId(
+            pickCompositionId(
+                compositions,
+                compositionMode,
+                compositionId,
+                `${structureId}|${prompt.trim()}|${slideCount}`
+            )
+        )
+    }, [structureId, compositionMode, compositionId, prompt, slideCount, compositions])
 
     useEffect(() => {
         if (!basicSelectedCompositionId) return
@@ -324,16 +384,15 @@ export function CarouselControlsPanel({
     useEffect(() => {
         if (compositionMode !== 'basic') return
         const autoId = pickCompositionId(
-            structureId,
+            compositions,
             'basic',
             compositionId,
-            `${structureId}|${prompt.trim()}|${slideCount}`,
-            basicSelectedCompositionId
+            `${structureId}|${prompt.trim()}|${slideCount}`
         )
         if (autoId !== compositionId) {
             setCompositionId(autoId)
         }
-    }, [compositionMode, structureId, compositionId, prompt, slideCount, basicSelectedCompositionId])
+    }, [compositionMode, structureId, compositionId, prompt, slideCount, compositions])
 
     useEffect(() => {
         if (showAllSteps) {
@@ -571,11 +630,10 @@ export function CarouselControlsPanel({
         const slideCountValue = overrides.slideCount ?? slideCount
         const structureIdValue = overrides.structureId ?? structureId
         const resolvedCompositionId = pickCompositionId(
-            structureIdValue,
+            compositions,
             compositionMode,
             overrides.compositionId ?? compositionId,
-            `${structureIdValue}|${promptValue.trim()}|${slideCountValue}`,
-            basicSelectedCompositionId
+            `${structureIdValue}|${promptValue.trim()}|${slideCountValue}`
         )
 
         const finalSlides = slides.length === slideCountValue
@@ -628,18 +686,10 @@ export function CarouselControlsPanel({
         setAspectRatio('4:5')
         setStyle('minimal')
         setSlides([])
-        const defaultStructureId = analysisStructure?.id || 'problema-solucion'
+        const defaultStructureId = analysisStructure?.id || structures[0]?.id || 'problema-solucion'
         setStructureId(defaultStructureId)
         setCompositionMode('basic')
-        setCompositionId(
-            pickCompositionId(
-                defaultStructureId,
-                'basic',
-                undefined,
-                `${defaultStructureId}|0`,
-                null
-            )
-        )
+        setCompositionId('free')
         setBasicSelectedCompositionId(null)
         setSelectedLogoId(brandLogos.length > 0 ? 'logo-0' : null)
         setSelectedColors([])
@@ -665,25 +715,9 @@ export function CarouselControlsPanel({
         if (state.structureId) {
             const nextStructureId = state.structureId
             setStructureId(nextStructureId)
-            setCompositionId(
-                pickCompositionId(
-                    nextStructureId,
-                    nextMode,
-                    state.compositionId,
-                    `${nextStructureId}|${(state.prompt || '').trim()}|${state.slideCount ?? 5}`,
-                    state.basicSelectedCompositionId ?? null
-                )
-            )
+            setCompositionId(state.compositionId || 'free')
         } else if (state.compositionId) {
-            setCompositionId(
-                pickCompositionId(
-                    structureId,
-                    nextMode,
-                    state.compositionId,
-                    `${structureId}|${(state.prompt || '').trim()}|${state.slideCount ?? slideCount}`,
-                    state.basicSelectedCompositionId ?? null
-                )
-            )
+            setCompositionId(state.compositionId)
         }
         setBasicSelectedCompositionId(state.basicSelectedCompositionId ?? null)
         setImageSourceMode(state.imageSourceMode || 'upload')
@@ -913,11 +947,10 @@ export function CarouselControlsPanel({
                                         setCompositionMode(nextMode)
                                         setCompositionId(
                                             pickCompositionId(
-                                                structureId,
+                                                compositions,
                                                 nextMode,
                                                 compositionId,
-                                                `${structureId}|${prompt.trim()}|${slideCount}`,
-                                                basicSelectedCompositionId
+                                                `${structureId}|${prompt.trim()}|${slideCount}`
                                             )
                                         )
                                     }}
@@ -940,7 +973,7 @@ export function CarouselControlsPanel({
                             <SelectValue placeholder="Estructura" />
                         </SelectTrigger>
                         <SelectContent align="end">
-                            {CAROUSEL_STRUCTURES.map((structure) => (
+                            {structures.map((structure) => (
                                 <SelectItem key={structure.id} value={structure.id}>
                                     <span className="flex items-center justify-between w-full gap-2">
                                         <span>{structure.name}</span>

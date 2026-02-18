@@ -1,15 +1,136 @@
-'use server'
+﻿'use server'
 
 import { generateContentImageUnified } from '@/lib/gemini'
 import { generateTextUnified } from '@/lib/gemini'
 import type { BrandDNA } from '@/lib/brand-types'
 import { buildCarouselDecompositionPrompt } from '@/lib/prompts/carousel'
 import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
-import { CAROUSEL_STRUCTURES, getNarrativeComposition, getNarrativeStructure } from '@/lib/carousel-structures'
 import { buildCarouselPrompt } from '@/lib/prompts/carousel/builder'
 import { getMoodForSlide } from '@/lib/prompts/carousel/mood'
 import { buildFinalPrompt, generateCarouselSeed, extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
 import { detectLanguage } from '@/lib/language-detection'
+import { fetchQuery } from 'convex/nextjs'
+import { api } from '../../../convex/_generated/api'
+
+type DbStructure = {
+    structure_id: string
+    name: string
+    summary: string
+    tension?: string
+    flow?: string
+    proof?: string
+    cta?: string
+    order: number
+}
+
+type DbComposition = {
+    composition_id: string
+    structure_id?: string
+    scope: string
+    mode: string
+    name: string
+    description: string
+    layoutPrompt: string
+    icon?: string
+    iconPrompt?: string
+    order: number
+}
+
+type CarouselStructure = {
+    id: string
+    name: string
+    summary: string
+    tension?: string
+    flow?: string
+    proof?: string
+    cta?: string
+    order: number
+}
+
+type CarouselComposition = {
+    id: string
+    structureId?: string
+    scope: 'global' | 'narrative'
+    mode: 'basic' | 'advanced'
+    name: string
+    description: string
+    layoutPrompt: string
+    icon?: string
+    iconPrompt?: string
+    order: number
+}
+
+type CarouselCatalog = {
+    structures: CarouselStructure[]
+    compositions: CarouselComposition[]
+}
+
+const normalizeCompositionId = (id?: string) => (id && id !== 'free' ? id : undefined)
+
+async function loadCarouselCatalog(): Promise<CarouselCatalog> {
+    const [structures, compositions] = await Promise.all([
+        fetchQuery(api.carousel.listStructures, { includeInactive: false }) as DbStructure[],
+        fetchQuery(api.carousel.listCompositions, { includeInactive: false, includeGlobals: true }) as DbComposition[]
+    ])
+
+    const mappedStructures = (structures || []).map((s) => ({
+        id: s.structure_id,
+        name: s.name,
+        summary: s.summary,
+        tension: s.tension,
+        flow: s.flow,
+        proof: s.proof,
+        cta: s.cta,
+        order: s.order
+    })).sort((a, b) => a.order - b.order)
+
+    const mappedCompositions = (compositions || []).map((c) => ({
+        id: c.composition_id,
+        structureId: c.structure_id,
+        scope: (c.scope as 'global' | 'narrative') || 'narrative',
+        mode: (c.mode as 'basic' | 'advanced') || 'basic',
+        name: c.name,
+        description: c.description,
+        layoutPrompt: c.layoutPrompt,
+        icon: c.icon,
+        iconPrompt: c.iconPrompt,
+        order: c.order
+    })).sort((a, b) => a.order - b.order)
+
+    if (mappedStructures.length === 0) {
+        throw new Error('No hay narrativas de carrusel configuradas en Convex.')
+    }
+
+    return {
+        structures: mappedStructures,
+        compositions: mappedCompositions
+    }
+}
+
+function getStructureById(structures: CarouselStructure[], id?: string): CarouselStructure | undefined {
+    if (!id) return undefined
+    return structures.find((s) => s.id === id)
+}
+
+function getDefaultStructure(structures: CarouselStructure[]): CarouselStructure | undefined {
+    return structures[0]
+}
+
+function getCompositionsForStructure(
+    compositions: CarouselComposition[],
+    structureId?: string
+): CarouselComposition[] {
+    if (!structureId) return compositions.filter((c) => c.scope === 'global')
+    return compositions.filter((c) => c.scope === 'global' || c.structureId === structureId)
+}
+
+function getCompositionById(
+    compositions: CarouselComposition[],
+    id?: string
+): CarouselComposition | undefined {
+    if (!id) return undefined
+    return compositions.find((c) => c.id === id)
+}
 
 export interface SlideContent {
     index: number
@@ -113,6 +234,7 @@ async function decomposeIntoSlides(
     model: string,
     selectedColors?: { color: string; role: string }[],
     includeLogoUrl?: string,
+    catalog?: CarouselCatalog,
     options?: {
         captionOnly?: boolean
         structureId?: string
@@ -131,7 +253,7 @@ async function decomposeIntoSlides(
 }> {
     // Auto-detect language from user prompt (like image module does)
     const detectedLanguage = detectLanguage(prompt) || 'es'
-    console.log(`🌐 Carousel: Detected language from prompt: ${detectedLanguage}`)
+    console.log(`ðŸŒ Carousel: Detected language from prompt: ${detectedLanguage}`)
 
     const selectedColorsList = selectedColors?.map(c => c.color) || []
     const brandContext = buildCarouselBrandContext(brand, selectedColorsList, includeLogoUrl)
@@ -139,9 +261,11 @@ async function decomposeIntoSlides(
     // NEW: Use Modular Prompt Builder if structure is defined
     let decompositionPrompt = ''
 
-    if (options?.structureId && options?.compositionId) {
-        const structure = getNarrativeStructure(options.structureId)
-        const composition = getNarrativeComposition(options.structureId, options.compositionId)
+    const normalizedCompositionId = normalizeCompositionId(options?.compositionId)
+    if (options?.structureId && normalizedCompositionId && catalog) {
+        const structure = getStructureById(catalog.structures, options.structureId)
+        const available = getCompositionsForStructure(catalog.compositions, options.structureId)
+        const composition = getCompositionById(available, normalizedCompositionId)
 
         if (structure && composition) {
             console.log(`Using Modular Prompt for ${structure.id} / ${composition.id}`)
@@ -182,7 +306,7 @@ async function decomposeIntoSlides(
         if (typeof value !== 'string') return undefined
         const normalized = value.toLowerCase().trim()
         if (['hook', 'gancho', 'portada', 'inicio'].includes(normalized)) return 'hook'
-        if (['cta', 'cierre', 'accion', 'acción', 'conclusion', 'conclusión'].includes(normalized)) return 'cta'
+        if (['cta', 'cierre', 'accion', 'acciÃ³n', 'conclusion', 'conclusiÃ³n'].includes(normalized)) return 'cta'
         if (['content', 'contenido', 'desarrollo', 'medio'].includes(normalized)) return 'content'
         return undefined
     }
@@ -271,20 +395,22 @@ async function decomposeIntoSlides(
     }
 
     const inferStructureFromPrompt = (text: string, detectedIntent?: string) => {
+        const fallback = catalog ? getDefaultStructure(catalog.structures) : undefined
         const mappedIntent = detectedIntent ? intentStructureMap[detectedIntent] : undefined
         if (mappedIntent && !(mappedIntent === 'frase-celebre' && !hasQuoteLikeSignal(text))) {
-            const mapped = getNarrativeStructure(mappedIntent)
+            const mapped = catalog ? getStructureById(catalog.structures, mappedIntent) : undefined
             if (mapped) return mapped
         }
 
         if (hasQuoteLikeSignal(text)) {
-            return getNarrativeStructure('frase-celebre')
+            return catalog ? getStructureById(catalog.structures, 'frase-celebre') : undefined
         }
 
-        return CAROUSEL_STRUCTURES[0]
+        return fallback
     }
 
     const resolveStructureFromParsed = (parsedStructure: any, detectedIntent?: string) => {
+        const fallback = catalog ? getDefaultStructure(catalog.structures) : undefined
         const rawId = typeof parsedStructure?.id === 'string' ? parsedStructure.id : ''
         const rawName = typeof parsedStructure?.name === 'string' ? parsedStructure.name : ''
         const normalizedId = rawId ? normalizeStructureKey(rawId) : ''
@@ -293,11 +419,11 @@ async function decomposeIntoSlides(
         const hasQuoteSignal = hasQuoteLikeSignal(prompt)
         const mappedFromIntent =
             mappedIntent && !(mappedIntent === 'frase-celebre' && !hasQuoteSignal)
-                ? getNarrativeStructure(mappedIntent)
+                ? (catalog ? getStructureById(catalog.structures, mappedIntent) : undefined)
                 : undefined
 
         if (normalizedId) {
-            const direct = getNarrativeStructure(normalizedId)
+            const direct = catalog ? getStructureById(catalog.structures, normalizedId) : undefined
             if (direct) {
                 if (direct.id === 'frase-celebre' && !hasQuoteSignal) {
                     return mappedFromIntent ?? inferStructureFromPrompt(prompt, detectedIntent)
@@ -306,7 +432,7 @@ async function decomposeIntoSlides(
             }
             const alias = STRUCTURE_ALIASES[normalizedId]
             if (alias) {
-                const mapped = getNarrativeStructure(alias)
+                const mapped = catalog ? getStructureById(catalog.structures, alias) : undefined
                 if (mapped) {
                     if (mapped.id === 'frase-celebre' && !hasQuoteSignal) {
                         return mappedFromIntent ?? inferStructureFromPrompt(prompt, detectedIntent)
@@ -319,7 +445,7 @@ async function decomposeIntoSlides(
         if (normalizedName) {
             const nameAlias = STRUCTURE_NAME_ALIASES[normalizedName]
             if (nameAlias) {
-                const mapped = getNarrativeStructure(nameAlias)
+                const mapped = catalog ? getStructureById(catalog.structures, nameAlias) : undefined
                 if (mapped) {
                     if (mapped.id === 'frase-celebre' && !hasQuoteSignal) {
                         return mappedFromIntent ?? inferStructureFromPrompt(prompt, detectedIntent)
@@ -330,8 +456,8 @@ async function decomposeIntoSlides(
         }
 
         if (mappedFromIntent) return mappedFromIntent
-        if (hasQuoteSignal) return getNarrativeStructure('frase-celebre')
-        return CAROUSEL_STRUCTURES[0]
+        if (hasQuoteSignal) return catalog ? getStructureById(catalog.structures, 'frase-celebre') : undefined
+        return fallback
     }
 
     const hookForbiddenRegex = /(\\b(truco|tip|atajo|paso|punto)\\b\\s*#?\\s*\\d+)|(#\\s*\\d+)/i
@@ -761,7 +887,7 @@ async function decomposeIntoSlides(
                 const fallbackUrl = brand.url?.trim()
                 const fallbackCTA = fallbackUrl
                     ? `Visita ${fallbackUrl} y empieza hoy.`
-                    : 'Escríbenos y empecemos hoy mismo.'
+                    : 'EscrÃ­benos y empecemos hoy mismo.'
 
                 slides[lastIndex] = {
                     ...slides[lastIndex],
@@ -880,15 +1006,18 @@ async function generateSlideImage(
     aiImageDescription?: string,
     compositionId?: string,
     structureId?: string,
-    consistencyRefUrls?: string[]
+    consistencyRefUrls?: string[],
+    catalog?: CarouselCatalog
 ): Promise<{ imageUrl: string; prompt: string; references: DebugImageReference[] }> {
-    const specificCompId = compositionId || slideContent.composition
-    const composition = (structureId && specificCompId)
-        ? getNarrativeComposition(structureId, specificCompId)
-        : {
-            layoutPrompt: "Standard clean social media composition with clear text area.",
-            name: "Free Layout"
-        }
+    const specificCompId = normalizeCompositionId(compositionId) || normalizeCompositionId(slideContent.composition)
+    const availableComps = catalog ? getCompositionsForStructure(catalog.compositions, structureId) : []
+    const composition = (structureId && specificCompId && catalog)
+        ? getCompositionById(availableComps, specificCompId)
+        : undefined
+    const resolvedComposition = composition || {
+        layoutPrompt: "Standard clean social media composition with clear text area.",
+        name: "Free Layout"
+    }
 
     const findColorByRole = (role: string, fallback: string) => {
         if (!selectedColors || selectedColors.length === 0) return fallback
@@ -913,13 +1042,13 @@ async function generateSlideImage(
     const currentMood = getMoodForSlide(slideContent.index, totalSlides, slideContent.role, moodCurve)
 
     const fullPrompt = buildFinalPrompt({
-        composition: composition as any,
+        composition: resolvedComposition as any,
         brandColors,
         slideData: slideContent,
         currentMood,
         currentSlide: slideContent.index + 1,
         totalSlides,
-        logoPosition: extractLogoPosition(composition?.layoutPrompt || ''),
+        logoPosition: extractLogoPosition(resolvedComposition?.layoutPrompt || ''),
         includeLogo: Boolean(selectedLogoUrl),
         isSequentialSlide: slideContent.index > 0,
         ctaText: isLastSlide ? (slideContent.title || 'Mas info') : undefined,
@@ -1001,6 +1130,7 @@ export async function generateCarouselAction(
     } = input
 
     try {
+        const catalog = await loadCarouselCatalog()
         console.log(`Starting carousel for ${brandDNA.brand_name}: ${slideCount} slides`)
 
         // Step 1: Decompose prompt (or reuse script)
@@ -1022,6 +1152,7 @@ export async function generateCarouselAction(
                 intelligenceModel as string,
                 selectedColors,
                 includeLogoOnSlides ? selectedLogoUrl : undefined,
+                catalog,
                 {
                     structureId,
                     compositionId,
@@ -1066,13 +1197,15 @@ export async function generateCarouselAction(
                 const currentMood = getMoodForSlide(i, effectiveSlideCount, slideContents[i].role, moodCurve)
 
                 // Resolve Composition (Specific or Default/Free)
-                const specificCompId = compositionId || slideContents[i].composition
+                const specificCompId = normalizeCompositionId(compositionId) || normalizeCompositionId(slideContents[i].composition)
+                const availableComps = getCompositionsForStructure(catalog.compositions, input.structureId)
                 const composition = (input.structureId && specificCompId)
-                    ? getNarrativeComposition(input.structureId, specificCompId)
-                    : {
-                        layoutPrompt: "Standard clean social media composition with clear text area.",
-                        name: "Free Layout"
-                    }
+                    ? getCompositionById(availableComps, specificCompId)
+                    : undefined
+                const resolvedComposition = composition || {
+                    layoutPrompt: "Standard clean social media composition with clear text area.",
+                    name: "Free Layout"
+                }
 
                 // Rule 3: Build Brand Colors object from user selection accurately by Role
                 const findColorByRole = (role: string, fallback: string) => {
@@ -1099,17 +1232,17 @@ export async function generateCarouselAction(
                 const finalUrl = brandUrl || extractedUrl
 
                 const promptToUse = buildFinalPrompt({
-                    composition: composition as any,
+                    composition: resolvedComposition as any,
                     brandColors,
                     slideData: slideContents[i],
                     currentMood,
                     currentSlide: i + 1,
                     totalSlides: effectiveSlideCount,
-                    logoPosition: extractLogoPosition(composition?.layoutPrompt || ''),
+                    logoPosition: extractLogoPosition(resolvedComposition?.layoutPrompt || ''),
                     includeLogo: !!(includeLogoOnSlides && selectedLogoUrl),
                     isSequentialSlide: i > 0, // true for slides 2-5
                     // CTA for final slide only
-                    ctaText: isLastSlide ? (slideContent.title || 'Más info') : undefined,
+                    ctaText: isLastSlide ? (slideContent.title || 'MÃ¡s info') : undefined,
                     ctaUrl: isLastSlide ? finalUrl : undefined,
                     visualAnalysis: aiImageDescription,
                     language: input.language || detectLanguage(prompt) || 'es',
@@ -1159,18 +1292,18 @@ export async function generateCarouselAction(
                     contextReferences.push({ type: 'logo', value: selectedLogoUrl, weight: 1.0 })
                 }
 
-                // ═══════════════════════════════════════════════════════════════
-                // 🔍 DEBUG: EXACT API CALL FOR SLIDE ${i + 1}
-                // ═══════════════════════════════════════════════════════════════
-                console.log(`\n${'═'.repeat(70)}`)
-                console.log(`🎨 SLIDE ${i + 1}/${effectiveSlideCount} - API CALL DEBUG`)
-                console.log(`${'═'.repeat(70)}`)
-                console.log(`📐 Composition: ${composition?.name || 'Free Layout'}`)
-                console.log(`🎭 Mood: ${currentMood}`)
-                console.log(`🎲 Seed: ${carouselSeed}`)
-                console.log(`🖼️  Aspect Ratio: ${aspectRatio}`)
-                console.log(`🤖 Model: ${imageModel}`)
-                console.log(`\n--- 🖼️ IMAGE REFERENCES (${contextReferences.length}) ---`)
+                // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                // ðŸ” DEBUG: EXACT API CALL FOR SLIDE ${i + 1}
+                // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                console.log(`\n${'â•'.repeat(70)}`)
+                console.log(`ðŸŽ¨ SLIDE ${i + 1}/${effectiveSlideCount} - API CALL DEBUG`)
+                console.log(`${'â•'.repeat(70)}`)
+                console.log(`ðŸ“ Composition: \$\{resolvedComposition\?\.name \|\| 'Free Layout'\}`)
+                console.log(`ðŸŽ­ Mood: ${currentMood}`)
+                console.log(`ðŸŽ² Seed: ${carouselSeed}`)
+                console.log(`ðŸ–¼ï¸  Aspect Ratio: ${aspectRatio}`)
+                console.log(`ðŸ¤– Model: ${imageModel}`)
+                console.log(`\n--- ðŸ–¼ï¸ IMAGE REFERENCES (${contextReferences.length}) ---`)
                 contextReferences.forEach((ref, idx) => {
                     const shortUrl = ref.value.length > 60
                         ? `${ref.value.substring(0, 30)}...${ref.value.substring(ref.value.length - 25)}`
@@ -1178,9 +1311,9 @@ export async function generateCarouselAction(
                     console.log(`  [${idx + 1}] ${ref.type.toUpperCase()} | Weight: ${ref.weight} | ${ref.label || 'No label'}`)
                     console.log(`      URL: ${shortUrl}`)
                 })
-                console.log(`\n--- 📝 PROMPT TO SEND ---`)
+                console.log(`\n--- ðŸ“ PROMPT TO SEND ---`)
                 console.log(promptToUse)
-                console.log(`${'─'.repeat(70)}\n`)
+                console.log(`${'â”€'.repeat(70)}\n`)
 
                 // 5. Generate with seed
                 const imageUrl = await generateContentImageUnified(
@@ -1198,7 +1331,7 @@ export async function generateCarouselAction(
                 currentSlide.imageUrl = imageUrl
                 currentSlide.status = 'done'
                 generatedImageUrls.push(imageUrl)
-                console.log(`✅ Slide ${i + 1} generated successfully: ${imageUrl.substring(0, 50)}...`)
+                console.log(`âœ… Slide ${i + 1} generated successfully: ${imageUrl.substring(0, 50)}...`)
 
             } catch (error) {
                 console.error(`Error slide ${i + 1}:`, error)
@@ -1238,6 +1371,7 @@ export async function analyzeCarouselAction(
     } = input
 
     try {
+        const catalog = await loadCarouselCatalog()
         console.log(`[Carousel] Analyzing script for ${brandDNA.brand_name}: ${slideCount} slides`)
         console.log(`[Carousel] aiImageDescription received:`, input.aiImageDescription ? input.aiImageDescription.substring(0, 100) + '...' : 'EMPTY/UNDEFINED')
         const decomposition = await decomposeIntoSlides(
@@ -1247,6 +1381,7 @@ export async function analyzeCarouselAction(
             intelligenceModel,
             selectedColors,
             includeLogoOnSlides ? selectedLogoUrl : undefined,
+            catalog,
             {
                 structureId: input.structureId,
                 visualDescription: input.aiImageDescription,
@@ -1290,6 +1425,7 @@ export async function regenerateCarouselCaptionAction(
     } = input
 
     try {
+        const catalog = await loadCarouselCatalog()
         const decomposition = await decomposeIntoSlides(
             prompt,
             slideCount,
@@ -1297,6 +1433,7 @@ export async function regenerateCarouselCaptionAction(
             intelligenceModel,
             selectedColors,
             includeLogoOnSlides ? selectedLogoUrl : undefined,
+            catalog,
             {
                 captionOnly: true,
                 structureId: input.structureId,
@@ -1334,6 +1471,7 @@ export async function regenerateSlideAction(
     consistencyRefUrls?: string[]
 ): Promise<{ success: boolean; imageUrl?: string; error?: string; debugPrompt?: string; debugReferences?: DebugImageReference[] }> {
     try {
+        const catalog = await loadCarouselCatalog()
         console.log(`Regenerating slide ${slideIndex + 1} for ${brandDNA.brand_name}...`)
 
         const { imageUrl, prompt, references } = await generateSlideImage(
@@ -1348,7 +1486,8 @@ export async function regenerateSlideAction(
             aiImageDescription,
             compositionId,
             structureId,
-            consistencyRefUrls
+            consistencyRefUrls,
+            catalog
         )
 
         return { success: true, imageUrl, debugPrompt: prompt, debugReferences: references }
@@ -1360,4 +1499,5 @@ export async function regenerateSlideAction(
         }
     }
 }
+
 

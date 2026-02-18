@@ -234,6 +234,12 @@ export default function AdminPage() {
                                 Gestor de composiciones
                             </Button>
                         </Link>
+                        <Link href="/admin/carousel-compositions">
+                            <Button variant="outline" className="gap-2">
+                                <Shapes className="h-4 w-4" />
+                                Gestor carruseles
+                            </Button>
+                        </Link>
                         <CreditsBadge />
                         <UserButton
                             appearance={{

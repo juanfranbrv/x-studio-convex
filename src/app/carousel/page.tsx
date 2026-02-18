@@ -27,7 +27,6 @@ import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 import type { DebugPromptData } from '@/lib/creation-flow-types'
 import { buildCarouselImagePrompt } from '@/lib/prompts/carousel-image'
 import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
-import { getNarrativeComposition } from '@/lib/carousel-structures'
 import { extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
 import { FeedbackButton } from '@/components/studio/FeedbackButton'
 import { cn } from '@/lib/utils'
@@ -67,6 +66,12 @@ export default function CarouselPage() {
     const [slides, setSlides] = useState<CarouselSlide[]>([])
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('4:5')
     const [carouselSettings, setCarouselSettings] = useState<CarouselSettings | null>(null)
+    const compositionsForDebug = useQuery(
+        api.carousel.listCompositions,
+        carouselSettings?.structureId
+            ? { structureId: carouselSettings.structureId, includeInactive: false, includeGlobals: true }
+            : 'skip'
+    ) as Array<{ composition_id: string; name: string; description: string; layoutPrompt: string }> | undefined
     const [scriptSlides, setScriptSlides] = useState<SlideContent[] | null>(null)
     const [scriptPrompt, setScriptPrompt] = useState('')
     const [scriptSlideCount, setScriptSlideCount] = useState<number | null>(null)
@@ -643,8 +648,12 @@ export default function CarouselPage() {
         const { getMoodForSlide } = await import('@/lib/prompts/carousel/mood')
 
         const compositionPreset = settings.structureId
-            ? getNarrativeComposition(settings.structureId, settings.compositionId)
+            ? compositionsForDebug?.find((c) => c.composition_id === settings.compositionId)
             : undefined
+        const resolvedCompositionPreset = compositionPreset || {
+            layoutPrompt: "Standard clean social media composition with clear text area.",
+            name: "Free Layout"
+        }
 
         // Extract brand colors for injection with role-based helper
         const findColor = (role: string, fallback: string) => {
@@ -670,13 +679,13 @@ export default function CarouselPage() {
             const brandUrl = activeBrandKit?.url?.trim()
             const finalUrl = brandUrl || extractedUrl
             const prompt = buildFinalPrompt({
-                composition: compositionPreset as any,
+                composition: resolvedCompositionPreset as any,
                 brandColors,
                 slideData: slide,
                 currentMood,
                 currentSlide: idx + 1,
                 totalSlides: slideCount,
-                logoPosition: extractLogoPosition(compositionPreset?.layoutPrompt || ''),
+                logoPosition: extractLogoPosition(resolvedCompositionPreset?.layoutPrompt || ''),
                 includeLogo: Boolean(settings.selectedLogoUrl),
                 isSequentialSlide: idx > 0,
                 ctaText: isLastSlide ? (slide.title || 'Más info') : undefined,

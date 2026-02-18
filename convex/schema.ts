@@ -158,6 +158,43 @@ export default defineSchema({
     .index("by_brand", ["brandId"])
     .index("by_system", ["isSystem"]),
 
+  carousel_structures: defineTable({
+    structure_id: v.string(), // stable id (e.g., "problema-solucion")
+    name: v.string(),
+    summary: v.string(),
+    tension: v.optional(v.string()),
+    flow: v.optional(v.string()),
+    proof: v.optional(v.string()),
+    cta: v.optional(v.string()),
+    order: v.number(),
+    isActive: v.boolean(),
+    created_at: v.string(),
+    updated_at: v.optional(v.string()),
+  }).index("by_structure_id", ["structure_id"])
+    .index("by_active", ["isActive"])
+    .index("by_order", ["order"]),
+
+  carousel_compositions: defineTable({
+    composition_id: v.string(), // stable id (e.g., "basic-orbit-hook" or "problema-solucion::chaos-order")
+    structure_id: v.optional(v.string()), // when scope === "narrative"
+    scope: v.string(), // "global" | "narrative"
+    mode: v.string(), // "basic" | "advanced"
+    name: v.string(),
+    description: v.string(),
+    layoutPrompt: v.string(),
+    icon: v.optional(v.string()), // svg string or material symbol name
+    iconPrompt: v.optional(v.string()),
+    order: v.number(),
+    isActive: v.boolean(),
+    created_at: v.string(),
+    updated_at: v.optional(v.string()),
+  }).index("by_composition_id", ["composition_id"])
+    .index("by_structure", ["structure_id"])
+    .index("by_scope", ["scope"])
+    .index("by_mode", ["mode"])
+    .index("by_active", ["isActive"])
+    .index("by_order", ["order"]),
+
   // User feedback system
   feedback: defineTable({
     userId: v.string(),              // clerk_id

@@ -33,7 +33,7 @@ type BasicCompositionTemplate = {
     layoutPrompt: string
 }
 
-const BASIC_CAROUSEL_TEMPLATES: BasicCompositionTemplate[] = [
+export const BASIC_CAROUSEL_TEMPLATES: BasicCompositionTemplate[] = [
     {
         baseId: 'basic-orbit-hook',
         name: 'Orbita de Foco',
@@ -407,7 +407,7 @@ function buildBasicCompositions(structureId: string): CarouselComposition[] {
     }))
 }
 
-const NARRATIVE_CONTEXTS: NarrativeContext[] = [
+export const NARRATIVE_CONTEXTS: NarrativeContext[] = [
     { id: 'problema-solucion', name: 'Problem-Solution', summary: 'Expose a pain, then show the relief.', tension: 'pain vs remedy', flow: 'two-part reveal', proof: 'evidence of success', cta: 'try the fix' },
     { id: 'antes-despues', name: 'Before-After', summary: 'Contrast current state with desired state.', tension: 'before vs after', flow: 'contrast then uplift', proof: 'transformation metric', cta: 'move to the after' },
     { id: 'paso-a-paso', name: 'Step-by-Step', summary: 'Sequential guidance from start to finish.', tension: 'progression clarity', flow: 'ordered steps', proof: 'completion confidence', cta: 'start the sequence' },

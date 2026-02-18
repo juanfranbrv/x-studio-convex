@@ -7,9 +7,10 @@ import { suggestIconAction } from '@/lib/admin-compositions-actions'
 
 interface IconEditorSectionProps {
     initialSvg: string
+    onChange?: (value: string) => void
 }
 
-export function IconEditorSection({ initialSvg }: IconEditorSectionProps) {
+export function IconEditorSection({ initialSvg, onChange }: IconEditorSectionProps) {
     const [svg, setSvg] = useState(initialSvg || '')
     const [isOpen, setIsOpen] = useState(false)
     const [isSuggesting, setIsSuggesting] = useState(false)
@@ -34,6 +35,7 @@ export function IconEditorSection({ initialSvg }: IconEditorSectionProps) {
             const suggested = await suggestIconAction('', name, description, promptInstruction)
             if (suggested) {
                 setSvg(suggested)
+                onChange?.(suggested)
             }
         } catch (error) {
             console.error('Error suggesting icon:', error)
@@ -71,7 +73,10 @@ export function IconEditorSection({ initialSvg }: IconEditorSectionProps) {
                 <textarea
                     name="svgIcon"
                     value={svg}
-                    onChange={(e) => setSvg(e.target.value)}
+                    onChange={(e) => {
+                        setSvg(e.target.value)
+                        onChange?.(e.target.value)
+                    }}
                     rows={5}
                     className="w-full rounded-md border border-border bg-background px-3 py-2 text-[10px] font-mono outline-none focus:ring-2 focus:ring-primary/40 leading-relaxed"
                     placeholder='<svg ...'
@@ -102,7 +107,10 @@ export function IconEditorSection({ initialSvg }: IconEditorSectionProps) {
 
             {isOpen && (
                 <IconSelector
-                    onSelect={(newSvg) => setSvg(newSvg)}
+                    onSelect={(newSvg) => {
+                        setSvg(newSvg)
+                        onChange?.(newSvg)
+                    }}
                     onClose={() => setIsOpen(false)}
                 />
             )}
