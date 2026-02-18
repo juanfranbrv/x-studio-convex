@@ -2034,13 +2034,14 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         }
 
         const inferredIntent = presetState.selectedIntent || inferIntentFromLayout(presetState.selectedLayout || null) || null
+        const resolvedIntent: IntentCategory | null = inferredIntent ?? presetState.selectedIntent ?? null
         const defaultPlatform = presetState.selectedPlatform || 'instagram'
         const defaultFormat = presetState.selectedFormat
             || SOCIAL_FORMATS.find((format) => format.platform === defaultPlatform)?.id
             || null
         const computedStep = presetState.currentStep ?? computeStepFromPreset({
             ...presetState,
-            selectedIntent: inferredIntent || presetState.selectedIntent || null,
+            selectedIntent: resolvedIntent,
         })
         const expandedStep = Math.max(computedStep, 6)
 
@@ -2051,7 +2052,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             ctaUrl: activeBrandKit?.url?.trim() || presetState.ctaUrl || '',
             ctaUrlManual: false,
             ctaUrlEnabled: presetState.ctaUrlEnabled ?? Boolean(presetState.ctaUrl?.trim()),
-            selectedIntent: inferredIntent || presetState.selectedIntent,
+            selectedIntent: resolvedIntent,
             selectedPlatform: presetState.selectedPlatform || defaultPlatform,
             selectedFormat: presetState.selectedFormat || defaultFormat,
             referenceImageRoles: presetState.referenceImageRoles || {},
