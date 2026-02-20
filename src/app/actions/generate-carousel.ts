@@ -281,6 +281,14 @@ async function decomposeIntoSlides(
                     mode: item.mode
                 })) as NarrativeComposition[]
             }
+            const compositionForPrompt: NarrativeComposition = {
+                id: composition.id,
+                name: composition.name,
+                description: composition.description,
+                layoutPrompt: composition.layoutPrompt,
+                iconPrompt: composition.iconPrompt || composition.icon || '',
+                mode: composition.mode
+            }
             decompositionPrompt = buildCarouselPrompt(
                 {
                     brandName: brand.brand_name,
@@ -294,7 +302,7 @@ async function decomposeIntoSlides(
                     brandColors: selectedColorsList
                 },
                 narrative,
-                composition
+                compositionForPrompt
             )
         }
     }
