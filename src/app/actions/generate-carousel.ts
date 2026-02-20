@@ -68,10 +68,8 @@ type CarouselCatalog = {
 const normalizeCompositionId = (id?: string) => (id && id !== 'free' ? id : undefined)
 
 async function loadCarouselCatalog(): Promise<CarouselCatalog> {
-    const [structures, compositions] = await Promise.all([
-        fetchQuery(api.carousel.listStructures, { includeInactive: false }) as DbStructure[],
-        fetchQuery(api.carousel.listCompositions, { includeInactive: false, includeGlobals: true }) as DbComposition[]
-    ])
+    const structures = await fetchQuery(api.carousel.listStructures, { includeInactive: false }) as unknown as DbStructure[]
+    const compositions = await fetchQuery(api.carousel.listCompositions, { includeInactive: false, includeGlobals: true }) as unknown as DbComposition[]
 
     const mappedStructures = (structures || []).map((s) => ({
         id: s.structure_id,
