@@ -1166,7 +1166,7 @@ export default function ImagePage() {
                         panelPosition === 'right' ? "flex-row" : "flex-row-reverse"
                     )}>
                         {/* LEFT COLUMN (Main Canvas) */}
-                        <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto overflow-x-hidden min-w-0">
+                        <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto overflow-x-hidden min-w-0 no-scrollbar">
                             {/* Canvas Preview */}
                             <div className="flex-1 min-h-[500px] flex flex-col overflow-x-hidden">
                                 <CanvasPanel

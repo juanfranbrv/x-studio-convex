@@ -76,17 +76,25 @@ export function TextLayersEditor({
     }, [resizeHeadline])
 
     return (
-        <div className="w-full h-full flex flex-col justify-between py-[4cqh] py-[2cqw] px-[6cqw] animate-in fade-in zoom-in-95 duration-500 overflow-y-auto overflow-x-hidden thin-scrollbar">
+        <div
+            className="text-layer-editor w-full h-full grid animate-in fade-in zoom-in-95 duration-500 overflow-hidden"
+            style={{
+                paddingTop: 'var(--tl-pad-top)',
+                paddingBottom: 'var(--tl-pad-bottom)',
+                paddingLeft: 'var(--tl-pad-x)',
+                paddingRight: 'var(--tl-pad-x)',
+                gridTemplateRows: 'auto 1fr auto',
+                rowGap: 'var(--tl-section-gap)',
+            }}
+        >
 
-            {/* TOP: HEADLINE & CUSTOM TEXTS (Required by Intent) */}
-            <div className="flex-none flex flex-col items-center justify-start pt-2 space-y-[1.5cqw]">
-                {/* Headline */}
-                <div className="group relative w-full max-w-2xl px-[8cqw] pointer-events-auto">
+            {/* TITLE */}
+            <div className="tl-title group relative w-full max-w-2xl px-[8cqw] pointer-events-auto" style={{ marginTop: 'var(--tl-title-top)' }}>
                     <textarea
                         value={headline || ''}
                         onChange={(e) => onHeadlineChange(e.target.value)}
-                        className="w-full bg-transparent border-none text-center font-black text-foreground placeholder:text-muted-foreground/20 focus:ring-0 resize-none overflow-hidden min-h-[1.2em] leading-tight drop-shadow-sm"
-                        style={{ fontSize: 'min(5cqw, 5cqh, 32px)' }}
+                        className="w-full bg-transparent border-none text-center font-black text-foreground placeholder:text-muted-foreground/20 focus:ring-0 resize-none overflow-visible min-h-[1.2em] leading-tight drop-shadow-sm pb-1"
+                        style={{ fontSize: 'var(--tl-head)', lineHeight: 'var(--tl-line-head)' }}
                         placeholder="ESCRIBE TU TITULAR"
                         rows={1}
                         onInput={(e) => {
@@ -101,22 +109,27 @@ export function TextLayersEditor({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDeleteLayer('headline', 'headline')}
-                            className="absolute right-4 top-0 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                            className="absolute right-4 top-0 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                            style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                         >
-                            <X className="w-3 h-3" />
+                            <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
                         </Button>
                     )}
                 </div>
 
-                {/* Intent-based Custom Texts */}
-                <div className="w-full flex flex-col items-center gap-4">
+            {/* MIDDLE: TEXT BLOCKS */}
+            <div
+                className="tl-middle w-full flex flex-col items-center justify-start"
+                style={{ rowGap: 'var(--tl-gap)', minHeight: 0 }}
+            >
+                <div className="w-full flex flex-col items-center" style={{ rowGap: 'var(--tl-gap-tight)', marginTop: 'var(--tl-middle-top)' }}>
                     {Object.entries(customTexts).map(([key, value]) => (
                         <div key={key} className="group relative mx-auto w-[min(64%,38ch)] pointer-events-auto">
                             <textarea
                                 value={value || ''}
                                 onChange={(e) => onCustomTextChange(key, e.target.value)}
-                                className="w-full bg-transparent border-none text-center font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.1em] leading-tight transition-all drop-shadow-sm py-0.5"
-                                style={{ fontSize: 'min(3cqw, 3cqh, 18px)' }}
+                                className="w-full bg-transparent border-none text-center font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.1em] leading-tight transition-all drop-shadow-sm py-0"
+                                style={{ fontSize: 'var(--tl-body)', lineHeight: 'var(--tl-line-body)' }}
                                 placeholder={`PROMPT PARA ${key.replace(/_/g, ' ').toUpperCase()}...`}
                                 rows={1}
                                 onInput={(e) => {
@@ -135,9 +148,10 @@ export function TextLayersEditor({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer(key, 'custom')}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                                style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                             >
-                                <X className="w-2.5 h-2.5" />
+                                <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                             </Button>
                         </div>
                     ))}
@@ -145,14 +159,14 @@ export function TextLayersEditor({
 
                 {/* Brand-based Text Assets (PROMPT TEXTS moved from Panel) */}
                 {visibleTextAssets.length > 0 && (
-                    <div className="w-full flex flex-col items-center gap-1 pt-1">
+                    <div className="w-full flex flex-col items-center pt-1" style={{ rowGap: 'var(--tl-gap-tight)' }}>
                         {visibleTextAssets.map((asset) => (
                             <div key={asset.id} className="group relative mx-auto w-[min(64%,38ch)] pointer-events-auto">
                                 <textarea
                                     value={asset.value || ''}
                                     onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
-                                    className="w-full bg-transparent border-none text-center font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.1em] leading-tight transition-all drop-shadow-sm py-0.5"
-                                    style={{ fontSize: 'min(3cqw, 3cqh, 18px)' }}
+                                    className="w-full bg-transparent border-none text-center font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.1em] leading-tight transition-all drop-shadow-sm py-0"
+                                    style={{ fontSize: 'var(--tl-body)', lineHeight: 'var(--tl-line-body)' }}
                                     placeholder={`Valor para ${asset.label}...`}
                                     rows={1}
                                     onInput={(e) => {
@@ -171,25 +185,34 @@ export function TextLayersEditor({
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => onDeleteLayer(asset.id, 'asset')}
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                                    style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                 >
-                                    <X className="w-2.5 h-2.5" />
+                                    <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                                 </Button>
                             </div>
                         ))}
                     </div>
                 )}
 
-                {/* Add New Text Button (Brand Kit Assets Only) */}
-                <div className="pt-2 pointer-events-auto flex justify-center">
+                    {/* Add New Text Button (Brand Kit Assets Only) */}
+                    <div className="pointer-events-auto flex justify-center" style={{ marginTop: 'var(--tl-brand-top)' }}>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-foreground transition-colors h-8 gap-2 bg-foreground/5 hover:bg-foreground/10 rounded-full px-4"
+                                className="uppercase font-bold tracking-widest text-muted-foreground hover:text-foreground transition-colors gap-2 bg-foreground/5 hover:bg-foreground/10 rounded-full"
+                                style={{
+                                    height: 'var(--tl-brand-h)',
+                                    paddingLeft: 'var(--tl-brand-px)',
+                                    paddingRight: 'var(--tl-brand-px)',
+                                    fontSize: 'var(--tl-brand-fs)',
+                                    width: 'fit-content',
+                                    maxWidth: '92%',
+                                }}
                             >
-                                <Fingerprint className="w-3.5 h-3.5 text-primary" />
+                                <Fingerprint style={{ width: 'var(--tl-brand-icon)', height: 'var(--tl-brand-icon)' }} className="text-primary" />
                                 Textos de Marca
                             </Button>
                         </DropdownMenuTrigger>
@@ -243,48 +266,73 @@ export function TextLayersEditor({
             </div>
 
             {/* BOTTOM: CTA + URL (URL takes priority like final render) */}
-            <div className="flex-none flex flex-col items-center justify-center pb-8 pointer-events-auto">
-                <div className="group relative flex flex-col items-center gap-3">
+            <div
+                className="tl-cta flex-none flex flex-col items-center justify-center pb-4 pointer-events-auto"
+                style={{ marginTop: 'auto', marginBottom: 'var(--tl-cta-bottom)' }}
+            >
+                <div className="group relative flex flex-col items-center" style={{ rowGap: 'var(--tl-gap)' }}>
                     {/* CTA Text (small, above URL) */}
-                    <div className="group relative flex items-center gap-3 px-5 py-2 rounded-full bg-muted/60 text-muted-foreground border border-border shadow-sm">
-                        <MousePointerClick className="w-4.5 h-4.5 text-muted-foreground flex-shrink-0" />
+                    <div
+                        className="group relative flex items-center gap-2 rounded-full bg-muted/60 text-muted-foreground border border-border shadow-sm"
+                        style={{
+                            paddingLeft: 'var(--tl-cta-px)',
+                            paddingRight: 'var(--tl-cta-px)',
+                            paddingTop: 'var(--tl-cta-py)',
+                            paddingBottom: 'var(--tl-cta-py)',
+                            width: 'fit-content',
+                            maxWidth: '92%',
+                        }}
+                    >
+                        <MousePointerClick style={{ width: 'var(--tl-cta-icon)', height: 'var(--tl-cta-icon)' }} className="text-muted-foreground flex-shrink-0" />
                         <input
                             value={cta || ''}
                             onChange={(e) => onCtaChange(e.target.value)}
-                            className="bg-transparent text-muted-foreground font-semibold border-none placeholder:text-muted-foreground/60 focus:ring-0 focus:outline-none min-w-[80px] text-center"
-                            style={{ fontSize: 'min(3.2cqw, 3.2cqh, 16px)', width: `${Math.max(130, (cta?.length || 10) * 10)}px` }}
+                            className="bg-transparent text-muted-foreground font-semibold border-none placeholder:text-muted-foreground/60 focus:ring-0 focus:outline-none text-center"
+                            style={{ fontSize: 'var(--tl-cta)', width: `${Math.max(8, (cta?.length || 10))}ch` }}
                         />
                         {(cta || ctaUrl) && (
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer('cta', 'cta')}
-                                className="ml-1 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                                className="ml-1 rounded-full bg-destructive/70 text-destructive-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                                style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                             >
-                                <X className="w-3 h-3" />
+                                <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
                             </Button>
                         )}
                     </div>
 
                     {/* URL Chip (dominant, framed) */}
                     {ctaUrlEnabled && (
-                        <div className="group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-muted/70 border border-primary/30 shadow-md">
-                            <Link2 className={`w-5 h-5 ${ctaUrl ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <div
+                            className="group relative flex items-center justify-center gap-2 rounded-2xl bg-muted/70 border border-primary/30 shadow-md"
+                            style={{
+                                paddingLeft: 'var(--tl-url-px)',
+                                paddingRight: 'var(--tl-url-px)',
+                                paddingTop: 'var(--tl-url-py)',
+                                paddingBottom: 'var(--tl-url-py)',
+                                width: 'fit-content',
+                                maxWidth: '92%',
+                            }}
+                        >
+                            <Link2 style={{ width: 'var(--tl-url-icon)', height: 'var(--tl-url-icon)' }} className={`${ctaUrl ? 'text-primary' : 'text-muted-foreground'}`} />
                             <input
                                 type="text"
                                 value={ctaUrl || ''}
                                 onChange={(e) => onCtaUrlChange?.(e.target.value)}
-                                className="bg-transparent text-[14px] text-primary font-semibold border-none focus:ring-0 focus:outline-none min-w-[220px] text-center font-mono placeholder:text-muted-foreground/60"
+                                className="bg-transparent text-[14px] text-primary font-semibold border-none focus:ring-0 focus:outline-none text-center font-mono placeholder:text-muted-foreground/60"
                                 placeholder="bauset.es/..."
-                                style={{ width: `${Math.max(220, (ctaUrl?.length || 18) * 9)}px` }}
+                                style={{ width: `${Math.max(10, (ctaUrl?.length || 12))}ch`, fontSize: 'var(--tl-url)' }}
                             />
                             {ctaUrl && (
                                 <button
                                     aria-label="Clear URL"
                                     onClick={() => onCtaUrlChange?.('')}
-                                    className="h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                                    className="rounded-full bg-destructive/70 text-destructive-foreground shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                                    style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                                 >
-                                    <X className="w-3 h-3" />
+                                    <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
                                 </button>
                             )}
                         </div>

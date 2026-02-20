@@ -85,10 +85,12 @@ export function CarouselCanvasPanel({
     hook,
     selectedLogoUrl
 }: CarouselCanvasPanelProps) {
-    const [zoom, setZoom] = useState(100)
+    const [zoom, setZoom] = useState(110)
+    const [hasManualZoom, setHasManualZoom] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
     const [viewportHeight, setViewportHeight] = useState(800)
     const [isMobile, setIsMobile] = useState(false)
+    const lastViewportHeightRef = useRef<number | null>(null)
     const [isEditingScript, setIsEditingScript] = useState(false)
     const [draftTitle, setDraftTitle] = useState('')
     const [draftDescription, setDraftDescription] = useState('')
@@ -112,6 +114,26 @@ export function CarouselCanvasPanel({
         window.addEventListener('resize', updateDimensions)
         return () => window.removeEventListener('resize', updateDimensions)
     }, [])
+
+    useEffect(() => {
+        const last = lastViewportHeightRef.current
+        lastViewportHeightRef.current = viewportHeight
+        if (last !== null && Math.abs(last - viewportHeight) > 40) {
+            setHasManualZoom(false)
+        }
+    }, [viewportHeight])
+
+    useEffect(() => {
+        if (hasManualZoom) return
+        const autoZoom = isMobile
+            ? 175
+            : viewportHeight < 760
+                ? 175
+                : viewportHeight < 900
+                    ? 162
+                    : 150
+        if (zoom !== autoZoom) setZoom(autoZoom)
+    }, [hasManualZoom, isMobile, viewportHeight, zoom])
 
     const currentSlide = slides[currentIndex]
     const hasScript = Boolean(currentSlide && !currentSlide.imageUrl && (currentSlide.title || currentSlide.description))
@@ -200,9 +222,18 @@ export function CarouselCanvasPanel({
     const handleNext = () => currentIndex < slides.length - 1 && onSelectSlide(currentIndex + 1)
 
     // Zoom handlers
-    const handleZoomIn = () => setZoom(z => Math.min(z + 25, 300))
-    const handleZoomOut = () => setZoom(z => Math.max(z - 25, 25))
-    const handleResetZoom = () => setZoom(100)
+    const handleZoomIn = () => {
+        setHasManualZoom(true)
+        setZoom(z => Math.min(z + 25, 300))
+    }
+    const handleZoomOut = () => {
+        setHasManualZoom(true)
+        setZoom(z => Math.max(z - 25, 25))
+    }
+    const handleResetZoom = () => {
+        setHasManualZoom(true)
+        setZoom(100)
+    }
 
     const handleMaximizeZoom = () => {
         if (!containerRef.current) return
@@ -552,18 +583,27 @@ export function CarouselCanvasPanel({
             <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between p-4 z-40 pointer-events-none">
                 {/* Left: Metadata */}
                 <div className="pointer-events-auto flex items-center gap-2 pt-1">
-                    <Badge variant="outline" className="text-[10px] h-7 gap-2 bg-background/80 backdrop-blur-sm border-border shadow-sm px-3 rounded-full">
-                        <span className="font-bold text-muted-foreground uppercase tracking-wider">Slide</span>
-                        <div className="w-px h-3 bg-border" />
-                        <span className="font-mono">{slides.length > 0 ? `${currentIndex + 1} / ${slides.length}` : '---'}</span>
-                        <div className="w-px h-3 bg-border" />
-                        <span className="text-primary font-semibold">{aspectRatio}</span>
+                    <Badge variant="outline" className="text-[10px] bg-background/80 backdrop-blur-sm border-border shadow-sm px-2 py-1 leading-tight flex flex-col items-start gap-0.5">
+                        <span className="text-muted-foreground/80">
+                            {slides.length > 0 ? `${currentIndex + 1} / ${slides.length}` : '---'}
+                        </span>
+                        <span className="text-muted-foreground/80">
+                            {aspectRatio}
+                            <span className="opacity-50"> · </span>
+                            {(() => {
+                                const [w, h] = aspectRatio.split(':').map(Number)
+                                const ratio = w / h
+                                const baseH = 600
+                                const calcW = baseH * ratio
+                                return `${Math.round(calcW)}x${baseH}`
+                            })()}
+                        </span>
                     </Badge>
                 </div>
 
                 {/* Right: Actions */}
-                <div className="hidden md:flex pointer-events-auto items-center gap-1 glass-panel rounded-full px-3 py-1.5 text-muted-foreground">
-                    <div className="flex items-center gap-1 mr-2 border-r border-white/10 pr-2">
+                <div className="hidden md:flex pointer-events-auto glass-panel text-muted-foreground transition-all duration-300 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4">
+                    <div className="flex flex-col items-center border-b border-white/10 pb-2 gap-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut}>
                             <ZoomOut className="w-4 h-4" />
                         </Button>
@@ -616,7 +656,7 @@ export function CarouselCanvasPanel({
             {/* Main Content Area */}
             <div className={cn(
                 "flex-1 relative flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden thin-scrollbar",
-                isMobile ? "pt-20 px-4" : "pt-24 px-6"
+                isMobile ? "pt-5 px-4" : "pt-5 px-6"
             )}>
                 {/* Canvas Scaling logic matching Image Canvas */}
                 <div

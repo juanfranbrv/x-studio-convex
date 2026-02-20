@@ -224,6 +224,14 @@
 }
 
 @layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   .btn-gradient {
     @apply bg-primary text-primary-foreground hover:bg-primary/90;
   }
@@ -390,5 +398,198 @@
   .dark .controls-panel {
     background: rgba(24, 24, 27, 0.4);
     border-left: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Text layer sizes by typical desktop resolutions */
+.text-layer-editor {
+  --tl-head: 28px;
+  --tl-body: 18px;
+  --tl-cta: 16px;
+  --tl-url: 14px;
+  --tl-pad-top: 8px;
+  --tl-pad-bottom: 8px;
+  --tl-pad-x: 22px;
+  --tl-gap: 8px;
+  --tl-gap-tight: 6px;
+  --tl-section-gap: 8px;
+  --tl-title-top: 20px;
+  --tl-middle-top: 10px;
+  --tl-cta-bottom: 16px;
+  --tl-brand-top: 6px;
+  --tl-line-head: 1.12;
+  --tl-line-body: 1.1;
+  --tl-brand-h: 32px;
+  --tl-brand-px: 16px;
+  --tl-brand-fs: 10px;
+  --tl-brand-icon: 14px;
+  --tl-cta-px: 20px;
+  --tl-cta-py: 8px;
+  --tl-cta-icon: 18px;
+  --tl-url-px: 24px;
+  --tl-url-py: 10px;
+  --tl-url-icon: 20px;
+}
+
+:root {
+  --style-thumb-w: clamp(28px, 4.5cqw, 40px);
+  --style-thumb-h: clamp(38px, 5.5cqw, 52px);
+}
+
+/* 1) <= 1366px (HD) */
+@media (max-width: 1366px) {
+  .text-layer-editor {
+    --tl-head: 11px;
+    --tl-body: 8px;
+    --tl-cta: 7px;
+    --tl-url: 6px;
+    --tl-pad-top: 4px;
+    --tl-pad-bottom: 4px;
+    --tl-pad-x: 10px;
+    --tl-gap: -3px;
+    --tl-gap-tight: -4px;
+    --tl-section-gap: 6px;
+    --tl-title-top: 26px;
+    --tl-middle-top: -34px;
+    --tl-cta-bottom: 8px;
+    --tl-brand-top: 32px;
+    --tl-line-head: 1.02;
+    --tl-line-body: 1.0;
+    --tl-brand-h: 20px;
+    --tl-brand-px: 8px;
+    --tl-brand-fs: 6px;
+    --tl-brand-icon: 9px;
+    --tl-cta-px: 8px;
+    --tl-cta-py: 3px;
+    --tl-cta-icon: 10px;
+    --tl-url-px: 10px;
+    --tl-url-py: 4px;
+    --tl-url-icon: 11px;
+  }
+  .text-layer-editor .tl-middle textarea {
+    margin-bottom: -25px;
+  }
+}
+
+/* 2) 1367px–1600px (HD+) */
+@media (min-width: 1367px) and (max-width: 1600px) {
+  .text-layer-editor {
+    --tl-head: 16px;
+    --tl-body: 12px;
+    --tl-cta: 12px;
+    --tl-url: 12px;
+    --tl-pad-top: 6px;
+    --tl-pad-bottom: 6px;
+    --tl-pad-x: 12px;
+    --tl-gap: 0px;
+    --tl-gap-tight: 0px;
+    --tl-section-gap: 6px;
+    --tl-title-top: 48px;
+    --tl-middle-top: 8px;
+    --tl-cta-bottom: 10px;
+    --tl-brand-top: 4px;
+    --tl-line-head: 1.15;
+    --tl-line-body: 1.02;
+    --tl-brand-h: 22px;
+    --tl-brand-px: 9px;
+    --tl-brand-fs: 7px;
+    --tl-brand-icon: 10px;
+    --tl-cta-px: 10px;
+    --tl-cta-py: 4px;
+    --tl-cta-icon: 11px;
+    --tl-url-px: 12px;
+    --tl-url-py: 5px;
+    --tl-url-icon: 12px;
+  }
+}
+
+/* 3) 1601px–1920px (FHD) */
+@media (min-width: 1601px) and (max-width: 1920px) {
+  .text-layer-editor {
+    --tl-head: 18px;
+    --tl-body: 13px;
+    --tl-cta: 13px;
+    --tl-url: 11px;
+    --tl-pad-top: 8px;
+    --tl-pad-bottom: 8px;
+    --tl-pad-x: 22px;
+    --tl-gap: 4px;
+    --tl-gap-tight: 2px;
+    --tl-section-gap: 6px;
+    --tl-title-top: 62px;
+    --tl-middle-top: 4px;
+    --tl-cta-bottom: 10px;
+    --tl-brand-top: 4px;
+    --tl-line-head: 1.08;
+    --tl-line-body: 1.02;
+    --tl-brand-h: 32px;
+    --tl-brand-px: 16px;
+    --tl-brand-fs: 10px;
+    --tl-brand-icon: 14px;
+    --tl-cta-px: 20px;
+    --tl-cta-py: 8px;
+    --tl-cta-icon: 18px;
+    --tl-url-px: 24px;
+    --tl-url-py: 10px;
+    --tl-url-icon: 20px;
+  }
+  :root {
+    --style-thumb-w: clamp(24px, 4cqw, 34px);
+    --style-thumb-h: clamp(32px, 4.8cqw, 44px);
+  }
+}
+
+/* 4) >= 1921px (QHD+) */
+@media (min-width: 1921px) {
+  .text-layer-editor {
+    --tl-head: 20px;
+    --tl-body: 12px;
+    --tl-cta: 12px;
+    --tl-url: 11px;
+    --tl-title-top: 26px;
+    --tl-middle-top: 8px;
+    --tl-cta-bottom: 10px;
+    --tl-brand-top: 6px;
+    --tl-gap: 4px;
+    --tl-gap-tight: 3px;
+    --tl-section-gap: 8px;
+  }
+}
+
+/* Canvas overlay sizes by typical laptop resolutions */
+.canvas-panel {
+  --canvas-logo-size: 96px;
+  --canvas-ai-size: 72px;
+}
+
+/* 1) <= 1366px (HD) */
+@media (max-width: 1366px) {
+  .canvas-panel {
+    --canvas-logo-size: 44px;
+    --canvas-ai-size: 32px;
+  }
+}
+
+/* 2) 1367px–1600px (HD+) */
+@media (min-width: 1367px) and (max-width: 1600px) {
+  .canvas-panel {
+    --canvas-logo-size: 66px;
+    --canvas-ai-size: 48px;
+  }
+}
+
+/* 3) 1601px–1920px (FHD) */
+@media (min-width: 1601px) and (max-width: 1920px) {
+  .canvas-panel {
+    --canvas-logo-size: 96px;
+    --canvas-ai-size: 56px;
+  }
+}
+
+/* 4) >= 1921px (QHD+) */
+@media (min-width: 1921px) {
+  .canvas-panel {
+    --canvas-logo-size: 70px;
+    --canvas-ai-size: 46px;
   }
 }

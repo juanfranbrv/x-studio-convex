@@ -10,7 +10,8 @@
     "test": "vitest",
     "debug": "powershell -ExecutionPolicy Bypass -File ./debug-chrome.ps1",
     "kill-chrome": "powershell -ExecutionPolicy Bypass -File ./kill-chrome.ps1",
-    "dev:mobile": "node scripts/dev-mobile.js"
+    "dev:mobile": "node scripts/dev-mobile.js",
+    "dev:lan": "concurrently \"npx convex dev\" \"powershell -ExecutionPolicy Bypass -Command \\\"$env:NEXT_DISABLE_TURBOPACK=1; next dev --hostname 0.0.0.0 --port 3000\\\"\""
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.1",

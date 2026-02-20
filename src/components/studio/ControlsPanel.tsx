@@ -54,12 +54,14 @@ const SectionHeader = ({
     icon: Icon,
     title,
     extra,
+    className,
 }: {
     icon: React.ElementType
     title: string
     extra?: React.ReactNode
+    className?: string
 }) => (
-    <div className="flex items-center justify-between mb-3">
+    <div className={cn("flex items-center justify-between mb-3", className)}>
         <div className="flex items-center gap-2">
             <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-primary/10 text-primary">
                 <Icon className="w-3.5 h-3.5" />
@@ -454,7 +456,7 @@ export function ControlsPanel({
                 {/* SECTION: Presets */}
                 <div className="glass-card p-4">
                     <div className="flex items-center justify-between mb-2">
-                        <SectionHeader icon={Star} title="Favoritos" />
+                        <SectionHeader icon={Star} title="Favoritos" className="mb-0" />
                         <div className="flex items-center gap-1">
                             <Button
                                 variant="ghost"

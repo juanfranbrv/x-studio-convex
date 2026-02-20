@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import DownloadIcon from '@mui/icons-material/Download'
 import ShareIcon from '@mui/icons-material/Share'
@@ -51,11 +51,12 @@ export interface Generation {
 import { GenerateButton } from './creation-flow/GenerateButton'
 import { TextLayersEditor } from './TextLayersEditor'
 
-function AiPromptIcon({ className }: { className?: string }) {
+function AiPromptIcon({ className, style }: { className?: string; style?: CSSProperties }) {
     return (
         <svg
             viewBox="0 0 120 120"
             className={className}
+            style={style}
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
@@ -127,7 +128,7 @@ function renderLayoutIcon(svgIcon: string) {
     return (
         <span
             className="material-symbols-outlined text-primary/25 leading-none"
-            style={{ fontSize: '55vmin' }}
+            style={{ fontSize: 'clamp(240px, 86cqw, 1500px)' }}
         >
             {trimmed}
         </span>
@@ -168,7 +169,6 @@ function StyleReferenceCorner({
     }
 
     const imgTop = Math.max(0, boxSize.h - renderH)
-    const iconSize = 40
     return (
         <div
             ref={containerRef}
@@ -189,12 +189,7 @@ function StyleReferenceCorner({
                         }
                     }}
                 />
-                <div
-                    className="absolute rounded-full bg-background/90 border-2 border-primary/35 text-primary shadow-md flex items-center justify-center"
-                    style={{ width: `${iconSize}px`, height: `${iconSize}px`, right: '4px', top: '4px' }}
-                >
-                    <Paintbrush className="w-5 h-5" />
-                </div>
+                {null}
                 {onRemove && (
                     <Button
                         type="button"
@@ -205,9 +200,10 @@ function StyleReferenceCorner({
                             e.stopPropagation()
                             onRemove()
                         }}
-                        className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg z-50 pointer-events-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                        className="absolute top-1 right-1 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg z-50 pointer-events-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                        style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                     >
-                        <X className="w-2.5 h-2.5" />
+                        <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
                     </Button>
                 )}
             </div>
@@ -292,6 +288,8 @@ export function CanvasPanel({
     const { activeBrandKit } = useBrandKit()
     const { panelPosition, assistanceEnabled } = useUI()
     const [zoom, setZoom] = useState(100)
+    const [hasManualZoom, setHasManualZoom] = useState(false)
+    const lastViewportHeightRef = useRef<number | null>(null)
     const containerRef = useRef<HTMLDivElement>(null)
     const [isDragActive, setIsDragActive] = useState(false)
     const [isDraggingOver, setIsDraggingOver] = useState(false)
@@ -330,6 +328,13 @@ export function CanvasPanel({
     }, [])
 
 
+    const getFooterOffset = () => {
+        if (isMobile) return currentImage ? 180 : 120
+        const base = currentImage ? 700 : 400
+        const maxOffset = Math.max(220, Math.round(viewportHeight * 0.45))
+        return Math.min(base, maxOffset)
+    }
+
     // Calculate effective zoom (base scale * manual zoom)
     const effectiveZoom = useMemo(() => {
         const [w, h] = aspectRatio.split(':').map(Number);
@@ -338,9 +343,7 @@ export function CanvasPanel({
 
         // Smarter dimension calculation matching the container style
         // We use the same offsets to ensure indicator matches reality
-        const footerOffset = isMobile
-            ? (currentImage ? 180 : 120)
-            : (currentImage ? 700 : 400);
+        const footerOffset = getFooterOffset();
         const availableHeight = Math.max(200, viewportHeight - footerOffset);
         const padding = isMobile ? 0 : 48;
         const availableWidth = (containerRef.current?.parentElement?.clientWidth
@@ -391,53 +394,63 @@ export function CanvasPanel({
         return options
     }, [activeBrandKit])
 
-    const handleZoomIn = () => setZoom((z) => Math.min(z + 25, 300))
-    const handleZoomOut = () => setZoom((z) => Math.max(z - 25, 25))
-    const handleResetZoom = () => setZoom(100)
+    const handleZoomIn = () => {
+        setHasManualZoom(true)
+        setZoom((z) => Math.min(z + 25, 300))
+    }
+    const handleZoomOut = () => {
+        setHasManualZoom(true)
+        setZoom((z) => Math.max(z - 25, 25))
+    }
+    const handleResetZoom = () => {
+        setHasManualZoom(true)
+        setZoom(100)
+    }
 
     const handleMaximizeZoom = () => {
-        const [w, h] = aspectRatio.split(':').map(Number);
-        const ratio = w / h;
-
-        // 1. Get current available space with buffers
-        // Margin/Padding buffer
-        const hBuffer = isMobile ? 20 : 60;
-        const availableWidth = (containerRef.current?.parentElement?.clientWidth
-            ? containerRef.current.parentElement.clientWidth - hBuffer
-            : (isMobile ? window.innerWidth - 20 : 800));
-
-        // Target vertical space
-        // Accounting for: Header (64), Container Top (80), Bottom Pad (48), Gap (48), and Buffer (40)
-        const vOffset = isMobile ? 180 : 280;
-        const targetHeight = viewportHeight - vOffset;
-
-        // 2. Calculate the "Base" dimensions (zoom=100%)
-        // We MUST match the component logic
-        const footerOffset = isMobile ? (currentImage ? 180 : 120) : (currentImage ? 700 : 400);
-        const availableHeight = Math.max(200, viewportHeight - footerOffset);
-
-        let baseWidth, baseHeight;
-        if (isMobile) {
-            baseWidth = availableWidth;
-            baseHeight = baseWidth / ratio;
-        } else {
-            if (ratio >= 1) {
-                baseWidth = Math.min(availableWidth, availableHeight * ratio);
-                baseHeight = baseWidth / ratio;
-            } else {
-                baseHeight = Math.min(availableHeight, availableWidth / ratio);
-                baseWidth = baseHeight * ratio;
-            }
-        }
-
-        // 3. Calculate zooms for both dimensions using a safety multiplier (0.95)
-        const zoomW = (availableWidth / baseWidth) * 100 * 0.95;
-        const zoomH = (targetHeight / baseHeight) * 100 * 0.95;
-
-        // 4. Take the smaller to fit completely
-        const newZoom = Math.min(Math.round(Math.min(zoomW, zoomH)), 300);
+        setHasManualZoom(true)
+        const newZoom = calcMaxZoom();
         setZoom(newZoom);
     }
+
+    const calcMaxZoom = () => {
+        const [w, h] = aspectRatio.split(':').map(Number);
+        const ratio = w / h;
+        const footerOffset = getFooterOffset();
+
+        const availableWidth = (containerRef.current?.parentElement?.clientWidth
+            ? containerRef.current.parentElement.clientWidth - (isMobile ? 12 : 32)
+            : (isMobile ? window.innerWidth - 12 : 900));
+        const availableHeight = Math.max(200, viewportHeight - footerOffset);
+
+        let baseWidth;
+        let baseHeight;
+        if (ratio >= 1) {
+            baseWidth = Math.min(availableWidth, availableHeight * ratio);
+            baseHeight = baseWidth / ratio;
+        } else {
+            baseHeight = Math.min(availableHeight, availableWidth / ratio);
+            baseWidth = baseHeight * ratio;
+        }
+
+        const fitScale = availableHeight / baseHeight;
+        return Math.min(Math.round(fitScale * 125), 300);
+    }
+
+    // Auto-boost zoom on smaller screens unless user already adjusted it.
+    useEffect(() => {
+        const last = lastViewportHeightRef.current
+        lastViewportHeightRef.current = viewportHeight
+        if (last !== null && Math.abs(last - viewportHeight) > 40) {
+            setHasManualZoom(false)
+        }
+    }, [viewportHeight])
+
+    useEffect(() => {
+        if (hasManualZoom) return
+        const autoZoom = calcMaxZoom();
+        if (zoom !== autoZoom) setZoom(autoZoom)
+    }, [hasManualZoom, isMobile, viewportHeight, zoom])
 
     // Handle Generation Reveal Effect - simplified, no longer wraps generation
 
@@ -606,30 +619,30 @@ export function CanvasPanel({
     return (
         <div className="flex-1 flex flex-col h-full relative isolate overflow-x-hidden">
             {/* Header Overlay */}
-            <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between p-4 z-40 pointer-events-none">
+            <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between px-4 pt-1 z-40 pointer-events-none">
 
                 {/* Left: Badge & Title */}
                 <div className="pointer-events-auto flex items-center gap-2 pt-1">
-                    <Badge variant="outline" className="text-[10px] h-6 gap-2 bg-background/80 backdrop-blur-sm border-border shadow-sm px-2">
-                        <span className="font-bold text-muted-foreground">{t('canvas.title')}</span>
-                        <div className="w-px h-3 bg-border" />
-                        {aspectRatio}
-                        <span className="opacity-50">|</span>
-                        {(() => {
-                            const [w, h] = aspectRatio.split(':').map(Number);
-                            const ratio = w / h;
-                            const baseH = 600;
-                            const calcW = baseH * ratio;
-                            return `${Math.round(calcW)}x${baseH}`;
-                        })()}
+                    <Badge variant="outline" className="text-[10px] bg-background/80 backdrop-blur-sm border-border shadow-sm px-2 py-1 leading-tight">
+                        <span className="text-muted-foreground/80">
+                            {aspectRatio}
+                            <span className="opacity-50"> · </span>
+                            {(() => {
+                                const [w, h] = aspectRatio.split(':').map(Number);
+                                const ratio = w / h;
+                                const baseH = 600;
+                                const calcW = baseH * ratio;
+                                return `${Math.round(calcW)}x${baseH}`;
+                            })()}
+                        </span>
                     </Badge>
                 </div>
 
                 {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}
                 {/* Zoom Controls & Actions */}
-                <div className="hidden md:flex pointer-events-auto items-center gap-1 glass-panel rounded-full px-3 py-1.5 text-muted-foreground transition-all duration-300 hover:text-foreground">
+                <div className="hidden md:flex pointer-events-auto glass-panel text-muted-foreground transition-all duration-300 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-1">
                     {/* Zoom Controls */}
-                    <div className="flex items-center gap-1 border-r border-white/10 pr-1">
+                    <div className="flex flex-col items-center border-b border-white/10 pb-2 gap-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut} title="Zoom out">
                             <ZoomOutIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
@@ -668,7 +681,7 @@ export function CanvasPanel({
 
             <div className={cn(
                 "flex-1 relative flex flex-col items-center justify-start pb-12 overflow-y-auto overflow-x-hidden thin-scrollbar gap-12",
-                isMobile ? "px-0 pt-20" : "px-6 pt-20"
+                isMobile ? "px-0 pt-1" : "px-6 pt-1"
             )}>
                 {/* Canvas Wrapper - reserves correct space and prevents overflow */}
                 <div
@@ -676,7 +689,7 @@ export function CanvasPanel({
                     style={(() => {
                         const [w, h] = aspectRatio.split(':').map(Number);
                         const ratio = w / h;
-                        const footerOffset = isMobile ? (currentImage ? 180 : 120) : (currentImage ? 700 : 400);
+                        const footerOffset = getFooterOffset();
                         const availableHeight = Math.max(200, viewportHeight - footerOffset);
                         const padding = isMobile ? 0 : 48;
                         const availableWidth = (containerRef.current?.parentElement?.clientWidth
@@ -706,16 +719,14 @@ export function CanvasPanel({
                     <div
                         ref={containerRef}
                         className={cn(
-                            "relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot shrink-0 rounded-aero",
+                            "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot shrink-0 rounded-aero",
                             "overflow-visible"
                         )}
                         style={(() => {
                             const [w, h] = aspectRatio.split(':').map(Number);
                             const ratio = w / h;
 
-                            const footerOffset = isMobile
-                                ? (currentImage ? 180 : 120)
-                                : (currentImage ? 700 : 400);
+                            const footerOffset = getFooterOffset();
                             const availableHeight = Math.max(200, viewportHeight - footerOffset);
 
                             const padding = isMobile ? 0 : 48;
@@ -892,16 +903,20 @@ export function CanvasPanel({
                                                             variant === 'style' && "transition-transform duration-300 hover:-translate-y-0.5"
                                                         )}
                                                     >
-                                                        <img
-                                                            src={item.url}
-                                                            alt={`Ref ${idx + 1}`}
-                                                            className={cn(
-                                                                "object-cover shadow-xl",
-                                                                variant === 'style'
-                                                                    ? "w-[64px] h-[84px] rounded-2xl border-2 border-violet-300/70 ring-4 ring-violet-500/15 bg-white p-1 -rotate-6 group-hover:rotate-0 transition-transform duration-300"
-                                                                    : "w-14 h-14 object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.28)]"
-                                                            )}
-                                                        />
+                                                            <img
+                                                                src={item.url}
+                                                                alt={`Ref ${idx + 1}`}
+                                                                className={cn(
+                                                                    "object-cover shadow-xl",
+                                                                    variant === 'style'
+                                                                        ? "rounded-2xl border-2 border-violet-300/70 ring-4 ring-violet-500/15 bg-white p-1 -rotate-6 group-hover:rotate-0 transition-transform duration-300"
+                                                                        : "object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.28)]"
+                                                                )}
+                                                                style={variant === 'style'
+                                                                    ? { width: 'var(--style-thumb-w)', height: 'var(--style-thumb-h)' }
+                                                                    : { width: 'clamp(28px, 4.5cqw, 46px)', height: 'clamp(28px, 4.5cqw, 46px)' }
+                                                                }
+                                                            />
                                                         {variant === 'style' && (
                                                             <div className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-violet-600 text-white text-[9px] font-bold flex items-center justify-center shadow-md ring-2 ring-white/70">
                                                                 <Sparkles className="w-2.5 h-2.5" />
@@ -918,9 +933,10 @@ export function CanvasPanel({
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() => onRemoveReferenceImage(item.url)}
-                                                                className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                className="absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                                             >
-                                                                <X className="w-2.5 h-2.5" />
+                                                                <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                                                             </Button>
                                                         )}
                                                     </div>
@@ -955,16 +971,20 @@ export function CanvasPanel({
                                                 <div className="absolute top-2 right-4 z-40">
                                                     {hasAiPromptReference ? (
                                                         <div className="relative group">
-                                                            <AiPromptIcon className="w-[54px] h-[54px] text-primary drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]" />
+                                                            <AiPromptIcon
+                                                                className="text-primary drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
+                                                                style={{ width: 'var(--canvas-ai-size)', height: 'var(--canvas-ai-size)' }}
+                                                            />
                                                             {onDisableAiPromptReference && (
                                                                 <Button
                                                                     type="button"
                                                                     variant="ghost"
                                                                     size="icon"
                                                                     onClick={onDisableAiPromptReference}
-                                                                    className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                    className="absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                    style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                                                 >
-                                                                    <X className="w-2.5 h-2.5" />
+                                                                    <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                                                                 </Button>
                                                             )}
                                                         </div>
@@ -973,7 +993,8 @@ export function CanvasPanel({
                                                             <img
                                                                 src={contentPreviewImage!.url}
                                                                 alt="Contenido principal"
-                                                                className="w-[90px] h-[90px] object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]"
+                                                                className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]"
+                                                                style={{ width: 'clamp(60px, 11cqw, 112px)', height: 'clamp(60px, 11cqw, 112px)' }}
                                                             />
                                                             {onRemoveReferenceImage && (
                                                                 <Button
@@ -981,9 +1002,10 @@ export function CanvasPanel({
                                                                     variant="ghost"
                                                                     size="icon"
                                                                     onClick={() => onRemoveReferenceImage(contentPreviewImage!.url)}
-                                                                    className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                    className="absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                    style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                                                 >
-                                                                    <X className="w-2.5 h-2.5" />
+                                                                    <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                                                                 </Button>
                                                             )}
                                                         </div>
@@ -1000,16 +1022,18 @@ export function CanvasPanel({
                                         <img
                                             src={selectedLogoUrl}
                                             alt="Logo"
-                                            className="w-[90px] h-[90px] object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
+                                            className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
+                                            style={{ width: 'var(--canvas-logo-size)', height: 'var(--canvas-logo-size)' }}
                                         />
                                         {onSelectLogo && (
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => onSelectLogo(null)}
-                                                className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30 hover:bg-destructive hover:text-destructive-foreground"
+                                                className="absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30 hover:bg-destructive hover:text-destructive-foreground"
+                                                style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                                             >
-                                                <X className="w-2.5 h-2.5" />
+                                                <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
                                             </Button>
                                         )}
                                     </div>
