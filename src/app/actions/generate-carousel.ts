@@ -9,6 +9,7 @@ import { buildCarouselPrompt } from '@/lib/prompts/carousel/builder'
 import { getMoodForSlide } from '@/lib/prompts/carousel/mood'
 import { buildFinalPrompt, generateCarouselSeed, extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
 import { detectLanguage } from '@/lib/language-detection'
+import type { NarrativeStructure, CarouselComposition as NarrativeComposition } from '@/lib/carousel-structures'
 import { fetchQuery } from 'convex/nextjs'
 import { api } from '../../../convex/_generated/api'
 
@@ -267,6 +268,19 @@ async function decomposeIntoSlides(
 
         if (structure && composition) {
             console.log(`Using Modular Prompt for ${structure.id} / ${composition.id}`)
+            const narrative: NarrativeStructure = {
+                id: structure.id,
+                name: structure.name,
+                summary: structure.summary,
+                compositions: available.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    description: item.description,
+                    layoutPrompt: item.layoutPrompt,
+                    iconPrompt: item.iconPrompt || item.icon || '',
+                    mode: item.mode
+                })) as NarrativeComposition[]
+            }
             decompositionPrompt = buildCarouselPrompt(
                 {
                     brandName: brand.brand_name,
@@ -279,7 +293,7 @@ async function decomposeIntoSlides(
                     language: detectedLanguage, // Use auto-detected language
                     brandColors: selectedColorsList
                 },
-                structure,
+                narrative,
                 composition
             )
         }
