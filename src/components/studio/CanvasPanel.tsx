@@ -172,7 +172,7 @@ function StyleReferenceCorner({
     return (
         <div
             ref={containerRef}
-            className="absolute z-50 w-[28%] aspect-square overflow-visible -left-10 bottom-10 pointer-events-auto"
+            className="absolute z-50 w-[24%] aspect-square overflow-visible -left-10 bottom-10 pointer-events-auto"
         >
             <div
                 className="absolute left-0 group"
@@ -181,7 +181,7 @@ function StyleReferenceCorner({
                 <img
                     src={url}
                     alt="Referencia de estilo"
-                    className="w-full h-full object-contain object-left-bottom"
+                    className="w-full h-full object-contain object-left-bottom origin-bottom-left -rotate-[10deg] drop-shadow-[0_12px_22px_rgba(0,0,0,0.24)]"
                     onLoad={(e) => {
                         const target = e.currentTarget
                         if (target.naturalWidth && target.naturalHeight) {

@@ -749,7 +749,11 @@ export function CarouselCanvasPanel({
                                         <img
                                             src={item.url}
                                             alt={`Ref ${idx + 1}`}
-                                            className="w-11 h-14 object-cover rounded-lg ring-1 ring-white/20 shadow-xl"
+                                            className={cn(
+                                                item.source === 'brandkit' ? "w-10 h-12" : "w-11 h-14",
+                                                "object-cover rounded-lg ring-1 ring-white/20 shadow-xl",
+                                                item.source === 'brandkit' && "origin-bottom-left -rotate-[10deg] drop-shadow-[0_12px_22px_rgba(0,0,0,0.24)]"
+                                            )}
                                         />
                                         <div className={cn(
                                             "absolute bottom-0 inset-x-0 text-[5px] text-white text-center py-0.5 backdrop-blur-sm rounded-b-lg",
