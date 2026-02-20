@@ -11,7 +11,6 @@ import AspectRatioOutlinedIcon from '@mui/icons-material/AspectRatioOutlined'
 import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
 import JSZip from 'jszip'
@@ -295,6 +294,7 @@ export function CanvasPanel({
     const [isDraggingOver, setIsDraggingOver] = useState(false)
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
     const [viewportHeight, setViewportHeight] = useState(800) // Default fallback
+    const [viewportWidth, setViewportWidth] = useState(1200)
     const [isMobile, setIsMobile] = useState(false)
     const selectedLogoUrl = useMemo(() => {
         if (!creationState.selectedLogoId || !activeBrandKit?.logos?.length) return null
@@ -321,11 +321,26 @@ export function CanvasPanel({
         const updateHeight = () => {
             setViewportHeight(window.innerHeight)
             setIsMobile(window.innerWidth < 768)
+            setViewportWidth(window.innerWidth)
         }
         updateHeight()
         window.addEventListener('resize', updateHeight)
         return () => window.removeEventListener('resize', updateHeight)
     }, [])
+
+    const getWidthBucket = (width: number) => {
+        if (width <= 1366) return '1:HD (<=1366)'
+        if (width <= 1600) return '2:HD+ (1367-1600)'
+        if (width <= 1920) return '3:FHD (1601-1920)'
+        return '4:QHD+ (>=1921)'
+    }
+
+    const getHeightBucket = (height: number) => {
+        if (height <= 760) return 'H1:<=760'
+        if (height <= 900) return 'H2:761-900'
+        if (height <= 1080) return 'H3:901-1080'
+        return 'H4:>=1081'
+    }
 
 
     const getFooterOffset = () => {
@@ -333,6 +348,13 @@ export function CanvasPanel({
         const base = currentImage ? 700 : 400
         const maxOffset = Math.max(220, Math.round(viewportHeight * 0.45))
         return Math.min(base, maxOffset)
+    }
+
+    const getAutoZoomBoost = (height: number) => {
+        if (height <= 760) return 1.25
+        if (height <= 900) return 1.2
+        if (height <= 1080) return 1.14
+        return 1.08
     }
 
     // Calculate effective zoom (base scale * manual zoom)
@@ -434,7 +456,8 @@ export function CanvasPanel({
         }
 
         const fitScale = availableHeight / baseHeight;
-        return Math.min(Math.round(fitScale * 125), 300);
+        const boost = getAutoZoomBoost(viewportHeight);
+        return Math.min(Math.round(fitScale * 100 * boost), 300);
     }
 
     // Auto-boost zoom on smaller screens unless user already adjusted it.
@@ -621,12 +644,12 @@ export function CanvasPanel({
             {/* Header Overlay */}
             <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between px-4 pt-1 z-40 pointer-events-none">
 
-                {/* Left: Badge & Title */}
+                {/* Left: Canvas info */}
                 <div className="pointer-events-auto flex items-center gap-2 pt-1">
-                    <Badge variant="outline" className="text-[10px] bg-background/80 backdrop-blur-sm border-border shadow-sm px-2 py-1 leading-tight">
-                        <span className="text-muted-foreground/80">
+                    <div className="flex flex-col items-start gap-0.5 leading-tight text-foreground/90 drop-shadow-sm">
+                        <span className="text-[12px] font-medium">
                             {aspectRatio}
-                            <span className="opacity-50"> · </span>
+                            <span className="opacity-60"> &middot; </span>
                             {(() => {
                                 const [w, h] = aspectRatio.split(':').map(Number);
                                 const ratio = w / h;
@@ -635,7 +658,19 @@ export function CanvasPanel({
                                 return `${Math.round(calcW)}x${baseH}`;
                             })()}
                         </span>
-                    </Badge>
+                        <span className="text-[11px] font-medium">
+                            {(() => {
+                                return `W:${getWidthBucket(viewportWidth)}`;
+                            })()}
+                        </span>
+                        <span className="text-[11px] font-medium">
+                            {(() => {
+                                const footerOffset = getFooterOffset();
+                                const availableHeight = Math.max(200, viewportHeight - footerOffset);
+                                return `H:${getHeightBucket(viewportHeight)} (${Math.round(availableHeight)}px)`;
+                            })()}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}

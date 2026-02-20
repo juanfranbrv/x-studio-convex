@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { GeneratedCopyCard } from '@/components/studio/GeneratedCopyCard'
@@ -89,6 +88,7 @@ export function CarouselCanvasPanel({
     const [hasManualZoom, setHasManualZoom] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
     const [viewportHeight, setViewportHeight] = useState(800)
+    const [viewportWidth, setViewportWidth] = useState(1200)
     const [isMobile, setIsMobile] = useState(false)
     const lastViewportHeightRef = useRef<number | null>(null)
     const [isEditingScript, setIsEditingScript] = useState(false)
@@ -109,11 +109,26 @@ export function CarouselCanvasPanel({
         const updateDimensions = () => {
             setViewportHeight(window.innerHeight)
             setIsMobile(window.innerWidth < 768)
+            setViewportWidth(window.innerWidth)
         }
         updateDimensions()
         window.addEventListener('resize', updateDimensions)
         return () => window.removeEventListener('resize', updateDimensions)
     }, [])
+
+    const getWidthBucket = (width: number) => {
+        if (width <= 1366) return '1:HD (≤1366)'
+        if (width <= 1600) return '2:HD+ (1367–1600)'
+        if (width <= 1920) return '3:FHD (1601–1920)'
+        return '4:QHD+ (≥1921)'
+    }
+
+    const getHeightBucket = (height: number) => {
+        if (height <= 760) return 'H1:≤760'
+        if (height <= 900) return 'H2:761–900'
+        if (height <= 1080) return 'H3:901–1080'
+        return 'H4:≥1081'
+    }
 
     useEffect(() => {
         const last = lastViewportHeightRef.current
@@ -123,19 +138,53 @@ export function CarouselCanvasPanel({
         }
     }, [viewportHeight])
 
-    useEffect(() => {
-        if (hasManualZoom) return
-        const autoZoom = isMobile
-            ? 175
-            : viewportHeight < 760
-                ? 175
-                : viewportHeight < 900
-                    ? 162
-                    : 150
-        if (zoom !== autoZoom) setZoom(autoZoom)
-    }, [hasManualZoom, isMobile, viewportHeight, zoom])
+    const getFooterOffset = () => {
+        const slide = slides[currentIndex]
+        if (isMobile) return slide?.imageUrl ? 180 : 120
+        const base = slide?.imageUrl ? 700 : 400
+        const maxOffset = Math.max(220, Math.round(viewportHeight * 0.45))
+        return Math.min(base, maxOffset)
+    }
+
+    const getAutoZoomBoost = (height: number) => {
+        if (height <= 760) return 1.25
+        if (height <= 900) return 1.2
+        if (height <= 1080) return 1.14
+        return 1.08
+    }
+
+    const calcMaxZoom = () => {
+        const [w, h] = aspectRatio.split(':').map(Number)
+        const ratio = w / h
+        const footerOffset = getFooterOffset()
+
+        const availableWidth = (containerRef.current?.parentElement?.clientWidth
+            ? containerRef.current.parentElement.clientWidth - (isMobile ? 12 : 32)
+            : (isMobile ? window.innerWidth - 12 : 900))
+        const availableHeight = Math.max(200, viewportHeight - footerOffset)
+
+        let baseWidth
+        let baseHeight
+        if (ratio >= 1) {
+            baseWidth = Math.min(availableWidth, availableHeight * ratio)
+            baseHeight = baseWidth / ratio
+        } else {
+            baseHeight = Math.min(availableHeight, availableWidth / ratio)
+            baseWidth = baseHeight * ratio
+        }
+
+        const fitScale = availableHeight / baseHeight
+        const boost = getAutoZoomBoost(viewportHeight)
+        return Math.min(Math.round(fitScale * 100 * boost), 300)
+    }
 
     const currentSlide = slides[currentIndex]
+
+    useEffect(() => {
+        if (hasManualZoom) return
+        const autoZoom = calcMaxZoom()
+        if (zoom !== autoZoom) setZoom(autoZoom)
+    }, [hasManualZoom, isMobile, viewportHeight, zoom, currentSlide?.imageUrl, aspectRatio])
     const hasScript = Boolean(currentSlide && !currentSlide.imageUrl && (currentSlide.title || currentSlide.description))
     const completedSlides = slides.filter(s => s.status === 'done').length
     const isGeneratingAny = isGenerating || slides.some(s => s.status === 'generating') || isRegenerating
@@ -236,28 +285,8 @@ export function CarouselCanvasPanel({
     }
 
     const handleMaximizeZoom = () => {
-        if (!containerRef.current) return
-        const [w, h] = aspectRatio.split(':').map(Number)
-        const ratio = w / h
-
-        const hBuffer = isMobile ? 20 : 60
-        const availableWidth = containerRef.current.parentElement?.clientWidth
-            ? containerRef.current.parentElement.clientWidth - hBuffer
-            : (isMobile ? window.innerWidth - 20 : 800)
-
-        const vOffset = isMobile ? 240 : 320
-        const targetHeight = viewportHeight - vOffset
-
-        // Match the base dimension logic in render
-        const footerOffset = isMobile ? 300 : 450
-        const availableHeight = Math.max(200, viewportHeight - footerOffset)
-
-        const baseWidth = Math.min(availableWidth, availableHeight * ratio)
-        const baseHeight = baseWidth / ratio
-
-        const zoomW = (availableWidth / baseWidth) * 100 * 0.95
-        const zoomH = (targetHeight / baseHeight) * 100 * 0.95
-        setZoom(Math.min(Math.round(Math.min(zoomW, zoomH)), 300))
+        setHasManualZoom(true)
+        setZoom(calcMaxZoom())
     }
 
     // Download handlers
@@ -583,13 +612,13 @@ export function CarouselCanvasPanel({
             <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between p-4 z-40 pointer-events-none">
                 {/* Left: Metadata */}
                 <div className="pointer-events-auto flex items-center gap-2 pt-1">
-                    <Badge variant="outline" className="text-[10px] bg-background/80 backdrop-blur-sm border-border shadow-sm px-2 py-1 leading-tight flex flex-col items-start gap-0.5">
-                        <span className="text-muted-foreground/80">
+                    <div className="flex flex-col items-start gap-0.5 leading-tight text-foreground/90 drop-shadow-sm">
+                        <span className="text-[12px] font-medium">
                             {slides.length > 0 ? `${currentIndex + 1} / ${slides.length}` : '---'}
                         </span>
-                        <span className="text-muted-foreground/80">
+                        <span className="text-[12px] font-medium">
                             {aspectRatio}
-                            <span className="opacity-50"> · </span>
+                            <span className="opacity-60"> &middot; </span>
                             {(() => {
                                 const [w, h] = aspectRatio.split(':').map(Number)
                                 const ratio = w / h
@@ -598,7 +627,19 @@ export function CarouselCanvasPanel({
                                 return `${Math.round(calcW)}x${baseH}`
                             })()}
                         </span>
-                    </Badge>
+                        <span className="text-[11px] font-medium">
+                            {(() => {
+                                return `W:${getWidthBucket(viewportWidth)}`
+                            })()}
+                        </span>
+                        <span className="text-[11px] font-medium">
+                            {(() => {
+                                const footerOffset = getFooterOffset()
+                                const availableHeight = Math.max(200, viewportHeight - footerOffset)
+                                return `H:${getHeightBucket(viewportHeight)} (${Math.round(availableHeight)}px)`
+                            })()}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Right: Actions */}
@@ -664,9 +705,11 @@ export function CarouselCanvasPanel({
                     style={(() => {
                         const [w, h] = aspectRatio.split(':').map(Number)
                         const ratio = w / h
-                        const footerOffset = isMobile ? 300 : 450
+                        const footerOffset = getFooterOffset()
                         const availableHeight = Math.max(200, viewportHeight - footerOffset)
-                        const availableWidth = containerRef.current?.parentElement?.clientWidth || 800
+                        const availableWidth = (containerRef.current?.parentElement?.clientWidth
+                            ? containerRef.current.parentElement.clientWidth - (isMobile ? 12 : 32)
+                            : (isMobile ? window.innerWidth - 12 : 900))
 
                         const canvasWidth = Math.min(availableWidth, availableHeight * ratio)
                         const canvasHeight = canvasWidth / ratio
@@ -675,13 +718,15 @@ export function CarouselCanvasPanel({
                 >
                     <div
                         ref={containerRef}
-                        className="relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-hidden"
+                        className="canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-hidden"
                         style={(() => {
                             const [w, h] = aspectRatio.split(':').map(Number)
                             const ratio = w / h
-                            const footerOffset = isMobile ? 300 : 450
+                            const footerOffset = getFooterOffset()
                             const availableHeight = Math.max(200, viewportHeight - footerOffset)
-                            const availableWidth = 800 // Default reference
+                            const availableWidth = (containerRef.current?.parentElement?.clientWidth
+                                ? containerRef.current.parentElement.clientWidth - (isMobile ? 12 : 32)
+                                : (isMobile ? window.innerWidth - 12 : 900))
 
                             const canvasWidth = Math.min(availableWidth, availableHeight * ratio)
                             const canvasHeight = canvasWidth / ratio
@@ -750,10 +795,13 @@ export function CarouselCanvasPanel({
                                             src={item.url}
                                             alt={`Ref ${idx + 1}`}
                                             className={cn(
-                                                item.source === 'brandkit' ? "w-10 h-12" : "w-11 h-14",
                                                 "object-cover rounded-lg ring-1 ring-white/20 shadow-xl",
                                                 item.source === 'brandkit' && "origin-bottom-left -rotate-[10deg] drop-shadow-[0_12px_22px_rgba(0,0,0,0.24)]"
                                             )}
+                                            style={item.source === 'brandkit'
+                                                ? { width: 'var(--style-thumb-w)', height: 'var(--style-thumb-h)' }
+                                                : { width: 'clamp(28px, 4.5cqw, 46px)', height: 'clamp(28px, 4.5cqw, 46px)' }
+                                            }
                                         />
                                         <div className={cn(
                                             "absolute bottom-0 inset-x-0 text-[5px] text-white text-center py-0.5 backdrop-blur-sm rounded-b-lg",
@@ -777,7 +825,8 @@ export function CarouselCanvasPanel({
                                 <img
                                     src={selectedLogoUrl}
                                     alt="Logo"
-                                    className="w-[90px] h-[90px] object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
+                                    className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
+                                    style={{ width: 'var(--canvas-logo-size)', height: 'var(--canvas-logo-size)' }}
                                 />
                             </div>
                         )}
@@ -825,8 +874,8 @@ export function CarouselCanvasPanel({
                             />
                         ) : hasScript ? (
                             <div className="w-full h-full flex items-center justify-center p-10">
-                                <div className="w-full max-w-md rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm p-6 text-center shadow-lg space-y-3">
-                                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                                <div className="carousel-script-preview w-full max-w-md rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm p-6 text-center shadow-lg space-y-3">
+                                    <p className="uppercase tracking-widest text-muted-foreground" style={{ fontSize: 'var(--cs-label)' }}>
                                         Guion previo
                                     </p>
                                     {isEditingScript ? (
@@ -912,10 +961,10 @@ export function CarouselCanvasPanel({
                                                 aria-label="Editar guion"
                                                 title="Haz clic para editar"
                                             >
-                                                <h3 className="text-xl font-semibold text-foreground">
+                                                <h3 className="font-semibold text-foreground" style={{ fontSize: 'var(--cs-title)', lineHeight: 1.2 }}>
                                                     {currentSlide?.title || `Slide ${currentIndex + 1}`}
                                                 </h3>
-                                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                                <p className="text-muted-foreground leading-relaxed" style={{ fontSize: 'var(--cs-body)' }}>
                                                     {currentSlide?.description || 'Sin descripcion'}
                                                 </p>
                                             </div>
@@ -924,6 +973,7 @@ export function CarouselCanvasPanel({
                                                 variant="ghost"
                                                 onClick={() => setIsEditingScript(true)}
                                                 className="mt-2"
+                                                style={{ fontSize: 'var(--cs-button)' }}
                                             >
                                                 Editar guion
                                             </Button>
