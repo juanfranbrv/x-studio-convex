@@ -526,13 +526,13 @@ export function ControlsPanel({
                                 }
                             }}
                         />
-                        <div className="absolute right-2 bottom-2 flex items-center gap-2">
+                        <div className="absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2">
                             {isMagicParsing && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                             <Button
                                 size="sm"
                                 onClick={onAnalyze}
                                 disabled={isMagicParsing || !promptValue.trim()}
-                                className="h-8 px-4 text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
+                                className="ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
                             >
                                 <Sparkles className="w-3.5 h-3.5 mr-2" />
                                 Analizar

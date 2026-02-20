@@ -562,11 +562,25 @@
   --canvas-ai-size: 72px;
 }
 
+/* Carousel script preview defaults */
+.carousel-script-preview {
+  --cs-title: 20px;
+  --cs-body: 14px;
+  --cs-label: 10px;
+  --cs-button: 12px;
+}
+
 /* 1) <= 1366px (HD) */
 @media (max-width: 1366px) {
   .canvas-panel {
     --canvas-logo-size: 44px;
     --canvas-ai-size: 32px;
+  }
+  .carousel-script-preview {
+    --cs-title: 14px;
+    --cs-body: 10px;
+    --cs-label: 9px;
+    --cs-button: 11px;
   }
 }
 
@@ -575,6 +589,12 @@
   .canvas-panel {
     --canvas-logo-size: 66px;
     --canvas-ai-size: 48px;
+  }
+  .carousel-script-preview {
+    --cs-title: 14px;
+    --cs-body: 10px;
+    --cs-label: 9px;
+    --cs-button: 11px;
   }
 }
 

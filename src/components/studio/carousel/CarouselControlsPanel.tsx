@@ -886,7 +886,7 @@ export function CarouselControlsPanel({
                             }}
                             className="min-h-[100px] text-sm resize-none bg-background border border-border focus:ring-1 focus:ring-primary focus:border-primary pb-12 pr-2 transition-all"
                         />
-                        <div className="absolute left-2 right-2 bottom-2 flex items-center gap-2">
+                        <div className="absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2">
                             <div className="flex items-center gap-2">
                                 {isAnalyzing && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                                 {isAnalyzing && onCancelAnalyze && (
@@ -915,7 +915,7 @@ export function CarouselControlsPanel({
                                 size="sm"
                                 onClick={handleAnalyze}
                                 disabled={!canAnalyze}
-                                className="ml-auto h-8 px-4 text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
+                                className="ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
                             >
                                 <Sparkles className="w-3.5 h-3.5 mr-2" />
                                 Analizar
