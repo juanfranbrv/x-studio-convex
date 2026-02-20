@@ -788,7 +788,7 @@ export function CarouselCanvasPanel({
 
                         {/* Reference Images Strip (Top Right) */}
                         {!currentSlide?.imageUrl && referenceImages.length > 0 && (
-                            <div className="absolute top-4 right-4 z-20 flex gap-2 flex-wrap max-w-[220px]">
+                            <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2 max-w-[220px]">
                                 {referenceImages.slice(0, 6).map((item, idx) => (
                                     <div key={`${item.source}-${idx}`} className="relative group">
                                         <img

@@ -919,7 +919,7 @@ export function CanvasPanel({
                                     const styleImages = allImages.filter((item) => item.role === 'style' || item.role === 'style_content')
                                     const auxLogos = allImages.filter((item) => item.role === 'logo')
                                     const hasAiPromptReference = creationState.imageSourceMode === 'generate'
-                                    const contentPreviewImage = contentImages[0]
+                                    const contentPreviewImages = contentImages.slice(0, 6)
 
                                     const renderStrip = (
                                         images: Array<{ url: string; source: 'upload' | 'brandkit'; key: string }>,
@@ -1002,9 +1002,9 @@ export function CanvasPanel({
                                         <>
                                             {renderStyleCorner(styleImages)}
                                             {renderStrip(auxLogos, "bottom-6 right-4", "bg-amber-600/80")}
-                                            {(hasAiPromptReference || !!contentPreviewImage) && (
-                                                <div className="absolute top-2 right-4 z-40">
-                                                    {hasAiPromptReference ? (
+                                            {(hasAiPromptReference || contentPreviewImages.length > 0) && (
+                                                <div className="absolute top-2 right-4 z-40 flex flex-col items-end gap-2">
+                                                    {hasAiPromptReference && (
                                                         <div className="relative group">
                                                             <AiPromptIcon
                                                                 className="text-primary drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
@@ -1023,11 +1023,12 @@ export function CanvasPanel({
                                                                 </Button>
                                                             )}
                                                         </div>
-                                                    ) : (
-                                                        <div className="relative group">
+                                                    )}
+                                                    {contentPreviewImages.map((item, idx) => (
+                                                        <div key={item.key} className="relative group">
                                                             <img
-                                                                src={contentPreviewImage!.url}
-                                                                alt="Contenido principal"
+                                                                src={item.url}
+                                                                alt={`Contenido ${idx + 1}`}
                                                                 className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]"
                                                                 style={{ width: 'clamp(60px, 11cqw, 112px)', height: 'clamp(60px, 11cqw, 112px)' }}
                                                             />
@@ -1036,13 +1037,18 @@ export function CanvasPanel({
                                                                     type="button"
                                                                     variant="ghost"
                                                                     size="icon"
-                                                                    onClick={() => onRemoveReferenceImage(contentPreviewImage!.url)}
+                                                                    onClick={() => onRemoveReferenceImage(item.url)}
                                                                     className="absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
                                                                     style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                                                 >
                                                                     <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                                                                 </Button>
                                                             )}
+                                                        </div>
+                                                    ))}
+                                                    {contentImages.length > 6 && (
+                                                        <div className="min-w-7 h-7 px-2 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white text-[10px] font-bold ring-1 ring-white/20">
+                                                            +{contentImages.length - 6}
                                                         </div>
                                                     )}
                                                 </div>
