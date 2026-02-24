@@ -47,6 +47,24 @@ function getPrimaryEmail(data: ClerkUserPayload): string | null {
   return typeof email === "string" && email.trim() ? email.trim() : null;
 }
 
+async function getPrimaryEmailFromClerk(clerkId: string): Promise<string | null> {
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(clerkId);
+    const primaryId = user.primaryEmailAddressId;
+    const primary =
+      user.emailAddresses.find((item) => item.id === primaryId) ?? user.emailAddresses[0];
+    const email = primary?.emailAddress;
+    return typeof email === "string" && email.trim() ? email.trim() : null;
+  } catch (error) {
+    log.warn("API", "[CLERK_WEBHOOK] Fallback email lookup en Clerk fallido", {
+      clerkId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const envSecret = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
@@ -90,7 +108,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (eventType === "user.created" || eventType === "user.updated") {
-      const email = getPrimaryEmail(data);
+      const email = getPrimaryEmail(data) ?? (await getPrimaryEmailFromClerk(clerkId));
       if (!email) {
         log.warn("API", "[CLERK_WEBHOOK] Usuario sin email primario, ignorado", { clerkId, eventType });
         return NextResponse.json({ ok: true, ignored: true }, { status: 200 });
