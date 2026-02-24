@@ -28,7 +28,26 @@ function getPrimaryEmail(data: ClerkUserPayload): string | null {
 
 export async function POST(req: NextRequest) {
   try {
-    const event = await verifyWebhook(req);
+    const envSecret = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
+    let event;
+
+    try {
+      event = await verifyWebhook(req, envSecret ? { signingSecret: envSecret } : undefined);
+    } catch (firstError) {
+      const message = firstError instanceof Error ? firstError.message : String(firstError);
+      const canRetryWithoutPrefix =
+        typeof envSecret === "string" &&
+        envSecret.startsWith("whsec_") &&
+        message.includes("Base64Coder");
+
+      if (!canRetryWithoutPrefix) {
+        throw firstError;
+      }
+
+      const normalizedSecret = envSecret.replace(/^whsec_/, "");
+      event = await verifyWebhook(req, { signingSecret: normalizedSecret });
+    }
+
     const eventType = event.type;
     const data = event.data as ClerkUserPayload;
     const clerkId = data?.id as string | undefined;
