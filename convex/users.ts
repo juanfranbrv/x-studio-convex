@@ -34,6 +34,17 @@ async function resolveUserAccess(ctx: MutationCtx | QueryCtx, email: string) {
     return { role: "user" as const, status: "waitlist" as const, approved: false };
 }
 
+function resolveExistingUserAccess(
+    existing: Doc<"users">,
+    access: { role: "user" | "beta" | "admin"; status: "waitlist" | "active"; approved: boolean }
+) {
+    // If user has been manually activated/suspended in admin, never downgrade from Clerk sync.
+    if (!access.approved && (existing.status === "active" || existing.status === "suspended")) {
+        return { role: existing.role, status: existing.status, approved: existing.status === "active" };
+    }
+    return access;
+}
+
 export const getUser = query({
     args: { clerk_id: v.string() },
     handler: async (ctx, args) => {
@@ -142,23 +153,28 @@ export const upsertUser = mutation({
         const access = await resolveUserAccess(ctx, args.email);
 
         if (existing) {
+            const effectiveAccess = resolveExistingUserAccess(existing, access);
             const wasApproved = existing.status === "active";
-            const nextCredits = !wasApproved && access.approved
-                ? (existing.credits || 0) + await getSetting(ctx, "beta_initial_credits", 100)
+            const willBeApproved = effectiveAccess.status === "active";
+            const creditsToGrant = !wasApproved && willBeApproved
+                ? await getSetting(ctx, "beta_initial_credits", 100)
+                : 0;
+            const nextCredits = creditsToGrant > 0
+                ? (existing.credits || 0) + creditsToGrant
                 : existing.credits;
 
             await ctx.db.patch(existing._id, {
                 email: args.email,
-                role: access.role,
-                status: access.status,
+                role: effectiveAccess.role,
+                status: effectiveAccess.status,
                 credits: nextCredits,
             });
 
-            if (!wasApproved && access.approved) {
+            if (creditsToGrant > 0) {
                 await ctx.db.insert("credit_transactions", {
                     user_id: existing._id,
                     type: "grant",
-                    amount: nextCredits - (existing.credits || 0),
+                    amount: creditsToGrant,
                     balance_after: nextCredits,
                     metadata: { reason: "Activation after beta approval" },
                     created_at: new Date().toISOString(),
@@ -238,30 +254,35 @@ export const syncUserFromClerkWebhook = mutation({
             : 0;
 
         if (existing) {
+            const effectiveAccess = resolveExistingUserAccess(existing, access);
             const wasApproved = existing.status === "active";
-            const nextCredits = !wasApproved && access.approved
-                ? (existing.credits || 0) + initialCredits
+            const willBeApproved = effectiveAccess.status === "active";
+            const creditsToGrant = !wasApproved && willBeApproved
+                ? await getSetting(ctx, "beta_initial_credits", 100)
+                : 0;
+            const nextCredits = creditsToGrant > 0
+                ? (existing.credits || 0) + creditsToGrant
                 : existing.credits;
 
             await ctx.db.patch(existing._id, {
                 email: args.email,
-                role: access.role,
-                status: access.status,
+                role: effectiveAccess.role,
+                status: effectiveAccess.status,
                 credits: nextCredits,
             });
 
-            if (!wasApproved && access.approved && initialCredits > 0) {
+            if (creditsToGrant > 0) {
                 await ctx.db.insert("credit_transactions", {
                     user_id: existing._id,
                     type: "grant",
-                    amount: initialCredits,
+                    amount: creditsToGrant,
                     balance_after: nextCredits,
                     metadata: { reason: "Clerk webhook beta approval" },
                     created_at: new Date().toISOString(),
                 });
             }
 
-            return { action: "updated", userId: existing._id, role: access.role, status: access.status };
+            return { action: "updated", userId: existing._id, role: effectiveAccess.role, status: effectiveAccess.status };
         }
 
         const userId = await ctx.db.insert("users", {

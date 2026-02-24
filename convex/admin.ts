@@ -151,6 +151,28 @@ export const activateUser = mutation({
             credits: newBalance,
         });
 
+        const emailLower = user.email.toLowerCase().trim();
+        const betaRequest = await ctx.db
+            .query("beta_requests")
+            .withIndex("by_email", (q) => q.eq("email", emailLower))
+            .first();
+
+        if (betaRequest) {
+            await ctx.db.patch(betaRequest._id, {
+                status: "approved",
+                processed_at: new Date().toISOString(),
+                processed_by: args.admin_email,
+            });
+        } else {
+            await ctx.db.insert("beta_requests", {
+                email: emailLower,
+                status: "approved",
+                created_at: new Date().toISOString(),
+                processed_at: new Date().toISOString(),
+                processed_by: args.admin_email,
+            });
+        }
+
         await ctx.db.insert("credit_transactions", {
             user_id: args.user_id,
             type: "grant",
