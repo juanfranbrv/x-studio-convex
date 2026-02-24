@@ -79,6 +79,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, ignored: true }, { status: 200 });
   } catch (error) {
     log.error("API", "[CLERK_WEBHOOK] Error procesando webhook", error);
-    return NextResponse.json({ ok: false }, { status: 400 });
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : "unknown_webhook_error";
+    return NextResponse.json({ ok: false, error: message }, { status: 400 });
   }
 }
