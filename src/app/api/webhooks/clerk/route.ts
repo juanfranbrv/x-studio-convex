@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { verifyWebhook } from "@clerk/nextjs/webhooks";
+import { verifyWebhook } from "@clerk/backend/webhooks";
 import { fetchMutation } from "convex/nextjs";
 import { api } from "@/../convex/_generated/api";
 import { log } from "@/lib/logger";
