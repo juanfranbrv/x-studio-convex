@@ -18,6 +18,27 @@ type ClerkUserPayload = {
   email_addresses?: ClerkEmailAddress[];
 };
 
+function buildWebhookSecretCandidates(secret: string | undefined): string[] {
+  if (!secret) return [];
+
+  const trimmed = secret.trim();
+  const unquoted = trimmed.replace(/^['"]+|['"]+$/g, "");
+  const compact = unquoted.replace(/\s+/g, "");
+  const raw = compact.startsWith("whsec_") ? compact.slice("whsec_".length) : compact;
+
+  const asBase64 = raw.replace(/-/g, "+").replace(/_/g, "/");
+  const paddedBase64 = asBase64 + "=".repeat((4 - (asBase64.length % 4)) % 4);
+
+  const candidates = new Set<string>();
+  for (const value of [compact, raw, asBase64, paddedBase64]) {
+    if (!value) continue;
+    candidates.add(value);
+    candidates.add(`whsec_${value}`);
+  }
+
+  return Array.from(candidates);
+}
+
 function getPrimaryEmail(data: ClerkUserPayload): string | null {
   const primaryEmailId = data?.primary_email_address_id;
   const addresses = Array.isArray(data?.email_addresses) ? data.email_addresses : [];
@@ -30,22 +51,27 @@ export async function POST(req: NextRequest) {
   try {
     const envSecret = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
     let event;
+    const candidateSecrets = buildWebhookSecretCandidates(envSecret);
 
-    try {
-      event = await verifyWebhook(req.clone(), envSecret ? { signingSecret: envSecret } : undefined);
-    } catch (firstError) {
-      const message = firstError instanceof Error ? firstError.message : String(firstError);
-      const canRetryWithoutPrefix =
-        typeof envSecret === "string" &&
-        envSecret.startsWith("whsec_") &&
-        message.includes("Base64Coder");
-
-      if (!canRetryWithoutPrefix) {
-        throw firstError;
+    let lastError: unknown = null;
+    for (const secret of candidateSecrets) {
+      try {
+        event = await verifyWebhook(req.clone(), { signingSecret: secret });
+        lastError = null;
+        break;
+      } catch (e) {
+        lastError = e;
       }
+    }
 
-      const normalizedSecret = envSecret.replace(/^whsec_/, "");
-      event = await verifyWebhook(req.clone(), { signingSecret: normalizedSecret });
+    if (!event) {
+      if (!envSecret) {
+        event = await verifyWebhook(req.clone());
+      } else if (lastError) {
+        throw lastError;
+      } else {
+        throw new Error("Webhook verification failed");
+      }
     }
 
     const eventType = event.type;
