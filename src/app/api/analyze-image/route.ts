@@ -11,17 +11,36 @@ const VISION_MODEL = 'models/gemini-flash-lite-latest'
 
 export async function POST(request: NextRequest) {
     try {
-        const { imageBase64, mimeType = 'image/jpeg' } = await request.json()
+        const { imageBase64, imageUrl, mimeType: incomingMimeType = 'image/jpeg' } = await request.json()
 
-        if (!imageBase64) {
+        let effectiveMimeType = incomingMimeType
+        let effectiveBase64 = imageBase64 as string | undefined
+
+        if (!effectiveBase64 && typeof imageUrl === 'string' && imageUrl.trim()) {
+            const imageResponse = await fetch(imageUrl)
+            if (!imageResponse.ok) {
+                return NextResponse.json(
+                    { success: false, error: 'No se pudo descargar la imagen de referencia' },
+                    { status: 400 }
+                )
+            }
+            const arrayBuffer = await imageResponse.arrayBuffer()
+            effectiveBase64 = Buffer.from(arrayBuffer).toString('base64')
+            const detectedMimeType = imageResponse.headers.get('content-type')
+            if (detectedMimeType) {
+                effectiveMimeType = detectedMimeType
+            }
+        }
+
+        if (!effectiveBase64) {
             return NextResponse.json(
-                { success: false, error: 'No image provided' },
+                { success: false, error: 'No image provided (base64 or imageUrl)' },
                 { status: 400 }
             )
         }
 
         // Remove data URL prefix if present
-        const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '')
+        const base64Data = effectiveBase64.replace(/^data:image\/\w+;base64,/, '')
 
         const model = genAI.getGenerativeModel({ model: VISION_MODEL })
 
@@ -32,7 +51,7 @@ export async function POST(request: NextRequest) {
                     parts: [
                         {
                             inlineData: {
-                                mimeType,
+                                mimeType: effectiveMimeType,
                                 data: base64Data,
                             },
                         },

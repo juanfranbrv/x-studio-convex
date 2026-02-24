@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -20,14 +20,16 @@ import {
     SlideContent,
     CarouselSuggestion
 } from '@/app/actions/generate-carousel'
+import { parseLazyIntentAction } from '@/app/actions/parse-intent'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { INTENT_CATALOG } from '@/lib/creation-flow-types'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
-import type { DebugPromptData } from '@/lib/creation-flow-types'
+import type { DebugPromptData, ReferenceImageRole, VisionAnalysis } from '@/lib/creation-flow-types'
 import { buildCarouselImagePrompt } from '@/lib/prompts/carousel-image'
 import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
 import { extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
+import { buildPriority5StyleBlockFromAnalysis, mergeCustomStyleIntoStyleDirectives } from '@/lib/prompts/vision/style-priority-block'
 import { FeedbackButton } from '@/components/studio/FeedbackButton'
 import { cn } from '@/lib/utils'
 import { Id } from '../../../convex/_generated/dataModel'
@@ -43,7 +45,7 @@ export default function CarouselPage() {
     const aiConfig = useQuery(api.settings.getAIConfig)
 
     useEffect(() => {
-        document.title = 'X Carrusel | Motor de Diseño Inteligente'
+        document.title = 'X Carrusel | Motor de DiseÃ±o Inteligente'
     }, [])
 
     useEffect(() => {
@@ -82,11 +84,29 @@ export default function CarouselPage() {
     const [isCaptionLocked, setIsCaptionLocked] = useState(false)
     const [isCaptionGenerating, setIsCaptionGenerating] = useState(false)
     const [referenceImages, setReferenceImages] = useState<Array<{ url: string; source: 'upload' | 'brandkit' }>>([])
+    const [referencePreviewState, setReferencePreviewState] = useState<{
+        uploadedImages: string[]
+        selectedBrandKitImageIds: string[]
+        referenceImageRoles: Record<string, ReferenceImageRole>
+        imageSourceMode: 'upload' | 'brandkit' | 'generate'
+    }>({
+        uploadedImages: [],
+        selectedBrandKitImageIds: [],
+        referenceImageRoles: {},
+        imageSourceMode: 'upload'
+    })
     const [selectedLogoUrl, setSelectedLogoUrl] = useState<string | undefined>(undefined)
     const [showDebugModal, setShowDebugModal] = useState(false)
     const [debugPromptData, setDebugPromptData] = useState<DebugPromptData | null>(null)
     const [pendingGenerateSettings, setPendingGenerateSettings] = useState<CarouselSettings | null>(null)
     const [suggestions, setSuggestions] = useState<CarouselSuggestion[]>([])
+    const [imagePromptSuggestions, setImagePromptSuggestions] = useState<string[]>([])
+    const [sessionHistory, setSessionHistory] = useState<Array<{
+        id: string
+        createdAt: string
+        slides: CarouselSlide[]
+        caption?: string
+    }>>([])
     const [originalAnalysis, setOriginalAnalysis] = useState<{
         slides: CarouselSlide[]
         scriptSlides: SlideContent[]
@@ -106,6 +126,7 @@ export default function CarouselPage() {
     const [slideCountOverride, setSlideCountOverride] = useState<number | null>(null)
     const cancelGenerationRef = useRef(false)
     const cancelAnalyzeRef = useRef(false)
+    const styleAnalysisCacheRef = useRef<Record<string, string>>({})
 
     const isAdmin = user?.emailAddresses?.some(
         email => email.emailAddress === 'juanfranbrv@gmail.com'
@@ -147,17 +168,114 @@ export default function CarouselPage() {
 
     const simplifyErrorMessage = (message: string, suggested?: number) => {
         const lower = message.toLowerCase()
-        if (lower.includes('reto de 7') || lower.includes('slide por día') || lower.includes('n+2') || lower.includes('requested_slide_count')) {
+        if (lower.includes('reto de 7') || lower.includes('slide por dÃ­a') || lower.includes('n+2') || lower.includes('requested_slide_count')) {
             if (suggested) {
-                return `Este tipo de carrusel requiere al menos ${suggested} diapositivas (gancho + contenido + CTA). Ajusta el número para continuar.`
+                return `Este tipo de carrusel requiere al menos ${suggested} diapositivas (gancho + contenido + CTA). Ajusta el nÃºmero para continuar.`
             }
-            return 'Este tipo de carrusel requiere más diapositivas de las seleccionadas. Ajusta el número para continuar.'
+            return 'Este tipo de carrusel requiere mÃ¡s diapositivas de las seleccionadas. Ajusta el nÃºmero para continuar.'
         }
         if (lower.includes('modelo de inteligencia') || lower.includes('modelo de imagen')) {
-            return 'Falta configuración de IA. Revisa el panel de Admin.'
+            return 'Falta configuraciÃ³n de IA. Revisa el panel de Admin.'
         }
-        return 'No se pudo completar la acción. Revisa la configuración e inténtalo de nuevo.'
+        return 'No se pudo completar la acciÃ³n. Revisa la configuraciÃ³n e intÃ©ntalo de nuevo.'
     }
+
+    const buildAiImageSuggestions = useCallback((
+        items?: SlideContent[] | null,
+        alternativeScripts?: Array<SlideContent[] | undefined>
+    ) => {
+        if (!Array.isArray(items) || items.length === 0) return []
+
+        const normalizeKey = (value: string) =>
+            value
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+
+        const removeVisualStyleHints = (text: string) => {
+            if (!text) return ''
+            const blockedTokens = [
+                'style', 'aesthetic', 'mood', 'vibe', 'look', 'visual',
+                'estilo', 'estetica',
+                'color', 'colors', 'palette', 'tone', 'contrast', 'saturation', 'hue',
+                'colores', 'paleta', 'tono', 'contraste', 'saturacion', 'matiz',
+                'lighting', 'light', 'shadow', 'cinematic',
+                'iluminacion', 'luz', 'sombras', 'cinematografico',
+                'realistic', 'photorealistic', 'illustration', 'illustrative',
+                'realista', 'fotorrealista', 'fotografico', 'fotografia', 'ilustracion',
+                'vector', 'comic', 'cartoon', 'watercolor', 'oil painting',
+                'vectorial', 'caricatura', 'acuarela', 'oleo',
+            ].map(normalizeKey)
+
+            const clauses = text
+                .split(/[.,;:]+/g)
+                .map((c) => c.trim())
+                .filter(Boolean)
+                .filter((clause) => {
+                    const normalizedClause = normalizeKey(clause)
+                    return !blockedTokens.some((token) => normalizedClause.includes(token))
+                })
+
+            const cleaned = clauses.join(', ').trim()
+            return (cleaned || text)
+                .replace(/^(ilustracion|ilustraci?n|fotografia|fotograf?a|foto|render|imagen|vector|vectorial)\s+/i, '')
+                .replace(/(con|en|usando|with|in|using)[^,.;]*(estilo|estetica|iluminacion|color|paleta|realista|fotografia|ilustracion|style|aesthetic|lighting|palette|realistic|illustration)[^,.;]*/gi, '')
+                .replace(/\s+/g, ' ')
+                .replace(/^[,.\s]+|[,.\s]+$/g, '')
+                .trim()
+        }
+
+        const normalize = (value: string) =>
+            removeVisualStyleHints(value)
+                .replace(/\s+/g, ' ')
+                .replace(/\.+/g, '.')
+                .trim()
+
+        const baseSlides = [...items]
+        const alternativeSlides = (alternativeScripts || [])
+            .flatMap((set) => (Array.isArray(set) ? set : []))
+            .filter(Boolean)
+        const slidePool = [...baseSlides, ...alternativeSlides]
+
+        const fromSlides = slidePool
+            .map((slide: SlideContent) => {
+                const visual = typeof slide.visualPrompt === 'string' ? normalize(slide.visualPrompt) : ''
+                if (visual) return visual
+                return normalize(`${slide.title || ''}. ${slide.description || ''}`)
+            })
+            .filter((value) => Boolean(value) && value.length > 16)
+
+        const hook = normalize(`${items[0]?.title || ''}. ${items[0]?.description || ''}`)
+        const middle = normalize(`${items[Math.max(1, Math.floor(items.length / 2))]?.title || ''}. ${items[Math.max(1, Math.floor(items.length / 2))]?.description || ''}`)
+        const close = normalize(`${items[items.length - 1]?.title || ''}. ${items[items.length - 1]?.description || ''}`)
+        const deckSummary = normalize(
+            items
+                .map((slide) => `${slide.title || ''}. ${slide.description || ''}`)
+                .join(' ')
+                .slice(0, 500)
+        )
+
+        const synthetic = [
+            normalize(`Persona principal resolviendo esta situaci?n concreta: ${hook}`),
+            normalize(`Escena del problema o necesidad central en contexto real: ${middle}`),
+            normalize(`Escena de soluci?n o resultado esperado vinculada al mensaje: ${close}`),
+            normalize(`Situaci?n completa que represente el guion del carrusel: ${deckSummary}`),
+            normalize(`Momento de acci?n con objeto clave del mensaje: ${hook}`),
+            normalize(`Interacci?n humana relacionada con el tema principal: ${middle}`),
+        ].filter(Boolean)
+
+        const merged = Array.from(new Set([...fromSlides, ...synthetic])).filter((value) => value.length > 12)
+        while (merged.length < 4) {
+            merged.push(normalize(`Situaci?n concreta del guion del carrusel: ${deckSummary || hook || middle || close || 'narrativa principal'}`))
+        }
+
+        const randomized = [...merged]
+        for (let i = randomized.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[randomized[i], randomized[j]] = [randomized[j], randomized[i]]
+        }
+        return randomized.slice(0, 4)
+    }, [])
 
     const openErrorModal = (title: string, message: string) => {
         const suggestedSlideCount = extractSuggestedSlideCount(message)
@@ -197,6 +315,17 @@ export default function CarouselPage() {
 
     const [isRegenerating, setIsRegenerating] = useState(false)
     const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null)
+    const buildPreviewTextContext = useCallback((slides: SlideContent[]) => {
+        return slides
+            .map((slide) => {
+                const title = (slide.title || '').trim()
+                const body = (slide.description || '').trim()
+                if (!title && !body) return ''
+                return `SLIDE_${slide.index + 1}: ${title}${body ? ` | ${body}` : ''}`
+            })
+            .filter(Boolean)
+            .join('\n')
+    }, [])
 
     const fingerprintSlides = useCallback((items: SlideContent[] | CarouselSlide[]) => {
         return items
@@ -215,7 +344,7 @@ export default function CarouselPage() {
         if (!settings.prompt.trim() || !activeBrandKit || !aiConfig?.intelligenceModel) {
             if (!silent) {
                 openErrorModal(
-                    'Falta configuración de IA',
+                    'Falta configuraciÃ³n de IA',
                     'No hay un modelo de inteligencia configurado en el panel de Admin.'
                 )
             }
@@ -281,6 +410,27 @@ export default function CarouselPage() {
                 if (!suggestion?.slides) return false
                 return fingerprintSlides(suggestion.slides) !== originalSignature
             })
+            let finalImagePrompts = buildAiImageSuggestions(
+                result.slides,
+                filteredSuggestions.map((suggestion) => suggestion.slides)
+            )
+            try {
+                const parsedIntent = await parseLazyIntentAction({
+                    userText: settings.prompt,
+                    brandDNA: activeBrandKit,
+                    brandWebsite: activeBrandKit?.url,
+                    intelligenceModel: aiConfig.intelligenceModel,
+                    intentId: result.detectedIntent,
+                    variationSeed: Date.now(),
+                    previewTextContext: buildPreviewTextContext(result.slides)
+                })
+                if (Array.isArray(parsedIntent.imagePromptSuggestions) && parsedIntent.imagePromptSuggestions.length > 0) {
+                    finalImagePrompts = parsedIntent.imagePromptSuggestions.slice(0, 4)
+                }
+            } catch (error) {
+                console.warn('[Carousel] parseLazyIntentAction fallback to local suggestions', error)
+            }
+            setImagePromptSuggestions(finalImagePrompts)
             setSuggestions(nextSuggestions)
             setSuggestions(filteredSuggestions)
             if (filteredSuggestions.length > 0) {
@@ -320,18 +470,78 @@ export default function CarouselPage() {
                 setIsCancelingAnalyze(false)
             }
         }
-    }, [activeBrandKit, aiConfig?.intelligenceModel, isCaptionLocked, toast])
+    }, [activeBrandKit, aiConfig?.intelligenceModel, buildAiImageSuggestions, buildPreviewTextContext, isCaptionLocked, toast])
 
     const handleCancelAnalyze = useCallback(() => {
         cancelAnalyzeRef.current = true
         setIsAnalyzing(false)
         setIsCancelingAnalyze(true)
         toast({
-            title: 'Análisis detenido',
-            description: 'Se canceló el análisis del prompt.'
+            title: 'AnÃ¡lisis detenido',
+            description: 'Se cancelÃ³ el anÃ¡lisis del prompt.'
         })
         setTimeout(() => setIsCancelingAnalyze(false), 800)
     }, [toast])
+
+    const resolveStyleReferenceImageUrl = useCallback((settings: CarouselSettings): string | undefined => {
+        const allSelectedReferences = [
+            ...(referencePreviewState.uploadedImages || []),
+            ...(referencePreviewState.selectedBrandKitImageIds || []),
+        ]
+
+        if (allSelectedReferences.length > 0) {
+            const selectedSet = new Set(allSelectedReferences)
+            const styleCandidate = Object.entries(referencePreviewState.referenceImageRoles || {}).find(([url, role]) =>
+                selectedSet.has(url) && (role === 'style' || role === 'style_content')
+            )?.[0]
+            if (styleCandidate) return styleCandidate
+        }
+
+        const fallbackFromSettings = (settings.selectedImageUrls || [])[0]
+        return fallbackFromSettings
+    }, [referencePreviewState.referenceImageRoles, referencePreviewState.selectedBrandKitImageIds, referencePreviewState.uploadedImages])
+
+    const ensureStyleAnalysisInSettings = useCallback(async (settings: CarouselSettings): Promise<CarouselSettings> => {
+        const styleReferenceUrl = resolveStyleReferenceImageUrl(settings)
+        if (!styleReferenceUrl) {
+            return settings
+        }
+
+        const cached = styleAnalysisCacheRef.current[styleReferenceUrl]
+        if (cached) {
+            const mergedCached = mergeCustomStyleIntoStyleDirectives(
+                cached,
+                settings.customStyleText?.trim() || ''
+            )
+            return { ...settings, aiStyleDirectives: mergedCached }
+        }
+
+        try {
+            const body = styleReferenceUrl.startsWith('data:image/')
+                ? { imageBase64: styleReferenceUrl }
+                : { imageUrl: styleReferenceUrl }
+            const response = await fetch('/api/analyze-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            })
+            const result = await response.json()
+            const analysis: VisionAnalysis | null = result?.success ? (result.data as VisionAnalysis) : null
+            const priority5Block = buildPriority5StyleBlockFromAnalysis(analysis)
+            if (!priority5Block) {
+                return settings
+            }
+            styleAnalysisCacheRef.current[styleReferenceUrl] = priority5Block
+            const mergedStyle = mergeCustomStyleIntoStyleDirectives(
+                priority5Block,
+                settings.customStyleText?.trim() || ''
+            )
+            return { ...settings, aiStyleDirectives: mergedStyle }
+        } catch (error) {
+            console.error('Style analysis fallback failed:', error)
+            return settings
+        }
+    }, [resolveStyleReferenceImageUrl])
 
     const handleAnalyze = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
@@ -346,13 +556,14 @@ export default function CarouselPage() {
 
         if (!aiConfig?.intelligenceModel) {
             openErrorModal(
-                'Falta configuración de IA',
+                'Falta configuraciÃ³n de IA',
                 'No hay un modelo de inteligencia configurado en el panel de Admin.'
             )
             return
         }
-        await performAnalyze(settings)
-    }, [activeBrandKit, aiConfig?.intelligenceModel, performAnalyze, toast])
+        const settingsWithStyle = await ensureStyleAnalysisInSettings(settings)
+        await performAnalyze(settingsWithStyle)
+    }, [activeBrandKit, aiConfig?.intelligenceModel, ensureStyleAnalysisInSettings, performAnalyze])
 
     const applySuggestion = useCallback((index: number) => {
         const suggestion = suggestions[index]
@@ -366,6 +577,7 @@ export default function CarouselPage() {
         setSlides(mappedSlides)
         setScriptSlides(suggestion.slides)
         setScriptSlideCount(suggestion.slides.length)
+        setImagePromptSuggestions(buildAiImageSuggestions(suggestion.slides))
         setAnalysisHook(suggestion.hook)
         setAnalysisStructure(suggestion.structure)
         setAnalysisIntent(suggestion.detectedIntent)
@@ -376,13 +588,14 @@ export default function CarouselPage() {
             title: 'Sugerencia aplicada',
             description: 'Se han actualizado los textos del carrusel.'
         })
-    }, [suggestions, isCaptionLocked, toast])
+    }, [buildAiImageSuggestions, suggestions, isCaptionLocked, toast])
 
     const undoSuggestion = useCallback(() => {
         if (!originalAnalysis) return
         setSlides(originalAnalysis.slides)
         setScriptSlides(originalAnalysis.scriptSlides)
         setScriptSlideCount(originalAnalysis.scriptSlides.length)
+        setImagePromptSuggestions(buildAiImageSuggestions(originalAnalysis.scriptSlides))
         setAnalysisHook(originalAnalysis.hook)
         setAnalysisStructure(originalAnalysis.structure)
         setAnalysisIntent(originalAnalysis.detectedIntent)
@@ -393,14 +606,14 @@ export default function CarouselPage() {
             title: 'Cambios revertidos',
             description: 'Se ha vuelto al contenido original.'
         })
-    }, [originalAnalysis, isCaptionLocked, toast])
+    }, [buildAiImageSuggestions, originalAnalysis, isCaptionLocked, toast])
 
     const handleRegenerateCaption = useCallback(async () => {
         if (!carouselSettings || !activeBrandKit) return
         if (isCaptionLocked) return
         if (!aiConfig?.intelligenceModel) {
             openErrorModal(
-                'Falta configuración de IA',
+                'Falta configuraciÃ³n de IA',
                 'No hay un modelo de inteligencia configurado en el panel de Admin.'
             )
             return
@@ -434,6 +647,21 @@ export default function CarouselPage() {
         }
     }, [activeBrandKit, aiConfig?.intelligenceModel, carouselSettings, isCaptionLocked, toast])
 
+    const buildSlidesFromCurrentState = useCallback((targetCount: number): SlideContent[] | null => {
+        if (!Array.isArray(slides) || slides.length === 0) return null
+        const normalized = slides
+            .slice(0, targetCount)
+            .map((slide, idx) => ({
+                index: Number.isFinite(slide.index) ? slide.index : idx,
+                title: (slide.title || '').trim(),
+                description: (slide.description || '').trim(),
+                visualPrompt: (slide.description || '').trim(),
+            }))
+            .filter((slide) => slide.title || slide.description || slide.visualPrompt)
+        if (normalized.length === 0) return null
+        return normalized
+    }, [slides])
+
     const executeGenerate = useCallback(async (settings: CarouselSettings) => {
         cancelGenerationRef.current = false
         if (!settings.prompt.trim()) {
@@ -448,19 +676,9 @@ export default function CarouselPage() {
 
         if (!aiConfig?.imageModel) {
             openErrorModal(
-                'Falta configuración de IA',
+                'Falta configuraciÃ³n de IA',
                 'No hay un modelo de imagen configurado en el panel de Admin.'
             )
-            return
-        }
-
-        const shouldUseScript = scriptSlides && scriptPrompt === settings.prompt && scriptSlideCount === settings.slideCount
-        if (!shouldUseScript && !aiConfig?.intelligenceModel) {
-            toast({
-                title: 'Falta configuracion de IA',
-                description: 'No hay un modelo de inteligencia configurado en el panel de Admin.',
-                variant: 'destructive'
-            })
             return
         }
 
@@ -471,13 +689,12 @@ export default function CarouselPage() {
         setCarouselSettings(settings)
 
         try {
-            let slidesForGeneration = shouldUseScript ? scriptSlides : null
-            if (!slidesForGeneration) {
-                slidesForGeneration = await performAnalyze(settings, true)
-            }
+            const slidesForGeneration =
+                (scriptSlides && scriptSlides.length > 0 ? scriptSlides.slice(0, settings.slideCount) : null)
+                || buildSlidesFromCurrentState(settings.slideCount)
 
             if (!slidesForGeneration) {
-                throw new Error('No se pudo preparar el guion para la generación.')
+                throw new Error('No hay slides preparadas para generar. Pulsa "Analizar" primero.')
             }
 
             const normalizedSlides = slidesForGeneration.map(s => ({ ...s }))
@@ -505,6 +722,7 @@ export default function CarouselPage() {
             setSlides(initialSlides)
 
             const generatedImageUrls: string[] = []
+            let latestSlidesSnapshot: CarouselSlide[] = [...initialSlides]
             let doneCount = 0
 
             for (let i = 0; i < totalSlides; i++) {
@@ -535,7 +753,7 @@ export default function CarouselPage() {
                     settings.selectedColors,
                     settings.compositionId,
                     settings.structureId,
-                    settings.aiImageDescription,
+                    settings.aiStyleDirectives,
                     settings.selectedImageUrls,
                     consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined
                 )
@@ -557,25 +775,43 @@ export default function CarouselPage() {
                         }
                         : s
                     ))
+                    latestSlidesSnapshot = latestSlidesSnapshot.map(s => s.index === slideContent.index
+                        ? {
+                            ...s,
+                            imageUrl: result.imageUrl,
+                            status: 'done' as const,
+                            debugPrompt: result.debugPrompt,
+                            debugReferences: result.debugReferences
+                        }
+                        : s
+                    )
                     setGeneratedCount(doneCount)
                     setCurrentSlideIndex(slideContent.index)
                 } else {
                     const errorMessage = result.error || 'Error desconocido'
                     setSlides(prev => prev.map(s => s.index === slideContent.index ? { ...s, status: 'error' as const, error: errorMessage } : s))
+                    latestSlidesSnapshot = latestSlidesSnapshot.map(s => s.index === slideContent.index ? { ...s, status: 'error' as const, error: errorMessage } : s)
                 }
             }
 
             if (cancelGenerationRef.current) {
                 toast({
-                    title: 'Generación detenida',
-                    description: 'Se canceló la generación del carrusel.'
+                    title: 'GeneraciÃ³n detenida',
+                    description: 'Se cancelÃ³ la generaciÃ³n del carrusel.'
                 })
             } else {
                 setCurrentSlideIndex(0)
-                toast({
-                    title: '✅ Carrusel generado',
-                    description: `${doneCount} slides listos.`
-                })
+                if (doneCount > 0) {
+                    setSessionHistory((prev) => [
+                        {
+                            id: `carousel-${Date.now()}`,
+                            createdAt: new Date().toISOString(),
+                            slides: latestSlidesSnapshot,
+                            caption
+                        },
+                        ...prev
+                    ])
+                }
             }
 
         } catch (error) {
@@ -593,7 +829,7 @@ export default function CarouselPage() {
                 setIsCancelingGenerate(false)
             }
         }
-    }, [activeBrandKit, aiConfig?.imageModel, aiConfig?.intelligenceModel, scriptSlides, scriptPrompt, scriptSlideCount, toast])
+    }, [activeBrandKit, aiConfig?.imageModel, buildSlidesFromCurrentState, scriptSlides, toast, caption])
 
     const handleCancelGenerate = useCallback(() => {
         cancelGenerationRef.current = true
@@ -601,8 +837,8 @@ export default function CarouselPage() {
         setSlides(prev => prev.map(s => s.status === 'generating' ? { ...s, status: 'pending' as const } : s))
         setIsCancelingGenerate(true)
         toast({
-            title: 'Generación detenida',
-            description: 'Se canceló la generación del carrusel.'
+            title: 'GeneraciÃ³n detenida',
+            description: 'Se cancelÃ³ la generaciÃ³n del carrusel.'
         })
         setTimeout(() => setIsCancelingGenerate(false), 800)
     }, [toast])
@@ -620,26 +856,25 @@ export default function CarouselPage() {
 
         if (!aiConfig?.imageModel) {
             openErrorModal(
-                'Falta configuración de IA',
+                'Falta configuraciÃ³n de IA',
                 'No hay un modelo de imagen configurado en el panel de Admin.'
             )
             return
         }
 
+        const settingsWithStyle = await ensureStyleAnalysisInSettings(settings)
+
         if (!isAdmin) {
-            await executeGenerate(settings)
+            await executeGenerate(settingsWithStyle)
             return
         }
 
-        const shouldUseScript = scriptSlides && scriptPrompt === settings.prompt && scriptSlideCount === settings.slideCount
-        let slidesForPrompt = shouldUseScript ? scriptSlides : null
+        const slidesForPrompt =
+            (scriptSlides && scriptSlides.length > 0 ? scriptSlides.slice(0, settingsWithStyle.slideCount) : null)
+            || buildSlidesFromCurrentState(settingsWithStyle.slideCount)
 
         if (!slidesForPrompt) {
-            slidesForPrompt = await performAnalyze(settings, true)
-        }
-
-        if (!slidesForPrompt) {
-            openErrorModal('Error', 'No se pudo preparar el guion para el preview del prompt.')
+            openErrorModal('Error', 'No hay slides preparadas para el preview. Pulsa "Analizar" primero.')
             return
         }
 
@@ -648,7 +883,7 @@ export default function CarouselPage() {
         const { getMoodForSlide } = await import('@/lib/prompts/carousel/mood')
 
         const compositionPreset = settings.structureId
-            ? compositionsForDebug?.find((c) => c.composition_id === settings.compositionId)
+            ? compositionsForDebug?.find((c) => c.composition_id === settingsWithStyle.compositionId)
             : undefined
         const resolvedCompositionPreset = compositionPreset || {
             layoutPrompt: "Standard clean social media composition with clear text area.",
@@ -656,14 +891,19 @@ export default function CarouselPage() {
         }
 
         // Extract brand colors for injection with role-based helper
-        const findColor = (role: string, fallback: string) => {
-            const match = settings.selectedColors?.find(c => (c as any).role === role)
-            return (match as any)?.color || fallback
+        const findColors = (role: string, fallback: string) => {
+            const fromRole = (settingsWithStyle.selectedColors || [])
+                .filter((entry) => entry?.role === role)
+                .map((entry) => (entry?.color || '').trim())
+                .filter(Boolean)
+            if (fromRole.length === 0) return [fallback]
+            return Array.from(new Set(fromRole))
         }
 
         const brandColors = {
-            background: findColor('Fondo', '#141210'),
-            accent: findColor('Acento', '#F0E500')
+            background: findColors('Fondo', '#141210'),
+            accent: findColors('Acento', '#F0E500'),
+            text: findColors('Texto', '#FFFFFF')
         }
 
         const seed = generateCarouselSeed()
@@ -686,23 +926,24 @@ export default function CarouselPage() {
                 currentSlide: idx + 1,
                 totalSlides: slideCount,
                 logoPosition: extractLogoPosition(resolvedCompositionPreset?.layoutPrompt || ''),
-                includeLogo: Boolean(settings.selectedLogoUrl),
+                includeLogo: Boolean(settingsWithStyle.selectedLogoUrl),
                 isSequentialSlide: idx > 0,
-                ctaText: isLastSlide ? (slide.title || 'Más info') : undefined,
+                ctaText: isLastSlide ? (slide.title || 'MÃ¡s info') : undefined,
                 ctaUrl: isLastSlide ? finalUrl : undefined,
-                visualAnalysis: settings?.aiImageDescription
+                visualAnalysis: settingsWithStyle?.aiStyleDirectives,
+                fonts: activeBrandKit?.fonts as any
             })
 
             // Build references array
             const references: Array<{ type: string; label: string; weight: number; url: string }> = []
-            if (settings.selectedImageUrls?.[0]) {
+            if (settingsWithStyle.selectedImageUrls?.[0]) {
                 references.push({
                     type: 'image',
                     label: 'Master Layout Structure',
                     weight: 0.8,
-                    url: settings.selectedImageUrls[0].length > 50
-                        ? settings.selectedImageUrls[0].substring(0, 50) + '...'
-                        : settings.selectedImageUrls[0]
+                    url: settingsWithStyle.selectedImageUrls[0].length > 50
+                        ? settingsWithStyle.selectedImageUrls[0].substring(0, 50) + '...'
+                        : settingsWithStyle.selectedImageUrls[0]
                 })
             }
             if (idx > 0) {
@@ -713,14 +954,14 @@ export default function CarouselPage() {
                     url: '(Generated from Slide 1)'
                 })
             }
-            if (settings.selectedLogoUrl) {
+            if (settingsWithStyle.selectedLogoUrl) {
                 references.push({
                     type: 'logo',
                     label: 'Brand Logo',
                     weight: 1.0,
-                    url: settings.selectedLogoUrl.length > 50
-                        ? settings.selectedLogoUrl.substring(0, 50) + '...'
-                        : settings.selectedLogoUrl
+                    url: settingsWithStyle.selectedLogoUrl.length > 50
+                        ? settingsWithStyle.selectedLogoUrl.substring(0, 50) + '...'
+                        : settingsWithStyle.selectedLogoUrl
                 })
             }
 
@@ -736,20 +977,59 @@ export default function CarouselPage() {
             .map((s) => `--- SLIDE ${s.slideNumber} ---\n${s.prompt}`)
             .join('\n\n')
 
+        const debugContextItems = [
+            ...(settingsWithStyle.selectedImageUrls || []).map((url, idx) => ({
+                id: `carousel-ref-${idx}`,
+                type: 'image',
+                label: `Referencia ${idx + 1}`,
+                url,
+                source: 'unknown' as const,
+                role: 'content' as const,
+            })),
+            ...(settingsWithStyle.selectedLogoUrl ? [{
+                id: 'carousel-logo',
+                type: 'logo',
+                label: 'Logo',
+                url: settingsWithStyle.selectedLogoUrl,
+                source: 'brandkit' as const,
+                role: 'logo' as const,
+            }] : []),
+        ]
+
+        const requestPayloadForDebug = {
+            prompt: finalPrompt,
+            model: aiConfig?.imageModel,
+            aspectRatio: settingsWithStyle.aspectRatio,
+            layoutId: settingsWithStyle.compositionId,
+            layoutName: resolvedCompositionPreset.name,
+            brandDNA: activeBrandKit,
+            context: debugContextItems.map((item) => ({
+                id: item.id,
+                type: item.type,
+                label: item.label,
+                value: item.url
+            })),
+            slideDebug
+        }
+
         setDebugPromptData({
             finalPrompt,
-            logoUrl: settings.selectedLogoUrl,
-            attachedImages: settings.selectedImageUrls,
-            selectedStyles: [settings.style],
+            logoUrl: settingsWithStyle.selectedLogoUrl,
+            attachedImages: settingsWithStyle.selectedImageUrls,
+            selectedStyles: [settingsWithStyle.style],
             platform: 'Instagram Carousel',
-            format: settings.aspectRatio,
+            format: settingsWithStyle.aspectRatio,
             intent: analysisIntentLabel || analysisIntent || undefined,
             seed,
             model: aiConfig?.imageModel,
-            aspectRatio: settings.aspectRatio,
+            aspectRatio: settingsWithStyle.aspectRatio,
+            layoutId: settingsWithStyle.compositionId,
+            layoutName: resolvedCompositionPreset.name,
+            contextItems: debugContextItems,
+            requestPayload: requestPayloadForDebug,
             slideDebug
         })
-        setPendingGenerateSettings(settings)
+        setPendingGenerateSettings(settingsWithStyle)
         setShowDebugModal(true)
     }, [
         activeBrandKit,
@@ -758,14 +1038,14 @@ export default function CarouselPage() {
         analysisIntentLabel,
         executeGenerate,
         isAdmin,
-        performAnalyze,
-        scriptPrompt,
-        scriptSlideCount,
+        buildSlidesFromCurrentState,
+        ensureStyleAnalysisInSettings,
+        openErrorModal,
         scriptSlides,
         toast
     ])
 
-    const handleRegenerateSlide = useCallback(async (index: number) => {
+    const handleRegenerateSlide = useCallback(async (index: number, correctionPrompt?: string) => {
         if (!carouselSettings || !activeBrandKit) return
 
         const slide = slides[index]
@@ -779,7 +1059,9 @@ export default function CarouselPage() {
                 index: slide.index,
                 title: slide.title,
                 description: slide.description,
-                visualPrompt: slide.description
+                visualPrompt: correctionPrompt?.trim()
+                    ? `${slide.description}\n\nCorrecciÃ³n local solicitada: ${correctionPrompt.trim()}`
+                    : slide.description
             }
 
             if (!aiConfig?.imageModel) {
@@ -809,7 +1091,7 @@ export default function CarouselPage() {
                 carouselSettings.selectedColors,
                 carouselSettings.compositionId,
                 carouselSettings.structureId,
-                carouselSettings.aiImageDescription,
+                carouselSettings.aiStyleDirectives,
                 carouselSettings.selectedImageUrls,
                 consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined
             )
@@ -825,7 +1107,7 @@ export default function CarouselPage() {
                 }
                 setSlides(newSlides)
                 toast({
-                    title: '✅ Slide regenerado',
+                    title: 'âœ… Slide regenerado',
                     description: `Slide ${index + 1} actualizado.`
                 })
             } else {
@@ -844,6 +1126,44 @@ export default function CarouselPage() {
         }
     }, [slides, carouselSettings, activeBrandKit, aiConfig?.imageModel, toast])
 
+    const handleSelectSessionHistory = useCallback((id: string) => {
+        const selected = sessionHistory.find((item) => item.id === id)
+        if (!selected) return
+        setSlides(selected.slides)
+        setGeneratedCount(selected.slides.filter((s) => Boolean(s.imageUrl)).length)
+        setCurrentSlideIndex(0)
+        if (!isCaptionLocked) {
+            setCaption(selected.caption || '')
+        }
+    }, [sessionHistory, isCaptionLocked])
+
+    const handleRestorePreviewFromPreset = useCallback((state: {
+        slides: CarouselSlide[]
+        scriptSlides?: SlideContent[]
+        caption?: string
+        currentIndex?: number
+    }) => {
+        const restoredSlides = Array.isArray(state.slides) ? state.slides : []
+        setSlides(restoredSlides)
+        setGeneratedCount(restoredSlides.filter((s) => Boolean(s.imageUrl)).length)
+        setCurrentSlideIndex(Math.max(0, Math.min((state.currentIndex ?? 0), Math.max(0, restoredSlides.length - 1))))
+
+        const restoredScript = Array.isArray(state.scriptSlides)
+            ? state.scriptSlides
+            : restoredSlides.map((s) => ({
+                index: s.index,
+                title: s.title || '',
+                description: s.description || '',
+                visualPrompt: s.description || ''
+            }))
+        setScriptSlides(restoredScript)
+        setScriptSlideCount(restoredScript.length)
+
+        if (!isCaptionLocked) {
+            setCaption(state.caption || '')
+        }
+    }, [isCaptionLocked])
+
     const handleResetCarousel = useCallback(() => {
         setSlides([])
         setGeneratedCount(0)
@@ -859,9 +1179,17 @@ export default function CarouselPage() {
         setAnalysisHook(undefined)
         setAnalysisStructure(undefined)
         setAnalysisIntent(undefined)
+        setImagePromptSuggestions([])
+        setSessionHistory([])
         setPendingGenerateSettings(null)
         setDebugPromptData(null)
         setShowDebugModal(false)
+    }, [])
+
+    const invalidatePreview = useCallback(() => {
+        setSlides([])
+        setGeneratedCount(0)
+        setCurrentSlideIndex(0)
     }, [])
 
     const confirmGeneration = useCallback(async () => {
@@ -895,6 +1223,8 @@ export default function CarouselPage() {
                         currentIndex={currentSlideIndex}
                         onSelectSlide={setCurrentSlideIndex}
                         onRegenerateSlide={handleRegenerateSlide}
+                        sessionHistory={sessionHistory}
+                        onSelectSessionHistory={handleSelectSessionHistory}
                         onUpdateSlideScript={handleUpdateSlideScript}
                         isGenerating={isGenerating}
                         isRegenerating={isRegenerating}
@@ -907,6 +1237,8 @@ export default function CarouselPage() {
                         isCaptionLocked={isCaptionLocked}
                         onToggleCaptionLock={() => setIsCaptionLocked(!isCaptionLocked)}
                         referenceImages={referenceImages}
+                        referenceImageRoles={referencePreviewState.referenceImageRoles}
+                        referenceImageMode={referencePreviewState.imageSourceMode}
                         brandKitTexts={brandKitTexts}
                         brandName={activeBrandKit?.brand_name}
                         hook={analysisHook}
@@ -953,6 +1285,7 @@ export default function CarouselPage() {
                     onApplySuggestion={applySuggestion}
                     onUndoSuggestion={undoSuggestion}
                     hasOriginalSuggestion={!!originalAnalysis}
+                    suggestedImagePrompts={imagePromptSuggestions}
                     analysisHook={analysisHook}
                     analysisStructure={analysisStructure}
                     analysisIntent={analysisIntent}
@@ -960,6 +1293,14 @@ export default function CarouselPage() {
                     isAdmin={isAdmin}
                     slideCountOverride={slideCountOverride}
                     onSlideCountOverrideApplied={() => setSlideCountOverride(null)}
+                    analysisReady={Boolean(scriptSlides?.length)}
+                    onInvalidatePreview={invalidatePreview}
+                    onReferencePreviewStateChange={setReferencePreviewState}
+                    previewSlides={slides}
+                    previewScriptSlides={scriptSlides}
+                    previewCaption={caption}
+                    previewCurrentIndex={currentSlideIndex}
+                    onRestorePreviewState={handleRestorePreviewFromPreset}
                 />
             </div>
 
@@ -1001,3 +1342,4 @@ export default function CarouselPage() {
         </DashboardLayout>
     )
 }
+

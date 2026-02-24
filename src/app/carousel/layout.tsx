@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "X Carrusel | Motor de Diseño Inteligente",
+  title: "PostLaboratory Carrusel | Motor de Diseno Inteligente",
 };
 
 export default function CarouselLayout({
@@ -11,3 +11,4 @@ export default function CarouselLayout({
 }) {
   return children;
 }
+

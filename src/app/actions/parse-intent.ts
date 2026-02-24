@@ -144,30 +144,44 @@ function removeVisualStyleHints(text: string): string {
 
     const blockedTokens = [
         'style', 'aesthetic', 'mood', 'vibe', 'look', 'visual',
+        'estilo', 'estética', 'estetica', 'ánimo', 'animo', 'vibra', 'aspecto', 'visual',
         'color', 'palette', 'tone', 'contrast', 'saturation', 'hue',
+        'color', 'colores', 'paleta', 'tono', 'contraste', 'saturación', 'saturacion', 'matiz',
         'lighting', 'light', 'shadow', 'cinematic', 'film', 'grain',
+        'iluminación', 'iluminacion', 'luz', 'sombras', 'sombra', 'cinematográfico', 'cinematografico', 'grano',
         'texture', 'composition', 'framing', 'depth of field', 'bokeh',
+        'textura', 'composición', 'composicion', 'encuadre', 'profundidad de campo',
         'close-up', 'close up', 'wide shot', 'soft focus',
+        'primer plano', 'plano amplio', 'foco suave',
         'realistic', 'photorealistic', 'illustration', 'illustrative',
+        'realista', 'fotorrealista', 'fotográfico', 'fotografico', 'fotografía', 'fotografia', 'ilustración', 'ilustracion',
         'vector', 'comic', 'cartoon', 'watercolor', 'oil painting',
+        'vectorial', 'cómic', 'comic', 'caricatura', 'acuarela', 'óleo', 'oleo',
         'corporate aesthetic', 'studio quality'
     ]
+    const normalizedBlockedTokens = blockedTokens.map((token) => normalizeText(token))
 
     const clauses = text
         .split(/[,;]+/g)
         .map((c) => c.trim())
         .filter(Boolean)
         .filter((clause) => {
-            const lower = clause.toLowerCase()
-            return !blockedTokens.some((token) => lower.includes(token))
+            const normalizedClause = normalizeText(clause)
+            return !normalizedBlockedTokens.some((token) => normalizedClause.includes(token))
         })
 
     const cleaned = clauses.join(', ').trim()
-    if (cleaned) return cleaned
+    if (cleaned) {
+        return cleaned
+            .replace(/^(ilustracion|fotografia|foto|render|imagen|vector|vectorial)\s+(de|del|de la)\s+/i, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+    }
 
     // Last-resort fallback: keep only likely semantic scaffold
     return text
-        .replace(/\b(with|in|using)\b[^,.;]*(style|aesthetic|mood|look|lighting|color|palette|composition|texture|realistic|illustration|comic)\b[^,.;]*/gi, '')
+        .replace(/^(ilustración|ilustracion|fotografía|fotografia|foto|render|imagen|vector|vectorial)\s+(de|del|de la)\s+/i, '')
+        .replace(/\b(with|in|using|con|en|usando)\b[^,.;]*(style|aesthetic|mood|look|lighting|color|palette|composition|texture|realistic|illustration|comic|estilo|estetica|iluminacion|color|paleta|composicion|realista|fotografia|ilustracion)\b[^,.;]*/gi, '')
         .replace(/\s+/g, ' ')
         .replace(/^[,.\s]+|[,.\s]+$/g, '')
         .trim()

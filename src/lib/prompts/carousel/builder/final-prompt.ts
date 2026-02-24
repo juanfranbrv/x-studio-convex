@@ -84,9 +84,9 @@ interface FinalPromptParams {
         id?: string
     }
     brandColors: {
-        background: string // Hex
-        accent: string     // Hex
-        text?: string      // Hex
+        background: string | string[] // Hex list or single
+        accent: string | string[]     // Hex list or single
+        text?: string | string[]      // Hex list or single
     }
     slideData: SlideContent
     currentMood: string
@@ -149,56 +149,6 @@ function extractStyleTraits(visualAnalysis: string): { lighting?: string; traits
     }
 }
 
-type VisualMode = 'photo' | 'illustration'
-
-function resolveVisualMode(visualAnalysis?: string): VisualMode {
-    const source = (visualAnalysis || '').toLowerCase()
-    const illustrationSignals = ['illustration', 'vector', 'cartoon', 'flat', '2d', 'comic', 'dibujo', 'ilustracion', 'ilustracion']
-    const photoSignals = ['photo', 'photography', 'photoreal', 'realistic', 'editorial', 'cinematic', 'camera', 'fotografia', 'fotoreal']
-
-    const hasIllustration = illustrationSignals.some((kw) => source.includes(kw))
-    const hasPhoto = photoSignals.some((kw) => source.includes(kw))
-
-    if (hasIllustration && !hasPhoto) return 'illustration'
-    return 'photo'
-}
-
-function enforceVisualMode(scene: string, mode: VisualMode): string {
-    const cleaned = scene
-        .replace(/\s{2,}/g, ' ')
-        .trim()
-
-    if (mode === 'illustration') {
-        const stripped = cleaned
-            .replace(/\b(photo|photography|photorealistic|realistic|editorial|camera|lens|cinematic|fotografia|foto|fotografico|fotorealista)\b/gi, '')
-            .replace(/\s{2,}/g, ' ')
-            .trim()
-        return `Ilustracion digital consistente de carrusel, misma tecnica grafica en todas las slides. ${stripped}`.trim()
-    }
-
-    const stripped = cleaned
-        .replace(/\b(illustration|vector|cartoon|flat|comic|2d|drawing|line art|dibujo|ilustracion|ilustrado)\b/gi, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim()
-    return `Fotografia editorial realista consistente de carrusel, misma tecnica fotografica en todas las slides. ${stripped}`.trim()
-}
-
-function buildVisualMediumDirective(mode: VisualMode, currentSlide: number, totalSlides: number): string {
-    const mediumLabel = mode === 'illustration' ? 'ILLUSTRATION' : 'PHOTO'
-    const forbidden = mode === 'illustration'
-        ? 'NO photographic rendering, no camera/lens realism, no live-action look.'
-        : 'NO illustration/vector/cartoon rendering, no drawn line-art look.'
-
-    return `
-VISUAL MEDIUM LOCK (CRITICAL):
-- Locked medium for this full carousel: ${mediumLabel}.
-- This slide (${currentSlide}/${totalSlides}) must use EXACTLY the same medium as slide 1.
-- Do not mix mediums across slides.
-- ${forbidden}
-- Keep the same rendering family, finish, detail level, and material treatment in all slides.
-`.trim()
-}
-
 function buildCtaDirective(ctaText: string, ctaUrl: string | undefined, accentColor: string): string {
     if (ctaUrl) {
         return `
@@ -223,26 +173,40 @@ TEXT RENDER SAFETY: Never render labels/tokens like "CTA", "URL", "CTA CONTAINER
 function buildTypographyDirective(fonts?: { family: string; role?: 'heading' | 'body' }[]): string {
     if (!fonts || fonts.length === 0) return ''
 
-    const headingFont = fonts.find(f => f?.role === 'heading')?.family
-    const bodyFont = fonts.find(f => f?.role === 'body')?.family
-    const firstAvailable = fonts.find(f => !!f?.family)?.family
+    const headingFont = fonts.find((f) => f?.role === 'heading' && f?.family)?.family
+    const bodyFont = fonts.find((f) => f?.role === 'body' && f?.family)?.family
+    const firstAvailable = fonts.find((f) => f?.family)?.family
 
     const lines: string[] = []
-    lines.push('TYPOGRAPHY SYSTEM (INTERNAL INSTRUCTION):')
+    lines.push('REGLAS DE TIPOGRAFIA (OBLIGATORIO):')
 
     if (headingFont) {
-        lines.push(`- HEADLINE FONT TARGET: "${headingFont}".`)
+        lines.push(`- FUENTE PARA TITULARES: Usa "${headingFont}" para el texto principal o headline.`)
     }
     if (bodyFont) {
-        lines.push(`- BODY FONT TARGET: "${bodyFont}".`)
+        lines.push(`- FUENTE PARA PARRAFOS: Usa "${bodyFont}" para textos secundarios, parrafos o descripcion.`)
     }
     if (!headingFont && !bodyFont && firstAvailable) {
-        lines.push(`- PRIMARY FONT TARGET: "${firstAvailable}".`)
+        lines.push(`- FUENTE DISPONIBLE: Usa "${firstAvailable}" como fuente principal.`)
     }
 
-    lines.push('- If any target font is unavailable, use the closest similar typeface (same classification/weight/metrics).')
-    lines.push('- CRITICAL: Font names are internal-only guidance. Never render font names as visible text in the image.')
+    lines.push('- REGLA CRITICA: Los nombres de fuente son instrucciones internas. NUNCA renderices el nombre de la fuente como texto visible en la imagen.')
+    lines.push('- NOTA: Si la fuente no esta disponible en tu sistema, usa una de estilo similar.')
     return lines.join('\n')
+}
+
+function toUniqueColorList(input: string | string[] | undefined, fallback: string): string[] {
+    const raw = Array.isArray(input) ? input : (typeof input === 'string' ? [input] : [])
+    const normalized = raw
+        .flatMap((entry) => entry.split(','))
+        .map((entry) => entry.trim().toLowerCase())
+        .filter(Boolean)
+    const withFallback = normalized.length > 0 ? normalized : [fallback.toLowerCase()]
+    return Array.from(new Set(withFallback))
+}
+
+function toBulletList(colors: string[]): string {
+    return colors.map((color) => `- ${color}`).join('\n')
 }
 
 export function buildFinalPrompt({
@@ -300,60 +264,45 @@ export function buildFinalPrompt({
         ? buildLogoDirective(logoPosition, currentSlide, totalSlides)
         : ''
 
+    const primaryAccentForCta = toUniqueColorList(brandColors.accent, '#f0e500')[0]
     const finalActionBlock = (isLastSlide && ctaText)
-        ? buildCtaDirective(ctaText, ctaUrl, brandColors.accent)
+        ? buildCtaDirective(ctaText, ctaUrl, primaryAccentForCta)
         : ''
 
-    const cleanedVisualAnalysis = visualAnalysis
-        ? stripPaperCanvasHints(stripColorGuidance(visualAnalysis.replace(/Colors?:[^\n]+/gi, '').trim()))
-        : ''
-    const { lighting: referenceLighting, traits: referenceTraits } = cleanedVisualAnalysis
+    const hasStyleDirectiveBlock = Boolean(
+        visualAnalysis && /STYLE DIRECTIVES:/i.test(visualAnalysis)
+    )
+    const cleanedVisualAnalysis = hasStyleDirectiveBlock
+        ? (visualAnalysis || '').trim()
+        : (visualAnalysis
+            ? stripPaperCanvasHints(stripColorGuidance(visualAnalysis.replace(/Colors?:[^\n]+/gi, '').trim()))
+            : '')
+    const { lighting: referenceLighting, traits: referenceTraits } = !hasStyleDirectiveBlock && cleanedVisualAnalysis
         ? extractStyleTraits(cleanedVisualAnalysis)
         : { lighting: undefined, traits: undefined }
 
-    const visualRefBlock = referenceTraits || referenceLighting
-        ? `VISUAL REFERENCE (PRIMARY SOURCE OF TRUTH):
+    const visualRefBlock = hasStyleDirectiveBlock
+        ? cleanedVisualAnalysis
+        : (referenceTraits || referenceLighting
+            ? `VISUAL REFERENCE (PRIMARY SOURCE OF TRUTH):
 ${referenceLighting ? `Lighting: ${referenceLighting}.` : ''}
 ${referenceTraits ? `Style Traits: ${referenceTraits}.` : ''}
 CREATIVE DIRECTION: Apply the STYLE TRAITS and LIGHTING only. Ignore any implied support (paper/canvas/white) and follow the Brand Color Palette.`
-        : ''
+            : '')
 
-    const analysisForMatch = cleanedVisualAnalysis || visualAnalysis || ''
-    const visualMode = resolveVisualMode(analysisForMatch)
-    const visualMediumBlock = buildVisualMediumDirective(visualMode, currentSlide, totalSlides)
+    const visualMediumBlock = ''
     const typographyBlock = buildTypographyDirective(fonts)
     const subject = (() => {
         const baseScene = slideData.visualPrompt || slideData.description
-        if (!visualAnalysis) {
-            return enforceVisualMode(
-                stripPaperCanvasHints(stripColorGuidance(baseScene)),
-                visualMode
-            )
-        }
-
-        const illustrationKeywords = ['illustration', 'vector', 'cartoon', 'flat', 'cel-shad', 'digital art', '2d', 'graphic style', 'animation']
-        const isIllustrationRef = illustrationKeywords.some(kw => analysisForMatch.toLowerCase().includes(kw))
-
-        if (isIllustrationRef) {
-            const cleanedScene = baseScene
-                .replace(/fotograf|photo|editorial|estilo fotograf|imagen real|realistic/gi, '')
-                .replace(/^\s*,\s*/, '')
-                .trim()
-            const illustrated = `Ilustracion vectorial estilo ${analysisForMatch.match(/Keywords:\s*([^.]+)/)?.[1]?.split(',')[0] || 'flat design'}. ${cleanedScene}`
-            return enforceVisualMode(
-                stripPaperCanvasHints(stripColorGuidance(illustrated)),
-                visualMode
-            )
-        }
-        return enforceVisualMode(
-            stripPaperCanvasHints(stripColorGuidance(baseScene)),
-            visualMode
-        )
+        const cleanedBaseScene = stripPaperCanvasHints(stripColorGuidance(baseScene))
+        return cleanedBaseScene
     })()
 
     const template = FINAL_IMAGE_PROMPT_TEMPLATE
     const languageBlock = LANGUAGE_ENFORCEMENT_INSTRUCTION((language || 'es').toLowerCase())
-    const textColor = brandColors.text || '#141210'
+    const backgroundColors = toUniqueColorList(brandColors.background, '#141210')
+    const textColors = toUniqueColorList(brandColors.text, '#141210')
+    const accentColors = toUniqueColorList(brandColors.accent, '#f0e500')
 
     return template
         .replace('{{LANGUAGE_BLOCK}}', languageBlock)
@@ -362,9 +311,9 @@ CREATIVE DIRECTION: Apply the STYLE TRAITS and LIGHTING only. Ignore any implied
         .replace('{{VISUAL_REF_BLOCK}}', visualRefBlock ? `${visualRefBlock}
 ` : '')
         .replace('{{LAYOUT_BLUEPRINT}}', cleanedBlueprint)
-        .replace('{{BACKGROUND_COLOR}}', brandColors.background)
-        .replace('{{TEXT_COLOR}}', textColor)
-        .replace('{{ACCENT_COLOR}}', brandColors.accent)
+        .replace('{{BACKGROUND_COLORS}}', toBulletList(backgroundColors))
+        .replace('{{TEXT_COLORS}}', toBulletList(textColors))
+        .replace('{{ACCENT_COLORS}}', toBulletList(accentColors))
         .replace('{{SUBJECT}}', subject)
         .replace('{{MOOD}}', currentMood)
         .replace('{{TEXT}}', `"${slideData.title}"${slideData.description ? ` - "${slideData.description}"` : ''}.`)

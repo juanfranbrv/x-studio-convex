@@ -5,6 +5,8 @@ import { Lightbulb, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createPortal } from 'react-dom';
 import { useEffect, useState, useRef } from 'react';
+import { useUI } from '@/contexts/UIContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface FloatingAssistanceProps {
     title?: string;
@@ -25,6 +27,8 @@ export function FloatingAssistance({
     side = 'left',
     anchorRef
 }: FloatingAssistanceProps) {
+    const { setAssistanceEnabled } = useUI();
+    const { toast } = useToast();
     const [mounted, setMounted] = useState(false);
     const [coords, setCoords] = useState({ top: 0, left: 0, right: 0, width: 0 });
     const assistanceRef = useRef<HTMLDivElement>(null);
@@ -68,6 +72,15 @@ export function FloatingAssistance({
     }, [isVisible, anchorRef, mounted]);
 
     if (!mounted || !isVisible || !description) return null;
+
+    const handleCloseAssistance = () => {
+        setAssistanceEnabled(false);
+        toast({
+            title: 'Ayudas desactivadas',
+            description: 'Puedes volver a activarlas desde Ajustes.',
+        });
+        onClose?.();
+    };
 
     const contentWidth = assistanceRef.current?.getBoundingClientRect().width ?? 280;
     const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
@@ -135,15 +148,14 @@ export function FloatingAssistance({
                         </p>
                     </div>
 
-                    {onClose && (
-                        <button
-                            onClick={onClose}
-                            className="shrink-0 text-muted-foreground/50 hover:text-foreground transition-colors -mt-1 -mr-1 p-1"
-                            aria-label="Cerrar"
-                        >
-                            <X className="w-3.5 h-3.5" />
-                        </button>
-                    )}
+                    <button
+                        onClick={handleCloseAssistance}
+                        className="shrink-0 text-muted-foreground/50 hover:text-foreground transition-colors -mt-1 -mr-1 p-1"
+                        aria-label="Cerrar ayuda y desactivar asistencias"
+                        title="Cerrar ayuda"
+                    >
+                        <X className="w-3.5 h-3.5" />
+                    </button>
                 </div>
             </motion.div>
         </AnimatePresence>

@@ -506,18 +506,18 @@
 /* 3) 1601px–1920px (FHD) */
 @media (min-width: 1601px) and (max-width: 1920px) {
   .text-layer-editor {
-    --tl-head: 18px;
-    --tl-body: 13px;
-    --tl-cta: 13px;
-    --tl-url: 11px;
+    --tl-head: 30px;
+    --tl-body: 22px;
+    --tl-cta: 16px;
+    --tl-url: 14px;
     --tl-pad-top: 8px;
     --tl-pad-bottom: 8px;
     --tl-pad-x: 22px;
-    --tl-gap: 4px;
-    --tl-gap-tight: 2px;
-    --tl-section-gap: 6px;
+    --tl-gap: 10px;
+    --tl-gap-tight: 6px;
+    --tl-section-gap: 12px;
     --tl-title-top: 62px;
-    --tl-middle-top: 4px;
+    --tl-middle-top: 10px;
     --tl-cta-bottom: 10px;
     --tl-brand-top: 4px;
     --tl-line-head: 1.08;

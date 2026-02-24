@@ -17,6 +17,9 @@ const PROMPT_TEMPLATE_PATH = path.join(
 let cachedPromptTemplate: string | null = null
 
 function getPromptTemplate(): string {
+  if (process.env.NODE_ENV !== 'production') {
+    return readFileSync(PROMPT_TEMPLATE_PATH, 'utf8')
+  }
   if (!cachedPromptTemplate) {
     cachedPromptTemplate = readFileSync(PROMPT_TEMPLATE_PATH, 'utf8')
   }

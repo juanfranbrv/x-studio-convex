@@ -101,7 +101,7 @@ OUTPUT JSON ONLY:
 }
 
 RULES
-1. Use Brand Kit context as primary guidance (tone, audience, values, hooks, CTAs, brand context, slogan, text assets, visual keywords). Adapt vocabulary and persuasion style to target audience and brand voice.
+1. Use Brand Kit context as primary guidance (tone, audience, values, hooks, CTAs, brand context, slogan, text assets). Adapt vocabulary and persuasion style to target audience and brand voice.
 2. The user request is the source of truth. Never ignore it.
 3. Deep transformation required: do not just reformat. Improve clarity, persuasion and usefulness.
 4. Generate image texts that are practical and production-ready (short lines that can fit separate boxes).
@@ -152,7 +152,10 @@ RULES
     - Are all three suggestions complete packages (headline + cta + caption + imageTexts)?
 19. imagePromptSuggestions:
     - Return EXACTLY 8 concise prompts describing ONLY semantic content: subject, action, setting, and key contextual objects.
+    - "WHAT, NOT HOW": describe what is happening and where; never describe artistic execution or visual treatment.
     - DO NOT include style/design/visual instructions (no color, lighting, mood, composition, camera, rendering, artistic references).
+    - HARD BAN: never mention words like "fotografía", "fotografico", "ilustración", "ilustrativo", "realista", "acuarela", "3D", "cinemático", "estilo", "aesthetic", "look", "mood", "lighting", "color palette".
+    - If you accidentally include any banned style word, rewrite the prompt before returning JSON.
     - Keep them practical and generation-ready as neutral scene briefs.
     - Use BOTH the detected intent and the PREVIEW TEXTS (if any) as hard anchors.
     - If PREVIEW TEXTS include concrete nouns (places, services, people, products), include them in every prompt.

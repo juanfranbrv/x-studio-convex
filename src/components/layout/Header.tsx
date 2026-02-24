@@ -81,7 +81,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
 
                     {/* Logo / Robot Icon */}
                     <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-semibold font-heading text-primary hidden md:block">X Studio</h1>
+                        <h1 className="text-2xl font-semibold font-heading text-primary hidden md:block">PostLaboratory</h1>
                     </div>
 
                     {brands.length > 0 && (

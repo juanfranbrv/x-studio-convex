@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Check, Copy, Sparkles } from 'lucide-react'
 import { DebugPromptData } from '@/lib/creation-flow-types'
 
@@ -81,11 +82,17 @@ export function PromptDebugModal({
 }: PromptDebugModalProps) {
     const [copiedPayload, setCopiedPayload] = useState(false)
     const [copiedPrompt, setCopiedPrompt] = useState(false)
+    const [activeSlideTab, setActiveSlideTab] = useState('')
+
+    const payloadObj = (promptData?.requestPayload || {}) as Record<string, unknown>
+    const payloadPrompt = typeof payloadObj.prompt === 'string' ? payloadObj.prompt : ''
+    const slideDebug = Array.isArray(promptData?.slideDebug) ? promptData.slideDebug : []
+    const firstSlideTab = slideDebug.length > 0 ? `slide-${slideDebug[0].slideNumber}` : ''
+    const activeSlideTabValue = slideDebug.some((slide) => `slide-${slide.slideNumber}` === activeSlideTab)
+        ? activeSlideTab
+        : firstSlideTab
 
     if (!promptData) return null
-
-    const payloadObj = (promptData.requestPayload || {}) as Record<string, unknown>
-    const payloadPrompt = typeof payloadObj.prompt === 'string' ? payloadObj.prompt : ''
 
     const effectiveModel = promptData.model || (typeof payloadObj.model === 'string' ? payloadObj.model : '') || 'No configurado'
     const providerLabel = !effectiveModel || effectiveModel === 'No configurado'
@@ -154,8 +161,12 @@ export function PromptDebugModal({
     }
 
     const handleCopyPrompt = async () => {
-        if (!payloadPrompt) return
-        await navigator.clipboard.writeText(payloadPrompt)
+        const selectedSlidePrompt = slideDebug.find(
+            (slide) => `slide-${slide.slideNumber}` === activeSlideTabValue
+        )?.prompt
+        const promptToCopy = selectedSlidePrompt || payloadPrompt
+        if (!promptToCopy) return
+        await navigator.clipboard.writeText(promptToCopy)
         setCopiedPrompt(true)
         setTimeout(() => setCopiedPrompt(false), 1200)
     }
@@ -186,9 +197,32 @@ export function PromptDebugModal({
                                     )}
                                 </Button>
                             </div>
-                            <pre className="flex-1 overflow-y-auto rounded-lg bg-black/90 p-4 text-[11px] leading-relaxed text-green-400 font-mono whitespace-pre-wrap break-words">
-                                {payloadPrompt || 'No hay prompt en el payload.'}
-                            </pre>
+                            {slideDebug.length > 0 ? (
+                                <Tabs value={activeSlideTabValue} onValueChange={setActiveSlideTab} className="min-h-0 flex-1 flex flex-col gap-2">
+                                    <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap">
+                                        {slideDebug.map((slide) => (
+                                            <TabsTrigger key={slide.slideNumber} value={`slide-${slide.slideNumber}`} className="shrink-0">
+                                                Slide {slide.slideNumber}
+                                            </TabsTrigger>
+                                        ))}
+                                    </TabsList>
+                                    {slideDebug.map((slide) => (
+                                        <TabsContent
+                                            key={slide.slideNumber}
+                                            value={`slide-${slide.slideNumber}`}
+                                            className="min-h-0 flex-1 mt-0"
+                                        >
+                                            <pre className="h-full overflow-y-auto rounded-lg bg-black/90 p-4 text-[11px] leading-relaxed text-green-400 font-mono whitespace-pre-wrap break-words">
+                                                {slide.prompt}
+                                            </pre>
+                                        </TabsContent>
+                                    ))}
+                                </Tabs>
+                            ) : (
+                                <pre className="flex-1 overflow-y-auto rounded-lg bg-black/90 p-4 text-[11px] leading-relaxed text-green-400 font-mono whitespace-pre-wrap break-words">
+                                    {payloadPrompt || 'No hay prompt en el payload.'}
+                                </pre>
+                            )}
                         </div>
 
                         <div className="rounded-lg border bg-muted/30 shrink-0">
@@ -239,6 +273,25 @@ export function PromptDebugModal({
                                 <p className="text-sm font-medium">{promptData.format || promptData.aspectRatio || 'No especificado'}</p>
                             </div>
                         </div>
+
+                        {slideDebug.length > 0 && (
+                            <div className="space-y-2">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Detalle por slide</p>
+                                <div className="space-y-2 max-h-[34vh] overflow-y-auto pr-1">
+                                    {slideDebug.map((slide) => (
+                                        <div key={slide.slideNumber} className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-xs font-semibold">Slide {slide.slideNumber}</p>
+                                                <span className="text-[10px] text-muted-foreground">{slide.mood}</span>
+                                            </div>
+                                            <pre className="max-h-28 overflow-y-auto rounded-md bg-black/90 p-2 text-[10px] leading-relaxed text-green-400 font-mono whitespace-pre-wrap break-words">
+                                                {slide.prompt}
+                                            </pre>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="space-y-3">
                             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Previews de imagenes enviadas</p>

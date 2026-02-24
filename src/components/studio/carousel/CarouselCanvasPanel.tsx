@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,12 +38,13 @@ import { cn } from '@/lib/utils'
 import type { CarouselSlide } from '@/app/actions/generate-carousel'
 import { DigitalStaticLoader } from '../DigitalStaticLoader'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import type { ReferenceImageRole } from '@/lib/creation-flow-types'
 
 interface CarouselCanvasPanelProps {
     slides: CarouselSlide[]
     currentIndex: number
     onSelectSlide: (index: number) => void
-    onRegenerateSlide: (index: number) => void
+    onRegenerateSlide: (index: number, correctionPrompt?: string) => void
     onUpdateSlideScript?: (index: number, updates: { title?: string; description?: string }) => void
     isGenerating?: boolean
     isRegenerating: boolean
@@ -56,10 +57,133 @@ interface CarouselCanvasPanelProps {
     isCaptionLocked?: boolean
     onToggleCaptionLock?: () => void
     referenceImages?: Array<{ url: string; source: 'upload' | 'brandkit' }>
+    referenceImageRoles?: Record<string, ReferenceImageRole>
+    referenceImageMode?: 'upload' | 'brandkit' | 'generate'
     brandKitTexts?: Array<{ id: string; label: string; value: string }>
     brandName?: string
     hook?: string
     selectedLogoUrl?: string
+    sessionHistory?: Array<{
+        id: string
+        createdAt: string
+        slides: CarouselSlide[]
+        caption?: string
+    }>
+    onSelectSessionHistory?: (id: string) => void
+}
+
+function AiPromptIcon({ className, style }: { className?: string; style?: CSSProperties }) {
+    return (
+        <svg
+            viewBox="0 0 120 120"
+            className={className}
+            style={style}
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+        >
+            <rect x="26" y="26" width="68" height="68" rx="12" fill="currentColor" />
+            <text
+                x="60"
+                y="68"
+                textAnchor="middle"
+                fontSize="22"
+                fontFamily="monospace"
+                fill="white"
+            >
+                AI
+            </text>
+            <g stroke="currentColor" strokeWidth="4" strokeLinecap="round">
+                <line x1="8" y1="34" x2="26" y2="34" />
+                <line x1="8" y1="52" x2="26" y2="52" />
+                <line x1="8" y1="70" x2="26" y2="70" />
+                <line x1="8" y1="88" x2="26" y2="88" />
+                <line x1="94" y1="34" x2="112" y2="34" />
+                <line x1="94" y1="52" x2="112" y2="52" />
+                <line x1="94" y1="70" x2="112" y2="70" />
+                <line x1="94" y1="88" x2="112" y2="88" />
+                <line x1="34" y1="8" x2="34" y2="26" />
+                <line x1="52" y1="8" x2="52" y2="26" />
+                <line x1="70" y1="8" x2="70" y2="26" />
+                <line x1="88" y1="8" x2="88" y2="26" />
+                <line x1="34" y1="94" x2="34" y2="112" />
+                <line x1="52" y1="94" x2="52" y2="112" />
+                <line x1="70" y1="94" x2="70" y2="112" />
+                <line x1="88" y1="94" x2="88" y2="112" />
+            </g>
+            <g fill="currentColor">
+                <circle cx="8" cy="34" r="4.5" />
+                <circle cx="8" cy="52" r="4.5" />
+                <circle cx="8" cy="70" r="4.5" />
+                <circle cx="8" cy="88" r="4.5" />
+                <circle cx="112" cy="34" r="4.5" />
+                <circle cx="112" cy="52" r="4.5" />
+                <circle cx="112" cy="70" r="4.5" />
+                <circle cx="112" cy="88" r="4.5" />
+                <circle cx="34" cy="8" r="4.5" />
+                <circle cx="52" cy="8" r="4.5" />
+                <circle cx="70" cy="8" r="4.5" />
+                <circle cx="88" cy="8" r="4.5" />
+                <circle cx="34" cy="112" r="4.5" />
+                <circle cx="52" cy="112" r="4.5" />
+                <circle cx="70" cy="112" r="4.5" />
+                <circle cx="88" cy="112" r="4.5" />
+            </g>
+        </svg>
+    )
+}
+
+function StyleReferenceCorner({ url }: { url: string }) {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [boxSize, setBoxSize] = useState({ w: 0, h: 0 })
+    const [naturalSize, setNaturalSize] = useState({ w: 1, h: 1 })
+
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el) return
+
+        const update = () => {
+            setBoxSize({ w: el.clientWidth, h: el.clientHeight })
+        }
+
+        update()
+        const ro = new ResizeObserver(update)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
+
+    const ratio = naturalSize.w / naturalSize.h || 1
+    let renderW = boxSize.w
+    let renderH = renderW / ratio
+    if (renderH > boxSize.h) {
+        renderH = boxSize.h
+        renderW = renderH * ratio
+    }
+
+    const imgTop = Math.max(0, boxSize.h - renderH)
+    return (
+        <div
+            ref={containerRef}
+            className="absolute z-50 w-[24%] aspect-square overflow-visible -left-10 bottom-10 pointer-events-none"
+        >
+            <div
+                className="absolute left-0 group"
+                style={{ top: `${imgTop}px`, width: `${renderW}px`, height: `${renderH}px` }}
+            >
+                <img
+                    src={url}
+                    alt="Referencia de estilo"
+                    className="w-full h-full object-contain object-left-bottom origin-bottom-left -rotate-[10deg] drop-shadow-[0_12px_22px_rgba(0,0,0,0.24)]"
+                    onLoad={(e) => {
+                        const target = e.currentTarget
+                        if (target.naturalWidth && target.naturalHeight) {
+                            setNaturalSize({ w: target.naturalWidth, h: target.naturalHeight })
+                        }
+                    }}
+                />
+            </div>
+        </div>
+    )
 }
 
 export function CarouselCanvasPanel({
@@ -79,10 +203,14 @@ export function CarouselCanvasPanel({
     isCaptionLocked = false,
     onToggleCaptionLock,
     referenceImages = [],
+    referenceImageRoles = {},
+    referenceImageMode = 'upload',
     brandKitTexts = [],
     brandName,
     hook,
-    selectedLogoUrl
+    selectedLogoUrl,
+    sessionHistory = [],
+    onSelectSessionHistory
 }: CarouselCanvasPanelProps) {
     const [zoom, setZoom] = useState(110)
     const [hasManualZoom, setHasManualZoom] = useState(false)
@@ -94,14 +222,15 @@ export function CarouselCanvasPanel({
     const [isEditingScript, setIsEditingScript] = useState(false)
     const [draftTitle, setDraftTitle] = useState('')
     const [draftDescription, setDraftDescription] = useState('')
-    const [loaderVariant, setLoaderVariant] = useState(0)
-    const [loaderSeed, setLoaderSeed] = useState(() => Date.now())
     const loaderVisibleRef = useRef(false)
     const [debugOpen, setDebugOpen] = useState(false)
     const [debugSlide, setDebugSlide] = useState<CarouselSlide | null>(null)
     const [isExportingVideo, setIsExportingVideo] = useState(false)
     const [videoExportProgress, setVideoExportProgress] = useState(0)
     const [videoExportPhase, setVideoExportPhase] = useState('')
+    const [slideCorrectionPrompt, setSlideCorrectionPrompt] = useState('')
+    const [prevImageUrl, setPrevImageUrl] = useState<string | null>(null)
+    const [wasJustGenerated, setWasJustGenerated] = useState(false)
     const { toast } = useToast()
 
     // Track viewport for responsive heights
@@ -179,6 +308,7 @@ export function CarouselCanvasPanel({
     }
 
     const currentSlide = slides[currentIndex]
+    const currentImageUrl = currentSlide?.imageUrl || null
 
     useEffect(() => {
         if (hasManualZoom) return
@@ -195,16 +325,26 @@ export function CarouselCanvasPanel({
         if (!currentSlide) return
         setDraftTitle(currentSlide.title || '')
         setDraftDescription(currentSlide.description || '')
+        setSlideCorrectionPrompt('')
         setIsEditingScript(false)
     }, [currentSlide?.index])
 
     useEffect(() => {
-        if (isLoaderVisible && !loaderVisibleRef.current) {
-            setLoaderVariant(Math.floor(Math.random() * 4))
-            setLoaderSeed(Date.now() + Math.floor(Math.random() * 10000))
-        }
         loaderVisibleRef.current = isLoaderVisible
     }, [isLoaderVisible])
+
+    useEffect(() => {
+        if (isGenerating && currentImageUrl && currentImageUrl !== prevImageUrl) {
+            setWasJustGenerated(true)
+            setPrevImageUrl(currentImageUrl)
+        } else if (currentImageUrl && currentImageUrl !== prevImageUrl) {
+            setPrevImageUrl(currentImageUrl)
+            if (wasJustGenerated) {
+                const timer = setTimeout(() => setWasJustGenerated(false), 600)
+                return () => clearTimeout(timer)
+            }
+        }
+    }, [isGenerating, currentImageUrl, prevImageUrl, wasJustGenerated])
 
     const handleSaveScript = () => {
         if (!currentSlide) return
@@ -287,6 +427,13 @@ export function CarouselCanvasPanel({
     const handleMaximizeZoom = () => {
         setHasManualZoom(true)
         setZoom(calcMaxZoom())
+    }
+
+    const handleApplySlideCorrection = () => {
+        if (!currentSlide?.imageUrl) return
+        const correction = slideCorrectionPrompt.trim()
+        if (!correction) return
+        onRegenerateSlide(currentIndex, correction)
     }
 
     // Download handlers
@@ -718,7 +865,7 @@ export function CarouselCanvasPanel({
                 >
                     <div
                         ref={containerRef}
-                        className="canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-hidden"
+                        className="canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-visible"
                         style={(() => {
                             const [w, h] = aspectRatio.split(':').map(Number)
                             const ratio = w / h
@@ -747,9 +894,10 @@ export function CarouselCanvasPanel({
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="absolute inset-0 z-50 bg-black/55 backdrop-blur-sm"
+                                    transition={{ duration: 0.8 }}
+                                    className="absolute inset-0 z-50 overflow-hidden rounded-sm shadow-lg ring-1 ring-white/10"
                                 >
-                                    <DigitalStaticLoader variant={loaderVariant} seed={loaderSeed} mode="spectacle" />
+                                    <DigitalStaticLoader />
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -786,49 +934,94 @@ export function CarouselCanvasPanel({
                             </>
                         )}
 
-                        {/* Reference Images Strip (Top Right) */}
-                        {!currentSlide?.imageUrl && referenceImages.length > 0 && (
-                            <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2 max-w-[220px]">
-                                {referenceImages.slice(0, 6).map((item, idx) => (
-                                    <div key={`${item.source}-${idx}`} className="relative group">
-                                        <img
-                                            src={item.url}
-                                            alt={`Ref ${idx + 1}`}
-                                            className={cn(
-                                                "object-cover rounded-lg ring-1 ring-white/20 shadow-xl",
-                                                item.source === 'brandkit' && "origin-bottom-left -rotate-[10deg] drop-shadow-[0_12px_22px_rgba(0,0,0,0.24)]"
+                        {/* PREVIEW OVERLAYS (igual módulo imagen) */}
+                        {!currentSlide?.imageUrl && (
+                            <>
+                                {(() => {
+                                    const allImages = referenceImages.map((item, idx) => ({
+                                        ...item,
+                                        key: `${item.source}-${idx}`,
+                                        role: referenceImageRoles?.[item.url] || 'content'
+                                    }))
+
+                                    const contentImages = allImages.filter((item) => item.role === 'content' || item.role === 'style_content')
+                                    const styleImages = allImages.filter((item) => item.role === 'style' || item.role === 'style_content')
+                                    const auxLogos = allImages.filter((item) => item.role === 'logo')
+                                    const hasAiPromptReference = referenceImageMode === 'generate'
+                                    const contentPreviewImages = contentImages.slice(0, 6)
+
+                                    const renderStrip = (
+                                        images: Array<{ url: string; source: 'upload' | 'brandkit'; key: string }>,
+                                        positionClass: string
+                                    ) => {
+                                        if (images.length === 0) return null
+                                        return (
+                                            <div className={cn('absolute z-20 flex gap-2 flex-wrap max-w-[220px]', positionClass)}>
+                                                {images.slice(0, 6).map((item, idx) => (
+                                                    <div key={item.key} className="relative group">
+                                                        <img
+                                                            src={item.url}
+                                                            alt={`Logo Aux ${idx + 1}`}
+                                                            className="object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.28)]"
+                                                            style={{ width: 'clamp(28px, 4.5cqw, 46px)', height: 'clamp(28px, 4.5cqw, 46px)' }}
+                                                        />
+                                                    </div>
+                                                ))}
+                                                {images.length > 6 && (
+                                                    <div className="w-11 h-14 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-white text-[10px] font-bold ring-1 ring-white/20">
+                                                        +{images.length - 6}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    }
+
+                                    return (
+                                        <>
+                                            {styleImages.length > 0 && <StyleReferenceCorner url={styleImages[0].url} />}
+                                            {renderStrip(auxLogos, 'bottom-6 right-4')}
+                                            {(hasAiPromptReference || contentPreviewImages.length > 0) && (
+                                                <div className="absolute top-2 right-4 z-40 flex flex-col items-end gap-2">
+                                                    {hasAiPromptReference && (
+                                                        <div className="relative group">
+                                                            <AiPromptIcon
+                                                                className="text-primary drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
+                                                                style={{ width: 'var(--canvas-ai-size)', height: 'var(--canvas-ai-size)' }}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    {contentPreviewImages.map((item, idx) => (
+                                                        <div key={item.key} className="relative group">
+                                                            <img
+                                                                src={item.url}
+                                                                alt={`Contenido ${idx + 1}`}
+                                                                className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]"
+                                                                style={{ width: 'clamp(60px, 11cqw, 112px)', height: 'clamp(60px, 11cqw, 112px)' }}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                    {contentImages.length > 6 && (
+                                                        <div className="min-w-7 h-7 px-2 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white text-[10px] font-bold ring-1 ring-white/20">
+                                                            +{contentImages.length - 6}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
-                                            style={item.source === 'brandkit'
-                                                ? { width: 'var(--style-thumb-w)', height: 'var(--style-thumb-h)' }
-                                                : { width: 'clamp(28px, 4.5cqw, 46px)', height: 'clamp(28px, 4.5cqw, 46px)' }
-                                            }
+                                        </>
+                                    )
+                                })()}
+
+                                {selectedLogoUrl && (
+                                    <div className="absolute top-1 left-4 z-20 group">
+                                        <img
+                                            src={selectedLogoUrl}
+                                            alt="Logo"
+                                            className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
+                                            style={{ width: 'var(--canvas-logo-size)', height: 'var(--canvas-logo-size)' }}
                                         />
-                                        <div className={cn(
-                                            "absolute bottom-0 inset-x-0 text-[5px] text-white text-center py-0.5 backdrop-blur-sm rounded-b-lg",
-                                            item.source === 'brandkit' ? 'bg-primary/70' : 'bg-black/50'
-                                        )}>
-                                            {item.source === 'brandkit' ? 'BK' : idx + 1}
-                                        </div>
-                                    </div>
-                                ))}
-                                {referenceImages.length > 6 && (
-                                    <div className="w-11 h-14 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-white text-[10px] font-bold ring-1 ring-white/20">
-                                        +{referenceImages.length - 6}
                                     </div>
                                 )}
-                            </div>
-                        )}
-
-                        {/* Logo Preview (Top Left) */}
-                        {selectedLogoUrl && !currentSlide?.imageUrl && (
-                            <div className="absolute top-1 left-4 z-20">
-                                <img
-                                    src={selectedLogoUrl}
-                                    alt="Logo"
-                                    className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
-                                    style={{ width: 'var(--canvas-logo-size)', height: 'var(--canvas-logo-size)' }}
-                                />
-                            </div>
+                            </>
                         )}
 
                         {/* Debug Prompt Trigger (Top Right) */}
@@ -864,14 +1057,28 @@ export function CarouselCanvasPanel({
                                 </Button>
                             </div>
                         ) : currentSlide.imageUrl ? (
-                            <motion.img
-                                key={currentSlide.imageUrl}
-                                src={currentSlide.imageUrl}
-                                alt={`Slide ${currentIndex + 1}`}
-                                initial={{ opacity: 0, filter: 'blur(10px)' }}
-                                animate={{ opacity: 1, filter: 'blur(0px)' }}
-                                className="w-full h-full object-cover"
-                            />
+                            <div className="w-full h-full flex items-center justify-center">
+                                <motion.div
+                                    key={currentSlide.imageUrl}
+                                    initial={wasJustGenerated ? { opacity: 0, filter: 'blur(20px)' } : { opacity: 1, filter: 'blur(0px)' }}
+                                    animate={{ opacity: 1, filter: 'blur(0px)' }}
+                                    transition={wasJustGenerated ? {
+                                        duration: 0.3,
+                                        ease: 'easeOut',
+                                        filter: { duration: 0.4 },
+                                        opacity: { duration: 0.2 }
+                                    } : {
+                                        duration: 0.15
+                                    }}
+                                    className="w-full h-full flex items-center justify-center"
+                                >
+                                    <img
+                                        src={currentSlide.imageUrl}
+                                        alt={`Slide ${currentIndex + 1}`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </motion.div>
+                            </div>
                         ) : hasScript ? (
                             <div className="w-full h-full flex items-center justify-center p-10">
                                 <div className="carousel-script-preview w-full max-w-md rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm p-6 text-center shadow-lg space-y-3">
@@ -1047,6 +1254,59 @@ export function CarouselCanvasPanel({
                             onToggleLock={onToggleCaptionLock}
                             onCopyChange={(val) => onCaptionChange?.(val)}
                         />
+                    </div>
+                )}
+
+                {sessionHistory.length > 0 && (
+                    <div className="w-full max-w-[800px] shrink-0 pb-4">
+                        <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Historial de sesión</p>
+                            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                                {sessionHistory.map((item) => {
+                                    const thumb = item.slides.find((s) => s.imageUrl)?.imageUrl
+                                    return (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => onSelectSessionHistory?.(item.id)}
+                                            className="relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-border hover:border-primary/60 transition-colors bg-muted/40"
+                                            title={`Carrusel ${new Date(item.createdAt).toLocaleTimeString()}`}
+                                        >
+                                            {thumb ? (
+                                                <img src={thumb} alt="Historial carrusel" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">N/A</div>
+                                            )}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {currentSlide?.imageUrl && (
+                    <div className="w-full max-w-[800px] shrink-0 pb-8">
+                        <div className="flex items-end gap-2">
+                            <Textarea
+                                placeholder="Describe los cambios para esta diapositiva..."
+                                value={slideCorrectionPrompt}
+                                onChange={(e) => setSlideCorrectionPrompt(e.target.value)}
+                                className="min-h-[44px] max-h-[120px] resize-none"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault()
+                                        handleApplySlideCorrection()
+                                    }
+                                }}
+                            />
+                            <Button
+                                onClick={handleApplySlideCorrection}
+                                disabled={isGeneratingAny || !slideCorrectionPrompt.trim()}
+                                className="h-[44px] whitespace-nowrap"
+                            >
+                                Realizar corrección
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>

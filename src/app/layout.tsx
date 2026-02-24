@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { DynamicThemeProvider } from "@/components/providers/DynamicThemeProvider";
@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "X Imagen | Motor de Diseño Inteligente",
-  description: "Plataforma de generación de assets de marketing visual con IA que respeta el ADN de tu marca",
-  keywords: ["IA", "diseño", "marketing", "branding", "generación de imágenes"],
+  title: "PostLaboratory | Crea contenido visual con IA",
+  description: "Plataforma de generacion de assets de marketing visual con IA que respeta el ADN de tu marca.",
+  keywords: ["IA", "diseno", "marketing", "branding", "generacion de imagenes", "carruseles", "contenido visual"],
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
@@ -64,3 +64,4 @@ export default function RootLayout({
     </html>
   );
 }
+

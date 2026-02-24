@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
-import { Home, Image, FileSpreadsheet, Settings, Menu, Bot } from 'lucide-react'
+import { Home, Image, FileSpreadsheet, Settings, Menu, Bot, PanelsTopLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,6 +24,7 @@ export function MobileMenu() {
         { icon: Home, label: 'nav.home', href: '/' },
         { icon: FileSpreadsheet, label: 'Kit de Marca', href: '/brand-kit' },
         { icon: Image, label: 'nav.studio', href: '/image' },
+        { icon: PanelsTopLeft, label: 'Estudio', href: '/studio' },
         { icon: Settings, label: 'nav.settings', href: '/settings' },
     ]
 
@@ -38,7 +39,7 @@ export function MobileMenu() {
                 <SheetHeader className="p-6 border-b border-border bg-muted/20">
                     <SheetTitle className="flex items-center gap-2">
                         <Bot className="w-6 h-6 text-primary" />
-                        <span>X Studio</span>
+                        <span>PostLaboratory</span>
                     </SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col p-4 gap-2">

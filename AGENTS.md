@@ -145,3 +145,9 @@ Cuando Juanfran diga **"deploy"**, se considera **autorización explícita** par
 - **Modelo Oficial**: `gemini-flash-latest` (o la exportación `flashModel` de `@/lib/gemini`).
 - **Prohibido**: No inventes nombres de modelos ni instancies clientes nuevos si ya existe uno centralizado. MANTÉN LA COHERENCIA.
 - **Configuración de Admin**: Los modelos de IA (texto e imagen) deben obtenerse siempre de la configuración del panel de Admin (`app_settings` en Convex) y pasarse desde el cliente. PROHIBIDO hardcodear strings de modelos en acciones o componentes.
+
+### 15. Réplica Completa Entre Módulos (Imagen -> Carrusel)
+- Si Juanfran pide "replicar el comportamiento del módulo de imagen", la réplica debe ser **funcionalmente completa** (no parcial ni visual).
+- Esto incluye toda la cadena: selección de referencia, análisis, inyección en prompt final, contexto enviado al generador, prioridades del prompt y reglas de fallback.
+- El análisis interno (ej. bloques de estilo `PRIORITY 5`) se usa para construir prompt y debug técnico, pero **NO debe mostrarse como contenido editable en el frontend** salvo petición explícita.
+- La misma lógica debe aplicar a referencias subidas y a referencias elegidas desde Brand Kit.

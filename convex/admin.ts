@@ -392,6 +392,23 @@ export const checkBetaAccess = query({
     handler: async (ctx, args) => {
         const email = args.email.toLowerCase().trim();
 
+        const existingUser = await ctx.db
+            .query("users")
+            .filter((q) => q.eq(q.field("email"), email))
+            .first();
+
+        if (existingUser) {
+            if (existingUser.status === "active") {
+                return { hasAccess: true, status: existingUser.role };
+            }
+
+            if (existingUser.status === "suspended") {
+                return { hasAccess: false, status: "suspended" };
+            }
+
+            return { hasAccess: false, status: "pending" };
+        }
+
         // Check beta_requests first
         const request = await ctx.db
             .query("beta_requests")
@@ -443,13 +460,6 @@ export const approveBetaRequest = mutation({
 
         const request = await ctx.db.get(args.request_id);
         if (!request) throw new Error("Request not found");
-
-        // Get initial credits from settings
-        const setting = await ctx.db
-            .query("app_settings")
-            .withIndex("by_key", (q) => q.eq("key", "beta_initial_credits"))
-            .first();
-        const initialCredits = setting?.value ?? 100;
 
         // Update request status
         await ctx.db.patch(args.request_id, {

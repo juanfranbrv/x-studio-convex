@@ -1,19 +1,30 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import { useBrandKit } from '@/contexts/BrandKitContext'
 
-// Redirect from old /studio path to new /image path
-export default function StudioRedirectPage() {
+export default function StudioPage() {
     const router = useRouter()
+    const { activeBrandKit, brandKits, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
 
-    useEffect(() => {
-        router.replace('/image')
-    }, [router])
+    const handleNewBrandKit = () => {
+        router.push('/brand-kit/new')
+    }
 
     return (
-        <div className="min-h-screen flex items-center justify-center">
-            <p className="text-muted-foreground">Redirigiendo...</p>
-        </div>
+        <DashboardLayout
+            brands={brandKits}
+            currentBrand={activeBrandKit}
+            onBrandChange={setActiveBrandKit}
+            onBrandDelete={deleteBrandKitById}
+            onNewBrandKit={handleNewBrandKit}
+        >
+            <div className="flex h-full">
+                <section className="flex-1 min-h-0 border-r border-border/40" />
+                <aside className="w-full md:w-[27%] min-h-0" />
+            </div>
+        </DashboardLayout>
     )
 }
+

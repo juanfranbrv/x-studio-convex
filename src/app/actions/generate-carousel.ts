@@ -793,7 +793,7 @@ async function decomposeIntoSlides(
     /**
      * Extracts a clean URL from potential Markdown or dirty strings.
      */
-    function sanitizeUrl(url?: string): string {
+function sanitizeUrl(url?: string): string {
         if (!url) return ''
         let cleaned = url.trim().replace(/^["']|["']$/g, '')
 
@@ -810,10 +810,9 @@ async function decomposeIntoSlides(
         }
 
         return cleaned
-    }
+}
 
-
-    const normalizeParsed = (parsed: any) => {
+const normalizeParsed = (parsed: any) => {
         let caption = typeof parsed.caption === 'string' ? parsed.caption.trim() : ''
         if (!caption) {
             throw new Error('Missing caption')
@@ -832,9 +831,16 @@ async function decomposeIntoSlides(
             }
         }
 
-        const rawSlides = Array.isArray(parsed.slides) ? parsed.slides : null
-        if (!rawSlides || rawSlides.length !== requested) {
-            throw new Error(`Slide count mismatch: expected ${requested}, got ${rawSlides?.length ?? 0}`)
+        const parsedSlides = Array.isArray(parsed.slides) ? parsed.slides : null
+        if (!parsedSlides) {
+            throw new Error(`Slide count mismatch: expected ${requested}, got 0`)
+        }
+        const rawSlides =
+            requested === 1 && parsedSlides.length > 1
+                ? [parsedSlides[0]]
+                : parsedSlides
+        if (rawSlides.length !== requested) {
+            throw new Error(`Slide count mismatch: expected ${requested}, got ${parsedSlides.length}`)
         }
 
         let slides: SlideContent[] = rawSlides.map((raw: any, i: number) => ({
@@ -1014,6 +1020,53 @@ async function decomposeIntoSlides(
 /**
  * Generate a single slide image with brand context
  */
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+function isTransientImageGenerationError(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error || '')
+    const normalized = message.toLowerCase()
+    return [
+        'system busy',
+        'try again later',
+        'request id',
+        'temporarily unavailable',
+        'rate limit',
+        'too many requests',
+        '429'
+    ].some(token => normalized.includes(token))
+}
+
+async function generateContentImageWithRetry(
+    brandWrapper: { name: string; brand_dna: BrandDNA },
+    fullPrompt: string,
+    options: {
+        aspectRatio: string
+        model: string
+        context: Array<{ type: string; value: string; label?: string; weight?: number }>
+        seed?: number
+        selectedColors?: { color: string; role: string }[]
+    }
+): Promise<string> {
+    const maxAttempts = 3
+    let lastError: unknown = null
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            return await generateContentImageUnified(brandWrapper, fullPrompt, options)
+        } catch (error) {
+            lastError = error
+            const shouldRetry = isTransientImageGenerationError(error) && attempt < maxAttempts
+            if (!shouldRetry) {
+                throw error
+            }
+            const waitMs = Math.min(5000, 900 * Math.pow(2, attempt - 1))
+            await sleep(waitMs)
+        }
+    }
+
+    throw lastError instanceof Error ? lastError : new Error('Image generation failed after retries')
+}
+
 async function generateSlideImage(
     slideContent: SlideContent,
     totalSlides: number,
@@ -1039,17 +1092,22 @@ async function generateSlideImage(
         name: "Free Layout"
     }
 
-    const findColorByRole = (role: string, fallback: string) => {
-        if (!selectedColors || selectedColors.length === 0) return fallback
-        const palette = selectedColors as { color?: string; role?: string }[]
-        const match = palette.find(c => c?.role === role)
-        return (match?.color || fallback)
+    const findColorsByRole = (role: string, fallback: string) => {
+        if (!selectedColors || selectedColors.length === 0) return [fallback]
+        const palette = selectedColors as Array<{ color?: string; role?: string } | string>
+        const fromRole = palette
+            .filter((entry): entry is { color?: string; role?: string } => typeof entry !== 'string')
+            .filter((entry) => entry?.role === role)
+            .map((entry) => (entry?.color || '').trim())
+            .filter(Boolean)
+        if (fromRole.length === 0) return [fallback]
+        return Array.from(new Set(fromRole))
     }
 
     const brandColors = {
-        background: findColorByRole('Fondo', '#141210'),
-        accent: findColorByRole('Acento', '#F0E500'),
-        text: findColorByRole('Texto', '#FFFFFF')
+        background: findColorsByRole('Fondo', '#141210'),
+        accent: findColorsByRole('Acento', '#F0E500'),
+        text: findColorsByRole('Texto', '#FFFFFF')
     }
 
     const isLastSlide = slideContent.index === totalSlides - 1
@@ -1074,7 +1132,7 @@ async function generateSlideImage(
         ctaText: isLastSlide ? (slideContent.title || 'Mas info') : undefined,
         ctaUrl: isLastSlide ? finalUrl : undefined,
         visualAnalysis: aiImageDescription,
-        language: brand.preferred_language || detectLanguage(slideContent.title || slideContent.description || '') || 'es',
+        language: detectLanguage(`${slideContent.title || ''} ${slideContent.description || ''}`) || brand.preferred_language || 'es',
         fonts: brand.fonts
     })
 
@@ -1109,7 +1167,7 @@ async function generateSlideImage(
         context.push({ type: 'logo', value: selectedLogoUrl, label: 'Logo', weight: 1.0 })
     }
 
-    const imageUrl = await generateContentImageUnified(brandWrapper, fullPrompt, {
+    const imageUrl = await generateContentImageWithRetry(brandWrapper, fullPrompt, {
         aspectRatio,
         model,
         context
@@ -1228,15 +1286,20 @@ export async function generateCarouselAction(
                 }
 
                 // Rule 3: Build Brand Colors object from user selection accurately by Role
-                const findColorByRole = (role: string, fallback: string) => {
-                    const match = selectedColors?.find(c => (c as any).role === role)
-                    return (match as any)?.color || fallback
+                const findColorsByRole = (role: string, fallback: string) => {
+                    const palette = (selectedColors || []) as Array<{ color?: string; role?: string }>
+                    const fromRole = palette
+                        .filter((entry) => entry?.role === role)
+                        .map((entry) => (entry?.color || '').trim())
+                        .filter(Boolean)
+                    if (fromRole.length === 0) return [fallback]
+                    return Array.from(new Set(fromRole))
                 }
 
                 const brandColors = {
-                    background: findColorByRole('Fondo', '#141210'),
-                    accent: findColorByRole('Acento', '#F0E500'),
-                    text: findColorByRole('Texto', '#FFFFFF')
+                    background: findColorsByRole('Fondo', '#141210'),
+                    accent: findColorsByRole('Acento', '#F0E500'),
+                    text: findColorsByRole('Texto', '#FFFFFF')
                 }
 
                 // Rule 1 + 2 + 3: Build Final Prompt (Token Cleanup, Mood, Color Injection)
@@ -1336,7 +1399,7 @@ export async function generateCarouselAction(
                 console.log(`${'â”€'.repeat(70)}\n`)
 
                 // 5. Generate with seed
-                const imageUrl = await generateContentImageUnified(
+                const imageUrl = await generateContentImageWithRetry(
                     { name: brandDNA.brand_name, brand_dna: brandDNA },
                     promptToUse,
                     {

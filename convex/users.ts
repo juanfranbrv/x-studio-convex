@@ -1,14 +1,37 @@
-import { v } from "convex/values";
+﻿import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import type { Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+
+const ADMIN_EMAILS = ["juanfranbrv@gmail.com"];
 
 // Helper: get a setting value with fallback
-async function getSetting(ctx: any, key: string, fallback: number): Promise<number> {
+async function getSetting(ctx: MutationCtx | QueryCtx, key: string, fallback: number): Promise<number> {
     const setting = await ctx.db
         .query("app_settings")
-        .withIndex("by_key", (q: any) => q.eq("key", key))
+        .withIndex("by_key", (q) => q.eq("key", key))
         .first();
     return setting?.value ?? fallback;
+}
+
+async function resolveUserAccess(ctx: MutationCtx | QueryCtx, email: string) {
+    const emailLower = email.toLowerCase().trim();
+    const isAdmin = ADMIN_EMAILS.includes(emailLower);
+
+    const betaRequest = await ctx.db
+        .query("beta_requests")
+        .withIndex("by_email", (q) => q.eq("email", emailLower))
+        .first();
+
+    if (isAdmin) {
+        return { role: "admin" as const, status: "active" as const, approved: true };
+    }
+
+    if (betaRequest?.status === "approved") {
+        return { role: "beta" as const, status: "active" as const, approved: true };
+    }
+
+    return { role: "user" as const, status: "waitlist" as const, approved: false };
 }
 
 export const getUser = query({
@@ -116,73 +139,177 @@ export const upsertUser = mutation({
             .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
             .first();
 
+        const access = await resolveUserAccess(ctx, args.email);
+
         if (existing) {
-            await ctx.db.patch(existing._id, { email: args.email });
+            const wasApproved = existing.status === "active";
+            const nextCredits = !wasApproved && access.approved
+                ? (existing.credits || 0) + await getSetting(ctx, "beta_initial_credits", 100)
+                : existing.credits;
+
+            await ctx.db.patch(existing._id, {
+                email: args.email,
+                role: access.role,
+                status: access.status,
+                credits: nextCredits,
+            });
+
+            if (!wasApproved && access.approved) {
+                await ctx.db.insert("credit_transactions", {
+                    user_id: existing._id,
+                    type: "grant",
+                    amount: nextCredits - (existing.credits || 0),
+                    balance_after: nextCredits,
+                    metadata: { reason: "Activation after beta approval" },
+                    created_at: new Date().toISOString(),
+                });
+            }
+
             return existing._id;
         }
 
-        // Check if email is approved in beta_requests
         const emailLower = args.email.toLowerCase().trim();
-        const betaRequest = await ctx.db
-            .query("beta_requests")
-            .withIndex("by_email", (q) => q.eq("email", emailLower))
-            .first();
+        const initialCredits = access.approved
+            ? await getSetting(ctx, "beta_initial_credits", 100)
+            : 0;
 
-        // Check if admin email
-        const ADMIN_EMAILS = ["juanfranbrv@gmail.com"];
-        const isAdmin = ADMIN_EMAILS.includes(emailLower);
+        const userId = await ctx.db.insert("users", {
+            clerk_id: args.clerk_id,
+            email: args.email,
+            created_at: new Date().toISOString(),
+            credits: initialCredits,
+            status: access.status,
+            role: access.role,
+        });
 
-        if (betaRequest?.status === "approved" || isAdmin) {
-            // Approved user - create with active status and initial credits
-            const initialCredits = await getSetting(ctx, "beta_initial_credits", 100);
-
-            const userId = await ctx.db.insert("users", {
-                clerk_id: args.clerk_id,
-                email: args.email,
-                created_at: new Date().toISOString(),
-                credits: initialCredits,
-                status: "active",
-                role: isAdmin ? "admin" : "beta",
-            });
-
-            // Record the credit grant
+        if (initialCredits > 0) {
             await ctx.db.insert("credit_transactions", {
                 user_id: userId,
                 type: "grant",
                 amount: initialCredits,
                 balance_after: initialCredits,
-                metadata: { reason: "Beta activation on first login" },
+                metadata: { reason: "Activation on first login" },
                 created_at: new Date().toISOString(),
             });
-
-            // TODO: Remove this block after vicentbriva@gmail.com has signed up
-            // One-time auto-provisioning: clone brand kit for specific new users
-            const PROVISIONING_MAP: Record<string, string> = {
-                "vicentbriva@gmail.com": "j97ewaqm418zrvb3qq6q25xy3x7yekmk", // Awordz brand from juanfranbrv
-            };
-            const sourceBrandId = PROVISIONING_MAP[emailLower];
-            if (sourceBrandId) {
-                try {
-                    const source = await ctx.db.get(sourceBrandId as Id<"brand_dna">);
-                    if (source) {
-                        const { _id, _creationTime, ...data } = source as any;
-                        const clonedBrandId = await ctx.db.insert("brand_dna", {
-                            ...data,
-                            clerk_user_id: args.clerk_id,
-                            updated_at: new Date().toISOString(),
-                        });
-                        await ctx.db.patch(userId, { current_brand_id: clonedBrandId });
-                    }
-                } catch (e) {
-                    console.error("[upsertUser] Auto-provisioning failed:", e);
-                }
-            }
-
-            return userId;
         }
 
-        // Not approved - don't create user, throw error
-        throw new Error("No tienes acceso a la beta. Solicita acceso en la página principal.");
+        // TODO: Remove this block after vicentbriva@gmail.com has signed up
+        // One-time auto-provisioning: clone brand kit for specific new users
+        const PROVISIONING_MAP: Record<string, string> = {
+            "vicentbriva@gmail.com": "j97ewaqm418zrvb3qq6q25xy3x7yekmk", // Awordz brand from juanfranbrv
+        };
+        const sourceBrandId = PROVISIONING_MAP[emailLower];
+        if (sourceBrandId) {
+            try {
+                const source = await ctx.db.get(sourceBrandId as Id<"brand_dna">);
+                if (source) {
+                    const rawData = { ...(source as Doc<"brand_dna">) } as Record<string, unknown>;
+                    delete rawData._id;
+                    delete rawData._creationTime;
+                    const clonedBrandId = await ctx.db.insert("brand_dna", {
+                        ...(rawData as Omit<Doc<"brand_dna">, "_id" | "_creationTime">),
+                        clerk_user_id: args.clerk_id,
+                        updated_at: new Date().toISOString(),
+                    });
+                    await ctx.db.patch(userId, { current_brand_id: clonedBrandId });
+                }
+            } catch (e) {
+                console.error("[upsertUser] Auto-provisioning failed:", e);
+            }
+        }
+
+        return userId;
+    },
+});
+export const syncUserFromClerkWebhook = mutation({
+    args: {
+        clerk_id: v.string(),
+        email: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const existing = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
+            .first();
+
+        const access = await resolveUserAccess(ctx, args.email);
+        const initialCredits = access.approved
+            ? await getSetting(ctx, "beta_initial_credits", 100)
+            : 0;
+
+        if (existing) {
+            const wasApproved = existing.status === "active";
+            const nextCredits = !wasApproved && access.approved
+                ? (existing.credits || 0) + initialCredits
+                : existing.credits;
+
+            await ctx.db.patch(existing._id, {
+                email: args.email,
+                role: access.role,
+                status: access.status,
+                credits: nextCredits,
+            });
+
+            if (!wasApproved && access.approved && initialCredits > 0) {
+                await ctx.db.insert("credit_transactions", {
+                    user_id: existing._id,
+                    type: "grant",
+                    amount: initialCredits,
+                    balance_after: nextCredits,
+                    metadata: { reason: "Clerk webhook beta approval" },
+                    created_at: new Date().toISOString(),
+                });
+            }
+
+            return { action: "updated", userId: existing._id, role: access.role, status: access.status };
+        }
+
+        const userId = await ctx.db.insert("users", {
+            clerk_id: args.clerk_id,
+            email: args.email,
+            created_at: new Date().toISOString(),
+            credits: initialCredits,
+            status: access.status,
+            role: access.role,
+        });
+
+        if (initialCredits > 0) {
+            await ctx.db.insert("credit_transactions", {
+                user_id: userId,
+                type: "grant",
+                amount: initialCredits,
+                balance_after: initialCredits,
+                metadata: { reason: "Clerk webhook activation" },
+                created_at: new Date().toISOString(),
+            });
+        }
+
+        return { action: "created", userId, role: access.role, status: access.status };
+    },
+});
+
+export const deleteUserByClerkId = mutation({
+    args: { clerk_id: v.string() },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
+            .first();
+
+        if (!user) return { success: true, deleted: false };
+
+        const transactions = await ctx.db
+            .query("credit_transactions")
+            .withIndex("by_user", (q) => q.eq("user_id", user._id))
+            .collect();
+
+        for (const tx of transactions) {
+            await ctx.db.delete(tx._id);
+        }
+
+        await ctx.db.delete(user._id);
+
+        return { success: true, deleted: true };
     },
 });
 
@@ -205,3 +332,5 @@ export const completeOnboarding = mutation({
         return { success: true };
     },
 });
+
+

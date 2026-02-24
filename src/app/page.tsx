@@ -109,7 +109,7 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
               <Bot className="w-8 h-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)]" />
             </div>
             <span className="text-xl font-bold font-heading tracking-tight opacity-90">
-              X Studio
+              PostLaboratory
             </span>
           </div>
 
@@ -255,10 +255,10 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 glass-card p-8 border-white/5">
           <div className="flex items-center gap-3">
             <Bot className="w-6 h-6 text-primary" />
-            <span className="font-bold text-lg tracking-tight">X Studio</span>
+            <span className="font-bold text-lg tracking-tight">PostLaboratory</span>
           </div>
           <p className="text-sm text-muted-foreground/60 font-medium text-center md:text-left">
-            © 2024 X Studio Engine. Powered by Creative AI.
+            © 2024 PostLaboratory. Powered by Creative AI.
           </p>
           <div className="flex gap-6">
             <a href="#" className="text-xs font-bold text-muted-foreground/40 hover:text-primary transition-colors uppercase tracking-widest leading-none">Privacy</a>

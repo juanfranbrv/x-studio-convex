@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "skills": {
+    "clerk": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "fa60121c8ac5217de62cc523dec49fcd561becd8cc07c66b0122fce29e30b66d"
+    },
+    "clerk-custom-ui": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "563c03fc04c3a13e0ba01b514081e08a4d32c040d61ed4f77bf20176bee36636"
+    },
+    "clerk-nextjs-patterns": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "873e0bfd8ca58d2dcbf0e2af7cb69c489f6e37ff64f0340b83087a77406fb9fd"
+    },
+    "clerk-orgs": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "703448d9f2b5c1f165ab971e10ea72b4e065693c839d8b9f1814b72134855787"
+    },
+    "clerk-setup": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "0c28864ddbc5c13376b9725f74c8ff02dd4dc139bffc2ff2f961ed02a54ad858"
+    },
+    "clerk-testing": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "c85c9f9a6067b60b50954317a6a7fa03f052e5cb01032f988fb5e1f62876bcfb"
+    },
+    "clerk-webhooks": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "39233b7056673b41322efa9d83d8d7c50c6385f318e1ec2670b0495a67432291"
+    },
+    "convex": {
+      "source": "waynesutton/convexskills",
+      "sourceType": "github",
+      "computedHash": "0a9f0151c7776f13ab3affca28a04d55fcb4ea3af9f53eeadebe934552975a8f"
+    },
+    "convex-best-practices": {
+      "source": "waynesutton/convexskills",
+      "sourceType": "github",
+      "computedHash": "1e0008cecaa0bca3b0e1aa8c31a7f59417907088cd9309402739e71f249287c2"
+    },
+    "convex-functions": {
+      "source": "waynesutton/convexskills",
+      "sourceType": "github",
+      "computedHash": "0238fad9b9a141dc0fe75baf0eb937f650a9b7d1044e86dbd25f5da7c56cb027"
+    },
+    "convex-schema-validator": {
+      "source": "waynesutton/convexskills",
+      "sourceType": "github",
+      "computedHash": "5ea368133caa4b5ff39b5c3f404de2c63501a03d3d2af3ec3e4cda2876ec7ecc"
+    },
+    "design-taste-frontend": {
+      "source": "leonxlnx/taste-skill",
+      "sourceType": "github",
+      "computedHash": "03eaad00f017d0a8ed35cae05ff0f8bc2eae300b97e0672d716b2c080f8b4ddc"
+    }
+  }
+}

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser, useClerk } from '@clerk/nextjs'
-import { Bot, Home, Image, GalleryHorizontal, Play, Settings, FileSpreadsheet, LogOut, User, Loader2 } from 'lucide-react'
+import { Bot, Home, Image, GalleryHorizontal, Play, Settings, FileSpreadsheet, LogOut, User, Loader2, PanelsTopLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
     DropdownMenu,
@@ -23,6 +23,7 @@ const navItems = [
     { icon: Home, label: 'Inicio', href: '/' },
     { icon: FileSpreadsheet, label: 'Kit de Marca', href: '/brand-kit' },
     { icon: Image, label: 'Imagen', href: '/image' },
+    { icon: PanelsTopLeft, label: 'Estudio', href: '/studio' },
     { icon: GalleryHorizontal, label: 'Carrusel', href: '/carousel' },
     { icon: Play, label: 'Video', href: '/video' },
 ]

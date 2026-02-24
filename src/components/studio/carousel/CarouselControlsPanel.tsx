@@ -7,16 +7,17 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Star, Bookmark as BookmarkIcon, SquarePlus, Square, RotateCcw } from 'lucide-react'
+import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Star, Bookmark as BookmarkIcon, SquarePlus, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
-import type { CarouselSuggestion } from '@/app/actions/generate-carousel'
+import type { CarouselSuggestion, CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
 import { ImageReferenceSelector } from '@/components/studio/creation-flow/ImageReferenceSelector'
 import { resizeImage } from '@/lib/image-utils'
 import { getAutomaticBasicComposition } from '@/lib/carousel-selection'
 import { CarouselCompositionSelector } from '@/components/studio/carousel/CarouselCompositionSelector'
 import { BrandingConfigurator } from '@/components/studio/creation-flow/BrandingConfigurator'
-import type { SelectedColor } from '@/lib/creation-flow-types'
+import type { ReferenceImageRole, SelectedColor, VisionAnalysis } from '@/lib/creation-flow-types'
+import { buildPriority5StyleBlockFromAnalysis, mergeCustomStyleIntoStyleDirectives } from '@/lib/prompts/vision/style-priority-block'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
 import { PresetsCarousel } from '@/components/studio/creation-flow/PresetsCarousel'
@@ -38,6 +39,8 @@ export interface CarouselSettings {
     structureId: string
     imageSourceMode: 'upload' | 'brandkit' | 'generate'
     aiImageDescription?: string
+    aiStyleDirectives?: string
+    customStyleText?: string
     // Brand Kit Context
     selectedLogoUrl?: string
     selectedColors: { color: string; role: string }[]
@@ -111,6 +114,25 @@ interface CarouselControlsPanelProps {
     onApplySuggestion?: (index: number) => void
     onUndoSuggestion?: () => void
     hasOriginalSuggestion?: boolean
+    suggestedImagePrompts?: string[]
+    analysisReady?: boolean
+    onInvalidatePreview?: () => void
+    onReferencePreviewStateChange?: (state: {
+        uploadedImages: string[]
+        selectedBrandKitImageIds: string[]
+        referenceImageRoles: Record<string, ReferenceImageRole>
+        imageSourceMode: 'upload' | 'brandkit' | 'generate'
+    }) => void
+    previewSlides?: CarouselSlide[]
+    previewScriptSlides?: SlideContent[] | null
+    previewCaption?: string
+    previewCurrentIndex?: number
+    onRestorePreviewState?: (state: {
+        slides: CarouselSlide[]
+        scriptSlides?: SlideContent[]
+        caption?: string
+        currentIndex?: number
+    }) => void
 }
 
 const SectionHeader = ({
@@ -194,7 +216,16 @@ export function CarouselControlsPanel({
     suggestions,
     onApplySuggestion,
     onUndoSuggestion,
-    hasOriginalSuggestion = false
+    hasOriginalSuggestion = false,
+    suggestedImagePrompts = [],
+    analysisReady = false,
+    onInvalidatePreview,
+    onReferencePreviewStateChange,
+    previewSlides = [],
+    previewScriptSlides = null,
+    previewCaption,
+    previewCurrentIndex = 0,
+    onRestorePreviewState
 }: CarouselControlsPanelProps) {
     const createPreset = useMutation(api.presets.create)
     const presetsData = useQuery(api.presets.list, userId ? {
@@ -249,26 +280,82 @@ export function CarouselControlsPanel({
     const [selectedLogoId, setSelectedLogoId] = useState<string | null>(null)
     const [selectedColors, setSelectedColors] = useState<SelectedColor[]>([])
     const [selectedBrandKitImageIds, setSelectedBrandKitImageIds] = useState<string[]>([])
+    const [referenceImageRoles, setReferenceImageRoles] = useState<Record<string, ReferenceImageRole>>({})
     const [uploadedImages, setUploadedImages] = useState<string[]>([])
     const [imageSourceMode, setImageSourceMode] = useState<'upload' | 'brandkit' | 'generate'>('upload')
     const [aiImageDescription, setAiImageDescription] = useState('')
+    const [styleAnalysisDescription, setStyleAnalysisDescription] = useState('')
+    const [customStyle, setCustomStyle] = useState('')
     const [isImageAnalyzing, setIsImageAnalyzing] = useState(false)
     const [imageError, setImageError] = useState<string | null>(null)
+    const styleAnalysisCacheRef = useRef<Record<string, string>>({})
+    const lastAutoStyleRef = useRef<string | null>(null)
     const [includeLogoOnSlides, setIncludeLogoOnSlides] = useState(true)
     const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1)
     const [needsReanalysis, setNeedsReanalysis] = useState(false)
-    const [lastAnalyzedPrompt, setLastAnalyzedPrompt] = useState('')
-    const showAllSteps = generatedCount > 0 && !needsReanalysis
+    const [lastAnalyzedSignature, setLastAnalyzedSignature] = useState('')
+    const showAllSteps = analysisReady || generatedCount > 0
     const stepRefs = useRef<Array<HTMLDivElement | null>>([])
     const shouldReduceMotion = useReducedMotion()
     const selectedImageCount = uploadedImages.length + selectedBrandKitImageIds.length
     const hasReferenceSelection = selectedImageCount > 0 || (imageSourceMode === 'generate' && aiImageDescription.trim().length > 0)
-    const canGenerate = prompt.trim().length > 0 && slideCount > 0 && !isGenerating && brandKit !== null && currentStep >= 7 && !needsReanalysis
+    const canGenerate = prompt.trim().length > 0 && slideCount > 0 && !isGenerating && brandKit !== null && analysisReady
     const canAnalyze = prompt.trim().length > 0 && slideCount > 0 && !isAnalyzing && !isGenerating && brandKit !== null
     const canContinueFromImage = imageSourceMode !== 'generate' || Boolean(aiImageDescription.trim())
+    const isPriority5StyleBlock = (value?: string) =>
+        typeof value === 'string' && /STYLE DIRECTIVES:/i.test(value)
+    const visibleAiImageDescription = aiImageDescription
     const isStepVisible = (step: number) => showAllSteps || currentStep >= step
     const basicCompositions = compositions.filter((composition) => composition.mode === 'basic')
     const advancedCompositions = compositions
+
+    const buildConfigSignature = (
+        partial?: Partial<{
+            prompt: string
+            slideCount: number
+            aspectRatio: '1:1' | '4:5' | '3:4'
+            structureId: string
+            compositionId: string
+            compositionMode: CompositionMode
+            imageSourceMode: 'upload' | 'brandkit' | 'generate'
+            aiImageDescription: string
+            aiStyleDirectives: string
+            includeLogoOnSlides: boolean
+            selectedLogoId: string | null
+            selectedColors: SelectedColor[]
+            uploadedImages: string[]
+            selectedBrandKitImageIds: string[]
+            referenceImageRoles: Record<string, ReferenceImageRole>
+            customStyle: string
+        }>
+    ) => {
+        const value = {
+            prompt: partial?.prompt ?? prompt,
+            slideCount: partial?.slideCount ?? slideCount,
+            aspectRatio: partial?.aspectRatio ?? aspectRatio,
+            structureId: partial?.structureId ?? structureId,
+            compositionId: partial?.compositionId ?? compositionId,
+            compositionMode: partial?.compositionMode ?? compositionMode,
+            imageSourceMode: partial?.imageSourceMode ?? imageSourceMode,
+            aiImageDescription: (partial?.aiImageDescription ?? aiImageDescription).trim(),
+            aiStyleDirectives: (partial?.aiStyleDirectives ?? styleAnalysisDescription).trim(),
+            includeLogoOnSlides: partial?.includeLogoOnSlides ?? includeLogoOnSlides,
+            selectedLogoId: partial?.selectedLogoId ?? selectedLogoId,
+            selectedColors: (partial?.selectedColors ?? selectedColors).map(c => `${c.role}:${c.color}`).sort().join(','),
+            uploadedImages: (partial?.uploadedImages ?? uploadedImages).join(','),
+            selectedBrandKitImageIds: (partial?.selectedBrandKitImageIds ?? selectedBrandKitImageIds).join(','),
+            referenceImageRoles: Object.entries(partial?.referenceImageRoles ?? referenceImageRoles).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}:${v}`).join(','),
+            customStyle: (partial?.customStyle ?? customStyle).trim(),
+        }
+        return JSON.stringify(value)
+    }
+
+    const markReanalysisNeeded = () => {
+        setNeedsReanalysis(true)
+        if (generatedCount > 0) {
+            onInvalidatePreview?.()
+        }
+    }
 
     // Get brand logos
     const brandLogos = brandKit?.logos || []
@@ -285,15 +372,143 @@ export function CarouselControlsPanel({
         setSlideCount(newCount)
         setCurrentStep(2)
         if (prompt.trim()) {
-            setNeedsReanalysis(true)
-            setCurrentStep(2)
-            setLastAnalyzedPrompt(prompt.trim())
-            if (newCount > 0 && !isAnalyzing && !isGenerating) {
-                onAnalyze(buildSettings({ slideCount: newCount }))
-            }
+            markReanalysisNeeded()
         } else {
             setCurrentStep(2)
         }
+    }
+
+    const refreshBrandColorsFromKit = () => {
+        const fallback = (brandKit?.colors || [])
+            .filter((c) => c.color)
+            .map((c) => {
+                const rawRole = ((c.role as string) || 'Acento').trim().toUpperCase()
+                let role: 'Texto' | 'Fondo' | 'Acento' = 'Acento'
+                if (rawRole.includes('TEXT')) role = 'Texto'
+                else if (rawRole.includes('FOND')) role = 'Fondo'
+                else if (rawRole.includes('ACENT')) role = 'Acento'
+                return {
+                    color: c.color.toLowerCase(),
+                    role
+                }
+            })
+        setSelectedColors(fallback)
+        markReanalysisNeeded()
+    }
+
+    const handleSelectLogo = (logoId: string | null) => {
+        setSelectedLogoId(logoId)
+        markReanalysisNeeded()
+    }
+
+    const handleAiDescriptionChange = (description: string) => {
+        setAiImageDescription(description)
+        markReanalysisNeeded()
+    }
+
+    const handleCustomStyleChange = (value: string) => {
+        setCustomStyle(value)
+        markReanalysisNeeded()
+    }
+
+    const hasStyleRole = (role?: ReferenceImageRole) => role === 'style' || role === 'style_content'
+    const findActiveStyleReference = (
+        uploadedIds: string[],
+        brandKitIds: string[],
+        roles: Record<string, ReferenceImageRole>
+    ) => [...uploadedIds, ...brandKitIds].find((id) => hasStyleRole(roles[id]))
+
+    const analyzeStyleReference = async (imageRef: string) => {
+        if (!imageRef) return
+        const cached = styleAnalysisCacheRef.current[imageRef]
+        if (cached) {
+            setStyleAnalysisDescription(cached)
+            return
+        }
+
+        setIsImageAnalyzing(true)
+        setImageError(null)
+        try {
+            const payload = imageRef.startsWith('data:image/')
+                ? { imageBase64: imageRef }
+                : { imageUrl: imageRef }
+            const response = await fetch('/api/analyze-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            })
+            const result = await response.json()
+            if (!result?.success || !result?.data) {
+                throw new Error(result?.error || 'No se pudo analizar la referencia de estilo.')
+            }
+            const analysis = result.data as VisionAnalysis
+            const priority5Block = buildPriority5StyleBlockFromAnalysis(analysis)
+            if (!priority5Block) return
+            styleAnalysisCacheRef.current[imageRef] = priority5Block
+            setStyleAnalysisDescription(priority5Block)
+        } catch (error) {
+            setImageError(error instanceof Error ? error.message : 'Error analizando referencia de estilo')
+        } finally {
+            setIsImageAnalyzing(false)
+        }
+    }
+
+    const hasActiveStyleRole = (
+        uploadedIds: string[],
+        brandKitIds: string[],
+        roles: Record<string, ReferenceImageRole>,
+        excludeId?: string
+    ) => [...uploadedIds, ...brandKitIds].some((id) => id !== excludeId && hasStyleRole(roles[id]))
+
+    const hasUploadedStyleRole = (
+        uploadedIds: string[],
+        roles: Record<string, ReferenceImageRole>,
+        excludeId?: string
+    ) => uploadedIds.some((id) => id !== excludeId && hasStyleRole(roles[id]))
+
+    const getDefaultRoleForNewImage = (
+        uploadedIds: string[],
+        brandKitIds: string[],
+        roles: Record<string, ReferenceImageRole>
+    ): ReferenceImageRole => (
+        hasActiveStyleRole(uploadedIds, brandKitIds, roles)
+            ? (imageSourceMode === 'generate' ? 'logo' : 'content')
+            : 'style'
+    )
+
+    const handleImageSourceModeChange = (mode: 'upload' | 'brandkit' | 'generate') => {
+        setImageSourceMode(mode)
+        setReferenceImageRoles((prev) => {
+            const selectedIds = [...uploadedImages, ...selectedBrandKitImageIds]
+            if (selectedIds.length === 0) return prev
+            const next = { ...prev }
+            let styleAssigned = false
+
+            selectedIds.forEach((id) => {
+                let role = next[id]
+                if (!role) {
+                    role = styleAssigned ? (mode === 'generate' ? 'logo' : 'content') : 'style'
+                }
+
+                if (mode === 'generate' && (role === 'content' || role === 'style_content')) {
+                    role = 'style'
+                }
+
+                if (hasStyleRole(role)) {
+                    if (!styleAssigned) {
+                        role = 'style'
+                        styleAssigned = true
+                    } else {
+                        role = mode === 'generate' ? 'logo' : 'content'
+                    }
+                }
+
+                next[id] = role
+            })
+
+            return next
+        })
+        markReanalysisNeeded()
     }
 
     // TRACK last initialized brand kit for colors
@@ -308,6 +523,19 @@ export function CarouselControlsPanel({
         if (currentBrandId === lastInitBrandId) return
 
         console.log(`[CarouselControlsPanel] Initializing colors for Brand Kit: ${currentBrandId}`)
+
+        // Reset reference/style analysis state to avoid leaking prompt/style data between Brand Kits
+        setSelectedBrandKitImageIds([])
+        setUploadedImages([])
+        setReferenceImageRoles({})
+        setImageSourceMode('upload')
+        setAiImageDescription('')
+        setStyleAnalysisDescription('')
+        setCustomStyle('')
+        setImageError(null)
+        styleAnalysisCacheRef.current = {}
+        lastAutoStyleRef.current = null
+
         if (brandKit.colors && brandKit.colors.length > 0) {
             const defaultColors: SelectedColor[] = brandKit.colors
                 .map(c => {
@@ -345,6 +573,42 @@ export function CarouselControlsPanel({
         const brandkit = selectedBrandKitImageIds.map(url => ({ url, source: 'brandkit' as const }))
         onReferenceImagesChange([...uploaded, ...brandkit])
     }, [uploadedImages, selectedBrandKitImageIds, onReferenceImagesChange])
+
+    useEffect(() => {
+        const activeStyleRef = findActiveStyleReference(
+            uploadedImages,
+            selectedBrandKitImageIds,
+            referenceImageRoles
+        )
+
+        if (!activeStyleRef) {
+            lastAutoStyleRef.current = null
+            setStyleAnalysisDescription('')
+            return
+        }
+
+        if (lastAutoStyleRef.current === activeStyleRef && styleAnalysisCacheRef.current[activeStyleRef]) {
+            return
+        }
+
+        lastAutoStyleRef.current = activeStyleRef
+        void analyzeStyleReference(activeStyleRef)
+    }, [uploadedImages, selectedBrandKitImageIds, referenceImageRoles])
+
+    useEffect(() => {
+        onReferencePreviewStateChange?.({
+            uploadedImages,
+            selectedBrandKitImageIds,
+            referenceImageRoles,
+            imageSourceMode
+        })
+    }, [
+        uploadedImages,
+        selectedBrandKitImageIds,
+        referenceImageRoles,
+        imageSourceMode,
+        onReferencePreviewStateChange
+    ])
 
     useEffect(() => {
         const nextId = analysisStructure?.id || null
@@ -403,12 +667,37 @@ export function CarouselControlsPanel({
     }, [showAllSteps])
 
     useEffect(() => {
-        if (!analysisStructure?.id) return
-        if (lastAnalyzedPrompt && lastAnalyzedPrompt.trim() === prompt.trim()) {
-            setNeedsReanalysis(false)
-            setCurrentStep(prev => (prev < 3 ? 3 : prev))
+        if (!analysisReady) return
+        setNeedsReanalysis(false)
+        setCurrentStep(7)
+        setLastAnalyzedSignature(buildConfigSignature())
+    }, [analysisReady, analysisHook])
+
+    useEffect(() => {
+        if (!lastAnalyzedSignature) return
+        const currentSignature = buildConfigSignature()
+        if (currentSignature !== lastAnalyzedSignature) {
+            markReanalysisNeeded()
         }
-    }, [analysisStructure?.id, lastAnalyzedPrompt, prompt])
+    }, [
+        prompt,
+        slideCount,
+        aspectRatio,
+        structureId,
+        compositionId,
+        compositionMode,
+        imageSourceMode,
+        aiImageDescription,
+        styleAnalysisDescription,
+        includeLogoOnSlides,
+        selectedLogoId,
+        selectedColors,
+        uploadedImages,
+        selectedBrandKitImageIds,
+        referenceImageRoles,
+        customStyle,
+        lastAnalyzedSignature
+    ])
 
     useEffect(() => {
         if (showAllSteps) return
@@ -432,12 +721,8 @@ export function CarouselControlsPanel({
         const newCount = Math.max(1, Math.min(15, slideCountOverride))
         setSlideCount(newCount)
         if (prompt.trim()) {
-            setNeedsReanalysis(true)
+            markReanalysisNeeded()
             setCurrentStep(2)
-            setLastAnalyzedPrompt(prompt.trim())
-            if (!isAnalyzing && !isGenerating) {
-                onAnalyze(buildSettings({ slideCount: newCount }))
-            }
         } else {
             setCurrentStep(2)
         }
@@ -446,9 +731,6 @@ export function CarouselControlsPanel({
         slideCountOverride,
         slideCount,
         prompt,
-        isAnalyzing,
-        isGenerating,
-        onAnalyze,
         onSlideCountOverrideApplied
     ])
 
@@ -464,6 +746,7 @@ export function CarouselControlsPanel({
         setAspectRatio(ratio)
         onAspectRatioChange?.(ratio)
         setCurrentStep(prev => (prev < 5 ? 5 : prev))
+        markReanalysisNeeded()
     }
 
     const toggleColor = (color: string) => {
@@ -500,6 +783,7 @@ export function CarouselControlsPanel({
                 }
             }
         })
+        markReanalysisNeeded()
     }
 
     const handleAddCustomColor = (color: string) => {
@@ -515,6 +799,7 @@ export function CarouselControlsPanel({
             console.log('[Carousel] New selectedColors after ADD:', newColors.map(c => c.color))
             return newColors
         })
+        markReanalysisNeeded()
     }
 
     const handleRemoveBrandColor = (color: string) => {
@@ -529,14 +814,31 @@ export function CarouselControlsPanel({
             }
             return newColors
         })
+        markReanalysisNeeded()
     }
 
     const toggleBrandKitImage = (id: string) => {
-        setSelectedBrandKitImageIds(prev =>
-            prev.includes(id)
-                ? prev.filter(u => u !== id)
-                : [...prev, id]
-        )
+        setSelectedBrandKitImageIds((prev) => {
+            if (prev.includes(id)) {
+                setReferenceImageRoles((prevRoles) => {
+                    const next = { ...prevRoles }
+                    delete next[id]
+                    return next
+                })
+                return prev.filter((u) => u !== id)
+            }
+
+            const nextBrandKit = [...prev, id]
+            setReferenceImageRoles((prevRoles) => {
+                const next = { ...prevRoles }
+                if (!next[id]) {
+                    next[id] = getDefaultRoleForNewImage(uploadedImages, nextBrandKit, next)
+                }
+                return next
+            })
+            return nextBrandKit
+        })
+        markReanalysisNeeded()
     }
 
     const handleUploadImage = async (file: File) => {
@@ -553,30 +855,18 @@ export function CarouselControlsPanel({
                 quality: 0.8,
                 format: 'image/jpeg'
             })
-            setUploadedImages(prev => [...prev, base64])
-
-            // Trigger visual analysis
-            try {
-                const response = await fetch('/api/analyze-image', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        imageBase64: base64,
-                        mimeType: file.type || 'image/jpeg',
-                    }),
+            setUploadedImages((prev) => {
+                const nextUploaded = [...prev, base64]
+                setReferenceImageRoles((prevRoles) => {
+                    const next = { ...prevRoles }
+                    if (!next[base64]) {
+                        next[base64] = getDefaultRoleForNewImage(nextUploaded, selectedBrandKitImageIds, next)
+                    }
+                    return next
                 })
-                const result = await response.json()
-                if (result.success && result.data) {
-                    const analysis = result.data
-                    // Build style-only description to avoid color overrides
-                    const desc = `Lighting: ${analysis.lighting}. Keywords: ${analysis.keywords?.join(', ')}.`
-                    setAiImageDescription(desc)
-                }
-            } catch (err) {
-                console.error('Auto-analysis failed:', err)
-                // Non-blocking error
-            }
-
+                return nextUploaded
+            })
+            markReanalysisNeeded()
         } catch (error) {
             setImageError(error instanceof Error ? error.message : 'Error al subir imagen')
         } finally {
@@ -586,10 +876,73 @@ export function CarouselControlsPanel({
 
     const removeUploadedImage = (url: string) => {
         setUploadedImages(prev => prev.filter(u => u !== url))
+        setReferenceImageRoles(prev => {
+            const next = { ...prev }
+            delete next[url]
+            return next
+        })
+        markReanalysisNeeded()
     }
 
-    const clearUploadedImages = () => setUploadedImages([])
-    const clearBrandKitImages = () => setSelectedBrandKitImageIds([])
+    const clearUploadedImages = () => {
+        setReferenceImageRoles((prev) => {
+            const next = { ...prev }
+            uploadedImages.forEach((id) => delete next[id])
+            return next
+        })
+        setUploadedImages([])
+        markReanalysisNeeded()
+    }
+    const clearBrandKitImages = () => {
+        setReferenceImageRoles((prev) => {
+            const next = { ...prev }
+            selectedBrandKitImageIds.forEach((id) => delete next[id])
+            return next
+        })
+        setSelectedBrandKitImageIds([])
+        markReanalysisNeeded()
+    }
+
+    const setReferenceImageRole = (imageId: string, role: ReferenceImageRole) => {
+        setReferenceImageRoles((prev) => {
+            const isSelected = uploadedImages.includes(imageId) || selectedBrandKitImageIds.includes(imageId)
+            if (!isSelected) return prev
+
+            const next = { ...prev }
+            const isTargetUpload = uploadedImages.includes(imageId)
+            const isTargetBrandKit = selectedBrandKitImageIds.includes(imageId)
+            let safeRole: ReferenceImageRole =
+                imageSourceMode === 'generate' && (role === 'content' || role === 'style_content')
+                    ? 'style'
+                    : role
+
+            if (
+                isTargetBrandKit &&
+                hasStyleRole(safeRole) &&
+                hasUploadedStyleRole(uploadedImages, next, imageId)
+            ) {
+                safeRole = imageSourceMode === 'generate'
+                    ? 'logo'
+                    : (hasStyleRole(next[imageId]) ? 'content' : (next[imageId] || 'content'))
+            }
+
+            if (hasStyleRole(safeRole)) {
+                ;[...uploadedImages, ...selectedBrandKitImageIds].forEach((id) => {
+                    if (id === imageId) return
+                    if (!hasStyleRole(next[id])) return
+                    const isOtherUpload = uploadedImages.includes(id)
+                    if (isTargetBrandKit && isOtherUpload) return
+                    if (isTargetUpload || !isOtherUpload) {
+                        next[id] = imageSourceMode === 'generate' ? 'logo' : 'content'
+                    }
+                })
+            }
+
+            next[imageId] = safeRole
+            return next
+        })
+        markReanalysisNeeded()
+    }
 
     const handleEditSlide = (index: number) => {
         setEditingSlide(index)
@@ -649,6 +1002,11 @@ export function CarouselControlsPanel({
                     ? selectedBrandKitImageIds
                     : []
 
+        const mergedStyleDirectives = mergeCustomStyleIntoStyleDirectives(
+            styleAnalysisDescription,
+            customStyle
+        )
+
         const baseSettings = {
             prompt: promptValue,
             slideCount: slideCountValue,
@@ -659,6 +1017,8 @@ export function CarouselControlsPanel({
             structureId: structureIdValue,
             imageSourceMode: overrides.imageSourceMode ?? imageSourceMode,
             aiImageDescription: (overrides.aiImageDescription ?? aiImageDescription).trim() || undefined,
+            aiStyleDirectives: mergedStyleDirectives || undefined,
+            customStyleText: (customStyle || '').trim() || undefined,
             selectedLogoUrl: resolveSelectedLogoUrl(),
             selectedColors: selectedColors.length > 0 ? selectedColors : brandColors.slice(0, 3).map(c => ({
                 color: c.color,
@@ -677,9 +1037,12 @@ export function CarouselControlsPanel({
 
     const handleAnalyze = async () => {
         if (!prompt.trim() || slideCount < 1) return
-        setNeedsReanalysis(true)
-        setLastAnalyzedPrompt(prompt.trim())
+        if (generatedCount > 0) {
+            onInvalidatePreview?.()
+        }
         await onAnalyze(buildSettings())
+        setNeedsReanalysis(false)
+        setLastAnalyzedSignature(buildConfigSignature())
     }
 
     const handleReset = () => {
@@ -696,12 +1059,15 @@ export function CarouselControlsPanel({
         setSelectedLogoId(brandLogos.length > 0 ? 'logo-0' : null)
         setSelectedColors([])
         setSelectedBrandKitImageIds([])
+        setReferenceImageRoles({})
         setUploadedImages([])
         setImageSourceMode('upload')
         setAiImageDescription('')
+        setStyleAnalysisDescription('')
+        setCustomStyle('')
         setIncludeLogoOnSlides(true)
         setNeedsReanalysis(false)
-        setLastAnalyzedPrompt('')
+        setLastAnalyzedSignature('')
         setCurrentStep(1)
         onReset?.()
     }
@@ -723,30 +1089,30 @@ export function CarouselControlsPanel({
         }
         setBasicSelectedCompositionId(state.basicSelectedCompositionId ?? null)
         setImageSourceMode(state.imageSourceMode || 'upload')
-        setAiImageDescription(state.aiImageDescription || '')
+        if (isPriority5StyleBlock(state.aiImageDescription)) {
+            setStyleAnalysisDescription(state.aiImageDescription || '')
+            setAiImageDescription('')
+        } else {
+            setStyleAnalysisDescription('')
+            setAiImageDescription(state.aiImageDescription || '')
+        }
+        setCustomStyle(state.customStyle || '')
         setSelectedBrandKitImageIds(state.selectedBrandKitImageIds || [])
         setSelectedLogoId(state.selectedLogoId ?? (brandLogos.length > 0 ? 'logo-0' : null))
         setSelectedColors(state.selectedColors || [])
         setIncludeLogoOnSlides(state.includeLogoOnSlides !== false)
-        setNeedsReanalysis(true)
-        setLastAnalyzedPrompt(state.prompt || '')
-        setCurrentStep(3)
-        if (state.prompt && !isAnalyzing && !isGenerating) {
-            onAnalyze(buildSettings({
-                prompt: state.prompt,
-                slideCount: state.slideCount ?? 5,
-                aspectRatio: state.aspectRatio || '4:5',
-                style: state.style || 'minimal',
-                structureId: state.structureId || structureId,
-                compositionId: state.compositionId || compositionId,
-                imageSourceMode: state.imageSourceMode || 'upload',
-                aiImageDescription: state.aiImageDescription || '',
-                selectedLogoUrl: resolveSelectedLogoUrl(),
-                selectedColors: state.selectedColors || [],
-                selectedImageUrls: state.selectedBrandKitImageIds || [],
-                includeLogoOnSlides: state.includeLogoOnSlides !== false
-            }))
+        const savedPreview = state.previewState
+        if (savedPreview && onRestorePreviewState) {
+            onRestorePreviewState({
+                slides: Array.isArray(savedPreview.slides) ? savedPreview.slides : [],
+                scriptSlides: Array.isArray(savedPreview.scriptSlides) ? savedPreview.scriptSlides : undefined,
+                caption: typeof savedPreview.caption === 'string' ? savedPreview.caption : undefined,
+                currentIndex: Number.isFinite(savedPreview.currentIndex) ? savedPreview.currentIndex : 0
+            })
         }
+        setNeedsReanalysis(true)
+        setLastAnalyzedSignature('')
+        setCurrentStep(7)
     }
 
     const handleSavePreset = async (name: string) => {
@@ -775,7 +1141,20 @@ export function CarouselControlsPanel({
                     selectedBrandKitImageIds,
                     selectedLogoId,
                     selectedColors,
-                    includeLogoOnSlides
+                    includeLogoOnSlides,
+                    previewState: {
+                        slides: (previewSlides || []).map((slide) => ({
+                            index: slide.index,
+                            title: slide.title,
+                            description: slide.description,
+                            status: slide.status,
+                            imageUrl: slide.imageUrl,
+                            error: slide.error
+                        })),
+                        scriptSlides: Array.isArray(previewScriptSlides) ? previewScriptSlides : undefined,
+                        caption: previewCaption || undefined,
+                        currentIndex: previewCurrentIndex
+                    }
                 }
             })
             setIsSaveDialogOpen(false)
@@ -850,7 +1229,7 @@ export function CarouselControlsPanel({
                 <div ref={(el) => { stepRefs.current[2] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader
                         icon={Wand2}
-                        title="Que quieres crear?"
+                        title="¿Qué quieres crear?"
                         extra={
                             <Button
                                 variant="ghost"
@@ -870,11 +1249,8 @@ export function CarouselControlsPanel({
                             onChange={(e) => {
                                 const nextPrompt = e.target.value
                                 setPrompt(nextPrompt)
-                                setNeedsReanalysis(true)
+                                markReanalysisNeeded()
                                 setCurrentStep(2)
-                                if (!nextPrompt.trim()) {
-                                    setLastAnalyzedPrompt('')
-                                }
                             }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -955,6 +1331,7 @@ export function CarouselControlsPanel({
                                                 `${structureId}|${prompt.trim()}|${slideCount}`
                                             )
                                         )
+                                        markReanalysisNeeded()
                                     }}
                                     aria-label="Activar modo avanzado de composicion"
                                 />
@@ -966,6 +1343,7 @@ export function CarouselControlsPanel({
                         onValueChange={(value) => {
                             setHasUserSelectedStructure(true)
                             setStructureId(value)
+                            markReanalysisNeeded()
                         }}
                     >
                         <SelectTrigger
@@ -996,6 +1374,7 @@ export function CarouselControlsPanel({
                                 onSelect={(id) => {
                                     setCompositionId(id)
                                     setCurrentStep(prev => (prev < 4 ? 4 : prev))
+                                    markReanalysisNeeded()
                                 }}
                             />
                             <p className="text-[11px] text-muted-foreground leading-snug">
@@ -1030,11 +1409,11 @@ export function CarouselControlsPanel({
                             <div className="w-8 h-10 rounded bg-muted border border-border" />
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold">Vertical EstÃ¡ndar (Retrato)</span>
+                                    <span className="text-xs font-semibold">Vertical Estándar (Retrato)</span>
                                     <span className="text-[10px] font-medium text-muted-foreground">4:5</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1350 Â· el estÃ¡ndar mÃ¡s seguro para evitar recortes en dispositivos antiguos o Meta Ads.
+                                    1080x1350 · el estándar más seguro para evitar recortes en dispositivos antiguos o Meta Ads.
                                 </p>
                             </div>
                         </button>
@@ -1052,7 +1431,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">3:4</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1440 Â· +6.6% pantalla Â· domina el feed y encaja con la nueva cuadrÃ­cula vertical.
+                                    1080x1440 · +6.6% pantalla · domina el feed y encaja con la nueva cuadrícula vertical.
                                 </p>
                             </div>
                         </button>
@@ -1070,7 +1449,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">1:1</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1080 Â· formato original y clÃ¡sico para composiciones equilibradas.
+                                    1080x1080 · formato original y clásico para composiciones equilibradas.
                                 </p>
                             </div>
                         </button>
@@ -1098,10 +1477,15 @@ export function CarouselControlsPanel({
                         selectedBrandKitImageIds={selectedBrandKitImageIds}
                         onToggleBrandKitImage={toggleBrandKitImage}
                         onClearBrandKitImages={clearBrandKitImages}
-                        aiImageDescription={aiImageDescription}
-                        onAiDescriptionChange={setAiImageDescription}
+                        aiImageDescription={visibleAiImageDescription}
+                        onAiDescriptionChange={handleAiDescriptionChange}
+                        suggestedImagePrompts={suggestedImagePrompts}
+                        referenceImageRoles={referenceImageRoles}
+                        onReferenceRoleChange={setReferenceImageRole}
+                        customStyle={customStyle}
+                        onCustomStyleChange={handleCustomStyleChange}
                         mode={imageSourceMode}
-                        onModeChange={setImageSourceMode}
+                        onModeChange={handleImageSourceModeChange}
                     />
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
                         Sube una referencia o usa una del Brand Kit.
@@ -1132,7 +1516,7 @@ export function CarouselControlsPanel({
                                 selectedLayout={null}
                                 selectedLogoId={selectedLogoId}
                                 selectedBrandColors={[]}
-                                onSelectLogo={setSelectedLogoId}
+                                onSelectLogo={handleSelectLogo}
                                 onToggleBrandColor={() => { }}
                                 onAddCustomColor={() => { }}
                                 showLogo={true}
@@ -1145,10 +1529,12 @@ export function CarouselControlsPanel({
                             <div className="flex items-center justify-between pt-1">
                                 <div className="space-y-0.5">
                                     <p className="text-sm font-medium">Aplicar logo en todas</p>
-                                    <p className="text-xs text-muted-foreground">Misma posiciÃ³n y tamaÃ±o</p>
                                 </div>
                                 <button
-                                    onClick={() => setIncludeLogoOnSlides(!includeLogoOnSlides)}
+                                    onClick={() => {
+                                        setIncludeLogoOnSlides(!includeLogoOnSlides)
+                                        markReanalysisNeeded()
+                                    }}
                                     className={cn(
                                         "w-10 h-6 rounded-full transition-colors",
                                         includeLogoOnSlides ? "bg-primary" : "bg-muted"
@@ -1176,7 +1562,21 @@ export function CarouselControlsPanel({
 
                 {isStepVisible(7) && (
                 <div ref={(el) => { stepRefs.current[7] = el }} className="glass-card p-4 space-y-3">
-                    <SectionHeader icon={Palette} title="Colores" />
+                    <SectionHeader
+                        icon={Palette}
+                        title="Colores"
+                        extra={(
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={refreshBrandColorsFromKit}
+                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                            >
+                                <RotateCcw className="w-3 h-3" />
+                                Recargar
+                            </Button>
+                        )}
+                    />
                     <BrandingConfigurator
                         selectedLayout={null}
                         selectedLogoId={null}
@@ -1209,6 +1609,11 @@ export function CarouselControlsPanel({
                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                             Generando {generatedCount}/{totalSlides}...
                         </>
+                    ) : generatedCount > 0 ? (
+                        <>
+                            <RotateCcw className="w-5 h-5 mr-2" />
+                            Generar otro carrusel con mismos ajustes
+                        </>
                     ) : (
                         <>
                             <Sparkles className="w-5 h-5 mr-2" />
@@ -1221,12 +1626,12 @@ export function CarouselControlsPanel({
                     <div className="mt-2 flex items-center justify-between">
                         <Button
                             onClick={onCancelGenerate}
-                            variant="outline"
-                            size="icon"
-                            className="h-9 w-9"
-                            title="Detener generaciÃ³n"
+                            variant="link"
+                            size="sm"
+                            className="h-7 px-0 text-[11px] text-muted-foreground hover:text-destructive"
+                            title="Detener generación"
                         >
-                            <Square className="w-4 h-4" />
+                            Detener generación
                         </Button>
                         <motion.span
                             initial={{ opacity: 0 }}

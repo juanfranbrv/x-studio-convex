@@ -1,7 +1,8 @@
-export default function Head() {
+﻿export default function Head() {
     return (
         <>
-            <title>X Carrusel | Motor de Diseño Inteligente</title>
+            <title>PostLaboratory Carrusel | Motor de Diseno Inteligente</title>
         </>
     )
 }
+

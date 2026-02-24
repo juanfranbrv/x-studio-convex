@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
-import { Home, Image, FileSpreadsheet, Settings } from 'lucide-react'
+import { Home, Image, FileSpreadsheet, Settings, PanelsTopLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function MobileNav() {
@@ -14,6 +14,7 @@ export function MobileNav() {
         { icon: Home, label: 'nav.home', href: '/' },
         { icon: FileSpreadsheet, label: 'Kit de Marca', href: '/brand-kit' },
         { icon: Image, label: 'nav.studio', href: '/image' },
+        { icon: PanelsTopLeft, label: 'Estudio', href: '/studio' },
         { icon: Settings, label: 'nav.settings', href: '/settings' }, // Assuming settings page or modal, maybe just placeholder
     ]
 
