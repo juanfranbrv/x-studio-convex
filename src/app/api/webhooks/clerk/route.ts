@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     let event;
 
     try {
-      event = await verifyWebhook(req, envSecret ? { signingSecret: envSecret } : undefined);
+      event = await verifyWebhook(req.clone(), envSecret ? { signingSecret: envSecret } : undefined);
     } catch (firstError) {
       const message = firstError instanceof Error ? firstError.message : String(firstError);
       const canRetryWithoutPrefix =
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       }
 
       const normalizedSecret = envSecret.replace(/^whsec_/, "");
-      event = await verifyWebhook(req, { signingSecret: normalizedSecret });
+      event = await verifyWebhook(req.clone(), { signingSecret: normalizedSecret });
     }
 
     const eventType = event.type;
