@@ -17,9 +17,7 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
             signInUrl={authConfig.signInPath}
             signUpUrl={authConfig.signUpPath}
             signInFallbackRedirectUrl={authConfig.signedInDefaultPath}
-            signInForceRedirectUrl={authConfig.signedInDefaultPath}
             signUpFallbackRedirectUrl={authConfig.onboardingPath}
-            signUpForceRedirectUrl={authConfig.onboardingPath}
             afterSignOutUrl={authConfig.afterSignOutPath}
         >
             <ConvexProviderWithClerk client={convex} useAuth={useAuth}>

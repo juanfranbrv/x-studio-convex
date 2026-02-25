@@ -8,7 +8,6 @@ export default function SignInPage() {
                 path={authConfig.signInPath}
                 signUpUrl={authConfig.signUpPath}
                 fallbackRedirectUrl={authConfig.signedInDefaultPath}
-                forceRedirectUrl={authConfig.signedInDefaultPath}
                 appearance={{
                     elements: {
                         rootBox: 'mx-auto',
