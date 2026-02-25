@@ -4,6 +4,8 @@ import { authConfig } from '@/lib/auth-config'
 // Define public routes that don't require authentication
 const isPublicRoute = createRouteMatcher([
   '/',
+  '/privacy(.*)',
+  '/terms(.*)',
   `${authConfig.signInPath}(.*)`,
   `${authConfig.signUpPath}(.*)`,
   `${authConfig.onboardingPath}(.*)`,
