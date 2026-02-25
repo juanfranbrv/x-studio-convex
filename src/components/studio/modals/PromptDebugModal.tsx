@@ -99,6 +99,8 @@ export function PromptDebugModal({
         ? 'No configurado'
         : effectiveModel.startsWith('wisdom/')
             ? 'Wisdom'
+            : effectiveModel.startsWith('naga/')
+                ? 'NagaAI'
             : effectiveModel.startsWith('google/')
                 ? 'Google Oficial'
                 : 'Proveedor personalizado'

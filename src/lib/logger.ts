@@ -60,6 +60,14 @@ function wrapLine(text: string, max = MAX_LINE): string[] {
 
 function formatDetails(details?: unknown) {
     if (!details) return ''
+    if (details instanceof Error) {
+        const payload = {
+            name: details.name,
+            message: details.message,
+            stack: details.stack,
+        }
+        return dim(JSON.stringify(payload))
+    }
     try {
         return dim(JSON.stringify(details))
     } catch {

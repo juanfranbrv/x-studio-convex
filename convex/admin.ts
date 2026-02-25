@@ -78,6 +78,9 @@ export const initializeSettings = mutation({
             { key: "beta_initial_credits", value: 100, description: "Créditos iniciales para beta testers" },
             { key: "low_credits_threshold", value: 10, description: "Umbral para alerta de créditos bajos" },
             { key: "credits_per_generation", value: 1, description: "Créditos consumidos por generación" },
+            { key: "model_image_generation", value: "wisdom/gemini-3-pro-image-preview", description: "Modelo por defecto para generación de imagen" },
+            { key: "model_intelligence", value: "wisdom/gemini-3-flash-preview", description: "Modelo por defecto para inteligencia y análisis" },
+            { key: "provider_naga_api_key", value: "", description: "API key de NagaAI para modelos naga/*" },
         ];
 
         for (const setting of defaults) {
@@ -531,3 +534,4 @@ export const deleteBetaRequest = mutation({
         return { success: true };
     },
 });
+

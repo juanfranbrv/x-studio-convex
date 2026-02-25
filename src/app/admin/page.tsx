@@ -34,9 +34,32 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 
 import { CompositionsSummaryTable } from '@/components/admin/CompositionsSummaryTable'
+
+const IMAGE_MODEL_OPTIONS = [
+    { value: 'wisdom/gemini-3-pro-image-preview', label: 'Wisdom · Gemini 3 Pro Image Preview' },
+    { value: 'wisdom/qwen-image', label: 'Wisdom · Qwen Image' },
+    { value: 'wisdom/kolors', label: 'Wisdom · Kolors' },
+    { value: 'wisdom/wanx-v1', label: 'Wisdom · Wanx v1' },
+    { value: 'wisdom/seedream-4.0', label: 'Wisdom · Seedream 4.0' },
+    { value: 'google/gemini-3-pro-image-preview', label: 'Google · Gemini 3 Pro Image Preview' },
+    { value: 'naga/seedream-5-lite', label: 'NagaAI · seedream-5-lite' },
+    { value: 'naga/gpt-image-1.5-2025-12-16', label: 'NagaAI · gpt-image-1.5-2025-12-16' },
+    { value: 'naga/gemini-3-pro-image-preview', label: 'NagaAI · gemini-3-pro-image-preview' },
+]
+
+const INTELLIGENCE_MODEL_OPTIONS = [
+    { value: 'wisdom/gemini-3-flash-preview', label: 'Wisdom · Gemini 3 Flash Preview' },
+    { value: 'wisdom/gemini-3-pro-preview', label: 'Wisdom · Gemini 3 Pro Preview' },
+    { value: 'wisdom/gemini-2.5-flash', label: 'Wisdom · Gemini 2.5 Flash' },
+    { value: 'gemini-3-flash-preview', label: 'Google (legacy) · gemini-3-flash-preview' },
+    { value: 'google/gemini-3-flash-preview', label: 'Google · gemini-3-flash-preview' },
+    { value: 'naga/step-3.5-flash:free', label: 'NagaAI · step-3.5-flash:free' },
+    { value: 'naga/gemini-3-flash-preview', label: 'NagaAI · gemini-3-flash-preview' },
+]
 
 export default function AdminPage() {
     const { user, isLoaded } = useUser()
@@ -602,7 +625,87 @@ export default function AdminPage() {
                                 <CardDescription>Valores configurables para crÃ©ditos</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                {settings?.filter(s => s.key !== 'theme_primary' && s.key !== 'theme_secondary' && s.key !== 'model_image_generation' && s.key !== 'model_intelligence').map((setting) => (
+                                <div className="rounded-lg border p-4 space-y-4">
+                                    <div>
+                                        <Label className="text-base">Modelo de imagen</Label>
+                                        <p className="text-sm text-muted-foreground">Modelo que usarÃ¡ la generaciÃ³n de imagen en toda la app</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Select
+                                            value={String(editingSettings.model_image_generation ?? 'wisdom/gemini-3-pro-image-preview')}
+                                            onValueChange={(value) => setEditingSettings(prev => ({ ...prev, model_image_generation: value }))}
+                                        >
+                                            <SelectTrigger className="flex-1">
+                                                <SelectValue placeholder="Selecciona modelo de imagen" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {IMAGE_MODEL_OPTIONS.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleSaveSetting('model_image_generation', String(editingSettings.model_image_generation ?? 'wisdom/gemini-3-pro-image-preview'))}
+                                        >
+                                            Guardar
+                                        </Button>
+                                    </div>
+
+                                    <div>
+                                        <Label className="text-base">Modelo de inteligencia</Label>
+                                        <p className="text-sm text-muted-foreground">Modelo usado para anÃ¡lisis, intenciones y texto de apoyo</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Select
+                                            value={String(editingSettings.model_intelligence ?? 'wisdom/gemini-3-flash-preview')}
+                                            onValueChange={(value) => setEditingSettings(prev => ({ ...prev, model_intelligence: value }))}
+                                        >
+                                            <SelectTrigger className="flex-1">
+                                                <SelectValue placeholder="Selecciona modelo de inteligencia" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {INTELLIGENCE_MODEL_OPTIONS.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleSaveSetting('model_intelligence', String(editingSettings.model_intelligence ?? 'wisdom/gemini-3-flash-preview'))}
+                                        >
+                                            Guardar
+                                        </Button>
+                                    </div>
+
+                                    <div>
+                                        <Label className="text-base">NagaAI API Key</Label>
+                                        <p className="text-sm text-muted-foreground">Se usa al seleccionar modelos con prefijo <code>naga/</code></p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="password"
+                                            value={String(editingSettings.provider_naga_api_key ?? '')}
+                                            onChange={(e) => setEditingSettings(prev => ({
+                                                ...prev,
+                                                provider_naga_api_key: e.target.value
+                                            }))}
+                                            placeholder="ng-..."
+                                        />
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleSaveSetting('provider_naga_api_key', String(editingSettings.provider_naga_api_key ?? ''))}
+                                        >
+                                            Guardar
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {settings?.filter(s => s.key !== 'theme_primary' && s.key !== 'theme_secondary' && s.key !== 'model_image_generation' && s.key !== 'model_intelligence' && s.key !== 'provider_naga_api_key').map((setting) => (
                                     <div key={setting.key} className="flex items-center justify-between gap-4">
                                         <div className="flex-1">
                                             <Label className="text-base">{setting.key}</Label>
