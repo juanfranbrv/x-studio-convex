@@ -2,6 +2,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { BrandDNA } from './brand-types'
 import { buildImagePrompt, ImageGenerationOptions } from './prompt-builder'
 import { log } from './logger'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '@/../convex/_generated/api'
 
 // Initialize Gemini clients
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -139,6 +141,46 @@ export async function generateBrandImage(
 // --- WIDOM GATE INTEGRATION ---
 const WISDOM_API_KEY = process.env.WISDOM_API_KEY || ''
 const WISDOM_BASE_URL = 'https://wisdom-gate.juheapi.com'
+const NAGA_BASE_URL = 'https://api.naga.ac/v1'
+const NAGA_API_KEY = process.env.NAGA_API_KEY || ''
+const NAGA_SETTING_KEY = 'provider_naga_api_key'
+const NAGA_MODEL_PROMPT_LIMITS: Record<string, number> = {
+    'seedream-5-lite': 8192,
+    'gpt-image-1.5-2025-12-16': 8192,
+}
+let nagaApiKeyCache = ''
+let nagaApiKeyCacheAt = 0
+const NAGA_API_KEY_CACHE_TTL_MS = 60_000
+
+async function resolveNagaApiKey(explicitKey?: string): Promise<string> {
+    const explicit = (explicitKey || '').trim()
+    if (explicit) return explicit
+
+    const fromEnv = (NAGA_API_KEY || '').trim()
+    if (fromEnv) return fromEnv
+
+    const now = Date.now()
+    if (nagaApiKeyCache && (now - nagaApiKeyCacheAt) < NAGA_API_KEY_CACHE_TTL_MS) {
+        return nagaApiKeyCache
+    }
+
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
+    if (!convexUrl) return ''
+
+    try {
+        const convex = new ConvexHttpClient(convexUrl)
+        const value = await convex.query(api.admin.getSetting, { key: NAGA_SETTING_KEY })
+        if (typeof value === 'string' && value.trim().length > 0) {
+            nagaApiKeyCache = value.trim()
+            nagaApiKeyCacheAt = now
+            return nagaApiKeyCache
+        }
+    } catch (error) {
+        log.warn('NAGA', 'No se pudo resolver API key desde app_settings', error)
+    }
+
+    return ''
+}
 
 export const WISDOM_MODELS = {
     TEXT: {
@@ -290,9 +332,115 @@ async function generateWisdomOpenAIImage(prompt: string, model: string, aspectRa
     }
 }
 
+async function generateNagaImage(
+    prompt: string,
+    model: string,
+    aspectRatio?: string,
+    explicitApiKey?: string
+): Promise<string> {
+    const nagaApiKey = await resolveNagaApiKey(explicitApiKey)
+    if (!nagaApiKey) {
+        throw new Error('NagaAI API key no configurada. Configúrala en /admin o en NAGA_API_KEY.')
+    }
+
+    const normalizedModel = String(model || '').trim().toLowerCase()
+    const limit = NAGA_MODEL_PROMPT_LIMITS[normalizedModel]
+    const promptForNaga = typeof limit === 'number'
+        ? fitPromptForProviderLimit(prompt, limit)
+        : prompt
+    if (typeof limit === 'number' && promptForNaga.length !== prompt.length) {
+        log.warn('IMAGE', `Naga prompt trimmed (${normalizedModel}) ${prompt.length} -> ${promptForNaga.length} chars`)
+    }
+
+    const response = await fetch(`${NAGA_BASE_URL}/images/generations`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${nagaApiKey}`
+        },
+        body: JSON.stringify({
+            model,
+            prompt: promptForNaga,
+            n: 1,
+            size: getOpenAISize(aspectRatio),
+            response_format: 'url'
+        })
+    })
+
+    if (!response.ok) {
+        const errorText = await response.text()
+        const contentType = response.headers.get('content-type') || 'unknown'
+        const compact = errorText.replace(/\s+/g, ' ').slice(0, 500)
+        throw new Error(`NagaAI image error (${response.status}, ${contentType}): ${compact}`)
+    }
+
+    const data = await response.json()
+    if (data?.data?.[0]?.b64_json) {
+        return `data:image/png;base64,${data.data[0].b64_json}`
+    }
+    if (data?.data?.[0]?.url) {
+        const rawUrl = String(data.data[0].url).trim()
+        try {
+            return await resolveImageUrlToDataUrl(rawUrl)
+        } catch (error) {
+            log.warn('IMAGE', `Naga URL fallback to remote URL (${rawUrl})`, error)
+            return rawUrl
+        }
+    }
+
+    throw new Error('No image data found in NagaAI response')
+}
+
+function fitPromptForProviderLimit(prompt: string, maxChars: number): string {
+    const normalized = prompt
+        .replace(/\r\n/g, '\n')
+        .replace(/[ \t]{2,}/g, ' ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+
+    if (normalized.length <= maxChars) {
+        return normalized
+    }
+
+    const marker = '\n\n[...prompt recortado automáticamente por límite del proveedor...]\n\n'
+    const budget = Math.max(0, maxChars - marker.length)
+    const headLen = Math.floor(budget * 0.4)
+    const tailLen = budget - headLen
+
+    const merged = `${normalized.slice(0, headLen)}${marker}${normalized.slice(-tailLen)}`
+    return merged.length <= maxChars ? merged : merged.slice(0, maxChars)
+}
+
+async function resolveImageUrlToDataUrl(url: string): Promise<string> {
+    const maxAttempts = 3
+    const retryMs = [500, 1000, 1500]
+    let lastError: unknown = null
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        try {
+            const response = await fetch(url)
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`)
+            }
+            const mimeType = response.headers.get('content-type') || 'image/png'
+            const arrayBuffer = await response.arrayBuffer()
+            const base64 = Buffer.from(arrayBuffer).toString('base64')
+            return `data:${mimeType};base64,${base64}`
+        } catch (error) {
+            lastError = error
+            if (attempt < maxAttempts - 1) {
+                await new Promise((resolve) => setTimeout(resolve, retryMs[attempt]))
+            }
+        }
+    }
+
+    throw lastError instanceof Error ? lastError : new Error('No se pudo resolver la URL de imagen')
+}
+
 export interface TextGenerationOptions {
     temperature?: number
     topP?: number
+    nagaApiKey?: string
 }
 
 async function generateWisdomText(
@@ -541,6 +689,64 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
     }
 }
 
+async function generateNagaText(
+    prompt: string,
+    model: string,
+    systemPrompt?: string,
+    images?: string[],
+    options?: TextGenerationOptions
+): Promise<string> {
+    const nagaApiKey = await resolveNagaApiKey(options?.nagaApiKey)
+    if (!nagaApiKey) {
+        throw new Error('NagaAI API key no configurada. Configúrala en /admin o en NAGA_API_KEY.')
+    }
+
+    const content: Array<{ type: string; text?: string; image_url?: { url: string } }> = [{ type: 'text', text: prompt }]
+    if (images && images.length > 0) {
+        images.forEach((img) => {
+            content.push({ type: 'image_url', image_url: { url: img } })
+        })
+    }
+
+    const messages: Array<{ role: 'system' | 'user'; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> }> = []
+    if (systemPrompt?.trim()) {
+        messages.push({ role: 'system', content: systemPrompt })
+    }
+    messages.push({ role: 'user', content: content.length > 1 ? content : prompt })
+
+    const response = await fetch(`${NAGA_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${nagaApiKey}`
+        },
+        body: JSON.stringify({
+            model,
+            messages,
+            ...(typeof options?.temperature === 'number' ? { temperature: options.temperature } : {}),
+            ...(typeof options?.topP === 'number' ? { top_p: options.topP } : {})
+        })
+    })
+
+    if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`NagaAI text error: ${errorText}`)
+    }
+
+    const data = await response.json()
+    const rawContent = data?.choices?.[0]?.message?.content
+    if (typeof rawContent === 'string') {
+        return rawContent
+    }
+    if (Array.isArray(rawContent)) {
+        return rawContent
+            .map((part: { text?: string }) => part?.text || '')
+            .join('')
+    }
+
+    throw new Error('No text content found in NagaAI response')
+}
+
 async function generateGoogleImage(parts: any[], model: string, aspectRatio?: string): Promise<string> {
     try {
         if (!process.env.GEMINI_IMAGE_API_KEY) {
@@ -614,6 +820,11 @@ export async function generateTextUnified(
     if (modelNameLower.startsWith('wisdom/')) {
         const wisdomModel = modelName.replace(/^wisdom\//i, '')
         return await generateWisdomText(prompt, wisdomModel, systemPrompt, images, options)
+    }
+
+    if (modelNameLower.startsWith('naga/')) {
+        const nagaModel = modelName.replace(/^naga\//i, '')
+        return await generateNagaText(prompt, nagaModel, systemPrompt, images, options)
     }
 
     // Default to Google
@@ -731,6 +942,17 @@ export async function generateContentImageUnified(
         }
     }
 
+    if (modelNameLower.startsWith('naga/')) {
+        log.info('IMAGE', `Provider route: naga (${modelName})`)
+        const nagaModel = modelName.replace('naga/', '')
+        const enhancedPrompt = options.promptAlreadyBuilt
+            ? prompt
+            : buildImagePrompt(brand, prompt, options)
+        const result = await generateNagaImage(enhancedPrompt, nagaModel, options.aspectRatio, options.nagaApiKey)
+        log.success('IMAGE', `Generation done in ${Date.now() - generationStart}ms`)
+        return result
+    }
+
     if (modelNameLower.startsWith('google/')) {
         log.info('IMAGE', `Provider route: google (${modelName})`)
         const googleModelRaw = modelName.replace('google/', '')
@@ -785,9 +1007,19 @@ export async function generateImageFromPromptRaw(
         throw new Error('Missing image model')
     }
 
-    const normalized = model.startsWith('wisdom/') ? model.replace('wisdom/', '') : model
-    const parts: any[] = [{ text: prompt }]
+    const modelName = model.trim()
+    const modelNameLower = modelName.toLowerCase()
 
+    if (modelNameLower.startsWith('naga/')) {
+        return await generateNagaImage(prompt, modelName.replace(/^naga\//i, ''), aspectRatio)
+    }
+
+    if (modelNameLower.startsWith('google/')) {
+        return await generateGoogleImage([{ text: prompt }], modelName.replace(/^google\//i, ''), aspectRatio)
+    }
+
+    const normalized = modelNameLower.startsWith('wisdom/') ? modelName.replace(/^wisdom\//i, '') : modelName
+    const parts: any[] = [{ text: prompt }]
     return await generateWisdomImage(parts, normalized, aspectRatio)
 }
 

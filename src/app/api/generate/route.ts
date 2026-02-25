@@ -1,12 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { generateContentImageUnified } from '@/lib/gemini'
+import type { ImageGenerationOptions } from '@/lib/prompt-builder'
 import type { BrandDNA } from '@/lib/brand-types'
 import { ConvexHttpClient } from 'convex/browser'
 import { api } from '@/../convex/_generated/api'
 import { log } from '@/lib/logger'
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
+
+function extractErrorMessage(error: unknown): string {
+    if (error instanceof Error && error.message) return error.message
+    if (typeof error === 'string') return error
+
+    if (error && typeof error === 'object') {
+        const obj = error as Record<string, unknown>
+        const direct = obj.message
+        if (typeof direct === 'string' && direct.trim()) return direct
+
+        const nestedError = obj.error
+        if (typeof nestedError === 'string' && nestedError.trim()) return nestedError
+        if (nestedError && typeof nestedError === 'object') {
+            const nestedMessage = (nestedError as Record<string, unknown>).message
+            if (typeof nestedMessage === 'string' && nestedMessage.trim()) return nestedMessage
+        }
+
+        try {
+            const serialized = JSON.stringify(obj)
+            if (serialized && serialized !== '{}') return serialized
+        } catch {
+            // no-op
+        }
+    }
+
+    return 'Failed to generate image'
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -57,19 +85,20 @@ export async function POST(request: NextRequest) {
         // Parse request body
         // Parse request body
         const body = await request.json()
-        let { prompt, headline, cta, platform, brandDNA, context, model, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt } = body as {
+        const { prompt, headline, cta, platform, brandDNA, context, model: incomingModel, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt } = body as {
             prompt: string
             headline?: string
             cta?: string
             platform?: 'instagram' | 'tiktok' | 'youtube' | 'linkedin'
             brandDNA: BrandDNA
-            context?: any[]
+            context?: ImageGenerationOptions['context']
             model?: string
             layoutReference?: string
             aspectRatio?: string
-            selectedColors?: any[]
+            selectedColors?: ImageGenerationOptions['selectedColors']
             promptAlreadyBuilt?: boolean
         }
+        let model = incomingModel
 
         // Robust Server-Side Fallback: If model is missing, fetch from DB
         if (!model) {
@@ -86,8 +115,22 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        let nagaApiKey: string | undefined
+        if (model?.startsWith('naga/')) {
+            try {
+                const key = await convex.query(api.admin.getSetting, { key: 'provider_naga_api_key' })
+                if (typeof key === 'string' && key.trim().length > 0) {
+                    nagaApiKey = key.trim()
+                }
+            } catch (err) {
+                log.warn('API', 'No se pudo leer provider_naga_api_key', err)
+            }
+        }
+
         const provider = model?.startsWith('wisdom/')
             ? 'Wisdom'
+            : model?.startsWith('naga/')
+                ? 'NagaAI'
             : model?.startsWith('google/')
                 ? 'Google Oficial'
                 : 'Google Oficial'
@@ -102,7 +145,7 @@ export async function POST(request: NextRequest) {
         const imageUrl = await generateContentImageUnified(
             { name: brandDNA.brand_name || 'Brand', brand_dna: brandDNA },
             prompt,
-            { headline, cta, platform, context, model, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt }
+            { headline, cta, platform, context, model, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt, nagaApiKey }
         )
 
         // Consume credit after successful generation
@@ -125,10 +168,10 @@ export async function POST(request: NextRequest) {
             creditsRemaining: (creditsData.credits - 1)
         })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         log.error('API', 'Generation error', error)
 
-        const errorMessage = error.message || 'Failed to generate image'
+        const errorMessage = extractErrorMessage(error)
 
         // Determine error type and appropriate status code
         let status = 500

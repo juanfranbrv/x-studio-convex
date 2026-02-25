@@ -261,8 +261,12 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
             © 2024 PostLaboratory. Powered by Creative AI.
           </p>
           <div className="flex gap-6">
-            <a href="#" className="text-xs font-bold text-muted-foreground/40 hover:text-primary transition-colors uppercase tracking-widest leading-none">Privacy</a>
-            <a href="#" className="text-xs font-bold text-muted-foreground/40 hover:text-primary transition-colors uppercase tracking-widest leading-none">Terms</a>
+            <Link href="/privacy" className="text-xs font-bold text-muted-foreground/40 hover:text-primary transition-colors uppercase tracking-widest leading-none">
+              Privacy
+            </Link>
+            <Link href="/terms" className="text-xs font-bold text-muted-foreground/40 hover:text-primary transition-colors uppercase tracking-widest leading-none">
+              Terms
+            </Link>
           </div>
         </div>
       </footer>

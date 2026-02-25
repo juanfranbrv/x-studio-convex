@@ -22,6 +22,7 @@ export interface ImageGenerationOptions {
     seed?: number // Consistent seed for carousel generation
     selectedColors?: Array<{ color: string; role: string } | string>
     promptAlreadyBuilt?: boolean
+    nagaApiKey?: string
 }
 
 export function buildImagePrompt(

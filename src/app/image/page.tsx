@@ -680,6 +680,8 @@ export default function ImagePage() {
             const effectiveModel = resolvedDebugModel
             const effectiveProvider = effectiveModel?.startsWith('wisdom/')
                 ? 'Wisdom'
+                : effectiveModel?.startsWith('naga/')
+                    ? 'NagaAI'
                 : effectiveModel?.startsWith('google/')
                     ? 'Google Oficial'
                     : 'Google Oficial'
@@ -784,6 +786,8 @@ export default function ImagePage() {
             const effectiveModel = resolveImageModelForDebug()
             const effectiveProvider = effectiveModel?.startsWith('wisdom/')
                 ? 'Wisdom'
+                : effectiveModel?.startsWith('naga/')
+                    ? 'NagaAI'
                 : effectiveModel?.startsWith('google/')
                     ? 'Google Oficial'
                     : 'Google Oficial'

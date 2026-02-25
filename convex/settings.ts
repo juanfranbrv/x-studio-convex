@@ -36,7 +36,7 @@ export const getAIConfig = query({
 
         return {
             imageModel: (imageModel?.value as string) || "wisdom/gemini-3-pro-image-preview",
-            intelligenceModel: (intelligenceModel?.value as string) || "gemini-3-flash-preview",
+            intelligenceModel: (intelligenceModel?.value as string) || "wisdom/gemini-3-flash-preview",
         };
     },
 });
