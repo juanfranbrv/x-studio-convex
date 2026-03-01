@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { UserButton, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
@@ -36,9 +36,10 @@ interface HeaderProps {
     onBrandChange?: (brandId: string) => void
     onBrandDelete?: (brandId: string) => void
     onNewBrandKit?: () => void
+    afterBrandActions?: ReactNode
 }
 
-export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete, onNewBrandKit }: HeaderProps) {
+export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete, onNewBrandKit, afterBrandActions }: HeaderProps) {
     const { t } = useTranslation()
     const { resolvedTheme } = useTheme()
     const { user } = useUser()
@@ -154,6 +155,12 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                             Nuevo Kit de Marca
                         </Button>
                     )}
+
+                    {afterBrandActions ? (
+                        <div className="hidden md:flex items-center min-w-0">
+                            {afterBrandActions}
+                        </div>
+                    ) : null}
                 </div>
 
                 {/* Right: Credits, Theme Toggle, Notifications */}

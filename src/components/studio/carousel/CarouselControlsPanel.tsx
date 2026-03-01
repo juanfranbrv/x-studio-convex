@@ -1,13 +1,12 @@
-'use client'
+﻿'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, Star, Bookmark as BookmarkIcon, SquarePlus, RotateCcw } from 'lucide-react'
+import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import type { CarouselSuggestion, CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
@@ -20,9 +19,9 @@ import type { ReferenceImageRole, SelectedColor, VisionAnalysis } from '@/lib/cr
 import { buildPriority5StyleBlockFromAnalysis, mergeCustomStyleIntoStyleDirectives } from '@/lib/prompts/vision/style-priority-block'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
-import { PresetsCarousel } from '@/components/studio/creation-flow/PresetsCarousel'
-import { SavePresetDialog } from '@/components/studio/creation-flow/SavePresetDialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Id } from '../../../../convex/_generated/dataModel'
+import { log } from '@/lib/logger'
 
 export interface SlideConfig {
     index: number
@@ -133,6 +132,36 @@ interface CarouselControlsPanelProps {
         caption?: string
         currentIndex?: number
     }) => void
+    getAuditFlowId?: () => string | undefined
+}
+
+type CarouselWorkspaceSnapshot = {
+    version: number
+    module: 'carousel'
+    prompt: string
+    slideCount: number
+    aspectRatio: '1:1' | '4:5' | '3:4'
+    style: string
+    structureId: string
+    compositionId: string
+    compositionMode: CompositionMode
+    basicSelectedCompositionId: string | null
+    imageSourceMode: 'upload' | 'brandkit' | 'generate'
+    aiImageDescription: string
+    aiStyleDirectives: string
+    customStyle: string
+    selectedLogoId: string | null
+    selectedColors: SelectedColor[]
+    selectedBrandKitImageIds: string[]
+    referenceImageRoles: Record<string, ReferenceImageRole>
+    uploadedImages: string[]
+    includeLogoOnSlides: boolean
+    previewState: {
+        slides: CarouselSlide[]
+        scriptSlides?: SlideContent[]
+        caption?: string
+        currentIndex?: number
+    }
 }
 
 const SectionHeader = ({
@@ -160,9 +189,9 @@ const SectionHeader = ({
 const STYLE_OPTIONS = [
     { id: 'minimal', label: 'Minimalista' },
     { id: 'gradient', label: 'Gradientes' },
-    { id: 'photo', label: 'Fotográfico' },
-    { id: 'illustration', label: 'Ilustración' },
-    { id: 'bold', label: 'Bold & Tipográfico' },
+    { id: 'photo', label: 'FotogrÃ¡fico' },
+    { id: 'illustration', label: 'IlustraciÃ³n' },
+    { id: 'bold', label: 'Bold & TipogrÃ¡fico' },
     { id: 'elegant', label: 'Elegante' },
 ]
 
@@ -225,20 +254,40 @@ export function CarouselControlsPanel({
     previewScriptSlides = null,
     previewCaption,
     previewCurrentIndex = 0,
-    onRestorePreviewState
+    onRestorePreviewState,
+    getAuditFlowId
 }: CarouselControlsPanelProps) {
-    const createPreset = useMutation(api.presets.create)
-    const presetsData = useQuery(api.presets.list, userId ? {
-        userId,
-        brandId: brandKit?.id as any
-    } : 'skip')
+    const createWorkSession = useMutation(api.work_sessions.createSession)
+    const upsertWorkSession = useMutation(api.work_sessions.upsertActiveSession)
+    const activateWorkSession = useMutation(api.work_sessions.activateSession)
+    const deleteWorkSession = useMutation(api.work_sessions.deleteSession)
+    const clearWorkSessions = useMutation(api.work_sessions.clearSessions)
+    const scopedBrandId = (brandKit?.id || (brandKit as any)?._id) as Id<'brand_dna'> | undefined
+    const activeWorkSession = useQuery(
+        api.work_sessions.getActiveSession,
+        userId && scopedBrandId
+            ? { user_id: userId, module: 'carousel', brand_id: scopedBrandId }
+            : 'skip'
+    )
+    const workSessions = useQuery(
+        api.work_sessions.listSessions,
+        userId && scopedBrandId
+            ? { user_id: userId, module: 'carousel', brand_id: scopedBrandId, limit: 50 }
+            : 'skip'
+    )
     const structuresData = useQuery(api.carousel.listStructures, { includeInactive: false }) as DbStructure[] | undefined
     const structures: UiStructure[] = (structuresData || [])
         .map((s) => ({ id: s.structure_id, name: s.name, summary: s.summary, order: s.order }))
         .sort((a, b) => a.order - b.order)
-    const hasPresets = (presetsData?.user?.some((preset: any) => preset?.state?.presetType === 'carousel') ?? false)
-    const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
-    const [isSavingPreset, setIsSavingPreset] = useState(false)
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
+    const [selectedSessionToLoad, setSelectedSessionToLoad] = useState<string>('')
+    const [hasHydratedSession, setHasHydratedSession] = useState(false)
+    const [isHydratingSession, setIsHydratingSession] = useState(false)
+    const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const hydrationScopeRef = useRef<string>('')
+    const hasHydratedScopeRef = useRef(false)
+    const persistedSlideImageCacheRef = useRef<Map<string, { storageId: string; imageUrl: string }>>(new Map())
+    const persistSlideImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string } | null>>>(new Map())
     const [prompt, setPrompt] = useState('')
     const [slideCount, setSlideCount] = useState(0)
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('4:5')
@@ -299,8 +348,8 @@ export function CarouselControlsPanel({
     const shouldReduceMotion = useReducedMotion()
     const selectedImageCount = uploadedImages.length + selectedBrandKitImageIds.length
     const hasReferenceSelection = selectedImageCount > 0 || (imageSourceMode === 'generate' && aiImageDescription.trim().length > 0)
-    const canGenerate = prompt.trim().length > 0 && slideCount > 0 && !isGenerating && brandKit !== null && analysisReady
-    const canAnalyze = prompt.trim().length > 0 && slideCount > 0 && !isAnalyzing && !isGenerating && brandKit !== null
+    const canGenerate = prompt.trim().length > 0 && slideCount > 0 && !isGenerating && !isImageAnalyzing && brandKit !== null && analysisReady
+    const canAnalyze = prompt.trim().length > 0 && slideCount > 0 && !isAnalyzing && !isImageAnalyzing && !isGenerating && brandKit !== null
     const canContinueFromImage = imageSourceMode !== 'generate' || Boolean(aiImageDescription.trim())
     const isPriority5StyleBlock = (value?: string) =>
         typeof value === 'string' && /STYLE DIRECTIVES:/i.test(value)
@@ -308,6 +357,366 @@ export function CarouselControlsPanel({
     const isStepVisible = (step: number) => showAllSteps || currentStep >= step
     const basicCompositions = compositions.filter((composition) => composition.mode === 'basic')
     const advancedCompositions = compositions
+
+    const buildSessionTitle = useCallback((value?: string | null) => {
+        const cleaned = (value || '').replace(/\s+/g, ' ').trim()
+        if (!cleaned) return 'Sesion nueva'
+        if (cleaned.length <= 48) return cleaned
+        return `${cleaned.slice(0, 48)}...`
+    }, [])
+
+    const buildWorkspaceSnapshot = useCallback((previewSlidesOverride?: CarouselSlide[]): CarouselWorkspaceSnapshot => {
+        const sourceSlides = Array.isArray(previewSlidesOverride) ? previewSlidesOverride : (previewSlides || [])
+        return {
+            version: 1,
+            module: 'carousel',
+            prompt,
+            slideCount,
+            aspectRatio,
+            style,
+            structureId,
+            compositionId,
+            compositionMode,
+            basicSelectedCompositionId,
+            imageSourceMode,
+            aiImageDescription,
+            aiStyleDirectives: styleAnalysisDescription,
+            customStyle,
+            selectedLogoId,
+            selectedColors,
+            selectedBrandKitImageIds,
+            referenceImageRoles,
+            uploadedImages,
+            includeLogoOnSlides,
+            previewState: {
+                slides: sourceSlides.map((slide) => ({
+                    index: slide.index,
+                    title: slide.title,
+                    description: slide.description,
+                    status: slide.status,
+                    imageUrl: slide.imageUrl,
+                    image_storage_id: slide.image_storage_id,
+                    error: slide.error
+                })),
+                scriptSlides: Array.isArray(previewScriptSlides) ? previewScriptSlides : undefined,
+                caption: previewCaption || undefined,
+                currentIndex: previewCurrentIndex
+            }
+        }
+    }, [
+        prompt,
+        slideCount,
+        aspectRatio,
+        style,
+        structureId,
+        compositionId,
+        compositionMode,
+        basicSelectedCompositionId,
+        imageSourceMode,
+        aiImageDescription,
+        styleAnalysisDescription,
+        customStyle,
+        selectedLogoId,
+        selectedColors,
+        selectedBrandKitImageIds,
+        referenceImageRoles,
+        uploadedImages,
+        includeLogoOnSlides,
+        previewSlides,
+        previewScriptSlides,
+        previewCaption,
+        previewCurrentIndex
+    ])
+
+    const buildSlidePersistKey = useCallback((slide: CarouselSlide, imageUrl: string) => {
+        const compactUrl = imageUrl.length > 160 ? `${imageUrl.slice(0, 160)}::${imageUrl.length}` : imageUrl
+        return `${slide.index}::${compactUrl}`
+    }, [])
+
+    const persistPreviewSlideImage = useCallback(async (slide: CarouselSlide) => {
+        const imageUrl = typeof slide.imageUrl === 'string' ? slide.imageUrl.trim() : ''
+        if (!imageUrl || slide.image_storage_id) return null
+
+        const needsPersistence =
+            imageUrl.startsWith('data:') ||
+            imageUrl.startsWith('http://') ||
+            imageUrl.startsWith('https://')
+        if (!needsPersistence) return null
+
+        const key = buildSlidePersistKey(slide, imageUrl)
+        const cached = persistedSlideImageCacheRef.current.get(key)
+        if (cached) return cached
+
+        const inFlight = persistSlideImageInFlightRef.current.get(key)
+        if (inFlight) return await inFlight
+
+        const task = (async () => {
+            const response = await fetch('/api/work-sessions/persist-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageUrl }),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'No se pudo persistir imagen de slide' }))
+                throw new Error(errorData.error || 'No se pudo persistir imagen de slide')
+            }
+
+            const data = await response.json() as { storageId?: string; imageUrl?: string }
+            if (!data.storageId || !data.imageUrl) {
+                throw new Error('Persistencia de slide incompleta')
+            }
+            const persisted = { storageId: data.storageId, imageUrl: data.imageUrl }
+            persistedSlideImageCacheRef.current.set(key, persisted)
+            return persisted
+        })()
+
+        persistSlideImageInFlightRef.current.set(key, task)
+        try {
+            return await task
+        } finally {
+            persistSlideImageInFlightRef.current.delete(key)
+        }
+    }, [buildSlidePersistKey])
+
+    const materializePreviewSlidesForSnapshot = useCallback(async (inputSlides: CarouselSlide[]) => {
+        if (!Array.isArray(inputSlides) || inputSlides.length === 0) return inputSlides
+
+        const materialized = await Promise.all(inputSlides.map(async (slide) => {
+            try {
+                const persisted = await persistPreviewSlideImage(slide)
+                if (!persisted) return slide
+                return {
+                    ...slide,
+                    image_storage_id: persisted.storageId,
+                    imageUrl: persisted.imageUrl,
+                }
+            } catch {
+                return slide
+            }
+        }))
+
+        return materialized
+    }, [persistPreviewSlideImage])
+
+    const restoreWorkspaceFromSnapshot = useCallback((snapshot: CarouselWorkspaceSnapshot) => {
+        setIsHydratingSession(true)
+        try {
+            setPrompt(snapshot.prompt || '')
+            setSlideCount(Math.max(0, Math.min(15, snapshot.slideCount || 0)))
+            setAspectRatio(snapshot.aspectRatio || '4:5')
+            setStyle(snapshot.style || 'minimal')
+            setStructureId(snapshot.structureId || 'problema-solucion')
+            setCompositionId(snapshot.compositionId || 'free')
+            setCompositionMode(snapshot.compositionMode === 'advanced' ? 'advanced' : 'basic')
+            setBasicSelectedCompositionId(snapshot.basicSelectedCompositionId || null)
+            setImageSourceMode(snapshot.imageSourceMode || 'upload')
+            setAiImageDescription(snapshot.aiImageDescription || '')
+            setStyleAnalysisDescription(snapshot.aiStyleDirectives || '')
+            setCustomStyle(snapshot.customStyle || '')
+            setSelectedLogoId(snapshot.selectedLogoId || null)
+            setSelectedColors(Array.isArray(snapshot.selectedColors) ? snapshot.selectedColors : [])
+            setSelectedBrandKitImageIds(Array.isArray(snapshot.selectedBrandKitImageIds) ? snapshot.selectedBrandKitImageIds : [])
+            setReferenceImageRoles(snapshot.referenceImageRoles || {})
+            setUploadedImages(Array.isArray(snapshot.uploadedImages) ? snapshot.uploadedImages : [])
+            setIncludeLogoOnSlides(snapshot.includeLogoOnSlides !== false)
+            const savedPreview = snapshot.previewState
+            if (savedPreview && onRestorePreviewState) {
+                onRestorePreviewState({
+                    slides: Array.isArray(savedPreview.slides) ? savedPreview.slides : [],
+                    scriptSlides: Array.isArray(savedPreview.scriptSlides) ? savedPreview.scriptSlides : undefined,
+                    caption: typeof savedPreview.caption === 'string' ? savedPreview.caption : undefined,
+                    currentIndex: Number.isFinite(savedPreview.currentIndex) ? savedPreview.currentIndex : 0
+                })
+            }
+            setCurrentStep(7)
+            setNeedsReanalysis(false)
+            setLastAnalyzedSignature('')
+        } finally {
+            window.setTimeout(() => setIsHydratingSession(false), 0)
+        }
+    }, [onRestorePreviewState])
+
+    const createNewCarouselSession = useCallback(async (silent = false) => {
+        if (!userId || !scopedBrandId) return null
+
+        resetWorkspace()
+
+        const created = await createWorkSession({
+            user_id: userId,
+            module: 'carousel',
+            brand_id: scopedBrandId,
+            title: buildSessionTitle(prompt),
+            snapshot: buildWorkspaceSnapshot(),
+        })
+
+        const id = String(created.session_id)
+        setCurrentSessionId(id)
+        setSelectedSessionToLoad(id)
+
+        if (!silent) {
+            window.setTimeout(() => {
+                // keep lightweight, no toast dependency on this path
+            }, 0)
+        }
+        return id
+    }, [userId, scopedBrandId, createWorkSession, buildSessionTitle, prompt, buildWorkspaceSnapshot])
+
+    const handleLoadSession = useCallback(async (sessionId: string) => {
+        if (!sessionId || !userId) return
+        const activated = await activateWorkSession({
+            user_id: userId,
+            session_id: sessionId as Id<'work_sessions'>,
+        })
+        if (activated?.snapshot) {
+            restoreWorkspaceFromSnapshot(activated.snapshot as CarouselWorkspaceSnapshot)
+            log.success('SESSION', 'Sesion de carrusel restaurada', {
+                session_id: String(activated._id || sessionId),
+                module: 'carousel',
+            })
+        }
+        setCurrentSessionId(String(activated?._id || sessionId))
+        setSelectedSessionToLoad(String(activated?._id || sessionId))
+    }, [userId, activateWorkSession, restoreWorkspaceFromSnapshot])
+
+    const handleDeleteCurrentSession = useCallback(async () => {
+        if (!userId || !currentSessionId) return
+        if (!window.confirm('Â¿Quieres borrar esta sesion de carrusel?')) return
+
+        const result = await deleteWorkSession({
+            user_id: userId,
+            session_id: currentSessionId as Id<'work_sessions'>,
+        })
+
+        if (result?.next_session_id) {
+            await handleLoadSession(String(result.next_session_id))
+        } else {
+            await createNewCarouselSession(true)
+        }
+    }, [userId, currentSessionId, deleteWorkSession, handleLoadSession, createNewCarouselSession])
+
+    const handleClearAllSessions = useCallback(async () => {
+        if (!userId || !scopedBrandId) return
+        if (!window.confirm('Â¿Quieres borrar todas las sesiones de carrusel de este kit?')) return
+        await clearWorkSessions({
+            user_id: userId,
+            module: 'carousel',
+            brand_id: scopedBrandId,
+        })
+        await createNewCarouselSession(true)
+    }, [userId, scopedBrandId, clearWorkSessions, createNewCarouselSession])
+
+    useEffect(() => {
+        const scopeKey = `${userId || 'anon'}::carousel::${scopedBrandId || 'no-brand'}`
+        if (hydrationScopeRef.current !== scopeKey) {
+            hydrationScopeRef.current = scopeKey
+            hasHydratedScopeRef.current = false
+            setHasHydratedSession(false)
+            setCurrentSessionId(null)
+            setSelectedSessionToLoad('')
+        }
+
+        if (!userId || !scopedBrandId) return
+        if (activeWorkSession === undefined) return
+        if (workSessions === undefined) return
+        if (hasHydratedScopeRef.current) return
+
+        if (activeWorkSession?.snapshot) {
+            restoreWorkspaceFromSnapshot(activeWorkSession.snapshot as CarouselWorkspaceSnapshot)
+            setCurrentSessionId(String(activeWorkSession._id))
+            setSelectedSessionToLoad(String(activeWorkSession._id))
+            setHasHydratedSession(true)
+            hasHydratedScopeRef.current = true
+            return
+        }
+
+        const latestExisting = Array.isArray(workSessions) && workSessions.length > 0
+            ? workSessions[0]
+            : null
+
+        if (latestExisting?._id) {
+            hasHydratedScopeRef.current = true
+            setHasHydratedSession(true)
+            void handleLoadSession(String(latestExisting._id)).catch(() => {
+                hasHydratedScopeRef.current = false
+                setHasHydratedSession(false)
+                log.warn('SESSION', 'Fallo cargando la sesion mas reciente de carrusel')
+            })
+            return
+        }
+
+        hasHydratedScopeRef.current = true
+        setHasHydratedSession(true)
+        void createWorkSession({
+            user_id: userId,
+            module: 'carousel',
+            brand_id: scopedBrandId,
+            title: 'Sesion nueva',
+            snapshot: buildWorkspaceSnapshot(),
+        }).then((created) => {
+            const id = String(created.session_id)
+            setCurrentSessionId(id)
+            setSelectedSessionToLoad(id)
+        }).catch(() => {
+            hasHydratedScopeRef.current = false
+            setHasHydratedSession(false)
+            log.warn('SESSION', 'No se pudo crear sesion inicial de carrusel')
+        })
+    }, [
+        userId,
+        scopedBrandId,
+        activeWorkSession,
+        workSessions,
+        createWorkSession,
+        buildWorkspaceSnapshot,
+        restoreWorkspaceFromSnapshot,
+        handleLoadSession
+    ])
+
+    useEffect(() => {
+        if (!userId || !scopedBrandId) return
+        if (!hasHydratedSession || isHydratingSession) return
+
+        if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+        autosaveTimerRef.current = setTimeout(() => {
+            void (async () => {
+                try {
+                    const persistedSlides = await materializePreviewSlidesForSnapshot(previewSlides || [])
+                    const snapshot = buildWorkspaceSnapshot(persistedSlides)
+                    const result = await upsertWorkSession({
+                        user_id: userId,
+                        module: 'carousel',
+                        brand_id: scopedBrandId,
+                        session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
+                        title: buildSessionTitle(snapshot.prompt || 'Sesion de carrusel'),
+                        snapshot,
+                    })
+                    const id = String(result.session_id)
+                    if (!currentSessionId) {
+                        setCurrentSessionId(id)
+                        setSelectedSessionToLoad(id)
+                    }
+                } catch {
+                    log.warn('SESSION', 'Autosave de carrusel fallido')
+                }
+            })()
+        }, 1500)
+
+        return () => {
+            if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+        }
+    }, [
+        userId,
+        scopedBrandId,
+        hasHydratedSession,
+        isHydratingSession,
+        currentSessionId,
+        buildWorkspaceSnapshot,
+        materializePreviewSlidesForSnapshot,
+        upsertWorkSession,
+        buildSessionTitle,
+        previewSlides
+    ])
 
     const buildConfigSignature = (
         partial?: Partial<{
@@ -429,9 +838,10 @@ export function CarouselControlsPanel({
         setIsImageAnalyzing(true)
         setImageError(null)
         try {
+            const auditFlowId = getAuditFlowId?.()
             const payload = imageRef.startsWith('data:image/')
-                ? { imageBase64: imageRef }
-                : { imageUrl: imageRef }
+                ? { imageBase64: imageRef, auditFlowId }
+                : { imageUrl: imageRef, auditFlowId }
             const response = await fetch('/api/analyze-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1045,7 +1455,7 @@ export function CarouselControlsPanel({
         setLastAnalyzedSignature(buildConfigSignature())
     }
 
-    const handleReset = () => {
+    function resetWorkspace() {
         setPrompt('')
         setSlideCount(0)
         setAspectRatio('4:5')
@@ -1072,136 +1482,62 @@ export function CarouselControlsPanel({
         onReset?.()
     }
 
-    const handleSelectPreset = (state: any) => {
-        if (!state || state.presetType !== 'carousel') return
-        setPrompt(state.prompt || '')
-        setSlideCount(state.slideCount ?? 5)
-        setAspectRatio(state.aspectRatio || '4:5')
-        setStyle(state.style || 'minimal')
-        const nextMode: CompositionMode = state.compositionMode === 'advanced' ? 'advanced' : 'basic'
-        setCompositionMode(nextMode)
-        if (state.structureId) {
-            const nextStructureId = state.structureId
-            setStructureId(nextStructureId)
-            setCompositionId(state.compositionId || 'free')
-        } else if (state.compositionId) {
-            setCompositionId(state.compositionId)
-        }
-        setBasicSelectedCompositionId(state.basicSelectedCompositionId ?? null)
-        setImageSourceMode(state.imageSourceMode || 'upload')
-        if (isPriority5StyleBlock(state.aiImageDescription)) {
-            setStyleAnalysisDescription(state.aiImageDescription || '')
-            setAiImageDescription('')
-        } else {
-            setStyleAnalysisDescription('')
-            setAiImageDescription(state.aiImageDescription || '')
-        }
-        setCustomStyle(state.customStyle || '')
-        setSelectedBrandKitImageIds(state.selectedBrandKitImageIds || [])
-        setSelectedLogoId(state.selectedLogoId ?? (brandLogos.length > 0 ? 'logo-0' : null))
-        setSelectedColors(state.selectedColors || [])
-        setIncludeLogoOnSlides(state.includeLogoOnSlides !== false)
-        const savedPreview = state.previewState
-        if (savedPreview && onRestorePreviewState) {
-            onRestorePreviewState({
-                slides: Array.isArray(savedPreview.slides) ? savedPreview.slides : [],
-                scriptSlides: Array.isArray(savedPreview.scriptSlides) ? savedPreview.scriptSlides : undefined,
-                caption: typeof savedPreview.caption === 'string' ? savedPreview.caption : undefined,
-                currentIndex: Number.isFinite(savedPreview.currentIndex) ? savedPreview.currentIndex : 0
-            })
-        }
-        setNeedsReanalysis(true)
-        setLastAnalyzedSignature('')
-        setCurrentStep(7)
-    }
-
-    const handleSavePreset = async (name: string) => {
-        if (!userId || !brandKit) return
-        if (!prompt.trim()) return
-        setIsSavingPreset(true)
-        try {
-            await createPreset({
-                userId,
-                brandId: brandKit?.id as any,
-                name,
-                description: analysisIntentLabel || analysisIntent || structureId || undefined,
-                icon: 'Star',
-                state: {
-                    presetType: 'carousel',
-                    prompt: prompt.trim(),
-                    slideCount,
-                    aspectRatio,
-                    style,
-                    structureId,
-                    compositionId,
-                    compositionMode,
-                    basicSelectedCompositionId,
-                    imageSourceMode,
-                    aiImageDescription: aiImageDescription || undefined,
-                    selectedBrandKitImageIds,
-                    selectedLogoId,
-                    selectedColors,
-                    includeLogoOnSlides,
-                    previewState: {
-                        slides: (previewSlides || []).map((slide) => ({
-                            index: slide.index,
-                            title: slide.title,
-                            description: slide.description,
-                            status: slide.status,
-                            imageUrl: slide.imageUrl,
-                            error: slide.error
-                        })),
-                        scriptSlides: Array.isArray(previewScriptSlides) ? previewScriptSlides : undefined,
-                        caption: previewCaption || undefined,
-                        currentIndex: previewCurrentIndex
-                    }
-                }
-            })
-            setIsSaveDialogOpen(false)
-        } finally {
-            setIsSavingPreset(false)
-        }
-    }
-
     return (
         <div className="w-full md:w-[27%] h-full controls-panel flex flex-col shrink-0 relative group/panel">
             <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-6">
-                {/* SECTION: Presets */}
-                <div className="glass-card p-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <SectionHeader icon={Star} title="Favoritos" className="mb-0" />
-                        <div className="flex items-center gap-1">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsSaveDialogOpen(true)}
-                                disabled={generatedCount === 0}
-                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
-                            >
-                                <BookmarkIcon className="w-3 h-3" />
-                                Guardar
-                            </Button>
-                        </div>
+                                {/* SECTION: Sessions */}
+                <div className="glass-card p-5 space-y-4">
+                    <SectionHeader icon={History} title="Sesiones" className="mb-2" />
+                    <div className="space-y-3 pt-1.5">
+                        <select
+                            className="h-9 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-xs"
+                            value={selectedSessionToLoad || currentSessionId || ''}
+                            onChange={(event) => {
+                                const id = event.target.value
+                                setSelectedSessionToLoad(id)
+                                if (id && id !== currentSessionId) {
+                                    void handleLoadSession(id)
+                                }
+                            }}
+                        >
+                            {(workSessions || []).length === 0 ? (
+                                <option value="">Sin sesiones</option>
+                            ) : null}
+                            {(workSessions || []).map((session) => (
+                                <option key={String(session._id)} value={String(session._id)}>
+                                    {buildSessionTitle(session.title || 'Sesion sin titulo')} {session.active ? '(Activa)' : ''} - {new Date(session.updated_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                </option>
+                            ))}
+                        </select>
                     </div>
-                    {hasPresets ? (
-                        <>
-                            <PresetsCarousel
-                                onSelectPreset={handleSelectPreset as any}
-                                onReset={handleReset}
-                                userId={userId}
-                                filterPreset={(preset) => preset?.state?.presetType === 'carousel'}
-                            />
-                            <p className="text-xs text-muted-foreground mt-2">
-                                Guarda y reutiliza tus configuraciones favoritas.
-                            </p>
-                        </>
-                    ) : (
-                        <div className="rounded-xl border border-dashed border-border/70 bg-muted/30 px-3 py-4 text-center">
-                            <p className="text-[11px] text-muted-foreground">
-                                Los favoritos guardan tu configuración de carrusel para reutilizarla. Podrás guardar uno cuando termines de generar tu carrusel.
-                            </p>
-                        </div>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-[10px] gap-1"
+                            onClick={() => void createNewCarouselSession()}
+                        >
+                            <Plus className="w-3 h-3" />
+                            Nueva
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => void handleDeleteCurrentSession()}
+                            title="Borrar sesion"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-[10px]"
+                            onClick={() => void handleClearAllSessions()}
+                        >
+                            Limpiar
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Slide Count */}
@@ -1229,22 +1565,11 @@ export function CarouselControlsPanel({
                 <div ref={(el) => { stepRefs.current[2] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader
                         icon={Wand2}
-                        title="¿Qué quieres crear?"
-                        extra={
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleReset}
-                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
-                            >
-                                <SquarePlus className="w-3 h-3" />
-                                Nuevo
-                            </Button>
-                        }
+                        title="Â¿QuÃ© quieres crear?"
                     />
                     <div className="relative">
                         <Textarea
-                            placeholder="Ej: Quiero dar valor real. Sácame los 5 errores típicos que cometemos los españoles al hablar inglés y cómo corregirlos. Algo que la gente quiera guardar para repasar luego."
+                            placeholder="Ej: Quiero dar valor real. SÃ¡came los 5 errores tÃ­picos que cometemos los espaÃ±oles al hablar inglÃ©s y cÃ³mo corregirlos. Algo que la gente quiera guardar para repasar luego."
                             value={prompt}
                             onChange={(e) => {
                                 const nextPrompt = e.target.value
@@ -1409,11 +1734,11 @@ export function CarouselControlsPanel({
                             <div className="w-8 h-10 rounded bg-muted border border-border" />
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold">Vertical Estándar (Retrato)</span>
+                                    <span className="text-xs font-semibold">Vertical EstÃ¡ndar (Retrato)</span>
                                     <span className="text-[10px] font-medium text-muted-foreground">4:5</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1350 · el estándar más seguro para evitar recortes en dispositivos antiguos o Meta Ads.
+                                    1080x1350 Â· el estÃ¡ndar mÃ¡s seguro para evitar recortes en dispositivos antiguos o Meta Ads.
                                 </p>
                             </div>
                         </button>
@@ -1431,7 +1756,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">3:4</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1440 · +6.6% pantalla · domina el feed y encaja con la nueva cuadrícula vertical.
+                                    1080x1440 Â· +6.6% pantalla Â· domina el feed y encaja con la nueva cuadrÃ­cula vertical.
                                 </p>
                             </div>
                         </button>
@@ -1449,7 +1774,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">1:1</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1080 · formato original y clásico para composiciones equilibradas.
+                                    1080x1080 Â· formato original y clÃ¡sico para composiciones equilibradas.
                                 </p>
                             </div>
                         </button>
@@ -1629,9 +1954,9 @@ export function CarouselControlsPanel({
                             variant="link"
                             size="sm"
                             className="h-7 px-0 text-[11px] text-muted-foreground hover:text-destructive"
-                            title="Detener generación"
+                            title="Detener generaciÃ³n"
                         >
-                            Detener generación
+                            Detener generaciÃ³n
                         </Button>
                         <motion.span
                             initial={{ opacity: 0 }}
@@ -1650,13 +1975,6 @@ export function CarouselControlsPanel({
                     </p>
                 )}
             </div>
-
-            <SavePresetDialog
-                open={isSaveDialogOpen}
-                onOpenChange={setIsSaveDialogOpen}
-                onSave={handleSavePreset}
-                isSaving={isSavingPreset}
-            />
         </div>
     )
 }
@@ -1719,3 +2037,6 @@ function SuggestionsList({
         </TooltipProvider>
     )
 }
+
+
+

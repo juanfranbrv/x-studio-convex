@@ -1,47 +1,53 @@
+﻿import { log } from './logger'
+
 /**
- * Detects the language of a text based on common words and patterns
- * Supports: Spanish, English, French, German, Portuguese, Italian, Catalan
+ * Detects the language of a text based on common words and patterns.
+ * Supports: Spanish, English, French, German, Portuguese, Italian, Catalan.
  */
 export function detectLanguage(text: string): string {
-    if (!text || text.trim().length === 0) return 'es'; // Default to Spanish
+    if (!text || text.trim().length === 0) return 'es'
 
-    const lowerText = text.toLowerCase();
-    const normalizedText = lowerText.normalize('NFD').replace(/\p{M}+/gu, '');
+    const lowerText = text.toLowerCase()
+    const normalizedText = lowerText.normalize('NFD').replace(/\p{M}+/gu, '')
 
-    // Language-specific keywords.
-    // NOTE: Keywords are stored without diacritics to match normalizedText.
     const patterns = {
         es: {
             common: ['el', 'la', 'de', 'que', 'y', 'en', 'los', 'las', 'del', 'para', 'con', 'por', 'una'],
-            strong: ['quien', 'quienes', 'cual', 'cuales', 'cuanto', 'cuanta', 'cuantos', 'cuantas', 'porque', 'aqui', 'asi', 'tambien', 'mas']
+            strong: ['quien', 'quienes', 'cual', 'cuales', 'porque', 'aqui', 'asi', 'tambien', 'mas', 'desde', 'hasta'],
         },
         en: {
-            common: ['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'her', 'was', 'one', 'our', 'out', 'this', 'have', 'from', 'they', 'been', 'which'],
-            strong: ['what', 'who', 'where', 'when', 'how']
+            common: ['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'this', 'have', 'from', 'they'],
+            strong: ['what', 'who', 'where', 'when', 'how'],
         },
         fr: {
-            common: ['le', 'la', 'de', 'et', 'les', 'des', 'un', 'une', 'dans', 'pour', 'que', 'qui', 'sur', 'avec', 'par', 'plus', 'ce', 'nous', 'vous'],
-            strong: ['est', 'au', 'aux', 'pas', 'tout', 'tres', 'etre']
+            // Keep French "common" list focused on less ambiguous words.
+            common: ['avec', 'dans', 'pour', 'sur', 'nous', 'vous', 'mais', 'donc', 'sans', 'chez'],
+            strong: ['est', 'pas', 'tout', 'tres', 'etre', 'ainsi', 'alors'],
         },
         de: {
             common: ['der', 'die', 'das', 'und', 'den', 'des', 'dem', 'ein', 'eine', 'ist', 'sind', 'mit', 'auf', 'von', 'zu'],
-            strong: ['nicht', 'werden', 'wurde', 'auch', 'fur']
+            strong: ['nicht', 'werden', 'wurde', 'auch', 'fur'],
         },
         pt: {
             common: ['o', 'a', 'de', 'e', 'que', 'do', 'da', 'em', 'um', 'para', 'com', 'uma', 'os', 'no', 'se', 'na', 'por', 'mais', 'como'],
-            strong: ['nao', 'porque']
+            strong: ['nao', 'porque'],
         },
         it: {
             common: ['il', 'di', 'e', 'la', 'che', 'per', 'un', 'in', 'del', 'le', 'da', 'con', 'una', 'dei', 'delle', 'alla', 'nel', 'sono'],
-            strong: ['piu']
+            strong: ['piu'],
         },
         ca: {
-            common: ['el', 'la', 'de', 'i', 'que', 'en', 'els', 'les', 'del', 'per', 'amb', 'una', 'aquest', 'aquesta', 'mes', 'com', 'son', 'esta'],
-            strong: ['tambe', 'pero']
-        }
-    };
+            common: ['el', 'la', 'de', 'i', 'que', 'en', 'els', 'les', 'del', 'per', 'amb', 'una', 'mes', 'com', 'son', 'esta'],
+            // Includes Catalan + Valencian high-signal forms.
+            strong: [
+                'aixo', 'aquest', 'aquesta', 'aquests', 'aquestes', 'allo', 'acord',
+                'tambe', 'perque', 'dons', 'doncs', 'fins', 'despres', 'avui',
+                'hui', 'aci', 'eixe', 'eixa', 'xiquet', 'xiqueta', 'vosaltres', 'vostres',
+                'nostre', 'nostra', 'seua', 'seues', 'llengua', 'servei', 'cal',
+            ],
+        },
+    } as const
 
-    // Count matches for each language
     const scores: Record<string, number> = {
         es: 0,
         en: 0,
@@ -49,94 +55,75 @@ export function detectLanguage(text: string): string {
         de: 0,
         pt: 0,
         it: 0,
-        ca: 0
-    };
-
-    // Split text into words (Unicode-safe)
-    const words = normalizedText.match(/[\p{L}\p{M}]+/gu) || [];
-    const wordCounts = new Map<string, number>();
-    for (const word of words) {
-        wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
+        ca: 0,
     }
 
-    // Score each language based on common word matches (frequency-aware)
+    const words = normalizedText.match(/[\p{L}\p{M}]+/gu) || []
+    const wordCounts = new Map<string, number>()
+    for (const word of words) {
+        wordCounts.set(word, (wordCounts.get(word) || 0) + 1)
+    }
+
     for (const [lang, groups] of Object.entries(patterns)) {
         for (const keyword of groups.common) {
-            const count = wordCounts.get(keyword);
-            if (count) scores[lang] += count;
+            const count = wordCounts.get(keyword)
+            if (count) scores[lang] += count
         }
         for (const keyword of groups.strong) {
-            const count = wordCounts.get(keyword);
-            if (count) scores[lang] += count * 2;
+            const count = wordCounts.get(keyword)
+            if (count) scores[lang] += count * 3
         }
     }
 
-    // Additional heuristics
-    // Portuguese specific: ção, ções, ões
-    if (lowerText.match(/ção|ções|ões/g)) {
-        scores.pt += 3;
+    const countMatches = (source: string, regex: RegExp): number => (source.match(regex) || []).length
+
+    const frenchMarkers = countMatches(lowerText, /\b(c'est|d'accord|qu'|l'|j'|n'|d'|s'|t'|je|tu|vous|nous)\b/g)
+    const catalanMarkers = countMatches(
+        normalizedText,
+        /\b(aixo|aquest|aquesta|aquests|aquestes|allo|tambe|perque|doncs|fins|despres|avui|hui|aci|eixe|eixa|xiquet|xiqueta|vosaltres|vostres|seua|seues|llengua)\b/g
+    )
+
+    if (countMatches(lowerText, /\u00e7\u00e3o|\u00e7\u00f5es|\u00f5es/g) > 0) scores.pt += 3
+    if (countMatches(lowerText, /[\u00e4\u00f6\u00fc\u00df]/g) > 0) scores.de += 3
+    if (countMatches(lowerText, /[\u00bf\u00a1]/g) > 0) scores.es += 3
+    if (countMatches(lowerText, /[\u00f1]/g) > 0) scores.es += 2
+
+    if (countMatches(lowerText, /[\u00e0\u00e8\u00f2\u00ef\u00fc]/g) > 0 && countMatches(lowerText, /[\u00f1]/g) === 0) {
+        scores.ca += 2
+    }
+    if (countMatches(lowerText, /[\u00e0\u00e2\u00e9\u00e8\u00ea\u00eb\u00ee\u00ef\u00f4\u00f9\u00fb\u00e7]/g) > 0) {
+        scores.fr += 1
     }
 
-    // French specific: accents and specific patterns
-    if (lowerText.match(/[àâéèêëîïôùûç]/g)) {
-        scores.fr += 2;
+    scores.fr += frenchMarkers * 3
+    scores.ca += catalanMarkers * 3
+
+    // Penalize false French positives in Valencian/Catalan texts.
+    if (frenchMarkers === 0 && catalanMarkers >= 2) {
+        scores.ca += 4
+        scores.fr = Math.max(0, scores.fr - 3)
     }
 
-    // German specific: umlauts and ß
-    if (lowerText.match(/[äöüß]/g)) {
-        scores.de += 3;
+    const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1])
+    const [firstLang, firstScore] = sorted[0] || ['es', 0]
+    const [, secondScore] = sorted[1] || ['es', 0]
+
+    let detectedLang = firstLang
+    if (firstScore === secondScore && firstScore > 0) {
+        if (scores.ca === firstScore) detectedLang = 'ca'
+        else detectedLang = 'es'
     }
 
-    // Catalan specific: à, è, ò, ï, ü (but not ñ)
-    if (lowerText.match(/[àèòïü]/g) && !lowerText.match(/ñ/g)) {
-        scores.ca += 2;
+    if (detectedLang === 'fr' && scores.ca >= scores.fr - 1 && catalanMarkers > 0) {
+        detectedLang = 'ca'
     }
 
-    // Spanish specific: ñ
-    if (lowerText.match(/ñ/g)) {
-        scores.es += 2;
-    }
+    log.debug('FLOW', 'Deteccion de idioma', {
+        idioma: detectedLang,
+        puntuaciones: scores,
+        marcadores_ca: catalanMarkers,
+        marcadores_fr: frenchMarkers,
+    })
 
-    // Spanish-specific punctuation and accents
-    if (lowerText.match(/[¿¡]/g)) {
-        scores.es += 3;
-    }
-
-    if (lowerText.match(/[áéíóúü]/g)) {
-        scores.es += 1;
-    }
-
-    // Additional distinctive patterns (short-text friendly)
-    if (lowerText.match(/\bl[']\w+/g)) scores.fr += 2;
-    if (lowerText.match(/\b(c'est|d'accord|qu'|l'|j')/g)) scores.fr += 2;
-    if (lowerText.match(/\b(der|die|das)\b/g)) scores.de += 1;
-    if (lowerText.match(/\b(nicht|aber|wenn|dass)\b/g)) scores.de += 2;
-    if (lowerText.match(/\b(che|per|anche|non|una)\b/g)) scores.it += 1;
-    if (lowerText.match(/\b(nao|porque|tambem)\b/g)) scores.pt += 2;
-    if (lowerText.match(/\b(pero|tambien|quien|cual|porque)\b/g)) scores.es += 1;
-    if (lowerText.match(/\b(aquest|aquesta|tambe|perque)\b/g)) scores.ca += 2;
-
-    // Find the language with highest score (tie-breaker: es)
-    let maxScore = 0;
-    let detectedLang = 'es';
-    let secondScore = 0;
-
-    for (const [lang, score] of Object.entries(scores)) {
-        if (score > maxScore) {
-            secondScore = maxScore;
-            maxScore = score;
-            detectedLang = lang;
-        } else if (score > secondScore) {
-            secondScore = score;
-        }
-    }
-
-    if (maxScore === secondScore && maxScore > 0) {
-        detectedLang = 'es';
-    }
-
-    console.log(`🌐 Language detection scores:`, scores);
-    console.log(`✅ Detected language: ${detectedLang}`);
-
-    return detectedLang;
+    return detectedLang
 }

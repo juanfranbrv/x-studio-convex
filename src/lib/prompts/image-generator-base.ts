@@ -50,6 +50,12 @@ COMPOSICION:
 - NO alucines productos que no esten en las imagenes de contexto.
 - Si hay una imagen de PRODUCTO PRINCIPAL, usala tal cual, no la recrees.
 - CONTROL DE TEXTO RADICAL: Solo incluye los textos listados explicitamente. PROHIBIDO "Lorem Ipsum" o rellenos.
+- CTA URL must be visually secondary and compact.
+- Render CTA URL at 50–70% of headline width.
+- Max width for CTA URL block: 35% of canvas width.
+- Use small/medium text scale for CTA URL; never dominant.
+- CTA URL must not compete with headline or key value bullets.
+- If space is limited, shorten URL visual treatment instead of scaling up.
 - AUTO-FIT TIPOGRAFICO OBLIGATORIO: ningun texto puede quedar cortado. Si el titular es largo, reduce tamano y haz salto de linea hasta que el 100% del texto sea visible.
 - SAFE MARGINS DE TEXTO: deja al menos un 8% de margen respecto a bordes del lienzo y evita recortes de ascenders/descenders.
 - PROHIBICION DE COLORES EXTRANOS: NO uses colores que no esten en la paleta de marca. Si la plantilla tiene elementos rojos y la marca no tiene rojo, cambialos al color primario de la marca ({{colorList}}).

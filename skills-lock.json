@@ -60,6 +60,11 @@
       "source": "leonxlnx/taste-skill",
       "sourceType": "github",
       "computedHash": "03eaad00f017d0a8ed35cae05ff0f8bc2eae300b97e0672d716b2c080f8b4ddc"
+    },
+    "replicate": {
+      "source": "replicate/skills",
+      "sourceType": "github",
+      "computedHash": "8e5da52a7a3ae87742749f2920701403e92a443cd742552d17ebd706e2618d2a"
     }
   }
 }

@@ -14,6 +14,7 @@ import type * as brands from "../brands.js";
 import type * as carousel from "../carousel.js";
 import type * as carouselAdmin from "../carouselAdmin.js";
 import type * as carouselSeed from "../carouselSeed.js";
+import type * as economic from "../economic.js";
 import type * as feedback from "../feedback.js";
 import type * as generations from "../generations.js";
 import type * as initPresets from "../initPresets.js";
@@ -22,6 +23,7 @@ import type * as pipeline from "../pipeline.js";
 import type * as presets from "../presets.js";
 import type * as settings from "../settings.js";
 import type * as users from "../users.js";
+import type * as work_sessions from "../work_sessions.js";
 
 import type {
   ApiFromModules,
@@ -36,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   carousel: typeof carousel;
   carouselAdmin: typeof carouselAdmin;
   carouselSeed: typeof carouselSeed;
+  economic: typeof economic;
   feedback: typeof feedback;
   generations: typeof generations;
   initPresets: typeof initPresets;
@@ -44,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   presets: typeof presets;
   settings: typeof settings;
   users: typeof users;
+  work_sessions: typeof work_sessions;
 }>;
 
 /**

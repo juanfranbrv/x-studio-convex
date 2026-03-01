@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         // Parse request body
         // Parse request body
         const body = await request.json()
-        const { prompt, headline, cta, platform, brandDNA, context, model: incomingModel, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt } = body as {
+        const { prompt, headline, cta, platform, brandDNA, context, model: incomingModel, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt, auditFlowId } = body as {
             prompt: string
             headline?: string
             cta?: string
@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
             aspectRatio?: string
             selectedColors?: ImageGenerationOptions['selectedColors']
             promptAlreadyBuilt?: boolean
+            auditFlowId?: string
         }
         let model = incomingModel
 
@@ -116,6 +117,8 @@ export async function POST(request: NextRequest) {
         }
 
         let nagaApiKey: string | undefined
+        let replicateApiKey: string | undefined
+        let atlasApiKey: string | undefined
         if (model?.startsWith('naga/')) {
             try {
                 const key = await convex.query(api.admin.getSetting, { key: 'provider_naga_api_key' })
@@ -126,11 +129,35 @@ export async function POST(request: NextRequest) {
                 log.warn('API', 'No se pudo leer provider_naga_api_key', err)
             }
         }
+        if (model?.startsWith('replicate/')) {
+            try {
+                const key = await convex.query(api.admin.getSetting, { key: 'provider_replicate_api_key' })
+                if (typeof key === 'string' && key.trim().length > 0) {
+                    replicateApiKey = key.trim()
+                }
+            } catch (err) {
+                log.warn('API', 'No se pudo leer provider_replicate_api_key', err)
+            }
+        }
+        if (model?.startsWith('atlas/')) {
+            try {
+                const key = await convex.query(api.admin.getSetting, { key: 'provider_atlas_api_key' })
+                if (typeof key === 'string' && key.trim().length > 0) {
+                    atlasApiKey = key.trim()
+                }
+            } catch (err) {
+                log.warn('API', 'No se pudo leer provider_atlas_api_key', err)
+            }
+        }
 
         const provider = model?.startsWith('wisdom/')
             ? 'Wisdom'
             : model?.startsWith('naga/')
                 ? 'NagaAI'
+            : model?.startsWith('replicate/')
+                ? 'Replicate'
+            : model?.startsWith('atlas/')
+                ? 'Atlas'
             : model?.startsWith('google/')
                 ? 'Google Oficial'
                 : 'Google Oficial'
@@ -145,8 +172,44 @@ export async function POST(request: NextRequest) {
         const imageUrl = await generateContentImageUnified(
             { name: brandDNA.brand_name || 'Brand', brand_dna: brandDNA },
             prompt,
-            { headline, cta, platform, context, model, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt, nagaApiKey }
+            {
+                headline,
+                cta,
+                platform,
+                context,
+                model,
+                layoutReference,
+                aspectRatio,
+                selectedColors,
+                promptAlreadyBuilt,
+                nagaApiKey,
+                replicateApiKey,
+                atlasApiKey
+            }
         )
+
+        try {
+            let userEmail: string | undefined
+            const userRow = await convex.query(api.users.getUser, { clerk_id: userId })
+            if (userRow?.email) {
+                userEmail = userRow.email
+            }
+            await convex.mutation(api.economic.logEconomicEvent, {
+                flow_id: typeof auditFlowId === 'string' ? auditFlowId : undefined,
+                phase: 'generate_image',
+                model: model || 'unknown-image-model',
+                kind: 'image',
+                user_clerk_id: userId,
+                user_email: userEmail,
+                metadata: {
+                    prompt_len: prompt.length,
+                    platform: platform || null,
+                    aspect_ratio: aspectRatio || null,
+                }
+            })
+        } catch (auditError) {
+            log.warn('API', 'No se pudo registrar coste económico de imagen', auditError)
+        }
 
         // Consume credit after successful generation
         try {
@@ -179,7 +242,9 @@ export async function POST(request: NextRequest) {
         let errorType = 'UNKNOWN'
 
         if (errorMessage.toLowerCase().includes('system busy') ||
-            errorMessage.toLowerCase().includes('please try again')) {
+            errorMessage.toLowerCase().includes('please try again') ||
+            errorMessage.toLowerCase().includes('no available channel') ||
+            errorMessage.toLowerCase().includes('429 received from upstream')) {
             status = 503
             userMessage = 'El servicio está temporalmente saturado. Por favor, inténtalo de nuevo en unos segundos.'
             errorType = 'WISDOM_BUSY'

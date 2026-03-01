@@ -76,6 +76,7 @@ const sanitizeStructuralPromptForModel = (raw?: string | null): string => {
 export interface UseCreationFlowOptions {
     onImageUploaded?: (file: File) => void
     onReset?: () => void
+    getOrCreateAuditFlowId?: () => string
 }
 
 export function useCreationFlow(options?: UseCreationFlowOptions) {
@@ -427,12 +428,14 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         expectedRef?: { id: string; source: 'upload' | 'brandkit' }
     ) => {
         try {
+            const flowId = optionsRef.current?.getOrCreateAuditFlowId?.()
             const response = await fetch('/api/analyze-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     imageBase64: base64,
                     mimeType,
+                    auditFlowId: flowId,
                 }),
             })
 
@@ -733,12 +736,14 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             }))
 
             // Call Vision API
+            const flowId = optionsRef.current?.getOrCreateAuditFlowId?.()
             const visionResponse = await fetch('/api/analyze-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     imageBase64: base64,
                     mimeType: blob.type,
+                    auditFlowId: flowId,
                 }),
             })
 

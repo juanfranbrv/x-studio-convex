@@ -4,6 +4,9 @@ import { generateTextUnified } from '@/lib/gemini'
 import { log } from '@/lib/logger'
 import { buildIntentParserPrompt } from '@/lib/prompts/intents/parser'
 import { INTENT_CATALOG, MERGED_LAYOUTS_BY_INTENT, type IntentCategory } from '@/lib/creation-flow-types'
+import { auth } from '@clerk/nextjs/server'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '@/../convex/_generated/api'
 
 export interface ParsedIntentResult {
     detectedIntent?: string // Auto-detected intent ID
@@ -820,6 +823,86 @@ function repairJsonString(raw: string): string {
     return result
 }
 
+function parseLoosePrimitive(value: string): unknown {
+    const trimmed = value.trim().replace(/,$/, '').trim()
+    if (!trimmed) return ''
+
+    if (trimmed === 'true') return true
+    if (trimmed === 'false') return false
+    if (trimmed === 'null') return null
+    if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed)
+
+    const maybeQuoted = trimmed.match(/^"(.*)"$/)
+    if (maybeQuoted) return maybeQuoted[1]
+
+    return sanitizeUrlsInText(trimmed.replace(/^["']|["']$/g, ''))
+}
+
+function parseLooseJsonLikeObject(raw: string): Record<string, unknown> | null {
+    const cleaned = normalizeSmartQuotes(extractJson(raw))
+        .replace(/^```json\s*/i, '')
+        .replace(/```$/g, '')
+        .trim()
+
+    const body = cleaned
+        .replace(/^\{/, '')
+        .replace(/\}$/, '')
+        .trim()
+
+    if (!body) return null
+
+    const lines = body.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+    if (lines.length === 0) return null
+
+    const result: Record<string, unknown> = {}
+    let currentKey = ''
+    let currentValueLines: string[] = []
+
+    const flush = () => {
+        if (!currentKey) return
+        const rawValue = currentValueLines.join('\n').trim()
+        if (!rawValue) {
+            result[currentKey] = ''
+            return
+        }
+
+        const normalizedRaw = rawValue.replace(/,$/, '').trim()
+        if (normalizedRaw.startsWith('{') || normalizedRaw.startsWith('[')) {
+            try {
+                result[currentKey] = JSON.parse(normalizedRaw)
+                return
+            } catch {
+                try {
+                    result[currentKey] = JSON.parse(repairJsonString(normalizedRaw))
+                    return
+                } catch {
+                    result[currentKey] = parseLoosePrimitive(normalizedRaw)
+                    return
+                }
+            }
+        }
+
+        result[currentKey] = parseLoosePrimitive(normalizedRaw)
+    }
+
+    for (const line of lines) {
+        const keyMatch = line.match(/^"?([a-zA-Z0-9_]+)"?\s*:\s*(.*)$/)
+        if (keyMatch) {
+            flush()
+            currentKey = keyMatch[1]
+            currentValueLines = [keyMatch[2]]
+            continue
+        }
+
+        if (currentKey) {
+            currentValueLines.push(line)
+        }
+    }
+
+    flush()
+    return Object.keys(result).length > 0 ? result : null
+}
+
 function inferIntentFromText(userText: string): string | undefined {
     const text = normalizeText(userText)
     if (!text.trim()) return undefined
@@ -967,7 +1050,8 @@ export async function parseLazyIntentAction({
     layoutId,
     intelligenceModel,
     variationSeed,
-    previewTextContext
+    previewTextContext,
+    auditFlowId
 }: {
     userText: string
     brandDNA: any
@@ -977,6 +1061,7 @@ export async function parseLazyIntentAction({
     intelligenceModel?: string
     variationSeed?: number
     previewTextContext?: string
+    auditFlowId?: string
 }): Promise<ParsedIntentResult> {
     try {
         // 1. Prepare Metadata
@@ -1027,6 +1112,28 @@ CREATIVE VARIATION MODE:
             { temperature: 0.9, topP: 0.92 }
         )
 
+        try {
+            const { userId } = await auth()
+            const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
+            if (convexUrl) {
+                const convex = new ConvexHttpClient(convexUrl)
+                await convex.mutation(api.economic.logEconomicEvent, {
+                    flow_id: auditFlowId,
+                    phase: 'analyze_prompt_intent',
+                    model: modelToUse,
+                    kind: 'intelligence',
+                    user_clerk_id: userId ?? undefined,
+                    metadata: {
+                        prompt_len: userText.length,
+                        has_brand: Boolean(brandDNA),
+                    }
+                })
+                log.success('ECONOMIC', `Audit event registered | phase=analyze_prompt_intent model=${modelToUse}`)
+            }
+        } catch (auditError) {
+            log.warn('LazyPrompt', 'No se pudo registrar coste económico de análisis', auditError)
+        }
+
         log.debug('LazyPrompt', 'Received JSON', jsonResponse.substring(0, 500))
 
         // 5. Parse Response (Robustly)
@@ -1038,9 +1145,17 @@ CREATIVE VARIATION MODE:
             try {
                 parsed = JSON.parse(repairJsonString(cleanJson))
             } catch (secondError) {
-                const firstMessage = firstError instanceof Error ? firstError.message : String(firstError)
-                const secondMessage = secondError instanceof Error ? secondError.message : String(secondError)
-                throw new Error(`Invalid JSON from intent parser (${firstMessage}) -> repair failed (${secondMessage})`)
+                const looseParsed = parseLooseJsonLikeObject(cleanJson)
+                if (looseParsed) {
+                    log.warn('LazyPrompt', 'Parser fallback activado: respuesta JSON-ish reparada', {
+                        fields: Object.keys(looseParsed),
+                    })
+                    parsed = looseParsed as ParsedIntentResult
+                } else {
+                    const firstMessage = firstError instanceof Error ? firstError.message : String(firstError)
+                    const secondMessage = secondError instanceof Error ? secondError.message : String(secondError)
+                    throw new Error(`Invalid JSON from intent parser (${firstMessage}) -> repair failed (${secondMessage})`)
+                }
             }
         }
 

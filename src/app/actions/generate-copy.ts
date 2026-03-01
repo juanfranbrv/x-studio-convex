@@ -1,12 +1,9 @@
 'use server'
 
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { BrandDNA } from '@/lib/brand-types'
 import { VisionAnalysis, IntentCategory, INTENT_CATALOG } from '@/lib/creation-flow-types'
 import { buildCopywriterPrompt } from '@/lib/prompts/actions/copywriter'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' })
+import { getGoogleTextGenerativeModel } from '@/lib/gemini'
 
 export async function generateFieldCopy(params: {
     brandName: string
@@ -41,6 +38,7 @@ export async function generateFieldCopy(params: {
     console.log('Generated System Prompt:', systemPrompt)
 
     try {
+        const model = await getGoogleTextGenerativeModel('gemini-flash-latest')
         const result = await model.generateContent(systemPrompt)
         const text = result.response.text().trim().replace(/^["']|["']$/g, '') // Remove quotes if any
         console.log('AI Response:', text)

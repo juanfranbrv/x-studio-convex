@@ -5,13 +5,6 @@ import { log } from './logger'
 import { ConvexHttpClient } from 'convex/browser'
 import { api } from '@/../convex/_generated/api'
 
-// Initialize Gemini clients
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-const imageGenAI = new GoogleGenerativeAI(process.env.GEMINI_IMAGE_API_KEY!)
-
-// Models
-export const flashModel = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' })
-
 // Default image model
 const DEFAULT_IMAGE_MODEL = 'gemini-3-pro-image-preview'
 
@@ -25,8 +18,8 @@ export async function generateMarketingCopy(
     prompt: string
 ): Promise<string> {
     const systemPrompt = buildBrandSystemPrompt(brand)
-
-    const result = await flashModel.generateContent({
+    const model = await getGoogleTextGenerativeModel('gemini-flash-latest')
+    const result = await model.generateContent({
         contents: [
             {
                 role: 'user',
@@ -139,25 +132,117 @@ export async function generateBrandImage(
 }
 
 // --- WIDOM GATE INTEGRATION ---
-const WISDOM_API_KEY = process.env.WISDOM_API_KEY || ''
 const WISDOM_BASE_URL = 'https://wisdom-gate.juheapi.com'
 const NAGA_BASE_URL = 'https://api.naga.ac/v1'
-const NAGA_API_KEY = process.env.NAGA_API_KEY || ''
+const GOOGLE_TEXT_SETTING_KEY = 'provider_google_api_key'
+const WISDOM_SETTING_KEY = 'provider_wisdom_api_key'
 const NAGA_SETTING_KEY = 'provider_naga_api_key'
+const REPLICATE_BASE_URL = 'https://api.replicate.com/v1'
+const REPLICATE_SETTING_KEY = 'provider_replicate_api_key'
+const REPLICATE_MODEL_NANO_BANANA_2 = 'google/nano-banana-2'
+const REPLICATE_MODEL_NANO_BANANA_PRO = 'google/nano-banana-pro'
+const REPLICATE_TEXT_MODEL_GEMINI_3_FLASH = 'google/gemini-3-flash'
+const ATLAS_BASE_URL = 'https://api.atlascloud.ai'
+const ATLAS_IMAGE_ENDPOINTS = [
+    '/api/v1/model/generateImage',
+    '/v1/model/generateImage',
+]
+const ATLAS_PREDICTION_PATH = '/api/v1/model/prediction'
+const ATLAS_SETTING_KEY = 'provider_atlas_api_key'
+const ATLAS_MODEL_ALIASES: Record<string, string> = {
+    'google/nano-banana-2': 'google/nano-banana-2/text-to-image',
+    'google/nano-banana': 'google/nano-banana/text-to-image-developer',
+    'google/nano-banana-2/text-to-image': 'google/nano-banana-2/text-to-image',
+    'bytedance/seedream-v5.0-lite': 'bytedance/seedream-v5.0-lite',
+}
+const NAGA_DEFAULT_PROMPT_LIMIT = 8192
+const NAGA_MODEL_ALIASES: Record<string, string> = {}
+const NAGA_UNSUPPORTED_MODELS = new Set([
+    'gemini-3-pro-image-preview',
+    'google/gemini-3-pro-image-preview',
+])
 const NAGA_MODEL_PROMPT_LIMITS: Record<string, number> = {
     'seedream-5-lite': 8192,
     'gpt-image-1.5-2025-12-16': 8192,
+    'gemini-3-pro-image-preview': 8192,
+    'google/gemini-3-pro-image-preview': 8192,
 }
 let nagaApiKeyCache = ''
 let nagaApiKeyCacheAt = 0
+let replicateApiKeyCache = ''
+let replicateApiKeyCacheAt = 0
+let atlasApiKeyCache = ''
+let atlasApiKeyCacheAt = 0
+let googleTextApiKeyCache = ''
+let googleTextApiKeyCacheAt = 0
+let wisdomApiKeyCache = ''
+let wisdomApiKeyCacheAt = 0
 const NAGA_API_KEY_CACHE_TTL_MS = 60_000
+const REPLICATE_API_KEY_CACHE_TTL_MS = 60_000
+const ATLAS_API_KEY_CACHE_TTL_MS = 60_000
+const GOOGLE_API_KEY_CACHE_TTL_MS = 60_000
+const WISDOM_API_KEY_CACHE_TTL_MS = 60_000
+let textCallSequence = 0
+
+function nextTextCallId(): string {
+    textCallSequence += 1
+    return `txt-${String(textCallSequence).padStart(4, '0')}`
+}
+
+async function resolveSettingKey(settingKey: string): Promise<string> {
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
+    if (!convexUrl) return ''
+
+    const convex = new ConvexHttpClient(convexUrl)
+    const value = await convex.query(api.admin.getSetting, { key: settingKey })
+    return typeof value === 'string' ? value.trim() : ''
+}
+
+async function resolveGoogleTextApiKey(): Promise<string> {
+    const now = Date.now()
+    if (googleTextApiKeyCache && (now - googleTextApiKeyCacheAt) < GOOGLE_API_KEY_CACHE_TTL_MS) {
+        return googleTextApiKeyCache
+    }
+    const value = await resolveSettingKey(GOOGLE_TEXT_SETTING_KEY)
+    if (value) {
+        googleTextApiKeyCache = value
+        googleTextApiKeyCacheAt = now
+    }
+    return value
+}
+
+async function resolveWisdomApiKey(): Promise<string> {
+    const now = Date.now()
+    if (wisdomApiKeyCache && (now - wisdomApiKeyCacheAt) < WISDOM_API_KEY_CACHE_TTL_MS) {
+        return wisdomApiKeyCache
+    }
+    const value = await resolveSettingKey(WISDOM_SETTING_KEY)
+    if (value) {
+        wisdomApiKeyCache = value
+        wisdomApiKeyCacheAt = now
+    }
+    return value
+}
+
+export async function getGoogleTextGenerativeModel(model: string) {
+    const key = await resolveGoogleTextApiKey()
+    if (!key) {
+        throw new Error('Google API key no configurada en Admin > Modelos y API Keys.')
+    }
+    return new GoogleGenerativeAI(key).getGenerativeModel({ model })
+}
+
+export async function getGoogleImageGenerativeModel(model: string) {
+    const key = await resolveGoogleTextApiKey()
+    if (!key) {
+        throw new Error('Google API key no configurada en Admin > Modelos y API Keys.')
+    }
+    return new GoogleGenerativeAI(key).getGenerativeModel({ model })
+}
 
 async function resolveNagaApiKey(explicitKey?: string): Promise<string> {
     const explicit = (explicitKey || '').trim()
     if (explicit) return explicit
-
-    const fromEnv = (NAGA_API_KEY || '').trim()
-    if (fromEnv) return fromEnv
 
     const now = Date.now()
     if (nagaApiKeyCache && (now - nagaApiKeyCacheAt) < NAGA_API_KEY_CACHE_TTL_MS) {
@@ -182,6 +267,60 @@ async function resolveNagaApiKey(explicitKey?: string): Promise<string> {
     return ''
 }
 
+async function resolveReplicateApiKey(explicitKey?: string): Promise<string> {
+    const explicit = (explicitKey || '').trim()
+    if (explicit) return explicit
+
+    const now = Date.now()
+    if (replicateApiKeyCache && (now - replicateApiKeyCacheAt) < REPLICATE_API_KEY_CACHE_TTL_MS) {
+        return replicateApiKeyCache
+    }
+
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
+    if (!convexUrl) return ''
+
+    try {
+        const convex = new ConvexHttpClient(convexUrl)
+        const value = await convex.query(api.admin.getSetting, { key: REPLICATE_SETTING_KEY })
+        if (typeof value === 'string' && value.trim().length > 0) {
+            replicateApiKeyCache = value.trim()
+            replicateApiKeyCacheAt = now
+            return replicateApiKeyCache
+        }
+    } catch (error) {
+        log.warn('REPLICATE', 'No se pudo resolver API key desde app_settings', error)
+    }
+
+    return ''
+}
+
+async function resolveAtlasApiKey(explicitKey?: string): Promise<string> {
+    const explicit = (explicitKey || '').trim()
+    if (explicit) return explicit
+
+    const now = Date.now()
+    if (atlasApiKeyCache && (now - atlasApiKeyCacheAt) < ATLAS_API_KEY_CACHE_TTL_MS) {
+        return atlasApiKeyCache
+    }
+
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
+    if (!convexUrl) return ''
+
+    try {
+        const convex = new ConvexHttpClient(convexUrl)
+        const value = await convex.query(api.admin.getSetting, { key: ATLAS_SETTING_KEY })
+        if (typeof value === 'string' && value.trim().length > 0) {
+            atlasApiKeyCache = value.trim()
+            atlasApiKeyCacheAt = now
+            return atlasApiKeyCache
+        }
+    } catch (error) {
+        log.warn('ATLAS', 'No se pudo resolver API key desde app_settings', error)
+    }
+
+    return ''
+}
+
 export const WISDOM_MODELS = {
     TEXT: {
         'gemini-3-pro-preview': 'Gemini 3 Pro (Wisdom)',
@@ -190,6 +329,7 @@ export const WISDOM_MODELS = {
     },
     IMAGE: {
         'gemini-3-pro-image-preview': 'Gemini 3 Image (Wisdom)',
+        'gemini-3.1-flash-image-preview': 'Gemini 3.1 Flash Image (Wisdom)',
         'qwen-image': 'Qwen Image (Alibaba)',
         'kolors': 'Kolors (Kwai)',
         'wanx-v1': 'Wanx (Alibaba)',
@@ -216,11 +356,13 @@ function getOpenAISize(aspectRatio?: string): string {
 
 async function generateWisdomChatImage(prompt: string, model: string): Promise<string> {
     try {
+        const wisdomApiKey = await resolveWisdomApiKey()
+        if (!wisdomApiKey) throw new Error('Wisdom API key no configurada en /admin.')
         log.info('IMAGE', `Chat image generation: ${model}`)
         const response = await fetch(`${WISDOM_BASE_URL}/v1/chat/completions`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${WISDOM_API_KEY}`,
+                'Authorization': `Bearer ${wisdomApiKey}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -274,6 +416,8 @@ async function generateWisdomChatImage(prompt: string, model: string): Promise<s
 
 async function generateWisdomOpenAIImage(prompt: string, model: string, aspectRatio?: string): Promise<string> {
     try {
+        const wisdomApiKey = await resolveWisdomApiKey()
+        if (!wisdomApiKey) throw new Error('Wisdom API key no configurada en /admin.')
         // SPECIAL ROUTING FOR CHAT-BASED IMAGE MODELS (Qwen, Wanx, Kolors, Seedream)
         // These models often use the Chat Completion endpoint or return JSON in chat
         if (model.includes('qwen-image') || model.includes('wanx') || model.includes('kolors') || model.includes('seedream')) {
@@ -300,7 +444,7 @@ async function generateWisdomOpenAIImage(prompt: string, model: string, aspectRa
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${WISDOM_API_KEY}`
+                'Authorization': `Bearer ${wisdomApiKey}`
             },
             body: JSON.stringify(requestBody)
         })
@@ -343,13 +487,24 @@ async function generateNagaImage(
         throw new Error('NagaAI API key no configurada. Configúrala en /admin o en NAGA_API_KEY.')
     }
 
-    const normalizedModel = String(model || '').trim().toLowerCase()
-    const limit = NAGA_MODEL_PROMPT_LIMITS[normalizedModel]
-    const promptForNaga = typeof limit === 'number'
-        ? fitPromptForProviderLimit(prompt, limit)
-        : prompt
-    if (typeof limit === 'number' && promptForNaga.length !== prompt.length) {
-        log.warn('IMAGE', `Naga prompt trimmed (${normalizedModel}) ${prompt.length} -> ${promptForNaga.length} chars`)
+    const rawModel = String(model || '').trim()
+    const normalizedModel = rawModel.toLowerCase()
+    if (NAGA_UNSUPPORTED_MODELS.has(normalizedModel)) {
+        throw new Error(
+            'El modelo naga/gemini-3-pro-image-preview no está disponible en Naga. ' +
+            'Selecciona un modelo Naga soportado (ej: naga/gpt-image-1.5-2025-12-16 o naga/seedream-5-lite).'
+        )
+    }
+    const resolvedModel = NAGA_MODEL_ALIASES[normalizedModel] ?? rawModel
+    const normalizedResolvedModel = resolvedModel.toLowerCase()
+    if (resolvedModel !== rawModel) {
+        log.info('IMAGE', `Naga model alias applied: ${rawModel} -> ${resolvedModel}`)
+    }
+
+    const limit = NAGA_MODEL_PROMPT_LIMITS[normalizedResolvedModel] ?? NAGA_DEFAULT_PROMPT_LIMIT
+    const promptForNaga = fitPromptForProviderLimit(prompt, limit)
+    if (promptForNaga.length !== prompt.length) {
+        log.warn('IMAGE', `Naga prompt trimmed (${normalizedResolvedModel}) ${prompt.length} -> ${promptForNaga.length} chars`)
     }
 
     const response = await fetch(`${NAGA_BASE_URL}/images/generations`, {
@@ -359,10 +514,10 @@ async function generateNagaImage(
             'Authorization': `Bearer ${nagaApiKey}`
         },
         body: JSON.stringify({
-            model,
+            model: resolvedModel,
             prompt: promptForNaga,
             n: 1,
-            size: getOpenAISize(aspectRatio),
+            size: getNagaImageSize(resolvedModel, aspectRatio),
             response_format: 'url'
         })
     })
@@ -389,6 +544,496 @@ async function generateNagaImage(
     }
 
     throw new Error('No image data found in NagaAI response')
+}
+
+function getNagaImageSize(model: string, aspectRatio?: string): string {
+    const normalizedModel = String(model || '').trim().toLowerCase()
+    const normalizedRatio = String(aspectRatio || '').trim()
+
+    // Naga GPT-Image 1.5 currently supports only:
+    // 1024x1024, 1024x1536, 1536x1024 and auto.
+    // We use the maximum available size per orientation.
+    if (normalizedModel.startsWith('gpt-image-1.5')) {
+        switch (normalizedRatio) {
+            case '9:16':
+            case '3:4':
+                return '1024x1536'
+            case '16:9':
+            case '4:3':
+                return '1536x1024'
+            case '1:1':
+            default:
+                return '1024x1024'
+        }
+    }
+
+    return getOpenAISize(aspectRatio)
+}
+
+function toReplicateAspectRatio(aspectRatio?: string): string {
+    if (!aspectRatio) return '1:1'
+
+    const normalized = aspectRatio.trim()
+    const supported = new Set([
+        'match_input_image',
+        '1:1',
+        '1:4',
+        '1:8',
+        '2:3',
+        '3:2',
+        '3:4',
+        '4:1',
+        '4:3',
+        '4:5',
+        '5:4',
+        '8:1',
+        '9:16',
+        '16:9',
+        '21:9',
+    ])
+
+    if (supported.has(normalized)) {
+        return normalized
+    }
+
+    if (normalized === '1.91:1') return '16:9'
+    if (normalized === '1.2:1') return '5:4'
+
+    return '1:1'
+}
+
+function toReplicateAspectRatioForModel(model: string, aspectRatio?: string): string {
+    const normalizedModel = String(model || '').trim().toLowerCase()
+    const mapped = toReplicateAspectRatio(aspectRatio)
+
+    if (normalizedModel === REPLICATE_MODEL_NANO_BANANA_PRO) {
+        const supported = new Set([
+            'match_input_image',
+            '1:1',
+            '2:3',
+            '3:2',
+            '3:4',
+            '4:3',
+            '4:5',
+            '5:4',
+            '9:16',
+            '16:9',
+            '21:9',
+        ])
+        return supported.has(mapped) ? mapped : '1:1'
+    }
+
+    return mapped
+}
+
+function collectReplicateImageInputs(options: ImageGenerationOptions): string[] {
+    const urls: string[] = []
+
+    const maybePush = (value?: string) => {
+        const trimmed = String(value || '').trim()
+        if (!trimmed) return
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+            urls.push(trimmed)
+        }
+    }
+
+    if (options.context && options.context.length > 0) {
+        options.context.forEach((item) => {
+            if (item.type === 'image' || item.type === 'logo' || item.type === 'aux_logo') {
+                maybePush(item.value)
+            }
+        })
+    }
+
+    if (options.layoutReference) {
+        maybePush(options.layoutReference)
+    }
+
+    return Array.from(new Set(urls)).slice(0, 14)
+}
+
+type ReplicatePredictionResponse = {
+    id?: string
+    status?: string
+    error?: string
+    output?: string | string[] | null
+    urls?: {
+        get?: string
+    }
+}
+
+function extractReplicateOutputUrl(payload: ReplicatePredictionResponse): string {
+    if (typeof payload.output === 'string' && payload.output.trim()) {
+        return payload.output.trim()
+    }
+    if (Array.isArray(payload.output)) {
+        const firstUrl = payload.output.find((item) => typeof item === 'string' && item.trim().length > 0)
+        if (firstUrl) return firstUrl.trim()
+    }
+    throw new Error('Replicate no devolvió URL de imagen en output')
+}
+
+async function pollReplicatePrediction(
+    getUrl: string,
+    token: string,
+    maxAttempts = 60
+): Promise<ReplicatePredictionResponse> {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const response = await fetch(getUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        })
+
+        if (!response.ok) {
+            const errorText = await response.text()
+            throw new Error(`Replicate polling error (${response.status}): ${errorText}`)
+        }
+
+        const data = (await response.json()) as ReplicatePredictionResponse
+
+        if (data.status === 'succeeded') return data
+        if (data.status === 'failed' || data.status === 'canceled') {
+            throw new Error(data.error || `Replicate prediction finalizó con estado ${data.status}`)
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+    }
+
+    throw new Error('Replicate timeout esperando la predicción')
+}
+
+async function generateReplicateImage(
+    prompt: string,
+    model: string,
+    options: ImageGenerationOptions = {}
+): Promise<string> {
+    const replicateApiKey = await resolveReplicateApiKey(options.replicateApiKey)
+    if (!replicateApiKey) {
+        throw new Error('Replicate API key no configurada. Configúrala en /admin o en REPLICATE_API_TOKEN.')
+    }
+
+    const normalizedModel = String(model || '').trim().toLowerCase()
+    const isSupportedModel =
+        normalizedModel === REPLICATE_MODEL_NANO_BANANA_2 ||
+        normalizedModel === REPLICATE_MODEL_NANO_BANANA_PRO
+
+    if (!isSupportedModel) {
+        throw new Error(`Modelo Replicate no soportado: ${model}`)
+    }
+
+    const input: Record<string, unknown> = {
+        prompt,
+        aspect_ratio: toReplicateAspectRatioForModel(normalizedModel, options.aspectRatio),
+        output_format: 'jpg',
+    }
+
+    if (normalizedModel === REPLICATE_MODEL_NANO_BANANA_PRO) {
+        input.resolution = '2K'
+        input.allow_fallback_model = false
+    }
+
+    log.info('REPLICATE', `Image input | aspect_ratio=${String(input.aspect_ratio)} model=${normalizedModel}`)
+
+    const imageInput = collectReplicateImageInputs(options)
+    if (imageInput.length > 0) {
+        input.image_input = imageInput
+    }
+
+    const response = await fetch(`${REPLICATE_BASE_URL}/models/${normalizedModel}/predictions`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${replicateApiKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'wait=60',
+        },
+        body: JSON.stringify({ input }),
+    })
+
+    if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Replicate image error (${response.status}): ${errorText}`)
+    }
+
+    let data = (await response.json()) as ReplicatePredictionResponse
+
+    if (data.status !== 'succeeded') {
+        const getUrl = data.urls?.get
+        if (!getUrl) {
+            throw new Error(data.error || `Replicate prediction en estado ${data.status || 'unknown'} sin URL de seguimiento`)
+        }
+        data = await pollReplicatePrediction(getUrl, replicateApiKey)
+    }
+
+    const outputUrl = extractReplicateOutputUrl(data)
+    try {
+        return await resolveImageUrlToDataUrl(outputUrl)
+    } catch (error) {
+        log.warn('IMAGE', `Replicate URL fallback to remote URL (${outputUrl})`, error)
+        return outputUrl
+    }
+}
+
+async function generateReplicateText(
+    prompt: string,
+    model: string,
+    systemPrompt?: string,
+    images?: string[],
+    options?: TextGenerationOptions
+): Promise<string> {
+    const startedAt = Date.now()
+    const replicateApiKey = await resolveReplicateApiKey()
+    if (!replicateApiKey) {
+        throw new Error('Replicate API key no configurada en Admin > Modelos y API Keys.')
+    }
+
+    const normalizedModel = String(model || '').trim().toLowerCase()
+    if (normalizedModel !== REPLICATE_TEXT_MODEL_GEMINI_3_FLASH) {
+        throw new Error(`Modelo Replicate de inteligencia no soportado: ${model}`)
+    }
+    log.info('REPLICATE', `Text prediction start | model=${normalizedModel} images=${images?.length || 0}`)
+
+    const input: Record<string, unknown> = {
+        prompt,
+    }
+
+    if (systemPrompt && systemPrompt.trim().length > 0) {
+        input.system_instruction = systemPrompt.trim()
+    }
+    if (typeof options?.temperature === 'number') {
+        input.temperature = options.temperature
+    }
+    if (typeof options?.topP === 'number') {
+        input.top_p = options.topP
+    }
+    if (images && images.length > 0) {
+        const imageUrls = images
+            .map((img) => String(img || '').trim())
+            .filter((img) => img.startsWith('http://') || img.startsWith('https://') || img.startsWith('data:'))
+            .slice(0, 10)
+        if (imageUrls.length > 0) {
+            input.images = imageUrls
+        }
+    }
+
+    const response = await fetch(`${REPLICATE_BASE_URL}/models/${normalizedModel}/predictions`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${replicateApiKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'wait=60',
+        },
+        body: JSON.stringify({ input }),
+    })
+
+    if (!response.ok) {
+        const errorText = await response.text()
+        log.error('REPLICATE', `Text prediction failed | model=${normalizedModel} status=${response.status}`, errorText)
+        throw new Error(`Replicate text error (${response.status}): ${errorText}`)
+    }
+
+    let data = (await response.json()) as ReplicatePredictionResponse
+    if (data.status !== 'succeeded') {
+        const getUrl = data.urls?.get
+        if (!getUrl) {
+            throw new Error(data.error || `Replicate prediction en estado ${data.status || 'unknown'} sin URL de seguimiento`)
+        }
+        data = await pollReplicatePrediction(getUrl, replicateApiKey)
+    }
+
+    if (Array.isArray(data.output)) {
+        log.success('REPLICATE', `Text prediction done | model=${normalizedModel} ${Date.now() - startedAt}ms`)
+        return data.output.map((part) => String(part || '')).join('')
+    }
+    if (typeof data.output === 'string' && data.output.trim().length > 0) {
+        log.success('REPLICATE', `Text prediction done | model=${normalizedModel} ${Date.now() - startedAt}ms`)
+        return data.output
+    }
+
+    throw new Error('Replicate text error: salida vacía')
+}
+
+function toAtlasAspectRatio(aspectRatio?: string): string {
+    if (!aspectRatio) return '1:1'
+    const normalized = aspectRatio.trim()
+    const supported = new Set(['1:1', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '2:3', '3:2'])
+    if (supported.has(normalized)) return normalized
+    if (normalized === '1.91:1') return '16:9'
+    if (normalized === '1.2:1') return '5:4'
+    return '1:1'
+}
+
+function resolveAtlasModel(model: string): string {
+    const normalized = String(model || '').trim().toLowerCase()
+    return ATLAS_MODEL_ALIASES[normalized] || String(model || '').trim()
+}
+
+function extractAtlasImageUrl(payload: any): string {
+    const direct = [
+        payload?.url,
+        payload?.image_url,
+        payload?.result?.url,
+        payload?.result?.image_url,
+        payload?.output?.url,
+        payload?.output?.image_url,
+        payload?.data?.[0]?.url,
+        payload?.data?.[0]?.image_url,
+        payload?.data?.output?.url,
+        payload?.data?.output?.image_url,
+    ].find((value) => typeof value === 'string' && value.trim().length > 0)
+
+    if (typeof direct === 'string' && direct.trim()) return direct.trim()
+
+    const arrayLike = [payload?.outputs, payload?.images, payload?.result?.images, payload?.data?.outputs, payload?.data?.images]
+    for (const candidate of arrayLike) {
+        if (Array.isArray(candidate)) {
+            const match = candidate.find((item: any) =>
+                typeof item === 'string'
+                    ? item.trim().length > 0
+                    : (typeof item?.url === 'string' && item.url.trim().length > 0)
+            )
+            if (typeof match === 'string') return match.trim()
+            if (match?.url) return String(match.url).trim()
+        }
+    }
+
+    throw new Error('Atlas no devolvió URL de imagen')
+}
+
+async function generateAtlasImage(
+    prompt: string,
+    model: string,
+    options: ImageGenerationOptions = {}
+): Promise<string> {
+    const atlasApiKey = await resolveAtlasApiKey(options.atlasApiKey)
+    if (!atlasApiKey) {
+        throw new Error('Atlas API key no configurada. Configúrala en /admin o en ATLAS_API_KEY.')
+    }
+
+    const atlasModel = resolveAtlasModel(model)
+    const body: Record<string, unknown> = {
+        model: atlasModel,
+        prompt,
+        aspect_ratio: toAtlasAspectRatio(options.aspectRatio),
+        enable_base64_output: false,
+        enable_sync_mode: false,
+        output_format: 'png',
+        resolution: '2k',
+    }
+
+    let lastError = ''
+    let data: any = null
+    let ok = false
+    const maxGenerateAttempts = 3
+
+    for (let attempt = 0; attempt < maxGenerateAttempts; attempt++) {
+        for (const path of ATLAS_IMAGE_ENDPOINTS) {
+            const response = await fetch(`${ATLAS_BASE_URL}${path}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${atlasApiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            })
+
+            if (response.ok) {
+                data = await response.json()
+                ok = true
+                break
+            }
+
+            const errorText = await response.text()
+            lastError = `Atlas image error (${response.status}) [${path}]: ${errorText}`
+
+            const lower = `${response.status} ${errorText}`.toLowerCase()
+            const isUpstreamBusy =
+                lower.includes('no available channel') ||
+                lower.includes('429 received from upstream') ||
+                (response.status === 429)
+
+            if (isUpstreamBusy && attempt < maxGenerateAttempts - 1) {
+                const waitMs = 1200 * (attempt + 1)
+                log.warn('ATLAS', `Canal saturado, reintentando intento ${attempt + 2}/${maxGenerateAttempts} en ${waitMs}ms`)
+                await new Promise((resolve) => setTimeout(resolve, waitMs))
+                break
+            }
+
+            if (response.status !== 404) {
+                throw new Error(lastError)
+            }
+        }
+
+        if (ok) {
+            break
+        }
+    }
+
+    if (!ok) {
+        throw new Error(lastError || 'Atlas image error: endpoint not found')
+    }
+
+    // Sync response shortcut: some deployments can return outputs directly.
+    try {
+        const syncUrl = extractAtlasImageUrl(data)
+        if (syncUrl) {
+            try {
+                return await resolveImageUrlToDataUrl(syncUrl)
+            } catch (error) {
+                log.warn('IMAGE', `Atlas URL fallback to remote URL (${syncUrl})`, error)
+                return syncUrl
+            }
+        }
+    } catch {
+        // continue with async polling flow
+    }
+
+    const predictionId = data?.data?.id || data?.id
+    if (!predictionId) {
+        throw new Error('Atlas no devolvió prediction id ni imagen directa')
+    }
+
+    let predictionPayload: any = null
+    const maxAttempts = 90
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const pollResponse = await fetch(`${ATLAS_BASE_URL}${ATLAS_PREDICTION_PATH}/${predictionId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${atlasApiKey}`,
+            },
+        })
+
+        if (!pollResponse.ok) {
+            const errorText = await pollResponse.text()
+            throw new Error(`Atlas polling error (${pollResponse.status}): ${errorText}`)
+        }
+
+        predictionPayload = await pollResponse.json()
+        const status = String(predictionPayload?.data?.status || predictionPayload?.status || '').toLowerCase()
+
+        if (status === 'completed' || status === 'succeeded') {
+            break
+        }
+        if (status === 'failed' || status === 'canceled' || status === 'cancelled') {
+            const err = predictionPayload?.data?.error || predictionPayload?.error || 'Generation failed'
+            throw new Error(`Atlas prediction failed: ${err}`)
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+    }
+
+    if (!predictionPayload) {
+        throw new Error('Atlas polling no devolvió resultado')
+    }
+
+    const outputUrl = extractAtlasImageUrl(predictionPayload)
+    try {
+        return await resolveImageUrlToDataUrl(outputUrl)
+    } catch (error) {
+        log.warn('IMAGE', `Atlas URL fallback to remote URL (${outputUrl})`, error)
+        return outputUrl
+    }
 }
 
 function fitPromptForProviderLimit(prompt: string, maxChars: number): string {
@@ -441,6 +1086,7 @@ export interface TextGenerationOptions {
     temperature?: number
     topP?: number
     nagaApiKey?: string
+    atlasApiKey?: string
 }
 
 async function generateWisdomText(
@@ -451,6 +1097,8 @@ async function generateWisdomText(
     options?: TextGenerationOptions
 ): Promise<string> {
     try {
+        const wisdomApiKey = await resolveWisdomApiKey()
+        if (!wisdomApiKey) throw new Error('Wisdom API key no configurada en /admin.')
         log.info('TEXT', `Generating with model: ${model}`)
 
         // Construct Gemini-native payload
@@ -514,7 +1162,7 @@ async function generateWisdomText(
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-goog-api-key': WISDOM_API_KEY
+                        'x-goog-api-key': wisdomApiKey
                     },
                     body: JSON.stringify(requestBody)
                 })
@@ -569,6 +1217,8 @@ async function generateWisdomText(
 
 async function generateWisdomImage(parts: any[], model: string, aspectRatio?: string): Promise<string> {
     try {
+        const wisdomApiKey = await resolveWisdomApiKey()
+        if (!wisdomApiKey) throw new Error('Wisdom API key no configurada en /admin.')
         log.info('IMAGE', `Generating with model: ${model}`)
         log.debug('IMAGE', `Payload parts: ${parts.length}`)
 
@@ -613,7 +1263,7 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-goog-api-key': WISDOM_API_KEY
+                        'x-goog-api-key': wisdomApiKey
                     },
                     body: JSON.stringify({
                         contents: [{
@@ -749,10 +1399,6 @@ async function generateNagaText(
 
 async function generateGoogleImage(parts: any[], model: string, aspectRatio?: string): Promise<string> {
     try {
-        if (!process.env.GEMINI_IMAGE_API_KEY) {
-            throw new Error('Missing GEMINI_IMAGE_API_KEY for Google image generation')
-        }
-
         const validRatios = ['1:1', '3:2', '2:3', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9']
         let targetRatio = '1:1'
 
@@ -775,7 +1421,7 @@ async function generateGoogleImage(parts: any[], model: string, aspectRatio?: st
 
         // Keep backward compatibility for legacy admin values.
         const normalizedModel = model === 'gemini-3-pro' ? 'gemini-3-pro-image-preview' : model
-        const imageModel = imageGenAI.getGenerativeModel({ model: normalizedModel })
+        const imageModel = await getGoogleImageGenerativeModel(normalizedModel)
 
         const response = await imageModel.generateContent({
             contents: [{ role: 'user', parts }],
@@ -813,22 +1459,94 @@ export async function generateTextUnified(
     systemPromptOverride?: string, // NEW: Allow specialized tasks to set their own persona
     options?: TextGenerationOptions
 ): Promise<string> {
+    const startedAt = Date.now()
+    const callId = nextTextCallId()
     const systemPrompt = typeof systemPromptOverride === 'string' ? systemPromptOverride : buildBrandSystemPrompt(brand)
     const modelName = String(model || '').trim()
     const modelNameLower = modelName.toLowerCase()
+    log.info('TEXT', 'Llamada de texto iniciada', {
+        call_id: callId,
+        modelo_solicitado: modelName || 'NO_CONFIG',
+        imagenes_contexto: images?.length || 0,
+    })
 
     if (modelNameLower.startsWith('wisdom/')) {
         const wisdomModel = modelName.replace(/^wisdom\//i, '')
-        return await generateWisdomText(prompt, wisdomModel, systemPrompt, images, options)
+        const result = await generateWisdomText(prompt, wisdomModel, systemPrompt, images, options)
+        log.success('TEXT', 'Llamada de texto completada', {
+            call_id: callId,
+            proveedor: 'Wisdom',
+            modelo_efectivo: wisdomModel,
+            fallback: false,
+            duracion_ms: Date.now() - startedAt,
+        })
+        return result
     }
 
     if (modelNameLower.startsWith('naga/')) {
         const nagaModel = modelName.replace(/^naga\//i, '')
-        return await generateNagaText(prompt, nagaModel, systemPrompt, images, options)
+        const result = await generateNagaText(prompt, nagaModel, systemPrompt, images, options)
+        log.success('TEXT', 'Llamada de texto completada', {
+            call_id: callId,
+            proveedor: 'Naga',
+            modelo_efectivo: nagaModel,
+            fallback: false,
+            duracion_ms: Date.now() - startedAt,
+        })
+        return result
+    }
+
+    if (modelNameLower.startsWith('replicate/')) {
+        const replicateModel = modelName.replace(/^replicate\//i, '')
+        const fullPrompt = `${systemPrompt}\n\nSOLICITUD DEL USUARIO:\n${prompt}`
+        const result = await generateReplicateText(fullPrompt, replicateModel, undefined, images, options)
+        log.success('TEXT', 'Llamada de texto completada', {
+            call_id: callId,
+            proveedor: 'Replicate',
+            modelo_efectivo: replicateModel,
+            fallback: false,
+            duracion_ms: Date.now() - startedAt,
+        })
+        return result
+    }
+
+    if (modelNameLower.startsWith('google/')) {
+        const googleModel = modelName.replace(/^google\//i, '')
+        const selectedModel = await getGoogleTextGenerativeModel(googleModel)
+        const parts: any[] = [{ text: `${systemPrompt}\n\nSOLICITUD DEL USUARIO:\n${prompt}` }]
+
+        if (images && images.length > 0) {
+            for (const img of images) {
+                const part = await urlToPart(img)
+                if (part) parts.push(part)
+            }
+        }
+
+        const result = await selectedModel.generateContent({
+            contents: [
+                {
+                    role: 'user',
+                    parts
+                }
+            ],
+            generationConfig: {
+                responseMimeType: "application/json",
+                ...(typeof options?.temperature === 'number' ? { temperature: options.temperature } : {}),
+                ...(typeof options?.topP === 'number' ? { topP: options.topP } : {}),
+            }
+        })
+        log.success('TEXT', 'Llamada de texto completada', {
+            call_id: callId,
+            proveedor: 'Google Oficial',
+            modelo_efectivo: googleModel,
+            fallback: false,
+            duracion_ms: Date.now() - startedAt,
+        })
+        return result.response.text()
     }
 
     // Default to Google
-    const selectedModel = genAI.getGenerativeModel({ model: modelName })
+    const selectedModel = await getGoogleTextGenerativeModel(modelName)
     const parts: any[] = [{ text: `${systemPrompt}\n\nSOLICITUD DEL USUARIO:\n${prompt}` }]
 
     if (images && images.length > 0) {
@@ -856,6 +1574,14 @@ export async function generateTextUnified(
             ...(typeof options?.temperature === 'number' ? { temperature: options.temperature } : {}),
             ...(typeof options?.topP === 'number' ? { topP: options.topP } : {}),
         }
+    })
+    log.success('TEXT', 'Llamada de texto completada', {
+        call_id: callId,
+        proveedor: 'Google Oficial',
+        modelo_efectivo: modelName || 'gemini-flash-latest',
+        fallback: false,
+        ruta: 'default_google',
+        duracion_ms: Date.now() - startedAt,
     })
     return result.response.text()
 }
@@ -953,6 +1679,28 @@ export async function generateContentImageUnified(
         return result
     }
 
+    if (modelNameLower.startsWith('replicate/')) {
+        log.info('IMAGE', `Provider route: replicate (${modelName})`)
+        const replicateModel = modelName.replace(/^replicate\//i, '')
+        const enhancedPrompt = options.promptAlreadyBuilt
+            ? prompt
+            : buildImagePrompt(brand, prompt, options)
+        const result = await generateReplicateImage(enhancedPrompt, replicateModel, options)
+        log.success('IMAGE', `Generation done in ${Date.now() - generationStart}ms`)
+        return result
+    }
+
+    if (modelNameLower.startsWith('atlas/')) {
+        log.info('IMAGE', `Provider route: atlas (${modelName})`)
+        const atlasModel = modelName.replace(/^atlas\//i, '')
+        const enhancedPrompt = options.promptAlreadyBuilt
+            ? prompt
+            : buildImagePrompt(brand, prompt, options)
+        const result = await generateAtlasImage(enhancedPrompt, atlasModel, options)
+        log.success('IMAGE', `Generation done in ${Date.now() - generationStart}ms`)
+        return result
+    }
+
     if (modelNameLower.startsWith('google/')) {
         log.info('IMAGE', `Provider route: google (${modelName})`)
         const googleModelRaw = modelName.replace('google/', '')
@@ -1014,6 +1762,14 @@ export async function generateImageFromPromptRaw(
         return await generateNagaImage(prompt, modelName.replace(/^naga\//i, ''), aspectRatio)
     }
 
+    if (modelNameLower.startsWith('replicate/')) {
+        return await generateReplicateImage(prompt, modelName.replace(/^replicate\//i, ''), { aspectRatio })
+    }
+
+    if (modelNameLower.startsWith('atlas/')) {
+        return await generateAtlasImage(prompt, modelName.replace(/^atlas\//i, ''), { aspectRatio })
+    }
+
     if (modelNameLower.startsWith('google/')) {
         return await generateGoogleImage([{ text: prompt }], modelName.replace(/^google\//i, ''), aspectRatio)
     }
@@ -1050,6 +1806,8 @@ export interface VideoGenerationResult {
 export async function generateVideoUnified(
     options: VideoGenerationOptions
 ): Promise<VideoGenerationResult> {
+    const wisdomApiKey = await resolveWisdomApiKey()
+    if (!wisdomApiKey) throw new Error('Wisdom API key no configurada en /admin.')
     const model = 'veo-3.1'
 
     console.log('\n--- 🎬 GENERATING VIDEO WITH VEO 3.1 ---')
@@ -1113,7 +1871,7 @@ export async function generateVideoUnified(
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-goog-api-key': WISDOM_API_KEY
+                'x-goog-api-key': wisdomApiKey
             },
             body: JSON.stringify(requestBody)
         })
@@ -1146,7 +1904,7 @@ export async function generateVideoUnified(
             const statusResponse = await fetch(`${WISDOM_BASE_URL}/v1beta/${operationName}`, {
                 method: 'GET',
                 headers: {
-                    'x-goog-api-key': WISDOM_API_KEY
+                    'x-goog-api-key': wisdomApiKey
                 }
             })
 
@@ -1199,10 +1957,12 @@ export async function checkVideoOperationStatus(operationName: string): Promise<
     progress?: number
 }> {
     try {
+        const wisdomApiKey = await resolveWisdomApiKey()
+        if (!wisdomApiKey) return { done: false, error: 'Wisdom API key no configurada en /admin.' }
         const response = await fetch(`${WISDOM_BASE_URL}/v1beta/${operationName}`, {
             method: 'GET',
             headers: {
-                'x-goog-api-key': WISDOM_API_KEY
+                'x-goog-api-key': wisdomApiKey
             }
         })
 

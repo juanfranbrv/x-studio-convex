@@ -7,21 +7,18 @@ import { SocialFormatSelector } from './creation-flow/SocialFormatSelector'
 import { BrandingConfigurator } from './creation-flow/BrandingConfigurator'
 import { ImageReferenceSelector } from './creation-flow/ImageReferenceSelector'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Sparkles, Layers, ImagePlus, Wand2, Loader2, Star, Fingerprint, Bookmark as BookmarkIcon, SquarePlus, RotateCcw, Link2 } from 'lucide-react'
+import { Palette, Layout, Sparkles, Layers, ImagePlus, Wand2, Loader2, Fingerprint, RotateCcw, Link2, History, Plus, Trash2 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { PresetsCarousel } from './creation-flow/PresetsCarousel'
-import { SavePresetDialog } from './creation-flow/SavePresetDialog'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useUI } from '@/contexts/UIContext'
 import {
-    GenerationState,
     IntentCategory,
     INTENT_CATALOG,
     MERGED_LAYOUTS_BY_INTENT,
@@ -84,12 +81,22 @@ interface ControlsPanelProps {
     canGenerate: boolean
     onUnifiedAction: () => void
     onAnalyze: () => Promise<any>
-    userId?: string
     isAdmin?: boolean
     adminEmail?: string
     compositionMode?: 'basic' | 'advanced'
     onCompositionModeChange?: (mode: 'basic' | 'advanced') => void
     layoutOverrides?: CompositionSummary[]
+    sessions?: Array<{
+        id: string
+        title: string
+        updatedAt: string
+        active?: boolean
+    }>
+    selectedSessionId?: string
+    onSelectSession?: (id: string) => void
+    onCreateSession?: () => void
+    onDeleteSession?: () => void
+    onClearSessions?: () => void
 }
 
 export function ControlsPanel({
@@ -104,20 +111,22 @@ export function ControlsPanel({
     canGenerate,
     onUnifiedAction,
     onAnalyze,
-    userId,
     isAdmin = false,
     adminEmail,
     compositionMode,
     onCompositionModeChange,
     layoutOverrides,
+    sessions = [],
+    selectedSessionId = '',
+    onSelectSession,
+    onCreateSession,
+    onDeleteSession,
+    onClearSessions,
 }: ControlsPanelProps) {
     const { toast } = useToast()
     const { panelPosition, assistanceEnabled } = useUI()
-    const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
-    const [isSavingPreset, setIsSavingPreset] = useState(false)
     const [showLabCatalog, setShowLabCatalog] = useState(compositionMode === 'advanced')
     const [layoutIntentOverride, setLayoutIntentOverride] = useState<'auto' | IntentCategory>('auto')
-    const createPreset = useMutation(api.presets.create)
     const upsertLayoutVote = useMutation(api.layoutRatings.upsertLayoutVote)
     const migrateLegacyRatings = useMutation(api.layoutRatings.migrateLegacyRatings)
     const resetLayoutRatings = useMutation(api.layoutRatings.resetLayoutRatings)
@@ -133,17 +142,6 @@ export function ControlsPanel({
     const step3Ref = useRef<HTMLDivElement>(null)
     const step4Ref = useRef<HTMLDivElement>(null)
     const step6Ref = useRef<HTMLDivElement>(null)
-
-    const presetsData = useQuery(api.presets.list, userId ? {
-        userId,
-        brandId: activeBrandKit?.id as any
-    } : 'skip')
-    const isImagePreset = useCallback((preset: { state?: { presetType?: string } } | null | undefined) => {
-        const type = preset?.state?.presetType
-        // Backward compatibility: presets without explicit type are treated as image
-        return typeof type !== 'string' || type === 'image'
-    }, [])
-    const hasPresets = (presetsData?.user?.some(isImagePreset) ?? false)
 
     const {
         state,
@@ -171,7 +169,6 @@ export function ControlsPanel({
         clearBrandKitImages,
         setReferenceImageRole,
         reset,
-        loadPreset,
         addTextAsset,
         removeTextAsset,
         updateTextAsset,
@@ -223,13 +220,6 @@ export function ControlsPanel({
         }
         return acc
     }, [])
-
-    const handleSelectPreset = (presetState: Partial<GenerationState>) => {
-        const presetType = (presetState as { presetType?: unknown })?.presetType
-        if (presetType === 'carousel') return
-        loadPreset(presetState)
-        onPromptChange(typeof presetState.rawMessage === 'string' ? presetState.rawMessage : '')
-    }
 
     const layoutRatingStore: Record<string, LayoutRatingStoreEntry> = (layoutRatingsRows || []).reduce(
         (acc: Record<string, LayoutRatingStoreEntry>, row: { layoutId: string; totalPoints: number; uses: number; votes: number }) => {
@@ -319,6 +309,7 @@ export function ControlsPanel({
     const selectedLayoutRatingStats = state.selectedLayout
         ? getLayoutRatingStats(state.selectedLayout, layoutRatingStore)
         : null
+    const effectiveSessionId = selectedSessionId || sessions.find((session) => session.active)?.id || ''
     const selectedIntentMeta = INTENT_CATALOG.find((intent) => intent.id === state.selectedIntent)
     const effectiveLayoutIntent: IntentCategory = (
         layoutIntentOverride === 'auto'
@@ -338,8 +329,6 @@ export function ControlsPanel({
             return layout
         })
     }, [effectiveLayoutIntent, availableLayouts, layoutOverrides])
-
-    const canSavePreset = Boolean(state.selectedIntent && state.selectedPlatform && state.selectedFormat)
 
     useEffect(() => {
         if (!compositionMode) return
@@ -392,103 +381,58 @@ export function ControlsPanel({
         }
     }
 
-    const handleSavePreset = async (name: string) => {
-        if (!userId || !state.selectedIntent || !state.selectedPlatform || !state.selectedFormat) {
-            toast({ title: "Error", description: "Faltan datos para guardar el preset.", variant: "destructive" })
-            return
-        }
-        setIsSavingPreset(true)
-        try {
-            const intentLabel = state.selectedIntent || undefined
-            const rawMessage = promptValue.trim() || state.rawMessage || undefined
-            const persistedReferenceRoles = Object.fromEntries(
-                Object.entries(state.referenceImageRoles || {}).filter(([key]) => !key.startsWith('data:'))
-            )
-
-            await createPreset({
-                userId,
-                brandId: activeBrandKit?.id as any,
-                name,
-                description: intentLabel,
-                state: {
-                    selectedGroup: state.selectedGroup || undefined,
-                    selectedIntent: state.selectedIntent,
-                    selectedSubMode: state.selectedSubMode || undefined,
-                    selectedLayout: state.selectedLayout || undefined,
-                    selectedPlatform: state.selectedPlatform,
-                    selectedFormat: state.selectedFormat,
-                    selectedLogoId: state.selectedLogoId || undefined,
-                    selectedStyles: state.selectedStyles,
-                    customStyle: state.customStyle || undefined,
-                    selectedBrandColors: state.selectedBrandColors,
-                    headline: state.headline || undefined,
-                    cta: state.cta || undefined,
-                    ctaUrl: state.ctaUrl || undefined,
-                    ctaUrlEnabled: state.ctaUrlEnabled,
-                    caption: state.caption || undefined,
-                    customTexts: state.customTexts,
-                    selectedTextAssets: state.selectedTextAssets,
-                    rawMessage,
-                    imageSourceMode: state.imageSourceMode,
-                    aiImageDescription: state.aiImageDescription || undefined,
-                    selectedBrandKitImageIds: state.selectedBrandKitImageIds.length > 0 ? state.selectedBrandKitImageIds : undefined,
-                    referenceImageRoles: Object.keys(persistedReferenceRoles).length > 0 ? persistedReferenceRoles : undefined,
-                    additionalInstructions: state.additionalInstructions || undefined,
-                    typography: state.typography,
-                    presetType: 'image',
-                },
-                icon: 'Star'
-            })
-            toast({ title: "Guardado", description: "Tu configuración se ha guardado." })
-            setIsSaveDialogOpen(false)
-        } catch (error) {
-            console.error('Error saving preset:', error)
-            toast({ title: "Error", description: "No se pudo guardar el preset.", variant: "destructive" })
-        } finally {
-            setIsSavingPreset(false)
-        }
-    }
-
     return (
         <div className="w-full md:w-[27%] h-full controls-panel flex flex-col shrink-0 relative group/panel">
             <div className="flex-1 overflow-y-auto thin-scrollbar [scrollbar-gutter:stable] p-4 space-y-6">
 
-                {/* SECTION: Presets */}
-                <div className="glass-card p-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <SectionHeader icon={Star} title="Favoritos" className="mb-0" />
-                        <div className="flex items-center gap-1">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsSaveDialogOpen(true)}
-                                disabled={!canSavePreset}
-                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
-                            >
-                                <BookmarkIcon className="w-3 h-3" />
-                                Guardar
-                            </Button>
-                        </div>
+                {/* SECTION: Sessions */}
+                <div className="glass-card p-5 space-y-4">
+                    <SectionHeader icon={History} title="Sesiones" className="mb-2" />
+                    <div className="space-y-3 pt-1.5">
+                        <select
+                            className="h-9 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-xs"
+                            value={effectiveSessionId}
+                            onChange={(event) => {
+                                const value = event.target.value
+                                if (value) onSelectSession?.(value)
+                            }}
+                        >
+                            {effectiveSessionId ? null : <option value="">Sin sesiones</option>}
+                            {sessions.map((session) => (
+                                <option key={session.id} value={session.id}>
+                                    {session.title} {session.active ? '(Activa)' : ''} - {new Date(session.updatedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                </option>
+                            ))}
+                        </select>
                     </div>
-                    {hasPresets ? (
-                        <>
-                            <PresetsCarousel
-                                onSelectPreset={handleSelectPreset}
-                                onReset={reset}
-                                userId={userId}
-                                filterPreset={isImagePreset}
-                            />
-                            <p className="text-xs text-muted-foreground mt-2">
-                                Guarda y reutiliza tus configuraciones favoritas.
-                            </p>
-                        </>
-                    ) : (
-                        <div className="rounded-xl border border-dashed border-border/70 bg-muted/30 px-3 py-4 text-center">
-                            <p className="text-[11px] text-muted-foreground">
-                                Aún no hay presets guardados para esta marca. Guarda el primero con "Guardar".
-                            </p>
-                        </div>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-[10px] gap-1"
+                            onClick={onCreateSession}
+                        >
+                            <Plus className="w-3 h-3" />
+                            Nueva
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={onDeleteSession}
+                            title="Borrar sesion"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-[10px]"
+                            onClick={onClearSessions}
+                        >
+                            Limpiar
+                        </Button>
+                    </div>
                 </div>
 
                 {/* STEP 1: Intent Input */}
@@ -499,17 +443,6 @@ export function ControlsPanel({
                     <SectionHeader
                         icon={Wand2}
                         title="¿Qué quieres crear?"
-                        extra={
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={reset}
-                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
-                            >
-                                <SquarePlus className="w-3 h-3" />
-                                Nuevo
-                            </Button>
-                        }
                     />
                     <div className="relative">
                         <Textarea
@@ -770,7 +703,6 @@ export function ControlsPanel({
                 )}
             </div>
 
-            <SavePresetDialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen} onSave={handleSavePreset} isSaving={isSavingPreset} />
         </div>
     )
 }
