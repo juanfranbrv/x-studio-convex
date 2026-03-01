@@ -1408,8 +1408,8 @@ export async function generateCarouselAction(
         log.info('CAROUSEL', `Generate start | brand=${brandDNA.brand_name} slides=${slideCount} flow=${auditContext.flowId}`)
 
         // Step 1: Decompose prompt (or reuse script)
-        log.info('CAROUSEL', `Generate script source | mode=${canUseScript ? 'provided_script' : 'ai_decomposition'}`)
         const canUseScript = Array.isArray(slideScript) && slideScript.length === slideCount
+        log.info('CAROUSEL', `Generate script source | mode=${canUseScript ? 'provided_script' : 'ai_decomposition'}`)
         if (!canUseScript && !intelligenceModel) {
             throw new Error('Missing intelligence model configuration')
         }
