@@ -182,7 +182,7 @@ type CarouselWorkspaceSnapshot = {
     }
 }
 
-const CAROUSEL_AUTOSAVE_DEBOUNCE_MS = 800
+const CAROUSEL_AUTOSAVE_DEBOUNCE_MS = 1000
 
 const SectionHeader = ({
     icon: Icon,
@@ -766,10 +766,17 @@ export function CarouselControlsPanel({
         handleLoadSession
     ])
 
-    const persistWorkspaceSnapshot = useCallback(async () => {
+    const persistWorkspaceSnapshot = useCallback(async (options?: {
+        silent?: boolean
+        markSavedAt?: boolean
+    }) => {
         if (!userId || !scopedBrandId) return
-        setIsSavingSession(true)
-        setSaveError(null)
+        const isSilent = options?.silent === true
+        const shouldMarkSavedAt = options?.markSavedAt !== false
+        if (!isSilent) {
+            setIsSavingSession(true)
+            setSaveError(null)
+        }
         try {
             const persistedSlides = await materializePreviewSlidesForSnapshot(previewSlides || [])
             const persistedHistory = await materializeSessionHistoryForSnapshot(previewSessionHistory || [])
@@ -787,12 +794,18 @@ export function CarouselControlsPanel({
                 setCurrentSessionId(id)
                 setSelectedSessionToLoad(id)
             }
-            setLastSavedAt(new Date().toISOString())
+            if (shouldMarkSavedAt) {
+                setLastSavedAt(new Date().toISOString())
+            }
         } catch (error) {
-            setSaveError(error instanceof Error ? error.message : 'No se pudo guardar')
+            if (!isSilent) {
+                setSaveError(error instanceof Error ? error.message : 'No se pudo guardar')
+            }
             throw error
         } finally {
-            setIsSavingSession(false)
+            if (!isSilent) {
+                setIsSavingSession(false)
+            }
         }
     }, [
         userId,
@@ -812,7 +825,10 @@ export function CarouselControlsPanel({
         if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
         ++autosaveRevisionRef.current
         try {
-            await persistWorkspaceSnapshot()
+            await persistWorkspaceSnapshot({
+                silent: false,
+                markSavedAt: true,
+            })
             log.success('SESSION', 'Guardado manual de sesion de carrusel completado')
         } catch {
             log.warn('SESSION', 'Guardado manual de sesion de carrusel fallido')
@@ -829,7 +845,10 @@ export function CarouselControlsPanel({
             void (async () => {
                 if (revision !== autosaveRevisionRef.current) return
                 try {
-                    await persistWorkspaceSnapshot()
+                    await persistWorkspaceSnapshot({
+                        silent: true,
+                        markSavedAt: false,
+                    })
                 } catch {
                     log.warn('SESSION', 'Autosave de carrusel fallido')
                 }
@@ -864,7 +883,10 @@ export function CarouselControlsPanel({
         void (async () => {
             if (revision !== autosaveRevisionRef.current) return
             try {
-                await persistWorkspaceSnapshot()
+                await persistWorkspaceSnapshot({
+                    silent: true,
+                    markSavedAt: false,
+                })
             } catch {
                 log.warn('SESSION', 'Autosave inmediato de historial de carrusel fallido')
             }
