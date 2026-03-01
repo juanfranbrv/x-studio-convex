@@ -1260,7 +1260,7 @@ export function CarouselCanvasPanel({
                 {sessionHistory.length > 0 && (
                     <div className="w-full max-w-[800px] shrink-0 pb-4">
                         <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Historial de sesión</p>
+                            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Variaciones de la sesión</p>
                             <div className="flex gap-2 overflow-x-auto no-scrollbar">
                                 {sessionHistory.map((item) => {
                                     const thumb = item.slides.find((s) => s.imageUrl)?.imageUrl
@@ -1272,7 +1272,7 @@ export function CarouselCanvasPanel({
                                             title={`Carrusel ${new Date(item.createdAt).toLocaleTimeString()}`}
                                         >
                                             {thumb ? (
-                                                <img src={thumb} alt="Historial carrusel" className="w-full h-full object-cover" />
+                                                <img src={thumb} alt="Variación carrusel" className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">N/A</div>
                                             )}
@@ -1325,7 +1325,7 @@ export function CarouselCanvasPanel({
                     <div className="space-y-6 overflow-y-auto pr-1">
                         <div className="space-y-3">
                             <div className="text-sm uppercase tracking-wider text-muted-foreground">
-                                ImÃ¡genes enviadas en la llamada
+                                Imágenes enviadas en la llamada
                             </div>
                             {debugSlide?.debugReferences && debugSlide.debugReferences.length > 0 ? (
                                 <div className="flex flex-wrap gap-3">
@@ -1346,7 +1346,7 @@ export function CarouselCanvasPanel({
                                 </div>
                             ) : (
                                 <div className="text-sm text-muted-foreground">
-                                    No se enviaron imÃ¡genes en esta llamada.
+                                    No se enviaron imágenes en esta llamada.
                                 </div>
                             )}
                         </div>

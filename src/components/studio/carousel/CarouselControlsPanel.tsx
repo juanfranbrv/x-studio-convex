@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Trash2 } from 'lucide-react'
+import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Trash2, Save, CheckCircle2, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import type { CarouselSuggestion, CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
@@ -126,11 +126,23 @@ interface CarouselControlsPanelProps {
     previewScriptSlides?: SlideContent[] | null
     previewCaption?: string
     previewCurrentIndex?: number
+    previewSessionHistory?: Array<{
+        id: string
+        createdAt: string
+        slides: CarouselSlide[]
+        caption?: string
+    }>
     onRestorePreviewState?: (state: {
         slides: CarouselSlide[]
         scriptSlides?: SlideContent[]
         caption?: string
         currentIndex?: number
+        sessionHistory?: Array<{
+            id: string
+            createdAt: string
+            slides: CarouselSlide[]
+            caption?: string
+        }>
     }) => void
     getAuditFlowId?: () => string | undefined
 }
@@ -161,8 +173,16 @@ type CarouselWorkspaceSnapshot = {
         scriptSlides?: SlideContent[]
         caption?: string
         currentIndex?: number
+        sessionHistory?: Array<{
+            id: string
+            createdAt: string
+            slides: CarouselSlide[]
+            caption?: string
+        }>
     }
 }
+
+const CAROUSEL_AUTOSAVE_DEBOUNCE_MS = 800
 
 const SectionHeader = ({
     icon: Icon,
@@ -189,9 +209,9 @@ const SectionHeader = ({
 const STYLE_OPTIONS = [
     { id: 'minimal', label: 'Minimalista' },
     { id: 'gradient', label: 'Gradientes' },
-    { id: 'photo', label: 'FotogrÃ¡fico' },
-    { id: 'illustration', label: 'IlustraciÃ³n' },
-    { id: 'bold', label: 'Bold & TipogrÃ¡fico' },
+    { id: 'photo', label: 'Fotográfico' },
+    { id: 'illustration', label: 'Ilustración' },
+    { id: 'bold', label: 'Bold & Tipográfico' },
     { id: 'elegant', label: 'Elegante' },
 ]
 
@@ -254,6 +274,7 @@ export function CarouselControlsPanel({
     previewScriptSlides = null,
     previewCaption,
     previewCurrentIndex = 0,
+    previewSessionHistory = [],
     onRestorePreviewState,
     getAuditFlowId
 }: CarouselControlsPanelProps) {
@@ -283,9 +304,14 @@ export function CarouselControlsPanel({
     const [selectedSessionToLoad, setSelectedSessionToLoad] = useState<string>('')
     const [hasHydratedSession, setHasHydratedSession] = useState(false)
     const [isHydratingSession, setIsHydratingSession] = useState(false)
+    const [isSavingSession, setIsSavingSession] = useState(false)
+    const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+    const [saveError, setSaveError] = useState<string | null>(null)
     const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const autosaveRevisionRef = useRef(0)
     const hydrationScopeRef = useRef<string>('')
     const hasHydratedScopeRef = useRef(false)
+    const lastHistorySignatureRef = useRef('')
     const persistedSlideImageCacheRef = useRef<Map<string, { storageId: string; imageUrl: string }>>(new Map())
     const persistSlideImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string } | null>>>(new Map())
     const [prompt, setPrompt] = useState('')
@@ -365,8 +391,17 @@ export function CarouselControlsPanel({
         return `${cleaned.slice(0, 48)}...`
     }, [])
 
-    const buildWorkspaceSnapshot = useCallback((previewSlidesOverride?: CarouselSlide[]): CarouselWorkspaceSnapshot => {
+    const buildWorkspaceSnapshot = useCallback((
+        previewSlidesOverride?: CarouselSlide[],
+        sessionHistoryOverride?: Array<{
+            id: string
+            createdAt: string
+            slides: CarouselSlide[]
+            caption?: string
+        }>
+    ): CarouselWorkspaceSnapshot => {
         const sourceSlides = Array.isArray(previewSlidesOverride) ? previewSlidesOverride : (previewSlides || [])
+        const sourceHistory = Array.isArray(sessionHistoryOverride) ? sessionHistoryOverride : (previewSessionHistory || [])
         return {
             version: 1,
             module: 'carousel',
@@ -400,7 +435,23 @@ export function CarouselControlsPanel({
                 })),
                 scriptSlides: Array.isArray(previewScriptSlides) ? previewScriptSlides : undefined,
                 caption: previewCaption || undefined,
-                currentIndex: previewCurrentIndex
+                currentIndex: previewCurrentIndex,
+                sessionHistory: sourceHistory.map((item) => ({
+                        id: item.id,
+                        createdAt: item.createdAt,
+                        caption: item.caption,
+                        slides: Array.isArray(item.slides)
+                            ? item.slides.map((slide) => ({
+                                index: slide.index,
+                                title: slide.title,
+                                description: slide.description,
+                                status: slide.status,
+                                imageUrl: slide.imageUrl,
+                                image_storage_id: slide.image_storage_id,
+                                error: slide.error
+                            }))
+                            : []
+                    }))
             }
         }
     }, [
@@ -425,7 +476,8 @@ export function CarouselControlsPanel({
         previewSlides,
         previewScriptSlides,
         previewCaption,
-        previewCurrentIndex
+        previewCurrentIndex,
+        previewSessionHistory
     ])
 
     const buildSlidePersistKey = useCallback((slide: CarouselSlide, imageUrl: string) => {
@@ -499,6 +551,43 @@ export function CarouselControlsPanel({
         return materialized
     }, [persistPreviewSlideImage])
 
+    const materializeSessionHistoryForSnapshot = useCallback(async (
+        history: Array<{
+            id: string
+            createdAt: string
+            slides: CarouselSlide[]
+            caption?: string
+        }>
+    ) => {
+        if (!Array.isArray(history) || history.length === 0) return history
+
+        const materialized = await Promise.all(history.map(async (entry) => {
+            const slides = Array.isArray(entry.slides) ? entry.slides : []
+            if (slides.length === 0) return entry
+
+            const persistedSlides = await Promise.all(slides.map(async (slide) => {
+                try {
+                    const persisted = await persistPreviewSlideImage(slide)
+                    if (!persisted) return slide
+                    return {
+                        ...slide,
+                        image_storage_id: persisted.storageId,
+                        imageUrl: persisted.imageUrl,
+                    }
+                } catch {
+                    return slide
+                }
+            }))
+
+            return {
+                ...entry,
+                slides: persistedSlides,
+            }
+        }))
+
+        return materialized
+    }, [persistPreviewSlideImage])
+
     const restoreWorkspaceFromSnapshot = useCallback((snapshot: CarouselWorkspaceSnapshot) => {
         setIsHydratingSession(true)
         try {
@@ -526,7 +615,8 @@ export function CarouselControlsPanel({
                     slides: Array.isArray(savedPreview.slides) ? savedPreview.slides : [],
                     scriptSlides: Array.isArray(savedPreview.scriptSlides) ? savedPreview.scriptSlides : undefined,
                     caption: typeof savedPreview.caption === 'string' ? savedPreview.caption : undefined,
-                    currentIndex: Number.isFinite(savedPreview.currentIndex) ? savedPreview.currentIndex : 0
+                    currentIndex: Number.isFinite(savedPreview.currentIndex) ? savedPreview.currentIndex : 0,
+                    sessionHistory: Array.isArray(savedPreview.sessionHistory) ? savedPreview.sessionHistory : undefined
                 })
             }
             setCurrentStep(7)
@@ -581,7 +671,7 @@ export function CarouselControlsPanel({
 
     const handleDeleteCurrentSession = useCallback(async () => {
         if (!userId || !currentSessionId) return
-        if (!window.confirm('Â¿Quieres borrar esta sesion de carrusel?')) return
+        if (!window.confirm('¿Quieres borrar esta sesión de carrusel?')) return
 
         const result = await deleteWorkSession({
             user_id: userId,
@@ -597,7 +687,7 @@ export function CarouselControlsPanel({
 
     const handleClearAllSessions = useCallback(async () => {
         if (!userId || !scopedBrandId) return
-        if (!window.confirm('Â¿Quieres borrar todas las sesiones de carrusel de este kit?')) return
+        if (!window.confirm('¿Quieres borrar todas las sesiones de carrusel de este kit?')) return
         await clearWorkSessions({
             user_id: userId,
             module: 'carousel',
@@ -614,6 +704,8 @@ export function CarouselControlsPanel({
             setHasHydratedSession(false)
             setCurrentSessionId(null)
             setSelectedSessionToLoad('')
+            setLastSavedAt(null)
+            setSaveError(null)
         }
 
         if (!userId || !scopedBrandId) return
@@ -636,11 +728,12 @@ export function CarouselControlsPanel({
 
         if (latestExisting?._id) {
             hasHydratedScopeRef.current = true
-            setHasHydratedSession(true)
             void handleLoadSession(String(latestExisting._id)).catch(() => {
                 hasHydratedScopeRef.current = false
                 setHasHydratedSession(false)
                 log.warn('SESSION', 'Fallo cargando la sesion mas reciente de carrusel')
+            }).finally(() => {
+                setHasHydratedSession(true)
             })
             return
         }
@@ -673,34 +766,75 @@ export function CarouselControlsPanel({
         handleLoadSession
     ])
 
+    const persistWorkspaceSnapshot = useCallback(async () => {
+        if (!userId || !scopedBrandId) return
+        setIsSavingSession(true)
+        setSaveError(null)
+        try {
+            const persistedSlides = await materializePreviewSlidesForSnapshot(previewSlides || [])
+            const persistedHistory = await materializeSessionHistoryForSnapshot(previewSessionHistory || [])
+            const snapshot = buildWorkspaceSnapshot(persistedSlides, persistedHistory)
+            const result = await upsertWorkSession({
+                user_id: userId,
+                module: 'carousel',
+                brand_id: scopedBrandId,
+                session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
+                title: buildSessionTitle(snapshot.prompt || 'Sesion de carrusel'),
+                snapshot,
+            })
+            const id = String(result.session_id)
+            if (!currentSessionId) {
+                setCurrentSessionId(id)
+                setSelectedSessionToLoad(id)
+            }
+            setLastSavedAt(new Date().toISOString())
+        } catch (error) {
+            setSaveError(error instanceof Error ? error.message : 'No se pudo guardar')
+            throw error
+        } finally {
+            setIsSavingSession(false)
+        }
+    }, [
+        userId,
+        scopedBrandId,
+        previewSlides,
+        previewSessionHistory,
+        materializePreviewSlidesForSnapshot,
+        materializeSessionHistoryForSnapshot,
+        buildWorkspaceSnapshot,
+        upsertWorkSession,
+        currentSessionId,
+        buildSessionTitle
+    ])
+
+    const handleSaveNow = useCallback(async () => {
+        if (!userId || !scopedBrandId || isHydratingSession) return
+        if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+        ++autosaveRevisionRef.current
+        try {
+            await persistWorkspaceSnapshot()
+            log.success('SESSION', 'Guardado manual de sesion de carrusel completado')
+        } catch {
+            log.warn('SESSION', 'Guardado manual de sesion de carrusel fallido')
+        }
+    }, [userId, scopedBrandId, isHydratingSession, persistWorkspaceSnapshot])
+
     useEffect(() => {
         if (!userId || !scopedBrandId) return
         if (!hasHydratedSession || isHydratingSession) return
 
         if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+        const revision = ++autosaveRevisionRef.current
         autosaveTimerRef.current = setTimeout(() => {
             void (async () => {
+                if (revision !== autosaveRevisionRef.current) return
                 try {
-                    const persistedSlides = await materializePreviewSlidesForSnapshot(previewSlides || [])
-                    const snapshot = buildWorkspaceSnapshot(persistedSlides)
-                    const result = await upsertWorkSession({
-                        user_id: userId,
-                        module: 'carousel',
-                        brand_id: scopedBrandId,
-                        session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
-                        title: buildSessionTitle(snapshot.prompt || 'Sesion de carrusel'),
-                        snapshot,
-                    })
-                    const id = String(result.session_id)
-                    if (!currentSessionId) {
-                        setCurrentSessionId(id)
-                        setSelectedSessionToLoad(id)
-                    }
+                    await persistWorkspaceSnapshot()
                 } catch {
                     log.warn('SESSION', 'Autosave de carrusel fallido')
                 }
             })()
-        }, 1500)
+        }, CAROUSEL_AUTOSAVE_DEBOUNCE_MS)
 
         return () => {
             if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
@@ -710,12 +844,38 @@ export function CarouselControlsPanel({
         scopedBrandId,
         hasHydratedSession,
         isHydratingSession,
-        currentSessionId,
-        buildWorkspaceSnapshot,
-        materializePreviewSlidesForSnapshot,
-        upsertWorkSession,
-        buildSessionTitle,
-        previewSlides
+        previewSlides,
+        previewSessionHistory,
+        persistWorkspaceSnapshot
+    ])
+
+    useEffect(() => {
+        if (!userId || !scopedBrandId) return
+        if (!hasHydratedSession || isHydratingSession) return
+
+        const signature = (previewSessionHistory || [])
+            .map((item) => `${item.id}:${item.createdAt}`)
+            .join('|')
+
+        if (!signature || signature === lastHistorySignatureRef.current) return
+        lastHistorySignatureRef.current = signature
+
+        const revision = ++autosaveRevisionRef.current
+        void (async () => {
+            if (revision !== autosaveRevisionRef.current) return
+            try {
+                await persistWorkspaceSnapshot()
+            } catch {
+                log.warn('SESSION', 'Autosave inmediato de historial de carrusel fallido')
+            }
+        })()
+    }, [
+        userId,
+        scopedBrandId,
+        hasHydratedSession,
+        isHydratingSession,
+        previewSessionHistory,
+        persistWorkspaceSnapshot
     ])
 
     const buildConfigSignature = (
@@ -931,6 +1091,8 @@ export function CarouselControlsPanel({
 
         // Only run if the Brand Kit ID has changed
         if (currentBrandId === lastInitBrandId) return
+        // Avoid overwriting state while a persisted session for this scope is being restored.
+        if (activeWorkSession?.snapshot && !hasHydratedSession) return
 
         console.log(`[CarouselControlsPanel] Initializing colors for Brand Kit: ${currentBrandId}`)
 
@@ -975,7 +1137,7 @@ export function CarouselControlsPanel({
         }
 
         setLastInitBrandId(currentBrandId)
-    }, [brandKit, lastInitBrandId])
+    }, [brandKit, lastInitBrandId, activeWorkSession, hasHydratedSession])
 
     useEffect(() => {
         if (!onReferenceImagesChange) return
@@ -1487,7 +1649,44 @@ export function CarouselControlsPanel({
             <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-6">
                                 {/* SECTION: Sessions */}
                 <div className="glass-card p-5 space-y-4">
-                    <SectionHeader icon={History} title="Sesiones" className="mb-2" />
+                    <SectionHeader
+                        icon={History}
+                        title="Historial"
+                        className="mb-2"
+                        extra={
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                                    {isSavingSession ? (
+                                        <>
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                            Guardando...
+                                        </>
+                                    ) : saveError ? (
+                                        <>
+                                            <AlertCircle className="h-3 w-3" />
+                                            Error
+                                        </>
+                                    ) : lastSavedAt ? (
+                                        <>
+                                            <CheckCircle2 className="h-3 w-3" />
+                                            {`Guardado ${new Date(lastSavedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
+                                        </>
+                                    ) : 'Sin guardar'}
+                                </span>
+                                <Button
+                                    type="button"
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7"
+                                    onClick={() => void handleSaveNow()}
+                                    disabled={!userId || !scopedBrandId || isHydratingSession || isSavingSession}
+                                    title="Guardar sesion ahora"
+                                >
+                                    {isSavingSession ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                                </Button>
+                            </div>
+                        }
+                    />
                     <div className="space-y-3 pt-1.5">
                         <select
                             className="h-9 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-xs"
@@ -1565,11 +1764,11 @@ export function CarouselControlsPanel({
                 <div ref={(el) => { stepRefs.current[2] = el }} className="glass-card p-4 space-y-3">
                     <SectionHeader
                         icon={Wand2}
-                        title="Â¿QuÃ© quieres crear?"
+                        title="¿Qué quieres crear?"
                     />
                     <div className="relative">
                         <Textarea
-                            placeholder="Ej: Quiero dar valor real. SÃ¡came los 5 errores tÃ­picos que cometemos los espaÃ±oles al hablar inglÃ©s y cÃ³mo corregirlos. Algo que la gente quiera guardar para repasar luego."
+                            placeholder="Ej: Quiero dar valor real. Sácame los 5 errores típicos que cometemos los españoles al hablar inglés y cómo corregirlos. Algo que la gente quiera guardar para repasar luego."
                             value={prompt}
                             onChange={(e) => {
                                 const nextPrompt = e.target.value
@@ -1734,11 +1933,11 @@ export function CarouselControlsPanel({
                             <div className="w-8 h-10 rounded bg-muted border border-border" />
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold">Vertical EstÃ¡ndar (Retrato)</span>
+                                    <span className="text-xs font-semibold">Vertical Estándar (Retrato)</span>
                                     <span className="text-[10px] font-medium text-muted-foreground">4:5</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1350 Â· el estÃ¡ndar mÃ¡s seguro para evitar recortes en dispositivos antiguos o Meta Ads.
+                                    1080x1350 · el estándar más seguro para evitar recortes en dispositivos antiguos o Meta Ads.
                                 </p>
                             </div>
                         </button>
@@ -1756,7 +1955,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">3:4</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1440 Â· +6.6% pantalla Â· domina el feed y encaja con la nueva cuadrÃ­cula vertical.
+                                    1080x1440 · +6.6% pantalla · domina el feed y encaja con la nueva cuadrícula vertical.
                                 </p>
                             </div>
                         </button>
@@ -1774,7 +1973,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">1:1</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1080 Â· formato original y clÃ¡sico para composiciones equilibradas.
+                                    1080x1080 · formato original y clásico para composiciones equilibradas.
                                 </p>
                             </div>
                         </button>
@@ -1954,9 +2153,9 @@ export function CarouselControlsPanel({
                             variant="link"
                             size="sm"
                             className="h-7 px-0 text-[11px] text-muted-foreground hover:text-destructive"
-                            title="Detener generaciÃ³n"
+                            title="Detener generación"
                         >
-                            Detener generaciÃ³n
+                            Detener generación
                         </Button>
                         <motion.span
                             initial={{ opacity: 0 }}

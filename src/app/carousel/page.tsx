@@ -49,7 +49,7 @@ export default function CarouselPage() {
     const aiConfig = useQuery(api.settings.getAIConfig)
 
     useEffect(() => {
-        document.title = 'X Carrusel | Motor de DiseÃ±o Inteligente'
+        document.title = 'X Carrusel | Motor de Diseño Inteligente'
     }, [])
 
     useEffect(() => {
@@ -179,16 +179,16 @@ export default function CarouselPage() {
 
     const simplifyErrorMessage = (message: string, suggested?: number) => {
         const lower = message.toLowerCase()
-        if (lower.includes('reto de 7') || lower.includes('slide por dÃ­a') || lower.includes('n+2') || lower.includes('requested_slide_count')) {
+        if (lower.includes('reto de 7') || lower.includes('slide por día') || lower.includes('n+2') || lower.includes('requested_slide_count')) {
             if (suggested) {
-                return `Este tipo de carrusel requiere al menos ${suggested} diapositivas (gancho + contenido + CTA). Ajusta el nÃºmero para continuar.`
+                return `Este tipo de carrusel requiere al menos ${suggested} diapositivas (gancho + contenido + CTA). Ajusta el número para continuar.`
             }
-            return 'Este tipo de carrusel requiere mÃ¡s diapositivas de las seleccionadas. Ajusta el nÃºmero para continuar.'
+            return 'Este tipo de carrusel requiere más diapositivas de las seleccionadas. Ajusta el número para continuar.'
         }
         if (lower.includes('modelo de inteligencia') || lower.includes('modelo de imagen')) {
-            return 'Falta configuraciÃ³n de IA. Revisa el panel de Admin.'
+            return 'Falta configuración de IA. Revisa el panel de Admin.'
         }
-        return 'No se pudo completar la acciÃ³n. Revisa la configuraciÃ³n e intÃ©ntalo de nuevo.'
+        return 'No se pudo completar la acción. Revisa la configuración e inténtalo de nuevo.'
     }
 
     const buildAiImageSuggestions = useCallback((
@@ -355,7 +355,7 @@ export default function CarouselPage() {
         if (!settings.prompt.trim() || !activeBrandKit || !aiConfig?.intelligenceModel) {
             if (!silent) {
                 openErrorModal(
-                    'Falta configuraciÃ³n de IA',
+                    'Falta configuración de IA',
                     'No hay un modelo de inteligencia configurado en el panel de Admin.'
                 )
             }
@@ -492,8 +492,8 @@ export default function CarouselPage() {
         setIsAnalyzing(false)
         setIsCancelingAnalyze(true)
         toast({
-            title: 'AnÃ¡lisis detenido',
-            description: 'Se cancelÃ³ el anÃ¡lisis del prompt.'
+            title: 'Análisis detenido',
+            description: 'Se canceló el análisis del prompt.'
         })
         setTimeout(() => setIsCancelingAnalyze(false), 800)
     }, [toast])
@@ -576,7 +576,7 @@ export default function CarouselPage() {
 
         if (!aiConfig?.intelligenceModel) {
             openErrorModal(
-                'Falta configuraciÃ³n de IA',
+                'Falta configuración de IA',
                 'No hay un modelo de inteligencia configurado en el panel de Admin.'
             )
             return
@@ -634,7 +634,7 @@ export default function CarouselPage() {
         if (isCaptionLocked) return
         if (!aiConfig?.intelligenceModel) {
             openErrorModal(
-                'Falta configuraciÃ³n de IA',
+                'Falta configuración de IA',
                 'No hay un modelo de inteligencia configurado en el panel de Admin.'
             )
             return
@@ -699,7 +699,7 @@ export default function CarouselPage() {
 
         if (!aiConfig?.imageModel) {
             openErrorModal(
-                'Falta configuraciÃ³n de IA',
+                'Falta configuración de IA',
                 'No hay un modelo de imagen configurado en el panel de Admin.'
             )
             return
@@ -822,8 +822,8 @@ export default function CarouselPage() {
 
             if (cancelGenerationRef.current) {
                 toast({
-                    title: 'GeneraciÃ³n detenida',
-                    description: 'Se cancelÃ³ la generaciÃ³n del carrusel.'
+                    title: 'Generación detenida',
+                    description: 'Se canceló la generación del carrusel.'
                 })
             } else {
                 setCurrentSlideIndex(0)
@@ -864,8 +864,8 @@ export default function CarouselPage() {
         setSlides(prev => prev.map(s => s.status === 'generating' ? { ...s, status: 'pending' as const } : s))
         setIsCancelingGenerate(true)
         toast({
-            title: 'GeneraciÃ³n detenida',
-            description: 'Se cancelÃ³ la generaciÃ³n del carrusel.'
+            title: 'Generación detenida',
+            description: 'Se canceló la generación del carrusel.'
         })
         setTimeout(() => setIsCancelingGenerate(false), 800)
     }, [toast])
@@ -883,7 +883,7 @@ export default function CarouselPage() {
 
         if (!aiConfig?.imageModel) {
             openErrorModal(
-                'Falta configuraciÃ³n de IA',
+                'Falta configuración de IA',
                 'No hay un modelo de imagen configurado en el panel de Admin.'
             )
             return
@@ -956,7 +956,7 @@ export default function CarouselPage() {
                 logoPosition: extractLogoPosition(resolvedCompositionPreset?.layoutPrompt || ''),
                 includeLogo: Boolean(settingsWithStyle.selectedLogoUrl),
                 isSequentialSlide: idx > 0,
-                ctaText: isLastSlide ? (slide.title || 'MÃ¡s info') : undefined,
+                ctaText: isLastSlide ? (slide.title || 'Más info') : undefined,
                 ctaUrl: isLastSlide ? finalUrl : undefined,
                 visualAnalysis: settingsWithStyle?.aiStyleDirectives,
                 fonts: activeBrandKit?.fonts as any
@@ -1088,7 +1088,7 @@ export default function CarouselPage() {
                 title: slide.title,
                 description: slide.description,
                 visualPrompt: correctionPrompt?.trim()
-                    ? `${slide.description}\n\nCorrecciÃ³n local solicitada: ${correctionPrompt.trim()}`
+                    ? `${slide.description}\n\nCorrección local solicitada: ${correctionPrompt.trim()}`
                     : slide.description
             }
 
@@ -1171,6 +1171,12 @@ export default function CarouselPage() {
         scriptSlides?: SlideContent[]
         caption?: string
         currentIndex?: number
+        sessionHistory?: Array<{
+            id: string
+            createdAt: string
+            slides: CarouselSlide[]
+            caption?: string
+        }>
     }) => {
         const restoredSlides = Array.isArray(state.slides) ? state.slides : []
         setSlides(restoredSlides)
@@ -1190,6 +1196,10 @@ export default function CarouselPage() {
 
         if (!isCaptionLocked) {
             setCaption(state.caption || '')
+        }
+
+        if (Array.isArray(state.sessionHistory)) {
+            setSessionHistory(state.sessionHistory)
         }
     }, [isCaptionLocked])
 
@@ -1216,10 +1226,33 @@ export default function CarouselPage() {
     }, [])
 
     const invalidatePreview = useCallback(() => {
-        setSlides([])
+        const scriptSource = Array.isArray(scriptSlides) && scriptSlides.length > 0
+            ? scriptSlides
+            : null
+
+        if (scriptSource) {
+            const pendingSlides: CarouselSlide[] = scriptSource.map((slide, idx) => ({
+                index: Number.isFinite(slide.index) ? slide.index : idx,
+                title: slide.title || '',
+                description: slide.description || '',
+                status: 'pending' as const
+            }))
+            setSlides(pendingSlides)
+        } else if (Array.isArray(slides) && slides.length > 0) {
+            const pendingSlides: CarouselSlide[] = slides.map((slide, idx) => ({
+                index: Number.isFinite(slide.index) ? slide.index : idx,
+                title: slide.title || '',
+                description: slide.description || '',
+                status: 'pending' as const
+            }))
+            setSlides(pendingSlides)
+        } else {
+            setSlides([])
+        }
+
         setGeneratedCount(0)
         setCurrentSlideIndex(0)
-    }, [])
+    }, [scriptSlides, slides])
 
     const confirmGeneration = useCallback(async () => {
         setShowDebugModal(false)
@@ -1329,6 +1362,7 @@ export default function CarouselPage() {
                     previewScriptSlides={scriptSlides}
                     previewCaption={caption}
                     previewCurrentIndex={currentSlideIndex}
+                    previewSessionHistory={sessionHistory}
                     onRestorePreviewState={handleRestorePreviewFromPreset}
                     getAuditFlowId={getOrCreateCreationFlowId}
                 />

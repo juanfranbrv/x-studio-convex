@@ -58,7 +58,7 @@ export function ThumbnailHistory({
         <div className="glass-card p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                    Historial de sesion
+                    Variaciones de la sesion
                 </p>
                 {totalPages > 1 ? (
                     <div className="flex items-center gap-1">

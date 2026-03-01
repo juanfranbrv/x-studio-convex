@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -34,6 +34,7 @@ import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/adm
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
+const IMAGE_AUTOSAVE_DEBOUNCE_MS = 800
 
 interface Generation {
     id: string
@@ -156,9 +157,13 @@ export default function ImagePage() {
     const [selectedSessionToLoad, setSelectedSessionToLoad] = useState<string>('')
     const [sessionRootPrompt, setSessionRootPrompt] = useState<string | null>(null)
     const [isHydratingSession, setIsHydratingSession] = useState(false)
+    const [isSavingSession, setIsSavingSession] = useState(false)
+    const [sessionSavedAt, setSessionSavedAt] = useState<string | null>(null)
+    const [sessionSaveError, setSessionSaveError] = useState<string | null>(null)
     const hydrationScopeRef = useRef<string>('')
     const hasHydratedScopeRef = useRef(false)
     const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const autosaveRevisionRef = useRef(0)
     const persistedSessionImageCacheRef = useRef<Map<string, { storageId: string; imageUrl: string }>>(new Map())
     const persistImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string } | null>>>(new Map())
 
@@ -423,7 +428,7 @@ export default function ImagePage() {
 
     const handleDeleteCurrentSession = useCallback(async () => {
         if (!user?.id || !currentSessionId) return
-        if (!window.confirm('¿Quieres borrar esta sesion?')) return
+        if (!window.confirm('¿Quieres borrar esta sesión?')) return
 
         const result = await deleteWorkSession({
             user_id: user.id,
@@ -468,6 +473,8 @@ export default function ImagePage() {
             setCurrentSessionId(null)
             setSelectedSessionToLoad('')
             setSessionRootPrompt(null)
+            setSessionSavedAt(null)
+            setSessionSaveError(null)
         }
 
         if (!user?.id || !scopedBrandId) return
@@ -508,6 +515,67 @@ export default function ImagePage() {
         normalizePromptForSession
     ])
 
+    const persistImageWorkspaceSnapshot = useCallback(async () => {
+        if (!user?.id || !scopedBrandId) return
+        setIsSavingSession(true)
+        setSessionSaveError(null)
+        try {
+            const persistedGenerations = await materializeGenerationsForSnapshot(sessionGenerations)
+            const hasPersistedChanges = persistedGenerations.some((generation, index) => (
+                generation.image_storage_id !== sessionGenerations[index]?.image_storage_id ||
+                generation.image_url !== sessionGenerations[index]?.image_url
+            ))
+            if (hasPersistedChanges) {
+                setSessionGenerations(persistedGenerations)
+            }
+
+            const snapshot = buildWorkspaceSnapshot(undefined, persistedGenerations)
+            const result = await upsertWorkSession({
+                user_id: user.id,
+                module: 'image',
+                brand_id: scopedBrandId,
+                session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
+                title: buildSessionTitle(snapshot.promptValue || 'Sesion de imagen'),
+                root_prompt: normalizePromptForSession(snapshot.rootPrompt || snapshot.promptValue) || undefined,
+                snapshot,
+            })
+            const id = String(result.session_id)
+            if (!currentSessionId) {
+                setCurrentSessionId(id)
+                setSelectedSessionToLoad(id)
+            }
+            setSessionSavedAt(new Date().toISOString())
+        } catch (error) {
+            setSessionSaveError(error instanceof Error ? error.message : 'No se pudo guardar')
+            throw error
+        } finally {
+            setIsSavingSession(false)
+        }
+    }, [
+        user?.id,
+        scopedBrandId,
+        sessionGenerations,
+        buildWorkspaceSnapshot,
+        materializeGenerationsForSnapshot,
+        upsertWorkSession,
+        currentSessionId,
+        buildSessionTitle,
+        normalizePromptForSession
+    ])
+
+    const handleSaveSessionNow = useCallback(async () => {
+        if (!user?.id || !scopedBrandId || isHydratingSession) return
+        if (autosaveTimerRef.current) {
+            clearTimeout(autosaveTimerRef.current)
+        }
+        ++autosaveRevisionRef.current
+        try {
+            await persistImageWorkspaceSnapshot()
+        } catch (error) {
+            console.error('Manual save session failed:', error)
+        }
+    }, [user?.id, scopedBrandId, isHydratingSession, persistImageWorkspaceSnapshot])
+
     // Autosave current workspace snapshot.
     useEffect(() => {
         if (!user?.id || !scopedBrandId) return
@@ -518,38 +586,17 @@ export default function ImagePage() {
             clearTimeout(autosaveTimerRef.current)
         }
 
+        const revision = ++autosaveRevisionRef.current
         autosaveTimerRef.current = setTimeout(() => {
             void (async () => {
+                if (revision !== autosaveRevisionRef.current) return
                 try {
-                    const persistedGenerations = await materializeGenerationsForSnapshot(sessionGenerations)
-                    const hasPersistedChanges = persistedGenerations.some((generation, index) => (
-                        generation.image_storage_id !== sessionGenerations[index]?.image_storage_id ||
-                        generation.image_url !== sessionGenerations[index]?.image_url
-                    ))
-                    if (hasPersistedChanges) {
-                        setSessionGenerations(persistedGenerations)
-                    }
-
-                    const snapshot = buildWorkspaceSnapshot(undefined, persistedGenerations)
-                    const result = await upsertWorkSession({
-                        user_id: user.id,
-                        module: 'image',
-                        brand_id: scopedBrandId,
-                        session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
-                        title: buildSessionTitle(snapshot.promptValue || 'Sesion de imagen'),
-                        root_prompt: normalizePromptForSession(snapshot.rootPrompt || snapshot.promptValue) || undefined,
-                        snapshot,
-                    })
-                    const id = String(result.session_id)
-                    if (!currentSessionId) {
-                        setCurrentSessionId(id)
-                        setSelectedSessionToLoad(id)
-                    }
+                    await persistImageWorkspaceSnapshot()
                 } catch (error) {
                     console.error('Autosave session failed:', error)
                 }
             })()
-        }, 1500)
+        }, IMAGE_AUTOSAVE_DEBOUNCE_MS)
 
         return () => {
             if (autosaveTimerRef.current) {
@@ -560,7 +607,6 @@ export default function ImagePage() {
         user?.id,
         scopedBrandId,
         isHydratingSession,
-        currentSessionId,
         promptValue,
         editPrompt,
         logoInclusion,
@@ -568,11 +614,7 @@ export default function ImagePage() {
         selectedContext,
         sessionGenerations,
         creationFlow.state,
-        buildWorkspaceSnapshot,
-        materializeGenerationsForSnapshot,
-        upsertWorkSession,
-        normalizePromptForSession,
-        buildSessionTitle
+        persistImageWorkspaceSnapshot
     ])
 
     // Reset Studio when Brand Kit changes
@@ -949,7 +991,7 @@ export default function ImagePage() {
             if (result.detectedIntent && !creationFlow.state.selectedIntent) {
                 creationFlow.selectIntent(result.detectedIntent as IntentCategory)
                 toast({
-                    title: "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ IntenciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n detectada",
+                    title: "✨ Intención detectada",
                     description: `Detectamos que quieres crear: ${result.detectedIntent}`,
                 })
             }
@@ -1082,7 +1124,7 @@ export default function ImagePage() {
         if (creationFlow.state.isAnalyzing) {
             toast({
                 title: "Analizando referencia",
-                description: "Espera a que termine el anÃƒÂ¡lisis antes de generar.",
+                description: "Espera a que termine el análisis antes de generar.",
                 variant: "destructive",
             })
             return
@@ -1143,7 +1185,7 @@ export default function ImagePage() {
 
             setLastGenerationRequest({
                 payload: requestPayloadForApi,
-                errorTitle: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                errorTitle: "Error de generación",
                 errorFallback: "Error al generar la imagen"
             })
 
@@ -1163,13 +1205,13 @@ export default function ImagePage() {
                     created_at: new Date().toISOString(),
                     prompt_used: typeof requestPayloadForApi.prompt === 'string' ? requestPayloadForApi.prompt : '',
                     request_payload: { ...requestPayloadForApi },
-                    error_title: "Error de generaciÃƒÂ³n",
+                    error_title: "Error de generación",
                     error_fallback: "Error al generar la imagen"
                 }, ...prev].slice(0, 80))
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al generar la imagen' }))
                 toast({
-                    title: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                    title: "Error de generación",
                     description: errorData.error || 'Error al generar la imagen',
                     variant: "destructive",
                 })
@@ -1177,7 +1219,7 @@ export default function ImagePage() {
         } catch (error: any) {
             console.error('Generation failed:', error)
             toast({
-                title: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                title: "Error de generación",
                 description: error.message || 'No se pudo generar la imagen.',
                 variant: "destructive",
             })
@@ -1270,7 +1312,7 @@ export default function ImagePage() {
             }
             setLastGenerationRequest({
                 payload: requestPayload,
-                errorTitle: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                errorTitle: "Error de edición",
                 errorFallback: "Error al editar la imagen"
             })
 
@@ -1290,13 +1332,13 @@ export default function ImagePage() {
                     created_at: new Date().toISOString(),
                     prompt_used: typeof requestPayload.prompt === 'string' ? requestPayload.prompt : '',
                     request_payload: { ...requestPayload },
-                    error_title: "Error de ediciÃƒÂ³n",
+                    error_title: "Error de edición",
                     error_fallback: "Error al editar la imagen"
                 }, ...prev].slice(0, 80))
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al editar la imagen' }))
                 toast({
-                    title: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                    title: "Error de edición",
                     description: errorData.error || 'Error al editar la imagen',
                     variant: "destructive",
                 })
@@ -1304,7 +1346,7 @@ export default function ImagePage() {
         } catch (error: any) {
             console.error('Edit failed:', error)
             toast({
-                title: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                title: "Error de edición",
                 description: error.message || 'No se pudo editar la imagen.',
                 variant: "destructive",
             })
@@ -1472,7 +1514,7 @@ export default function ImagePage() {
         if (!currentIntent) {
             toast({
                 title: "Falta intent",
-                description: "Primero analiza el prompt para detectar la intenciÃƒÂ³n.",
+                description: "Primero analiza el prompt para detectar la intención.",
                 variant: "destructive",
             })
             return
@@ -1480,8 +1522,8 @@ export default function ImagePage() {
 
         if (compositionMode === 'advanced' && !creationFlow.state.selectedLayout) {
             toast({
-                title: "Selecciona una composiciÃƒÂ³n",
-                description: "En modo avanzado debes elegir una composiciÃƒÂ³n manualmente.",
+                title: "Selecciona una composición",
+                description: "En modo avanzado debes elegir una composición manualmente.",
                 variant: "destructive",
             })
             return
@@ -1517,7 +1559,7 @@ export default function ImagePage() {
             if (!currentIntent) {
                 toast({
                     title: "Falta intent",
-                    description: "Primero analiza el prompt para detectar la intenciÃƒÂ³n.",
+                    description: "Primero analiza el prompt para detectar la intención.",
                     variant: "destructive",
                 })
                 return
@@ -1557,7 +1599,7 @@ export default function ImagePage() {
         if (creationFlow.state.isAnalyzing) {
             toast({
                 title: "Analizando referencia",
-                description: "Espera a que termine el anÃƒÂ¡lisis antes de generar.",
+                description: "Espera a que termine el análisis antes de generar.",
                 variant: "destructive",
             })
             return
@@ -1674,7 +1716,7 @@ export default function ImagePage() {
                                         if (gen.request_payload) {
                                             setLastGenerationRequest({
                                                 payload: { ...gen.request_payload },
-                                                errorTitle: gen.error_title || "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                                                errorTitle: gen.error_title || "Error de generación",
                                                 errorFallback: gen.error_fallback || "Error al generar la imagen"
                                             })
                                         } else if (gen.prompt_used) {
@@ -1683,7 +1725,7 @@ export default function ImagePage() {
                                                     ...(prev?.payload || {}),
                                                     prompt: gen.prompt_used
                                                 },
-                                                errorTitle: prev?.errorTitle || "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                                                errorTitle: prev?.errorTitle || "Error de generación",
                                                 errorFallback: prev?.errorFallback || "Error al generar la imagen"
                                             }))
                                         }
@@ -1744,6 +1786,10 @@ export default function ImagePage() {
                             onCreateSession={() => void createNewImageSession(promptValue)}
                             onDeleteSession={() => void handleDeleteCurrentSession()}
                             onClearSessions={() => void handleClearAllSessions()}
+                            onSaveSessionNow={() => void handleSaveSessionNow()}
+                            isSavingSession={isSavingSession}
+                            sessionSavedAt={sessionSavedAt}
+                            sessionSaveError={sessionSaveError}
                         />
                     </div>
 
@@ -1776,7 +1822,7 @@ export default function ImagePage() {
                                     className="h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold px-4 whitespace-nowrap"
                                 >
                                     <Sparkles className="w-4 h-4 mr-2" />
-                                    Realizar correcciÃƒÂ³n
+                                    Realizar corrección
                                 </Button>
                             )}
                         </div>
@@ -1834,8 +1880,8 @@ export default function ImagePage() {
                         </div>
                         <h2 className="text-2xl font-semibold">Selecciona un Brand Kit</h2>
                         <p className="text-muted-foreground">
-                            Para empezar a diseÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â±ar en el panel de Imagen, necesitas seleccionar un Brand Kit.
-                            Si aÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºn no tienes uno, crÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©alo en la secciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n "Brand Kit".
+                            Para empezar a diseñar en el panel de Imagen, necesitas seleccionar un Brand Kit.
+                            Si aún no tienes uno, créalo en la sección &quot;Brand Kit&quot;.
                         </p>
                     </div>
                 </div>
@@ -1856,5 +1902,6 @@ export default function ImagePage() {
         </DashboardLayout >
     )
 }
+
 
 

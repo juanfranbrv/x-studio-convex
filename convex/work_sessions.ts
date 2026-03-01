@@ -144,6 +144,37 @@ async function resolveSnapshotImageUrls(
       previewNext.slides = resolvedSlides;
       next.previewState = previewNext;
     }
+
+    const previewHistory = Array.isArray(previewNext.sessionHistory) ? previewNext.sessionHistory : [];
+    if (previewHistory.length) {
+      const resolvedHistory = await Promise.all(
+        previewHistory.map(async (entry) => {
+          if (!entry || typeof entry !== "object") return entry;
+          const historyItem = { ...(entry as Record<string, unknown>) };
+          const historySlides = Array.isArray(historyItem.slides) ? historyItem.slides : [];
+          if (!historySlides.length) return historyItem;
+
+          const resolvedSlides = await Promise.all(
+            historySlides.map(async (row) => {
+              if (!row || typeof row !== "object") return row;
+              const item = { ...(row as Record<string, unknown>) };
+              const storageId = typeof item.image_storage_id === "string" ? item.image_storage_id.trim() : "";
+              if (storageId) {
+                const url = await ctx.storage.getUrl(storageId);
+                if (url) item.imageUrl = url;
+              }
+              return item;
+            }),
+          );
+
+          historyItem.slides = resolvedSlides;
+          return historyItem;
+        }),
+      );
+
+      previewNext.sessionHistory = resolvedHistory;
+      next.previewState = previewNext;
+    }
   }
 
   return next;

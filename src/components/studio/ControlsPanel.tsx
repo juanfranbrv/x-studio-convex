@@ -7,7 +7,7 @@ import { SocialFormatSelector } from './creation-flow/SocialFormatSelector'
 import { BrandingConfigurator } from './creation-flow/BrandingConfigurator'
 import { ImageReferenceSelector } from './creation-flow/ImageReferenceSelector'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Sparkles, Layers, ImagePlus, Wand2, Loader2, Fingerprint, RotateCcw, Link2, History, Plus, Trash2 } from 'lucide-react'
+import { Palette, Layout, Sparkles, Layers, ImagePlus, Wand2, Loader2, Fingerprint, RotateCcw, Link2, History, Plus, Trash2, Save, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -97,6 +97,10 @@ interface ControlsPanelProps {
     onCreateSession?: () => void
     onDeleteSession?: () => void
     onClearSessions?: () => void
+    onSaveSessionNow?: () => void
+    isSavingSession?: boolean
+    sessionSavedAt?: string | null
+    sessionSaveError?: string | null
 }
 
 export function ControlsPanel({
@@ -122,6 +126,10 @@ export function ControlsPanel({
     onCreateSession,
     onDeleteSession,
     onClearSessions,
+    onSaveSessionNow,
+    isSavingSession = false,
+    sessionSavedAt = null,
+    sessionSaveError = null,
 }: ControlsPanelProps) {
     const { toast } = useToast()
     const { panelPosition, assistanceEnabled } = useUI()
@@ -387,7 +395,43 @@ export function ControlsPanel({
 
                 {/* SECTION: Sessions */}
                 <div className="glass-card p-5 space-y-4">
-                    <SectionHeader icon={History} title="Sesiones" className="mb-2" />
+                    <SectionHeader
+                        icon={History}
+                        title="Historial"
+                        className="mb-2"
+                        extra={
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                                    {isSavingSession ? (
+                                        <>
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                            Guardando...
+                                        </>
+                                    ) : sessionSaveError ? (
+                                        <>
+                                            <AlertCircle className="w-3 h-3" />
+                                            Error
+                                        </>
+                                    ) : sessionSavedAt ? (
+                                        <>
+                                            <CheckCircle2 className="w-3 h-3" />
+                                            {`Guardado ${new Date(sessionSavedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
+                                        </>
+                                    ) : 'Sin guardar'}
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={onSaveSessionNow}
+                                    disabled={isSavingSession}
+                                    title="Guardar historial ahora"
+                                >
+                                    {isSavingSession ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                                </Button>
+                            </div>
+                        }
+                    />
                     <div className="space-y-3 pt-1.5">
                         <select
                             className="h-9 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-xs"
