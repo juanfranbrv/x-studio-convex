@@ -34,7 +34,7 @@ import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/adm
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
-const IMAGE_AUTOSAVE_DEBOUNCE_MS = 800
+const IMAGE_AUTOSAVE_DEBOUNCE_MS = 1000
 
 interface Generation {
     id: string
@@ -515,10 +515,18 @@ export default function ImagePage() {
         normalizePromptForSession
     ])
 
-    const persistImageWorkspaceSnapshot = useCallback(async () => {
+    const persistImageWorkspaceSnapshot = useCallback(async (options?: {
+        silent?: boolean
+        markSavedAt?: boolean
+    }) => {
         if (!user?.id || !scopedBrandId) return
-        setIsSavingSession(true)
-        setSessionSaveError(null)
+        const isSilent = options?.silent === true
+        const shouldMarkSavedAt = options?.markSavedAt !== false
+
+        if (!isSilent) {
+            setIsSavingSession(true)
+            setSessionSaveError(null)
+        }
         try {
             const persistedGenerations = await materializeGenerationsForSnapshot(sessionGenerations)
             const hasPersistedChanges = persistedGenerations.some((generation, index) => (
@@ -544,12 +552,18 @@ export default function ImagePage() {
                 setCurrentSessionId(id)
                 setSelectedSessionToLoad(id)
             }
-            setSessionSavedAt(new Date().toISOString())
+            if (shouldMarkSavedAt) {
+                setSessionSavedAt(new Date().toISOString())
+            }
         } catch (error) {
-            setSessionSaveError(error instanceof Error ? error.message : 'No se pudo guardar')
+            if (!isSilent) {
+                setSessionSaveError(error instanceof Error ? error.message : 'No se pudo guardar')
+            }
             throw error
         } finally {
-            setIsSavingSession(false)
+            if (!isSilent) {
+                setIsSavingSession(false)
+            }
         }
     }, [
         user?.id,
@@ -570,7 +584,10 @@ export default function ImagePage() {
         }
         ++autosaveRevisionRef.current
         try {
-            await persistImageWorkspaceSnapshot()
+            await persistImageWorkspaceSnapshot({
+                silent: false,
+                markSavedAt: true,
+            })
         } catch (error) {
             console.error('Manual save session failed:', error)
         }
@@ -591,7 +608,10 @@ export default function ImagePage() {
             void (async () => {
                 if (revision !== autosaveRevisionRef.current) return
                 try {
-                    await persistImageWorkspaceSnapshot()
+                    await persistImageWorkspaceSnapshot({
+                        silent: true,
+                        markSavedAt: false,
+                    })
                 } catch (error) {
                     console.error('Autosave session failed:', error)
                 }
