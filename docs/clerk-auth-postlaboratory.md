@@ -1,4 +1,4 @@
-# Clerk Auth Setup (postlaboratory.com)
+# Clerk Auth Setup (adstudio.click)
 
 This project is now prepared for Clerk auth sync with Convex using:
 
@@ -8,14 +8,14 @@ This project is now prepared for Clerk auth sync with Convex using:
 
 ## Required Clerk Dashboard config
 
-1. Set production domain to `postlaboratory.com`.
+1. Set production domain to `adstudio.click`.
 2. Configure paths:
    - Sign-in URL: `/sign-in`
    - Sign-up URL: `/sign-up`
    - After sign-in: `/image`
    - After sign-up: `/onboarding`
 3. Add webhook endpoint:
-   - URL: `https://postlaboratory.com/api/webhooks/clerk`
+   - URL: `https://adstudio.click/api/webhooks/clerk`
    - Events: `user.created`, `user.updated`, `user.deleted`
 4. Copy webhook secret into env var:
    - `CLERK_WEBHOOK_SIGNING_SECRET`

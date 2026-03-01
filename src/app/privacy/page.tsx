@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad | PostLaboratory",
-  description: "Política de privacidad de PostLaboratory.",
+  title: "Política de Privacidad | Adstudio",
+  description: "Política de privacidad de Adstudio.",
 };
 
 export default function PrivacyPage() {
@@ -17,7 +17,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold text-foreground">1. Responsable</h2>
           <p>
-            PostLaboratory es una plataforma para generar contenidos visuales con IA. Si necesitas
+            Adstudio es una plataforma para generar contenidos visuales con IA. Si necesitas
             información sobre privacidad, puedes escribir a nuestro canal de contacto oficial.
           </p>
         </section>

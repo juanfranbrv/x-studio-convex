@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PostLaboratory | Crea contenido visual con IA",
+  title: "Adstudio | Crea contenido visual con IA",
   description: "Plataforma de generacion de assets de marketing visual con IA que respeta el ADN de tu marca.",
   keywords: ["IA", "diseno", "marketing", "branding", "generacion de imagenes", "carruseles", "contenido visual"],
   icons: {

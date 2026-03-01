@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Términos de Servicio | PostLaboratory",
-  description: "Términos y condiciones de uso de PostLaboratory.",
+  title: "Términos de Servicio | Adstudio",
+  description: "Términos y condiciones de uso de Adstudio.",
 };
 
 export default function TermsPage() {
@@ -17,7 +17,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold text-foreground">1. Objeto</h2>
           <p>
-            Estos términos regulan el acceso y uso de PostLaboratory, plataforma para creación de
+            Estos términos regulan el acceso y uso de Adstudio, plataforma para creación de
             contenidos visuales mediante inteligencia artificial.
           </p>
         </section>
@@ -57,7 +57,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold text-foreground">6. Limitación de responsabilidad</h2>
           <p>
-            PostLaboratory se ofrece tal cual. En la máxima medida permitida por la ley, no
+            Adstudio se ofrece tal cual. En la máxima medida permitida por la ley, no
             garantizamos resultados específicos ni asumimos responsabilidad por usos indebidos por
             parte de los usuarios.
           </p>

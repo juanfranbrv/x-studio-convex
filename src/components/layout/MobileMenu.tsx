@@ -39,7 +39,7 @@ export function MobileMenu() {
                 <SheetHeader className="p-6 border-b border-border bg-muted/20">
                     <SheetTitle className="flex items-center gap-2">
                         <Bot className="w-6 h-6 text-primary" />
-                        <span>PostLaboratory</span>
+                        <span>Adstudio</span>
                     </SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col p-4 gap-2">

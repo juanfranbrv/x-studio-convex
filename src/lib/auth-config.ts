@@ -1,4 +1,4 @@
-const PROD_DOMAIN = "postlaboratory.com";
+const PROD_DOMAIN = "adstudio.click";
 
 function normalizeBaseUrl(input?: string | null): string {
   const raw = (input || "").trim();
