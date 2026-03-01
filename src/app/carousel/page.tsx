@@ -29,7 +29,11 @@ import type { DebugPromptData, ReferenceImageRole, VisionAnalysis } from '@/lib/
 import { buildCarouselImagePrompt } from '@/lib/prompts/carousel-image'
 import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
 import { extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
+
+const createAuditFlowId = (prefix: string) =>
+    `flow_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 import { buildPriority5StyleBlockFromAnalysis, mergeCustomStyleIntoStyleDirectives } from '@/lib/prompts/vision/style-priority-block'
+import { log } from '@/lib/logger'
 import { FeedbackButton } from '@/components/studio/FeedbackButton'
 import { cn } from '@/lib/utils'
 import { Id } from '../../../convex/_generated/dataModel'
@@ -127,6 +131,13 @@ export default function CarouselPage() {
     const cancelGenerationRef = useRef(false)
     const cancelAnalyzeRef = useRef(false)
     const styleAnalysisCacheRef = useRef<Record<string, string>>({})
+    const currentCreationFlowIdRef = useRef<string | undefined>(undefined)
+    const getOrCreateCreationFlowId = useCallback(() => {
+        if (!currentCreationFlowIdRef.current) {
+            currentCreationFlowIdRef.current = createAuditFlowId('carousel_create')
+        }
+        return currentCreationFlowIdRef.current
+    }, [])
 
     const isAdmin = user?.emailAddresses?.some(
         email => email.emailAddress === 'juanfranbrv@gmail.com'
@@ -339,7 +350,7 @@ export default function CarouselPage() {
         setScriptSlides(prev => prev ? prev.map(s => s.index === index ? { ...s, ...updates } : s) : prev)
     }, [])
 
-    const performAnalyze = useCallback(async (settings: CarouselSettings, silent = false) => {
+    const performAnalyze = useCallback(async (settings: CarouselSettings, silent = false, auditFlowId?: string) => {
         cancelAnalyzeRef.current = false
         if (!settings.prompt.trim() || !activeBrandKit || !aiConfig?.intelligenceModel) {
             if (!silent) {
@@ -360,6 +371,8 @@ export default function CarouselPage() {
         setOriginalAnalysis(null)
 
         try {
+            const effectiveAuditFlowId = auditFlowId || currentCreationFlowIdRef.current || createAuditFlowId('carousel_create')
+            currentCreationFlowIdRef.current = effectiveAuditFlowId
             const result = await analyzeCarouselAction({
                 prompt: settings.prompt,
                 slideCount: settings.slideCount,
@@ -368,7 +381,8 @@ export default function CarouselPage() {
                 selectedColors: settings.selectedColors,
                 includeLogoOnSlides: settings.includeLogoOnSlides,
                 selectedLogoUrl: settings.selectedLogoUrl,
-                aiImageDescription: settings.aiImageDescription
+                aiImageDescription: settings.aiImageDescription,
+                auditFlowId: effectiveAuditFlowId
             })
             if (cancelAnalyzeRef.current) {
                 return null
@@ -422,13 +436,14 @@ export default function CarouselPage() {
                     intelligenceModel: aiConfig.intelligenceModel,
                     intentId: result.detectedIntent,
                     variationSeed: Date.now(),
-                    previewTextContext: buildPreviewTextContext(result.slides)
+                    previewTextContext: buildPreviewTextContext(result.slides),
+                    auditFlowId: effectiveAuditFlowId
                 })
                 if (Array.isArray(parsedIntent.imagePromptSuggestions) && parsedIntent.imagePromptSuggestions.length > 0) {
                     finalImagePrompts = parsedIntent.imagePromptSuggestions.slice(0, 4)
                 }
             } catch (error) {
-                console.warn('[Carousel] parseLazyIntentAction fallback to local suggestions', error)
+            log.warn('CAROUSEL', 'Lazy intent fallback to local suggestions', error)
             }
             setImagePromptSuggestions(finalImagePrompts)
             setSuggestions(nextSuggestions)
@@ -456,7 +471,7 @@ export default function CarouselPage() {
             if (cancelAnalyzeRef.current) {
                 return null
             }
-            console.error('Carousel analysis error:', error)
+            log.error('CAROUSEL', 'Analyze action failed', error)
             if (!silent) {
                 openErrorModal(
                     'Error al analizar',
@@ -501,9 +516,14 @@ export default function CarouselPage() {
         return fallbackFromSettings
     }, [referencePreviewState.referenceImageRoles, referencePreviewState.selectedBrandKitImageIds, referencePreviewState.uploadedImages])
 
-    const ensureStyleAnalysisInSettings = useCallback(async (settings: CarouselSettings): Promise<CarouselSettings> => {
+    const ensureStyleAnalysisInSettings = useCallback(async (settings: CarouselSettings, auditFlowId?: string): Promise<CarouselSettings> => {
         const styleReferenceUrl = resolveStyleReferenceImageUrl(settings)
         if (!styleReferenceUrl) {
+            return settings
+        }
+
+        // If controls panel already provided a computed style block, avoid duplicate analysis calls.
+        if ((settings.aiStyleDirectives || '').trim().length > 0) {
             return settings
         }
 
@@ -518,8 +538,8 @@ export default function CarouselPage() {
 
         try {
             const body = styleReferenceUrl.startsWith('data:image/')
-                ? { imageBase64: styleReferenceUrl }
-                : { imageUrl: styleReferenceUrl }
+                ? { imageBase64: styleReferenceUrl, auditFlowId }
+                : { imageUrl: styleReferenceUrl, auditFlowId }
             const response = await fetch('/api/analyze-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -538,7 +558,7 @@ export default function CarouselPage() {
             )
             return { ...settings, aiStyleDirectives: mergedStyle }
         } catch (error) {
-            console.error('Style analysis fallback failed:', error)
+            log.warn('CAROUSEL', 'Style analysis fallback failed', error)
             return settings
         }
     }, [resolveStyleReferenceImageUrl])
@@ -561,8 +581,9 @@ export default function CarouselPage() {
             )
             return
         }
-        const settingsWithStyle = await ensureStyleAnalysisInSettings(settings)
-        await performAnalyze(settingsWithStyle)
+        const analyzeAuditFlowId = getOrCreateCreationFlowId()
+        const settingsWithStyle = await ensureStyleAnalysisInSettings(settings, analyzeAuditFlowId)
+        await performAnalyze(settingsWithStyle, false, analyzeAuditFlowId)
     }, [activeBrandKit, aiConfig?.intelligenceModel, ensureStyleAnalysisInSettings, performAnalyze])
 
     const applySuggestion = useCallback((index: number) => {
@@ -621,6 +642,7 @@ export default function CarouselPage() {
 
         setIsCaptionGenerating(true)
         try {
+            const captionAuditFlowId = createAuditFlowId('carousel_caption')
             const result = await regenerateCarouselCaptionAction({
                 prompt: carouselSettings.prompt,
                 slideCount: carouselSettings.slideCount,
@@ -628,7 +650,8 @@ export default function CarouselPage() {
                 intelligenceModel: aiConfig.intelligenceModel,
                 selectedColors: carouselSettings.selectedColors,
                 includeLogoOnSlides: carouselSettings.includeLogoOnSlides,
-                selectedLogoUrl: carouselSettings.selectedLogoUrl
+                selectedLogoUrl: carouselSettings.selectedLogoUrl,
+                auditFlowId: captionAuditFlowId,
             })
 
             if (result.success && result.caption) {
@@ -637,7 +660,7 @@ export default function CarouselPage() {
                 throw new Error(result.error || 'No se pudo regenerar el caption.')
             }
         } catch (error) {
-            console.error('Caption regeneration error:', error)
+            log.error('CAROUSEL', 'Caption regeneration failed', error)
             openErrorModal(
                 'Error',
                 error instanceof Error ? error.message : 'No se pudo regenerar el caption.'
@@ -689,6 +712,8 @@ export default function CarouselPage() {
         setCarouselSettings(settings)
 
         try {
+            const generationAuditFlowId = currentCreationFlowIdRef.current || createAuditFlowId('carousel_create')
+            currentCreationFlowIdRef.current = generationAuditFlowId
             const slidesForGeneration =
                 (scriptSlides && scriptSlides.length > 0 ? scriptSlides.slice(0, settings.slideCount) : null)
                 || buildSlidesFromCurrentState(settings.slideCount)
@@ -755,7 +780,8 @@ export default function CarouselPage() {
                     settings.structureId,
                     settings.aiStyleDirectives,
                     settings.selectedImageUrls,
-                    consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined
+                    consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined,
+                    generationAuditFlowId
                 )
 
                 if (cancelGenerationRef.current) {
@@ -818,13 +844,14 @@ export default function CarouselPage() {
             if (cancelGenerationRef.current) {
                 return
             }
-            console.error('Carousel generation error:', error)
+            log.error('CAROUSEL', 'Generate action failed', error)
             openErrorModal(
                 'Error al generar',
                 error instanceof Error ? error.message : 'No se pudo generar el carrusel.'
             )
         } finally {
             setIsGenerating(false)
+            currentCreationFlowIdRef.current = undefined
             if (cancelGenerationRef.current) {
                 setIsCancelingGenerate(false)
             }
@@ -862,7 +889,8 @@ export default function CarouselPage() {
             return
         }
 
-        const settingsWithStyle = await ensureStyleAnalysisInSettings(settings)
+        const generateAuditFlowId = getOrCreateCreationFlowId()
+        const settingsWithStyle = await ensureStyleAnalysisInSettings(settings, generateAuditFlowId)
 
         if (!isAdmin) {
             await executeGenerate(settingsWithStyle)
@@ -1093,7 +1121,8 @@ export default function CarouselPage() {
                 carouselSettings.structureId,
                 carouselSettings.aiStyleDirectives,
                 carouselSettings.selectedImageUrls,
-                consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined
+                consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined,
+                createAuditFlowId('carousel_regenerate')
             )
 
             if (result.success && result.imageUrl) {
@@ -1115,7 +1144,7 @@ export default function CarouselPage() {
             }
 
         } catch (error) {
-            console.error('Slide regeneration error:', error)
+            log.error('CAROUSEL', 'Slide regeneration failed', error)
             openErrorModal(
                 'Error',
                 error instanceof Error ? error.message : 'No se pudo regenerar el slide.'
@@ -1301,6 +1330,7 @@ export default function CarouselPage() {
                     previewCaption={caption}
                     previewCurrentIndex={currentSlideIndex}
                     onRestorePreviewState={handleRestorePreviewFromPreset}
+                    getAuditFlowId={getOrCreateCreationFlowId}
                 />
             </div>
 

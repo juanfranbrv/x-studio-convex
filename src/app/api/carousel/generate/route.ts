@@ -13,6 +13,7 @@ import { buildStyleToBrandAdapter } from "@/lib/pipeline/adapter";
 import { compilePrompt } from "@/lib/pipeline/compilePrompt";
 import { ALL_FORBIDDEN_TOKENS } from "@/lib/pipeline/forbiddenTokens";
 import { generateImageFromPromptRaw } from "@/lib/gemini";
+import { log } from "@/lib/logger";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -91,6 +92,34 @@ export async function POST(request: NextRequest) {
     validateLayoutSpec(layoutSpec);
 
     const normalizedBrandId = brandId as Id<"brand_dna"> | undefined;
+    const auditFlowId = `flow_carousel_pipeline_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    let userEmail: string | undefined;
+    const logEconomicEvent = async (params: {
+      phase: string;
+      model: string;
+      kind: "intelligence" | "image";
+      metadata?: Record<string, unknown>;
+    }) => {
+      try {
+        await convex.mutation(api.economic.logEconomicEvent, {
+          flow_id: auditFlowId,
+          phase: params.phase,
+          model: params.model,
+          kind: params.kind,
+          user_clerk_id: userId,
+          user_email: userEmail,
+          metadata: params.metadata,
+        });
+      } catch (error) {
+        log.warn("ECONOMIC", `Audit event failed | phase=${params.phase} model=${params.model}`, error);
+      }
+    };
+    try {
+      const userRow = await convex.query(api.users.getUser, { clerk_id: userId });
+      userEmail = userRow?.email || undefined;
+    } catch (error) {
+      log.warn("ECONOMIC", "No se pudo resolver email de usuario para auditoria de carrusel pipeline", error);
+    }
 
     const carouselId = await convex.mutation(api.pipeline.createCarousel, {
       brandId: normalizedBrandId,
@@ -103,6 +132,12 @@ export async function POST(request: NextRequest) {
       imageUrl: referenceImageUrl,
       model: textModel,
     })) as StyleDNA;
+    await logEconomicEvent({
+      phase: "carousel_pipeline_analyze_reference_image",
+      model: textModel,
+      kind: "intelligence",
+      metadata: { carousel_id: String(carouselId) },
+    });
 
     const adapter = buildStyleToBrandAdapter(styleDNA, brandLock);
 
@@ -122,6 +157,15 @@ export async function POST(request: NextRequest) {
         emotion: slideInput.emotion,
         model: textModel,
       })) as SanitizedNarrativeOut;
+      await logEconomicEvent({
+        phase: "carousel_pipeline_generate_narrative_slide",
+        model: textModel,
+        kind: "intelligence",
+        metadata: {
+          carousel_id: String(carouselId),
+          slide: slideInput.slide,
+        },
+      });
 
       const compiled = compilePrompt({
         brand: brandLock,
@@ -143,6 +187,15 @@ export async function POST(request: NextRequest) {
         imageModel,
         aspectRatio
       );
+      await logEconomicEvent({
+        phase: "carousel_pipeline_generate_slide_image",
+        model: imageModel,
+        kind: "image",
+        metadata: {
+          carousel_id: String(carouselId),
+          slide: slideInput.slide,
+        },
+      });
 
       results.push({
         slide: slideInput.slide,
@@ -157,10 +210,11 @@ export async function POST(request: NextRequest) {
       styleDNA,
       results,
     });
-  } catch (error: any) {
-    console.error("Carousel generation error:", error);
+  } catch (error: unknown) {
+    log.error("API", "Carousel generation error", error);
+    const message = error instanceof Error ? error.message : "Error generando el carrusel";
     return NextResponse.json(
-      { error: error?.message || "Error generando el carrusel" },
+      { error: message },
       { status: 500 }
     );
   }

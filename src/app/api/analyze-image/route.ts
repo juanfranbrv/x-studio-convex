@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { VisionAnalysis, DetectedSubject } from '@/lib/creation-flow-types'
+import type { BrandDNA } from '@/lib/brand-types'
 import { IMAGE_ANALYSIS_PROMPT } from '@/lib/prompts/vision/image-analysis.prompt'
+import { generateTextUnified } from '@/lib/gemini'
+import { log } from '@/lib/logger'
+import { auth } from '@clerk/nextjs/server'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '@/../convex/_generated/api'
 
-// Use the same paid API key as image generation
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_IMAGE_API_KEY!)
-
-const VISION_MODEL = 'models/gemini-flash-lite-latest'
+const DEFAULT_INTELLIGENCE_MODEL = 'wisdom/gemini-3-flash-preview'
 
 
 export async function POST(request: NextRequest) {
+    const startedAt = Date.now()
     try {
-        const { imageBase64, imageUrl, mimeType: incomingMimeType = 'image/jpeg' } = await request.json()
+        const { imageBase64, imageUrl, mimeType: incomingMimeType = 'image/jpeg', auditFlowId } = await request.json()
+        const { userId } = await auth()
+        log.info('VISION', `Analyze request start | user=${userId || 'anonymous'} hasBase64=${Boolean(imageBase64)} hasUrl=${Boolean(imageUrl)}`)
 
         let effectiveMimeType = incomingMimeType
         let effectiveBase64 = imageBase64 as string | undefined
@@ -39,30 +44,31 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Remove data URL prefix if present
         const base64Data = effectiveBase64.replace(/^data:image\/\w+;base64,/, '')
+        const imageDataUrl = effectiveBase64.startsWith('data:')
+            ? effectiveBase64
+            : `data:${effectiveMimeType};base64,${base64Data}`
 
-        const model = genAI.getGenerativeModel({ model: VISION_MODEL })
+        const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
+        let intelligenceModel = DEFAULT_INTELLIGENCE_MODEL
+        if (convexUrl) {
+            const convex = new ConvexHttpClient(convexUrl)
+            const aiConfig = await convex.query(api.settings.getAIConfig, {})
+            const configured = String(aiConfig?.intelligenceModel || '').trim()
+            if (configured) intelligenceModel = configured
+        }
+        log.info('VISION', `Analyze model selected | model=${intelligenceModel} mime=${effectiveMimeType}`)
 
-        const result = await model.generateContent({
-            contents: [
-                {
-                    role: 'user',
-                    parts: [
-                        {
-                            inlineData: {
-                                mimeType: effectiveMimeType,
-                                data: base64Data,
-                            },
-                        },
-                        { text: IMAGE_ANALYSIS_PROMPT },
-                    ],
-                },
-            ],
-        })
-
-        const response = result.response
-        const text = response.text()
+        const modelCallStartedAt = Date.now()
+        const text = await generateTextUnified(
+            { name: 'Style Analyzer', brand_dna: {} as BrandDNA },
+            IMAGE_ANALYSIS_PROMPT,
+            intelligenceModel,
+            [imageDataUrl],
+            'Eres un analizador visual. Responde solo JSON válido, sin markdown ni texto adicional.',
+            { temperature: 0.2, topP: 0.9 }
+        )
+        log.success('VISION', `Analyze model response received | ${Date.now() - modelCallStartedAt}ms`)
 
         // Parse JSON from response
         let analysis: VisionAnalysis
@@ -97,12 +103,37 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        try {
+            if (convexUrl) {
+                const convex = new ConvexHttpClient(convexUrl)
+                const userRow = userId ? await convex.query(api.users.getUser, { clerk_id: userId }) : null
+                await convex.mutation(api.economic.logEconomicEvent, {
+                    flow_id: typeof auditFlowId === 'string' ? auditFlowId : undefined,
+                    phase: 'analyze_style_image',
+                    model: intelligenceModel,
+                    kind: 'intelligence',
+                    user_clerk_id: userId ?? undefined,
+                    user_email: userRow?.email || undefined,
+                    metadata: {
+                        mime_type: effectiveMimeType,
+                        subject: analysis.subject,
+                        confidence: analysis.confidence,
+                    }
+                })
+                log.success('ECONOMIC', `Audit event registered | phase=analyze_style_image model=${intelligenceModel}`)
+            }
+        } catch (auditError) {
+            log.warn('ECONOMIC', 'Audit event failed | phase=analyze_style_image', auditError)
+        }
+
+        log.success('VISION', `Analyze request done | ${Date.now() - startedAt}ms subject=${analysis.subject} confidence=${analysis.confidence}`)
+
         return NextResponse.json({
             success: true,
             data: analysis,
         })
     } catch (error) {
-        console.error('[VISION API] Error:', error)
+        log.error('VISION', 'Analyze request failed', error)
         return NextResponse.json(
             {
                 success: false,

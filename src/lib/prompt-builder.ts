@@ -23,6 +23,8 @@ export interface ImageGenerationOptions {
     selectedColors?: Array<{ color: string; role: string } | string>
     promptAlreadyBuilt?: boolean
     nagaApiKey?: string
+    replicateApiKey?: string
+    atlasApiKey?: string
 }
 
 export function buildImagePrompt(

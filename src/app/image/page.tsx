@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { CanvasPanel } from '@/components/studio/CanvasPanel'
 import { ControlsPanel } from '@/components/studio/ControlsPanel'
-import { useQuery } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -38,11 +38,34 @@ const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
 interface Generation {
     id: string
     image_url: string
+    image_storage_id?: string
     created_at: string
     prompt_used?: string
     request_payload?: Record<string, unknown>
     error_title?: string
     error_fallback?: string
+}
+
+interface ImageWorkspaceSnapshot {
+    version: number
+    module: 'image'
+    promptValue: string
+    editPrompt: string
+    logoInclusion: boolean
+    compositionMode: 'basic' | 'advanced'
+    selectedContext: ContextElement[]
+    sessionGenerations: Generation[]
+    creationFlowState: Record<string, unknown>
+    rootPrompt?: string
+}
+
+type CompactGeneration = Pick<Generation, 'id' | 'image_url' | 'image_storage_id' | 'created_at' | 'prompt_used' | 'error_title' | 'error_fallback'> & {
+    request_payload?: {
+        prompt?: string
+        model?: string
+        layoutId?: string
+        aspectRatio?: string
+    }
 }
 
 export type ContextType = 'color' | 'logo' | 'aux_logo' | 'template' | 'image' | 'font' | 'text' | 'link' | 'contact'
@@ -72,6 +95,9 @@ export default function ImagePage() {
     const [isMobile, setIsMobile] = useState(false)
     const [isMagicParsing, setIsMagicParsing] = useState(false)
     const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
+    const [auditFlowId, setAuditFlowId] = useState<string | null>(null)
+    const auditFlowIdRef = useRef<string | null>(null)
+    const smartAnalyzeInFlightRef = useRef(false)
 
     // Layout Overrides for Icons
     const [layoutOverrides, setLayoutOverrides] = useState<CompositionSummary[]>([])
@@ -81,6 +107,10 @@ export default function ImagePage() {
             .then(setLayoutOverrides)
             .catch(err => console.error('Failed to load layout overrides:', err))
     }, [])
+
+    useEffect(() => {
+        auditFlowIdRef.current = auditFlowId
+    }, [auditFlowId])
 
     const layoutIconOverrides = useMemo(() => {
         if (!layoutOverrides.length) return {}
@@ -122,13 +152,54 @@ export default function ImagePage() {
 
     // Local session history
     const [sessionGenerations, setSessionGenerations] = useState<Generation[]>([])
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
+    const [selectedSessionToLoad, setSelectedSessionToLoad] = useState<string>('')
+    const [sessionRootPrompt, setSessionRootPrompt] = useState<string | null>(null)
+    const [isHydratingSession, setIsHydratingSession] = useState(false)
+    const hydrationScopeRef = useRef<string>('')
+    const hasHydratedScopeRef = useRef(false)
+    const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const persistedSessionImageCacheRef = useRef<Map<string, { storageId: string; imageUrl: string }>>(new Map())
+    const persistImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string } | null>>>(new Map())
+
+    const createWorkSession = useMutation(api.work_sessions.createSession)
+    const upsertWorkSession = useMutation(api.work_sessions.upsertActiveSession)
+    const activateWorkSession = useMutation(api.work_sessions.activateSession)
+    const deleteWorkSession = useMutation(api.work_sessions.deleteSession)
+    const clearWorkSessions = useMutation(api.work_sessions.clearSessions)
+
+    const scopedBrandId = activeBrandKit?.id as Id<'brand_dna'> | undefined
+    const activeWorkSession = useQuery(
+        api.work_sessions.getActiveSession,
+        user?.id && scopedBrandId
+            ? { user_id: user.id, module: 'image', brand_id: scopedBrandId }
+            : 'skip'
+    )
+    const workSessions = useQuery(
+        api.work_sessions.listSessions,
+        user?.id && scopedBrandId
+            ? { user_id: user.id, module: 'image', brand_id: scopedBrandId, limit: 50 }
+            : 'skip'
+    )
 
     // Sync history
     const displayGenerations = useMemo(() => {
-        return sessionGenerations
+        return sessionGenerations.filter((generation) => {
+            const hasUrl = typeof generation.image_url === 'string' && generation.image_url.trim().length > 0
+            const hasStorageId = typeof generation.image_storage_id === 'string' && generation.image_storage_id.trim().length > 0
+            return hasUrl || hasStorageId
+        })
     }, [sessionGenerations])
 
     const creationFlow = useCreationFlow({
+        getOrCreateAuditFlowId: () => {
+            const current = auditFlowIdRef.current
+            if (current) return current
+            const next = `flow_${Date.now()}`
+            auditFlowIdRef.current = next
+            setAuditFlowId(next)
+            return next
+        },
         onImageUploaded: async (file: File) => {
             // Reference images are only used for the current session/generation
             // and should not be persisted in the permanent Brand Kit image storage.
@@ -145,6 +216,364 @@ export default function ImagePage() {
             setLastGenerationRequest(null)
         }
     } as UseCreationFlowOptions)
+
+    const normalizePromptForSession = useCallback((value?: string | null) => {
+        const cleaned = (value || '')
+            .trim()
+            .replace(/\s+/g, ' ')
+            .toLowerCase()
+        return cleaned.length > 0 ? cleaned : null
+    }, [])
+
+    const buildSessionTitle = useCallback((value?: string | null) => {
+        const cleaned = (value || '').replace(/\s+/g, ' ').trim()
+        if (!cleaned) return 'Sesion nueva'
+        if (cleaned.length <= 48) return cleaned
+        return `${cleaned.slice(0, 48)}...`
+    }, [])
+
+    const buildWorkspaceSnapshot = useCallback((rootPromptOverride?: string | null, generationsOverride?: Generation[]): ImageWorkspaceSnapshot => {
+        const sourceGenerations = generationsOverride ?? sessionGenerations
+        const compactGenerations: CompactGeneration[] = sourceGenerations.slice(0, 120).map((generation) => {
+            const payload = generation.request_payload || {}
+            return {
+                id: generation.id,
+                image_url: generation.image_url,
+                image_storage_id: generation.image_storage_id,
+                created_at: generation.created_at,
+                prompt_used: generation.prompt_used?.slice(0, 2500),
+                error_title: generation.error_title,
+                error_fallback: generation.error_fallback,
+                request_payload: {
+                    prompt: typeof payload.prompt === 'string' ? payload.prompt.slice(0, 2500) : undefined,
+                    model: typeof payload.model === 'string' ? payload.model : undefined,
+                    layoutId: typeof payload.layoutId === 'string' ? payload.layoutId : undefined,
+                    aspectRatio: typeof payload.aspectRatio === 'string' ? payload.aspectRatio : undefined,
+                }
+            }
+        })
+
+        return {
+            version: 1,
+            module: 'image',
+            promptValue,
+            editPrompt,
+            logoInclusion,
+            compositionMode,
+            selectedContext,
+            sessionGenerations: compactGenerations,
+            creationFlowState: creationFlow.getStateSnapshot(),
+            rootPrompt: rootPromptOverride ?? sessionRootPrompt ?? undefined,
+        }
+    }, [
+        promptValue,
+        editPrompt,
+        logoInclusion,
+        compositionMode,
+        selectedContext,
+        sessionGenerations,
+        creationFlow,
+        sessionRootPrompt
+    ])
+
+    const persistGenerationImage = useCallback(async (generation: Generation) => {
+        const imageUrl = typeof generation.image_url === 'string' ? generation.image_url.trim() : ''
+        if (!imageUrl || generation.image_storage_id) return null
+
+        const needsPersistence =
+            imageUrl.startsWith('data:') ||
+            imageUrl.startsWith('http://') ||
+            imageUrl.startsWith('https://')
+
+        if (!needsPersistence) return null
+
+        const cached = persistedSessionImageCacheRef.current.get(generation.id)
+        if (cached) return cached
+
+        const inFlight = persistImageInFlightRef.current.get(generation.id)
+        if (inFlight) return await inFlight
+
+        const task = (async () => {
+            const response = await fetch('/api/work-sessions/persist-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageUrl }),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'No se pudo persistir la imagen de sesion' }))
+                throw new Error(errorData.error || 'No se pudo persistir la imagen de sesion')
+            }
+
+            const data = await response.json() as { storageId?: string; imageUrl?: string }
+            if (!data.storageId || !data.imageUrl) {
+                throw new Error('Persistencia de imagen incompleta')
+            }
+            const persisted = { storageId: data.storageId, imageUrl: data.imageUrl }
+            persistedSessionImageCacheRef.current.set(generation.id, persisted)
+            return persisted
+        })()
+
+        persistImageInFlightRef.current.set(generation.id, task)
+        try {
+            return await task
+        } finally {
+            persistImageInFlightRef.current.delete(generation.id)
+        }
+    }, [])
+
+    const materializeGenerationsForSnapshot = useCallback(async (generations: Generation[]) => {
+        const updated = await Promise.all(generations.map(async (generation) => {
+            try {
+                const persisted = await persistGenerationImage(generation)
+                if (!persisted) return generation
+                return {
+                    ...generation,
+                    image_storage_id: persisted.storageId,
+                    image_url: persisted.imageUrl,
+                }
+            } catch (error) {
+                console.error('Session image persist failed:', error)
+                return generation
+            }
+        }))
+        return updated
+    }, [persistGenerationImage])
+
+    const restoreWorkspaceFromSnapshot = useCallback((snapshot: ImageWorkspaceSnapshot) => {
+        setIsHydratingSession(true)
+        try {
+            if (snapshot.creationFlowState && typeof snapshot.creationFlowState === 'object') {
+                creationFlow.loadPreset(snapshot.creationFlowState)
+            }
+            setPromptValue(snapshot.promptValue || '')
+            creationFlow.setRawMessage(snapshot.promptValue || '')
+            setEditPrompt(snapshot.editPrompt || '')
+            setLogoInclusion(typeof snapshot.logoInclusion === 'boolean' ? snapshot.logoInclusion : true)
+            setCompositionMode(snapshot.compositionMode === 'advanced' ? 'advanced' : 'basic')
+            setSelectedContext(Array.isArray(snapshot.selectedContext) ? snapshot.selectedContext : [])
+            setSessionGenerations(
+                Array.isArray(snapshot.sessionGenerations)
+                    ? snapshot.sessionGenerations.filter((item) => {
+                        if (!item || typeof item !== 'object') return false
+                        const row = item as Generation
+                        return Boolean(row.image_url || row.image_storage_id)
+                    })
+                    : []
+            )
+            setSessionRootPrompt(normalizePromptForSession(snapshot.rootPrompt || snapshot.promptValue))
+        } finally {
+            window.setTimeout(() => setIsHydratingSession(false), 0)
+        }
+    }, [creationFlow, normalizePromptForSession])
+
+    const createNewImageSession = useCallback(async (initialPrompt?: string, silent = false) => {
+        if (!user?.id || !scopedBrandId) return null
+
+        const prompt = initialPrompt ?? ''
+        const normalizedPrompt = normalizePromptForSession(prompt)
+
+        creationFlow.reset()
+        setSessionGenerations([])
+        setDebugPromptData(null)
+        setSelectedContext([])
+        setEditPrompt('')
+        setPendingRetryRequest(null)
+        setLastGenerationRequest(null)
+        setPromptValue(prompt)
+        creationFlow.setRawMessage(prompt)
+        setSessionRootPrompt(normalizedPrompt)
+        setAuditFlowId(null)
+        auditFlowIdRef.current = null
+
+        const created = await createWorkSession({
+            user_id: user.id,
+            module: 'image',
+            brand_id: scopedBrandId,
+            title: buildSessionTitle(prompt),
+            root_prompt: normalizedPrompt || undefined,
+        })
+
+        const newId = String(created.session_id)
+        setCurrentSessionId(newId)
+        setSelectedSessionToLoad(newId)
+
+        if (!silent) {
+            toast({
+                title: "Sesion nueva",
+                description: "Se ha iniciado una nueva sesion de trabajo para este kit de marca.",
+            })
+        }
+        return newId
+    }, [user?.id, scopedBrandId, normalizePromptForSession, creationFlow, createWorkSession, toast, buildSessionTitle])
+
+    const handleLoadSession = useCallback(async (sessionId: string) => {
+        if (!sessionId || !user?.id) return
+        const activated = await activateWorkSession({
+            user_id: user.id,
+            session_id: sessionId as Id<'work_sessions'>,
+        })
+        if (activated?.snapshot) {
+            restoreWorkspaceFromSnapshot(activated.snapshot as ImageWorkspaceSnapshot)
+        }
+        setCurrentSessionId(String(activated?._id || sessionId))
+        setSelectedSessionToLoad(String(activated?._id || sessionId))
+        setSessionRootPrompt(normalizePromptForSession(activated?.root_prompt))
+    }, [user?.id, activateWorkSession, restoreWorkspaceFromSnapshot, normalizePromptForSession])
+
+    const handleDeleteCurrentSession = useCallback(async () => {
+        if (!user?.id || !currentSessionId) return
+        if (!window.confirm('¿Quieres borrar esta sesion?')) return
+
+        const result = await deleteWorkSession({
+            user_id: user.id,
+            session_id: currentSessionId as Id<'work_sessions'>,
+        })
+
+        if (result?.next_session_id) {
+            await handleLoadSession(String(result.next_session_id))
+        } else {
+            await createNewImageSession('', true)
+        }
+
+        toast({
+            title: 'Sesion eliminada',
+            description: 'La sesion se ha borrado correctamente.',
+        })
+    }, [user?.id, currentSessionId, deleteWorkSession, handleLoadSession, createNewImageSession, toast])
+
+    const handleClearAllSessions = useCallback(async () => {
+        if (!user?.id || !scopedBrandId) return
+        if (!window.confirm('¿Quieres borrar todas las sesiones de este kit de marca?')) return
+
+        await clearWorkSessions({
+            user_id: user.id,
+            module: 'image',
+            brand_id: scopedBrandId,
+        })
+
+        await createNewImageSession('', true)
+        toast({
+            title: 'Sesiones borradas',
+            description: 'Se han eliminado todas las sesiones de este kit.',
+        })
+    }, [user?.id, scopedBrandId, clearWorkSessions, createNewImageSession, toast])
+
+    // Hydrate one session per scope (user + module + brand kit).
+    useEffect(() => {
+        const scopeKey = `${user?.id || 'anon'}::image::${scopedBrandId || 'no-brand'}`
+        if (hydrationScopeRef.current !== scopeKey) {
+            hydrationScopeRef.current = scopeKey
+            hasHydratedScopeRef.current = false
+            setCurrentSessionId(null)
+            setSelectedSessionToLoad('')
+            setSessionRootPrompt(null)
+        }
+
+        if (!user?.id || !scopedBrandId) return
+        if (activeWorkSession === undefined) return
+        if (hasHydratedScopeRef.current) return
+
+        if (activeWorkSession?.snapshot) {
+            restoreWorkspaceFromSnapshot(activeWorkSession.snapshot as ImageWorkspaceSnapshot)
+            setCurrentSessionId(String(activeWorkSession._id))
+            setSelectedSessionToLoad(String(activeWorkSession._id))
+            setSessionRootPrompt(normalizePromptForSession(activeWorkSession.root_prompt))
+            hasHydratedScopeRef.current = true
+            return
+        }
+
+        hasHydratedScopeRef.current = true
+        createWorkSession({
+            user_id: user.id,
+            module: 'image',
+            brand_id: scopedBrandId,
+            title: 'Sesion nueva',
+            snapshot: buildWorkspaceSnapshot(),
+        }).then((created) => {
+            const id = String(created.session_id)
+            setCurrentSessionId(id)
+            setSelectedSessionToLoad(id)
+        }).catch((error) => {
+            hasHydratedScopeRef.current = false
+            console.error('Error creating initial image work session:', error)
+        })
+    }, [
+        user?.id,
+        scopedBrandId,
+        activeWorkSession,
+        createWorkSession,
+        buildWorkspaceSnapshot,
+        restoreWorkspaceFromSnapshot,
+        normalizePromptForSession
+    ])
+
+    // Autosave current workspace snapshot.
+    useEffect(() => {
+        if (!user?.id || !scopedBrandId) return
+        if (!hasHydratedScopeRef.current) return
+        if (isHydratingSession) return
+
+        if (autosaveTimerRef.current) {
+            clearTimeout(autosaveTimerRef.current)
+        }
+
+        autosaveTimerRef.current = setTimeout(() => {
+            void (async () => {
+                try {
+                    const persistedGenerations = await materializeGenerationsForSnapshot(sessionGenerations)
+                    const hasPersistedChanges = persistedGenerations.some((generation, index) => (
+                        generation.image_storage_id !== sessionGenerations[index]?.image_storage_id ||
+                        generation.image_url !== sessionGenerations[index]?.image_url
+                    ))
+                    if (hasPersistedChanges) {
+                        setSessionGenerations(persistedGenerations)
+                    }
+
+                    const snapshot = buildWorkspaceSnapshot(undefined, persistedGenerations)
+                    const result = await upsertWorkSession({
+                        user_id: user.id,
+                        module: 'image',
+                        brand_id: scopedBrandId,
+                        session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
+                        title: buildSessionTitle(snapshot.promptValue || 'Sesion de imagen'),
+                        root_prompt: normalizePromptForSession(snapshot.rootPrompt || snapshot.promptValue) || undefined,
+                        snapshot,
+                    })
+                    const id = String(result.session_id)
+                    if (!currentSessionId) {
+                        setCurrentSessionId(id)
+                        setSelectedSessionToLoad(id)
+                    }
+                } catch (error) {
+                    console.error('Autosave session failed:', error)
+                }
+            })()
+        }, 1500)
+
+        return () => {
+            if (autosaveTimerRef.current) {
+                clearTimeout(autosaveTimerRef.current)
+            }
+        }
+    }, [
+        user?.id,
+        scopedBrandId,
+        isHydratingSession,
+        currentSessionId,
+        promptValue,
+        editPrompt,
+        logoInclusion,
+        compositionMode,
+        selectedContext,
+        sessionGenerations,
+        creationFlow.state,
+        buildWorkspaceSnapshot,
+        materializeGenerationsForSnapshot,
+        upsertWorkSession,
+        normalizePromptForSession,
+        buildSessionTitle
+    ])
 
     // Reset Studio when Brand Kit changes
     useEffect(() => {
@@ -221,7 +650,7 @@ export default function ImagePage() {
                 request_payload: { ...requestPayload },
                 error_title: errorTitle,
                 error_fallback: errorFallback
-            }, ...prev])
+            }, ...prev].slice(0, 80))
             return
         }
 
@@ -270,6 +699,7 @@ export default function ImagePage() {
         model?: string
         promptAlreadyBuilt?: boolean
         forcedLayoutId?: string
+        auditFlowId?: string
     }) => {
         if (!activeBrandKit) return null
 
@@ -418,7 +848,8 @@ export default function ImagePage() {
             compositionSkill,
             layoutReference: effectiveLayoutMeta?.referenceImage,
             aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
-            selectedColors: creationFlow.state.selectedBrandColors
+            selectedColors: creationFlow.state.selectedBrandColors,
+            auditFlowId: data.auditFlowId
         } as Record<string, unknown>
 
         return {
@@ -443,11 +874,20 @@ export default function ImagePage() {
     // Smart analyze prompt
     const handleSmartAnalyze = async (autoModel?: string) => {
         if (!promptValue.trim()) return null
+        if (smartAnalyzeInFlightRef.current) return null
 
+        smartAnalyzeInFlightRef.current = true
         setIsMagicParsing(true)
         setHighlightedFields(new Set())
 
         try {
+            const normalizedPrompt = normalizePromptForSession(promptValue)
+            if (normalizedPrompt && sessionRootPrompt && normalizedPrompt !== sessionRootPrompt) {
+                await createNewImageSession(promptValue, true)
+            } else if (normalizedPrompt && !sessionRootPrompt) {
+                setSessionRootPrompt(normalizedPrompt)
+            }
+
             const modelToUse = autoModel || aiConfig?.intelligenceModel
             if (!modelToUse) {
                 toast({
@@ -459,6 +899,11 @@ export default function ImagePage() {
             }
 
             creationFlow.setRawMessage(promptValue)
+            const nextFlowId = auditFlowIdRef.current || `flow_${Date.now()}`
+            if (!auditFlowIdRef.current) {
+                auditFlowIdRef.current = nextFlowId
+                setAuditFlowId(nextFlowId)
+            }
 
             const previewTextContext = [
                 creationFlow.state.headline?.trim() ? `HEADLINE: ${creationFlow.state.headline.trim()}` : '',
@@ -485,7 +930,8 @@ export default function ImagePage() {
                 intentId: creationFlow.currentIntent?.id,
                 layoutId: creationFlow.selectedLayoutMeta?.id,
                 variationSeed: Date.now(),
-                previewTextContext
+                previewTextContext,
+                auditFlowId: nextFlowId
             })
 
             if (result.error) {
@@ -503,7 +949,7 @@ export default function ImagePage() {
             if (result.detectedIntent && !creationFlow.state.selectedIntent) {
                 creationFlow.selectIntent(result.detectedIntent as IntentCategory)
                 toast({
-                    title: "ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒâ€šÃ‚Â¨ IntenciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n detectada",
+                    title: "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ IntenciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n detectada",
                     description: `Detectamos que quieres crear: ${result.detectedIntent}`,
                 })
             }
@@ -618,6 +1064,7 @@ export default function ImagePage() {
             return null
         } finally {
             setIsMagicParsing(false)
+            smartAnalyzeInFlightRef.current = false
         }
     }
 
@@ -629,12 +1076,13 @@ export default function ImagePage() {
         model?: string
         promptAlreadyBuilt?: boolean
         forcedLayoutId?: string
+        auditFlowId?: string
     }) => {
         if (!activeBrandKit) return
         if (creationFlow.state.isAnalyzing) {
             toast({
                 title: "Analizando referencia",
-                description: "Espera a que termine el análisis antes de generar.",
+                description: "Espera a que termine el anÃƒÂ¡lisis antes de generar.",
                 variant: "destructive",
             })
             return
@@ -642,7 +1090,12 @@ export default function ImagePage() {
 
         setIsGenerating(true)
         try {
-            const prepared = buildGenerationRequestPayload(data)
+            const effectiveFlowId = data.auditFlowId || auditFlowId || `flow_${Date.now()}`
+            if (!auditFlowId) setAuditFlowId(effectiveFlowId)
+            const prepared = buildGenerationRequestPayload({
+                ...data,
+                auditFlowId: effectiveFlowId
+            })
             if (!prepared) return
 
             const { requestPayload, styleReferenceImage, attachedImages, debugContextItems } = prepared
@@ -690,7 +1143,7 @@ export default function ImagePage() {
 
             setLastGenerationRequest({
                 payload: requestPayloadForApi,
-                errorTitle: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                errorTitle: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
                 errorFallback: "Error al generar la imagen"
             })
 
@@ -710,13 +1163,13 @@ export default function ImagePage() {
                     created_at: new Date().toISOString(),
                     prompt_used: typeof requestPayloadForApi.prompt === 'string' ? requestPayloadForApi.prompt : '',
                     request_payload: { ...requestPayloadForApi },
-                    error_title: "Error de generación",
+                    error_title: "Error de generaciÃƒÂ³n",
                     error_fallback: "Error al generar la imagen"
-                }, ...prev])
+                }, ...prev].slice(0, 80))
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al generar la imagen' }))
                 toast({
-                    title: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n",
+                    title: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
                     description: errorData.error || 'Error al generar la imagen',
                     variant: "destructive",
                 })
@@ -724,7 +1177,7 @@ export default function ImagePage() {
         } catch (error: any) {
             console.error('Generation failed:', error)
             toast({
-                title: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n",
+                title: "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
                 description: error.message || 'No se pudo generar la imagen.',
                 variant: "destructive",
             })
@@ -738,6 +1191,8 @@ export default function ImagePage() {
 
         setIsGenerating(true)
         try {
+            const effectiveFlowId = auditFlowId || `flow_${Date.now()}`
+            if (!auditFlowId) setAuditFlowId(effectiveFlowId)
             const editContext = [{
                 id: 'edit-reference',
                 type: 'image' as const,
@@ -810,11 +1265,12 @@ export default function ImagePage() {
                     }
                     : undefined,
                 aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
-                selectedColors: creationFlow.state.selectedBrandColors
+                selectedColors: creationFlow.state.selectedBrandColors,
+                auditFlowId: effectiveFlowId
             }
             setLastGenerationRequest({
                 payload: requestPayload,
-                errorTitle: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                errorTitle: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
                 errorFallback: "Error al editar la imagen"
             })
 
@@ -834,13 +1290,13 @@ export default function ImagePage() {
                     created_at: new Date().toISOString(),
                     prompt_used: typeof requestPayload.prompt === 'string' ? requestPayload.prompt : '',
                     request_payload: { ...requestPayload },
-                    error_title: "Error de edición",
+                    error_title: "Error de ediciÃƒÂ³n",
                     error_fallback: "Error al editar la imagen"
-                }, ...prev])
+                }, ...prev].slice(0, 80))
             } else {
                 const errorData = await response.json().catch(() => ({ error: 'Error al editar la imagen' }))
                 toast({
-                    title: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n",
+                    title: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
                     description: errorData.error || 'Error al editar la imagen',
                     variant: "destructive",
                 })
@@ -848,7 +1304,7 @@ export default function ImagePage() {
         } catch (error: any) {
             console.error('Edit failed:', error)
             toast({
-                title: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n",
+                title: "Error de ediciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
                 description: error.message || 'No se pudo editar la imagen.',
                 variant: "destructive",
             })
@@ -881,6 +1337,7 @@ export default function ImagePage() {
         model?: string
         promptAlreadyBuilt?: boolean
         forcedLayoutId?: string
+        auditFlowId?: string
     }) => {
         if (!isAdmin) {
             await handleGenerate(data)
@@ -1015,7 +1472,7 @@ export default function ImagePage() {
         if (!currentIntent) {
             toast({
                 title: "Falta intent",
-                description: "Primero analiza el prompt para detectar la intención.",
+                description: "Primero analiza el prompt para detectar la intenciÃƒÂ³n.",
                 variant: "destructive",
             })
             return
@@ -1023,8 +1480,8 @@ export default function ImagePage() {
 
         if (compositionMode === 'advanced' && !creationFlow.state.selectedLayout) {
             toast({
-                title: "Selecciona una composición",
-                description: "En modo avanzado debes elegir una composición manualmente.",
+                title: "Selecciona una composiciÃƒÂ³n",
+                description: "En modo avanzado debes elegir una composiciÃƒÂ³n manualmente.",
                 variant: "destructive",
             })
             return
@@ -1060,7 +1517,7 @@ export default function ImagePage() {
             if (!currentIntent) {
                 toast({
                     title: "Falta intent",
-                    description: "Primero analiza el prompt para detectar la intención.",
+                    description: "Primero analiza el prompt para detectar la intenciÃƒÂ³n.",
                     variant: "destructive",
                 })
                 return
@@ -1100,7 +1557,7 @@ export default function ImagePage() {
         if (creationFlow.state.isAnalyzing) {
             toast({
                 title: "Analizando referencia",
-                description: "Espera a que termine el análisis antes de generar.",
+                description: "Espera a que termine el anÃƒÂ¡lisis antes de generar.",
                 variant: "destructive",
             })
             return
@@ -1217,7 +1674,7 @@ export default function ImagePage() {
                                         if (gen.request_payload) {
                                             setLastGenerationRequest({
                                                 payload: { ...gen.request_payload },
-                                                errorTitle: gen.error_title || "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                                                errorTitle: gen.error_title || "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
                                                 errorFallback: gen.error_fallback || "Error al generar la imagen"
                                             })
                                         } else if (gen.prompt_used) {
@@ -1226,7 +1683,7 @@ export default function ImagePage() {
                                                     ...(prev?.payload || {}),
                                                     prompt: gen.prompt_used
                                                 },
-                                                errorTitle: prev?.errorTitle || "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
+                                                errorTitle: prev?.errorTitle || "Error de generaciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n",
                                                 errorFallback: prev?.errorFallback || "Error al generar la imagen"
                                             }))
                                         }
@@ -1266,12 +1723,27 @@ export default function ImagePage() {
                             canGenerate={Boolean(canGenerate)}
                             onUnifiedAction={handleUnifiedAction}
                             onAnalyze={() => handleSmartAnalyze()}
-                            userId={user?.id}
                             isAdmin={isAdmin}
                             adminEmail={user?.emailAddresses?.[0]?.emailAddress}
                             compositionMode={compositionMode}
                             onCompositionModeChange={setCompositionMode}
                             layoutOverrides={layoutOverrides}
+                            sessions={(workSessions || []).map((session) => ({
+                                id: String(session._id),
+                                title: buildSessionTitle(session.title || 'Sesion sin titulo'),
+                                updatedAt: session.updated_at,
+                                active: session.active,
+                            }))}
+                            selectedSessionId={selectedSessionToLoad}
+                            onSelectSession={(id) => {
+                                setSelectedSessionToLoad(id)
+                                if (id && id !== currentSessionId) {
+                                    void handleLoadSession(id)
+                                }
+                            }}
+                            onCreateSession={() => void createNewImageSession(promptValue)}
+                            onDeleteSession={() => void handleDeleteCurrentSession()}
+                            onClearSessions={() => void handleClearAllSessions()}
                         />
                     </div>
 
@@ -1304,7 +1776,7 @@ export default function ImagePage() {
                                     className="h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold px-4 whitespace-nowrap"
                                 >
                                     <Sparkles className="w-4 h-4 mr-2" />
-                                    Realizar corrección
+                                    Realizar correcciÃƒÂ³n
                                 </Button>
                             )}
                         </div>
@@ -1362,8 +1834,8 @@ export default function ImagePage() {
                         </div>
                         <h2 className="text-2xl font-semibold">Selecciona un Brand Kit</h2>
                         <p className="text-muted-foreground">
-                            Para empezar a diseÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â±ar en el panel de Imagen, necesitas seleccionar un Brand Kit.
-                            Si aÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºn no tienes uno, crÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©alo en la secciÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n "Brand Kit".
+                            Para empezar a diseÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â±ar en el panel de Imagen, necesitas seleccionar un Brand Kit.
+                            Si aÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âºn no tienes uno, crÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©alo en la secciÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³n "Brand Kit".
                         </p>
                     </div>
                 </div>
@@ -1384,4 +1856,5 @@ export default function ImagePage() {
         </DashboardLayout >
     )
 }
+
 

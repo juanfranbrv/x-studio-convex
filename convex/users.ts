@@ -45,6 +45,150 @@ function resolveExistingUserAccess(
     return access;
 }
 
+async function migrateUserOwnershipIfNeeded(
+    ctx: MutationCtx,
+    oldClerkId: string,
+    newClerkId: string,
+    email: string
+) {
+    if (!oldClerkId || !newClerkId || oldClerkId === newClerkId) return;
+
+    const [brandDNA, legacyBrands, presets, feedbackItems] = await Promise.all([
+        ctx.db
+            .query("brand_dna")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_user_id", oldClerkId))
+            .collect(),
+        ctx.db
+            .query("brands")
+            .withIndex("by_owner", (q) => q.eq("owner_id", oldClerkId))
+            .collect(),
+        ctx.db
+            .query("presets")
+            .withIndex("by_user", (q) => q.eq("userId", oldClerkId))
+            .collect(),
+        ctx.db
+            .query("feedback")
+            .withIndex("by_user", (q) => q.eq("userId", oldClerkId))
+            .collect(),
+    ]);
+
+    await Promise.all([
+        ...brandDNA.map((item) => ctx.db.patch(item._id, { clerk_user_id: newClerkId })),
+        ...legacyBrands.map((item) => ctx.db.patch(item._id, { owner_id: newClerkId })),
+        ...presets.map((item) => ctx.db.patch(item._id, { userId: newClerkId })),
+        ...feedbackItems.map((item) => ctx.db.patch(item._id, { userId: newClerkId, userEmail: email })),
+    ]);
+}
+
+async function findUserByEmail(ctx: MutationCtx, email: string) {
+    const emailLower = email.toLowerCase().trim();
+    return await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", emailLower))
+        .first();
+}
+
+async function findUsersByEmail(ctx: MutationCtx, email: string) {
+    const emailLower = email.toLowerCase().trim();
+    return await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", emailLower))
+        .collect();
+}
+
+async function reconcileUsersByEmail(
+    ctx: MutationCtx,
+    targetUser: Doc<"users">,
+    newClerkId: string,
+    email: string
+) {
+    const matches = await findUsersByEmail(ctx, email);
+    const duplicates = matches.filter((user) => user._id !== targetUser._id);
+
+    if (duplicates.length === 0) {
+        const normalizedEmail = email.toLowerCase().trim();
+        if (targetUser.clerk_id !== newClerkId || targetUser.email !== normalizedEmail) {
+            await ctx.db.patch(targetUser._id, { clerk_id: newClerkId, email: normalizedEmail });
+            return { ...targetUser, clerk_id: newClerkId, email: normalizedEmail };
+        }
+        return targetUser;
+    }
+
+    let maxCredits = targetUser.credits || 0;
+    let fallbackCurrentBrand = targetUser.current_brand_id;
+
+    for (const duplicate of duplicates) {
+        maxCredits = Math.max(maxCredits, duplicate.credits || 0);
+        if (!fallbackCurrentBrand && duplicate.current_brand_id) {
+            fallbackCurrentBrand = duplicate.current_brand_id;
+        }
+
+        await migrateUserOwnershipIfNeeded(ctx, duplicate.clerk_id, newClerkId, email);
+
+        const txs = await ctx.db
+            .query("credit_transactions")
+            .withIndex("by_user", (q) => q.eq("user_id", duplicate._id))
+            .collect();
+        await Promise.all(txs.map((tx) => ctx.db.patch(tx._id, { user_id: targetUser._id })));
+
+        await ctx.db.delete(duplicate._id);
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    await ctx.db.patch(targetUser._id, {
+        clerk_id: newClerkId,
+        email: normalizedEmail,
+        credits: maxCredits,
+        current_brand_id: fallbackCurrentBrand,
+    });
+
+    return {
+        ...targetUser,
+        clerk_id: newClerkId,
+        email: normalizedEmail,
+        credits: maxCredits,
+        current_brand_id: fallbackCurrentBrand,
+    };
+}
+
+async function updateUserAccessAndCredits(
+    ctx: MutationCtx,
+    user: Doc<"users">,
+    access: { role: "user" | "beta" | "admin"; status: "waitlist" | "active"; approved: boolean },
+    email: string,
+    reason: string
+) {
+    const effectiveAccess = resolveExistingUserAccess(user, access);
+    const wasApproved = user.status === "active";
+    const willBeApproved = effectiveAccess.status === "active";
+    const creditsToGrant = !wasApproved && willBeApproved
+        ? await getSetting(ctx, "beta_initial_credits", 100)
+        : 0;
+    const nextCredits = creditsToGrant > 0
+        ? (user.credits || 0) + creditsToGrant
+        : user.credits;
+
+    await ctx.db.patch(user._id, {
+        email,
+        role: effectiveAccess.role,
+        status: effectiveAccess.status,
+        credits: nextCredits,
+    });
+
+    if (creditsToGrant > 0) {
+        await ctx.db.insert("credit_transactions", {
+            user_id: user._id,
+            type: "grant",
+            amount: creditsToGrant,
+            balance_after: nextCredits,
+            metadata: { reason },
+            created_at: new Date().toISOString(),
+        });
+    }
+
+    return { effectiveAccess, nextCredits };
+}
+
 export const getUser = query({
     args: { clerk_id: v.string() },
     handler: async (ctx, args) => {
@@ -145,6 +289,7 @@ export const upsertUser = mutation({
         email: v.string(),
     },
     handler: async (ctx, args) => {
+        const emailLower = args.email.toLowerCase().trim();
         const existing = await ctx.db
             .query("users")
             .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
@@ -153,45 +298,29 @@ export const upsertUser = mutation({
         const access = await resolveUserAccess(ctx, args.email);
 
         if (existing) {
-            const effectiveAccess = resolveExistingUserAccess(existing, access);
-            const wasApproved = existing.status === "active";
-            const willBeApproved = effectiveAccess.status === "active";
-            const creditsToGrant = !wasApproved && willBeApproved
-                ? await getSetting(ctx, "beta_initial_credits", 100)
-                : 0;
-            const nextCredits = creditsToGrant > 0
-                ? (existing.credits || 0) + creditsToGrant
-                : existing.credits;
-
-            await ctx.db.patch(existing._id, {
-                email: args.email,
-                role: effectiveAccess.role,
-                status: effectiveAccess.status,
-                credits: nextCredits,
-            });
-
-            if (creditsToGrant > 0) {
-                await ctx.db.insert("credit_transactions", {
-                    user_id: existing._id,
-                    type: "grant",
-                    amount: creditsToGrant,
-                    balance_after: nextCredits,
-                    metadata: { reason: "Activation after beta approval" },
-                    created_at: new Date().toISOString(),
-                });
-            }
-
-            return existing._id;
+            const reconciled = await reconcileUsersByEmail(ctx, existing, args.clerk_id, emailLower);
+            await updateUserAccessAndCredits(ctx, reconciled, access, emailLower, "Activation after beta approval");
+            return reconciled._id;
         }
 
-        const emailLower = args.email.toLowerCase().trim();
+        const existingByEmail = await findUserByEmail(ctx, emailLower);
+        if (existingByEmail) {
+            const oldClerkId = existingByEmail.clerk_id;
+            if (oldClerkId !== args.clerk_id) {
+                await migrateUserOwnershipIfNeeded(ctx, oldClerkId, args.clerk_id, emailLower);
+            }
+            const reconciled = await reconcileUsersByEmail(ctx, existingByEmail, args.clerk_id, emailLower);
+            await updateUserAccessAndCredits(ctx, reconciled, access, emailLower, "Activation after beta approval");
+            return reconciled._id;
+        }
+
         const initialCredits = access.approved
             ? await getSetting(ctx, "beta_initial_credits", 100)
             : 0;
 
         const userId = await ctx.db.insert("users", {
             clerk_id: args.clerk_id,
-            email: args.email,
+            email: emailLower,
             created_at: new Date().toISOString(),
             credits: initialCredits,
             status: access.status,
@@ -243,51 +372,49 @@ export const syncUserFromClerkWebhook = mutation({
         email: v.string(),
     },
     handler: async (ctx, args) => {
+        const emailLower = args.email.toLowerCase().trim();
         const existing = await ctx.db
             .query("users")
             .withIndex("by_clerk_id", (q) => q.eq("clerk_id", args.clerk_id))
             .first();
 
-        const access = await resolveUserAccess(ctx, args.email);
+        const access = await resolveUserAccess(ctx, emailLower);
         const initialCredits = access.approved
             ? await getSetting(ctx, "beta_initial_credits", 100)
             : 0;
 
         if (existing) {
-            const effectiveAccess = resolveExistingUserAccess(existing, access);
-            const wasApproved = existing.status === "active";
-            const willBeApproved = effectiveAccess.status === "active";
-            const creditsToGrant = !wasApproved && willBeApproved
-                ? await getSetting(ctx, "beta_initial_credits", 100)
-                : 0;
-            const nextCredits = creditsToGrant > 0
-                ? (existing.credits || 0) + creditsToGrant
-                : existing.credits;
+            const reconciled = await reconcileUsersByEmail(ctx, existing, args.clerk_id, emailLower);
+            const { effectiveAccess } = await updateUserAccessAndCredits(
+                ctx,
+                reconciled,
+                access,
+                emailLower,
+                "Clerk webhook beta approval"
+            );
+            return { action: "updated", userId: reconciled._id, role: effectiveAccess.role, status: effectiveAccess.status };
+        }
 
-            await ctx.db.patch(existing._id, {
-                email: args.email,
-                role: effectiveAccess.role,
-                status: effectiveAccess.status,
-                credits: nextCredits,
-            });
-
-            if (creditsToGrant > 0) {
-                await ctx.db.insert("credit_transactions", {
-                    user_id: existing._id,
-                    type: "grant",
-                    amount: creditsToGrant,
-                    balance_after: nextCredits,
-                    metadata: { reason: "Clerk webhook beta approval" },
-                    created_at: new Date().toISOString(),
-                });
+        const existingByEmail = await findUserByEmail(ctx, emailLower);
+        if (existingByEmail) {
+            const oldClerkId = existingByEmail.clerk_id;
+            if (oldClerkId !== args.clerk_id) {
+                await migrateUserOwnershipIfNeeded(ctx, oldClerkId, args.clerk_id, emailLower);
             }
-
-            return { action: "updated", userId: existing._id, role: effectiveAccess.role, status: effectiveAccess.status };
+            const reconciled = await reconcileUsersByEmail(ctx, existingByEmail, args.clerk_id, emailLower);
+            const { effectiveAccess } = await updateUserAccessAndCredits(
+                ctx,
+                reconciled,
+                access,
+                emailLower,
+                "Clerk webhook beta approval"
+            );
+            return { action: "updated", userId: reconciled._id, role: effectiveAccess.role, status: effectiveAccess.status };
         }
 
         const userId = await ctx.db.insert("users", {
             clerk_id: args.clerk_id,
-            email: args.email,
+            email: emailLower,
             created_at: new Date().toISOString(),
             credits: initialCredits,
             status: access.status,
@@ -331,6 +458,41 @@ export const deleteUserByClerkId = mutation({
         await ctx.db.delete(user._id);
 
         return { success: true, deleted: true };
+    },
+});
+
+export const reconcileUserByEmail = mutation({
+    args: {
+        admin_email: v.string(),
+        email: v.string(),
+    },
+    handler: async (ctx, args) => {
+        if (!ADMIN_EMAILS.includes(args.admin_email.toLowerCase().trim())) {
+            throw new Error("Unauthorized");
+        }
+
+        const emailLower = args.email.toLowerCase().trim();
+        const matches = await findUsersByEmail(ctx, emailLower);
+        if (matches.length <= 1) {
+            return { success: true, message: "No duplicates found", count: matches.length };
+        }
+
+        const target =
+            matches.find((user) => user.role === "admin") ??
+            matches.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+
+        const beforeCount = matches.length;
+        await reconcileUsersByEmail(ctx, target, target.clerk_id, emailLower);
+        const after = await findUsersByEmail(ctx, emailLower);
+
+        return {
+            success: true,
+            message: "Reconciled",
+            beforeCount,
+            afterCount: after.length,
+            targetUserId: target._id,
+            targetClerkId: target.clerk_id,
+        };
     },
 });
 

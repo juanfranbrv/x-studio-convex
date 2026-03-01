@@ -35,7 +35,8 @@ export default defineSchema({
     // Onboarding
     onboarding_completed: v.optional(v.boolean()),
     onboarding_completed_at: v.optional(v.string()),
-  }).index("by_clerk_id", ["clerk_id"]),
+  }).index("by_clerk_id", ["clerk_id"])
+    .index("by_email", ["email"]),
 
   // Credit transaction audit log
   credit_transactions: defineTable({
@@ -158,6 +159,21 @@ export default defineSchema({
     .index("by_brand", ["brandId"])
     .index("by_system", ["isSystem"]),
 
+  // Persistent workspace sessions (autosave snapshots) per user/module/brand kit.
+  work_sessions: defineTable({
+    user_id: v.string(),                  // clerk_id
+    module: v.string(),                   // "image" | "carousel"
+    brand_id: v.optional(v.id("brand_dna")),
+    title: v.optional(v.string()),
+    root_prompt: v.optional(v.string()),
+    snapshot: v.optional(v.any()),        // full UI state
+    active: v.boolean(),
+    created_at: v.string(),
+    updated_at: v.string(),
+  }).index("by_user_module", ["user_id", "module"])
+    .index("by_user_module_updated", ["user_id", "module", "updated_at"])
+    .index("by_user_brand_module", ["user_id", "brand_id", "module"]),
+
   carousel_structures: defineTable({
     structure_id: v.string(), // stable id (e.g., "problema-solucion")
     name: v.string(),
@@ -211,4 +227,36 @@ export default defineSchema({
   }).index("by_user", ["userId"])
     .index("by_rating", ["rating"])
     .index("by_created", ["created_at"]),
+
+  // Economic audit: model cost catalog
+  model_costs: defineTable({
+    model: v.string(),                    // e.g. "wisdom/gemini-3-flash-preview"
+    kind: v.string(),                     // "intelligence" | "image"
+    cost_eur: v.number(),                 // Estimated EUR cost per call
+    comment: v.optional(v.string()),      // Admin notes about pricing/source
+    active: v.boolean(),
+    created_at: v.string(),
+    updated_at: v.string(),
+    updated_by: v.optional(v.string()),
+  }).index("by_model", ["model"])
+    .index("by_kind", ["kind"])
+    .index("by_active", ["active"]),
+
+  // Economic audit: one row per charged AI call
+  economic_audit_events: defineTable({
+    flow_id: v.optional(v.string()),      // ties "analyze" + "generate" together
+    phase: v.string(),                    // e.g. "analyze_prompt_intent" | "generate_image"
+    model: v.string(),
+    kind: v.string(),                     // "intelligence" | "image"
+    estimated_cost_eur: v.number(),
+    cumulative_cost_eur: v.optional(v.number()), // Running total per flow
+    user_clerk_id: v.optional(v.string()),
+    user_email: v.optional(v.string()),
+    metadata: v.optional(v.any()),
+    created_at: v.string(),
+  }).index("by_flow", ["flow_id"])
+    .index("by_created", ["created_at"])
+    .index("by_model", ["model"])
+    .index("by_kind", ["kind"])
+    .index("by_user", ["user_clerk_id"]),
 });

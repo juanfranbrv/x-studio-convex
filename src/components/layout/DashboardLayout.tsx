@@ -22,6 +22,7 @@ interface DashboardLayoutProps {
     onBrandDelete?: (brandId: string) => void
     onNewBrandKit?: () => void
     isFixed?: boolean
+    headerAfterBrandActions?: ReactNode
 }
 
 export function DashboardLayout({
@@ -31,7 +32,8 @@ export function DashboardLayout({
     onBrandChange,
     onBrandDelete,
     onNewBrandKit,
-    isFixed = false
+    isFixed = false,
+    headerAfterBrandActions
 }: DashboardLayoutProps) {
     const { user } = useUser()
     const { brandKits, loading: brandKitsLoading } = useBrandKit()
@@ -81,6 +83,7 @@ export function DashboardLayout({
                             onBrandChange={onBrandChange}
                             onBrandDelete={onBrandDelete}
                             onNewBrandKit={onNewBrandKit}
+                            afterBrandActions={headerAfterBrandActions}
                         />
 
                         {/* Scrollable Content Container */}

@@ -80,7 +80,11 @@ export const initializeSettings = mutation({
             { key: "credits_per_generation", value: 1, description: "Créditos consumidos por generación" },
             { key: "model_image_generation", value: "wisdom/gemini-3-pro-image-preview", description: "Modelo por defecto para generación de imagen" },
             { key: "model_intelligence", value: "wisdom/gemini-3-flash-preview", description: "Modelo por defecto para inteligencia y análisis" },
+            { key: "provider_google_api_key", value: "", description: "API key de Google para modelos de texto google/*" },
+            { key: "provider_wisdom_api_key", value: "", description: "API key de Wisdom para modelos wisdom/*" },
             { key: "provider_naga_api_key", value: "", description: "API key de NagaAI para modelos naga/*" },
+            { key: "provider_replicate_api_key", value: "", description: "API key de Replicate para modelos replicate/*" },
+            { key: "provider_atlas_api_key", value: "", description: "API key de Atlas para modelos atlas/*" },
         ];
 
         for (const setting of defaults) {

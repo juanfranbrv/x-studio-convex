@@ -11,7 +11,9 @@
     "debug": "powershell -ExecutionPolicy Bypass -File ./debug-chrome.ps1",
     "kill-chrome": "powershell -ExecutionPolicy Bypass -File ./kill-chrome.ps1",
     "dev:mobile": "node scripts/dev-mobile.js",
-    "dev:lan": "concurrently \"npx convex dev\" \"powershell -ExecutionPolicy Bypass -Command \\\"$env:NEXT_DISABLE_TURBOPACK=1; next dev --hostname 0.0.0.0 --port 3000\\\"\""
+    "dev:quiet": "concurrently \"powershell -ExecutionPolicy Bypass -Command \\\"npx convex dev 2>&1 | node scripts/dev-log-filter.js convex\\\"\" \"powershell -ExecutionPolicy Bypass -Command \\\"$env:NEXT_DISABLE_TURBOPACK=1; next dev 2>&1 | node scripts/dev-log-filter.js next\\\"\"",
+    "dev:lan": "concurrently \"npx convex dev\" \"powershell -ExecutionPolicy Bypass -Command \\\"$env:NEXT_DISABLE_TURBOPACK=1; next dev --hostname 0.0.0.0 --port 3000\\\"\"",
+    "dev:lan:quiet": "concurrently \"powershell -ExecutionPolicy Bypass -Command \\\"npx convex dev 2>&1 | node scripts/dev-log-filter.js convex\\\"\" \"powershell -ExecutionPolicy Bypass -Command \\\"$env:NEXT_DISABLE_TURBOPACK=1; next dev --hostname 0.0.0.0 --port 3000 2>&1 | node scripts/dev-log-filter.js next\\\"\""
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.1",
@@ -51,7 +53,7 @@
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "convex": "^1.31.3",
+    "convex": "^1.32.0",
     "framer-motion": "^12.23.26",
     "i18next": "^25.7.3",
     "jszip": "^3.10.1",
@@ -84,4 +86,3 @@
     "vitest": "^2.1.9"
   }
 }
-

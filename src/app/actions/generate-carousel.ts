@@ -10,7 +10,9 @@ import { getMoodForSlide } from '@/lib/prompts/carousel/mood'
 import { buildFinalPrompt, generateCarouselSeed, extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
 import { detectLanguage } from '@/lib/language-detection'
 import type { NarrativeStructure, CarouselComposition as NarrativeComposition } from '@/lib/carousel-structures'
-import { fetchQuery } from 'convex/nextjs'
+import { fetchMutation, fetchQuery } from 'convex/nextjs'
+import { auth } from '@clerk/nextjs/server'
+import { log } from '@/lib/logger'
 import { api } from '../../../convex/_generated/api'
 
 type DbStructure = {
@@ -64,6 +66,60 @@ type CarouselComposition = {
 type CarouselCatalog = {
     structures: CarouselStructure[]
     compositions: CarouselComposition[]
+}
+
+type EconomicAuditContext = {
+    flowId: string
+    userClerkId?: string
+    userEmail?: string
+}
+
+function createEconomicFlowId(prefix: string): string {
+    return `flow_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+}
+
+function shortFlowId(flowId?: string): string {
+    if (!flowId) return 'sin-flow'
+    if (flowId.length <= 28) return flowId
+    return `${flowId.slice(0, 22)}...${flowId.slice(-5)}`
+}
+
+async function resolveEconomicAuditActor(): Promise<Pick<EconomicAuditContext, 'userClerkId' | 'userEmail'>> {
+    try {
+        const { userId } = await auth()
+        if (!userId) return {}
+        const userRow = await fetchQuery(api.users.getUser, { clerk_id: userId }) as { email?: string } | null
+        return {
+            userClerkId: userId,
+            userEmail: userRow?.email,
+        }
+    } catch {
+        return {}
+    }
+}
+
+async function logEconomicModelCall(params: {
+    audit?: EconomicAuditContext
+    phase: string
+    model: string
+    kind: 'intelligence' | 'image'
+    metadata?: Record<string, unknown>
+}) {
+    const { audit, phase, model, kind, metadata } = params
+    if (!audit?.flowId) return
+    try {
+        await fetchMutation(api.economic.logEconomicEvent, {
+            flow_id: audit.flowId,
+            phase,
+            model,
+            kind,
+            user_clerk_id: audit.userClerkId,
+            user_email: audit.userEmail,
+            metadata,
+        })
+    } catch (error) {
+        log.warn('ECONOMIC', `Audit event failed | phase=${phase} model=${model}`, error)
+    }
 }
 
 const normalizeCompositionId = (id?: string) => (id && id !== 'free' ? id : undefined)
@@ -144,6 +200,7 @@ export interface SlideContent {
 export interface CarouselSlide {
     index: number
     imageUrl?: string
+    image_storage_id?: string
     title: string
     description: string
     status: 'pending' | 'generating' | 'done' | 'error'
@@ -178,6 +235,7 @@ export interface GenerateCarouselInput {
     selectedColors?: { color: string; role: string }[]
     selectedImageUrls?: string[]
     includeLogoOnSlides?: boolean
+    auditFlowId?: string
 }
 
 export interface AnalyzeCarouselInput {
@@ -191,6 +249,7 @@ export interface AnalyzeCarouselInput {
     selectedLogoUrl?: string
     aiImageDescription?: string
     language?: string
+    auditFlowId?: string
 }
 
 export interface AnalyzeCarouselResult {
@@ -240,6 +299,7 @@ async function decomposeIntoSlides(
         compositionId?: string
         visualDescription?: string
         language?: string
+        audit?: EconomicAuditContext
     }
 ): Promise<{
     slides: SlideContent[]
@@ -250,9 +310,16 @@ async function decomposeIntoSlides(
     caption?: string
     suggestions?: CarouselSuggestion[]
 }> {
+    const auditFlowTag = options?.audit?.flowId || 'no-flow'
+
     // Auto-detect language from user prompt (like image module does)
     const detectedLanguage = detectLanguage(prompt) || 'es'
-    console.log(`ðŸŒ Carousel: Detected language from prompt: ${detectedLanguage}`)
+    log.info('CAROUSEL', 'Iniciando análisis del carrusel', {
+        flow: shortFlowId(auditFlowTag),
+        slides_solicitadas: slideCount,
+        modelo: model,
+        idioma: detectedLanguage,
+    })
 
     const selectedColorsList = selectedColors?.map(c => c.color) || []
     const brandContext = buildCarouselBrandContext(brand, selectedColorsList, includeLogoUrl)
@@ -267,7 +334,7 @@ async function decomposeIntoSlides(
         const composition = getCompositionById(available, normalizedCompositionId)
 
         if (structure && composition) {
-            console.log(`Using Modular Prompt for ${structure.id} / ${composition.id}`)
+            log.info('CAROUSEL', `Using modular prompt | structure=${structure.id} composition=${composition.id}`)
             const narrative: NarrativeStructure = {
                 id: structure.id,
                 name: structure.name,
@@ -835,23 +902,93 @@ const normalizeParsed = (parsed: any) => {
         if (!parsedSlides) {
             throw new Error(`Slide count mismatch: expected ${requested}, got 0`)
         }
+        const roleByIndex = (idx: number): 'hook' | 'content' | 'cta' => {
+            if (requested === 1) return 'hook'
+            if (idx === 0) return 'hook'
+            if (idx === requested - 1) return 'cta'
+            return 'content'
+        }
+
+        const coerceSlidesToRequested = (source: unknown[]): unknown[] => {
+            if (source.length === requested) return source
+            if (source.length > requested) {
+                const buildNarrativeSlice = (items: unknown[]) => {
+                    if (requested <= 1) return [items[0]]
+                    if (requested === 2) return [items[0], items[items.length - 1]]
+                    const first = items[0]
+                    const last = items[items.length - 1]
+                    const middle = items.slice(1, -1)
+                    const neededMiddle = requested - 2
+                    if (middle.length <= neededMiddle) {
+                        return [first, ...middle, last]
+                    }
+                    const picked: unknown[] = []
+                    for (let i = 0; i < neededMiddle; i++) {
+                        const pos = Math.floor((i * middle.length) / neededMiddle)
+                        picked.push(middle[Math.min(pos, middle.length - 1)])
+                    }
+                    return [first, ...picked, last]
+                }
+                log.warn('FLOW', 'El modelo devolvió más slides; se conserva hook+cta y se muestrea el contenido intermedio', {
+                    flow: shortFlowId(auditFlowTag),
+                    esperadas: requested,
+                    recibidas: source.length,
+                })
+                return buildNarrativeSlice(source)
+            }
+            const next = [...source]
+            log.warn('FLOW', `Carousel parser incompleto: expected=${requested}, got=${source.length}. Rellenando faltantes.`)
+            while (next.length < requested) {
+                const idx = next.length
+                const fallbackRole = roleByIndex(idx)
+                next.push({
+                    index: idx,
+                    role: fallbackRole,
+                    title: fallbackRole === 'hook'
+                        ? 'Descubre esta idea'
+                        : fallbackRole === 'cta'
+                            ? 'Da el siguiente paso'
+                            : `Punto clave ${idx + 1}`,
+                    description: fallbackRole === 'cta'
+                        ? (brand.url?.trim()
+                            ? `Visita ${brand.url?.trim()} y empieza hoy.`
+                            : 'Escríbenos y empecemos hoy mismo.')
+                        : 'Contenido principal del carrusel.',
+                    visualPrompt: `Representa visualmente esta idea del carrusel: ${prompt}`,
+                })
+            }
+            return next
+        }
+
         const rawSlides =
             requested === 1 && parsedSlides.length > 1
                 ? [parsedSlides[0]]
-                : parsedSlides
-        if (rawSlides.length !== requested) {
-            throw new Error(`Slide count mismatch: expected ${requested}, got ${parsedSlides.length}`)
-        }
+                : coerceSlidesToRequested(parsedSlides)
 
-        let slides: SlideContent[] = rawSlides.map((raw: any, i: number) => ({
-            index: typeof raw?.index === 'number' ? raw.index : i,
-            title: sanitizeTextFromMarkdownLinks(typeof raw?.title === 'string' ? raw.title.trim() : ''),
-            description: sanitizeTextFromMarkdownLinks(typeof raw?.description === 'string' ? raw.description.trim() : ''),
-            visualPrompt: typeof raw?.visualPrompt === 'string' ? raw.visualPrompt.trim() : '',
-            composition: typeof raw?.composition === 'string' ? raw.composition.trim() : undefined,
-            focus: typeof raw?.focus === 'string' ? raw.focus.trim() : undefined,
-            role: normalizeRole(raw?.role)
-        }))
+        let slides: SlideContent[] = rawSlides.map((raw: any, i: number) => {
+            const fallbackRole = roleByIndex(i)
+            const safeRole = normalizeRole(raw?.role) || fallbackRole
+            const safeTitle = sanitizeTextFromMarkdownLinks(typeof raw?.title === 'string' ? raw.title.trim() : '')
+            const safeDescription = sanitizeTextFromMarkdownLinks(typeof raw?.description === 'string' ? raw.description.trim() : '')
+            const safeVisualPrompt = typeof raw?.visualPrompt === 'string' ? raw.visualPrompt.trim() : ''
+            return {
+                index: i,
+                title: safeTitle || (safeRole === 'hook'
+                    ? 'Descubre esta idea'
+                    : safeRole === 'cta'
+                        ? 'Da el siguiente paso'
+                        : `Punto clave ${i + 1}`),
+                description: safeDescription || (safeRole === 'cta'
+                    ? (brand.url?.trim()
+                        ? `Visita ${brand.url?.trim()} y empieza hoy.`
+                        : 'Escríbenos y empecemos hoy mismo.')
+                    : 'Contenido principal del carrusel.'),
+                visualPrompt: safeVisualPrompt || `Representa visualmente esta idea del carrusel: ${prompt}`,
+                composition: typeof raw?.composition === 'string' ? raw.composition.trim() : undefined,
+                focus: typeof raw?.focus === 'string' ? raw.focus.trim() : undefined,
+                role: safeRole
+            }
+        })
 
         // Validate required fields
         const hasMissing = slides.some((s: SlideContent) => !s.title || !s.description || !s.visualPrompt || !s.role)
@@ -859,42 +996,17 @@ const normalizeParsed = (parsed: any) => {
             throw new Error('Missing required fields in one or more slides')
         }
 
-        // Normalize indexes (allow 1-based indices)
-        const indexes = slides.map(s => s.index)
-        const isOneBased = indexes.every(idx => Number.isFinite(idx) && idx >= 1 && idx <= requested) && !indexes.includes(0)
-        if (isOneBased) {
-            slides = slides.map(s => ({ ...s, index: s.index - 1 }))
-        }
-
-        const indexSet = new Set(slides.map(s => s.index))
-        if (indexSet.size !== requested) {
-            throw new Error('Duplicate or missing slide indexes')
-        }
-        const inRange = slides.every(s => s.index >= 0 && s.index < requested)
-        if (!inRange) {
-            throw new Error('Slide indexes out of range')
-        }
-
-        // Sort by index
-        slides.sort((a, b) => a.index - b.index)
+        // Reindex and normalize order deterministically to avoid brittle model indexing.
+        slides = slides.map((slide, index) => ({ ...slide, index }))
 
         const lastIndex = requested - 1
 
-        // For single slide, any role is acceptable
-        if (requested === 1) {
-            // Single slide - no hook/cta enforcement
-        } else {
-            // Multi-slide: first must be hook, last must be cta
-            if (slides[0]?.role !== 'hook') {
-                throw new Error('Slide 0 must be role hook')
-            }
-            if (slides[lastIndex]?.role !== 'cta') {
-                throw new Error('Last slide must be role cta')
-            }
-            const middleRolesOk = slides.slice(1, lastIndex).every(s => s.role === 'content')
-            if (!middleRolesOk) {
-                throw new Error('Middle slides must be role content')
-            }
+        // Force stable role schema instead of failing hard on model inconsistencies.
+        if (requested > 1) {
+            slides = slides.map((slide, index) => ({
+                ...slide,
+                role: index === 0 ? 'hook' : index === lastIndex ? 'cta' : 'content',
+            }))
         }
 
         // Hook and CTA validations only for multi-slide carousels
@@ -919,7 +1031,7 @@ const normalizeParsed = (parsed: any) => {
                     ...slides[lastIndex],
                     description: `${slides[lastIndex].description} ${fallbackCTA}`.trim()
                 }
-                console.warn('CTA slide missing explicit call-to-action; fallback CTA appended.')
+                log.warn('CAROUSEL', 'CTA missing explicit action; fallback CTA appended')
             }
         }
 
@@ -966,6 +1078,22 @@ const normalizeParsed = (parsed: any) => {
                 undefined,
                 ''
             )
+            const basePhase = options?.captionOnly ? 'carousel_caption_regeneration' : 'carousel_script_decomposition'
+            const phase = attempt === 0 ? basePhase : `${basePhase}_retry`
+            await logEconomicModelCall({
+                audit: options?.audit,
+                phase,
+                model,
+                kind: 'intelligence',
+                metadata: {
+                    attempt: attempt + 1,
+                    requested_slides: requested,
+                }
+            })
+            log.info('CAROUSEL', 'Respuesta del modelo recibida', {
+                flow: shortFlowId(auditFlowTag),
+                intento: `${attempt + 1}/3`,
+            })
 
             if (/^\s*ERROR\b/i.test(response)) {
                 throw new Error(response.trim())
@@ -975,7 +1103,11 @@ const normalizeParsed = (parsed: any) => {
             const jsonString = extractJsonFromResponse(response)
             if (!jsonString) {
                 const preview = response.slice(0, 220).replace(/\s+/g, ' ')
-                console.error(`[Carousel JSON] attempt=${attempt + 1} no valid JSON extracted. preview="${preview}"`)
+                log.warn('CAROUSEL', 'No se pudo extraer JSON válido de la respuesta', {
+                    flow: shortFlowId(auditFlowTag),
+                    intento: `${attempt + 1}/3`,
+                    preview,
+                })
                 if (attempt === 2) throw new Error('No valid JSON found in response')
                 continue
             }
@@ -989,7 +1121,11 @@ const normalizeParsed = (parsed: any) => {
                 try {
                     parsed = JSON.parse(repairJsonString(jsonString))
                 } catch (repairError) {
-                    console.error('JSON parse failed. Raw response snippet:', jsonString.substring(0, 200))
+                    log.warn('CAROUSEL', 'Falló el parseo JSON incluso tras intentar repararlo', {
+                        flow: shortFlowId(auditFlowTag),
+                        intento: `${attempt + 1}/3`,
+                        fragmento: jsonString.substring(0, 200),
+                    })
                     if (attempt === 2) throw new Error(`Invalid JSON from AI: ${(firstError as Error).message}`)
                     continue
                 }
@@ -999,11 +1135,22 @@ const normalizeParsed = (parsed: any) => {
                 const suggestions = Array.isArray(parsed?.suggestions)
                     ? parsed.suggestions.map(normalizeSuggestion).filter(Boolean) as CarouselSuggestion[]
                     : []
+                log.success('CAROUSEL', 'Análisis del carrusel completado', {
+                    flow: shortFlowId(auditFlowTag),
+                    intento: `${attempt + 1}/3`,
+                    slides: normalized.slides.length,
+                    sugerencias: suggestions.length,
+                })
                 return {
                     ...normalized,
                     suggestions
                 }
             } catch (err) {
+                log.warn('CAROUSEL', 'La respuesta no cumple el formato esperado del carrusel', {
+                    flow: shortFlowId(auditFlowTag),
+                    intento: `${attempt + 1}/3`,
+                })
+                log.debug('CAROUSEL', 'Detalle técnico de normalización', err)
                 if (attempt === 2) throw err
                 continue
             }
@@ -1012,7 +1159,10 @@ const normalizeParsed = (parsed: any) => {
         throw new Error('Failed to generate a valid slide script')
 
     } catch (error) {
-        console.error('Decomposition error:', error)
+        log.error('CAROUSEL', 'Análisis del carrusel fallido', {
+            flow: shortFlowId(auditFlowTag),
+            motivo: error instanceof Error ? error.message : String(error),
+        })
         throw error
     }
 }
@@ -1045,6 +1195,11 @@ async function generateContentImageWithRetry(
         context: Array<{ type: string; value: string; label?: string; weight?: number }>
         seed?: number
         selectedColors?: { color: string; role: string }[]
+    },
+    audit?: {
+        context?: EconomicAuditContext
+        phase?: string
+        slideIndex?: number
     }
 ): Promise<string> {
     const maxAttempts = 3
@@ -1052,9 +1207,37 @@ async function generateContentImageWithRetry(
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            return await generateContentImageUnified(brandWrapper, fullPrompt, options)
+            const imageUrl = await generateContentImageUnified(brandWrapper, fullPrompt, options)
+            const basePhase = audit?.phase || 'carousel_slide_image_generation'
+            const phase = attempt === 1 ? basePhase : `${basePhase}_retry`
+            await logEconomicModelCall({
+                audit: audit?.context,
+                phase,
+                model: options.model,
+                kind: 'image',
+                metadata: {
+                    slide_index: audit?.slideIndex,
+                    attempt,
+                    status: 'success',
+                }
+            })
+            return imageUrl
         } catch (error) {
             lastError = error
+            const basePhase = audit?.phase || 'carousel_slide_image_generation'
+            const phase = attempt === 1 ? basePhase : `${basePhase}_retry`
+            await logEconomicModelCall({
+                audit: audit?.context,
+                phase,
+                model: options.model,
+                kind: 'image',
+                metadata: {
+                    slide_index: audit?.slideIndex,
+                    attempt,
+                    status: 'error',
+                    error: error instanceof Error ? error.message : String(error),
+                }
+            })
             const shouldRetry = isTransientImageGenerationError(error) && attempt < maxAttempts
             if (!shouldRetry) {
                 throw error
@@ -1080,7 +1263,11 @@ async function generateSlideImage(
     compositionId?: string,
     structureId?: string,
     consistencyRefUrls?: string[],
-    catalog?: CarouselCatalog
+    catalog?: CarouselCatalog,
+    audit?: {
+        context?: EconomicAuditContext
+        phase?: string
+    }
 ): Promise<{ imageUrl: string; prompt: string; references: DebugImageReference[] }> {
     const specificCompId = normalizeCompositionId(compositionId) || normalizeCompositionId(slideContent.composition)
     const availableComps = catalog ? getCompositionsForStructure(catalog.compositions, structureId) : []
@@ -1171,6 +1358,10 @@ async function generateSlideImage(
         aspectRatio,
         model,
         context
+    }, {
+        context: audit?.context,
+        phase: audit?.phase || 'carousel_slide_regeneration',
+        slideIndex: slideContent.index,
     })
 
     const references: DebugImageReference[] = context.map(ref => ({
@@ -1209,10 +1400,15 @@ export async function generateCarouselAction(
 
     try {
         const catalog = await loadCarouselCatalog()
-        console.log(`Starting carousel for ${brandDNA.brand_name}: ${slideCount} slides`)
+        const auditActor = await resolveEconomicAuditActor()
+        const auditContext: EconomicAuditContext = {
+            flowId: input.auditFlowId || createEconomicFlowId('carousel_generate'),
+            ...auditActor,
+        }
+        log.info('CAROUSEL', `Generate start | brand=${brandDNA.brand_name} slides=${slideCount} flow=${auditContext.flowId}`)
 
         // Step 1: Decompose prompt (or reuse script)
-        console.log('Decomposing with brand context...')
+        log.info('CAROUSEL', `Generate script source | mode=${canUseScript ? 'provided_script' : 'ai_decomposition'}`)
         const canUseScript = Array.isArray(slideScript) && slideScript.length === slideCount
         if (!canUseScript && !intelligenceModel) {
             throw new Error('Missing intelligence model configuration')
@@ -1235,7 +1431,8 @@ export async function generateCarouselAction(
                     structureId,
                     compositionId,
                     visualDescription: aiImageDescription,
-                    language: input.language
+                    language: input.language,
+                    audit: auditContext,
                 }
             )
         const slideContents = decomposition.slides
@@ -1262,11 +1459,11 @@ export async function generateCarouselAction(
 
         // Rule 4: Generate a consistent seed for this carousel
         const carouselSeed = generateCarouselSeed()
-        console.log(`Carousel Seed: ${carouselSeed}`)
+        log.info('CAROUSEL', `Generate seed | ${carouselSeed}`)
 
         for (let i = 0; i < slides.length; i++) {
             const currentSlide = slides[i]
-            console.log(`Generating slide ${i + 1}/${effectiveSlideCount} [Sequential Flow - Seed: ${carouselSeed}]`)
+            log.info('CAROUSEL', `Generate slide start | flow=${auditContext.flowId} slide=${i + 1}/${effectiveSlideCount}`)
             currentSlide.status = 'generating'
 
             try {
@@ -1375,28 +1572,7 @@ export async function generateCarouselAction(
                     contextReferences.push({ type: 'logo', value: selectedLogoUrl, weight: 1.0 })
                 }
 
-                // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-                // ðŸ” DEBUG: EXACT API CALL FOR SLIDE ${i + 1}
-                // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-                console.log(`\n${'â•'.repeat(70)}`)
-                console.log(`ðŸŽ¨ SLIDE ${i + 1}/${effectiveSlideCount} - API CALL DEBUG`)
-                console.log(`${'â•'.repeat(70)}`)
-                console.log(`ðŸ“ Composition: \$\{resolvedComposition\?\.name \|\| 'Free Layout'\}`)
-                console.log(`ðŸŽ­ Mood: ${currentMood}`)
-                console.log(`ðŸŽ² Seed: ${carouselSeed}`)
-                console.log(`ðŸ–¼ï¸  Aspect Ratio: ${aspectRatio}`)
-                console.log(`ðŸ¤– Model: ${imageModel}`)
-                console.log(`\n--- ðŸ–¼ï¸ IMAGE REFERENCES (${contextReferences.length}) ---`)
-                contextReferences.forEach((ref, idx) => {
-                    const shortUrl = ref.value.length > 60
-                        ? `${ref.value.substring(0, 30)}...${ref.value.substring(ref.value.length - 25)}`
-                        : ref.value
-                    console.log(`  [${idx + 1}] ${ref.type.toUpperCase()} | Weight: ${ref.weight} | ${ref.label || 'No label'}`)
-                    console.log(`      URL: ${shortUrl}`)
-                })
-                console.log(`\n--- ðŸ“ PROMPT TO SEND ---`)
-                console.log(promptToUse)
-                console.log(`${'â”€'.repeat(70)}\n`)
+                log.debug('CAROUSEL', `Slide payload | flow=${auditContext.flowId} slide=${i + 1}/${effectiveSlideCount} model=${imageModel} refs=${contextReferences.length}`)
 
                 // 5. Generate with seed
                 const imageUrl = await generateContentImageWithRetry(
@@ -1408,27 +1584,32 @@ export async function generateCarouselAction(
                         context: contextReferences,
                         seed: carouselSeed, // Same seed for all slides
                         selectedColors
+                    },
+                    {
+                        context: auditContext,
+                        phase: 'carousel_slide_image_generation',
+                        slideIndex: i,
                     }
                 )
 
                 currentSlide.imageUrl = imageUrl
                 currentSlide.status = 'done'
                 generatedImageUrls.push(imageUrl)
-                console.log(`âœ… Slide ${i + 1} generated successfully: ${imageUrl.substring(0, 50)}...`)
+                log.success('CAROUSEL', `Generate slide done | flow=${auditContext.flowId} slide=${i + 1}/${effectiveSlideCount}`)
 
             } catch (error) {
-                console.error(`Error slide ${i + 1}:`, error)
+                log.error('CAROUSEL', `Generate slide failed | flow=${auditContext.flowId} slide=${i + 1}/${effectiveSlideCount}`, error)
                 currentSlide.status = 'error'
                 currentSlide.error = error instanceof Error ? error.message : 'Error'
                 generatedImageUrls.push('') // Push empty to keep index alignment
             }
         }
 
-        console.log('Carousel complete.')
+        log.success('CAROUSEL', `Generate done | flow=${auditContext.flowId} slides=${slides.length}`)
         return { success: true, slides }
 
     } catch (error) {
-        console.error('Carousel error:', error)
+        log.error('CAROUSEL', 'Generate failed', error)
         return {
             success: false,
             slides: [],
@@ -1455,8 +1636,20 @@ export async function analyzeCarouselAction(
 
     try {
         const catalog = await loadCarouselCatalog()
-        console.log(`[Carousel] Analyzing script for ${brandDNA.brand_name}: ${slideCount} slides`)
-        console.log(`[Carousel] aiImageDescription received:`, input.aiImageDescription ? input.aiImageDescription.substring(0, 100) + '...' : 'EMPTY/UNDEFINED')
+        const auditActor = await resolveEconomicAuditActor()
+        const auditContext: EconomicAuditContext = {
+            flowId: input.auditFlowId || createEconomicFlowId('carousel_analyze'),
+            ...auditActor,
+        }
+        log.info('CAROUSEL', 'Solicitud de análisis recibida', {
+            marca: brandDNA.brand_name,
+            slides: slideCount,
+            flow: shortFlowId(auditContext.flowId),
+        })
+        log.debug('CAROUSEL', 'Estado de referencia de estilo', {
+            flow: shortFlowId(auditContext.flowId),
+            referencia: input.aiImageDescription ? 'disponible' : 'vacía',
+        })
         const decomposition = await decomposeIntoSlides(
             prompt,
             slideCount,
@@ -1468,7 +1661,8 @@ export async function analyzeCarouselAction(
             {
                 structureId: input.structureId,
                 visualDescription: input.aiImageDescription,
-                language: input.language
+                language: input.language,
+                audit: auditContext,
             }
         )
         return {
@@ -1482,7 +1676,9 @@ export async function analyzeCarouselAction(
             suggestions: decomposition.suggestions || []
         }
     } catch (error) {
-        console.error('Carousel analysis error:', error)
+        log.error('CAROUSEL', 'No se pudo completar el análisis del carrusel', {
+            motivo: error instanceof Error ? error.message : String(error),
+        })
         return {
             success: false,
             slides: [],
@@ -1509,6 +1705,11 @@ export async function regenerateCarouselCaptionAction(
 
     try {
         const catalog = await loadCarouselCatalog()
+        const auditActor = await resolveEconomicAuditActor()
+        const auditContext: EconomicAuditContext = {
+            flowId: input.auditFlowId || createEconomicFlowId('carousel_caption'),
+            ...auditActor,
+        }
         const decomposition = await decomposeIntoSlides(
             prompt,
             slideCount,
@@ -1521,12 +1722,13 @@ export async function regenerateCarouselCaptionAction(
                 captionOnly: true,
                 structureId: input.structureId,
                 visualDescription: input.aiImageDescription,
-                language: input.language
+                language: input.language,
+                audit: auditContext,
             }
         )
         return { success: true, caption: decomposition.caption }
     } catch (error) {
-        console.error('Carousel caption error:', error)
+        log.error('CAROUSEL', 'Caption action failed', error)
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Error'
@@ -1551,11 +1753,17 @@ export async function regenerateSlideAction(
     structureId?: string,
     aiImageDescription?: string,
     selectedImageUrls?: string[],
-    consistencyRefUrls?: string[]
+    consistencyRefUrls?: string[],
+    auditFlowId?: string
 ): Promise<{ success: boolean; imageUrl?: string; error?: string; debugPrompt?: string; debugReferences?: DebugImageReference[] }> {
     try {
         const catalog = await loadCarouselCatalog()
-        console.log(`Regenerating slide ${slideIndex + 1} for ${brandDNA.brand_name}...`)
+        const auditActor = await resolveEconomicAuditActor()
+        const auditContext: EconomicAuditContext = {
+            flowId: auditFlowId || createEconomicFlowId('carousel_regenerate'),
+            ...auditActor,
+        }
+        log.info('CAROUSEL', `Regenerate slide request | brand=${brandDNA.brand_name} slide=${slideIndex + 1} flow=${auditContext.flowId}`)
 
         const { imageUrl, prompt, references } = await generateSlideImage(
             slideContent,
@@ -1570,7 +1778,11 @@ export async function regenerateSlideAction(
             compositionId,
             structureId,
             consistencyRefUrls,
-            catalog
+            catalog,
+            {
+                context: auditContext,
+                phase: 'carousel_slide_regeneration',
+            }
         )
 
         return { success: true, imageUrl, debugPrompt: prompt, debugReferences: references }
