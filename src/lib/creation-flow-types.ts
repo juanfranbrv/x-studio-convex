@@ -1379,6 +1379,8 @@ export interface GenerationState {
 
     // Step 4: Style
     selectedStyles: string[]  // StyleChip IDs
+    selectedStylePresetId?: string | null
+    selectedStylePresetName?: string | null
 
     // Step 5: Layout
     selectedLayout: string | null  // LayoutOption ID
@@ -1434,6 +1436,8 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     originalState: null,
     isAnalyzing: false,
     selectedStyles: [],
+    selectedStylePresetId: null,
+    selectedStylePresetName: null,
     selectedLayout: null,
     selectedLogoId: null,
     headline: '',

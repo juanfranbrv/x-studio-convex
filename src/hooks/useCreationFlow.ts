@@ -640,19 +640,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 format: 'image/jpeg'
             })
 
-            let shouldAnalyzeAsStyle = false
             setState(prev => {
-                const hasManualStyle = Boolean(prev.customStyle?.trim())
-                const defaultRole: ReferenceImageRole = hasManualStyle
-                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
-                    : hasActiveStyleRole(
-                    prev.uploadedImages,
-                    prev.selectedBrandKitImageIds,
-                    prev.referenceImageRoles
-                )
-                        ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
-                        : 'style'
-                shouldAnalyzeAsStyle = defaultRole === 'style'
+                const defaultRole: ReferenceImageRole =
+                    prev.imageSourceMode === 'generate' ? 'logo' : 'content'
                 const nextRoles = { ...prev.referenceImageRoles, [base64]: defaultRole }
                 const pickedStyle = pickStyleReference([...prev.uploadedImages, base64], prev.selectedBrandKitImageIds, nextRoles)
                 const resetAnalysis =
@@ -676,11 +666,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 optionsRef.current.onImageUploaded(file)
             }
 
-            if (shouldAnalyzeAsStyle) {
-                await analyzeImageBase64(base64, file.type || 'image/jpeg', { id: base64, source: 'upload' })
-            } else {
-                setState(prev => ({ ...prev, isAnalyzing: false }))
-            }
+            setState(prev => ({ ...prev, isAnalyzing: false }))
         } catch (error) {
             setState(prev => ({
                 ...prev,
@@ -688,7 +674,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 error: error instanceof Error ? error.message : 'Error analyzing image',
             }))
         }
-    }, [state.uploadedImages.length, state.selectedBrandKitImageIds.length, analyzeImageBase64, invalidateFromStep]) // Added dependencies
+    }, [state.uploadedImages.length, state.selectedBrandKitImageIds.length, invalidateFromStep]) // Added dependencies
 
     const selectTheme = useCallback((theme: SeasonalTheme) => {
         const themeMeta = THEME_CATALOG.find(t => t.id === theme)
@@ -826,13 +812,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 // Add to selection (if under limit)
                 const totalImages = prev.uploadedImages.length + prev.selectedBrandKitImageIds.length
                 if (totalImages >= MAX_REFERENCE_IMAGES) return prev
-                const defaultRole: ReferenceImageRole = hasActiveStyleRole(
-                    prev.uploadedImages,
-                    prev.selectedBrandKitImageIds,
-                    prev.referenceImageRoles
-                )
-                    ? (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
-                    : 'style'
+                const defaultRole: ReferenceImageRole =
+                    prev.imageSourceMode === 'generate' ? 'logo' : 'content'
                 const nextRoles = { ...prev.referenceImageRoles, [imageId]: defaultRole }
                 const pickedStyle = pickStyleReference(prev.uploadedImages, [...prev.selectedBrandKitImageIds, imageId], nextRoles)
                 const resetAnalysis =
@@ -926,6 +907,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 ...prev,
                 customStyle: prev.customStyle,
                 referenceImageRoles: nextRoles,
+                selectedStylePresetId: (safeRole === 'style' || safeRole === 'style_content')
+                    ? null
+                    : prev.selectedStylePresetId,
+                selectedStylePresetName: (safeRole === 'style' || safeRole === 'style_content')
+                    ? null
+                    : prev.selectedStylePresetName,
                 firstReferenceId: pickedStyle.id,
                 firstReferenceSource: pickedStyle.source,
                 firstVisionAnalysis: resetAnalysis ? null : prev.firstVisionAnalysis,
@@ -941,6 +928,40 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             aiImageDescription: description,
             ...invalidateFromStep(prev, 4)
         }))
+    }, [invalidateFromStep])
+
+    const setStylePreset = useCallback((
+        preset: { id: string; name: string; analysis: VisionAnalysis } | null
+    ) => {
+        setState(prev => {
+            if (!preset) {
+                return {
+                    ...prev,
+                    selectedStylePresetId: null,
+                    selectedStylePresetName: null,
+                    ...invalidateFromStep(prev, 4),
+                }
+            }
+
+            const nextRoles = { ...prev.referenceImageRoles }
+            ;[...prev.uploadedImages, ...prev.selectedBrandKitImageIds].forEach((id) => {
+                if (nextRoles[id] === 'style' || nextRoles[id] === 'style_content') {
+                    nextRoles[id] = prev.imageSourceMode === 'generate' ? 'logo' : 'content'
+                }
+            })
+
+            return {
+                ...prev,
+                referenceImageRoles: nextRoles,
+                selectedStylePresetId: preset.id,
+                selectedStylePresetName: preset.name,
+                firstReferenceId: null,
+                firstReferenceSource: null,
+                firstVisionAnalysis: preset.analysis,
+                visionAnalysis: preset.analysis,
+                ...invalidateFromStep(prev, 4),
+            }
+        })
     }, [invalidateFromStep])
 
     // -------------------------------------------------------------------------
@@ -1511,7 +1532,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // When reference images are provided (brand kit OR uploaded), instruct the model to detect
         // and properly hierarchy any logos found (collaborators, sponsors, institutions, etc.)
         const referenceRoles = activeState.referenceImageRoles || {}
-        const visualReferenceIds = [...activeState.uploadedImages, ...activeState.selectedBrandKitImageIds]
+        const manualRefsEnabled = activeState.imageSourceMode !== 'generate'
+        const visualReferenceIds = (manualRefsEnabled
+            ? [...activeState.uploadedImages, ...activeState.selectedBrandKitImageIds]
+            : [])
             .filter((id) => (referenceRoles[id] || 'content') !== 'style')
         const hasReferenceImages = visualReferenceIds.length > 0
         if (hasReferenceImages) {
@@ -1792,7 +1816,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             const role = activeState.referenceImageRoles?.[id]
             return role === 'style' || role === 'style_content'
         })
-        const styleAnalysis = hasActiveStyleReference
+        const hasStylePresetSelected = Boolean(activeState.selectedStylePresetId)
+        const styleAnalysis = (hasActiveStyleReference || hasStylePresetSelected)
             ? (activeState.firstVisionAnalysis ?? activeState.visionAnalysis)
             : null
         const styleSignals = extractStyleSignals(customStyle, styleAnalysis)
@@ -1908,10 +1933,12 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // Format selection is mandatory before generation.
         if (!state.selectedFormat || !state.selectedPlatform) return false;
         // Must have some form of image source or a detailed description
-        const hasImageSource = state.uploadedImages.length > 0 || state.selectedBrandKitImageIds.length > 0;
+        const hasImageSource =
+            state.imageSourceMode !== 'generate'
+            && (state.uploadedImages.length > 0 || state.selectedBrandKitImageIds.length > 0);
         const hasEnoughVisualInfo = hasImageSource || (state.aiImageDescription && state.aiImageDescription.length > 10);
         return !!hasEnoughVisualInfo;
-    }, [state.selectedIntent, state.selectedFormat, state.selectedPlatform, state.uploadedImages, state.selectedBrandKitImageIds, state.aiImageDescription])
+    }, [state.selectedIntent, state.selectedFormat, state.selectedPlatform, state.uploadedImages, state.selectedBrandKitImageIds, state.aiImageDescription, state.imageSourceMode])
 
     // -------------------------------------------------------------------------
     // GENERATION (stub for now)
@@ -1954,6 +1981,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                     typography: state.typography,
                     // Styles & Layout
                     selectedStyles: state.selectedStyles,
+                    selectedStylePresetId: state.selectedStylePresetId,
+                    selectedStylePresetName: state.selectedStylePresetName,
                     selectedLayout: state.selectedLayout,
                     // Branding
                     selectedLogoId: state.selectedLogoId,
@@ -2031,7 +2060,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 || (preset.selectedBrandKitImageIds?.length || 0) > 0
                 || (preset.aiImageDescription?.trim()?.length || 0) > 0
             if (hasImageRef) step = Math.max(step, 5)
-            const hasStyles = (preset.selectedStyles?.length || 0) > 0 || Boolean(preset.customStyle?.trim())
+            const hasStyles =
+                (preset.selectedStyles?.length || 0) > 0
+                || Boolean(preset.customStyle?.trim())
+                || Boolean(preset.selectedStylePresetId)
             if (hasStyles) step = Math.max(step, 6)
             const hasBranding = Boolean(preset.selectedLogoId) || (preset.selectedBrandColors?.length || 0) > 0
             if (hasBranding) step = Math.max(step, 6)
@@ -2095,6 +2127,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             imagePromptSuggestions: state.imagePromptSuggestions,
             typography: state.typography,
             selectedStyles: state.selectedStyles,
+            selectedStylePresetId: state.selectedStylePresetId,
+            selectedStylePresetName: state.selectedStylePresetName,
             selectedLayout: state.selectedLayout,
             selectedLogoId: state.selectedLogoId,
             headline: state.headline,
@@ -2321,6 +2355,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         setImagePromptSuggestions,
         applySuggestion,
         undoSuggestion,
+        setStylePreset,
         // Constants
         styleGroups: ARTISTIC_STYLE_GROUPS,
     }

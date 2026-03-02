@@ -49,7 +49,7 @@ export function ThumbnailHistory({
         }
         const layoutSkillVersion = payload.layoutSkillVersion as string | undefined
         if (layoutSkillVersion) {
-            return `composiciones v${layoutSkillVersion}`
+            return `diseños v${layoutSkillVersion}`
         }
         return null
     }

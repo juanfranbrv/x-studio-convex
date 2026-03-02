@@ -265,7 +265,7 @@ export function PromptDebugModal({
                                 <p className="text-sm font-medium">{promptData.intent || 'No especificado'}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Composicion</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Diseño</p>
                                 <p className="text-sm font-medium">{promptData.layoutName || promptData.layoutId || 'No especificada'}</p>
                             </div>
                             <div>

@@ -23,13 +23,13 @@ export default function AdminComposicionesPage() {
                             </Button>
                         </Link>
                         <div>
-                            <h1 className="text-3xl font-bold">Panel de Composiciones</h1>
-                            <p className="text-muted-foreground">Vista general del catálogo de composiciones por objetivo.</p>
+                            <h1 className="text-3xl font-bold">Panel de Diseños</h1>
+                            <p className="text-muted-foreground">Vista general del catálogo de diseños por objetivo.</p>
                         </div>
                     </div>
                     <Badge variant="secondary" className="gap-2">
                         <LayoutGrid className="h-4 w-4" />
-                        {ALL_IMAGE_LAYOUTS.length} composiciones
+                        {ALL_IMAGE_LAYOUTS.length} diseños
                     </Badge>
                 </div>
 
@@ -49,7 +49,7 @@ export default function AdminComposicionesPage() {
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium flex items-center gap-2">
                                 <Layers3 className="h-4 w-4 text-primary" />
-                                Composiciones registradas
+                                Diseños registrados
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -70,7 +70,7 @@ export default function AdminComposicionesPage() {
                     <CardHeader>
                         <CardTitle>Catálogo por objetivo</CardTitle>
                         <CardDescription>
-                            Recuento de composiciones disponibles en cada objetivo de contenido.
+                            Recuento de diseños disponibles en cada objetivo de contenido.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2">

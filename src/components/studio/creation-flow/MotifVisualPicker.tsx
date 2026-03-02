@@ -192,7 +192,7 @@ const getMeta = (mode: PickerMode) => {
             autoLabel: 'Auto',
             autoDescription: 'El sistema decide como distribuir el contenido para tu idea.',
             Icon: LayoutTemplate,
-            emptyDescription: 'Distribucion visual base de la composicion.',
+            emptyDescription: 'Distribucion visual base del diseño.',
         }
     }
     if (mode === 'operator') {
@@ -209,7 +209,7 @@ const getMeta = (mode: PickerMode) => {
         autoLabel: 'Auto',
         autoDescription: 'El sistema define el look visual que mejor encaja con tu idea.',
         Icon: Wand2,
-        emptyDescription: 'Look visual dominante de la composicion.',
+        emptyDescription: 'Look visual dominante del diseño.',
     }
 }
 
@@ -217,7 +217,7 @@ const getDescripcionEs = (mode: PickerMode, kind: PreviewKind): string => {
     const map: Record<PreviewKind, string> = {
         'offer-burst': 'Enfasis central con apoyos para comunicar impacto.',
         'hero-stage': 'Elemento protagonista con bloques de apoyo secundarios.',
-        'mosaic-grid': 'Composicion modular en celdas para ordenar contenido.',
+        'mosaic-grid': 'Diseño modular en celdas para ordenar contenido.',
         'launch-teaser': 'Recorrido en diagonal para anticipar y revelar.',
         'service-blueprint': 'Nodos conectados para explicar relaciones o flujo.',
         'bulletin': 'Estructura de comunicado con jerarquia textual clara.',
@@ -226,7 +226,7 @@ const getDescripcionEs = (mode: PickerMode, kind: PreviewKind): string => {
         'before-after': 'Comparativa dividida para mostrar contraste visual.',
         'commemoration-seal': 'Sello central para mensajes de logro o hito.',
         'team-cards': 'Tarjetas en columna para perfiles o equipo.',
-        'quote-poster': 'Composicion tipografica para citas o declaraciones.',
+        'quote-poster': 'Diseño tipografico para citas o declaraciones.',
         'hiring-spotlight': 'Foco principal con apoyos para captar talento.',
         'confetti-island': 'Centro destacado con acentos para celebracion.',
         'cutaway-layers': 'Capas superpuestas para dar profundidad y contexto.',
@@ -243,8 +243,8 @@ const getDescripcionEs = (mode: PickerMode, kind: PreviewKind): string => {
         'generic': mode === 'operator'
             ? 'Enfoque visual para guiar el recorrido de lectura.'
             : mode === 'skeleton'
-                ? 'Estructura visual para organizar la composicion.'
-                : 'Estilo visual para definir el gesto de la composicion.',
+                ? 'Estructura visual para organizar el diseño.'
+                : 'Estilo visual para definir el gesto del diseño.',
     }
     return map[kind]
 }

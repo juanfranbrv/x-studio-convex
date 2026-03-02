@@ -36,13 +36,13 @@ export function CompositionsLayout({
     const { toast } = useToast()
 
     const handleBatchAssign = () => {
-        if (!confirm('¿Estás seguro de que quieres asignar iconos por IA a todas las composiciones que no tengan uno?')) return
+        if (!confirm('¿Estás seguro de que quieres asignar iconos por IA a todos los diseños que no tengan uno?')) return
 
         startBatchTransition(async () => {
             const results = await batchAssignIconsAction()
             toast({
                 title: 'Asignación completada',
-                description: `Se procesaron ${results.count} composiciones y se actualizaron ${results.updated}.`,
+                description: `Se procesaron ${results.count} diseños y se actualizaron ${results.updated}.`,
             })
         })
     }
@@ -136,7 +136,7 @@ export function CompositionsLayout({
                     {compositions.length === 0 && (
                         <div className="h-full flex flex-col items-center justify-center text-muted-foreground py-20 space-y-4">
                             <FileText className="h-12 w-12 opacity-20" />
-                            <p>No se encontraron composiciones que coincidan con tu búsqueda.</p>
+                            <p>No se encontraron diseños que coincidan con tu búsqueda.</p>
                         </div>
                     )}
                 </section>

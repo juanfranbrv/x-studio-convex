@@ -43,7 +43,7 @@ export function CompositionEditor({
     if (!composition && !isNew) {
         return (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 text-center border-l border-border bg-muted/10">
-                <p>Selecciona una composición para editar o haz clic en "Nueva composición"</p>
+                <p>Selecciona un diseño para editar o haz clic en "Nuevo diseño"</p>
             </div>
         )
     }
@@ -55,7 +55,7 @@ export function CompositionEditor({
             <header className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
                 <div>
                     <h2 className="text-xl font-bold tracking-tight">
-                        {isNew ? 'Nueva Composición' : 'Editar Composición'}
+                        {isNew ? 'Nuevo Diseño' : 'Editar Diseño'}
                     </h2>
                     {!isNew && <p className="text-xs text-muted-foreground font-mono mt-1">{composition?.id}</p>}
                 </div>
@@ -88,7 +88,7 @@ export function CompositionEditor({
                             name="id"
                             defaultValue={composition?.id || ''}
                             readOnly={!isNew}
-                            placeholder="id-de-la-composicion"
+                            placeholder="id-del-diseno"
                             className="bg-muted/50 font-mono text-sm focus:ring-primary/20"
                         />
                     </div>
@@ -111,7 +111,7 @@ export function CompositionEditor({
                         name="description"
                         defaultValue={composition?.description || ''}
                         rows={2}
-                        placeholder="¿Qué hace esta composición?"
+                        placeholder="¿Qué hace este diseño?"
                         className="focus:ring-primary/20 resize-none"
                     />
                 </div>

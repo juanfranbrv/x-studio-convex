@@ -22,6 +22,7 @@ import type * as layoutRatings from "../layoutRatings.js";
 import type * as pipeline from "../pipeline.js";
 import type * as presets from "../presets.js";
 import type * as settings from "../settings.js";
+import type * as stylePresets from "../stylePresets.js";
 import type * as users from "../users.js";
 import type * as work_sessions from "../work_sessions.js";
 
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   pipeline: typeof pipeline;
   presets: typeof presets;
   settings: typeof settings;
+  stylePresets: typeof stylePresets;
   users: typeof users;
   work_sessions: typeof work_sessions;
 }>;

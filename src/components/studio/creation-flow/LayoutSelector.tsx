@@ -68,7 +68,7 @@ export function LayoutSelector({
     }
 
     const buildTooltip = (layout: LayoutOption) => {
-        const line1 = cleanSentence(layout.description) || cleanSentence('Composición de lectura visual')
+        const line1 = cleanSentence(layout.description) || cleanSentence('Diseño de lectura visual')
         const line2 = extractStructuralLine(layout)
         return [line1, line2].join('\n')
     }
@@ -77,7 +77,7 @@ export function LayoutSelector({
         <div className="grid grid-cols-3 gap-2">
             {layouts.map(layout => {
                 const isSelected = selectedLayout === layout.id
-                const title = layout.name || 'Composición'
+                const title = layout.name || 'Diseño'
                 // description already contains the fallback to structuralPrompt and cleaning logic
                 const description = cleanSentence(layout.description) || extractStructuralLine(layout)
 
@@ -215,7 +215,7 @@ export function LayoutSelector({
                     </div>
                     <div className="space-y-2">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Todas las composiciones
+                            Todos los diseños
                         </p>
                         <div className="rounded-xl border border-border/60 bg-background/40 p-2">
                             {renderGrid(allLayouts || [])}

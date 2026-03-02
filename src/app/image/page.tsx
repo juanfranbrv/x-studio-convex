@@ -1380,13 +1380,23 @@ export default function ImagePage() {
         email => email.emailAddress === ADMIN_EMAIL
     ) ?? false
 
-    // Rule: once the final Branding card (Logo/Colors) is reachable, Generate must be enabled.
+    // Rule: once prompt analysis has populated defaults, Generate should be enabled.
+    // Do not rely only on `currentStep`, because async step corrections can temporarily
+    // move the flow backwards even when generation requirements are already satisfied.
     const { state } = creationFlow
     const hasReachedBrandingStep =
         state.currentStep >= 5 ||
         (state.currentStep >= 4 && state.imageSourceMode === 'generate') ||
         state.hasGeneratedImage
-    const canGenerate = Boolean(hasReachedBrandingStep && !state.isAnalyzing)
+    const hasAnalyzedPromptDefaults =
+        Boolean(promptValue.trim()) &&
+        Boolean(state.selectedIntent) &&
+        Boolean(state.selectedPlatform) &&
+        Boolean(state.selectedFormat)
+    const canGenerate = Boolean(
+        (creationFlow.canGenerate || hasReachedBrandingStep || hasAnalyzedPromptDefaults) &&
+        !state.isAnalyzing
+    )
     const resolveImageModelForDebug = (explicitModel?: string) =>
         explicitModel || state.selectedImageModel || aiConfig?.imageModel || undefined
 
@@ -1542,8 +1552,8 @@ export default function ImagePage() {
 
         if (compositionMode === 'advanced' && !creationFlow.state.selectedLayout) {
             toast({
-                title: "Selecciona una composición",
-                description: "En modo avanzado debes elegir una composición manualmente.",
+                title: "Selecciona un diseño",
+                description: "En modo avanzado debes elegir un diseño manualmente.",
                 variant: "destructive",
             })
             return
@@ -1555,8 +1565,8 @@ export default function ImagePage() {
             const basicLayoutId = getNextBasicLayoutId(currentIntent)
             if (!basicLayoutId) {
                 toast({
-                    title: "Sin composiciones disponibles",
-                    description: "No se encontraron composiciones para el intent detectado.",
+                    title: "Sin diseños disponibles",
+                    description: "No se encontraron diseños para el intent detectado.",
                     variant: "destructive",
                 })
                 return
@@ -1591,8 +1601,8 @@ export default function ImagePage() {
             const nextLayoutId = getNextBasicLayoutId(currentIntent, previousLayoutId || null)
             if (!nextLayoutId) {
                 toast({
-                    title: "Sin composiciones disponibles",
-                    description: "No se encontraron composiciones para el intent detectado.",
+                    title: "Sin diseños disponibles",
+                    description: "No se encontraron diseños para el intent detectado.",
                     variant: "destructive",
                 })
                 return

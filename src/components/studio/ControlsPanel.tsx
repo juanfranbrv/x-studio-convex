@@ -5,9 +5,11 @@ import { useCreationFlow } from '@/hooks/useCreationFlow'
 import { LayoutSelector } from './creation-flow/LayoutSelector'
 import { SocialFormatSelector } from './creation-flow/SocialFormatSelector'
 import { BrandingConfigurator } from './creation-flow/BrandingConfigurator'
-import { ImageReferenceSelector } from './creation-flow/ImageReferenceSelector'
+import { ContentImageCard } from './creation-flow/ContentImageCard'
+import { StyleImageCard } from './creation-flow/StyleImageCard'
+import { AuxiliaryLogosCard } from './creation-flow/AuxiliaryLogosCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Sparkles, Layers, ImagePlus, Wand2, Loader2, Fingerprint, RotateCcw, Link2, History, Plus, Trash2, Save, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Palette, Layout, Layers, ImagePlus, Wand2, Loader2, Fingerprint, RotateCcw, Link2, History, Plus, Trash2, Save, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -22,6 +24,7 @@ import {
     IntentCategory,
     INTENT_CATALOG,
     MERGED_LAYOUTS_BY_INTENT,
+    type VisionAnalysis,
 } from '@/lib/creation-flow-types'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
 import { cn } from '@/lib/utils'
@@ -40,11 +43,15 @@ const RESET_USES4_FLAG = 'admin_layout_ratings_reset_uses4_done_v1'
 
 const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = {
     1: { title: "Tu Idea", description: "Escribe tu idea y pulsa el boton para crear la publicación" },
-    2: { title: "Composición", description: "Elige una plantilla por intent detectado o fuerza manualmente otro intent." },
+    2: { title: "Diseño", description: "Elige una plantilla por intent detectado o fuerza manualmente otro intent." },
     3: { title: "Formato", description: "Selecciona las dimensiones según la red social." },
-    4: { title: "Imagen", description: "Sube una referencia o usa una del Brand Kit." },
+    4: { title: "Imagen", description: "Sube una referencia o usa una del Kit de marca." },
     6: { title: "Marca", description: "Elige la variante del logo y ajusta la paleta cromática." }
 }
+
+const PANEL_CARD_CLASS = "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(15,23,42,0.55)] transition-all duration-200 hover:border-primary/30"
+const PANEL_CARD_PADDED_CLASS = `${PANEL_CARD_CLASS} p-4`
+const PANEL_CARD_PADDED_LG_CLASS = `${PANEL_CARD_CLASS} p-5`
 
 // Section header component
 const SectionHeader = ({
@@ -60,10 +67,10 @@ const SectionHeader = ({
 }) => (
     <div className={cn("flex items-center justify-between mb-3", className)}>
         <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-primary/10 text-primary">
+            <div className="flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary ring-1 ring-primary/20">
                 <Icon className="w-3.5 h-3.5" />
             </div>
-            <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">{title}</h3>
+            <h3 className="text-[11px] font-semibold text-foreground/95 uppercase tracking-[0.12em]">{title}</h3>
         </div>
         {extra}
     </div>
@@ -176,6 +183,7 @@ export function ControlsPanel({
         toggleBrandKitImage,
         clearBrandKitImages,
         setReferenceImageRole,
+        setStylePreset,
         reset,
         addTextAsset,
         removeTextAsset,
@@ -192,6 +200,13 @@ export function ControlsPanel({
             }
             : 'skip'
     )
+    const stylePresets = useQuery(api.stylePresets.listActive, {}) as Array<{
+        _id: string
+        name: string
+        description?: string
+        image_url: string
+        analysis: VisionAnalysis
+    }> | undefined
 
     const lastInitBrandId = useRef<string | null>(null)
 
@@ -225,6 +240,13 @@ export function ControlsPanel({
         const imageUrl = typeof img === 'string' ? img : img.url
         if (imageUrl && !acc.find(i => i.url === imageUrl)) {
             acc.push({ id: imageUrl, url: imageUrl, name: `Imagen ${idx + 1}` })
+        }
+        return acc
+    }, [])
+    const brandKitLogos = (activeBrandKit?.logos || []).reduce((acc: Array<{ id: string; url: string; name?: string }>, logo, idx) => {
+        const logoUrl = typeof logo === 'string' ? logo : logo.url
+        if (logoUrl && !acc.find((item) => item.url === logoUrl)) {
+            acc.push({ id: logoUrl, url: logoUrl, name: `Logo ${idx + 1}` })
         }
         return acc
     }, [])
@@ -268,7 +290,7 @@ export function ControlsPanel({
                     markLayoutRatingsMigrationAsDone()
                     toast({
                         title: 'Ratings migrados a Convex',
-                        description: 'Se importaron votos y marcas previas de composiciones.',
+                        description: 'Se importaron votos y marcas previas de diseños.',
                     })
                 }
             } catch (error) {
@@ -299,7 +321,7 @@ export function ControlsPanel({
                     if (result?.updated > 0) {
                         toast({
                             title: 'Ratings corregidos',
-                            description: `Se pusieron a 0 ${result.updated} composiciones con 4 usos.`,
+                            description: `Se pusieron a 0 ${result.updated} diseños con 4 usos.`,
                         })
                     }
                 }
@@ -358,7 +380,7 @@ export function ControlsPanel({
         if (hasVotedCurrentGeneration) {
             toast({
                 title: 'Ya votada',
-                description: 'Esta generación ya tiene voto para esta composición.',
+                description: 'Esta generación ya tiene voto para este diseño.',
             })
             return
         }
@@ -390,11 +412,10 @@ export function ControlsPanel({
     }
 
     return (
-        <div className="w-full md:w-[27%] h-full controls-panel flex flex-col shrink-0 relative group/panel">
-            <div className="flex-1 overflow-y-auto thin-scrollbar [scrollbar-gutter:stable] p-4 space-y-6">
-
+        <div className="w-full md:w-[27%] h-full controls-panel flex flex-col shrink-0 relative group/panel border-l border-border/40 bg-gradient-to-b from-background via-background to-muted/20">
+            <div className="flex-1 overflow-y-auto thin-scrollbar [scrollbar-gutter:stable] p-4 space-y-5">
                 {/* SECTION: Sessions */}
-                <div className="glass-card p-5 space-y-4">
+                <div className={`${PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader
                         icon={History}
                         title="Historial"
@@ -480,7 +501,7 @@ export function ControlsPanel({
                 </div>
 
                 {/* STEP 1: Intent Input */}
-                <div ref={step1Ref} className="glass-card p-4 space-y-3 relative group">
+                <div ref={step1Ref} className={`${PANEL_CARD_PADDED_CLASS} space-y-3 relative group`}>
                     {(isMagicParsing || isGenerating) && (
                         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 animate-shimmer" />
                     )}
@@ -511,7 +532,6 @@ export function ControlsPanel({
                                 disabled={isMagicParsing || !promptValue.trim()}
                                 className="ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
                             >
-                                <Sparkles className="w-3.5 h-3.5 mr-2" />
                                 Analizar
                             </Button>
                         </div>
@@ -548,11 +568,11 @@ export function ControlsPanel({
                     <>
                         {/* STEP 2: LAYOUT */}
                         {availableLayouts.length > 0 && (
-                            <div ref={step2Ref} className="relative glass-card p-4">
+                            <div ref={step2Ref} className={`relative ${PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 2 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[2]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step2Ref} />
                                 <SectionHeader
                                     icon={Layout}
-                                    title="Composición"
+                                    title="Diseño"
                                     extra={
                                         <div className="flex items-center gap-2">
                                             <span className={cn('text-[10px] font-medium', showLabCatalog ? 'text-primary' : 'text-muted-foreground')}>
@@ -561,7 +581,7 @@ export function ControlsPanel({
                                             <Switch
                                                 checked={showLabCatalog}
                                                 onCheckedChange={setShowLabCatalog}
-                                                aria-label="Activar modo avanzado de composicion"
+                                                aria-label="Activar modo avanzado de diseño"
                                             />
                                         </div>
                                     }
@@ -570,9 +590,6 @@ export function ControlsPanel({
                                     {showLabCatalog ? (
                                         <>
                                             <div className="space-y-1.5">
-                                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
-                                                    Catálogo de composiciones
-                                                </p>
                                                 <Select
                                                     value={layoutIntentOverride}
                                                     onValueChange={(value) => setLayoutIntentOverride(value as 'auto' | IntentCategory)}
@@ -618,7 +635,7 @@ export function ControlsPanel({
                         )}
 
                         {/* STEP 3: FORMAT */}
-                        <div ref={step3Ref} className="relative glass-card p-4">
+                        <div ref={step3Ref} className={`relative ${PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 3 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[3]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step3Ref} />
                                 <SectionHeader icon={Layers} title="Formato" />
                                 <SocialFormatSelector
@@ -634,19 +651,26 @@ export function ControlsPanel({
                                 )}
                         </div>
 
-                        {/* STEP 4: IMAGE */}
-                        <div ref={step4Ref} className="relative glass-card p-4">
+                        {/* STEP 4A: CONTENT */}
+                        <div ref={step4Ref} className={`relative ${PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 4 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[4]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step4Ref} />
-                                <SectionHeader icon={ImagePlus} title="Imagenes" />
-                                <ImageReferenceSelector
+                                <SectionHeader
+                                    icon={ImagePlus}
+                                    title={state.imageSourceMode === 'generate' ? 'Contenido generado por IA' : 'Contenido del usuario'}
+                                    extra={(
+                                        <Switch
+                                            checked={state.imageSourceMode === 'generate'}
+                                            onCheckedChange={(checked) => setImageSourceMode(checked ? 'generate' : 'upload')}
+                                        />
+                                    )}
+                                />
+                                <ContentImageCard
+                                    mode={state.imageSourceMode}
+                                    onModeChange={setImageSourceMode}
                                     uploadedImages={state.uploadedImages}
-                                    visionAnalysis={state.visionAnalysis ?? null}
-                                    isAnalyzing={state.isAnalyzing || false}
-                                    error={null}
                                     onUpload={uploadImage}
                                     onRemoveUploadedImage={removeUploadedImage}
                                     onClearUploadedImages={clearUploadedImages}
-                                    isOptional={true}
                                     brandKitImages={brandKitImages}
                                     selectedBrandKitImageIds={state.selectedBrandKitImageIds}
                                     onToggleBrandKitImage={toggleBrandKitImage}
@@ -656,18 +680,59 @@ export function ControlsPanel({
                                     aiImageDescription={state.aiImageDescription}
                                     onAiDescriptionChange={setAiImageDescription}
                                     suggestedImagePrompts={state.imagePromptSuggestions}
-                                    customStyle={state.customStyle}
-                                    onCustomStyleChange={setCustomStyle}
-                                    mode={state.imageSourceMode}
-                                    onModeChange={setImageSourceMode}
+                                    isAnalyzing={state.isAnalyzing || false}
+                                    error={null}
+                                    visionAnalysis={state.visionAnalysis ?? null}
                                 />
-                                <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
-                                    Sube una referencia o usa una del Brand Kit.
-                                </p>
+                        </div>
+
+                        {/* STEP 4B: STYLE */}
+                        <div className={`relative ${PANEL_CARD_PADDED_CLASS}`}>
+                                <SectionHeader icon={Palette} title="Estilo" />
+                                <StyleImageCard
+                                    uploadedImages={state.uploadedImages}
+                                    onUpload={uploadImage}
+                                    onRemoveUploadedImage={removeUploadedImage}
+                                    brandKitImages={brandKitImages}
+                                    selectedBrandKitImageIds={state.selectedBrandKitImageIds}
+                                    onToggleBrandKitImage={toggleBrandKitImage}
+                                    referenceImageRoles={state.referenceImageRoles}
+                                    onReferenceRoleChange={setReferenceImageRole}
+                                    stylePresets={stylePresets || []}
+                                    selectedStylePresetId={state.selectedStylePresetId || null}
+                                    selectedStylePresetName={state.selectedStylePresetName || null}
+                                    onSelectStylePreset={(preset) => {
+                                        if (!preset) {
+                                            setStylePreset(null)
+                                            return
+                                        }
+                                        setStylePreset({
+                                            id: preset.id,
+                                            name: preset.name,
+                                            analysis: preset.analysis as VisionAnalysis,
+                                        })
+                                    }}
+                                    isAnalyzing={state.isAnalyzing || false}
+                                    error={state.error}
+                                />
+                        </div>
+
+                        {/* STEP 4C: AUXILIARY LOGOS */}
+                        <div className={`relative ${PANEL_CARD_PADDED_CLASS}`}>
+                                <AuxiliaryLogosCard
+                                    uploadedImages={state.uploadedImages}
+                                    onUpload={uploadImage}
+                                    onRemoveUploadedImage={removeUploadedImage}
+                                    brandKitLogos={brandKitLogos}
+                                    selectedBrandKitImageIds={state.selectedBrandKitImageIds}
+                                    onToggleBrandKitImage={toggleBrandKitImage}
+                                    referenceImageRoles={state.referenceImageRoles}
+                                    onReferenceRoleChange={setReferenceImageRole}
+                                />
                         </div>
 
                         {/* STEP 6: LOGO & COLORS - Unified */}
-                        <div ref={step6Ref} className="relative glass-card p-4 space-y-6">
+                        <div ref={step6Ref} className={`relative ${PANEL_CARD_PADDED_CLASS} space-y-6`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep >= 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
                                 <div className="space-y-3">
                                     <SectionHeader icon={Fingerprint} title="Logo" />

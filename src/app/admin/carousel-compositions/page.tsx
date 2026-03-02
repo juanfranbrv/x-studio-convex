@@ -87,7 +87,7 @@ export default function CarouselCompositionsAdminPage() {
                     toast({ title: 'Defaults ya importados', description: 'No se aplicaron cambios porque ya existían datos.' })
                 }
             } else {
-                toast({ title: 'Defaults importados', description: 'Narrativas y composiciones cargadas desde el catálogo actual.' })
+                toast({ title: 'Defaults importados', description: 'Narrativas y diseños cargados desde el catálogo actual.' })
             }
         } catch (error: any) {
             toast({ title: 'Error al importar defaults', description: error?.message || 'No se pudo completar la importación.', variant: 'destructive' })
@@ -166,7 +166,7 @@ export default function CarouselCompositionsAdminPage() {
                         <Link href="/admin/compositions">
                             <Button variant="outline" size="sm" className="gap-2">
                                 <LayoutGrid className="h-4 w-4" />
-                                Composiciones Imagen
+                                Diseños Imagen
                             </Button>
                         </Link>
                     </div>
@@ -177,7 +177,7 @@ export default function CarouselCompositionsAdminPage() {
                 <div className="px-6 pt-4">
                     <TabsList>
                         <TabsTrigger value="structures">Narrativas</TabsTrigger>
-                        <TabsTrigger value="compositions">Composiciones</TabsTrigger>
+                        <TabsTrigger value="compositions">Diseños</TabsTrigger>
                     </TabsList>
                 </div>
 
@@ -233,11 +233,11 @@ export default function CarouselCompositionsAdminPage() {
                 <TabsContent value="compositions" className="p-6 overflow-auto">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h2 className="text-lg font-semibold">Composiciones</h2>
+                            <h2 className="text-lg font-semibold">Diseños</h2>
                             <p className="text-sm text-muted-foreground">Layouts para carruseles. Globales o asociadas a una narrativa.</p>
                         </div>
                         <Button size="sm" onClick={() => { setEditingComposition(null); setCompositionDialogOpen(true) }}>
-                            <Plus className="h-4 w-4 mr-1" /> Nueva composición
+                            <Plus className="h-4 w-4 mr-1" /> Nuevo diseño
                         </Button>
                     </div>
 
@@ -277,7 +277,7 @@ export default function CarouselCompositionsAdminPage() {
                             {sortedCompositions.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                                        No hay composiciones todavía.
+                                        No hay diseños todavía.
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -449,7 +449,7 @@ function CompositionDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle>{initial ? 'Editar composición' : 'Nueva composición'}</DialogTitle>
+                    <DialogTitle>{initial ? 'Editar diseño' : 'Nuevo diseño'}</DialogTitle>
                     <DialogDescription>Define layout y metadatos.</DialogDescription>
                 </DialogHeader>
                 <div className="grid grid-cols-2 gap-4">

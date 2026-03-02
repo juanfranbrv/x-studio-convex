@@ -183,6 +183,9 @@ type CarouselWorkspaceSnapshot = {
 }
 
 const CAROUSEL_AUTOSAVE_DEBOUNCE_MS = 1000
+const PANEL_CARD_CLASS = "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(15,23,42,0.55)] transition-all duration-200 hover:border-primary/30"
+const PANEL_CARD_PADDED_CLASS = `${PANEL_CARD_CLASS} p-4`
+const PANEL_CARD_PADDED_LG_CLASS = `${PANEL_CARD_CLASS} p-5`
 
 const SectionHeader = ({
     icon: Icon,
@@ -197,10 +200,10 @@ const SectionHeader = ({
 }) => (
     <div className={cn("flex items-center justify-between mb-3", className)}>
         <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-primary/10 text-primary">
+            <div className="flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary ring-1 ring-primary/20">
                 <Icon className="w-3.5 h-3.5" />
             </div>
-            <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">{title}</h3>
+            <h3 className="text-[11px] font-semibold text-foreground/95 uppercase tracking-[0.12em]">{title}</h3>
         </div>
         {extra}
     </div>
@@ -1667,10 +1670,10 @@ export function CarouselControlsPanel({
     }
 
     return (
-        <div className="w-full md:w-[27%] h-full controls-panel flex flex-col shrink-0 relative group/panel">
-            <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-6">
+        <div className="w-full md:w-[27%] h-full controls-panel flex flex-col shrink-0 relative group/panel border-l border-border/40 bg-gradient-to-b from-background via-background to-muted/20">
+            <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-5">
                                 {/* SECTION: Sessions */}
-                <div className="glass-card p-5 space-y-4">
+                <div className={`${PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader
                         icon={History}
                         title="Historial"
@@ -1763,7 +1766,7 @@ export function CarouselControlsPanel({
 
                 {/* Slide Count */}
                 {isStepVisible(1) && (
-                <div ref={(el) => { stepRefs.current[1] = el }} className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[1] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader icon={GalleryHorizontal} title="Numero de diapositivas" />
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(-1)} disabled={slideCount <= 0}>
@@ -1783,7 +1786,7 @@ export function CarouselControlsPanel({
 
                 {/* Prompt */}
                 {isStepVisible(2) && (
-                <div ref={(el) => { stepRefs.current[2] = el }} className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[2] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
                         icon={Wand2}
                         title="¿Qué quieres crear?"
@@ -1839,7 +1842,6 @@ export function CarouselControlsPanel({
                                 disabled={!canAnalyze}
                                 className="ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
                             >
-                                <Sparkles className="w-3.5 h-3.5 mr-2" />
                                 Analizar
                             </Button>
                         </div>
@@ -1855,10 +1857,10 @@ export function CarouselControlsPanel({
 
                 {/* Composition */}
                 {isStepVisible(3) && (
-                <div ref={(el) => { stepRefs.current[3] = el }} className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[3] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
                         icon={Layout}
-                        title="Composicion"
+                        title="Diseño"
                         extra={
                             <div className="flex items-center gap-2">
                                 <span className={cn("text-[10px] font-medium", compositionMode === 'advanced' ? "text-primary" : "text-muted-foreground")}>
@@ -1879,7 +1881,7 @@ export function CarouselControlsPanel({
                                         )
                                         markReanalysisNeeded()
                                     }}
-                                    aria-label="Activar modo avanzado de composicion"
+                                    aria-label="Activar modo avanzado de diseño"
                                 />
                             </div>
                         }
@@ -1924,13 +1926,13 @@ export function CarouselControlsPanel({
                                 }}
                             />
                             <p className="text-[11px] text-muted-foreground leading-snug">
-                                Modo avanzado: eliges manualmente la composicion.
+                                Modo avanzado: eliges manualmente el diseño.
                             </p>
                         </>
                     ) : (
                         <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 space-y-1.5">
                             <p className="text-[11px] text-primary font-medium leading-relaxed">
-                                Modo basico activo. El sistema selecciona internamente la composicion mas adecuada segun tu prompt, con criterio determinista (no azar puro), sin mostrarla al usuario final.
+                                Modo basico activo. El sistema selecciona internamente el diseño mas adecuado segun tu prompt, con criterio determinista (no azar puro), sin mostrarlo al usuario final.
                             </p>
                             <p className="text-[11px] text-primary/80 leading-relaxed">
                                 La arquitectura se asigna en segundo plano y se mantiene consistente durante todo el carrusel.
@@ -1942,7 +1944,7 @@ export function CarouselControlsPanel({
 
                 {/* Format */}
                 {isStepVisible(4) && (
-                <div ref={(el) => { stepRefs.current[4] = el }} className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[4] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader icon={Layers} title="Formato" />
                     <div className="space-y-2">
                         <button
@@ -1995,7 +1997,7 @@ export function CarouselControlsPanel({
                                     <span className="text-[10px] font-medium text-muted-foreground">1:1</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1080 · formato original y clásico para composiciones equilibradas.
+                                    1080x1080 · formato original y clásico para diseños equilibrados.
                                 </p>
                             </div>
                         </button>
@@ -2005,7 +2007,7 @@ export function CarouselControlsPanel({
 
                 {/* Image */}
                 {isStepVisible(5) && (
-                <div ref={(el) => { stepRefs.current[5] = el }} className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[5] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader icon={ImagePlus} title="Imagen de Referencia" />
                     <ImageReferenceSelector
                         uploadedImages={uploadedImages}
@@ -2054,7 +2056,7 @@ export function CarouselControlsPanel({
 
                 {/* Logo */}
                 {isStepVisible(6) && (
-                <div ref={(el) => { stepRefs.current[6] = el }} className="glass-card p-4 space-y-4">
+                <div ref={(el) => { stepRefs.current[6] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-4`}>
                     <SectionHeader icon={Fingerprint} title="Logo" />
                     {brandLogos.length > 0 || primaryLogo ? (
                         <>
@@ -2107,7 +2109,7 @@ export function CarouselControlsPanel({
                 )}
 
                 {isStepVisible(7) && (
-                <div ref={(el) => { stepRefs.current[7] = el }} className="glass-card p-4 space-y-3">
+                <div ref={(el) => { stepRefs.current[7] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
                         icon={Palette}
                         title="Colores"

@@ -59,7 +59,7 @@ export default async function AdminCompositionsPage({ searchParams }: Compositio
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
                         <Link href="/admin" className="text-xs font-medium text-primary hover:underline">← Volver a Admin</Link>
-                        <h1 className="text-2xl font-bold tracking-tight">Gestor de Composiciones</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">Gestor de Diseños</h1>
                     </div>
                     <div className="flex items-center gap-3">
                         <Link href="/admin/compositions/auto">
@@ -71,7 +71,7 @@ export default async function AdminCompositionsPage({ searchParams }: Compositio
                         <Link href="/admin/compositions?nuevo=1">
                             <Button size="sm" className="gap-2">
                                 <Plus className="h-4 w-4" />
-                                Nueva Composición
+                                Nuevo Diseño
                             </Button>
                         </Link>
                     </div>

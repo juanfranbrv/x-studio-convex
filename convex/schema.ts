@@ -259,4 +259,19 @@ export default defineSchema({
     .index("by_model", ["model"])
     .index("by_kind", ["kind"])
     .index("by_user", ["user_clerk_id"]),
+
+  // Predefined style presets (admin-managed) with precomputed visual analysis.
+  style_presets: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    image_url: v.string(),
+    analysis: v.any(),                 // VisionAnalysis snapshot
+    is_active: v.boolean(),
+    sort_order: v.number(),
+    created_at: v.string(),
+    updated_at: v.string(),
+    updated_by: v.optional(v.string()),
+  }).index("by_active", ["is_active"])
+    .index("by_sort_order", ["sort_order"])
+    .index("by_active_sort", ["is_active", "sort_order"]),
 });

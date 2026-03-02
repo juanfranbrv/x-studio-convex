@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
-import { Loader2, Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink, Trash2, MessageSquare, Shapes, Banknote, Save, ChevronRight, ChevronDown, Download } from 'lucide-react'
+import { Loader2, Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink, Trash2, MessageSquare, Shapes, Banknote, Save, ChevronRight, ChevronDown, Download, Palette } from 'lucide-react'
 import { CreditsBadge } from '@/components/layout/CreditsBadge'
 import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/admin-compositions-actions'
 import { Button } from '@/components/ui/button'
@@ -40,6 +40,7 @@ import { Fragment } from 'react'
 
 
 import { CompositionsSummaryTable } from '@/components/admin/CompositionsSummaryTable'
+import { StylePresetsManager } from '@/components/admin/StylePresetsManager'
 
 const IMAGE_MODEL_OPTIONS = [
     { value: 'wisdom/gemini-3-pro-image-preview', label: 'Wisdom · Gemini 3 Pro Image Preview' },
@@ -73,7 +74,7 @@ const PROVIDER_COST_LINKS: Record<string, string> = {
 }
 
 const ADMIN_TAB_STORAGE_KEY = 'x-studio-admin-active-tab'
-const ADMIN_TABS = ['requests', 'users', 'transactions', 'settings', 'models', 'economics', 'links', 'feedback', 'compositions'] as const
+const ADMIN_TABS = ['requests', 'users', 'transactions', 'settings', 'models', 'styles', 'economics', 'links', 'feedback', 'compositions'] as const
 type AdminTab = (typeof ADMIN_TABS)[number]
 const DEFAULT_ADMIN_TAB: AdminTab = 'requests'
 const ADMIN_EMAILS = ['juanfranbrv@gmail.com']
@@ -587,7 +588,7 @@ export default function AdminPage() {
                         <Link href="/admin/compositions">
                             <Button variant="outline" className="gap-2">
                                 <Shapes className="h-4 w-4" />
-                                Gestor de composiciones
+                                Gestor de diseños
                             </Button>
                         </Link>
                         <Link href="/admin/carousel-compositions">
@@ -667,6 +668,9 @@ export default function AdminPage() {
                         <TabsTrigger value="models" className="gap-2">
                             <Shapes className="h-4 w-4" /> Modelos
                         </TabsTrigger>
+                        <TabsTrigger value="styles" className="gap-2">
+                            <Palette className="h-4 w-4" /> Estilos
+                        </TabsTrigger>
                         <TabsTrigger value="economics" className="gap-2">
                             <Banknote className="h-4 w-4" /> Economía
                         </TabsTrigger>
@@ -682,7 +686,7 @@ export default function AdminPage() {
                             )}
                         </TabsTrigger>
                         <TabsTrigger value="compositions" className="gap-2">
-                            <Shapes className="h-4 w-4" /> Composiciones
+                            <Shapes className="h-4 w-4" /> Diseños
                         </TabsTrigger>
                     </TabsList>
 
@@ -1603,6 +1607,19 @@ export default function AdminPage() {
                                         />
                                     </div>
                                 </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Styles Tab */}
+                    <TabsContent value="styles" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Estilos predefinidos</CardTitle>
+                                <CardDescription>Gestión de estilos con análisis guardado para inyección directa en prompt.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <StylePresetsManager adminEmail={userEmail} />
                             </CardContent>
                         </Card>
                     </TabsContent>

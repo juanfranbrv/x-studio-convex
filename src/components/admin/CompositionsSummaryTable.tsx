@@ -280,7 +280,7 @@ export function CompositionsSummaryTable({ initialData }: CompositionsSummaryTab
                         {filteredAndSortedData.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-32 text-center text-muted-foreground italic">
-                                    No se encontraron composiciones con esos filtros.
+                                    No se encontraron diseños con esos filtros.
                                 </TableCell>
                             </TableRow>
                         )}
@@ -289,7 +289,7 @@ export function CompositionsSummaryTable({ initialData }: CompositionsSummaryTab
             </div>
 
             <footer className="p-3 border-t bg-muted/5 flex items-center justify-between text-[10px] text-muted-foreground">
-                <span>Mostrando {filteredAndSortedData.length} de {data.length} composiciones</span>
+                <span>Mostrando {filteredAndSortedData.length} de {data.length} diseños</span>
                 <span className="font-mono">Modo avanzado activo siempre por defecto</span>
             </footer>
         </div>

@@ -19,7 +19,7 @@ export default async function AutoGenerateCompositionsPage() {
                 <header className="space-y-2">
                     <Link href="/admin/compositions" className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
                         <ArrowLeft className="h-4 w-4" />
-                        Volver al Gestor de Composiciones
+                        Volver al Gestor de Diseños
                     </Link>
                     <div className="flex items-center gap-3">
                         <div className="rounded-lg bg-primary/10 p-2 text-primary">
@@ -28,28 +28,28 @@ export default async function AutoGenerateCompositionsPage() {
                         <h1 className="text-3xl font-bold tracking-tight">Generación Automática</h1>
                     </div>
                     <p className="text-muted-foreground text-lg">
-                        Crea composiciones completas asistidas por IA optimizadas para cada objetivo.
+                        Crea diseños completos asistidos por IA optimizados para cada objetivo.
                     </p>
                 </header>
 
                 <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
                     <div className="border-b border-border bg-muted/30 px-6 py-4">
                         <h2 className="font-semibold text-lg">Configuración de la Generación</h2>
-                        <p className="text-sm text-muted-foreground">Define el objetivo y los parámetros para las nuevas composiciones.</p>
+                        <p className="text-sm text-muted-foreground">Define el objetivo y los parámetros para los nuevos diseños.</p>
                     </div>
 
                     <form action={autoGenerateAction} className="p-6 space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4 md:col-span-2">
                                 <label className="block space-y-2">
-                                    <span className="text-sm font-medium">Objetivo de la Composición</span>
+                                    <span className="text-sm font-medium">Objetivo del Diseño</span>
                                     <input
                                         name="goal"
                                         required
                                         placeholder="Ej: captar leads para curso de informática para mayores..."
                                         className="h-12 w-full rounded-lg border border-border bg-background px-4 text-sm outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
                                     />
-                                    <p className="text-xs text-muted-foreground">Describe detalladamente qué quieres comunicar con estas composiciones.</p>
+                                    <p className="text-xs text-muted-foreground">Describe detalladamente qué quieres comunicar con estos diseños.</p>
                                 </label>
                             </div>
 
@@ -118,7 +118,7 @@ export default async function AutoGenerateCompositionsPage() {
 
                         <div className="pt-4 flex justify-end">
                             <Button type="submit" className="px-8 h-12 text-base shadow-lg shadow-primary/20">
-                                Generar Composiciones Automaticamente
+                                Generar Diseños Automaticamente
                             </Button>
                         </div>
                     </form>
