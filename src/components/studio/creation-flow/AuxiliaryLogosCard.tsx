@@ -20,7 +20,7 @@ interface AuxiliaryLogosCardProps {
   onReferenceRoleChange?: (imageId: string, role: ReferenceImageRole) => void
 }
 
-const isAuxLogoRole = (role?: ReferenceImageRole) => role === 'logo' || role === 'aux_logo'
+const isAuxLogoRole = (role?: ReferenceImageRole) => role === 'logo'
 
 export function AuxiliaryLogosCard({
   uploadedImages = [],
