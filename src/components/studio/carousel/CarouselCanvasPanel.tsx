@@ -70,6 +70,7 @@ interface CarouselCanvasPanelProps {
         caption?: string
     }>
     onSelectSessionHistory?: (id: string) => void
+    isAdmin?: boolean
 }
 
 function AiPromptIcon({ className, style }: { className?: string; style?: CSSProperties }) {
@@ -210,7 +211,8 @@ export function CarouselCanvasPanel({
     hook,
     selectedLogoUrl,
     sessionHistory = [],
-    onSelectSessionHistory
+    onSelectSessionHistory,
+    isAdmin = false
 }: CarouselCanvasPanelProps) {
     const [zoom, setZoom] = useState(110)
     const [hasManualZoom, setHasManualZoom] = useState(false)
@@ -758,36 +760,40 @@ export function CarouselCanvasPanel({
             {/* Header Overlay - Balanced with Image Canvas */}
             <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between p-4 z-40 pointer-events-none">
                 {/* Left: Metadata */}
-                <div className="pointer-events-auto flex items-center gap-2 pt-1">
-                    <div className="flex flex-col items-start gap-0.5 leading-tight text-foreground/90 drop-shadow-sm">
-                        <span className="text-[12px] font-medium">
-                            {slides.length > 0 ? `${currentIndex + 1} / ${slides.length}` : '---'}
-                        </span>
-                        <span className="text-[12px] font-medium">
-                            {aspectRatio}
-                            <span className="opacity-60"> &middot; </span>
-                            {(() => {
-                                const [w, h] = aspectRatio.split(':').map(Number)
-                                const ratio = w / h
-                                const baseH = 600
-                                const calcW = baseH * ratio
-                                return `${Math.round(calcW)}x${baseH}`
-                            })()}
-                        </span>
-                        <span className="text-[11px] font-medium">
-                            {(() => {
-                                return `W:${getWidthBucket(viewportWidth)}`
-                            })()}
-                        </span>
-                        <span className="text-[11px] font-medium">
-                            {(() => {
-                                const footerOffset = getFooterOffset()
-                                const availableHeight = Math.max(200, viewportHeight - footerOffset)
-                                return `H:${getHeightBucket(viewportHeight)} (${Math.round(availableHeight)}px)`
-                            })()}
-                        </span>
+                {isAdmin ? (
+                    <div className="pointer-events-auto flex items-center gap-2 pt-1">
+                        <div className="flex flex-col items-start gap-0.5 leading-tight text-foreground/90 drop-shadow-sm">
+                            <span className="text-[12px] font-medium">
+                                {slides.length > 0 ? `${currentIndex + 1} / ${slides.length}` : '---'}
+                            </span>
+                            <span className="text-[12px] font-medium">
+                                {aspectRatio}
+                                <span className="opacity-60"> &middot; </span>
+                                {(() => {
+                                    const [w, h] = aspectRatio.split(':').map(Number)
+                                    const ratio = w / h
+                                    const baseH = 600
+                                    const calcW = baseH * ratio
+                                    return `${Math.round(calcW)}x${baseH}`
+                                })()}
+                            </span>
+                            <span className="text-[11px] font-medium">
+                                {(() => {
+                                    return `W:${getWidthBucket(viewportWidth)}`
+                                })()}
+                            </span>
+                            <span className="text-[11px] font-medium">
+                                {(() => {
+                                    const footerOffset = getFooterOffset()
+                                    const availableHeight = Math.max(200, viewportHeight - footerOffset)
+                                    return `H:${getHeightBucket(viewportHeight)} (${Math.round(availableHeight)}px)`
+                                })()}
+                            </span>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div />
+                )}
 
                 {/* Right: Actions */}
                 <div className="hidden md:flex pointer-events-auto glass-panel text-muted-foreground transition-all duration-300 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4">

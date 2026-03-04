@@ -1444,7 +1444,7 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     cta: '',
     ctaUrl: '', // NEW: Init ctaUrl
     ctaUrlManual: false,
-    ctaUrlEnabled: false,
+    ctaUrlEnabled: true,
     caption: '', // NEW: Init caption
     customTexts: {},
     selectedBrandColors: [],

@@ -13,7 +13,10 @@ interface AuxiliaryLogosCardProps {
   uploadedImages: string[]
   onUpload: (file: File) => void
   onRemoveUploadedImage?: (url: string) => void
+  brandKitImages?: Array<{ id: string; url: string; name?: string }>
+  // Backward compatibility: legacy source based on primary logos
   brandKitLogos?: Array<{ id: string; url: string; name?: string }>
+  onRefreshBrandKitContent?: () => Promise<void> | void
   selectedBrandKitImageIds?: string[]
   onToggleBrandKitImage?: (imageId: string) => void
   referenceImageRoles?: Record<string, ReferenceImageRole>
@@ -26,7 +29,9 @@ export function AuxiliaryLogosCard({
   uploadedImages = [],
   onUpload,
   onRemoveUploadedImage,
+  brandKitImages = [],
   brandKitLogos = [],
+  onRefreshBrandKitContent,
   selectedBrandKitImageIds = [],
   onToggleBrandKitImage,
   referenceImageRoles = {},
@@ -34,6 +39,7 @@ export function AuxiliaryLogosCard({
 }: AuxiliaryLogosCardProps) {
   const [collapsed, setCollapsed] = useState(true)
   const [isBrandKitModalOpen, setIsBrandKitModalOpen] = useState(false)
+  const [isRefreshingBrandKit, setIsRefreshingBrandKit] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const previousUploadedRef = useRef<string[]>(uploadedImages)
   const waitingForUploadedAuxRef = useRef(false)
@@ -50,11 +56,16 @@ export function AuxiliaryLogosCard({
     [selectedBrandKitImageIds, referenceImageRoles]
   )
 
-  const brandKitLogoMap = useMemo(() => {
+  const brandKitSources = useMemo(
+    () => (brandKitImages.length > 0 ? brandKitImages : brandKitLogos),
+    [brandKitImages, brandKitLogos]
+  )
+
+  const brandKitAssetMap = useMemo(() => {
     const map = new Map<string, { id: string; url: string; name?: string }>()
-    brandKitLogos.forEach((logo) => map.set(logo.id, logo))
+    brandKitSources.forEach((item) => map.set(item.id, item))
     return map
-  }, [brandKitLogos])
+  }, [brandKitSources])
 
   useEffect(() => {
     if (!waitingForUploadedAuxRef.current) {
@@ -106,14 +117,31 @@ export function AuxiliaryLogosCard({
     onReferenceRoleChange?.(logo.id, 'logo')
   }, [auxBrandKitIds, globalReferenceCount, onReferenceRoleChange, onToggleBrandKitImage, selectedBrandKitImageIds])
 
-  const selectedBrandKitLogos = useMemo(
+  const selectedBrandKitAssets = useMemo(
     () => auxBrandKitIds
-      .map((id) => brandKitLogoMap.get(id) || { id, url: id, name: 'Logo auxiliar' })
-      .filter((logo) => Boolean(logo?.url)),
-    [auxBrandKitIds, brandKitLogoMap]
+      .map((id) => brandKitAssetMap.get(id) || { id, url: id, name: 'Recurso auxiliar' })
+      .filter((item) => Boolean(item?.url)),
+    [auxBrandKitIds, brandKitAssetMap]
   )
 
-  const hasAuxLogos = auxUploadedIds.length > 0 || selectedBrandKitLogos.length > 0
+  const hasAuxLogos = auxUploadedIds.length > 0 || selectedBrandKitAssets.length > 0
+
+  useEffect(() => {
+    // Keep the card expanded whenever there are auxiliary logos selected.
+    if (hasAuxLogos) {
+      setCollapsed(false)
+    }
+  }, [hasAuxLogos])
+
+  const refreshBrandKitContent = useCallback(async () => {
+    if (!onRefreshBrandKitContent) return
+    try {
+      setIsRefreshingBrandKit(true)
+      await onRefreshBrandKitContent()
+    } finally {
+      setIsRefreshingBrandKit(false)
+    }
+  }, [onRefreshBrandKitContent])
 
   return (
     <div className="space-y-3">
@@ -129,7 +157,13 @@ export function AuxiliaryLogosCard({
           variant="ghost"
           size="icon"
           className="h-7 w-7"
-          onClick={() => setCollapsed((prev) => !prev)}
+          onClick={() => {
+            if (hasAuxLogos) {
+              setCollapsed(false)
+              return
+            }
+            setCollapsed((prev) => !prev)
+          }}
           aria-label={collapsed ? 'Expandir logos auxiliares' : 'Colapsar logos auxiliares'}
         >
           {collapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
@@ -167,7 +201,7 @@ export function AuxiliaryLogosCard({
                 className="h-7 px-2 text-[10px] ml-auto"
                 onClick={() => {
                   auxUploadedIds.forEach((id) => removeAuxLogo(id))
-                  selectedBrandKitLogos.forEach((logo) => removeAuxLogo(logo.id))
+                  selectedBrandKitAssets.forEach((item) => removeAuxLogo(item.id))
                 }}
               >
                 Limpiar
@@ -206,15 +240,15 @@ export function AuxiliaryLogosCard({
                 </div>
               ))}
 
-              {selectedBrandKitLogos.map((logo) => (
+              {selectedBrandKitAssets.map((item) => (
                 <button
-                  key={logo.id}
+                  key={item.id}
                   type="button"
-                  onClick={() => removeAuxLogo(logo.id)}
+                  onClick={() => removeAuxLogo(item.id)}
                   className="relative rounded-xl overflow-hidden border border-border/60 bg-background aspect-square group"
                   title="Quitar logo auxiliar"
                 >
-                  <img src={logo.url} alt={logo.name || 'Logo auxiliar del Kit de marca'} className="w-full h-full object-cover" />
+                  <img src={item.url} alt={item.name || 'Recurso auxiliar del Kit de marca'} className="w-full h-full object-cover" />
                   <span className="absolute top-1 left-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-emerald-500/85 text-white">
                     Kit
                   </span>
@@ -237,26 +271,38 @@ export function AuxiliaryLogosCard({
       <Dialog open={isBrandKitModalOpen} onOpenChange={setIsBrandKitModalOpen}>
         <DialogContent className="!w-[64vw] !max-w-[64vw] sm:!max-w-[64vw] h-[min(88vh,860px)] p-0 overflow-hidden flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-3">
-            <DialogTitle>Seleccionar logos auxiliares desde Kit de marca</DialogTitle>
+            <div className="flex items-center justify-between gap-3">
+              <DialogTitle>Seleccionar logos auxiliares desde Kit de marca</DialogTitle>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 text-[11px]"
+                onClick={() => void refreshBrandKitContent()}
+                disabled={isRefreshingBrandKit}
+              >
+                {isRefreshingBrandKit ? 'Actualizando...' : 'Actualizar Kit'}
+              </Button>
+            </div>
             <DialogDescription>
-              Puedes elegir varios logos auxiliares. Se aplicarán como referencias de logo secundario.
+              Se muestran las imágenes del Kit de marca para que puedas elegir logos auxiliares o recursos visuales secundarios.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
-            {brandKitLogos.length > 0 ? (
+            {brandKitSources.length > 0 ? (
               <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(132px,1fr))] gap-3">
-                {brandKitLogos.map((logo) => {
-                  const isSelected = auxBrandKitIds.includes(logo.id)
-                  const canSelect = isSelected || globalReferenceCount < MAX_REFERENCE_IMAGES || selectedBrandKitImageIds.includes(logo.id)
+                {brandKitSources.map((item) => {
+                  const isSelected = auxBrandKitIds.includes(item.id)
+                  const canSelect = isSelected || globalReferenceCount < MAX_REFERENCE_IMAGES || selectedBrandKitImageIds.includes(item.id)
 
                   return (
                     <button
-                      key={logo.id}
+                      key={item.id}
                       type="button"
                       onClick={() => {
                         if (!canSelect) return
-                        toggleAuxFromKit(logo)
+                        toggleAuxFromKit(item)
                       }}
                       className={cn(
                         'relative w-full rounded-xl overflow-hidden border aspect-square transition-all',
@@ -267,7 +313,7 @@ export function AuxiliaryLogosCard({
                             : 'border-border opacity-50 cursor-not-allowed'
                       )}
                     >
-                      <img src={logo.url} alt={logo.name || 'Logo de Kit de marca'} className="w-full h-full object-cover" />
+                      <img src={item.url} alt={item.name || 'Imagen de Kit de marca'} className="w-full h-full object-cover" />
                       {isSelected ? (
                         <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
                           <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
@@ -281,7 +327,7 @@ export function AuxiliaryLogosCard({
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-border mt-1 p-6 text-center text-sm text-muted-foreground">
-                Este Kit de marca no tiene logos aún.
+                Este Kit de marca no tiene imágenes aún.
               </div>
             )}
           </div>

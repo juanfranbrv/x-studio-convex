@@ -59,7 +59,8 @@ const roleLabel = (role?: string) => {
     if (role === 'style') return 'Estilo'
     if (role === 'style_content') return 'Estilo+Contenido'
     if (role === 'content') return 'Contenido'
-    if (role === 'logo' || role === 'primary_logo' || role === 'aux_logo') return 'Logo'
+    if (role === 'primary_logo') return 'Logo Principal'
+    if (role === 'aux_logo' || role === 'logo') return 'Logo Aux'
     if (role === 'generated') return 'Generada'
     return 'Referencia'
 }

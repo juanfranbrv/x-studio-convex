@@ -248,6 +248,7 @@ export interface CanvasPanelProps {
     onOpenPromptDebug?: () => void
     showPromptDebugTrigger?: boolean
     layoutIconOverrides?: Record<string, string>
+    isAdmin?: boolean
 }
 
 export function CanvasPanel({
@@ -282,6 +283,7 @@ export function CanvasPanel({
     onOpenPromptDebug,
     showPromptDebugTrigger = false,
     layoutIconOverrides = {},
+    isAdmin = false,
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const { activeBrandKit } = useBrandKit()
@@ -537,14 +539,46 @@ export function CanvasPanel({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentImage])
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
         if (!currentImage) return
-        const link = document.createElement('a')
-        link.href = currentImage
-        link.download = `x-image-generation-${Date.now()}.png`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+        const timestamp = Date.now()
+
+        try {
+            let imageBlob: Blob
+            let imageResponse = await fetch(currentImage)
+
+            if (!imageResponse.ok) {
+                const proxyResponse = await fetch('/api/download-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: currentImage }),
+                })
+                if (!proxyResponse.ok) {
+                    throw new Error(`Proxy download failed: ${proxyResponse.status}`)
+                }
+                imageResponse = proxyResponse
+            }
+
+            imageBlob = await imageResponse.blob()
+            const imageUrl = URL.createObjectURL(imageBlob)
+            const mime = (imageBlob.type || 'image/png').toLowerCase()
+            const extension = mime.includes('jpeg') || mime.includes('jpg')
+                ? 'jpg'
+                : mime.includes('webp')
+                    ? 'webp'
+                    : mime.includes('png')
+                        ? 'png'
+                        : 'png'
+            const link = document.createElement('a')
+            link.href = imageUrl
+            link.download = `x-image-generation-${timestamp}.${extension}`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            URL.revokeObjectURL(imageUrl)
+        } catch (error) {
+            console.error('Image download failed:', error)
+        }
     }
 
     const handleDownloadBundle = async () => {
@@ -645,33 +679,37 @@ export function CanvasPanel({
             <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between px-4 pt-1 z-40 pointer-events-none">
 
                 {/* Left: Canvas info */}
-                <div className="pointer-events-auto flex items-center gap-2 pt-1">
-                    <div className="flex flex-col items-start gap-0.5 leading-tight text-foreground/90 drop-shadow-sm">
-                        <span className="text-[12px] font-medium">
-                            {aspectRatio}
-                            <span className="opacity-60"> &middot; </span>
-                            {(() => {
-                                const [w, h] = aspectRatio.split(':').map(Number);
-                                const ratio = w / h;
-                                const baseH = 600;
-                                const calcW = baseH * ratio;
-                                return `${Math.round(calcW)}x${baseH}`;
-                            })()}
-                        </span>
-                        <span className="text-[11px] font-medium">
-                            {(() => {
-                                return `W:${getWidthBucket(viewportWidth)}`;
-                            })()}
-                        </span>
-                        <span className="text-[11px] font-medium">
-                            {(() => {
-                                const footerOffset = getFooterOffset();
-                                const availableHeight = Math.max(200, viewportHeight - footerOffset);
-                                return `H:${getHeightBucket(viewportHeight)} (${Math.round(availableHeight)}px)`;
-                            })()}
-                        </span>
+                {isAdmin ? (
+                    <div className="pointer-events-auto flex items-center gap-2 pt-1">
+                        <div className="flex flex-col items-start gap-0.5 leading-tight text-foreground/90 drop-shadow-sm">
+                            <span className="text-[12px] font-medium">
+                                {aspectRatio}
+                                <span className="opacity-60"> &middot; </span>
+                                {(() => {
+                                    const [w, h] = aspectRatio.split(':').map(Number);
+                                    const ratio = w / h;
+                                    const baseH = 600;
+                                    const calcW = baseH * ratio;
+                                    return `${Math.round(calcW)}x${baseH}`;
+                                })()}
+                            </span>
+                            <span className="text-[11px] font-medium">
+                                {(() => {
+                                    return `W:${getWidthBucket(viewportWidth)}`;
+                                })()}
+                            </span>
+                            <span className="text-[11px] font-medium">
+                                {(() => {
+                                    const footerOffset = getFooterOffset();
+                                    const availableHeight = Math.max(200, viewportHeight - footerOffset);
+                                    return `H:${getHeightBucket(viewportHeight)} (${Math.round(availableHeight)}px)`;
+                                })()}
+                            </span>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div />
+                )}
 
                 {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}
                 {/* Zoom Controls & Actions */}

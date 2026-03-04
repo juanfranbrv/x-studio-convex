@@ -210,9 +210,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 }
                 hasChanges = true
             } else {
-                nextState.ctaUrlEnabled = false
+                nextState.ctaUrlEnabled = true
                 nextState.ctaUrlManual = false
-                nextState.ctaUrl = ''
+                nextState.ctaUrl = activeBrandKit?.url?.trim() || ''
                 hasChanges = true
             }
         }
@@ -307,6 +307,28 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             currentStep: prev.hasGeneratedImage ? 3 : Math.max(prev.currentStep, 4)
         })) // Auto-advance to Step 4 (Image Reference)
     }, [invalidateFromStep])
+
+    // Ensure a default format is always present once a platform exists.
+    // Uses functional state updates to avoid stale-closure races.
+    const ensureDefaultFormat = useCallback((preferredPlatform?: SocialPlatform | null) => {
+        setState(prev => {
+            if (prev.selectedFormat) return prev
+
+            const targetPlatform = preferredPlatform ?? prev.selectedPlatform ?? 'instagram'
+            const fallbackFormat =
+                SOCIAL_FORMATS.find((format) => format.platform === targetPlatform)?.id ??
+                SOCIAL_FORMATS.find((format) => format.platform === 'instagram')?.id
+
+            if (!fallbackFormat) return prev
+
+            return {
+                ...prev,
+                selectedPlatform: prev.selectedPlatform ?? targetPlatform,
+                selectedFormat: fallbackFormat,
+                currentStep: prev.hasGeneratedImage ? 4 : Math.max(prev.currentStep, 4),
+            }
+        })
+    }, [])
 
     // -------------------------------------------------------------------------
     // STEP 1: Intent Selection
@@ -1574,7 +1596,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // TEXT CONTENT (Part of P9 - Mandatory)
         const textParts: string[] = []
         const contactParts: string[] = []
-        const contactLabelRegex = /\b(tel[e?]fono|telefono|m[o?]vil|movil|phone|whatsapp|email|e-mail|correo|mail|url|web|website|sitio|instagram|tiktok|linkedin|youtube|x|twitter|facebook|usuario|user|handle)\b/i
+        const contactLabelRegex = /\b(tel[e?]fono|telefono|m[o?]vil|movil|phone|whatsapp|email|e-mail|correo|mail|url|web|website|sitio|instagram|tiktok|linkedin|youtube|x|twitter|facebook|usuario|user|handle|direcci[oó]n|direccion|address|domicilio|ubicaci[oó]n|ubicacion)\b/i
         const hasEmail = (value: string) => /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(value)
         const hasUrl = (value: string) => /(https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,}(\/|$))/i.test(value)
         const hasHandle = (value: string) => /(^|\s)@[a-z0-9._]{2,}/i.test(value)
@@ -1582,6 +1604,12 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             const digits = value.replace(/\D/g, '')
             if (digits.length < 7) return false
             return /(\+?\d[\d\s().-]{6,}\d)/.test(value) || /^(\+?\d{7,})$/.test(digits)
+        }
+        const hasPhysicalAddress = (value: string) => {
+            const v = value.trim()
+            if (!v) return false
+            return /\b(calle|c\/|avda|avenida|plaza|pza|camino|carretera|rd|road|street|st\.?|avenue|ave\.?|blvd|boulevard|cp|c\.p\.|postal)\b/i.test(v)
+                || /\b\d{1,4}\b/.test(v) && /\b([a-záéíóúñ]{4,})\b/i.test(v)
         }
         const isContactField = (label: string, value: string, type?: TextAsset['type']) => {
             const normalizedLabel = label.trim()
@@ -1592,7 +1620,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 hasEmail(value) ||
                 hasUrl(value) ||
                 hasHandle(value) ||
-                hasPhone(value)
+                hasPhone(value) ||
+                hasPhysicalAddress(value)
             )
         }
         const headlineValue = activeState.headline?.trim()
@@ -1650,7 +1679,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         if (textParts.length > 0 || contactParts.length > 0) {
             brandDNA.push(P09.MANDATORY_TEXT_HEADER)
             brandDNA.push(P09.TEXT_FIT_SAFETY_RULES)
-            brandDNA.push(P09.TEXT_TYPOGRAPHY_LOCK)
+            brandDNA.push(P09.buildTypographyContract(activeBrandKit?.fonts))
             if (activeState.ctaUrlEnabled && activeState.ctaUrl?.trim()) {
                 brandDNA.push(P09B.CRITICAL_HIERARCHY_INSTRUCTION(activeState.ctaUrl))
             }
@@ -1821,7 +1850,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             ? (activeState.firstVisionAnalysis ?? activeState.visionAnalysis)
             : null
         const styleSignals = extractStyleSignals(customStyle, styleAnalysis)
-        const typographyDirection = buildSimpleTypographyDirection(activeState.typography, styleSignals)
+        const hasBrandTypographyContract = Boolean(activeBrandKit?.fonts && activeBrandKit.fonts.length > 0)
+        const typographyDirection = hasBrandTypographyContract
+            ? ''
+            : buildSimpleTypographyDirection(activeState.typography, styleSignals)
         const visualDirectiveLine = buildVisualStyleDirective(customStyle, styleAnalysis)
 
         if (styleSignals.length > 0 || typographyDirection) {
@@ -1829,6 +1861,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                 P05.PRIORITY_HEADER,
                 ``,
                 visualDirectiveLine,
+                P09.TYPOGRAPHY_LOCK_REFERENCE,
                 `COLOR DOMINANCE RULE: Style cues define form, line quality, texture and composition. PRIORITY 4 brand palette controls final hue decisions. Do not override brand colors with fixed external color schemes.`,
                 ``,
                 typographyDirection ? `${typographyDirection}` : ``,
@@ -2124,6 +2157,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             selectedBrandKitImageIds: state.selectedBrandKitImageIds,
             referenceImageRoles: state.referenceImageRoles,
             aiImageDescription: state.aiImageDescription,
+            suggestions: state.suggestions,
             imagePromptSuggestions: state.imagePromptSuggestions,
             typography: state.typography,
             selectedStyles: state.selectedStyles,
@@ -2322,6 +2356,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         setSelectedLayoutForGeneration,
         selectPlatform,
         selectFormat,
+        ensureDefaultFormat,
         selectLogo,
         setHeadline,
         setCta,

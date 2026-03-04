@@ -139,7 +139,21 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
+const isToastMutedForCurrentRoute = () => {
+    if (typeof window === "undefined") return false
+    const pathname = window.location?.pathname || ""
+    return pathname === "/image" || pathname.startsWith("/image/")
+}
+
 function toast({ ...props }: Toast) {
+    if (isToastMutedForCurrentRoute()) {
+        return {
+            id: "muted",
+            dismiss: () => { },
+            update: () => { },
+        }
+    }
+
     const id = genId()
 
     const update = (props: ToasterToast) =>

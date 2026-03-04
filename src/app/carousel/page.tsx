@@ -1305,6 +1305,7 @@ export default function CarouselPage() {
                         brandName={activeBrandKit?.brand_name}
                         hook={analysisHook}
                         selectedLogoUrl={selectedLogoUrl}
+                        isAdmin={Boolean(isAdmin)}
                     />
                 </div>
 

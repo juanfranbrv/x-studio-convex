@@ -37,6 +37,7 @@ export async function updateUserBrandKit(brandKitId: string, brandData: BrandDNA
                 social_links: brandData.social_links,
                 emails: brandData.emails,
                 phones: brandData.phones,
+                addresses: brandData.addresses,
                 text_assets: brandData.text_assets,
                 preferred_language: brandData.preferred_language,
                 updated_at: new Date().toISOString(),

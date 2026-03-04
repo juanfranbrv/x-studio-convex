@@ -24,6 +24,8 @@ Generate a single, masterpiece-quality image that strictly adheres to the provid
 RENDER **ONLY** THE EXACT STRING INSIDE THE "TEXT:" FIELD.
 EVERYTHING ELSE IS INVISIBLE STYLE.
 **DO NOT WRITE:** Template/Font names, Hex codes, Tech terms, Instructions, or Meta tags (CTA, URL, Label).
+Typography compliance is mandatory and has precedence over aesthetic freedom.
+Typography lock already defined above. Do not override.
 
 # PRIORITY 04 - CONSISTENCY LOCK (G)
 

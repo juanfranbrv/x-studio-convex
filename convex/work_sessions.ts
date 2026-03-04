@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
 const MODULES = new Set(["image", "carousel"]);
 
@@ -101,6 +103,43 @@ function sanitizeSnapshot(snapshot: unknown): unknown {
   return next;
 }
 
+function safeStableStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value ?? null);
+  } catch {
+    return "";
+  }
+}
+
+async function getRowsForScope(
+  ctx: MutationCtx | QueryCtx,
+  args: { user_id: string; module: "image" | "carousel"; brand_id?: Id<"brand_dna"> },
+) {
+  const scopedRows = args.brand_id
+    ? await ctx.db
+        .query("work_sessions")
+        .withIndex("by_user_brand_module", (q) =>
+          q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", args.module),
+        )
+        .collect()
+    : await ctx.db
+        .query("work_sessions")
+        .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", args.module))
+        .collect();
+
+  if (!args.brand_id || scopedRows.length > 0) {
+    return scopedRows;
+  }
+
+  // Legacy fallback: older sessions could exist without brand_id.
+  const legacyRows = await ctx.db
+    .query("work_sessions")
+    .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", args.module))
+    .collect();
+
+  return legacyRows.filter((row) => row.brand_id === undefined);
+}
+
 async function resolveSnapshotImageUrls(
   ctx: { storage: { getUrl: (storageId: string) => Promise<string | null> } },
   snapshot: unknown,
@@ -188,17 +227,11 @@ export const getActiveSession = query({
   },
   handler: async (ctx, args) => {
     const moduleKey = ensureModule(args.module);
-    const rows = args.brand_id
-      ? await ctx.db
-          .query("work_sessions")
-          .withIndex("by_user_brand_module", (q) =>
-            q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", moduleKey),
-          )
-          .collect()
-      : await ctx.db
-          .query("work_sessions")
-          .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", moduleKey))
-          .collect();
+    const rows = await getRowsForScope(ctx, {
+      user_id: args.user_id,
+      module: moduleKey,
+      brand_id: args.brand_id,
+    });
 
     const active = rows.filter((row) => row.active).sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
     const fallbackLatest = rows.sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
@@ -222,18 +255,11 @@ export const listSessions = query({
   },
   handler: async (ctx, args) => {
     const moduleKey = ensureModule(args.module);
-    const rows = args.brand_id
-      ? await ctx.db
-          .query("work_sessions")
-          .withIndex("by_user_brand_module", (q) =>
-            q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", moduleKey),
-          )
-          .collect()
-      : await ctx.db
-          .query("work_sessions")
-          .withIndex("by_user_module_updated", (q) => q.eq("user_id", args.user_id).eq("module", moduleKey))
-          .order("desc")
-          .take(Math.max(1, Math.min(args.limit ?? 30, 200)));
+    const rows = await getRowsForScope(ctx, {
+      user_id: args.user_id,
+      module: moduleKey,
+      brand_id: args.brand_id,
+    });
 
     return rows
       .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
@@ -313,57 +339,83 @@ export const upsertActiveSession = mutation({
   handler: async (ctx, args) => {
     const moduleKey = ensureModule(args.module);
     const now = new Date().toISOString();
+    const sanitizedSnapshot = sanitizeSnapshot(args.snapshot);
+    const normalizedTitle = args.title?.trim() || undefined;
+    const normalizedRootPrompt = normalizePrompt(args.root_prompt) || undefined;
 
     if (args.session_id) {
       const existing = await ctx.db.get(args.session_id);
       if (!existing || existing.user_id !== args.user_id) throw new Error("Session not found");
 
-      const rows = await ctx.db
-        .query("work_sessions")
-        .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", moduleKey))
-        .collect();
-      for (const row of rows) {
-        if (!row.active) continue;
-        if (args.brand_id && row.brand_id !== args.brand_id) continue;
-        if (!args.brand_id && row.brand_id !== undefined) continue;
-        if (row._id === args.session_id) continue;
-        await ctx.db.patch(row._id, { active: false, updated_at: now });
-      }
-
-      await ctx.db.patch(args.session_id, {
-        title: args.title?.trim() || existing.title,
-        root_prompt: normalizePrompt(args.root_prompt) || existing.root_prompt,
-        snapshot: sanitizeSnapshot(args.snapshot),
-        active: true,
-        updated_at: now,
-      });
-      return { session_id: args.session_id };
-    }
-
-    const rows = args.brand_id
-      ? await ctx.db
-          .query("work_sessions")
-          .withIndex("by_user_brand_module", (q) =>
-            q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", moduleKey),
-          )
-          .collect()
-      : await ctx.db
+      if (!existing.active) {
+        const rows = await ctx.db
           .query("work_sessions")
           .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", moduleKey))
           .collect();
+        for (const row of rows) {
+          if (!row.active) continue;
+          if (args.brand_id && row.brand_id !== args.brand_id) continue;
+          if (!args.brand_id && row.brand_id !== undefined) continue;
+          if (row._id === args.session_id) continue;
+          await ctx.db.patch(row._id, { active: false, updated_at: now });
+        }
+      }
+
+      const nextTitle = normalizedTitle ?? existing.title;
+      const nextRootPrompt = normalizedRootPrompt ?? existing.root_prompt;
+      const snapshotChanged =
+        safeStableStringify(existing.snapshot) !== safeStableStringify(sanitizedSnapshot);
+      const shouldPatch =
+        !existing.active ||
+        existing.title !== nextTitle ||
+        existing.root_prompt !== nextRootPrompt ||
+        snapshotChanged;
+
+      if (shouldPatch) {
+        await ctx.db.patch(args.session_id, {
+          title: nextTitle,
+          root_prompt: nextRootPrompt,
+          snapshot: sanitizedSnapshot,
+          active: true,
+          updated_at: now,
+        });
+      }
+      return { session_id: args.session_id };
+    }
+
+    const rows = await getRowsForScope(ctx, {
+      user_id: args.user_id,
+      module: moduleKey,
+      brand_id: args.brand_id,
+    });
 
     const current = rows
       .filter((row) => row.active)
       .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
 
     if (current) {
-      await ctx.db.patch(current._id, {
-        title: args.title?.trim() || current.title,
-        root_prompt: normalizePrompt(args.root_prompt) || current.root_prompt,
-        snapshot: sanitizeSnapshot(args.snapshot),
-        active: true,
-        updated_at: now,
-      });
+      const nextTitle = normalizedTitle ?? current.title;
+      const nextRootPrompt = normalizedRootPrompt ?? current.root_prompt;
+      const nextBrandId = args.brand_id ?? current.brand_id;
+      const snapshotChanged =
+        safeStableStringify(current.snapshot) !== safeStableStringify(sanitizedSnapshot);
+      const shouldPatch =
+        !current.active ||
+        current.title !== nextTitle ||
+        current.root_prompt !== nextRootPrompt ||
+        current.brand_id !== nextBrandId ||
+        snapshotChanged;
+
+      if (shouldPatch) {
+        await ctx.db.patch(current._id, {
+          brand_id: nextBrandId,
+          title: nextTitle,
+          root_prompt: nextRootPrompt,
+          snapshot: sanitizedSnapshot,
+          active: true,
+          updated_at: now,
+        });
+      }
       return { session_id: current._id };
     }
 
@@ -371,9 +423,9 @@ export const upsertActiveSession = mutation({
       user_id: args.user_id,
       module: moduleKey,
       brand_id: args.brand_id,
-      title: args.title?.trim() || undefined,
-      root_prompt: normalizePrompt(args.root_prompt),
-      snapshot: sanitizeSnapshot(args.snapshot),
+      title: normalizedTitle,
+      root_prompt: normalizedRootPrompt,
+      snapshot: sanitizedSnapshot,
       active: true,
       created_at: now,
       updated_at: now,

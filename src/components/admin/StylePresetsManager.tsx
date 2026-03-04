@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 type PresetRow = {
@@ -35,23 +36,26 @@ interface StylePresetsManagerProps {
   adminEmail: string
 }
 
+const LOCAL_STORAGE_STYLE_MODEL_KEY = 'x-studio-admin-style-analysis-model'
+const FALLBACK_INTELLIGENCE_MODEL = 'wisdom/gemini-3-flash-preview'
+
 const STYLE_NAME_RULES: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /\bcommercial\b|\badvertising\b/, label: 'Comercial' },
   { pattern: /\beditorial\b/, label: 'Editorial' },
   { pattern: /\bproduct\b|\bpackshot\b/, label: 'Producto' },
   { pattern: /\banime\b|\bmanga\b|\bghibli\b/, label: 'Anime' },
-  { pattern: /\bcomic\b|\bpop art\b|\bhalftone\b/, label: 'Cómic' },
-  { pattern: /\billustrat/i, label: 'Ilustración' },
+  { pattern: /\bcomic\b|\bpop art\b|\bhalftone\b/, label: 'Comic' },
+  { pattern: /\billustrat/i, label: 'Ilustracion' },
   { pattern: /\bvector\b|\bflat design\b/, label: 'Vectorial' },
   { pattern: /\bwatercolor\b|\bacuarela\b/, label: 'Acuarela' },
-  { pattern: /\boil painting\b|\bpainterly\b/, label: 'Pictórico' },
-  { pattern: /\b3d\b|\bcgi\b|\brender\b/, label: '3D' },
-  { pattern: /\bphotoreal\b|\bphoto\b|\bphotograph/i, label: 'Fotográfico' },
-  { pattern: /\bcinematic\b|\bfilm\b|\bmovie\b/, label: 'Cinemático' },
+  { pattern: /\boil painting\b|\bpainterly\b/, label: 'Pictorico' },
+  { pattern: /\b3d\b|\bcgi\b|\brender\b/, label: 'Render' },
+  { pattern: /\bphotoreal\b|\bphoto\b|\bphotograph/i, label: 'Fotografico' },
+  { pattern: /\bcinematic\b|\bfilm\b|\bmovie\b/, label: 'Cinematico' },
   { pattern: /\bminimal\b/, label: 'Minimalista' },
   { pattern: /\bvintage\b|\bretro\b/, label: 'Retro' },
   { pattern: /\bnoir\b/, label: 'Noir' },
-  { pattern: /\bhigh contrast\b|\bdramatic contrast\b/, label: 'Alto contraste' },
+  { pattern: /\bhigh contrast\b|\bdramatic contrast\b/, label: 'Contraste' },
   { pattern: /\bpastel\b/, label: 'Pastel' },
 ]
 
@@ -88,35 +92,41 @@ function synthesizeLabelFromKeywords(paragraph: string): string {
   return unique.map(sentenceCase).join(' · ')
 }
 
-function buildPresetNameFromAnalysis(analysis: VisionAnalysis | null, fallback = 'Estilo predefinido'): string {
+function normalizeSingleWordName(input: string): string {
+  const cleaned = input
+    .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!cleaned) return ''
+  const first = cleaned.split(' ')[0] || ''
+  return sentenceCase(first)
+}
+
+function buildPresetNameFromAnalysis(analysis: VisionAnalysis | null, fallback = 'Estilo'): string {
   if (!analysis) return fallback
 
   const paragraph = (analysis.keywords?.[0] || '').trim()
   const normalized = paragraph.toLowerCase()
 
-  const matchedLabels: string[] = []
   for (const rule of STYLE_NAME_RULES) {
-    if (rule.pattern.test(normalized) && !matchedLabels.includes(rule.label)) {
-      matchedLabels.push(rule.label)
+    if (rule.pattern.test(normalized)) {
+      return rule.label
     }
-    if (matchedLabels.length >= 2) break
-  }
-
-  if (matchedLabels.length > 0) {
-    return `Estilo - ${matchedLabels.join(' · ')}`
   }
 
   const subject = (analysis.subjectLabel || '').trim()
   if (subject && subject.toUpperCase() !== 'N/A') {
-    return `Estilo - ${subject}`
+    const normalizedSubject = normalizeSingleWordName(subject)
+    if (normalizedSubject) return normalizedSubject
   }
 
   const synthesized = synthesizeLabelFromKeywords(paragraph)
   if (synthesized) {
-    return `Estilo - ${synthesized}`
+    const normalizedSynthesized = normalizeSingleWordName(synthesized)
+    if (normalizedSynthesized) return normalizedSynthesized
   }
 
-  return fallback
+  return normalizeSingleWordName(fallback) || 'Estilo'
 }
 
 function extractStylePrompt(analysis: VisionAnalysis | null): string {
@@ -127,6 +137,13 @@ function extractStylePrompt(analysis: VisionAnalysis | null): string {
 export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
   const { toast } = useToast()
   const presets = useQuery(api.stylePresets.listAll, { admin_email: adminEmail }) as PresetRow[] | undefined
+  const modelCosts = useQuery(api.economic.listModelCosts, { admin_email: adminEmail }) as Array<{
+    _id: Id<'model_costs'>
+    model: string
+    kind: 'intelligence' | 'image'
+    active: boolean
+  }> | undefined
+  const aiConfig = useQuery(api.settings.getAIConfig, {})
   const createPreset = useMutation(api.stylePresets.create)
   const updatePreset = useMutation(api.stylePresets.update)
   const removePreset = useMutation(api.stylePresets.remove)
@@ -139,6 +156,75 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
   const [newAnalysis, setNewAnalysis] = useState<VisionAnalysis | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [reanalyzingId, setReanalyzingId] = useState<string | null>(null)
+  const [styleAnalysisModel, setStyleAnalysisModel] = useState<string>('')
+
+  const intelligenceModelOptions = useMemo(() => {
+    const models = (modelCosts || [])
+      .filter((row) => row.kind === 'intelligence' && row.active !== false)
+      .map((row) => row.model?.trim())
+      .filter((value): value is string => Boolean(value))
+
+    const uniqueModels = Array.from(new Set(models))
+    if (uniqueModels.length > 0) return uniqueModels
+
+    const fallback = String(aiConfig?.intelligenceModel || '').trim()
+    return [fallback || FALLBACK_INTELLIGENCE_MODEL]
+  }, [aiConfig?.intelligenceModel, modelCosts])
+
+  useEffect(() => {
+    if (styleAnalysisModel) return
+    if (typeof window === 'undefined') return
+    const persisted = window.localStorage.getItem(LOCAL_STORAGE_STYLE_MODEL_KEY)?.trim()
+    if (persisted && intelligenceModelOptions.includes(persisted)) {
+      setStyleAnalysisModel(persisted)
+      return
+    }
+    setStyleAnalysisModel(intelligenceModelOptions[0] || FALLBACK_INTELLIGENCE_MODEL)
+  }, [intelligenceModelOptions, styleAnalysisModel])
+
+  useEffect(() => {
+    if (!styleAnalysisModel) return
+    if (intelligenceModelOptions.includes(styleAnalysisModel)) return
+    const next = intelligenceModelOptions[0] || FALLBACK_INTELLIGENCE_MODEL
+    setStyleAnalysisModel(next)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LOCAL_STORAGE_STYLE_MODEL_KEY, next)
+    }
+  }, [intelligenceModelOptions, styleAnalysisModel])
+
+  const updateStyleAnalysisModel = (nextModel: string) => {
+    setStyleAnalysisModel(nextModel)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LOCAL_STORAGE_STYLE_MODEL_KEY, nextModel)
+    }
+  }
+
+  const dataUrlToPayload = (dataUrl: string) => {
+    const match = /^data:([^;]+);base64,/.exec(dataUrl)
+    const mimeType = match?.[1] || 'image/jpeg'
+    const base64 = dataUrl.split(',')[1] || ''
+    return { mimeType, base64 }
+  }
+
+  const urlToPayload = async (url: string) => {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error('No se pudo descargar la imagen para analizar')
+    }
+    const buffer = await response.arrayBuffer()
+    let binary = ''
+    const bytes = new Uint8Array(buffer)
+    for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i])
+    const base64 = btoa(binary)
+    const mimeType = response.headers.get('content-type') || 'image/jpeg'
+    return { mimeType, base64 }
+  }
+
+  const resolveImagePayload = async (imageValue: string) => {
+    if (imageValue.startsWith('data:')) return dataUrlToPayload(imageValue)
+    return await urlToPayload(imageValue)
+  }
 
   const nextSortOrder = useMemo(() => {
     const maxOrder = (presets || []).reduce((max, item) => Math.max(max, item.sort_order || 0), 0)
@@ -160,7 +246,11 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
       const response = await fetch('/api/analyze-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: base64, mimeType }),
+        body: JSON.stringify({
+          imageBase64: base64,
+          mimeType,
+          intelligenceModel: styleAnalysisModel || undefined,
+        }),
       })
 
       const result = await response.json()
@@ -180,13 +270,51 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
     }
   }
 
+  const reanalyzePreset = async (preset: PresetRow) => {
+    setReanalyzingId(String(preset._id))
+    setSavingId(String(preset._id))
+    try {
+      const { mimeType, base64 } = await resolveImagePayload(preset.image_url)
+      const response = await fetch('/api/analyze-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: base64,
+          mimeType,
+          intelligenceModel: styleAnalysisModel || undefined,
+        }),
+      })
+
+      const result = await response.json()
+      if (!result?.success || !result?.data) {
+        throw new Error(result?.error || 'No se pudo reanalizar la imagen')
+      }
+
+      const parsed = result.data as VisionAnalysis
+      const normalizedName = buildPresetNameFromAnalysis(parsed)
+      await updatePreset({
+        admin_email: adminEmail,
+        id: preset._id,
+        name: normalizedName,
+        analysis: parsed,
+      })
+      toast({ title: 'Estilo reanalizado', description: `Análisis y nombre actualizados: ${normalizedName}` })
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error desconocido'
+      toast({ title: 'Error al reanalizar', description: message, variant: 'destructive' })
+    } finally {
+      setSavingId(null)
+      setReanalyzingId(null)
+    }
+  }
+
   const createNewPreset = async () => {
     if (!newImageDataUrl || !newAnalysis) {
       toast({ title: 'Faltan datos', description: 'Sube una imagen y analizala antes de guardar.', variant: 'destructive' })
       return
     }
 
-    const finalName = newName.trim() || buildPresetNameFromAnalysis(newAnalysis)
+    const finalName = normalizeSingleWordName(newName) || buildPresetNameFromAnalysis(newAnalysis)
 
     setIsCreating(true)
     try {
@@ -229,6 +357,24 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Se autocompleta tras analizar"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Modelo de análisis (solo Estilos)</Label>
+              <Select
+                value={styleAnalysisModel || intelligenceModelOptions[0] || FALLBACK_INTELLIGENCE_MODEL}
+                onValueChange={updateStyleAnalysisModel}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona modelo para analizar estilos" />
+                </SelectTrigger>
+                <SelectContent>
+                  {intelligenceModelOptions.map((model) => (
+                    <SelectItem key={model} value={model}>
+                      {model}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Orden</Label>
@@ -292,12 +438,14 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
           <CardDescription>{(presets || []).length} estilos</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {(presets || []).map((preset) => (
-            <div key={preset._id} className="border rounded-xl p-3 space-y-3">
-              <div className="flex gap-3">
-                <img src={preset.image_url} alt={preset.name} className="w-20 h-20 rounded-lg object-cover border" />
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {(presets || []).map((preset) => (
+              <div key={preset._id} className="border rounded-xl p-3 space-y-3">
+                <div className="flex items-start gap-3">
+                  <img src={preset.image_url} alt={preset.name} className="w-20 h-20 rounded-lg object-cover border shrink-0" />
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Input
+                    key={`${String(preset._id)}-${preset.name}`}
                     defaultValue={preset.name}
                     onBlur={async (e) => {
                       const value = e.target.value.trim()
@@ -326,43 +474,58 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
                     }}
                   />
 
-                  <div className="md:col-span-2 rounded-md border bg-muted/20 p-2 text-xs leading-relaxed whitespace-pre-wrap max-h-24 overflow-auto">
-                    {extractStylePrompt(preset.analysis) || 'Sin texto de estilo'}
-                  </div>
+                    <div className="sm:col-span-2 rounded-md border bg-muted/20 p-2 text-xs leading-relaxed whitespace-pre-wrap min-h-32 max-h-44 overflow-auto">
+                      {extractStylePrompt(preset.analysis) || 'Sin texto de estilo'}
+                    </div>
 
-                  <div className="flex items-center gap-3">
-                    <Label>Activo</Label>
-                    <Switch
-                      checked={preset.is_active}
-                      onCheckedChange={async (checked) => {
-                        setSavingId(String(preset._id))
-                        try {
-                          await updatePreset({ admin_email: adminEmail, id: preset._id, is_active: checked })
-                        } finally {
-                          setSavingId(null)
-                        }
-                      }}
-                    />
+                    <div className="flex items-center gap-3">
+                      <Label>Activo</Label>
+                      <Switch
+                        checked={preset.is_active}
+                        onCheckedChange={async (checked) => {
+                          setSavingId(String(preset._id))
+                          try {
+                            await updatePreset({ admin_email: adminEmail, id: preset._id, is_active: checked })
+                          } finally {
+                            setSavingId(null)
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-center justify-end gap-2">
-                {savingId === String(preset._id) ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> : null}
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={async () => {
-                    await removePreset({ admin_email: adminEmail, id: preset._id })
-                  }}
-                >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Eliminar
-                </Button>
+                <div className="flex items-center justify-end gap-2">
+                  {savingId === String(preset._id) ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> : null}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void reanalyzePreset(preset)}
+                    disabled={Boolean(reanalyzingId)}
+                  >
+                    {reanalyzingId === String(preset._id)
+                      ? <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      : <RefreshCw className="w-4 h-4 mr-1" />
+                    }
+                    Reanalizar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={Boolean(reanalyzingId)}
+                    size="sm"
+                    onClick={async () => {
+                      await removePreset({ admin_email: adminEmail, id: preset._id })
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Eliminar
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           {(presets || []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No hay estilos aun.</p>

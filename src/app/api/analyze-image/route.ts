@@ -14,7 +14,13 @@ const DEFAULT_INTELLIGENCE_MODEL = 'wisdom/gemini-3-flash-preview'
 export async function POST(request: NextRequest) {
     const startedAt = Date.now()
     try {
-        const { imageBase64, imageUrl, mimeType: incomingMimeType = 'image/jpeg', auditFlowId } = await request.json()
+        const {
+            imageBase64,
+            imageUrl,
+            mimeType: incomingMimeType = 'image/jpeg',
+            auditFlowId,
+            intelligenceModel: incomingIntelligenceModel
+        } = await request.json()
         const { userId } = await auth()
         log.info('VISION', `Analyze request start | user=${userId || 'anonymous'} hasBase64=${Boolean(imageBase64)} hasUrl=${Boolean(imageUrl)}`)
 
@@ -56,6 +62,12 @@ export async function POST(request: NextRequest) {
             const aiConfig = await convex.query(api.settings.getAIConfig, {})
             const configured = String(aiConfig?.intelligenceModel || '').trim()
             if (configured) intelligenceModel = configured
+        }
+        const overrideModel = typeof incomingIntelligenceModel === 'string'
+            ? incomingIntelligenceModel.trim()
+            : ''
+        if (overrideModel) {
+            intelligenceModel = overrideModel
         }
         log.info('VISION', `Analyze model selected | model=${intelligenceModel} mime=${effectiveMimeType}`)
 

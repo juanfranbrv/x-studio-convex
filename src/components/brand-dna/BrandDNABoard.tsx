@@ -22,7 +22,7 @@ import { uploadBrandImage } from '@/app/actions/upload-image';
 import { updateUserBrandKit } from '@/app/actions/update-user-brand-kit';
 import { hexToRgb } from '@/lib/color-utils';
 
-import { Save, Download, CheckCircle, RotateCcw, AlertCircle, X, Check, Pencil, Plus, Bug } from 'lucide-react';
+import { Save, Download, CheckCircle, RotateCcw, AlertCircle, X, Bug } from 'lucide-react';
 
 interface BrandDNABoardProps {
     data: BrandDNA;
@@ -97,10 +97,6 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         title: '',
         message: ''
     });
-    const [isEditingBrandName, setIsEditingBrandName] = useState(false);
-    const [brandNameEdit, setBrandNameEdit] = useState(initialData.brand_name);
-    const [isEditingUrl, setIsEditingUrl] = useState(false);
-    const [urlEdit, setUrlEdit] = useState(initialData.url || '');
     const [showDebug, setShowDebug] = useState(isDebug);
     const canUseDebugAudit = isDebug;
 
@@ -116,7 +112,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
             setErrorModal({
                 open: true,
                 title: 'Error de Identificador',
-                message: 'No se puede guardar porque falta el ID del Brand Kit. Intente recargar la pÃ¡gina o regenerar.'
+                message: 'No se puede guardar porque falta el ID del Brand Kit. Intente recargar la página o regenerar.'
             });
             return;
         }
@@ -276,7 +272,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         if (currentCount + files.length > 6) {
             setErrorModal({
                 open: true,
-                title: 'LÃ­mite Excedido',
+                title: 'Límite Excedido',
                 message: 'Solo puedes tener hasta 6 logos.'
             });
             return;
@@ -324,12 +320,13 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         }
     };
 
-    const handleUpdateContact = (contactData: { socialLinks: { platform: string; url: string }[], emails: string[], phones: string[] }) => {
+    const handleUpdateContact = (contactData: { socialLinks: { platform: string; url: string; username?: string }[], emails: string[], phones: string[], addresses: string[] }) => {
         updateData(prev => ({
             ...prev,
             social_links: contactData.socialLinks,
             emails: contactData.emails,
-            phones: contactData.phones
+            phones: contactData.phones,
+            addresses: contactData.addresses
         }));
     };
 
@@ -416,60 +413,16 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                         )}
                     </div>
                     <div className="flex-1">
-                        <div className="flex items-center gap-2 group">
-                            {isEditingBrandName ? (
-                                <div className="flex items-center gap-2">
-                                    <Input
-                                        value={brandNameEdit}
-                                        onChange={(e) => setBrandNameEdit(e.target.value)}
-                                        className="text-xl font-bold h-9 px-2 border-primary"
-                                        autoFocus
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                setData({ ...data, brand_name: brandNameEdit });
-                                                setHasUnsavedChanges(true);
-                                                setIsEditingBrandName(false);
-                                            }
-                                            if (e.key === 'Escape') {
-                                                setBrandNameEdit(data.brand_name);
-                                                setIsEditingBrandName(false);
-                                            }
-                                        }}
-                                    />
-                                    <button
-                                        onClick={() => {
-                                            setData({ ...data, brand_name: brandNameEdit });
-                                            setHasUnsavedChanges(true);
-                                            setIsEditingBrandName(false);
-                                        }}
-                                        className="p-1 rounded hover:bg-muted"
-                                    >
-                                        <Check className="w-4 h-4 text-green-500" />
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setBrandNameEdit(data.brand_name);
-                                            setIsEditingBrandName(false);
-                                        }}
-                                        className="p-1 rounded hover:bg-muted"
-                                    >
-                                        <X className="w-4 h-4 text-red-500" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <>
-                                    <h2 className="text-xl font-bold text-foreground">{data.brand_name}</h2>
-                                    <button
-                                        onClick={() => {
-                                            setBrandNameEdit(data.brand_name);
-                                            setIsEditingBrandName(true);
-                                        }}
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
-                                    >
-                                        <Pencil className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
-                                    </button>
-                                </>
-                            )}
+                        <div className="flex items-center gap-2">
+                            <Input
+                                value={data.brand_name || ''}
+                                onChange={(e) => {
+                                    setData((prev) => ({ ...prev, brand_name: e.target.value }));
+                                    setHasUnsavedChanges(true);
+                                }}
+                                className="text-xl font-bold h-10 px-2 bg-transparent border-border focus-visible:ring-primary"
+                                placeholder="Nombre de marca"
+                            />
                         </div>
                         <div className="flex items-center gap-2">
                             {isSaving ? (
@@ -488,80 +441,16 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                                     Sincronizado
                                 </div>
                             )}
-                            {/* Website URL display / Edit */}
-                            <span className="text-muted-foreground/40">Â·</span>
-                            <div className="flex items-center gap-1.5 group/url">
-                                {isEditingUrl ? (
-                                    <div className="flex items-center gap-1.5">
-                                        <Input
-                                            value={urlEdit}
-                                            onChange={(e) => setUrlEdit(e.target.value)}
-                                            placeholder="AÃ±adir sitio web..."
-                                            className="text-xs h-7 px-2 w-[180px] border-primary"
-                                            autoFocus
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    setData({ ...data, url: urlEdit || '' });
-                                                    setHasUnsavedChanges(true);
-                                                    setIsEditingUrl(false);
-                                                }
-                                                if (e.key === 'Escape') {
-                                                    setUrlEdit(data.url || '');
-                                                    setIsEditingUrl(false);
-                                                }
-                                            }}
-                                        />
-                                        <button
-                                            onClick={() => {
-                                                setData({ ...data, url: urlEdit || '' });
-                                                setHasUnsavedChanges(true);
-                                                setIsEditingUrl(false);
-                                            }}
-                                            className="p-1 rounded hover:bg-muted"
-                                        >
-                                            <Check className="w-3.5 h-3.5 text-green-500" />
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setUrlEdit(data.url || '');
-                                                setIsEditingUrl(false);
-                                            }}
-                                            className="p-1 rounded hover:bg-muted"
-                                        >
-                                            <X className="w-3.5 h-3.5 text-red-500" />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <>
-                                        {data.url ? (
-                                            <a
-                                                href={data.url.startsWith('http') ? data.url : `https://${data.url}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-xs text-primary/70 hover:text-primary transition-colors truncate max-w-[200px]"
-                                            >
-                                                {data.url}
-                                            </a>
-                                        ) : (
-                                            <span className="text-xs text-muted-foreground/50 italic">Sin sitio web</span>
-                                        )}
-                                        <button
-                                            onClick={() => {
-                                                setUrlEdit(data.url ?? '');
-                                                setIsEditingUrl(true);
-                                            }}
-                                            className="opacity-0 group-hover/url:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
-                                            title={data.url ? "Editar URL" : "AÃ±adir URL"}
-                                        >
-                                            {data.url ? (
-                                                <Pencil className="w-3 h-3 text-muted-foreground hover:text-primary" />
-                                            ) : (
-                                                <Plus className="w-3 h-3 text-muted-foreground hover:text-primary" />
-                                            )}
-                                        </button>
-                                    </>
-                                )}
-                            </div>
+                            <span className="text-muted-foreground/40">·</span>
+                            <Input
+                                value={data.url || ''}
+                                onChange={(e) => {
+                                    setData((prev) => ({ ...prev, url: e.target.value }));
+                                    setHasUnsavedChanges(true);
+                                }}
+                                placeholder="Añadir sitio web..."
+                                className="text-xs h-8 px-2 w-[240px] bg-transparent border-border focus-visible:ring-primary"
+                            />
                         </div>
                     </div>
                 </div>
@@ -664,6 +553,7 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                         socialLinks={data.social_links}
                         emails={data.emails}
                         phones={data.phones}
+                        addresses={data.addresses}
                         onUpdate={handleUpdateContact}
                     />
 

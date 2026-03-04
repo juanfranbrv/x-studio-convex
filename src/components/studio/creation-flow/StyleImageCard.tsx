@@ -159,57 +159,59 @@ export function StyleImageCard({
     return (
         <div className="space-y-3">
             <div className="flex items-center gap-2">
-                <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-[10px] gap-1"
-                    onClick={() => inputRef.current?.click()}
-                >
-                    <Upload className="w-3 h-3" />
-                    Subir estilo
-                </Button>
-                <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-[10px] gap-1"
-                    onClick={() => setIsBrandKitModalOpen(true)}
-                >
-                    <Palette className="w-3 h-3" />
-                    Desde Kit de marca
-                </Button>
-                <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-2 text-[10px] gap-1"
-                    onClick={() => setIsPresetModalOpen(true)}
-                >
-                    Estilo predefinido
-                </Button>
-                {currentStyleId && (
+                <div className="w-full flex flex-wrap items-center gap-2">
                     <Button
                         type="button"
                         size="sm"
-                        variant="ghost"
-                        className="h-7 px-2 text-[10px] ml-auto"
-                        onClick={() => removeStyleId(currentStyleId)}
+                        variant="outline"
+                        className="h-7 px-2 text-[10px] gap-1"
+                        onClick={() => inputRef.current?.click()}
                     >
-                        Limpiar
+                        <Upload className="w-3 h-3" />
+                        Subir estilo
                     </Button>
-                )}
-                {!currentStyleId && selectedStylePresetId && (
                     <Button
                         type="button"
                         size="sm"
-                        variant="ghost"
-                        className="h-7 px-2 text-[10px] ml-auto"
-                        onClick={() => onSelectStylePreset?.(null)}
+                        variant="outline"
+                        className="h-7 px-2 text-[10px] gap-1"
+                        onClick={() => setIsBrandKitModalOpen(true)}
                     >
-                        Limpiar
+                        <Palette className="w-3 h-3" />
+                        Desde Kit de marca
                     </Button>
-                )}
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-[10px] gap-1"
+                        onClick={() => setIsPresetModalOpen(true)}
+                    >
+                        Estilo predefinido
+                    </Button>
+                    {currentStyleId && (
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-[10px] ml-auto"
+                            onClick={() => removeStyleId(currentStyleId)}
+                        >
+                            Limpiar
+                        </Button>
+                    )}
+                    {!currentStyleId && selectedStylePresetId && (
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-[10px] ml-auto"
+                            onClick={() => onSelectStylePreset?.(null)}
+                        >
+                            Limpiar
+                        </Button>
+                    )}
+                </div>
             </div>
 
             <input
@@ -221,23 +223,22 @@ export function StyleImageCard({
             />
 
             {visualStylePreview ? (
-                <div className="relative rounded-xl overflow-hidden border border-border/60 bg-background min-h-[120px] group">
-                    <div className="p-3 pl-28">
-                        <span className="inline-flex rounded-full px-2 py-1 text-[10px] font-semibold bg-violet-500/10 text-violet-700 border border-violet-500/30">
-                            {visualStylePreview.sourceLabel}
-                        </span>
-                        <p className="mt-2 text-sm font-medium text-foreground line-clamp-2">
-                            {visualStylePreview.title || selectedStylePresetName || 'Estilo activo'}
-                        </p>
-                    </div>
-
-                    <div className="absolute left-3 bottom-3">
-                        <div className="-rotate-[8deg] rounded-lg border border-border/70 shadow-md bg-background p-1">
+                <div className="relative rounded-xl border border-border/60 bg-background p-3 min-h-[120px] group">
+                    <div className="flex items-center gap-3">
+                        <div className="rounded-lg border border-border/70 shadow-sm bg-background p-1 shrink-0">
                             <img
                                 src={visualStylePreview.url}
                                 alt={visualStylePreview.title || 'Vista de estilo'}
                                 className="w-20 h-20 rounded-md object-cover"
                             />
+                        </div>
+                        <div className="min-w-0 flex-1 space-y-2">
+                            <span className="inline-flex rounded-full px-2 py-1 text-[10px] font-semibold bg-violet-500/10 text-violet-700 border border-violet-500/30">
+                                {visualStylePreview.sourceLabel}
+                            </span>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Referencia de estilo activa para la próxima generación.
+                            </p>
                         </div>
                     </div>
 
@@ -348,7 +349,7 @@ export function StyleImageCard({
             </Dialog>
 
             <Dialog open={isPresetModalOpen} onOpenChange={setIsPresetModalOpen}>
-                <DialogContent className="!w-[64vw] !max-w-[64vw] sm:!max-w-[64vw] h-[min(88vh,860px)] p-0 overflow-hidden flex flex-col">
+                <DialogContent className="!w-[64vw] !max-w-[64vw] sm:!max-w-[64vw] h-[min(93vh,980px)] p-0 overflow-hidden flex flex-col">
                     <DialogHeader className="px-6 pt-6 pb-3">
                         <DialogTitle>Seleccionar estilo predefinido</DialogTitle>
                         <DialogDescription>
@@ -382,12 +383,6 @@ export function StyleImageCard({
                                         >
                                             <div className="aspect-square">
                                                 <img src={preset.image_url} alt={preset.name} className="w-full h-full object-cover" />
-                                            </div>
-                                            <div className="p-2">
-                                                <p className="text-xs font-medium text-foreground truncate">{preset.name}</p>
-                                                {preset.description ? (
-                                                    <p className="text-[10px] text-muted-foreground line-clamp-2">{preset.description}</p>
-                                                ) : null}
                                             </div>
                                             {isSelected && (
                                                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">

@@ -4,8 +4,8 @@ import { suggestCompositionIcon } from '../src/lib/ai-composition-icon'
 import { upsertCustomLegacyLayout, upsertLegacyLayoutOverride } from '../src/lib/legacy-warehouse'
 import { LayoutOption } from '../src/lib/creation-flow-types'
 
-process.env.NEXT_PUBLIC_CONVEX_URL = "https://warmhearted-schnauzer-446.convex.cloud"
-process.env.CONVEX_URL = "https://warmhearted-schnauzer-446.convex.cloud"
+process.env.NEXT_PUBLIC_CONVEX_URL = "https://prestigious-pigeon-784.eu-west-1.convex.cloud"
+process.env.CONVEX_URL = "https://prestigious-pigeon-784.eu-west-1.convex.cloud"
 
 async function main() {
     console.log('🚀 Iniciando asignación masiva de iconos...')

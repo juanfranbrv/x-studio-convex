@@ -12,6 +12,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { PromptCard } from '@/components/studio/PromptCard'
 import { CaptionCard } from '@/components/studio/CaptionCard'
 import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
@@ -34,7 +35,6 @@ import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/adm
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
-const IMAGE_AUTOSAVE_DEBOUNCE_MS = 1000
 
 interface Generation {
     id: string
@@ -160,12 +160,20 @@ export default function ImagePage() {
     const [isSavingSession, setIsSavingSession] = useState(false)
     const [sessionSavedAt, setSessionSavedAt] = useState<string | null>(null)
     const [sessionSaveError, setSessionSaveError] = useState<string | null>(null)
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+    const [unsavedNavModalOpen, setUnsavedNavModalOpen] = useState(false)
+    const [pendingNavigationTarget, setPendingNavigationTarget] = useState<{ href: string; external: boolean } | null>(null)
+    const [isResolvingUnsavedNavigation, setIsResolvingUnsavedNavigation] = useState(false)
     const hydrationScopeRef = useRef<string>('')
     const hasHydratedScopeRef = useRef(false)
-    const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const autosaveRevisionRef = useRef(0)
+    const lastSavedSnapshotSignatureRef = useRef<string | null>(null)
     const persistedSessionImageCacheRef = useRef<Map<string, { storageId: string; imageUrl: string }>>(new Map())
     const persistImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string } | null>>>(new Map())
+    const bypassUnsavedGuardRef = useRef(false)
+    const confirmDiscardUnsavedChanges = useCallback((action: string) => {
+        if (!hasUnsavedChanges) return true
+        return window.confirm(`Tienes cambios sin guardar. ¿Quieres continuar y perderlos al ${action}?`)
+    }, [hasUnsavedChanges])
 
     const createWorkSession = useMutation(api.work_sessions.createSession)
     const upsertWorkSession = useMutation(api.work_sessions.upsertActiveSession)
@@ -372,8 +380,13 @@ export default function ImagePage() {
         }
     }, [creationFlow, normalizePromptForSession])
 
-    const createNewImageSession = useCallback(async (initialPrompt?: string, silent = false) => {
+    const createNewImageSession = useCallback(async (
+        initialPrompt?: string,
+        silent = false,
+        options?: { skipUnsavedConfirm?: boolean }
+    ) => {
         if (!user?.id || !scopedBrandId) return null
+        if (!options?.skipUnsavedConfirm && !confirmDiscardUnsavedChanges('crear una sesión nueva')) return null
 
         const prompt = initialPrompt ?? ''
         const normalizedPrompt = normalizePromptForSession(prompt)
@@ -402,6 +415,7 @@ export default function ImagePage() {
         const newId = String(created.session_id)
         setCurrentSessionId(newId)
         setSelectedSessionToLoad(newId)
+        setHasUnsavedChanges(false)
 
         if (!silent) {
             toast({
@@ -410,10 +424,14 @@ export default function ImagePage() {
             })
         }
         return newId
-    }, [user?.id, scopedBrandId, normalizePromptForSession, creationFlow, createWorkSession, toast, buildSessionTitle])
+    }, [user?.id, scopedBrandId, normalizePromptForSession, creationFlow, createWorkSession, toast, buildSessionTitle, confirmDiscardUnsavedChanges])
 
-    const handleLoadSession = useCallback(async (sessionId: string) => {
-        if (!sessionId || !user?.id) return
+    const handleLoadSession = useCallback(async (
+        sessionId: string,
+        options?: { skipUnsavedConfirm?: boolean }
+    ) => {
+        if (!sessionId || !user?.id) return false
+        if (!options?.skipUnsavedConfirm && !confirmDiscardUnsavedChanges('cambiar de sesión')) return false
         const activated = await activateWorkSession({
             user_id: user.id,
             session_id: sessionId as Id<'work_sessions'>,
@@ -424,7 +442,9 @@ export default function ImagePage() {
         setCurrentSessionId(String(activated?._id || sessionId))
         setSelectedSessionToLoad(String(activated?._id || sessionId))
         setSessionRootPrompt(normalizePromptForSession(activated?.root_prompt))
-    }, [user?.id, activateWorkSession, restoreWorkspaceFromSnapshot, normalizePromptForSession])
+        setHasUnsavedChanges(false)
+        return true
+    }, [user?.id, activateWorkSession, restoreWorkspaceFromSnapshot, normalizePromptForSession, confirmDiscardUnsavedChanges])
 
     const handleDeleteCurrentSession = useCallback(async () => {
         if (!user?.id || !currentSessionId) return
@@ -436,9 +456,9 @@ export default function ImagePage() {
         })
 
         if (result?.next_session_id) {
-            await handleLoadSession(String(result.next_session_id))
+            await handleLoadSession(String(result.next_session_id), { skipUnsavedConfirm: true })
         } else {
-            await createNewImageSession('', true)
+            await createNewImageSession('', true, { skipUnsavedConfirm: true })
         }
 
         toast({
@@ -457,7 +477,7 @@ export default function ImagePage() {
             brand_id: scopedBrandId,
         })
 
-        await createNewImageSession('', true)
+        await createNewImageSession('', true, { skipUnsavedConfirm: true })
         toast({
             title: 'Sesiones borradas',
             description: 'Se han eliminado todas las sesiones de este kit.',
@@ -470,11 +490,13 @@ export default function ImagePage() {
         if (hydrationScopeRef.current !== scopeKey) {
             hydrationScopeRef.current = scopeKey
             hasHydratedScopeRef.current = false
+            lastSavedSnapshotSignatureRef.current = null
             setCurrentSessionId(null)
             setSelectedSessionToLoad('')
             setSessionRootPrompt(null)
             setSessionSavedAt(null)
             setSessionSaveError(null)
+            setHasUnsavedChanges(false)
         }
 
         if (!user?.id || !scopedBrandId) return
@@ -486,6 +508,8 @@ export default function ImagePage() {
             setCurrentSessionId(String(activeWorkSession._id))
             setSelectedSessionToLoad(String(activeWorkSession._id))
             setSessionRootPrompt(normalizePromptForSession(activeWorkSession.root_prompt))
+            lastSavedSnapshotSignatureRef.current = JSON.stringify(activeWorkSession.snapshot)
+            setHasUnsavedChanges(false)
             hasHydratedScopeRef.current = true
             return
         }
@@ -501,6 +525,7 @@ export default function ImagePage() {
             const id = String(created.session_id)
             setCurrentSessionId(id)
             setSelectedSessionToLoad(id)
+            setHasUnsavedChanges(false)
         }).catch((error) => {
             hasHydratedScopeRef.current = false
             console.error('Error creating initial image work session:', error)
@@ -518,10 +543,12 @@ export default function ImagePage() {
     const persistImageWorkspaceSnapshot = useCallback(async (options?: {
         silent?: boolean
         markSavedAt?: boolean
+        force?: boolean
     }) => {
         if (!user?.id || !scopedBrandId) return
         const isSilent = options?.silent === true
         const shouldMarkSavedAt = options?.markSavedAt !== false
+        const forcePersist = options?.force === true
 
         if (!isSilent) {
             setIsSavingSession(true)
@@ -538,6 +565,14 @@ export default function ImagePage() {
             }
 
             const snapshot = buildWorkspaceSnapshot(undefined, persistedGenerations)
+            const snapshotSignature = JSON.stringify(snapshot)
+            if (!forcePersist && lastSavedSnapshotSignatureRef.current === snapshotSignature) {
+                if (shouldMarkSavedAt) {
+                    setSessionSavedAt(new Date().toISOString())
+                }
+                return
+            }
+
             const result = await upsertWorkSession({
                 user_id: user.id,
                 module: 'image',
@@ -552,6 +587,8 @@ export default function ImagePage() {
                 setCurrentSessionId(id)
                 setSelectedSessionToLoad(id)
             }
+            lastSavedSnapshotSignatureRef.current = snapshotSignature
+            setHasUnsavedChanges(false)
             if (shouldMarkSavedAt) {
                 setSessionSavedAt(new Date().toISOString())
             }
@@ -579,63 +616,144 @@ export default function ImagePage() {
 
     const handleSaveSessionNow = useCallback(async () => {
         if (!user?.id || !scopedBrandId || isHydratingSession) return
-        if (autosaveTimerRef.current) {
-            clearTimeout(autosaveTimerRef.current)
-        }
-        ++autosaveRevisionRef.current
         try {
             await persistImageWorkspaceSnapshot({
                 silent: false,
                 markSavedAt: true,
+                force: true,
             })
         } catch (error) {
             console.error('Manual save session failed:', error)
         }
     }, [user?.id, scopedBrandId, isHydratingSession, persistImageWorkspaceSnapshot])
 
-    // Autosave current workspace snapshot.
+    const workspaceSignature = useMemo(() => {
+        return JSON.stringify(buildWorkspaceSnapshot())
+    }, [buildWorkspaceSnapshot])
+
+    const wasHydratingRef = useRef(false)
     useEffect(() => {
-        if (!user?.id || !scopedBrandId) return
-        if (!hasHydratedScopeRef.current) return
-        if (isHydratingSession) return
+        const wasHydrating = wasHydratingRef.current
+        wasHydratingRef.current = isHydratingSession
 
-        if (autosaveTimerRef.current) {
-            clearTimeout(autosaveTimerRef.current)
+        if (!wasHydrating || isHydratingSession || !hasHydratedScopeRef.current) return
+
+        // After restoring a session, establish the restored workspace as the saved baseline.
+        // This prevents false "unsaved changes" warnings caused by hydration-time normalization.
+        lastSavedSnapshotSignatureRef.current = workspaceSignature
+        setHasUnsavedChanges(false)
+    }, [isHydratingSession, workspaceSignature])
+
+    useEffect(() => {
+        if (!hasHydratedScopeRef.current || isHydratingSession) return
+        const lastSaved = lastSavedSnapshotSignatureRef.current
+        if (!lastSaved) {
+            setHasUnsavedChanges(true)
+            return
         }
+        setHasUnsavedChanges(lastSaved !== workspaceSignature)
+    }, [workspaceSignature, isHydratingSession])
 
-        const revision = ++autosaveRevisionRef.current
-        autosaveTimerRef.current = setTimeout(() => {
-            void (async () => {
-                if (revision !== autosaveRevisionRef.current) return
-                try {
-                    await persistImageWorkspaceSnapshot({
-                        silent: true,
-                        markSavedAt: false,
-                    })
-                } catch (error) {
-                    console.error('Autosave session failed:', error)
-                }
-            })()
-        }, IMAGE_AUTOSAVE_DEBOUNCE_MS)
+    useEffect(() => {
+        if (!hasUnsavedChanges) return
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            if (bypassUnsavedGuardRef.current) return
+            event.preventDefault()
+            event.returnValue = ''
+        }
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    }, [hasUnsavedChanges])
 
-        return () => {
-            if (autosaveTimerRef.current) {
-                clearTimeout(autosaveTimerRef.current)
+    useEffect(() => {
+        if (!hasUnsavedChanges) return
+
+        const onDocumentClickCapture = (event: MouseEvent) => {
+            if (bypassUnsavedGuardRef.current) return
+            if (event.defaultPrevented) return
+            if (event.button !== 0) return
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+
+            const target = event.target as HTMLElement | null
+            const anchor = target?.closest('a[href]') as HTMLAnchorElement | null
+            if (!anchor) return
+
+            const hrefAttr = anchor.getAttribute('href') || ''
+            if (!hrefAttr || hrefAttr.startsWith('#') || hrefAttr.startsWith('javascript:')) return
+            if (hrefAttr.startsWith('mailto:') || hrefAttr.startsWith('tel:')) return
+            if (anchor.hasAttribute('download')) return
+            if (anchor.target && anchor.target !== '_self') return
+
+            let targetUrl: URL
+            try {
+                targetUrl = new URL(anchor.href, window.location.href)
+            } catch {
+                return
             }
+
+            const current = `${window.location.pathname}${window.location.search}${window.location.hash}`
+            const next = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`
+            if (current === next) return
+
+            event.preventDefault()
+            event.stopPropagation()
+            setPendingNavigationTarget({
+                href: targetUrl.href,
+                external: targetUrl.origin !== window.location.origin,
+            })
+            setUnsavedNavModalOpen(true)
         }
-    }, [
-        user?.id,
-        scopedBrandId,
-        isHydratingSession,
-        promptValue,
-        editPrompt,
-        logoInclusion,
-        compositionMode,
-        selectedContext,
-        sessionGenerations,
-        creationFlow.state,
-        persistImageWorkspaceSnapshot
-    ])
+
+        document.addEventListener('click', onDocumentClickCapture, true)
+        return () => document.removeEventListener('click', onDocumentClickCapture, true)
+    }, [hasUnsavedChanges])
+
+    const continuePendingNavigation = useCallback(() => {
+        if (!pendingNavigationTarget) return
+        bypassUnsavedGuardRef.current = true
+        setUnsavedNavModalOpen(false)
+
+        if (pendingNavigationTarget.external) {
+            window.location.assign(pendingNavigationTarget.href)
+            return
+        }
+
+        const url = new URL(pendingNavigationTarget.href, window.location.origin)
+        router.push(`${url.pathname}${url.search}${url.hash}`)
+    }, [pendingNavigationTarget, router])
+
+    const handleUnsavedNavigateDiscard = useCallback(() => {
+        setIsResolvingUnsavedNavigation(true)
+        try {
+            continuePendingNavigation()
+        } finally {
+            setIsResolvingUnsavedNavigation(false)
+            setPendingNavigationTarget(null)
+        }
+    }, [continuePendingNavigation])
+
+    const handleUnsavedNavigateSave = useCallback(async () => {
+        if (!pendingNavigationTarget) return
+        setIsResolvingUnsavedNavigation(true)
+        try {
+            await persistImageWorkspaceSnapshot({
+                silent: false,
+                markSavedAt: true,
+                force: true,
+            })
+            continuePendingNavigation()
+        } catch (error) {
+            console.error('Save before navigation failed:', error)
+        } finally {
+            setIsResolvingUnsavedNavigation(false)
+            setPendingNavigationTarget(null)
+        }
+    }, [pendingNavigationTarget, persistImageWorkspaceSnapshot, continuePendingNavigation])
+
+    const handleUnsavedNavigateCancel = useCallback(() => {
+        setUnsavedNavModalOpen(false)
+        setPendingNavigationTarget(null)
+    }, [])
 
     // Reset Studio when Brand Kit changes
     useEffect(() => {
@@ -772,8 +890,38 @@ export default function ImagePage() {
         const finalContext: ContextElement[] = [...selectedContext]
         const styleReferenceImages: string[] = []
         const debugContextItems: DebugContextItem[] = []
-        const getReferenceRole = (imageId: string) => creationFlow.state.referenceImageRoles?.[imageId] || 'content'
+        const activeBrandKitAssets = [...(activeBrandKit.images || []), ...(activeBrandKit.logos || [])]
+        const resolveBrandKitAssetUrl = (value: string) => {
+            if (!value) return ''
+            if (
+                value.startsWith('http://')
+                || value.startsWith('https://')
+                || value.startsWith('data:')
+                || value.startsWith('blob:')
+            ) {
+                return value
+            }
+            const match = activeBrandKitAssets.find((asset: any) =>
+                asset?.id === value
+                || asset?._id === value
+                || asset?.image_id === value
+                || asset?.storage_id === value
+            )
+            return (match?.url || value) as string
+        }
+        const normalizeRole = (role?: string) => {
+            if (role === 'aux_logo' || role === 'primary_logo') return 'logo'
+            if (role === 'style' || role === 'style_content' || role === 'logo' || role === 'content') return role
+            return 'content'
+        }
+        const getReferenceRole = (imageId: string) => {
+            const directRole = creationFlow.state.referenceImageRoles?.[imageId]
+            if (directRole) return normalizeRole(directRole)
+            const resolvedUrl = resolveBrandKitAssetUrl(imageId)
+            return normalizeRole(creationFlow.state.referenceImageRoles?.[resolvedUrl])
+        }
         const isStyleRole = (role: string) => role === 'style' || role === 'style_content'
+        const contextTypeFromRole = (role: string): ContextType => role === 'logo' ? 'aux_logo' : 'image'
         const hasDebugItem = (url: string, role?: DebugContextItem['role']) =>
             debugContextItems.some((item) => item.url === url && item.role === role)
         const addDebugItem = (item: DebugContextItem) => {
@@ -787,7 +935,7 @@ export default function ImagePage() {
                 if (isStyleRole(role)) styleReferenceImages.push(imgUrl)
                 addDebugItem({
                     id: `debug-upload-${idx}`,
-                    type: role === 'logo' ? 'aux_logo' : 'image',
+                    type: contextTypeFromRole(role),
                     label: role === 'logo' ? `Logo auxiliar ${idx + 1}` : `Upload ${idx + 1}`,
                     url: imgUrl,
                     source: 'upload',
@@ -799,7 +947,7 @@ export default function ImagePage() {
                 if (!hasImg) {
                     finalContext.push({
                         id: `flow-upload-${idx}`,
-                        type: role === 'logo' ? 'aux_logo' : 'image',
+                        type: contextTypeFromRole(role),
                         value: imgUrl,
                         label: role === 'logo' ? `Logo auxiliar ${idx + 1}` : `Referencia ${idx + 1}`
                     })
@@ -808,12 +956,13 @@ export default function ImagePage() {
         }
 
         if (creationFlow.state.selectedBrandKitImageIds.length > 0) {
-            creationFlow.state.selectedBrandKitImageIds.forEach((imgUrl, idx) => {
-                const role = getReferenceRole(imgUrl)
+            creationFlow.state.selectedBrandKitImageIds.forEach((rawImageIdOrUrl, idx) => {
+                const imgUrl = resolveBrandKitAssetUrl(rawImageIdOrUrl)
+                const role = getReferenceRole(rawImageIdOrUrl)
                 if (isStyleRole(role)) styleReferenceImages.push(imgUrl)
                 addDebugItem({
                     id: `debug-brandkit-${idx}`,
-                    type: role === 'logo' ? 'aux_logo' : 'image',
+                    type: contextTypeFromRole(role),
                     label: role === 'logo' ? `Logo auxiliar BrandKit ${idx + 1}` : `BrandKit ${idx + 1}`,
                     url: imgUrl,
                     source: 'brandkit',
@@ -825,7 +974,7 @@ export default function ImagePage() {
                 if (!hasImg) {
                     finalContext.push({
                         id: `flow-brandkit-${idx}`,
-                        type: role === 'logo' ? 'aux_logo' : 'image',
+                        type: contextTypeFromRole(role),
                         value: imgUrl,
                         label: role === 'logo' ? `Logo auxiliar BrandKit ${idx + 1}` : `Imagen BrandKit ${idx + 1}`
                     })
@@ -928,11 +1077,6 @@ export default function ImagePage() {
         router.push('/brand-kit?action=new')
     }
 
-    const getDefaultFormatId = useCallback((platform?: string | null) => {
-        const normalized = platform || 'instagram'
-        return SOCIAL_FORMATS.find((format) => format.platform === normalized)?.id || null
-    }, [])
-
     // Smart analyze prompt
     const handleSmartAnalyze = async (autoModel?: string) => {
         if (!promptValue.trim()) return null
@@ -1008,7 +1152,8 @@ export default function ImagePage() {
             const newHighlights = new Set<string>()
 
             // Auto-detect intent
-            if (result.detectedIntent && !creationFlow.state.selectedIntent) {
+            // IMPORTANT: do not gate this with stale local state checks after async resets/new session creation.
+            if (result.detectedIntent) {
                 creationFlow.selectIntent(result.detectedIntent as IntentCategory)
                 toast({
                     title: "✨ Intención detectada",
@@ -1096,12 +1241,7 @@ export default function ImagePage() {
             // Reset preview after analysis but keep current selections
             creationFlow.setGeneratedImage(null)
 
-            if (!creationFlow.state.selectedFormat) {
-                const fallbackFormat = getDefaultFormatId(creationFlow.state.selectedPlatform)
-                if (fallbackFormat) {
-                    creationFlow.selectFormat(fallbackFormat)
-                }
-            }
+            creationFlow.ensureDefaultFormat(creationFlow.state.selectedPlatform || 'instagram')
 
             if (!creationFlow.state.aiImageDescription.trim()) {
                 const fallbackDescription = Array.isArray(result.imagePromptSuggestions) && result.imagePromptSuggestions[0]
@@ -1733,6 +1873,7 @@ export default function ImagePage() {
                                     onOpenPromptDebug={handleOpenPromptDebug}
                                     showPromptDebugTrigger={Boolean(isAdmin && creationFlow.state.generatedImage && debugPromptData?.finalPrompt)}
                                     layoutIconOverrides={layoutIconOverrides}
+                                    isAdmin={Boolean(isAdmin)}
                                 />
                             </div>
 
@@ -1810,7 +1951,11 @@ export default function ImagePage() {
                             onSelectSession={(id) => {
                                 setSelectedSessionToLoad(id)
                                 if (id && id !== currentSessionId) {
-                                    void handleLoadSession(id)
+                                    void handleLoadSession(id).then((loaded) => {
+                                        if (!loaded) {
+                                            setSelectedSessionToLoad(currentSessionId || '')
+                                        }
+                                    })
                                 }
                             }}
                             onCreateSession={() => void createNewImageSession(promptValue)}
@@ -1820,6 +1965,7 @@ export default function ImagePage() {
                             isSavingSession={isSavingSession}
                             sessionSavedAt={sessionSavedAt}
                             sessionSaveError={sessionSaveError}
+                            hasUnsavedChanges={hasUnsavedChanges}
                         />
                     </div>
 
@@ -1917,7 +2063,6 @@ export default function ImagePage() {
                 </div>
             )}
 
-
             <PromptDebugModal
                 open={showDebugModal}
                 onClose={cancelGeneration}
@@ -1928,10 +2073,39 @@ export default function ImagePage() {
                 onEditablePromptChange={setEditableDebugPrompt}
             />
 
-
+            <Dialog open={unsavedNavModalOpen} onOpenChange={(open) => { if (!open) handleUnsavedNavigateCancel() }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>¿Hay cambios sin guardar? ¿Desea guardarlos?</DialogTitle>
+                        <DialogDescription>
+                            Si continúas sin guardar, perderás los cambios de esta sesión.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={handleUnsavedNavigateCancel}
+                            disabled={isResolvingUnsavedNavigation}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleUnsavedNavigateDiscard}
+                            disabled={isResolvingUnsavedNavigation}
+                        >
+                            Descartar y salir
+                        </Button>
+                        <Button
+                            onClick={() => void handleUnsavedNavigateSave()}
+                            disabled={isResolvingUnsavedNavigation}
+                        >
+                            Guardar y salir
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </DashboardLayout >
     )
 }
-
-
 

@@ -9,12 +9,14 @@ import { ContentImageCard } from './creation-flow/ContentImageCard'
 import { StyleImageCard } from './creation-flow/StyleImageCard'
 import { AuxiliaryLogosCard } from './creation-flow/AuxiliaryLogosCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Layers, ImagePlus, Wand2, Loader2, Fingerprint, RotateCcw, Link2, History, Plus, Trash2, Save, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Palette, Layout, Layers, ImagePlus, Wand2, Loader2, Fingerprint, RotateCcw, History, Plus, Trash2, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { HexColorPicker } from 'react-colorful'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
@@ -25,6 +27,7 @@ import {
     INTENT_CATALOG,
     MERGED_LAYOUTS_BY_INTENT,
     type VisionAnalysis,
+    type TextAsset,
 } from '@/lib/creation-flow-types'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
 import { cn } from '@/lib/utils'
@@ -76,6 +79,121 @@ const SectionHeader = ({
     </div>
 )
 
+type BrandColorRole = 'Texto' | 'Fondo' | 'Acento'
+
+function normalizeHexColor(color: string): string {
+    const base = (color || '').trim().toLowerCase()
+    if (!base) return '#000000'
+    const withHash = base.startsWith('#') ? base : `#${base}`
+    return /^#[0-9a-f]{6}$/i.test(withHash) ? withHash : '#000000'
+}
+
+function RoleColorSwatch({
+    color,
+    onCommit,
+    sizeClass = "w-12 h-12 rounded-full",
+}: {
+    color: string
+    onCommit: (nextColor: string) => void
+    sizeClass?: string
+}) {
+    const initial = normalizeHexColor(color)
+    const [draft, setDraft] = useState(initial)
+    const [open, setOpen] = useState(false)
+
+    useEffect(() => {
+        setDraft(initial)
+    }, [initial])
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    className={cn(sizeClass, "border border-border/70 shadow-sm")}
+                    style={{ backgroundColor: initial }}
+                    title={initial}
+                />
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-3 space-y-3 bg-card border border-border/80 shadow-xl z-[140]" align="start">
+                <HexColorPicker
+                    color={draft}
+                    onChange={(next) => setDraft(normalizeHexColor(next))}
+                    className="!w-full !h-28"
+                />
+                <Input
+                    value={draft.toUpperCase()}
+                    onChange={(e) => setDraft(normalizeHexColor(e.target.value))}
+                    className="h-8 text-xs font-mono"
+                />
+                <Button
+                    type="button"
+                    size="sm"
+                    className="w-full h-8 text-xs"
+                    onClick={() => {
+                        onCommit(draft)
+                        setOpen(false)
+                    }}
+                >
+                    Aplicar color
+                </Button>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
+function AddAccentSwatch({
+    disabled,
+    onAdd,
+}: {
+    disabled?: boolean
+    onAdd: (nextColor: string) => void
+}) {
+    const [open, setOpen] = useState(false)
+    const [draft, setDraft] = useState('#4f46e5')
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    disabled={disabled}
+                    className={cn(
+                        "w-12 h-12 rounded-full border border-dashed border-border/80 flex items-center justify-center text-muted-foreground",
+                        "hover:text-primary hover:border-primary/60 transition-colors",
+                        disabled && "opacity-40 cursor-not-allowed"
+                    )}
+                    title="Añadir acento"
+                >
+                    <Plus className="w-5 h-5" />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-3 space-y-3 bg-card border border-border/80 shadow-xl z-[140]" align="start">
+                <HexColorPicker
+                    color={draft}
+                    onChange={(next) => setDraft(normalizeHexColor(next))}
+                    className="!w-full !h-28"
+                />
+                <Input
+                    value={draft.toUpperCase()}
+                    onChange={(e) => setDraft(normalizeHexColor(e.target.value))}
+                    className="h-8 text-xs font-mono"
+                />
+                <Button
+                    type="button"
+                    size="sm"
+                    className="w-full h-8 text-xs"
+                    onClick={() => {
+                        onAdd(draft)
+                        setOpen(false)
+                    }}
+                >
+                    Añadir acento
+                </Button>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
 interface ControlsPanelProps {
     creationFlow: ReturnType<typeof useCreationFlow>
     highlightedFields?: Set<string>
@@ -108,6 +226,7 @@ interface ControlsPanelProps {
     isSavingSession?: boolean
     sessionSavedAt?: string | null
     sessionSaveError?: string | null
+    hasUnsavedChanges?: boolean
 }
 
 export function ControlsPanel({
@@ -137,6 +256,7 @@ export function ControlsPanel({
     isSavingSession = false,
     sessionSavedAt = null,
     sessionSaveError = null,
+    hasUnsavedChanges = false,
 }: ControlsPanelProps) {
     const { toast } = useToast()
     const { panelPosition, assistanceEnabled } = useUI()
@@ -145,7 +265,7 @@ export function ControlsPanel({
     const upsertLayoutVote = useMutation(api.layoutRatings.upsertLayoutVote)
     const migrateLegacyRatings = useMutation(api.layoutRatings.migrateLegacyRatings)
     const resetLayoutRatings = useMutation(api.layoutRatings.resetLayoutRatings)
-    const { activeBrandKit, updateActiveBrandKit } = useBrandKit()
+    const { activeBrandKit, updateActiveBrandKit, setActiveBrandKit, reloadBrandKits } = useBrandKit()
     const layoutRatingsRows = useQuery(
         api.layoutRatings.listLayoutRatings,
         isAdmin && adminEmail ? { admin_email: adminEmail, layoutIdPrefix: 'lab-v6-' } : 'skip'
@@ -251,6 +371,13 @@ export function ControlsPanel({
         return acc
     }, [])
 
+    const refreshActiveBrandKitContent = async () => {
+        const currentId = activeBrandKit?.id || (activeBrandKit as any)?._id
+        if (!currentId) return
+        await setActiveBrandKit(String(currentId), false, false)
+        await reloadBrandKits(true)
+    }
+
     const layoutRatingStore: Record<string, LayoutRatingStoreEntry> = (layoutRatingsRows || []).reduce(
         (acc: Record<string, LayoutRatingStoreEntry>, row: { layoutId: string; totalPoints: number; uses: number; votes: number }) => {
             acc[row.layoutId] = {
@@ -339,6 +466,83 @@ export function ControlsPanel({
     const selectedLayoutRatingStats = state.selectedLayout
         ? getLayoutRatingStats(state.selectedLayout, layoutRatingStore)
         : null
+    const primaryEmail = useMemo(() => {
+        const emails = (activeBrandKit as any)?.emails
+        if (!Array.isArray(emails)) return ''
+        return String(emails.find((value: unknown) => typeof value === 'string' && value.trim()) || '').trim()
+    }, [activeBrandKit])
+    const phoneValues = useMemo(() => {
+        const phones = (activeBrandKit as any)?.phones
+        if (!Array.isArray(phones)) return [] as string[]
+        return phones
+            .map((value: unknown) => String(value || '').trim())
+            .filter(Boolean)
+    }, [activeBrandKit])
+    const addressValues = useMemo(() => {
+        const addresses = (activeBrandKit as any)?.addresses
+        if (!Array.isArray(addresses)) return [] as string[]
+        return addresses
+            .map((value: unknown) => String(value || '').trim())
+            .filter(Boolean)
+    }, [activeBrandKit])
+
+    const getContactAssetById = (assetId: string) =>
+        state.selectedTextAssets.find((asset) => asset.id === assetId) || null
+
+    const toggleContactAsset = (asset: TextAsset) => {
+        const exists = getContactAssetById(asset.id)
+        if (exists) {
+            removeTextAsset(asset.id)
+            return
+        }
+        addTextAsset(asset)
+    }
+
+    const updateContactAssetValue = (assetId: string, value: string) => {
+        updateTextAsset(assetId, value)
+    }
+    const brandColorsByRole = useMemo(() => {
+        const grouped: Record<BrandColorRole, string[]> = {
+            Texto: [],
+            Fondo: [],
+            Acento: [],
+        }
+
+        state.selectedBrandColors.forEach((item) => {
+            const normalized = normalizeHexColor(item.color)
+            const role = item.role === 'Texto' || item.role === 'Fondo' ? item.role : 'Acento'
+            if (!grouped[role].includes(normalized)) {
+                grouped[role].push(normalized)
+            }
+        })
+
+        return grouped
+    }, [state.selectedBrandColors])
+
+    const replaceRoleColor = (role: BrandColorRole, nextColorRaw: string, previousColor?: string) => {
+        const nextColor = normalizeHexColor(nextColorRaw)
+        const prevColor = previousColor ? normalizeHexColor(previousColor) : null
+
+        if (prevColor && prevColor !== nextColor) {
+            removeBrandColor(prevColor)
+        }
+
+        if (role !== 'Acento') {
+            brandColorsByRole[role].forEach((existing) => {
+                if (!prevColor || existing !== prevColor) {
+                    removeBrandColor(existing)
+                }
+            })
+        }
+
+        toggleBrandColor(nextColor, role)
+    }
+
+    const addAccentColor = (nextColorRaw: string) => {
+        const nextColor = normalizeHexColor(nextColorRaw)
+        if (brandColorsByRole.Acento.length >= 5) return
+        toggleBrandColor(nextColor, 'Acento')
+    }
     const effectiveSessionId = selectedSessionId || sessions.find((session) => session.active)?.id || ''
     const selectedIntentMeta = INTENT_CATALOG.find((intent) => intent.id === state.selectedIntent)
     const effectiveLayoutIntent: IntentCategory = (
@@ -433,12 +637,14 @@ export function ControlsPanel({
                                             <AlertCircle className="w-3 h-3" />
                                             Error
                                         </>
+                                    ) : hasUnsavedChanges ? (
+                                        'Hay cambios por guardar'
                                     ) : sessionSavedAt ? (
                                         <>
                                             <CheckCircle2 className="w-3 h-3" />
                                             {`Guardado ${new Date(sessionSavedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
                                         </>
-                                    ) : 'Sin guardar'}
+                                    ) : 'Sin cambios'}
                                 </span>
                                 <Button
                                     variant="ghost"
@@ -448,7 +654,18 @@ export function ControlsPanel({
                                     disabled={isSavingSession}
                                     title="Guardar historial ahora"
                                 >
-                                    {isSavingSession ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                                    {isSavingSession ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                        <Save
+                                            className={cn(
+                                                "w-3.5 h-3.5 transition-colors",
+                                                hasUnsavedChanges
+                                                    ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.45)]"
+                                                    : "text-muted-foreground/55"
+                                            )}
+                                        />
+                                    )}
                                 </Button>
                             </div>
                         }
@@ -564,7 +781,7 @@ export function ControlsPanel({
                     />
                 </div>
 
-                {state.selectedIntent && (
+                {(state.selectedIntent || state.currentStep >= 2) && (
                     <>
                         {/* STEP 2: LAYOUT */}
                         {availableLayouts.length > 0 && (
@@ -723,7 +940,9 @@ export function ControlsPanel({
                                     uploadedImages={state.uploadedImages}
                                     onUpload={uploadImage}
                                     onRemoveUploadedImage={removeUploadedImage}
+                                    brandKitImages={brandKitImages}
                                     brandKitLogos={brandKitLogos}
+                                    onRefreshBrandKitContent={refreshActiveBrandKitContent}
                                     selectedBrandKitImageIds={state.selectedBrandKitImageIds}
                                     onToggleBrandKitImage={toggleBrandKitImage}
                                     referenceImageRoles={state.referenceImageRoles}
@@ -731,11 +950,13 @@ export function ControlsPanel({
                                 />
                         </div>
 
-                        {/* STEP 6: LOGO & COLORS - Unified */}
+                        {/* STEP 6: KIT DE MARCA */}
                         <div ref={step6Ref} className={`relative ${PANEL_CARD_PADDED_CLASS} space-y-6`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep >= 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
+                                <SectionHeader icon={Fingerprint} title="Kit de marca" />
+
                                 <div className="space-y-3">
-                                    <SectionHeader icon={Fingerprint} title="Logo" />
+                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Logo</p>
                                     <BrandingConfigurator
                                         selectedLayout={selectedLayoutMeta || null}
                                         selectedLogoId={state.selectedLogoId}
@@ -749,51 +970,106 @@ export function ControlsPanel({
                                 </div>
 
                                 <div className="space-y-3 border-t border-border/60 pt-4">
-                                    <SectionHeader
-                                        icon={Palette}
-                                        title="Colores"
-                                        extra={(
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={refreshBrandColorsFromKit}
-                                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
-                                            >
-                                                <RotateCcw className="w-3 h-3" />
-                                                Recargar
-                                            </Button>
-                                        )}
-                                    />
-                                    <BrandingConfigurator
-                                        selectedLayout={selectedLayoutMeta || null}
-                                        selectedLogoId={state.selectedLogoId}
-                                        selectedBrandColors={state.selectedBrandColors}
-                                        onSelectLogo={selectLogo}
-                                        onToggleBrandColor={toggleBrandColor}
-                                        onRemoveBrandColor={removeBrandColor}
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Colores</p>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                refreshBrandColorsFromKit()
+                                                toast({
+                                                    title: 'Colores recargados',
+                                                    description: 'Se volvieron a importar los colores del Kit de marca.',
+                                                })
+                                            }}
+                                            className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                                        >
+                                            <RotateCcw className="w-3 h-3" />
+                                            Recargar
+                                        </Button>
+                                    </div>
 
-                                        onAddCustomColor={addCustomColor}
-                                        showLogo={false} showColors={true} showTypography={false} showBrandTexts={false}
-                                        rawMessage={promptValue}
-                                        debugLabel="Studio-Colors"
-                                        onlyShowSelectedColors={true}
-                                    />
+                                    <div className="flex items-end gap-3 flex-wrap pb-1">
+                                        <div className="flex flex-col items-center gap-1">
+                                            {brandColorsByRole.Texto[0] ? (
+                                                <RoleColorSwatch
+                                                    color={brandColorsByRole.Texto[0]}
+                                                    onCommit={(nextColor) => replaceRoleColor('Texto', nextColor, brandColorsByRole.Texto[0])}
+                                                />
+                                            ) : (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 px-2 text-[10px]"
+                                                    onClick={() => replaceRoleColor('Texto', '#111111')}
+                                                >
+                                                    Añadir
+                                                </Button>
+                                            )}
+                                            <span className="text-[10px] text-muted-foreground">Texto</span>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-1">
+                                            {brandColorsByRole.Fondo[0] ? (
+                                                <RoleColorSwatch
+                                                    color={brandColorsByRole.Fondo[0]}
+                                                    onCommit={(nextColor) => replaceRoleColor('Fondo', nextColor, brandColorsByRole.Fondo[0])}
+                                                />
+                                            ) : (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-8 px-2 text-[10px]"
+                                                    onClick={() => replaceRoleColor('Fondo', '#ffffff')}
+                                                >
+                                                    Añadir
+                                                </Button>
+                                            )}
+                                            <span className="text-[10px] text-muted-foreground">Fondo</span>
+                                        </div>
+
+                                        <div className="flex flex-col gap-1 min-w-0 pl-3 ml-2">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {brandColorsByRole.Acento.map((accentColor) => (
+                                                    <div key={accentColor} className="relative inline-flex items-center group/accent">
+                                                        <RoleColorSwatch
+                                                            color={accentColor}
+                                                            onCommit={(nextColor) => replaceRoleColor('Acento', nextColor, accentColor)}
+                                                            sizeClass="w-12 h-12 rounded-full"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-background border border-border/70 text-muted-foreground hover:text-destructive hover:border-destructive/50 inline-flex items-center justify-center shadow-sm opacity-0 group-hover/accent:opacity-100 group-focus-within/accent:opacity-100 transition-opacity"
+                                                            onClick={() => removeBrandColor(accentColor)}
+                                                            title="Quitar acento"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <AddAccentSwatch
+                                                    onAdd={addAccentColor}
+                                                    disabled={brandColorsByRole.Acento.length >= 5}
+                                                />
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground w-12 text-center">Acentos</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-3 border-t border-border/60 pt-4">
-                                    <SectionHeader
-                                        icon={Link2}
-                                        title="Enlace"
-                                        extra={(
-                                            <Switch
-                                                checked={state.ctaUrlEnabled}
-                                                onCheckedChange={(checked) => {
-                                                    setCtaUrlEnabled(checked, { useKitIfEmpty: true })
-                                                    updateActiveBrandKit?.({ cta_url_enabled: checked })
-                                                }}
-                                            />
-                                        )}
-                                    />
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Enlace</p>
+                                        <Switch
+                                            checked={state.ctaUrlEnabled}
+                                            onCheckedChange={(checked) => {
+                                                setCtaUrlEnabled(checked, { useKitIfEmpty: true })
+                                                updateActiveBrandKit?.({ cta_url_enabled: checked })
+                                            }}
+                                        />
+                                    </div>
                                     {state.ctaUrlEnabled ? (
                                         <Input
                                             value={state.ctaUrl}
@@ -807,6 +1083,119 @@ export function ControlsPanel({
                                         </p>
                                     )}
                                 </div>
+
+                                {(primaryEmail || phoneValues.length > 0 || addressValues.length > 0) ? (
+                                    <div className="space-y-3 pt-1">
+                                        <div className="space-y-3">
+                                            {primaryEmail ? (
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Email</p>
+                                                        <Switch
+                                                            checked={Boolean(getContactAssetById('contact-email-main'))}
+                                                            onCheckedChange={(checked) => {
+                                                                if (checked) {
+                                                                    toggleContactAsset({
+                                                                        id: 'contact-email-main',
+                                                                        type: 'custom',
+                                                                        label: 'Email',
+                                                                        value: primaryEmail,
+                                                                    })
+                                                                } else {
+                                                                    removeTextAsset('contact-email-main')
+                                                                }
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    {getContactAssetById('contact-email-main') ? (
+                                                        <Input
+                                                            value={getContactAssetById('contact-email-main')?.value || ''}
+                                                            onChange={(e) => updateContactAssetValue('contact-email-main', e.target.value)}
+                                                            placeholder={primaryEmail}
+                                                            className="h-9 text-xs"
+                                                        />
+                                                    ) : (
+                                                        <p className="text-[11px] text-muted-foreground truncate">{primaryEmail}</p>
+                                                    )}
+                                                </div>
+                                            ) : null}
+
+                                            {phoneValues.map((phone, idx) => {
+                                                const assetId = `contact-phone-${idx}`
+                                                const selectedPhoneAsset = getContactAssetById(assetId)
+                                                return (
+                                                    <div key={assetId} className="space-y-1.5">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Teléfono {idx + 1}</p>
+                                                            <Switch
+                                                                checked={Boolean(selectedPhoneAsset)}
+                                                                onCheckedChange={(checked) => {
+                                                                    if (checked) {
+                                                                        toggleContactAsset({
+                                                                            id: assetId,
+                                                                            type: 'custom',
+                                                                            label: `Teléfono ${idx + 1}`,
+                                                                            value: phone,
+                                                                        })
+                                                                    } else {
+                                                                    removeTextAsset(assetId)
+                                                                }
+                                                            }}
+                                                        />
+                                                        </div>
+                                                        {selectedPhoneAsset ? (
+                                                            <Input
+                                                                value={selectedPhoneAsset.value || ''}
+                                                                onChange={(e) => updateContactAssetValue(assetId, e.target.value)}
+                                                                placeholder={phone}
+                                                                className="h-9 text-xs"
+                                                            />
+                                                        ) : (
+                                                            <p className="text-[11px] text-muted-foreground truncate">{phone}</p>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+
+                                            {addressValues.map((address, idx) => {
+                                                const assetId = `contact-address-${idx}`
+                                                const selectedAddressAsset = getContactAssetById(assetId)
+                                                return (
+                                                    <div key={assetId} className="space-y-1.5">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Dirección {idx + 1}</p>
+                                                            <Switch
+                                                                checked={Boolean(selectedAddressAsset)}
+                                                                onCheckedChange={(checked) => {
+                                                                    if (checked) {
+                                                                        toggleContactAsset({
+                                                                            id: assetId,
+                                                                            type: 'custom',
+                                                                            label: `Dirección ${idx + 1}`,
+                                                                            value: address,
+                                                                        })
+                                                                    } else {
+                                                                    removeTextAsset(assetId)
+                                                                }
+                                                            }}
+                                                        />
+                                                        </div>
+                                                        {selectedAddressAsset ? (
+                                                            <Input
+                                                                value={selectedAddressAsset.value || ''}
+                                                                onChange={(e) => updateContactAssetValue(assetId, e.target.value)}
+                                                                placeholder={address}
+                                                                className="h-9 text-xs"
+                                                            />
+                                                        ) : (
+                                                            <p className="text-[11px] text-muted-foreground break-words">{address}</p>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                ) : null}
                         </div>
                     </>
                 )}

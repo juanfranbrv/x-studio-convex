@@ -1,5 +1,6 @@
 import { SlideContent } from '@/app/actions/generate-carousel'
 import { P09B } from '@/lib/prompts/priorities/p09b-cta-url-hierarchy'
+import * as P09 from '@/lib/prompts/priorities/p09-brand-dna'
 import { FINAL_IMAGE_PROMPT_TEMPLATE } from './final-image.template'
 import { LANGUAGE_ENFORCEMENT_INSTRUCTION } from '@/lib/prompts/priorities/p12-preferred-language'
 
@@ -171,28 +172,7 @@ TEXT RENDER SAFETY: Never render labels/tokens like "CTA", "URL", "CTA CONTAINER
 }
 
 function buildTypographyDirective(fonts?: { family: string; role?: 'heading' | 'body' }[]): string {
-    if (!fonts || fonts.length === 0) return ''
-
-    const headingFont = fonts.find((f) => f?.role === 'heading' && f?.family)?.family
-    const bodyFont = fonts.find((f) => f?.role === 'body' && f?.family)?.family
-    const firstAvailable = fonts.find((f) => f?.family)?.family
-
-    const lines: string[] = []
-    lines.push('REGLAS DE TIPOGRAFIA (OBLIGATORIO):')
-
-    if (headingFont) {
-        lines.push(`- FUENTE PARA TITULARES: Usa "${headingFont}" para el texto principal o headline.`)
-    }
-    if (bodyFont) {
-        lines.push(`- FUENTE PARA PARRAFOS: Usa "${bodyFont}" para textos secundarios, parrafos o descripcion.`)
-    }
-    if (!headingFont && !bodyFont && firstAvailable) {
-        lines.push(`- FUENTE DISPONIBLE: Usa "${firstAvailable}" como fuente principal.`)
-    }
-
-    lines.push('- REGLA CRITICA: Los nombres de fuente son instrucciones internas. NUNCA renderices el nombre de la fuente como texto visible en la imagen.')
-    lines.push('- NOTA: Si la fuente no esta disponible en tu sistema, usa una de estilo similar.')
-    return lines.join('\n')
+    return P09.buildTypographyContract(fonts)
 }
 
 function toUniqueColorList(input: string | string[] | undefined, fallback: string): string[] {

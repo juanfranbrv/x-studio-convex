@@ -44,17 +44,22 @@ export function DashboardLayout({
 
     // Detectar si debemos mostrar el modal de onboarding
     useEffect(() => {
+        const hasConvexUser = userRecord !== null && userRecord !== undefined
+        const onboardingIncomplete = hasConvexUser && userRecord?.onboarding_completed === false
         if (
             user?.id &&
             userRecord !== undefined &&
             !brandKitsLoading &&
-            // Usuario no ha completado onboarding
-            !userRecord?.onboarding_completed &&
+            // Solo mostramos onboarding si el usuario Convex existe
+            // y explícitamente tiene onboarding incompleto.
+            onboardingIncomplete &&
             // Usuario no tiene Brand Kits
             brandKits.length === 0
         ) {
             setShowOnboarding(true)
+            return
         }
+        setShowOnboarding(false)
     }, [user?.id, userRecord, brandKitsLoading, brandKits.length])
 
     const handleOnboardingComplete = async () => {
