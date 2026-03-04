@@ -7,6 +7,7 @@ export default function SignUpPage() {
             <SignUp
                 path={authConfig.signUpPath}
                 signInUrl={authConfig.signInPath}
+                forceRedirectUrl={authConfig.onboardingPath}
                 fallbackRedirectUrl={authConfig.onboardingPath}
                 appearance={{
                     elements: {

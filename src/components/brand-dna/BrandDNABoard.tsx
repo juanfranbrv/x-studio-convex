@@ -13,6 +13,7 @@ import { BrandContextCard } from './BrandContextCard';
 import { TechnicalAudit } from './TechnicalAudit';
 import { ContactSocialCard } from './ContactSocialCard';
 import { TargetAudienceCard } from './TargetAudienceCard';
+import { BrandKitAssistantWizard } from './BrandKitAssistantWizard';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,13 +22,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { uploadBrandImage } from '@/app/actions/upload-image';
 import { updateUserBrandKit } from '@/app/actions/update-user-brand-kit';
 import { hexToRgb } from '@/lib/color-utils';
+import { calculateBrandKitCompleteness } from '@/lib/brand-kit-utils';
 
-import { Save, Download, CheckCircle, RotateCcw, AlertCircle, X, Bug } from 'lucide-react';
+import { Save, Download, CheckCircle, RotateCcw, AlertCircle, X, Bug, Globe, ListChecks } from 'lucide-react';
 
 interface BrandDNABoardProps {
     data: BrandDNA;
     isDebug?: boolean;
-    onRegenerate?: () => void;
+    allowAssistantExit?: boolean;
+    onRegenerate?: (urlOverride?: string) => void;
+    onAnalyzeUrlFromAssistant?: (urlOverride?: string) => void;
+    onPreviewUrlFromAssistant?: (url: string) => Promise<{
+        success: boolean;
+        url: string;
+        title?: string;
+        screenshotUrl?: string;
+        error?: string;
+    }>;
     onNewBrandKit?: () => void;
     onSaveSuccess?: () => void;
 }
@@ -83,7 +94,17 @@ function normalizeStudioColorRoles(payload: BrandDNA): BrandDNA {
     };
 }
 
-export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate, onNewBrandKit, onSaveSuccess }: BrandDNABoardProps) {
+export function BrandDNABoard({
+    data: initialData,
+    isDebug = false,
+    allowAssistantExit = false,
+    onRegenerate,
+    onAnalyzeUrlFromAssistant,
+    onPreviewUrlFromAssistant,
+    onNewBrandKit,
+    onSaveSuccess
+}: BrandDNABoardProps) {
+    const ASSISTANT_LOCK_KEY = 'brand-kit-assistant-lock';
     const { user } = useUser();
     const { syncActiveBrandKit } = useBrandKit();
     const [data, setData] = useState<BrandDNA>(() => normalizeStudioColorRoles(initialData));
@@ -98,11 +119,68 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         message: ''
     });
     const [showDebug, setShowDebug] = useState(isDebug);
+    const [showAssistantWizard, setShowAssistantWizard] = useState(false);
+    const [assistantFlowLocked, setAssistantFlowLocked] = useState(false);
     const canUseDebugAudit = isDebug;
+    const rawBrandUrl = (data.url || '').trim();
+    const isManualPlaceholderUrl = rawBrandUrl.toLowerCase().startsWith('manual-');
+    const normalizedAnalysisUrl = (() => {
+        if (!rawBrandUrl || isManualPlaceholderUrl) return null;
+        try {
+            const withProtocol = rawBrandUrl.startsWith('http://') || rawBrandUrl.startsWith('https://')
+                ? rawBrandUrl
+                : `https://${rawBrandUrl}`;
+            return new URL(withProtocol).toString();
+        } catch {
+            return null;
+        }
+    })();
+    const completeness = calculateBrandKitCompleteness(data);
+    const assistantPriorityMode = completeness.percentage < 70;
+    const mustForceAssistant = (assistantPriorityMode || assistantFlowLocked) && !allowAssistantExit;
 
     useEffect(() => {
         setData(normalizeStudioColorRoles(initialData));
     }, [initialData]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const locked = window.sessionStorage.getItem(ASSISTANT_LOCK_KEY) === '1';
+        if (locked) {
+            setAssistantFlowLocked(true);
+            setShowAssistantWizard(true);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!data?.id) return;
+        if (assistantPriorityMode && !allowAssistantExit) {
+            setAssistantFlowLocked(true);
+            if (typeof window !== 'undefined') {
+                window.sessionStorage.setItem(ASSISTANT_LOCK_KEY, '1');
+            }
+            setShowAssistantWizard(true);
+            return;
+        }
+        if (assistantFlowLocked && !allowAssistantExit) {
+            setShowAssistantWizard(true);
+            return;
+        }
+        const key = `brand-kit-wizard-dismissed:${data.id}`;
+        const dismissed = typeof window !== 'undefined' ? window.sessionStorage.getItem(key) : '1';
+        const shouldSuggestWizard = isManualPlaceholderUrl;
+        if (shouldSuggestWizard && !dismissed) {
+            setShowAssistantWizard(true);
+        }
+    }, [data?.id, isManualPlaceholderUrl, assistantPriorityMode, assistantFlowLocked, allowAssistantExit]);
+
+    const handleWizardOpenChange = (open: boolean) => {
+        if (!open && mustForceAssistant) return;
+        setShowAssistantWizard(open);
+        if (!open && data?.id && typeof window !== 'undefined') {
+            window.sessionStorage.setItem(`brand-kit-wizard-dismissed:${data.id}`, '1');
+        }
+    };
 
 
     const handleSave = async (isAuto = false) => {
@@ -330,6 +408,103 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
         }));
     };
 
+    const handleAddFont = (font: string) => {
+        updateData(prev => ({ ...prev, fonts: [...(prev.fonts || []), { family: font }] }));
+    };
+
+    const handleRemoveFont = (idx: number) => {
+        updateData(prev => ({ ...prev, fonts: prev.fonts?.filter((_, i) => i !== idx) }));
+    };
+
+    const handleUpdateFontRole = (idx: number, role?: 'heading' | 'body') => {
+        updateData(prev => ({
+            ...prev,
+            fonts: (prev.fonts || []).map((f, i) => {
+                const fontObj = typeof f === 'string' ? { family: f } : f;
+                return i === idx ? { ...fontObj, role } : f;
+            })
+        }));
+    };
+
+    const handleSelectFontForRole = (family: string, role: 'heading' | 'body') => {
+        updateData(prev => {
+            const normalizedFonts = (prev.fonts || []).map((f) => typeof f === 'string' ? { family: f } : f);
+            const updatedForRole = normalizedFonts
+                .filter((f) => f.role !== role)
+                .filter((f) => !(f.family === family && f.role === role));
+
+            const selectedFont = { family, role } as { family: string; role: 'heading' | 'body' };
+            const withSelection = [...updatedForRole, selectedFont];
+
+            const heading = withSelection.find((f) => f.role === 'heading');
+            const body = withSelection.find((f) => f.role === 'body');
+            const ordered = [
+                ...(heading ? [heading] : []),
+                ...(body ? [body] : []),
+            ];
+
+            return {
+                ...prev,
+                fonts: ordered
+            };
+        });
+    };
+
+    const handleUpdateTagline = (val: string) => {
+        updateData(prev => ({ ...prev, tagline: val }));
+    };
+
+    const handleUpdateBrandValue = (index: number, val: string) => {
+        updateData(prev => ({
+            ...prev,
+            brand_values: (prev.brand_values || []).map((v, i) => i === index ? val : v)
+        }));
+    };
+
+    const handleAddBrandValue = () => {
+        updateData(prev => ({ ...prev, brand_values: [...(prev.brand_values || []), 'Nuevo Valor'] }));
+    };
+
+    const handleRemoveBrandValue = (idx: number) => {
+        updateData(prev => ({ ...prev, brand_values: prev.brand_values?.filter((_, i) => i !== idx) }));
+    };
+
+    const handleUpdateAesthetic = (idx: number, val: string) => {
+        updateData(prev => ({ ...prev, visual_aesthetic: prev.visual_aesthetic?.map((v, i) => i === idx ? val : v) }));
+    };
+
+    const handleAddAesthetic = () => {
+        updateData(prev => ({ ...prev, visual_aesthetic: [...(prev.visual_aesthetic || []), ''] }));
+    };
+
+    const handleRemoveAesthetic = (idx: number) => {
+        updateData(prev => ({ ...prev, visual_aesthetic: prev.visual_aesthetic?.filter((_, i) => i !== idx) }));
+    };
+
+    const handleUpdateTone = (idx: number, val: string) => {
+        updateData(prev => ({ ...prev, tone_of_voice: prev.tone_of_voice?.map((v, i) => i === idx ? val : v) }));
+    };
+
+    const handleAddTone = () => {
+        updateData(prev => ({ ...prev, tone_of_voice: [...(prev.tone_of_voice || []), 'Nuevo Tono'] }));
+    };
+
+    const handleRemoveTone = (idx: number) => {
+        updateData(prev => ({ ...prev, tone_of_voice: prev.tone_of_voice?.filter((_, i) => i !== idx) }));
+    };
+
+    const handleTextAssetsChange = (newTextAssets: any) => {
+        updateData(prev => ({
+            ...prev,
+            text_assets: newTextAssets,
+            business_overview: newTextAssets.brand_context || prev.business_overview
+        }));
+    };
+
+    const handleRemoveImage = (idx: number) => {
+        updateData(prev => ({ ...prev, images: prev.images?.filter((_, i) => i !== idx) }));
+    };
+
     const handleExportJSON = () => {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
         const downloadAnchorNode = document.createElement('a');
@@ -401,66 +576,107 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
 
     return (
         <div className="space-y-8 pb-12">
-            {/* Header / Save Status */}
-            {/* Header / Save Status */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl glass-panel transition-all duration-200 mb-6">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center text-accent-foreground shadow-sm">
-                        {data.logo_url ? (
-                            <img src={data.logo_url} className="w-8 h-8 object-contain" alt="Logo" />
+            {!assistantPriorityMode && (
+            <div className="rounded-2xl glass-panel transition-all duration-200 mb-6 p-5 md:p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex-1 space-y-4">
+                        <div className="rounded-xl border border-border/60 bg-background/60 p-3">
+                            <p className="text-xs font-semibold text-foreground mb-1">Como completar este bloque</p>
+                            <p className="text-xs text-muted-foreground">Paso 1: Pon nombre a tu kit. Paso 2 (opcional): pega una URL y pulsa Analizar URL para autocompletar contenido.</p>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center text-accent-foreground shadow-sm shrink-0">
+                                {data.logo_url ? (
+                                    <img src={data.logo_url} className="w-8 h-8 object-contain" alt="Logo" />
+                                ) : (
+                                    <span className="text-xl font-bold">{data.brand_name?.[0] || 'M'}</span>
+                                )}
+                            </div>
+
+                            <div className="flex-1 space-y-3">
+                                <div>
+                                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Paso 1 · Nombre del kit</p>
+                                    <Input
+                                        value={data.brand_name || ''}
+                                        onChange={(e) => {
+                                            setData((prev) => ({ ...prev, brand_name: e.target.value }));
+                                            setHasUnsavedChanges(true);
+                                        }}
+                                        className="h-10 px-3 bg-background border-border focus-visible:ring-primary font-semibold"
+                                        placeholder="Ej: Mi Marca"
+                                    />
+                                </div>
+
+                                <div>
+                                    <p className="text-[11px] font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+                                        <Globe className="w-3.5 h-3.5" />
+                                        Paso 2 (opcional) · URL web para analizar
+                                    </p>
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                        <Input
+                                            value={data.url || ''}
+                                            onChange={(e) => {
+                                                setData((prev) => ({ ...prev, url: e.target.value }));
+                                                setHasUnsavedChanges(true);
+                                            }}
+                                            placeholder="https://tuweb.com"
+                                            className="text-xs h-9 px-3 bg-background border-border focus-visible:ring-primary sm:max-w-[360px]"
+                                        />
+                                        {onRegenerate && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-9 text-xs px-4 w-full sm:w-auto"
+                                                disabled={!normalizedAnalysisUrl}
+                                                onClick={() => onRegenerate(normalizedAnalysisUrl || rawBrandUrl)}
+                                            >
+                                                Analizar URL
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground/80 mt-1">
+                                        {isManualPlaceholderUrl
+                                            ? 'Tu kit se creó manualmente. Añade una URL válida para completar datos automáticamente.'
+                                            : normalizedAnalysisUrl
+                                                ? 'URL válida. Pulsa "Analizar URL" para actualizar este kit con datos de la web.'
+                                                : 'Si añades una URL válida, podrás analizarla para completar este kit más rápido.'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 lg:pt-1">
+                        {isSaving ? (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium animate-pulse">
+                                <RotateCcw className="w-4 h-4 mr-2 animate-spin" />
+                                Guardando...
+                            </div>
+                        ) : hasUnsavedChanges ? (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                                <Save className="w-4 h-4 mr-2" />
+                                Cambios pendientes
+                            </div>
                         ) : (
-                            <span className="text-xl font-bold">{data.brand_name?.[0]}</span>
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Sincronizado
+                            </div>
                         )}
                     </div>
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                            <Input
-                                value={data.brand_name || ''}
-                                onChange={(e) => {
-                                    setData((prev) => ({ ...prev, brand_name: e.target.value }));
-                                    setHasUnsavedChanges(true);
-                                }}
-                                className="text-xl font-bold h-10 px-2 bg-transparent border-border focus-visible:ring-primary"
-                                placeholder="Nombre de marca"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {isSaving ? (
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium animate-pulse">
-                                    <RotateCcw className="w-4 h-4 mr-2 animate-spin" />
-                                    Guardando cambios...
-                                </div>
-                            ) : hasUnsavedChanges ? (
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                                    <Save className="w-4 h-4 mr-2" />
-                                    Cambios locales pendientes
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                                    <CheckCircle className="w-4 h-4 mr-2" />
-                                    Sincronizado
-                                </div>
-                            )}
-                            <span className="text-muted-foreground/40">·</span>
-                            <Input
-                                value={data.url || ''}
-                                onChange={(e) => {
-                                    setData((prev) => ({ ...prev, url: e.target.value }));
-                                    setHasUnsavedChanges(true);
-                                }}
-                                placeholder="Añadir sitio web..."
-                                className="text-xs h-8 px-2 w-[240px] bg-transparent border-border focus-visible:ring-primary"
-                            />
-                        </div>
-                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    {onRegenerate && (
-                        <Button variant="ghost" size="sm" onClick={onRegenerate} className="gap-2 h-9 text-muted-foreground hover:text-destructive">
-                            <RotateCcw className="w-4 h-4" />
-                            Regenerar
-                        </Button>
-                    )}
+
+                <div className="mt-4 flex flex-wrap items-center justify-end gap-3 border-t border-border/50 pt-4">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 h-9"
+                        onClick={() => setShowAssistantWizard(true)}
+                    >
+                        <ListChecks className="w-4 h-4" />
+                        Modo guiado
+                    </Button>
                     {canUseDebugAudit && (
     <Button
         variant="ghost"
@@ -490,139 +706,131 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                     </Button>
                 </div>
             </div>
+            )}
 
-            {/* NEW LAYOUT IMPLEMENTATION */}
-
-            {/* Top Section: Branding & Screenshot */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
-                {/* Left Column: Identities & Palette */}
-                <div className="space-y-10">
-                    <div className="grid grid-cols-2 gap-8">
-                        <LogoCard
-                            logoUrl={data.logo_url}
-                            logos={data.logos}
-                            onUpload={handleUploadLogos}
-                            onRemove={handleRemoveLogo}
-                            onToggle={handleToggleLogoSelection}
-                            isUploading={isUploading}
-                        />
-                        <FaviconCard faviconUrl={data.favicon_url} />
+            {assistantPriorityMode && !allowAssistantExit ? (
+                !showAssistantWizard && (
+                    <div className="rounded-xl border border-dashed border-border/70 p-6 bg-muted/20">
+                        <p className="text-base font-medium text-foreground mb-1">Completa primero el asistente guiado</p>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Cuando termines estos pasos, se desbloqueara el editor completo.
+                        </p>
+                        <Button onClick={() => setShowAssistantWizard(true)}>Continuar asistente</Button>
                     </div>
-                    <ColorPalette
-                        colors={data.colors || []}
-                        isEdited={JSON.stringify(data.colors) !== JSON.stringify(initialData.colors)}
-                        onUpdateColor={handleUpdateColor}
-                        onUpdateRole={handleUpdateColorRole}
-                        onRemoveColor={handleRemoveColor}
-                        onAddColor={handleAddColor}
-                        onReset={handleResetColors}
-                    />
-                </div>
+                )
+            ) : (
+                <>
+                    {/* NEW LAYOUT IMPLEMENTATION */}
 
-                {/* Right Column: Screenshot */}
-                <div className="h-full min-h-[400px]">
-                    <ScreenshotCard screenshotUrl={data.screenshot_url} />
-                </div>
-            </div>
+                    {/* Top Section: Branding & Screenshot */}
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                        {/* Left Column: Identities & Palette */}
+                        <div className="space-y-10">
+                            <div className="grid grid-cols-2 gap-8">
+                                <LogoCard
+                                    logoUrl={data.logo_url}
+                                    logos={data.logos}
+                                    onUpload={handleUploadLogos}
+                                    onRemove={handleRemoveLogo}
+                                    onToggle={handleToggleLogoSelection}
+                                    isUploading={isUploading}
+                                />
+                                <FaviconCard faviconUrl={data.favicon_url} />
+                            </div>
+                            <ColorPalette
+                                colors={data.colors || []}
+                                isEdited={JSON.stringify(data.colors) !== JSON.stringify(initialData.colors)}
+                                onUpdateColor={handleUpdateColor}
+                                onUpdateRole={handleUpdateColorRole}
+                                onRemoveColor={handleRemoveColor}
+                                onAddColor={handleAddColor}
+                                onReset={handleResetColors}
+                            />
+                        </div>
 
-            {/* Middle Section: Brand Context (Full Width Focus) */}
-            <div className="w-full">
-                <BrandContextCard
-                    context={data.business_overview || ''}
-                    onUpdate={(val) => updateData(prev => ({
-                        ...prev,
-                        business_overview: val,
-                        text_assets: prev.text_assets ? { ...prev.text_assets, brand_context: val } : {
-                            marketing_hooks: [],
-                            visual_keywords: [],
-                            ctas: [],
-                            brand_context: val
-                        }
-                    }))}
-                />
-            </div>
+                        {/* Right Column: Screenshot */}
+                        <div className="h-full min-h-[400px]">
+                            <ScreenshotCard screenshotUrl={data.screenshot_url} />
+                        </div>
+                    </div>
 
-            {/* Two-Column Layout: Content Cards (Left) + Image Gallery (Right) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-                {/* Left Column: All Content/Info Cards */}
-                <div className="space-y-6">
-
-                    {/* Contact & Audience */}
-                    <TargetAudienceCard audience={data.target_audience} />
-                    <ContactSocialCard
-                        socialLinks={data.social_links}
-                        emails={data.emails}
-                        phones={data.phones}
-                        addresses={data.addresses}
-                        onUpdate={handleUpdateContact}
-                    />
-
-                    {/* Typography */}
-                    <TypographySection
-                        fonts={(data.fonts || []).map(f => typeof f === 'string' ? { family: f } : f)}
-                        tagline={data.tagline || ''}
-                        onAddFont={(f) => updateData(prev => ({ ...prev, fonts: [...(prev.fonts || []), { family: f }] }))}
-                        onRemoveFont={(idx) => updateData(prev => ({ ...prev, fonts: prev.fonts?.filter((_, i) => i !== idx) }))}
-                        onUpdateRole={(idx, role) => updateData(prev => ({
-                            ...prev,
-                            fonts: (prev.fonts || []).map((f, i) => {
-                                const fontObj = typeof f === 'string' ? { family: f } : f;
-                                return i === idx ? { ...fontObj, role } : f;
-                            })
-                        }))}
-                    />
-
-                    {/* Brand Assets */}
-                    <BrandAssets
-                        tagline={data.tagline || ''}
-                        values={data.brand_values || []}
-                        aesthetic={data.visual_aesthetic || []}
-                        tone={data.tone_of_voice || []}
-                        onUpdateTagline={(val) => updateData(prev => ({ ...prev, tagline: val }))}
-                        onUpdateValue={(index, val) => {
-                            updateData(prev => ({
+                    {/* Middle Section: Brand Context (Full Width Focus) */}
+                    <div className="w-full">
+                        <BrandContextCard
+                            context={data.business_overview || ''}
+                            onUpdate={(val) => updateData(prev => ({
                                 ...prev,
-                                brand_values: (prev.brand_values || []).map((v, i) => i === index ? val : v)
-                            }));
-                        }}
-                        onAddValue={() => updateData(prev => ({ ...prev, brand_values: [...(prev.brand_values || []), 'Nuevo Valor'] }))}
-                        onRemoveValue={(idx) => updateData(prev => ({ ...prev, brand_values: prev.brand_values?.filter((_, i) => i !== idx) }))}
-                        onUpdateAesthetic={(idx, val) => updateData(prev => ({ ...prev, visual_aesthetic: prev.visual_aesthetic?.map((v, i) => i === idx ? val : v) }))}
-                        onAddAesthetic={() => updateData(prev => ({ ...prev, visual_aesthetic: [...(prev.visual_aesthetic || []), ''] }))}
-                        onRemoveAesthetic={(idx) => updateData(prev => ({ ...prev, visual_aesthetic: prev.visual_aesthetic?.filter((_, i) => i !== idx) }))}
-                        onUpdateTone={(idx, val) => updateData(prev => ({ ...prev, tone_of_voice: prev.tone_of_voice?.map((v, i) => i === idx ? val : v) }))}
-                        onAddTone={() => updateData(prev => ({ ...prev, tone_of_voice: [...(prev.tone_of_voice || []), 'Nuevo Tono'] }))}
-                        onRemoveTone={(idx) => updateData(prev => ({ ...prev, tone_of_voice: prev.tone_of_voice?.filter((_, i) => i !== idx) }))}
-                    />
+                                business_overview: val,
+                                text_assets: prev.text_assets ? { ...prev.text_assets, brand_context: val } : {
+                                    marketing_hooks: [],
+                                    visual_keywords: [],
+                                    ctas: [],
+                                    brand_context: val
+                                }
+                            }))}
+                        />
+                    </div>
 
-                    {/* Text Assets */}
-                    <TextAssetsSection
-                        data={data.text_assets}
-                        onChange={(newTextAssets) => {
-                            updateData(prev => ({
-                                ...prev,
-                                text_assets: newTextAssets,
-                                business_overview: newTextAssets.brand_context || prev.business_overview
-                            }));
-                        }}
-                        onAppendData={handleAppendExtractedData}
-                    />
-                </div>
+                    {/* Two-Column Layout: Content Cards (Left) + Image Gallery (Right) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                        {/* Left Column: All Content/Info Cards */}
+                        <div className="space-y-6">
+                            <TargetAudienceCard audience={data.target_audience} />
+                            <ContactSocialCard
+                                socialLinks={data.social_links}
+                                emails={data.emails}
+                                phones={data.phones}
+                                addresses={data.addresses}
+                                onUpdate={handleUpdateContact}
+                            />
 
-                {/* Right Column: Image Gallery */}
-                <div className="lg:sticky lg:top-6">
-                    <ImageGallery
-                        images={data.images || []}
-                        isUploading={isUploading}
-                        onUpload={handleUploadFiles}
-                        onRemoveImage={(idx) => updateData(prev => ({ ...prev, images: prev.images?.filter((_, i) => i !== idx) }))}
-                        onOpenLightbox={setLightboxImage}
-                    />
-                </div>
-            </div>
+                            <TypographySection
+                                fonts={(data.fonts || []).map(f => typeof f === 'string' ? { family: f } : f)}
+                                tagline={data.tagline || ''}
+                                onAddFont={handleAddFont}
+                                onSelectFontForRole={handleSelectFontForRole}
+                                onRemoveFont={handleRemoveFont}
+                                onUpdateRole={handleUpdateFontRole}
+                            />
 
-            {/* Technical Audit (Debug) */}
-            {canUseDebugAudit && showDebug && <TechnicalAudit trace={data.api_trace} isVisible={showDebug} debugData={data.debug} />}
+                            <BrandAssets
+                                tagline={data.tagline || ''}
+                                values={data.brand_values || []}
+                                aesthetic={data.visual_aesthetic || []}
+                                tone={data.tone_of_voice || []}
+                                onUpdateTagline={handleUpdateTagline}
+                                onUpdateValue={handleUpdateBrandValue}
+                                onAddValue={handleAddBrandValue}
+                                onRemoveValue={handleRemoveBrandValue}
+                                onUpdateAesthetic={handleUpdateAesthetic}
+                                onAddAesthetic={handleAddAesthetic}
+                                onRemoveAesthetic={handleRemoveAesthetic}
+                                onUpdateTone={handleUpdateTone}
+                                onAddTone={handleAddTone}
+                                onRemoveTone={handleRemoveTone}
+                            />
+
+                            <TextAssetsSection
+                                data={data.text_assets}
+                                onChange={handleTextAssetsChange}
+                                onAppendData={handleAppendExtractedData}
+                            />
+                        </div>
+
+                        <div className="lg:sticky lg:top-6">
+                            <ImageGallery
+                                images={data.images || []}
+                                isUploading={isUploading}
+                                onUpload={handleUploadFiles}
+                                onRemoveImage={handleRemoveImage}
+                                onOpenLightbox={setLightboxImage}
+                            />
+                        </div>
+                    </div>
+
+                    {canUseDebugAudit && showDebug && <TechnicalAudit trace={data.api_trace} isVisible={showDebug} debugData={data.debug} />}
+                </>
+            )}
 
             {/* Lightbox */}
             {
@@ -660,6 +868,57 @@ export function BrandDNABoard({ data: initialData, isDebug = false, onRegenerate
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <BrandKitAssistantWizard
+                open={showAssistantWizard}
+                onOpenChange={handleWizardOpenChange}
+                brand={data}
+                forceMode={mustForceAssistant}
+                onUpdateBrandName={(value) => updateData((prev) => ({ ...prev, brand_name: value }))}
+                onUpdateUrl={(value) => updateData((prev) => ({ ...prev, url: value }))}
+                onAnalyzeUrl={(urlOverride) => (onAnalyzeUrlFromAssistant || onRegenerate)?.(urlOverride || data.url || '')}
+                onPreviewUrl={async (targetUrl) => {
+                    if (!onPreviewUrlFromAssistant) {
+                        return { success: false, url: targetUrl, error: 'Preview no disponible' };
+                    }
+                    return onPreviewUrlFromAssistant(targetUrl);
+                }}
+                onUploadLogos={handleUploadLogos}
+                onToggleLogo={handleToggleLogoSelection}
+                onRemoveLogo={handleRemoveLogo}
+                onAddColor={handleAddColor}
+                onUpdateColor={handleUpdateColor}
+                onUpdateColorRole={handleUpdateColorRole}
+                onRemoveColor={handleRemoveColor}
+                onUpdateContact={handleUpdateContact}
+                onAddFont={handleAddFont}
+                onSelectFontForRole={handleSelectFontForRole}
+                onRemoveFont={handleRemoveFont}
+                onUpdateFontRole={handleUpdateFontRole}
+                onUpdateTagline={handleUpdateTagline}
+                onUpdateValue={handleUpdateBrandValue}
+                onAddValue={handleAddBrandValue}
+                onRemoveValue={handleRemoveBrandValue}
+                onUpdateAesthetic={handleUpdateAesthetic}
+                onAddAesthetic={handleAddAesthetic}
+                onRemoveAesthetic={handleRemoveAesthetic}
+                onUpdateTone={handleUpdateTone}
+                onAddTone={handleAddTone}
+                onRemoveTone={handleRemoveTone}
+                onChangeTextAssets={handleTextAssetsChange}
+                onAppendExtractedData={handleAppendExtractedData}
+                onUploadImages={handleUploadFiles}
+                onRemoveImage={handleRemoveImage}
+                onOpenLightbox={setLightboxImage}
+                isUploadingImages={isUploading}
+                onFinish={() => {
+                    setShowAssistantWizard(false);
+                    setAssistantFlowLocked(false);
+                    if (typeof window !== 'undefined') {
+                        window.sessionStorage.removeItem(ASSISTANT_LOCK_KEY);
+                    }
+                }}
+            />
         </div >
     );
 }

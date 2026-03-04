@@ -1,7 +1,8 @@
 'use client'
 
-import { ReactNode, useState, useEffect } from 'react'
+import { ReactNode, useState, useEffect, useMemo } from 'react'
 import { useUser } from '@clerk/nextjs'
+import { usePathname, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import { Sidebar } from './Sidebar'
@@ -11,8 +12,14 @@ import { I18nProvider } from '@/components/providers/I18nProvider'
 import { ProtectedRoute } from '@/components/providers/ProtectedRoute'
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
 import { useBrandKit } from '@/contexts/BrandKitContext'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { AlertTriangle } from 'lucide-react'
+import { calculateBrandKitCompleteness } from '@/lib/brand-kit-utils'
 
 import { BrandKitSummary, BrandDNA } from '@/lib/brand-types'
+
+const MIN_BRAND_KIT_COMPLETENESS = 70
 
 interface DashboardLayoutProps {
     children: ReactNode
@@ -35,12 +42,26 @@ export function DashboardLayout({
     isFixed = false,
     headerAfterBrandActions
 }: DashboardLayoutProps) {
+    const router = useRouter()
+    const pathname = usePathname()
     const { user } = useUser()
-    const { brandKits, loading: brandKitsLoading } = useBrandKit()
+    const { brandKits, activeBrandKit, loading: brandKitsLoading } = useBrandKit()
     const userRecord = useQuery(api.users.getUser, user?.id ? { clerk_id: user.id } : "skip")
     const completeOnboarding = useMutation(api.users.completeOnboarding)
 
     const [showOnboarding, setShowOnboarding] = useState(false)
+    const [showCompletenessGate, setShowCompletenessGate] = useState(false)
+
+    const completeness = useMemo(
+        () => calculateBrandKitCompleteness(activeBrandKit),
+        [activeBrandKit]
+    )
+
+    const isBrandKitRoute = Boolean(pathname?.startsWith('/brand-kit'))
+    const shouldBlockModules =
+        !brandKitsLoading &&
+        !isBrandKitRoute &&
+        completeness.percentage < MIN_BRAND_KIT_COMPLETENESS
 
     // Detectar si debemos mostrar el modal de onboarding
     useEffect(() => {
@@ -62,6 +83,10 @@ export function DashboardLayout({
         setShowOnboarding(false)
     }, [user?.id, userRecord, brandKitsLoading, brandKits.length])
 
+    useEffect(() => {
+        setShowCompletenessGate(shouldBlockModules)
+    }, [shouldBlockModules])
+
     const handleOnboardingComplete = async () => {
         if (user?.id) {
             try {
@@ -70,6 +95,11 @@ export function DashboardLayout({
                 console.error('Error completing onboarding:', error)
             }
         }
+    }
+
+    const handleCompletenessGateAccept = () => {
+        setShowCompletenessGate(false)
+        router.replace('/brand-kit')
     }
 
     return (
@@ -109,6 +139,43 @@ export function DashboardLayout({
                     onClose={() => setShowOnboarding(false)}
                     onComplete={handleOnboardingComplete}
                 />
+
+                <Dialog
+                    open={showCompletenessGate}
+                    onOpenChange={(open) => {
+                        if (!open && shouldBlockModules) return
+                        setShowCompletenessGate(open)
+                    }}
+                >
+                    <DialogContent className="sm:max-w-[480px]">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                                Completa tu Kit de Marca primero
+                            </DialogTitle>
+                            <DialogDescription className="pt-2 space-y-2">
+                                <span className="block">
+                                    Tu kit esta al {completeness.percentage}% y necesitas al menos un {MIN_BRAND_KIT_COMPLETENESS}% para usar este modulo.
+                                </span>
+                                <span className="block">
+                                    Sin ese minimo no se desbloquean Imagen ni el resto de modulos.
+                                </span>
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {completeness.tips.length > 0 && (
+                            <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
+                                {completeness.tips[0]}
+                            </div>
+                        )}
+
+                        <DialogFooter>
+                            <Button onClick={handleCompletenessGateAccept}>
+                                Ir a Kit de Marca
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </I18nProvider>
         </ProtectedRoute>
     )

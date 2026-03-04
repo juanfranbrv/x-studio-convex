@@ -5907,3 +5907,781 @@
     "brand_context": "Mi Oliva Gourmet es un proyecto liderado por Miguel, Ricardo y Julio en Puente Genil, uniendo tres generaciones de conocimiento agrícola con innovación tecnológica. Gestionan una comunidad de más de 10.000 clientes y ofrecen variedades exclusivas como 'Estirpe' (filtrado y sin filtrar) y aceites de cosecha temprana. Su operación incluye atención al cliente personalizada y una cadena logística optimizada para preservar la integridad del producto desde la cosecha hasta la entrega domiciliaria en envases técnicos como cristal opaco antigoteo."
   }
 }
+[2026-03-04T10:41:18.114Z] 📄 HTML cargado. Longitud: 16966 caracteres.
+[2026-03-04T10:41:18.114Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-04T10:41:18.115Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-03-04T10:41:18.118Z] 🔍 Favicon encontrado: https://gualele.click/favicon.svg (1 candidatos)
+[2026-03-04T10:41:18.119Z] 📱 Social links found: 0, Emails: 0, Phones: 1
+[2026-03-04T10:41:18.120Z] 🎯 JSON-LD: Logo encontrado: https://gualele.click/favicon.svg
+[2026-03-04T10:41:18.120Z] 🎯 FAVICON ESCALATION: Favicon SVG tratado como logo candidato (220 puntos)
+[2026-03-04T10:41:18.123Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-04T10:41:18.123Z]    - SVGs en header encontrados: 0
+[2026-03-04T10:41:18.124Z]    - IMGs en header encontrados: 0
+[2026-03-04T10:41:18.124Z]    - firstHeaderSvg.length: 0
+[2026-03-04T10:41:18.124Z] ⚠️ No se encontró ningún SVG ni IMG en contenedores de cabecera
+[2026-03-04T10:41:18.125Z] 🖼️ Logo candidates encontrados: 2 (Top score: 250)
+[2026-03-04T10:41:18.125Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-04T10:41:18.125Z]    1. URL: https://gualele.click/favicon.svg - Score: 250
+[2026-03-04T10:41:18.125Z]    2. URL: https://gualele.click/opengraph.png - Score: 5
+[2026-03-04T10:41:18.575Z] 🔍 Extracción inicial: 0 RRSS, 0 emails, 1 teléfonos, 0 direcciones
+[2026-03-04T10:41:35.431Z] ✅ Gemini Response: {
+  "brand_name": "Gualele",
+  "tagline": "Transform Your Photos with AI",
+  "business_overview": "Gualele is an innovative AI-driven photo editing platform that enables users to instantly transform their images using a library of over 999 specialized templates. From artistic sketches to urban graffiti and high-end studio portraits, it provides a seamless and free tool for creative digital manipulation.",
+  "brand_values": [
+    "Innovation",
+    "Creativity",
+    "Accessibility",
+    "Versatility",
+    "Self-expression"
+  ],
+  "tone_of_voice": [
+    "Dynamic",
+    "Inspirational",
+    "Playful"
+  ],
+  "visual_aesthetic": [
+    "Pop Art",
+    "Cyberpunk",
+    "Street Art"
+  ],
+  "target_audience": [
+    "Social media creators",
+    "AI art enthusiasts",
+    "Digital hobbyists"
+  ],
+  "colors": [
+    "#C084FC",
+    "#F26E22",
+    "#60A5FA",
+    "#00FF00",
+    "#FFFFFF"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "DM Sans"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Transform your reality with 999+ AI templates.",
+      "From simple portraits to monochromatic masterpieces in seconds.",
+      "Unlock professional-grade AI photo editing for free.",
+      "Turn your photos into sketchbook masterpieces effortlessly.",
+      "Reinvent your digital identity with one-click transformations."
+    ],
+    "visual_keywords": [
+      "Cyberpunk",
+      "Pop Art",
+      "Street Art",
+      "Surrealism",
+      "Digital Art Stickers"
+    ],
+    "ctas": [
+      "Start Transforming",
+      "Explore Templates",
+      "Edit for Free"
+    ],
+    "brand_context": "Gualele is a high-performance AI photo transformation tool specialized in rapid image processing and stylistic re-rendering. Operating with a massive library of 999+ distinct visual filters including 'Punkifyer', 'Urban Graffiti', and 'Studio Pro Head', the platform utilizes advanced neural networks to provide users with varied outputs ranging from hyper-realism to abstract digital art. It serves a niche of users looking for quick, high-fidelity creative edits for social media presence and personal branding without the need for manual design skills."
+  }
+}
+[2026-03-04T10:54:03.873Z] 📄 HTML cargado. Longitud: 77678 caracteres.
+[2026-03-04T10:54:03.874Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-04T10:54:03.875Z] 🔤 Fuentes iniciales extraídas: 2 ["Open Sans","Abel"]
+[2026-03-04T10:54:03.884Z] 🔍 Favicon encontrado: https://macmeliana.com/wp-content/uploads/2018/06/favicon-32x32.png (4 candidatos)
+[2026-03-04T10:54:03.887Z] 📱 Social links found: 2, Emails: 1, Phones: 2
+[2026-03-04T10:54:03.898Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-04T10:54:03.899Z]    - SVGs en header encontrados: 1
+[2026-03-04T10:54:03.899Z]    - IMGs en header encontrados: 13
+[2026-03-04T10:54:03.900Z]    - firstHeaderSvg.length: 1
+[2026-03-04T10:54:03.900Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 223 caracteres
+[2026-03-04T10:54:03.901Z] 🎯 BOOST: SVG existente en header potenciado (+300) - Score final: 420
+[2026-03-04T10:54:03.902Z] 🖼️ Logo candidates encontrados: 14 (Top score: 420)
+[2026-03-04T10:54:03.902Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-04T10:54:03.903Z]    1. SVG inline - Score: 420 - Length: 223 chars
+[2026-03-04T10:54:03.903Z]    2. URL: https://macmeliana.com/wp-content/uploads/2018/06/logo.png - Score: 350
+[2026-03-04T10:54:03.903Z]    3. URL: https://macmeliana.com/wp-content/uploads/2026/02/logogebbg.png - Score: 310
+[2026-03-04T10:54:03.904Z]    4. URL: https://macmeliana.com/wp-content/uploads/2024/03/logomel.png - Score: 310
+[2026-03-04T10:54:03.904Z]    5. URL: https://macmeliana.com/wp-content/uploads/2019/03/logo1.png - Score: 310
+[2026-03-04T10:54:04.342Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 2 teléfonos, 0 direcciones
+[2026-03-04T10:54:27.061Z] ✅ Gemini Response: {
+  "brand_name": "Macmeliana",
+  "tagline": "Discover more of what you love",
+  "business_overview": "Macmeliana is a comprehensive online department store offering an extensive range of products from high-fashion apparel and luxury jewelry to home essentials and specialized baby gear. They serve as a one-stop destination for curated lifestyle brands and seasonal collections for the entire family.",
+  "brand_values": [
+    "Versatility",
+    "Quality",
+    "Customer-Centricity",
+    "Modernity",
+    "Style"
+  ],
+  "tone_of_voice": [
+    "Helpful",
+    "Commercial",
+    "Direct"
+  ],
+  "visual_aesthetic": [
+    "Swiss Style",
+    "Corporate Memphis",
+    "Modernist"
+  ],
+  "target_audience": [
+    "Multi-generational families",
+    "Style-conscious shoppers",
+    "Home and lifestyle enthusiasts"
+  ],
+  "colors": [
+    "#FF0000",
+    "#00008E",
+    "#000000",
+    "#FFFFFF",
+    "#ABB8C3"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Open Sans"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Shop the latest trends in fashion and home",
+      "Premium baby teething toys for your little one",
+      "Exclusive deals on your favorite global brands",
+      "Everything you need for a stylish lifestyle",
+      "From luxury jewelry to everyday essentials"
+    ],
+    "visual_keywords": [
+      "Swiss Style",
+      "Minimalist Poster",
+      "Grid-based Design",
+      "Clean Typography",
+      "Commercial Photography"
+    ],
+    "ctas": [
+      "Shop Now",
+      "Discover More",
+      "Create a Registry"
+    ],
+    "brand_context": "Macmeliana operates as a massive multi-category e-commerce platform with a sophisticated technical infrastructure supporting gift registries, seasonal sales, and brand-specific storefronts. The catalog spans Women, Men, Kids, Beauty, Home, Jewelry, and Electronics, featuring prominent partnerships with brands like Nike, Polo Ralph Lauren, and Calvin Klein. Their operational focus includes high-volume retail management, promotional event execution (such as Friends & Family sales), and specialized niches like silicone sensory teething toys for infants."
+  }
+}
+[2026-03-04T11:00:59.095Z] 📄 HTML cargado. Longitud: 16966 caracteres.
+[2026-03-04T11:00:59.095Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-04T11:00:59.096Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-03-04T11:00:59.098Z] 🔍 Favicon encontrado: https://gualele.click/favicon.svg (1 candidatos)
+[2026-03-04T11:00:59.099Z] 📱 Social links found: 0, Emails: 0, Phones: 1
+[2026-03-04T11:00:59.101Z] 🎯 JSON-LD: Logo encontrado: https://gualele.click/favicon.svg
+[2026-03-04T11:00:59.101Z] 🎯 FAVICON ESCALATION: Favicon SVG tratado como logo candidato (220 puntos)
+[2026-03-04T11:00:59.102Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-04T11:00:59.102Z]    - SVGs en header encontrados: 0
+[2026-03-04T11:00:59.103Z]    - IMGs en header encontrados: 0
+[2026-03-04T11:00:59.103Z]    - firstHeaderSvg.length: 0
+[2026-03-04T11:00:59.103Z] ⚠️ No se encontró ningún SVG ni IMG en contenedores de cabecera
+[2026-03-04T11:00:59.104Z] 🖼️ Logo candidates encontrados: 2 (Top score: 250)
+[2026-03-04T11:00:59.104Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-04T11:00:59.104Z]    1. URL: https://gualele.click/favicon.svg - Score: 250
+[2026-03-04T11:00:59.104Z]    2. URL: https://gualele.click/opengraph.png - Score: 5
+[2026-03-04T11:00:59.205Z] 🔍 Extracción inicial: 0 RRSS, 0 emails, 1 teléfonos, 0 direcciones
+[2026-03-04T11:01:09.044Z] ✅ Gemini Response: {
+  "brand_name": "Gualele",
+  "tagline": "Transform Your Photos with AI",
+  "business_overview": "Gualele is an AI-powered creative platform that enables users to instantly transform their photography using a vast library of over 999 specialized style templates. The service offers everything from high-end studio portraits to avant-garde artistic filters like 'Punkifyer' and 'Urban Graffiti'.",
+  "brand_values": [
+    "Innovation",
+    "Creativity",
+    "Accessibility",
+    "Speed",
+    "Versatility"
+  ],
+  "tone_of_voice": [
+    "Playful",
+    "Modern",
+    "Bold"
+  ],
+  "visual_aesthetic": [
+    "Cyberpunk",
+    "Neo-Brutalism",
+    "Pop Art"
+  ],
+  "target_audience": [
+    "Social media creators",
+    "Digital art enthusiasts",
+    "Gen Z trendsetters"
+  ],
+  "colors": [
+    "#00FF00",
+    "#C084FC",
+    "#1C1C24",
+    "#FFFFFF",
+    "#F26E22"
+  ],
+  "fonts": [
+    "DM Serif Display",
+    "DM Sans"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Transform your photos with AI in seconds",
+      "Access 999+ creative templates for free",
+      "From urban graffiti to studio portraits instantly",
+      "Level up your profile with AI magic",
+      "Experience the next generation of photo editing"
+    ],
+    "visual_keywords": [
+      "Cyberpunk",
+      "Neo-Brutalism",
+      "Pop Art",
+      "Glitch Art",
+      "Vaporwave"
+    ],
+    "ctas": [
+      "Transform Now",
+      "Explore Templates",
+      "Start Creating"
+    ],
+    "brand_context": "Gualele operates as a high-velocity AI image processing hub, offering a diverse catalog of over 999 distinct visual templates including 'Punkifyer', 'Urban Graffiti', and 'Sketchbook Masterpiece'. The platform leverages advanced cloud storage for template management and focuses on democratizing complex image manipulation through one-click style transfers, catering to a user base that demands instant, high-impact visual content for digital environments."
+  }
+}
+[2026-03-04T11:07:25.633Z] 📄 HTML cargado. Longitud: 16966 caracteres.
+[2026-03-04T11:07:25.633Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-04T11:07:25.634Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-03-04T11:07:25.636Z] 🔍 Favicon encontrado: https://gualele.click/favicon.svg (1 candidatos)
+[2026-03-04T11:07:25.637Z] 📱 Social links found: 0, Emails: 0, Phones: 1
+[2026-03-04T11:07:25.638Z] 🎯 JSON-LD: Logo encontrado: https://gualele.click/favicon.svg
+[2026-03-04T11:07:25.639Z] 🎯 FAVICON ESCALATION: Favicon SVG tratado como logo candidato (220 puntos)
+[2026-03-04T11:07:25.640Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-04T11:07:25.640Z]    - SVGs en header encontrados: 0
+[2026-03-04T11:07:25.641Z]    - IMGs en header encontrados: 0
+[2026-03-04T11:07:25.641Z]    - firstHeaderSvg.length: 0
+[2026-03-04T11:07:25.641Z] ⚠️ No se encontró ningún SVG ni IMG en contenedores de cabecera
+[2026-03-04T11:07:25.641Z] 🖼️ Logo candidates encontrados: 2 (Top score: 250)
+[2026-03-04T11:07:25.642Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-04T11:07:25.642Z]    1. URL: https://gualele.click/favicon.svg - Score: 250
+[2026-03-04T11:07:25.642Z]    2. URL: https://gualele.click/opengraph.png - Score: 5
+[2026-03-04T11:07:25.723Z] 🔍 Extracción inicial: 0 RRSS, 0 emails, 1 teléfonos, 0 direcciones
+[2026-03-04T11:07:37.908Z] ✅ Gemini Response: {
+  "brand_name": "Gualele",
+  "tagline": "Transform Your Photos with AI",
+  "business_overview": "Gualele is an AI-powered photo transformation platform that provides users with over 999 creative templates for instant image editing. It allows anyone to turn standard photos into artistic masterpieces, ranging from professional studio headshots to vibrant urban graffiti and caricatures.",
+  "brand_values": [
+    "Innovation",
+    "Creativity",
+    "Accessibility",
+    "Versatility",
+    "Instantaneity"
+  ],
+  "tone_of_voice": [
+    "Dynamic",
+    "Imaginative",
+    "Empowering"
+  ],
+  "visual_aesthetic": [
+    "Pop Art",
+    "Cyberpunk",
+    "Digital Surrealism"
+  ],
+  "target_audience": [
+    "Social media content creators",
+    "Digital hobbyists",
+    "Personal brand builders"
+  ],
+  "colors": [
+    "#C084FC",
+    "#F26E22",
+    "#60A5FA",
+    "#1C1C24",
+    "#DCFCE7"
+  ],
+  "fonts": [
+    "Syne",
+    "DM Sans"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Turn your selfies into sketchbook masterpieces instantly.",
+      "Access 999+ AI templates to redefine your look.",
+      "Professional studio headshots created in seconds.",
+      "From urban graffiti to monochromatic elegance with one click.",
+      "Experience the future of photo transformation for free."
+    ],
+    "visual_keywords": [
+      "Pop Art",
+      "Cyberpunk",
+      "Risograph",
+      "Street Art Graffiti",
+      "Digital Surrealism"
+    ],
+    "ctas": [
+      "Transform Your Photos",
+      "Explore 999 Templates",
+      "Get Started for Free"
+    ],
+    "brand_context": "Gualele functions as a high-volume AI template engine utilizing Supabase infrastructure to manage and deliver a massive library of visual styles including 'Punkifyer', 'Digital Art Stickers', and 'Caricature Fusion Reality'. The business focuses on bridging the gap between complex generative AI and user-friendly mobile-first web interfaces, providing assets like 'Studio Pro Head' and 'Urban Graffiti Portrait' for users seeking rapid viral social media aesthetics or professional-grade personal branding without manual editing tools."
+  }
+}
+[2026-03-04T11:08:58.114Z] 📄 HTML cargado. Longitud: 54944 caracteres.
+[2026-03-04T11:08:58.115Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-04T11:08:58.116Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-03-04T11:08:58.118Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2026-03-04T11:08:58.122Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2026-03-04T11:08:58.131Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-04T11:08:58.132Z]    - SVGs en header encontrados: 0
+[2026-03-04T11:08:58.133Z]    - IMGs en header encontrados: 11
+[2026-03-04T11:08:58.134Z]    - firstHeaderSvg.length: 0
+[2026-03-04T11:08:58.134Z] 🎯 Primera IMG en header detectada
+[2026-03-04T11:08:58.134Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-03-04T11:08:58.135Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2026-03-04T11:08:58.135Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-04T11:08:58.136Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2026-03-04T11:08:58.136Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2026-03-04T11:08:58.136Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2026-03-04T11:08:58.137Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2026-03-04T11:08:58.137Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2026-03-04T11:08:58.294Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2026-03-04T11:09:18.925Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Formando generaciones desde hace más de 45 años.",
+  "business_overview": "Centro de formación integral en Meliana especializado en idiomas, informática y refuerzo escolar para todas las edades. Con una trayectoria de más de cuatro décadas, combinamos la tradición de un negocio familiar con metodologías innovadoras en robótica y preparación para exámenes oficiales.",
+  "brand_values": [
+    "Tradición",
+    "Excelencia académica",
+    "Cercanía",
+    "Innovación tecnológica",
+    "Compromiso local"
+  ],
+  "tone_of_voice": [
+    "Cercano",
+    "Didáctico",
+    "Confiable"
+  ],
+  "visual_aesthetic": [
+    "Swiss Style",
+    "Bauhaus",
+    "Modernism"
+  ],
+  "target_audience": [
+    "Estudiantes en busca de certificaciones oficiales de idiomas",
+    "Padres interesados en refuerzo escolar y robótica para sus hijos",
+    "Profesionales que requieren formación técnica o idiomas para empresas"
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#4A1E11",
+    "#000000",
+    "#FFFFFF"
+  ],
+  "fonts": [
+    "Montserrat",
+    "Open Sans"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Certifica tu nivel de idiomas con examinadores oficiales",
+      "Más de 45 años de éxito educativo en Meliana",
+      "Impulsa el futuro de tus hijos con clases de robótica e informática",
+      "Aprende inglés, francés o alemán con profesores nativos",
+      "Asegura tu éxito en las pruebas de acceso a la universidad"
+    ],
+    "visual_keywords": [
+      "Swiss Style",
+      "Minimalist Poster",
+      "Typography-driven",
+      "Flat Design",
+      "Bauhaus"
+    ],
+    "ctas": [
+      "¡Reserva tu prueba de nivel!",
+      "Solicita información",
+      "Inscríbete ahora"
+    ],
+    "brand_context": "Academia Bauset es una institución educativa de referencia en la comarca de l'Horta Nord, fundada por Amparo Bauset Ferrer en 1974. Como centro examinador oficial de entidades de prestigio como Trinity College London y Pearson, ofrece una infraestructura de diez aulas equipadas con las últimas tecnologías. Su modelo operativo abarca desde el refuerzo escolar tradicional y pruebas de acceso hasta la formación in-company para grandes corporaciones y empleados públicos, manteniendo un enfoque humano y familiar que ha permitido formar a múltiples generaciones de familias en la zona de Meliana."
+  }
+}
+[2026-03-04T11:10:38.294Z] 📄 HTML cargado. Longitud: 23531 caracteres.
+[2026-03-04T11:10:38.295Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-04T11:10:38.295Z] 🔤 Fuentes iniciales extraídas: 1 ["Poppins"]
+[2026-03-04T11:10:38.299Z] 🔍 Favicon encontrado: https://www.google.com/s2/favicons?domain=www.roselladerubielos.com&sz=256 (0 candidatos)
+[2026-03-04T11:10:38.300Z] 📱 Social links found: 0, Emails: 1, Phones: 2
+[2026-03-04T11:10:38.317Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-04T11:10:38.318Z]    - SVGs en header encontrados: 0
+[2026-03-04T11:10:38.319Z]    - IMGs en header encontrados: 1
+[2026-03-04T11:10:38.319Z]    - firstHeaderSvg.length: 0
+[2026-03-04T11:10:38.320Z] 🎯 Primera IMG en header detectada
+[2026-03-04T11:10:38.320Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-03-04T11:10:38.321Z] 🖼️ Logo candidates encontrados: 1 (Top score: 460)
+[2026-03-04T11:10:38.321Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-04T11:10:38.322Z]    1. URL: https://www.roselladerubielos.com/img-struct/logo.png - Score: 460
+[2026-03-04T11:10:38.445Z] 🔍 Extracción inicial: 0 RRSS, 1 emails, 2 teléfonos, 0 direcciones
+[2026-03-04T11:10:54.046Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Tu hogar rural en el corazón de la Sierra de Gúdar",
+  "business_overview": "Casa rural de alquiler íntegro diseñada para alojar grupos de entre 10 y 12 personas, con la calidez de la piedra tradicional y el confort moderno. Situada en Fuentes de Rubielos, ofrece una experiencia acogedora con chimenea, salón de juegos y un entorno natural privilegiado.",
+  "brand_values": [
+    "Tradición",
+    "Hospitalidad",
+    "Naturaleza",
+    "Autenticidad",
+    "Confort"
+  ],
+  "tone_of_voice": [
+    "Cercano",
+    "Invitador",
+    "Tradicional"
+  ],
+  "visual_aesthetic": [
+    "Rustic Modernism",
+    "Cottagecore",
+    "Arts and Crafts Movement"
+  ],
+  "target_audience": [
+    "Familias numerosas",
+    "Grupos de amigos amantes del esquí",
+    "Turistas de naturaleza y gastronomía"
+  ],
+  "colors": [
+    "#004042",
+    "#F4F4F0",
+    "#3E4951",
+    "#00ACBA",
+    "#7F7F02"
+  ],
+  "fonts": [
+    "Lora",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Desconecta en una casa de piedra con alma rural",
+      "El refugio perfecto para grupos de hasta 12 personas",
+      "Chimenea, billar y barbacoa: tu escapada ideal en Teruel",
+      "Explora la Sierra de Gúdar desde la comodidad de Rosella",
+      "Tu base de operaciones para una jornada de esquí y relax"
+    ],
+    "visual_keywords": [
+      "Wabi-sabi",
+      "Rustic Poster Design",
+      "Vintage Travel Poster",
+      "Arts and Crafts style",
+      "Handcrafted textures"
+    ],
+    "ctas": [
+      "Reserva tu estancia rural",
+      "Consulta disponibilidad",
+      "Descubre la casa"
+    ],
+    "brand_context": "Rosella de Rubielos opera como un alojamiento de turismo rural de alquiler completo ubicado en Fuentes de Rubielos, a 962 metros de altitud en la Sierra de Gúdar. La propiedad destaca por su arquitectura en piedra autóctona y servicios específicos para grupos de 10 a 12 personas, incluyendo calefacción central, chimenea para el invierno, zona de barbacoa para asados y un salón de juegos privado con billar. Su ubicación estratégica facilita el acceso a pistas de esquí, rutas histórico-artísticas por Rubielos de Mora y actividades de naturaleza en la provincia de Teruel."
+  }
+}
+[2026-03-04T11:14:25.676Z] 📄 HTML cargado. Longitud: 54944 caracteres.
+[2026-03-04T11:14:25.677Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-04T11:14:25.678Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-03-04T11:14:25.683Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2026-03-04T11:14:25.687Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2026-03-04T11:14:25.698Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-04T11:14:25.699Z]    - SVGs en header encontrados: 0
+[2026-03-04T11:14:25.700Z]    - IMGs en header encontrados: 11
+[2026-03-04T11:14:25.701Z]    - firstHeaderSvg.length: 0
+[2026-03-04T11:14:25.701Z] 🎯 Primera IMG en header detectada
+[2026-03-04T11:14:25.702Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-03-04T11:14:25.703Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2026-03-04T11:14:25.703Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-04T11:14:25.704Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2026-03-04T11:14:25.704Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2026-03-04T11:14:25.704Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2026-03-04T11:14:25.704Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2026-03-04T11:14:25.705Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2026-03-04T11:14:25.871Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2026-03-04T11:14:41.238Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Más de 45 años formando generaciones en Meliana",
+  "business_overview": "Centro de formación integral especializado en la enseñanza de idiomas, informática y refuerzo escolar para todas las edades. Con una trayectoria de más de cuatro décadas, combinan la tradición educativa con la innovación tecnológica en robótica y cálculo mental.",
+  "brand_values": [
+    "Tradición",
+    "Familiaridad",
+    "Profesionalidad",
+    "Innovación",
+    "Compromiso"
+  ],
+  "tone_of_voice": [
+    "Familiar",
+    "Profesional",
+    "Cercano"
+  ],
+  "visual_aesthetic": [
+    "Swiss Style",
+    "Corporate Memphis",
+    "Minimalist Poster"
+  ],
+  "target_audience": [
+    "Padres de alumnos en edad escolar en l'Horta Nord",
+    "Adultos que buscan certificaciones oficiales de idiomas",
+    "Empresas e instituciones públicas locales"
+  ],
+  "colors": [
+    "#0EFF1D",
+    "#0D3A00",
+    "#4A1E11",
+    "#FFFFFF",
+    "#000000"
+  ],
+  "fonts": [
+    "Francois One",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Certifica tu nivel de inglés con los mejores expertos de Meliana",
+      "45 años de éxito educativo avalan el futuro de tus hijos",
+      "Domina nuevos idiomas y tecnología en un entorno familiar",
+      "Asegura tu plaza universitaria con nuestro refuerzo especializado",
+      "Formación técnica y lingüística adaptada a la era digital"
+    ],
+    "visual_keywords": [
+      "Swiss Style",
+      "Bauhaus",
+      "Minimalist Poster",
+      "Typography-driven",
+      "Flat Design"
+    ],
+    "ctas": [
+      "¡Reserva tu plaza ahora!",
+      "Solicita tu prueba de nivel gratis",
+      "Contacta con nuestros profesores"
+    ],
+    "brand_context": "Academia Bauset es una institución educativa familiar con sede en Meliana, liderada por Amparo Bauset Ferrer desde hace más de 45 años. El centro destaca por su enfoque humano y su constante evolución, contando con diez aulas equipadas para la enseñanza de idiomas como centro oficial examinador de Trinity, Pearson y preparador de Cambridge y la JQCV. Su oferta académica incluye desde refuerzo escolar en primaria y bachillerato hasta áreas tecnológicas de vanguardia como la robótica y el cálculo aritmético mental. Además de su labor en el centro, ofrecen formación in-company para empresas como Mitsubishi y Nanta, consolidándose como un pilar educativo y comercial fundamental en la comarca de l'Horta Nord."
+  }
+}
+[2026-03-04T11:18:04.717Z] 📄 HTML cargado. Longitud: 54944 caracteres.
+[2026-03-04T11:18:04.718Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-04T11:18:04.719Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-03-04T11:18:04.723Z] 🔍 Favicon encontrado: https://bauset.es/wp-content/uploads/2020/07/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2026-03-04T11:18:04.726Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2026-03-04T11:18:04.738Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-04T11:18:04.739Z]    - SVGs en header encontrados: 0
+[2026-03-04T11:18:04.739Z]    - IMGs en header encontrados: 11
+[2026-03-04T11:18:04.740Z]    - firstHeaderSvg.length: 0
+[2026-03-04T11:18:04.740Z] 🎯 Primera IMG en header detectada
+[2026-03-04T11:18:04.740Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-03-04T11:18:04.742Z] 🖼️ Logo candidates encontrados: 11 (Top score: 650)
+[2026-03-04T11:18:04.742Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-04T11:18:04.743Z]    1. URL: https://bauset.es/wp-content/uploads/2018/01/logoweb1.png - Score: 650
+[2026-03-04T11:18:04.743Z]    2. URL: https://bauset.es/wp-content/uploads/2018/01/cambridgelogo.png - Score: 310
+[2026-03-04T11:18:04.743Z]    3. URL: https://bauset.es/wp-content/uploads/2018/01/JQCV-logo.png - Score: 310
+[2026-03-04T11:18:04.744Z]    4. URL: https://bauset.es/wp-content/uploads/2018/01/logo_footer.png - Score: 310
+[2026-03-04T11:18:04.744Z]    5. URL: https://bauset.es/wp-content/uploads/2025/07/25-26-AUTO.webp - Score: 210
+[2026-03-04T11:18:04.908Z] 🔍 Extracción inicial: 2 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2026-03-04T11:18:17.698Z] ✅ Gemini Response: {
+  "brand_name": "Academia Bauset",
+  "tagline": "Tradición y futuro en tu formación.",
+  "business_overview": "Centro de estudios integral en Meliana con más de 45 años de trayectoria, especializado en la enseñanza de idiomas con certificaciones oficiales y refuerzo académico. Destaca por su enfoque humano y familiar combinado con aulas de última tecnología para impartir robótica, informática y preparación para pruebas de acceso.",
+  "brand_values": [
+    "Tradición",
+    "Excelencia académica",
+    "Cercanía",
+    "Innovación tecnológica",
+    "Compromiso local"
+  ],
+  "tone_of_voice": [
+    "Familiar",
+    "Profesional",
+    "Motivador"
+  ],
+  "visual_aesthetic": [
+    "Swiss Style",
+    "Flat Design",
+    "Modernism"
+  ],
+  "target_audience": [
+    "Estudiantes de primaria y secundaria",
+    "Adultos que buscan certificaciones de idiomas",
+    "Empresas de Horta Nord que requieren formación"
+  ],
+  "colors": [
+    "#0D3A00",
+    "#0EFF1D",
+    "#FFFFFF",
+    "#000000",
+    "#FF6900"
+  ],
+  "fonts": [
+    "Libre Baskerville",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Más de 45 años formando a generaciones en Meliana.",
+      "Consigue tu título oficial de Cambridge o Trinity con nosotros.",
+      "Robótica y tecnología: preparamos a los profesionales del mañana.",
+      "Refuerzo escolar personalizado con un 100% de compromiso.",
+      "Cursos de idiomas con profesores nativos y expertos."
+    ],
+    "visual_keywords": [
+      "Swiss Style",
+      "Bauhaus",
+      "Minimalist Poster",
+      "Flat Design",
+      "Modernism"
+    ],
+    "ctas": [
+      "¡Reserva tu plaza ahora!",
+      "Prueba de nivel gratuita",
+      "Solicita información"
+    ],
+    "brand_context": "Academia Bauset es una institución educativa de gestión familiar fundada en 1970 en Meliana por Amparo Bauset Ferrer. Se ha consolidado como centro examinador oficial de Trinity College London y Pearson, operando además como centro preparador de Cambridge. Dispone de diez aulas equipadas tecnológicamente donde se imparten desde refuerzo escolar hasta robótica y cálculo mental. Su alcance se extiende a la formación in-company para corporaciones como Mitsubishi y ayuntamientos locales, manteniendo un altísimo porcentaje de aprobados en pruebas de acceso a la universidad y certificaciones de idiomas A1 a C2."
+  }
+}
+[2026-03-04T11:21:00.084Z] 📄 HTML cargado. Longitud: 22749 caracteres.
+[2026-03-04T11:21:00.085Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-04T11:21:00.086Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-03-04T11:21:00.088Z] 🔍 Favicon encontrado: https://awordz.com/logo.svg (1 candidatos)
+[2026-03-04T11:21:00.092Z] 📱 Social links found: 0, Emails: 0, Phones: 0
+[2026-03-04T11:21:00.093Z] 🎯 FAVICON ESCALATION: Favicon SVG tratado como logo candidato (220 puntos)
+[2026-03-04T11:21:00.098Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-04T11:21:00.100Z]    - SVGs en header encontrados: 3
+[2026-03-04T11:21:00.100Z]    - IMGs en header encontrados: 1
+[2026-03-04T11:21:00.100Z]    - firstHeaderSvg.length: 1
+[2026-03-04T11:21:00.101Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 377 caracteres
+[2026-03-04T11:21:00.102Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2026-03-04T11:21:00.102Z] 🖼️ Logo candidates encontrados: 3 (Top score: 350)
+[2026-03-04T11:21:00.102Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-04T11:21:00.103Z]    1. SVG inline - Score: 350 - Length: 377 chars
+[2026-03-04T11:21:00.103Z]    2. URL: https://awordz.com/logo.svg - Score: 310
+[2026-03-04T11:21:00.103Z]    3. URL: https://awordz.com/og.jpg - Score: 5
+[2026-03-04T11:21:00.216Z] 🔍 Extracción inicial: 0 RRSS, 0 emails, 0 teléfonos, 0 direcciones
+[2026-03-04T11:21:12.214Z] ✅ Gemini Response: {
+  "brand_name": "Awordz",
+  "tagline": "Assist. Augment. Accelerate.",
+  "business_overview": "Awordz provides personalized AI agents that automate repetitive linguistic tasks and enforce quality standards. By integrating multi-agent workflows, the platform accelerates translation delivery while ensuring fluency and glossary compliance for professional teams.",
+  "brand_values": [
+    "Efficiency",
+    "Accuracy",
+    "Innovation",
+    "Scalability",
+    "Excellence"
+  ],
+  "tone_of_voice": [
+    "Empowering",
+    "Technological",
+    "Decisive"
+  ],
+  "visual_aesthetic": [
+    "Swiss Style",
+    "Corporate Memphis",
+    "Flat Design"
+  ],
+  "target_audience": [
+    "Linguistic services agencies",
+    "Global localization managers",
+    "Enterprise translation teams"
+  ],
+  "colors": [
+    "#007100",
+    "#0F172A",
+    "#E5E7EB",
+    "#228855",
+    "#9CA3AF"
+  ],
+  "fonts": [
+    "Outfit",
+    "Inter"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Personalised AI agents for every linguist on your team",
+      "Slash turnaround times without adding headcount",
+      "Spot omissions and fix fluency before the human eye ever reads a line",
+      "Raise the bar with our multi-agent quality escalator",
+      "Global releases live in days—not months"
+    ],
+    "visual_keywords": [
+      "Swiss Style",
+      "Flat Design",
+      "Minimalist Poster",
+      "Line Art",
+      "Vector Graphics"
+    ],
+    "ctas": [
+      "Ready to see AI agents live?",
+      "Get started with Awordz",
+      "Send Message"
+    ],
+    "brand_context": "Awordz is an AI-driven linguistic acceleration platform that leverages personalized AI agents to handle the 'busy-work' of translation. Its core architecture revolves around a multi-agent quality escalator using co-pilots to pre-translate, check adequacy, flag terminology issues, and enforce strict style guides. Operative workflows are designed as plug-and-play modules to reduce global release turnaround times from months to days, specifically targeting professional linguists and localization teams who require high-precision output."
+  }
+}
+[2026-03-04T11:27:20.377Z] 📄 HTML cargado. Longitud: 22749 caracteres.
+[2026-03-04T11:27:20.378Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-04T11:27:20.378Z] 🔤 Fuentes iniciales extraídas: 0 []
+[2026-03-04T11:27:20.381Z] 🔍 Favicon encontrado: https://awordz.com/logo.svg (1 candidatos)
+[2026-03-04T11:27:20.383Z] 📱 Social links found: 0, Emails: 0, Phones: 0
+[2026-03-04T11:27:20.383Z] 🎯 FAVICON ESCALATION: Favicon SVG tratado como logo candidato (220 puntos)
+[2026-03-04T11:27:20.387Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-04T11:27:20.387Z]    - SVGs en header encontrados: 3
+[2026-03-04T11:27:20.388Z]    - IMGs en header encontrados: 1
+[2026-03-04T11:27:20.388Z]    - firstHeaderSvg.length: 1
+[2026-03-04T11:27:20.389Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 377 caracteres
+[2026-03-04T11:27:20.389Z] 🎯 NUEVO: Primer SVG en header añadido directamente (350 puntos)
+[2026-03-04T11:27:20.389Z] 🖼️ Logo candidates encontrados: 3 (Top score: 350)
+[2026-03-04T11:27:20.390Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-04T11:27:20.390Z]    1. SVG inline - Score: 350 - Length: 377 chars
+[2026-03-04T11:27:20.390Z]    2. URL: https://awordz.com/logo.svg - Score: 310
+[2026-03-04T11:27:20.391Z]    3. URL: https://awordz.com/og.jpg - Score: 5
+[2026-03-04T11:27:20.497Z] 🔍 Extracción inicial: 0 RRSS, 0 emails, 0 teléfonos, 0 direcciones
+[2026-03-04T11:27:29.506Z] ✅ Gemini Response: {
+  "brand_name": "Awordz",
+  "tagline": "Scale your words, not your workload",
+  "business_overview": "Awordz specializes in automating language operations through personalised AI agents for localisation, legal translation, and global content management. Their platform assists, augments, and accelerates linguistic workflows by handling repetitive tasks and enforcing quality standards.",
+  "brand_values": [
+    "Efficiency",
+    "Accuracy",
+    "Scalability",
+    "Innovation",
+    "Expertise"
+  ],
+  "tone_of_voice": [
+    "Empowering",
+    "Direct",
+    "Tech-savvy"
+  ],
+  "visual_aesthetic": [
+    "Corporate Memphis",
+    "Swiss Style",
+    "Minimalist Poster"
+  ],
+  "target_audience": [
+    "Localization Managers",
+    "Legal Translation Teams",
+    "Global Release Operations"
+  ],
+  "colors": [
+    "#007100",
+    "#D40000",
+    "#0000D4",
+    "#0F172A",
+    "#228855"
+  ],
+  "fonts": [
+    "Outfit",
+    "Inter"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Scale your words, not your workload",
+      "Assist. Augment. Accelerate.",
+      "Personalised AI agents for language operations",
+      "Near-final drafts your reviewers love",
+      "Global releases go live in days—not months"
+    ],
+    "visual_keywords": [
+      "Swiss Style",
+      "Corporate Memphis",
+      "Flat Illustration",
+      "Information Design",
+      "Vector Geometry"
+    ],
+    "ctas": [
+      "Ready to see AI agents live?",
+      "Get started with Foxi",
+      "Send Message"
+    ],
+    "brand_context": "Awordz is an AI-driven language operations platform designed to automate complex localisation and translation tasks through personalised agents. The system utilizes a 'quality escalator' model to pre-translate, check adequacy, and enforce specific glossaries and style guides before human review. By implementing plug-and-play workflows, Awordz enables businesses to slash turnaround times for global releases without increasing headcount, specifically targeting high-stakes domains like legal and professional translation services."
+  }
+}

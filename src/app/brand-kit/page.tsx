@@ -1,9 +1,10 @@
 ﻿'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { analyzeBrandDNA } from '@/app/actions/analyze-brand-dna';
+import { previewBrandUrl } from '@/app/actions/preview-brand-url';
 import { useBrandKit } from '@/contexts/BrandKitContext';
 import type { BrandDNA } from '@/lib/brand-types';
 import { cn } from '@/lib/utils';
@@ -41,15 +42,15 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 const LOADING_MESSAGES = [
-    "Iniciando motores de anÃ¡lisis...",
+    "Iniciando motores de análisis...",
     "Conectando con Microlink API...",
     "Capturando esencia visual de la web...",
-    "Extrayendo paleta tÃ©cnica (DOM)...",
+    "Extrayendo paleta técnica (DOM)...",
     "Analizando candidatos a logo...",
-    "Descubriendo tipografÃ­as en CSS...",
+    "Descubriendo tipografías en CSS...",
     "Extrayendo ADN de marca con IA...",
     "Generando activos y paletas finales...",
-    "Puliendo los Ãºltimos detalles..."
+    "Puliendo los últimos detalles..."
 ];
 
 const TECHNICAL_LOGS = [
@@ -73,6 +74,7 @@ function BrandKitPageContent() {
         brandKits,
         loading: contextLoading,
         setActiveBrandKit,
+        syncActiveBrandKit,
         deleteBrandKitById,
         updateActiveBrandKit,
         reloadBrandKits
@@ -95,11 +97,29 @@ function BrandKitPageContent() {
 
     // Multi-profile state
     const [showNewKitForm, setShowNewKitForm] = useState(false);
+    const [creatingAssistantKit, setCreatingAssistantKit] = useState(false);
+    const autoCreateTriggeredRef = useRef(false);
     const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+    const [pendingRegenerateUrl, setPendingRegenerateUrl] = useState('');
 
     // Brand name editing
     const [isEditingBrandName, setIsEditingBrandName] = useState(false);
     const [brandNameEdit, setBrandNameEdit] = useState('');
+
+    const normalizeUrlForAnalysis = (raw: string): string | null => {
+        const value = raw.trim();
+        if (!value) return null;
+        if (value.toLowerCase().startsWith('manual-')) return null;
+
+        try {
+            const withProtocol = value.startsWith('http://') || value.startsWith('https://')
+                ? value
+                : `https://${value}`;
+            return new URL(withProtocol).toString();
+        } catch {
+            return null;
+        }
+    };
 
     // Social media domains that we cannot scan
     const SOCIAL_DOMAINS = [
@@ -210,21 +230,55 @@ function BrandKitPageContent() {
     }, [loading]);
 
 
+    const createAssistantKitAndOpen = useCallback(async () => {
+        if (!user?.id || creatingAssistantKit) return;
+        setCreatingAssistantKit(true);
+        setError('');
+        try {
+            const response = await fetch('/api/brand-kit/create-empty', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clerk_user_id: user.id,
+                    brand_name: 'Mi Marca',
+                }),
+            });
+
+            const result = await response.json();
+            const createdId = result?.data?.id;
+            if (result.success && isValidBrandId(createdId)) {
+                const debugParam = searchParams.get('debug') === 'true' ? '&debug=true' : '';
+                window.location.href = `/brand-kit?id=${createdId}${debugParam}`;
+                return;
+            }
+
+            setError(result.error || 'No se pudo crear el kit de marca.');
+            setCreatingAssistantKit(false);
+        } catch (err) {
+            console.error('Error creating assistant brand kit:', err);
+            setError('Ocurrio un error al crear el kit de marca.');
+            setCreatingAssistantKit(false);
+        }
+    }, [user?.id, creatingAssistantKit, searchParams]);
+
     // Handle initial state and query params
     useEffect(() => {
         if (!contextLoading) {
             const action = searchParams.get('action');
             if (action === 'new') {
-                setShowNewKitForm(true);
+                void createAssistantKitAndOpen();
                 // Clear the param without refreshing to avoid re-triggering on reload
                 const newParams = new URLSearchParams(searchParams.toString());
                 newParams.delete('action');
                 router.replace(`/brand-kit${newParams.toString() ? `?${newParams.toString()}` : ''}`);
             } else if (brandKits.length === 0) {
-                setShowNewKitForm(true);
+                if (!autoCreateTriggeredRef.current) {
+                    autoCreateTriggeredRef.current = true;
+                    void createAssistantKitAndOpen();
+                }
             }
         }
-    }, [contextLoading, brandKits, searchParams, router]);
+    }, [contextLoading, brandKits, searchParams, router, createAssistantKitAndOpen]);
 
     // Si llega un id por query param (ej. tras crear un kit), forzamos seleccion de ese kit.
     useEffect(() => {
@@ -302,6 +356,10 @@ function BrandKitPageContent() {
         }
     }, [activeBrandKit]);
 
+    const hasOtherBrandKits = Boolean(
+        activeBrandKit?.id && brandKits.some((kit) => kit.id !== activeBrandKit.id)
+    );
+
     const handleBrandDelete = async (brandId: string) => {
         try {
             await deleteBrandKitById(brandId);
@@ -340,7 +398,7 @@ function BrandKitPageContent() {
             console.error('Error updating brand name:', error);
             toast({
                 title: "Error",
-                description: "OcurriÃ³ un error al actualizar el nombre.",
+                description: "Ocurrió un error al actualizar el nombre.",
                 variant: "destructive",
             });
         }
@@ -349,50 +407,119 @@ function BrandKitPageContent() {
     // Handler para crear nuevo kit
     const handleNewProfile = () => {
         setUrl('');
-        setShowNewKitForm(true);
+        void createAssistantKitAndOpen();
     };
 
-    const handleRegenerate = async () => {
-        setShowRegenerateConfirm(false);
-        const targetUrl = url || activeBrandKit?.url;
+    const runRegenerateAnalysis = async (
+        urlOverride?: string,
+        options?: { useGlobalLoading?: boolean; showSuccessToast?: boolean }
+    ): Promise<{ success: boolean; error?: string }> => {
+        const useGlobalLoading = options?.useGlobalLoading !== false;
+        const showSuccessToast = options?.showSuccessToast !== false;
+        const targetUrl =
+            normalizeUrlForAnalysis(urlOverride || '')
+            || normalizeUrlForAnalysis(pendingRegenerateUrl)
+            || normalizeUrlForAnalysis(url)
+            || normalizeUrlForAnalysis(activeBrandKit?.url || '');
+
         if (!targetUrl || !user?.id) {
-            console.warn('âŒ Cannot regenerate: No URL found', { url, activeBrandKitUrl: activeBrandKit?.url });
-            return;
+            console.warn('âŒ Cannot regenerate: No URL found', {
+                pendingRegenerateUrl,
+                url,
+                activeBrandKitUrl: activeBrandKit?.url
+            });
+            const message = 'Introduce una URL valida en el campo web del Kit de Marca para poder analizarla.';
+            setError(message);
+            toast({
+                title: "URL no valida",
+                description: message,
+                variant: "destructive",
+            });
+            return { success: false, error: message };
         }
 
-        setLoading(true);
+        if (useGlobalLoading) setLoading(true);
         setError('');
-        setLoadingScreenshot(null);
+        if (useGlobalLoading) setLoadingScreenshot(null);
 
         try {
             const response = await analyzeBrandDNA(targetUrl, true, user.id);
 
             if (response.success && response.data) {
                 setShowNewKitForm(false);
+                const analyzedBrandId = response.data?.id;
+                // Actualizacion inmediata en memoria para que el asistente vea logos/colores
+                // sin depender de la latencia de recarga.
+                syncActiveBrandKit(response.data as BrandDNA);
 
                 // CRITICAL: Force reload to show updated data
                 await new Promise(resolve => setTimeout(resolve, 500));
                 await reloadBrandKits();
 
-                // Re-set the active brand kit to force UI refresh
-                if (activeBrandKit?.id) {
-                    await setActiveBrandKit(activeBrandKit.id);
+                // Re-set active brand with priority:
+                // 1) Brand returned by analysis
+                // 2) Previously active brand
+                const nextActiveId = isValidBrandId(analyzedBrandId)
+                    ? analyzedBrandId
+                    : activeBrandKit?.id;
+
+                if (nextActiveId) {
+                    await setActiveBrandKit(nextActiveId, true, false);
                 }
 
-                toast({
-                    title: "Kit de marca regenerado",
-                    description: "El anÃ¡lisis se ha completado correctamente.",
-                });
+                if (showSuccessToast) {
+                    toast({
+                        title: "Kit de marca regenerado",
+                        description: "El análisis se ha completado correctamente.",
+                    });
+                }
+                return { success: true };
             } else {
-                setError(response.error || 'No se pudo regenerar el kit de marca.');
+                const message = response.error || 'No se pudo regenerar el kit de marca.';
+                setError(message);
+                return { success: false, error: message };
             }
         } catch (err) {
             console.error('Unexpected error during regenerate:', err);
-            setError('OcurriÃ³ un error inesperado al regenerar.');
+            const message = 'Ocurrió un error inesperado al regenerar.';
+            setError(message);
+            return { success: false, error: message };
         } finally {
-            setLoading(false);
-            setLoadingScreenshot(null);
+            if (useGlobalLoading) {
+                setLoading(false);
+                setLoadingScreenshot(null);
+            }
         }
+    };
+
+    const handleRegenerate = async () => {
+        setShowRegenerateConfirm(false);
+        await runRegenerateAnalysis(undefined, { useGlobalLoading: true, showSuccessToast: true });
+    };
+
+    const handleAnalyzeFromAssistant = async (urlOverride?: string) => {
+        const result = await runRegenerateAnalysis(urlOverride, { useGlobalLoading: false, showSuccessToast: false });
+        if (!result.success) {
+            throw new Error(result.error || 'No se pudo analizar la web.');
+        }
+    };
+
+    const handlePreviewFromAssistant = async (inputUrl: string) => {
+        const response = await previewBrandUrl(inputUrl);
+        if (!response.success) {
+            return {
+                success: false,
+                url: inputUrl,
+                error: response.error,
+            };
+        }
+
+        return {
+            success: true,
+            url: response.data.url,
+            title: response.data.title,
+            screenshotUrl: response.data.screenshotUrl,
+        };
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -438,7 +565,7 @@ function BrandKitPageContent() {
             }
         } catch (err) {
             console.error('âŒ Unexpected error during submit:', err);
-            setError('OcurriÃ³ un error inesperado.');
+            setError('Ocurrió un error inesperado.');
         } finally {
             setLoading(false);
         }
@@ -474,8 +601,20 @@ function BrandKitPageContent() {
         >
             <main className="p-6 md:p-12 max-w-7xl mx-auto">
 
-                {/* Si no tiene Brand Kits o estÃ¡ creando uno nuevo */}
-                {((brandKits.length === 0 || showNewKitForm) && !loading) && (
+                {creatingAssistantKit && (
+                    <div className="max-w-2xl mx-auto py-20 text-center">
+                        <div className="glass-panel rounded-3xl p-10 space-y-4">
+                            <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
+                            <h2 className="text-2xl font-bold">Preparando tu nuevo kit de marca</h2>
+                            <p className="text-muted-foreground">
+                                En unos segundos abriremos el asistente guiado.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Si no tiene Brand Kits o está creando uno nuevo */}
+                {false && ((brandKits.length === 0 || showNewKitForm) && !loading) && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -555,10 +694,10 @@ function BrandKitPageContent() {
                                         className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-600 dark:text-amber-400"
                                     >
                                         <p className="text-sm font-medium mb-2">
-                                            ðŸ“± Las redes sociales no se pueden analizar automÃ¡ticamente
+                                            📱 Las redes sociales no se pueden analizar automáticamente
                                         </p>
                                         <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mb-3">
-                                            Las URLs de Instagram, Facebook, TikTok y otras redes sociales no permiten la extracciÃ³n automÃ¡tica de estilos.
+                                            Las URLs de Instagram, Facebook, TikTok y otras redes sociales no permiten la extracción automática de estilos.
                                         </p>
                                         <Button
                                             type="button"
@@ -823,7 +962,7 @@ function BrandKitPageContent() {
                                     {progress >= 20 && progress < 40 && "Conectando con el motor visual..."}
                                     {progress >= 40 && progress < 60 && "Extrayendo ADN de marca..."}
                                     {progress >= 60 && progress < 80 && "Procesando activos visuales..."}
-                                    {progress >= 80 && progress < 95 && "Generando paletas de diseÃ±o..."}
+                                    {progress >= 80 && progress < 95 && "Generando paletas de diseño..."}
                                     {progress >= 95 && "Finalizando el Kit de Marca..."}
                                 </motion.h3>
 
@@ -884,16 +1023,28 @@ function BrandKitPageContent() {
                         <BrandDNABoard
                             key={activeBrandKit.id || 'new'}
                             data={activeBrandKit}
+                            allowAssistantExit={hasOtherBrandKits}
                             isDebug={searchParams.get('debug') === 'true'}
-                            onRegenerate={() => setShowRegenerateConfirm(true)}
+                            onRegenerate={(urlOverride) => {
+                                setPendingRegenerateUrl(urlOverride || '');
+                                setShowRegenerateConfirm(true);
+                            }}
+                            onAnalyzeUrlFromAssistant={handleAnalyzeFromAssistant}
+                            onPreviewUrlFromAssistant={handlePreviewFromAssistant}
                             onNewBrandKit={handleNewProfile}
                             onSaveSuccess={reloadBrandKits}
                         />
                     </div>
                 )}
 
-                {/* AlertDialog de ConfirmaciÃ³n de RegeneraciÃ³n - REDESIGNED */}
-                <AlertDialog open={showRegenerateConfirm} onOpenChange={setShowRegenerateConfirm}>
+                {/* AlertDialog de Confirmación de Regeneración - REDESIGNED */}
+                <AlertDialog
+                    open={showRegenerateConfirm}
+                    onOpenChange={(open) => {
+                        setShowRegenerateConfirm(open);
+                        if (!open) setPendingRegenerateUrl('');
+                    }}
+                >
                     <AlertDialogContent className="max-w-md shadow-2xl p-0 overflow-hidden gap-0">
                         <div className="p-6 pb-2">
                             <AlertDialogHeader>
@@ -904,7 +1055,7 @@ function BrandKitPageContent() {
                                     Regenerar kit de marca
                                 </AlertDialogTitle>
                                 <AlertDialogDescription className="text-muted-foreground pt-4 text-base leading-relaxed">
-                                    Esta accion volvera a analizar el sitio web <span className='font-semibold text-foreground'>{activeBrandKit?.url}</span> desde cero.
+                                    Esta accion volvera a analizar el sitio web <span className='font-semibold text-foreground'>{normalizeUrlForAnalysis(pendingRegenerateUrl) || normalizeUrlForAnalysis(activeBrandKit?.url || '') || 'sin URL valida'}</span> desde cero.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                         </div>

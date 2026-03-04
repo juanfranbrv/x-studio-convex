@@ -19,7 +19,9 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
             localization={esES}
             signInUrl={authConfig.signInPath}
             signUpUrl={authConfig.signUpPath}
-            signInFallbackRedirectUrl={authConfig.signedInDefaultPath}
+            signInForceRedirectUrl={authConfig.onboardingPath}
+            signInFallbackRedirectUrl={authConfig.onboardingPath}
+            signUpForceRedirectUrl={authConfig.onboardingPath}
             signUpFallbackRedirectUrl={authConfig.onboardingPath}
             afterSignOutUrl={authConfig.afterSignOutPath}
         >

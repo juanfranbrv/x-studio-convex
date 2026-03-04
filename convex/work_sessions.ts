@@ -281,6 +281,34 @@ export const listSessions = query({
   },
 });
 
+export const getLastVisitedModule = query({
+  args: {
+    user_id: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const [imageRows, carouselRows] = await Promise.all([
+      ctx.db
+        .query("work_sessions")
+        .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", "image"))
+        .collect(),
+      ctx.db
+        .query("work_sessions")
+        .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", "carousel"))
+        .collect(),
+    ]);
+
+    const latest = [...imageRows, ...carouselRows].sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
+    if (!latest) return null;
+
+    return {
+      module: latest.module,
+      session_id: latest._id,
+      brand_id: latest.brand_id,
+      updated_at: latest.updated_at,
+    };
+  },
+});
+
 export const createSession = mutation({
   args: {
     user_id: v.string(),

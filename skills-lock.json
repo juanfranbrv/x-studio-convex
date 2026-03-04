@@ -65,6 +65,11 @@
       "source": "replicate/skills",
       "sourceType": "github",
       "computedHash": "8e5da52a7a3ae87742749f2920701403e92a443cd742552d17ebd706e2618d2a"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "computedHash": "4cfe5e95a230616c17d92b44e3cd37bae543ce087a7756a446a62f77d7c58a37"
     }
   }
 }

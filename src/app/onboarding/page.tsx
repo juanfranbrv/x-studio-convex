@@ -1,16 +1,47 @@
-﻿'use client'
+'use client'
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Sparkles } from 'lucide-react'
+import { useUser } from '@clerk/nextjs'
+import { useQuery } from 'convex/react'
+import { api } from '@/../convex/_generated/api'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const { user, isLoaded } = useUser()
+
+  const brandKits = useQuery(
+    api.brands.getBrandDNAByClerkId,
+    isLoaded && user?.id ? { clerk_user_id: user.id } : 'skip'
+  )
+
+  const lastVisitedModule = useQuery(
+    api.work_sessions.getLastVisitedModule,
+    isLoaded && user?.id ? { user_id: user.id } : 'skip'
+  )
 
   useEffect(() => {
-    router.replace('/brand-kit?action=new')
-  }, [router])
+    if (!isLoaded) return
+
+    if (!user?.id) {
+      router.replace('/sign-in')
+      return
+    }
+
+    if (brandKits === undefined) return
+
+    if (!Array.isArray(brandKits) || brandKits.length === 0) {
+      router.replace('/brand-kit')
+      return
+    }
+
+    if (lastVisitedModule === undefined) return
+
+    const targetPath = lastVisitedModule?.module === 'carousel' ? '/carousel' : '/image'
+    router.replace(targetPath)
+  }, [isLoaded, user?.id, brandKits, lastVisitedModule, router])
 
   return (
     <I18nProvider>
@@ -25,7 +56,7 @@ export default function OnboardingPage() {
             </div>
             <h1 className="text-3xl font-heading font-bold tracking-tight">Preparando tu Kit de Marca</h1>
             <p className="mt-3 text-muted-foreground">
-              Te estamos llevando al flujo oficial de creacion de Brand Kit.
+              Te estamos llevando al flujo correcto segun tu ultima sesion.
             </p>
             <div className="mt-8 flex items-center justify-center gap-3 text-primary">
               <Loader2 className="h-5 w-5 animate-spin" />

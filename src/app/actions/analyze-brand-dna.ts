@@ -2986,6 +2986,7 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
 
             const resultId = await fetchMutation(api.brands.upsertBrandDNA, upsertPayload);
             console.log('✅ [DEBUG] Convex Upsert Success. ID:', resultId);
+            (result as any).id = String(resultId);
 
             /* Supabase Logic Removed
             const { data: dbData, error: dbError } = await supabase.from('brand_dna').upsert(upsertPayload, { onConflict: 'url' }).select();
