@@ -352,6 +352,33 @@ export function BrandDNABoard({
         });
     };
 
+    const handleReorderLogos = (fromIndex: number, toIndex: number) => {
+        updateData(prev => {
+            const currentLogos = prev.logos || (prev.logo_url ? [{ url: prev.logo_url, selected: true }] : []);
+            if (
+                fromIndex < 0
+                || toIndex < 0
+                || fromIndex >= currentLogos.length
+                || toIndex >= currentLogos.length
+                || fromIndex === toIndex
+            ) {
+                return prev;
+            }
+
+            const reordered = [...currentLogos];
+            const [moved] = reordered.splice(fromIndex, 1);
+            reordered.splice(toIndex, 0, moved);
+
+            const firstSelected = reordered.find(l => l.selected !== false);
+
+            return {
+                ...prev,
+                logos: reordered,
+                logo_url: firstSelected ? firstSelected.url : undefined
+            };
+        });
+    };
+
     const handleUploadLogos = async (files: FileList | File[]) => {
         if (!user) return;
 
@@ -756,6 +783,7 @@ export function BrandDNABoard({
                                     onUpload={handleUploadLogos}
                                     onRemove={handleRemoveLogo}
                                     onToggle={handleToggleLogoSelection}
+                                    onReorder={handleReorderLogos}
                                     isUploading={isUploading}
                                 />
                                 <FaviconCard faviconUrl={data.favicon_url} />

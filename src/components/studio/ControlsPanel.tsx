@@ -80,6 +80,7 @@ const SectionHeader = ({
 )
 
 type BrandColorRole = 'Texto' | 'Fondo' | 'Acento'
+type DraggedBrandColor = { role: BrandColorRole; color: string } | null
 
 function normalizeHexColor(color: string): string {
     const base = (color || '').trim().toLowerCase()
@@ -91,10 +92,16 @@ function normalizeHexColor(color: string): string {
 function RoleColorSwatch({
     color,
     onCommit,
+    draggable = false,
+    onDragStart,
+    onDragEnd,
     sizeClass = "w-12 h-12 rounded-full",
 }: {
     color: string
     onCommit: (nextColor: string) => void
+    draggable?: boolean
+    onDragStart?: (event: React.DragEvent<HTMLButtonElement>) => void
+    onDragEnd?: (event: React.DragEvent<HTMLButtonElement>) => void
     sizeClass?: string
 }) {
     const initial = normalizeHexColor(color)
@@ -113,6 +120,9 @@ function RoleColorSwatch({
                     className={cn(sizeClass, "border border-border/70 shadow-sm")}
                     style={{ backgroundColor: initial }}
                     title={initial}
+                    draggable={draggable}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
                 />
             </PopoverTrigger>
             <PopoverContent className="w-56 p-3 space-y-3 bg-card border border-border/80 shadow-xl z-[140]" align="start">
@@ -262,6 +272,7 @@ export function ControlsPanel({
     const { panelPosition, assistanceEnabled } = useUI()
     const [showLabCatalog, setShowLabCatalog] = useState(compositionMode === 'advanced')
     const [layoutIntentOverride, setLayoutIntentOverride] = useState<'auto' | IntentCategory>('auto')
+    const [draggedBrandColor, setDraggedBrandColor] = useState<DraggedBrandColor>(null)
     const upsertLayoutVote = useMutation(api.layoutRatings.upsertLayoutVote)
     const migrateLegacyRatings = useMutation(api.layoutRatings.migrateLegacyRatings)
     const resetLayoutRatings = useMutation(api.layoutRatings.resetLayoutRatings)
@@ -542,6 +553,33 @@ export function ControlsPanel({
         const nextColor = normalizeHexColor(nextColorRaw)
         if (brandColorsByRole.Acento.length >= 5) return
         toggleBrandColor(nextColor, 'Acento')
+    }
+
+    const setColorRole = (colorRaw: string, role: BrandColorRole) => {
+        const color = normalizeHexColor(colorRaw)
+        removeBrandColor(color)
+        toggleBrandColor(color, role)
+    }
+
+    const swapBrandColorRoles = (
+        source: { role: BrandColorRole; color: string },
+        targetRole: BrandColorRole,
+        explicitTargetColor?: string
+    ) => {
+        const sourceColor = normalizeHexColor(source.color)
+        const sourceRole = source.role
+        const targetColor = explicitTargetColor
+            ? normalizeHexColor(explicitTargetColor)
+            : (targetRole === 'Acento' ? undefined : brandColorsByRole[targetRole][0])
+
+        if (sourceRole === targetRole && (!targetColor || targetColor === sourceColor)) return
+
+        setColorRole(sourceColor, targetRole)
+
+        if (targetColor && targetColor !== sourceColor) {
+            const returnRole: BrandColorRole = sourceRole === 'Acento' ? 'Acento' : sourceRole
+            setColorRole(targetColor, returnRole)
+        }
     }
     const effectiveSessionId = selectedSessionId || sessions.find((session) => session.active)?.id || ''
     const selectedIntentMeta = INTENT_CATALOG.find((intent) => intent.id === state.selectedIntent)
@@ -985,11 +1023,30 @@ export function ControlsPanel({
                                     </div>
 
                                     <div className="flex items-end gap-3 flex-wrap pb-1">
-                                        <div className="flex flex-col items-center gap-1">
+                                        <div
+                                            className={cn(
+                                                "flex flex-col items-center gap-1 rounded-xl p-1 transition-colors",
+                                                draggedBrandColor && draggedBrandColor.role !== 'Texto' && "bg-primary/5 border border-primary/20"
+                                            )}
+                                            onDragOver={(event) => event.preventDefault()}
+                                            onDrop={(event) => {
+                                                event.preventDefault()
+                                                if (!draggedBrandColor) return
+                                                swapBrandColorRoles(
+                                                    draggedBrandColor,
+                                                    'Texto',
+                                                    brandColorsByRole.Texto[0]
+                                                )
+                                                setDraggedBrandColor(null)
+                                            }}
+                                        >
                                             {brandColorsByRole.Texto[0] ? (
                                                 <RoleColorSwatch
                                                     color={brandColorsByRole.Texto[0]}
                                                     onCommit={(nextColor) => replaceRoleColor('Texto', nextColor, brandColorsByRole.Texto[0])}
+                                                    draggable
+                                                    onDragStart={() => setDraggedBrandColor({ role: 'Texto', color: brandColorsByRole.Texto[0] })}
+                                                    onDragEnd={() => setDraggedBrandColor(null)}
                                                 />
                                             ) : (
                                                 <Button
@@ -1005,11 +1062,30 @@ export function ControlsPanel({
                                             <span className="text-[10px] text-muted-foreground">Texto</span>
                                         </div>
 
-                                        <div className="flex flex-col items-center gap-1">
+                                        <div
+                                            className={cn(
+                                                "flex flex-col items-center gap-1 rounded-xl p-1 transition-colors",
+                                                draggedBrandColor && draggedBrandColor.role !== 'Fondo' && "bg-primary/5 border border-primary/20"
+                                            )}
+                                            onDragOver={(event) => event.preventDefault()}
+                                            onDrop={(event) => {
+                                                event.preventDefault()
+                                                if (!draggedBrandColor) return
+                                                swapBrandColorRoles(
+                                                    draggedBrandColor,
+                                                    'Fondo',
+                                                    brandColorsByRole.Fondo[0]
+                                                )
+                                                setDraggedBrandColor(null)
+                                            }}
+                                        >
                                             {brandColorsByRole.Fondo[0] ? (
                                                 <RoleColorSwatch
                                                     color={brandColorsByRole.Fondo[0]}
                                                     onCommit={(nextColor) => replaceRoleColor('Fondo', nextColor, brandColorsByRole.Fondo[0])}
+                                                    draggable
+                                                    onDragStart={() => setDraggedBrandColor({ role: 'Fondo', color: brandColorsByRole.Fondo[0] })}
+                                                    onDragEnd={() => setDraggedBrandColor(null)}
                                                 />
                                             ) : (
                                                 <Button
@@ -1025,14 +1101,43 @@ export function ControlsPanel({
                                             <span className="text-[10px] text-muted-foreground">Fondo</span>
                                         </div>
 
-                                        <div className="flex flex-col gap-1 min-w-0 pl-3 ml-2">
+                                        <div
+                                            className="flex flex-col gap-1 min-w-0 pl-3 ml-2 rounded-xl p-1"
+                                            onDragOver={(event) => event.preventDefault()}
+                                            onDrop={(event) => {
+                                                event.preventDefault()
+                                                if (!draggedBrandColor) return
+                                                swapBrandColorRoles(draggedBrandColor, 'Acento')
+                                                setDraggedBrandColor(null)
+                                            }}
+                                        >
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 {brandColorsByRole.Acento.map((accentColor) => (
-                                                    <div key={accentColor} className="relative inline-flex items-center group/accent">
+                                                    <div
+                                                        key={accentColor}
+                                                        className={cn(
+                                                            "relative inline-flex items-center group/accent rounded-full",
+                                                            draggedBrandColor && draggedBrandColor.color !== accentColor && "ring-2 ring-primary/30 ring-offset-1 ring-offset-background"
+                                                        )}
+                                                        onDragOver={(event) => event.preventDefault()}
+                                                        onDrop={(event) => {
+                                                            event.preventDefault()
+                                                            if (!draggedBrandColor) return
+                                                            swapBrandColorRoles(
+                                                                draggedBrandColor,
+                                                                'Acento',
+                                                                accentColor
+                                                            )
+                                                            setDraggedBrandColor(null)
+                                                        }}
+                                                    >
                                                         <RoleColorSwatch
                                                             color={accentColor}
                                                             onCommit={(nextColor) => replaceRoleColor('Acento', nextColor, accentColor)}
                                                             sizeClass="w-12 h-12 rounded-full"
+                                                            draggable
+                                                            onDragStart={() => setDraggedBrandColor({ role: 'Acento', color: accentColor })}
+                                                            onDragEnd={() => setDraggedBrandColor(null)}
                                                         />
                                                         <button
                                                             type="button"

@@ -10,7 +10,6 @@ import { type ContextElement } from "@/app/image/page";
 import { cn } from '@/lib/utils';
 
 import { Palette, Info, RotateCcw, X, Pipette, Check, Plus, Copy } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { useTheme } from 'next-themes';
 import { hexToRgb, rgbToLab } from '@/lib/color-utils';
 
@@ -45,7 +44,6 @@ export function ColorPalette({
 }: ColorPaletteProps) {
     const [colorPickerOpen, setColorPickerOpen] = useState<number | null>(null);
     const [localColor, setLocalColor] = useState<{ index: number, color: string } | null>(null);
-    const [copiedColor, setCopiedColor] = useState<string | null>(null);
     const [draggedColorIndex, setDraggedColorIndex] = useState<number | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const { theme } = useTheme();
@@ -75,11 +73,28 @@ export function ColorPalette({
         }
     };
 
-    const copyToClipboard = (color: string) => {
-        navigator.clipboard.writeText(color);
-        setCopiedColor(color);
-        setTimeout(() => setCopiedColor(null), 2000);
+    const normalizeRole = (role?: string): 'Texto' | 'Fondo' | 'Acento' => {
+        const raw = (role || '').toLowerCase();
+        if (raw.includes('text') || raw.includes('texto')) return 'Texto';
+        if (raw.includes('fondo') || raw.includes('background')) return 'Fondo';
+        return 'Acento';
     };
+
+    const textIndex = colors.findIndex((c) => normalizeRole(c.role) === 'Texto');
+    const backgroundIndex = colors.findIndex((c) => normalizeRole(c.role) === 'Fondo');
+    const accentIndexes = colors
+        .map((item, index) => ({ item, index }))
+        .filter(({ item, index }) =>
+            normalizeRole(item.role) === 'Acento'
+            && index !== textIndex
+            && index !== backgroundIndex
+        )
+        .map(({ index }) => index);
+    const orderedIndexes = [
+        ...(textIndex >= 0 ? [textIndex] : []),
+        ...(backgroundIndex >= 0 && backgroundIndex !== textIndex ? [backgroundIndex] : []),
+        ...accentIndexes
+    ];
 
     const handleEyedropper = async (index: number) => {
         if ('EyeDropper' in window) {
@@ -157,11 +172,14 @@ export function ColorPalette({
                     </>
                 )}
                 <CardContent className={cn("relative space-y-1 overflow-visible", hideHeader && "p-0")}>
-                    <div className={cn(
-                        "grid gap-4",
-                        "grid-cols-5"
-                    )}>
-                        {colors.map((item, idx) => (
+                    <div className="flex items-start gap-3 flex-wrap">
+                        {orderedIndexes.map((idx, visualIdx) => {
+                            const item = colors[idx];
+                            const role = normalizeRole(item.role);
+                            const isAccent = role === 'Acento';
+                            const firstAccentVisualIndex = orderedIndexes.findIndex((id) => normalizeRole(colors[id]?.role) === 'Acento');
+                            const addLeftSpacingForAccents = isAccent && visualIdx === firstAccentVisualIndex;
+                            return (
                             <div key={idx} className="group relative">
                                 <Tooltip>
                                     <Popover
@@ -198,7 +216,8 @@ export function ColorPalette({
                                                     className={cn(
                                                         "aspect-square rounded-full cursor-grab active:cursor-grabbing transition-all duration-300",
                                                         "hover:scale-110 hover:shadow-xl border-2",
-                                                        "relative overflow-visible flex items-center justify-center",
+                                                        "relative overflow-visible flex items-center justify-center w-20 h-20",
+                                                        addLeftSpacingForAccents && "ml-2",
                                                         colorPickerOpen === idx ? 'border-primary ring-2 ring-primary/20' : '',
                                                         draggedColorIndex !== null && draggedColorIndex !== idx && 'ring-2 ring-primary/20',
                                                         selectedColorIds.includes(`color-${idx}`)
@@ -207,16 +226,6 @@ export function ColorPalette({
                                                     )}
                                                     style={{ backgroundColor: item.color }}
                                                 >
-                                                    {/* Role Indicator Letter */}
-                                                    {item.role && (
-                                                        <span className={cn(
-                                                            "text-[12px] font-black select-none pointer-events-none uppercase tracking-tight leading-none text-center",
-                                                            getContrastColor(item.color)
-                                                        )}>
-                                                            {item.role.replace(/\d+$/, '').trim()}
-                                                        </span>
-                                                    )}
-
                                                     {/* Toggle Selection Checkmark Overlay */}
                                                     {onToggleSelection && selectedColorIds.includes(`color-${idx}`) && (
                                                         <div
@@ -295,48 +304,19 @@ export function ColorPalette({
                                         </PopoverContent>
                                     </Popover>
                                     <TooltipContent side="bottom" className="flex flex-col gap-1 p-2 bg-popover border-border shadow-md z-[110]">
-                                        <p className="text-xs font-bold text-foreground">{item.role || 'Sin rol'}</p>
-                                        <p className="text-[10px] font-mono text-muted-foreground">{item.color.toUpperCase()}</p>
+                                        <p className="text-xs font-bold text-foreground">{role}</p>
                                         <p className="text-[9px] text-muted-foreground/60">Arrastra sobre otro color para intercambiar rol</p>
                                     </TooltipContent>
                                 </Tooltip>
-
-                                <div className="mt-2 space-y-1">
-                                    {/* Always show high-visibility editable HEX input below (for desktop/manual edit) */}
-                                    <div className="relative group/hex-input">
-                                        <Input
-                                            value={item.color.toUpperCase()}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                // Basic sanitization and limit
-                                                if (val.length <= 7) {
-                                                    onUpdateColor(idx, val.startsWith('#') ? val : `#${val}`);
-                                                }
-                                            }}
-                                            className={cn(
-                                                "w-full h-8 text-[11px] font-mono text-center bg-muted/50 border-border/50 focus:border-primary/50 transition-all uppercase px-1 py-0 rounded-lg group-hover/hex-input:bg-muted"
-                                            )}
-                                        />
-                                        <button
-                                            onClick={() => copyToClipboard(item.color)}
-                                            className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/hex-input:opacity-100 transition-opacity p-1 hover:text-primary"
-                                            title="Copiar HEX"
-                                        >
-                                            <Copy className="w-3 h-3" />
-                                        </button>
-                                    </div>
-                                    {copiedColor === item.color && (
-                                        <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-primary/10 rounded-lg animate-in fade-in duration-300">
-                                            <Check className="w-3 h-3 text-primary" />
-                                        </div>
-                                    )}
+                                <div className={cn("mt-2 text-center", addLeftSpacingForAccents && "ml-2")}>
+                                    <span className="text-xs text-muted-foreground">{role === 'Acento' ? 'Acento' : role}</span>
                                 </div>
                             </div>
-                        ))}
+                        )})}
                         {colors.length < 10 && (
                             <div
                                 onClick={onAddColor}
-                                className="aspect-square rounded-full border-2 border-dashed border-border hover:border-primary flex items-center justify-center transition-colors group bg-muted/50 cursor-pointer w-full"
+                                className="rounded-full border-2 border-dashed border-border hover:border-primary flex items-center justify-center transition-colors group bg-muted/50 cursor-pointer w-20 h-20"
                             >
                                 <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                             </div>

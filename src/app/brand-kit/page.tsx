@@ -5,6 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { analyzeBrandDNA } from '@/app/actions/analyze-brand-dna';
 import { previewBrandUrl } from '@/app/actions/preview-brand-url';
+import { getAllUserBrandKits } from '@/app/actions/get-user-brand-kit';
 import { useBrandKit } from '@/contexts/BrandKitContext';
 import type { BrandDNA } from '@/lib/brand-types';
 import { cn } from '@/lib/utils';
@@ -276,14 +277,35 @@ function BrandKitPageContent() {
                 const newParams = new URLSearchParams(searchParams.toString());
                 newParams.delete('action');
                 router.replace(`/brand-kit${newParams.toString() ? `?${newParams.toString()}` : ''}`);
-            } else if (brandKits.length === 0) {
-                if (!autoCreateTriggeredRef.current) {
-                    autoCreateTriggeredRef.current = true;
-                    void createAssistantKitAndOpen({ draft: false });
-                }
+            } else if (brandKits.length === 0 && !activeBrandKit && user?.id && !autoCreateTriggeredRef.current) {
+                autoCreateTriggeredRef.current = true;
+                void (async () => {
+                    try {
+                        const serverKits = await getAllUserBrandKits(user.id);
+                        const realCount = serverKits.success ? (serverKits.data?.length || 0) : -1;
+
+                        // Solo auto-creamos para usuarios realmente nuevos sin kits.
+                        if (realCount === 0) {
+                            await createAssistantKitAndOpen({ draft: false });
+                            return;
+                        }
+
+                        // Si hay kits en servidor, recargamos contexto y no creamos nada.
+                        if (realCount > 0) {
+                            await reloadBrandKits(false);
+                        }
+                    } catch (error) {
+                        console.error('[AUTO-CREATE] Error verificando kits reales, se cancela creación automática:', error);
+                    } finally {
+                        // Permite reintento solo si seguimos sin kit activo y sin kits en contexto.
+                        if (!activeBrandKit && brandKits.length === 0) {
+                            autoCreateTriggeredRef.current = false;
+                        }
+                    }
+                })();
             }
         }
-    }, [contextLoading, brandKits, searchParams, router, createAssistantKitAndOpen]);
+    }, [contextLoading, brandKits, activeBrandKit, user?.id, searchParams, router, createAssistantKitAndOpen, reloadBrandKits]);
 
     // Si llega un id por query param (ej. tras crear un kit), forzamos seleccion de ese kit.
     useEffect(() => {

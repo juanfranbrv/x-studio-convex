@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +24,7 @@ interface LogoCardProps {
     onUpload?: (files: FileList | File[]) => void;
     onRemove?: (index: number) => void;
     onToggle?: (index: number) => void;
+    onReorder?: (fromIndex: number, toIndex: number) => void;
     isUploading?: boolean;
 }
 
@@ -45,8 +46,11 @@ interface ImageGalleryProps {
 
 // --- Components ---
 
-export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, isUploading }: LogoCardProps) {
+export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, onReorder, isUploading }: LogoCardProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const suppressNextClickRef = useRef(false);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
 
     // Si no hay array de logos pero hay logoUrl, lo tratamos como el único logo
     const effectiveLogos = logos.length > 0
@@ -98,9 +102,42 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, is
                                     "group relative aspect-square rounded-md overflow-hidden border transition-all cursor-pointer transparency-grid",
                                     logo.selected !== false
                                         ? "border-primary shadow-sm"
-                                        : "border-border opacity-70 grayscale hover:grayscale-0 hover:opacity-100"
+                                        : "border-border opacity-70 grayscale hover:grayscale-0 hover:opacity-100",
+                                    dropTargetIndex === idx && draggedIndex !== null && draggedIndex !== idx && "ring-2 ring-primary/70 ring-offset-1 ring-offset-background"
                                 )}
-                                onClick={() => onToggle && onToggle(idx)}
+                                draggable={Boolean(onReorder)}
+                                onDragStart={(event) => {
+                                    if (!onReorder) return;
+                                    setDraggedIndex(idx);
+                                    event.dataTransfer.effectAllowed = 'move';
+                                    event.dataTransfer.setData('text/plain', String(idx));
+                                }}
+                                onDragOver={(event) => {
+                                    if (!onReorder || draggedIndex === null) return;
+                                    event.preventDefault();
+                                    setDropTargetIndex(idx);
+                                }}
+                                onDrop={(event) => {
+                                    if (!onReorder || draggedIndex === null) return;
+                                    event.preventDefault();
+                                    if (draggedIndex !== idx) {
+                                        onReorder(draggedIndex, idx);
+                                        suppressNextClickRef.current = true;
+                                        setTimeout(() => {
+                                            suppressNextClickRef.current = false;
+                                        }, 0);
+                                    }
+                                    setDraggedIndex(null);
+                                    setDropTargetIndex(null);
+                                }}
+                                onDragEnd={() => {
+                                    setDraggedIndex(null);
+                                    setDropTargetIndex(null);
+                                }}
+                                onClick={() => {
+                                    if (suppressNextClickRef.current) return;
+                                    if (onToggle) onToggle(idx);
+                                }}
                             >
                                 <img
                                     src={logo.url} /* Safe access, transparency-grid handles bg */
