@@ -272,11 +272,35 @@ function BrandKitPageContent() {
         if (!contextLoading) {
             const action = searchParams.get('action');
             if (action === 'new') {
-                void createAssistantKitAndOpen({ draft: true });
-                // Clear the param without refreshing to avoid re-triggering on reload
-                const newParams = new URLSearchParams(searchParams.toString());
-                newParams.delete('action');
-                router.replace(`/brand-kit${newParams.toString() ? `?${newParams.toString()}` : ''}`);
+                void (async () => {
+                    let shouldCreateDraft = brandKits.length === 0 && !activeBrandKit;
+
+                    // Verificacion defensiva contra falsos "0 kits" al entrar en produccion.
+                    if (user?.id) {
+                        try {
+                            const serverKits = await getAllUserBrandKits(user.id);
+                            const realCount = serverKits.success ? (serverKits.data?.length || 0) : -1;
+                            if (realCount > 0) {
+                                shouldCreateDraft = false;
+                                await reloadBrandKits(false);
+                            } else if (realCount === 0) {
+                                shouldCreateDraft = true;
+                            }
+                        } catch (error) {
+                            console.error('[ACTION=NEW] Error verificando kits reales, se evita creacion automatica:', error);
+                            shouldCreateDraft = false;
+                        }
+                    }
+
+                    if (shouldCreateDraft) {
+                        await createAssistantKitAndOpen({ draft: true });
+                    }
+
+                    // Clear the param without refreshing to avoid re-triggering on reload
+                    const newParams = new URLSearchParams(searchParams.toString());
+                    newParams.delete('action');
+                    router.replace(`/brand-kit${newParams.toString() ? `?${newParams.toString()}` : ''}`);
+                })();
             } else if (brandKits.length === 0 && !activeBrandKit && user?.id && !autoCreateTriggeredRef.current) {
                 autoCreateTriggeredRef.current = true;
                 void (async () => {

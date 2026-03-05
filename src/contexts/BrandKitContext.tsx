@@ -25,6 +25,8 @@ interface BrandKitContextType {
 
 const BrandKitContext = createContext<BrandKitContextType | undefined>(undefined)
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 export function BrandKitProvider({ children }: { children: ReactNode }) {
     const { user, isLoaded } = useUser()
     const [activeBrandKit, setActiveBrandKitState] = useState<BrandDNA | null>(null)
@@ -65,7 +67,27 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
 
         if (!isSilent) setLoading(true)
         try {
-            const result = await getAllUserBrandKits(user.id)
+            // Produccion puede devolver un vacio/transitorio justo tras login.
+            // Reintentamos de forma acotada antes de concluir "0 kits".
+            let result: Awaited<ReturnType<typeof getAllUserBrandKits>> = { success: false, error: 'No data' }
+            const retryDelaysMs = [0, 350, 900]
+            for (let i = 0; i < retryDelaysMs.length; i++) {
+                if (retryDelaysMs[i] > 0) {
+                    await wait(retryDelaysMs[i])
+                }
+
+                result = await getAllUserBrandKits(user.id)
+
+                if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+                    break
+                }
+
+                // Si tras todos los intentos sigue sin datos, aceptamos el resultado final.
+                if (i === retryDelaysMs.length - 1) {
+                    break
+                }
+            }
+
             if (result.success && result.data) {
                 setBrandKits(result.data)
 
