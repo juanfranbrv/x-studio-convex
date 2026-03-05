@@ -1,21 +1,19 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Sparkles } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { useQuery } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import { I18nProvider } from '@/components/providers/I18nProvider'
+import { useBrandKit } from '@/contexts/BrandKitContext'
 
 export default function OnboardingPage() {
   const router = useRouter()
   const { user, isLoaded } = useUser()
-
-  const brandKits = useQuery(
-    api.brands.getBrandDNAByClerkId,
-    isLoaded && user?.id ? { clerk_user_id: user.id } : 'skip'
-  )
+  const { brandKits, loading: brandKitsLoading, reloadBrandKits } = useBrandKit()
+  const hasRetriedBrandKitLoadRef = useRef(false)
 
   const lastVisitedModule = useQuery(
     api.work_sessions.getLastVisitedModule,
@@ -30,9 +28,16 @@ export default function OnboardingPage() {
       return
     }
 
-    if (brandKits === undefined) return
+    if (brandKitsLoading) return
 
     if (!Array.isArray(brandKits) || brandKits.length === 0) {
+      // Reintento defensivo para evitar falsos "sin kits" por carrera de carga.
+      if (!hasRetriedBrandKitLoadRef.current) {
+        hasRetriedBrandKitLoadRef.current = true
+        void reloadBrandKits(false)
+        return
+      }
+
       router.replace('/brand-kit')
       return
     }
@@ -41,7 +46,7 @@ export default function OnboardingPage() {
 
     const targetPath = lastVisitedModule?.module === 'carousel' ? '/carousel' : '/image'
     router.replace(targetPath)
-  }, [isLoaded, user?.id, brandKits, lastVisitedModule, router])
+  }, [isLoaded, user?.id, brandKitsLoading, brandKits, lastVisitedModule, reloadBrandKits, router])
 
   return (
     <I18nProvider>
