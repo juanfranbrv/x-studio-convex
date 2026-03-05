@@ -103,7 +103,10 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                         : result.data[0].id
 
                     // Si el persisted id ya no existe, curamos el estado guardando uno valido
-                    await setActiveBrandKit(brandToSelect, !hasPersistedBrand)
+                    const selected = await setActiveBrandKit(brandToSelect, !hasPersistedBrand)
+                    if (!selected && result.data[0]?.id && result.data[0].id !== brandToSelect) {
+                        await setActiveBrandKit(result.data[0].id, true, true)
+                    }
                 }
             }
         } catch (error) {

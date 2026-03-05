@@ -38,6 +38,12 @@ interface StylePresetsManagerProps {
 
 const LOCAL_STORAGE_STYLE_MODEL_KEY = 'x-studio-admin-style-analysis-model'
 const FALLBACK_INTELLIGENCE_MODEL = 'wisdom/gemini-3-flash-preview'
+const BASE_INTELLIGENCE_MODELS = [
+  'wisdom/gemini-3-flash-preview',
+  'wisdom/gemini-3.1-flash-lite-preview',
+  'wisdom/gemini-3-pro-preview',
+  'wisdom/gemini-2.5-flash',
+]
 
 const STYLE_NAME_RULES: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /\bcommercial\b|\badvertising\b/, label: 'Comercial' },
@@ -160,16 +166,20 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
   const [styleAnalysisModel, setStyleAnalysisModel] = useState<string>('')
 
   const intelligenceModelOptions = useMemo(() => {
-    const models = (modelCosts || [])
+    const modelsFromCosts = (modelCosts || [])
       .filter((row) => row.kind === 'intelligence' && row.active !== false)
       .map((row) => row.model?.trim())
       .filter((value): value is string => Boolean(value))
 
-    const uniqueModels = Array.from(new Set(models))
+    const fallbackFromConfig = String(aiConfig?.intelligenceModel || '').trim()
+    const uniqueModels = Array.from(new Set([
+      ...BASE_INTELLIGENCE_MODELS,
+      ...modelsFromCosts,
+      ...(fallbackFromConfig ? [fallbackFromConfig] : []),
+    ]))
     if (uniqueModels.length > 0) return uniqueModels
 
-    const fallback = String(aiConfig?.intelligenceModel || '').trim()
-    return [fallback || FALLBACK_INTELLIGENCE_MODEL]
+    return [FALLBACK_INTELLIGENCE_MODEL]
   }, [aiConfig?.intelligenceModel, modelCosts])
 
   useEffect(() => {
@@ -407,7 +417,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
           </div>
 
           {newImageDataUrl ? (
-            <img src={newImageDataUrl} alt="Preview estilo" className="w-40 h-40 rounded-lg object-cover border" />
+            <img src={newImageDataUrl} alt="Preview estilo" className="w-32 aspect-[2/3] rounded-lg object-cover border" />
           ) : null}
 
           {newAnalysis ? (
@@ -442,7 +452,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
             {(presets || []).map((preset) => (
               <div key={preset._id} className="border rounded-xl p-3 space-y-3">
                 <div className="flex items-start gap-3">
-                  <img src={preset.image_url} alt={preset.name} className="w-20 h-20 rounded-lg object-cover border shrink-0" />
+                  <img src={preset.image_url} alt={preset.name} className="w-16 aspect-[2/3] rounded-lg object-cover border shrink-0" />
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Input
                     key={`${String(preset._id)}-${preset.name}`}

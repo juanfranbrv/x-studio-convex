@@ -57,6 +57,7 @@ const IMAGE_MODEL_OPTIONS = [
 
 const INTELLIGENCE_MODEL_OPTIONS = [
     { value: 'wisdom/gemini-3-flash-preview', label: 'Wisdom · Gemini 3 Flash Preview' },
+    { value: 'wisdom/gemini-3.1-flash-lite-preview', label: 'Wisdom · Gemini 3.1 Flash Lite Preview' },
     { value: 'wisdom/gemini-3-pro-preview', label: 'Wisdom · Gemini 3 Pro Preview' },
     { value: 'wisdom/gemini-2.5-flash', label: 'Wisdom · Gemini 2.5 Flash' },
     { value: 'gemini-3-flash-preview', label: 'Google (legacy) · gemini-3-flash-preview' },
@@ -180,6 +181,12 @@ export default function AdminPage() {
 
     // Settings state
     const [editingSettings, setEditingSettings] = useState<Record<string, number | string>>({})
+    const economicModelSuggestions = Array.from(
+        new Set([
+            ...INTELLIGENCE_MODEL_OPTIONS.map((option) => option.value),
+            ...IMAGE_MODEL_OPTIONS.map((option) => option.value),
+        ])
+    )
 
     // Initialize settings on first load
     useEffect(() => {
@@ -1054,8 +1061,14 @@ export default function AdminPage() {
                                         <Input
                                             placeholder="ej: wisdom/gemini-3-flash-preview"
                                             value={newCostModel}
+                                            list="economic-model-suggestions"
                                             onChange={(e) => setNewCostModel(e.target.value)}
                                         />
+                                        <datalist id="economic-model-suggestions">
+                                            {economicModelSuggestions.map((model) => (
+                                                <option key={model} value={model} />
+                                            ))}
+                                        </datalist>
                                     </div>
                                     <div>
                                         <Label>Tipo</Label>

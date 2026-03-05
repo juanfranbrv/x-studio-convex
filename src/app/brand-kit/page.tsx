@@ -111,7 +111,9 @@ function BrandKitPageContent() {
     const [pendingRegenerateUrl, setPendingRegenerateUrl] = useState('');
     const [assistantLaunchNonce, setAssistantLaunchNonce] = useState(0);
     const [importLaunchNonce, setImportLaunchNonce] = useState(0);
+    const [importLaunchBrandId, setImportLaunchBrandId] = useState<string | null>(null);
     const [exportLaunchNonce, setExportLaunchNonce] = useState(0);
+    const [exportLaunchBrandId, setExportLaunchBrandId] = useState<string | null>(null);
     const [showDeleteCurrentConfirm, setShowDeleteCurrentConfirm] = useState(false);
     const [isDuplicatingCurrent, setIsDuplicatingCurrent] = useState(false);
 
@@ -348,6 +350,17 @@ function BrandKitPageContent() {
 
         const requestedBrandId = searchParams.get('id');
         if (!isValidBrandId(requestedBrandId)) return;
+
+        // Si llega un id huérfano/ajeno en URL, lo limpiamos para evitar bucles y bloqueos de asistente.
+        const requestedExists = brandKits.some((b) => b.id === requestedBrandId);
+        if (!requestedExists && brandKits.length > 0) {
+            const newParams = new URLSearchParams(searchParams.toString());
+            newParams.delete('id');
+            newParams.delete('creation');
+            router.replace(`/brand-kit${newParams.toString() ? `?${newParams.toString()}` : ''}`);
+            return;
+        }
+
         if (activeBrandKit?.id === requestedBrandId) {
             const newParams = new URLSearchParams(searchParams.toString());
             newParams.delete('id');
@@ -480,7 +493,10 @@ function BrandKitPageContent() {
         }
 
         if (previousId) {
-            await setActiveBrandKit(previousId, true, false);
+            const restored = await setActiveBrandKit(previousId, true, true);
+            if (!restored) {
+                await reloadBrandKits(false);
+            }
         }
 
         const params = new URLSearchParams(searchParams.toString());
@@ -505,12 +521,14 @@ function BrandKitPageContent() {
     };
 
     const handleOpenImport = () => {
-        if (!activeBrandKit) return;
+        if (!activeBrandKit?.id) return;
+        setImportLaunchBrandId(activeBrandKit.id);
         setImportLaunchNonce((prev) => prev + 1);
     };
 
     const handleOpenExport = () => {
-        if (!activeBrandKit) return;
+        if (!activeBrandKit?.id) return;
+        setExportLaunchBrandId(activeBrandKit.id);
         setExportLaunchNonce((prev) => prev + 1);
     };
 
@@ -1246,7 +1264,17 @@ function BrandKitPageContent() {
                             assistantCreationMode={assistantCreationMode}
                             assistantLaunchNonce={assistantLaunchNonce}
                             importLaunchNonce={importLaunchNonce}
+                            importLaunchBrandId={importLaunchBrandId}
                             exportLaunchNonce={exportLaunchNonce}
+                            exportLaunchBrandId={exportLaunchBrandId}
+                            onConsumeImportLaunch={() => {
+                                setImportLaunchNonce(0);
+                                setImportLaunchBrandId(null);
+                            }}
+                            onConsumeExportLaunch={() => {
+                                setExportLaunchNonce(0);
+                                setExportLaunchBrandId(null);
+                            }}
                             onAbortAssistantCreation={handleAbortAssistantCreation}
                             onCompleteAssistantCreation={handleCompleteAssistantCreation}
                             isDebug={searchParams.get('debug') === 'true'}

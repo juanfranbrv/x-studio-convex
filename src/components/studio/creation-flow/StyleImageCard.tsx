@@ -225,11 +225,11 @@ export function StyleImageCard({
             {visualStylePreview ? (
                 <div className="relative rounded-xl border border-border/60 bg-background p-3 min-h-[120px] group">
                     <div className="flex items-center gap-3">
-                        <div className="rounded-lg border border-border/70 shadow-sm bg-background p-1 shrink-0">
+                        <div className="rounded-lg border border-border/70 shadow-sm bg-background p-1 shrink-0 w-[6.5rem]">
                             <img
                                 src={visualStylePreview.url}
                                 alt={visualStylePreview.title || 'Vista de estilo'}
-                                className="w-20 h-20 rounded-md object-cover"
+                                className="w-full aspect-[2/3] rounded-md object-cover"
                             />
                         </div>
                         <div className="min-w-0 flex-1 space-y-2">
@@ -359,7 +359,7 @@ export function StyleImageCard({
 
                     <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
                         {stylePresets.length > 0 ? (
-                            <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(160px,1fr))] gap-3">
+                            <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] gap-3">
                                 {stylePresets.map((preset) => {
                                     const isSelected = selectedStylePresetId === preset._id
                                     return (
@@ -375,14 +375,19 @@ export function StyleImageCard({
                                                 setIsPresetModalOpen(false)
                                             }}
                                             className={cn(
-                                                'relative w-full rounded-xl overflow-hidden border transition-all text-left',
+                                                'relative w-full rounded-xl overflow-hidden border transition-all text-left group',
                                                 isSelected
                                                     ? 'border-primary ring-2 ring-primary/20'
                                                     : 'border-border hover:border-primary/40'
                                             )}
                                         >
-                                            <div className="aspect-square">
+                                            <div className="aspect-[2/3]">
                                                 <img src={preset.image_url} alt={preset.name} className="w-full h-full object-cover" />
+                                            </div>
+                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent p-3">
+                                                <p className="text-white text-xs font-semibold truncate">
+                                                    {preset.name}
+                                                </p>
                                             </div>
                                             {isSelected && (
                                                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">

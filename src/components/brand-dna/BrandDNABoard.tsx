@@ -34,6 +34,10 @@ interface BrandDNABoardProps {
     assistantLaunchNonce?: number;
     importLaunchNonce?: number;
     exportLaunchNonce?: number;
+    importLaunchBrandId?: string | null;
+    exportLaunchBrandId?: string | null;
+    onConsumeImportLaunch?: () => void;
+    onConsumeExportLaunch?: () => void;
     onAbortAssistantCreation?: () => Promise<void> | void;
     onCompleteAssistantCreation?: () => void;
     onRegenerate?: (urlOverride?: string) => void;
@@ -122,6 +126,10 @@ export function BrandDNABoard({
     assistantLaunchNonce = 0,
     importLaunchNonce = 0,
     exportLaunchNonce = 0,
+    importLaunchBrandId = null,
+    exportLaunchBrandId = null,
+    onConsumeImportLaunch,
+    onConsumeExportLaunch,
     onAbortAssistantCreation,
     onCompleteAssistantCreation,
     onRegenerate,
@@ -140,8 +148,21 @@ export function BrandDNABoard({
     const [isUploading, setIsUploading] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [isExportingPortable, setIsExportingPortable] = useState(false);
+    const [importProgressModal, setImportProgressModal] = useState<{
+        open: boolean;
+        progress: number;
+        message: string;
+        completed: boolean;
+    }>({
+        open: false,
+        progress: 0,
+        message: '',
+        completed: false,
+    });
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
     const importFileInputRef = useRef<HTMLInputElement | null>(null);
+    const handledImportLaunchNonceRef = useRef(0);
+    const handledExportLaunchNonceRef = useRef(0);
     const [errorModal, setErrorModal] = useState<{ open: boolean; title: string; message: string }>({
         open: false,
         title: '',
@@ -717,15 +738,21 @@ export function BrandDNABoard({
 
     useEffect(() => {
         if (importLaunchNonce <= 0) return;
-        if (isImporting) return;
+        if (importLaunchBrandId && data.id && importLaunchBrandId !== data.id) return;
+        if (handledImportLaunchNonceRef.current === importLaunchNonce) return;
+        handledImportLaunchNonceRef.current = importLaunchNonce;
+        onConsumeImportLaunch?.();
         handleImportKitClick();
-    }, [importLaunchNonce, isImporting]);
+    }, [importLaunchNonce, importLaunchBrandId, data.id, onConsumeImportLaunch]);
 
     useEffect(() => {
         if (exportLaunchNonce <= 0) return;
-        if (isExportingPortable) return;
+        if (exportLaunchBrandId && data.id && exportLaunchBrandId !== data.id) return;
+        if (handledExportLaunchNonceRef.current === exportLaunchNonce) return;
+        handledExportLaunchNonceRef.current = exportLaunchNonce;
+        onConsumeExportLaunch?.();
         void handleExportJSON();
-    }, [exportLaunchNonce, isExportingPortable]);
+    }, [exportLaunchNonce, exportLaunchBrandId, data.id, onConsumeExportLaunch]);
 
     const handleImportKitFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -741,13 +768,29 @@ export function BrandDNABoard({
         }
 
         setIsImporting(true);
+        setImportProgressModal({
+            open: true,
+            progress: 5,
+            message: 'Preparando importacion del kit de marca...',
+            completed: false,
+        });
         try {
             const text = await file.text();
+            setImportProgressModal((prev) => ({
+                ...prev,
+                progress: 15,
+                message: 'Leyendo archivo y validando contenido...',
+            }));
             const parsed = JSON.parse(text) as Partial<PortableBrandKitPayload> | BrandDNA;
 
             const isPortable = (parsed as PortableBrandKitPayload)?.format === 'xstudio-brand-kit';
             const rawBrand = (isPortable ? (parsed as PortableBrandKitPayload).brand : parsed) as BrandDNA;
             const importedBrand = sanitizeImportedBrand(rawBrand);
+            setImportProgressModal((prev) => ({
+                ...prev,
+                progress: 25,
+                message: 'Normalizando datos del kit importado...',
+            }));
 
             const replacementMap = new Map<string, string>();
             const portableAssets = isPortable ? ((parsed as PortableBrandKitPayload).embeddedAssets || []) : [];
@@ -762,6 +805,12 @@ export function BrandDNABoard({
                     if (uploaded.success && uploaded.url) {
                         replacementMap.set(asset.originalUrl, uploaded.url);
                     }
+                    const assetProgress = 25 + Math.round((replacementMap.size / Math.max(portableAssets.length, 1)) * 40);
+                    setImportProgressModal((prev) => ({
+                        ...prev,
+                        progress: Math.min(assetProgress, 65),
+                        message: 'Subiendo imagenes del kit...',
+                    }));
                 } catch {
                     // No bloqueamos toda la importacion por una imagen concreta.
                 }
@@ -780,6 +829,11 @@ export function BrandDNABoard({
             importedBrand.images = (importedBrand.images || []).map((img) => ({ ...img, url: mapUrl(img.url) }));
 
             const normalized = normalizeStudioColorRoles(importedBrand);
+            setImportProgressModal((prev) => ({
+                ...prev,
+                progress: 72,
+                message: 'Creando nuevo kit en tu cuenta...',
+            }));
 
             const createResponse = await fetch('/api/brand-kit/create-empty', {
                 method: 'POST',
@@ -794,6 +848,11 @@ export function BrandDNABoard({
             if (!createResult?.success || !createdId) {
                 throw new Error(createResult?.error || 'No se pudo crear el kit para importarlo.');
             }
+            setImportProgressModal((prev) => ({
+                ...prev,
+                progress: 82,
+                message: 'Guardando contenido del kit importado...',
+            }));
 
             const payloadToSave: BrandDNA = {
                 ...normalized,
@@ -804,11 +863,23 @@ export function BrandDNABoard({
                 throw new Error(saveResult.error || 'No se pudo guardar el kit importado.');
             }
 
+            setImportProgressModal((prev) => ({
+                ...prev,
+                progress: 92,
+                message: 'Sincronizando lista y activando kit...',
+            }));
             await reloadBrandKits(false);
             await setActiveBrandKit(createdId, true, false);
             setData(payloadToSave);
             setHasUnsavedChanges(false);
+            setImportProgressModal({
+                open: true,
+                progress: 100,
+                message: 'pues he importado kit de marca',
+                completed: true,
+            });
         } catch (error) {
+            setImportProgressModal((prev) => ({ ...prev, open: false }));
             setErrorModal({
                 open: true,
                 title: 'Error al importar',
@@ -1167,6 +1238,52 @@ export function BrandDNABoard({
                         <Button onClick={() => setErrorModal(prev => ({ ...prev, open: false }))}>
                             Entendido
                         </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                open={importProgressModal.open}
+                onOpenChange={(open) => {
+                    if (!open && !importProgressModal.completed) return;
+                    setImportProgressModal((prev) => ({ ...prev, open }));
+                }}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {importProgressModal.completed ? 'Importacion completada' : 'Importando kit de marca'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {importProgressModal.message}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3">
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                                className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-500 transition-all duration-500 ease-out"
+                                style={{ width: `${Math.max(0, Math.min(100, importProgressModal.progress))}%` }}
+                            />
+                        </div>
+                        <div className="text-right text-xs text-muted-foreground font-medium">
+                            {Math.round(importProgressModal.progress)}%
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        {!importProgressModal.completed ? (
+                            <div className="w-full text-sm text-muted-foreground flex items-center justify-end gap-2">
+                                <RotateCcw className="w-4 h-4 animate-spin" />
+                                Procesando...
+                            </div>
+                        ) : (
+                            <Button
+                                onClick={() => setImportProgressModal((prev) => ({ ...prev, open: false }))}
+                            >
+                                Aceptar
+                            </Button>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

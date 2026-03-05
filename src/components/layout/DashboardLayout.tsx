@@ -56,12 +56,19 @@ export function DashboardLayout({
         () => calculateBrandKitCompleteness(activeBrandKit),
         [activeBrandKit]
     )
+    const hasAnyUnlockedBrandKit = useMemo(
+        () => brandKits.some((kit) => (kit.completeness ?? 0) >= MIN_BRAND_KIT_COMPLETENESS),
+        [brandKits]
+    )
 
     const isBrandKitRoute = Boolean(pathname?.startsWith('/brand-kit'))
-    const shouldBlockModules =
+    const shouldBlockCurrentRoute =
         !brandKitsLoading &&
-        !isBrandKitRoute &&
-        completeness.percentage < MIN_BRAND_KIT_COMPLETENESS
+        Boolean(activeBrandKit) &&
+        (
+            (!isBrandKitRoute && completeness.percentage < MIN_BRAND_KIT_COMPLETENESS) ||
+            !hasAnyUnlockedBrandKit
+        )
 
     // Detectar si debemos mostrar el modal de onboarding
     useEffect(() => {
@@ -84,8 +91,8 @@ export function DashboardLayout({
     }, [user?.id, userRecord, brandKitsLoading, brandKits.length])
 
     useEffect(() => {
-        setShowCompletenessGate(shouldBlockModules)
-    }, [shouldBlockModules])
+        setShowCompletenessGate(shouldBlockCurrentRoute)
+    }, [shouldBlockCurrentRoute])
 
     const handleOnboardingComplete = async () => {
         if (user?.id) {
@@ -142,10 +149,7 @@ export function DashboardLayout({
 
                 <Dialog
                     open={showCompletenessGate}
-                    onOpenChange={(open) => {
-                        if (!open && shouldBlockModules) return
-                        setShowCompletenessGate(open)
-                    }}
+                    onOpenChange={setShowCompletenessGate}
                 >
                     <DialogContent className="sm:max-w-[480px]">
                         <DialogHeader>
@@ -158,7 +162,9 @@ export function DashboardLayout({
                                     Tu kit esta al {completeness.percentage}% y necesitas al menos un {MIN_BRAND_KIT_COMPLETENESS}% para usar este modulo.
                                 </span>
                                 <span className="block">
-                                    Sin ese minimo no se desbloquean Imagen ni el resto de modulos.
+                                    {!hasAnyUnlockedBrandKit
+                                        ? 'Ahora mismo no tienes ningun kit por encima del minimo. Completa uno para desbloquear toda la app.'
+                                        : 'Sin ese minimo no se desbloquean Imagen ni el resto de modulos.'}
                                 </span>
                             </DialogDescription>
                         </DialogHeader>
