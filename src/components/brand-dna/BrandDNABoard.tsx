@@ -174,11 +174,11 @@ export function BrandDNABoard({
         }
         const key = `brand-kit-wizard-dismissed:${data.id}`;
         const dismissed = typeof window !== 'undefined' ? window.sessionStorage.getItem(key) : '1';
-        const shouldSuggestWizard = isManualPlaceholderUrl;
+        const shouldSuggestWizard = assistantCreationMode && isManualPlaceholderUrl;
         if (shouldSuggestWizard && !dismissed) {
             setShowAssistantWizard(true);
         }
-    }, [data?.id, isManualPlaceholderUrl, assistantPriorityMode, assistantFlowLocked, allowAssistantExit]);
+    }, [data?.id, isManualPlaceholderUrl, assistantCreationMode, assistantPriorityMode, assistantFlowLocked, allowAssistantExit]);
 
     const handleWizardOpenChange = (open: boolean) => {
         if (!open && mustForceAssistant) return;

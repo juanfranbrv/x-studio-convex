@@ -38,6 +38,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
 
     // Track if we have already attempted initial load
     const initialLoadAttempted = useRef(false)
+    const activeSelectionHealing = useRef(false)
 
     const ensureConvexUser = async () => {
         if (!user?.id) return false
@@ -199,6 +200,30 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
             loadBrandKits()
         }
     }, [isLoaded, user, userRecord])
+
+    // Invariante: si existen kits, debe haber un kit activo válido.
+    useEffect(() => {
+        if (loading) return
+        if (!user?.id) return
+        if (!Array.isArray(brandKits) || brandKits.length === 0) return
+        if (activeSelectionHealing.current) return
+
+        const activeId = activeBrandKit?.id
+        const hasValidActive = Boolean(activeId && brandKits.some((kit) => kit.id === activeId))
+        if (hasValidActive) return
+
+        const lastBrandId = userRecord?.current_brand_id
+        const preferredId = (lastBrandId && brandKits.some((kit) => kit.id === lastBrandId))
+            ? (lastBrandId as string)
+            : brandKits[0].id
+
+        if (!preferredId) return
+
+        activeSelectionHealing.current = true
+        void setActiveBrandKit(preferredId, true, true).finally(() => {
+            activeSelectionHealing.current = false
+        })
+    }, [loading, user?.id, brandKits, activeBrandKit?.id, userRecord?.current_brand_id])
 
     const value: BrandKitContextType = {
         activeBrandKit,

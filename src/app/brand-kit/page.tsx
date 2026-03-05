@@ -432,7 +432,8 @@ function BrandKitPageContent() {
     const assistantCreationMode = searchParams.get('creation') === 'draft';
 
     const handleAbortAssistantCreation = async () => {
-        const createdKitId = activeBrandKit?.id;
+        const createdKitIdFromQuery = searchParams.get('id');
+        const createdKitId = activeBrandKit?.id || (isValidBrandId(createdKitIdFromQuery) ? createdKitIdFromQuery : null);
         if (createdKitId) {
             await deleteBrandKitById(createdKitId);
         }
@@ -1077,7 +1078,7 @@ function BrandKitPageContent() {
                             key={activeBrandKit.id || 'new'}
                             data={activeBrandKit}
                             allowAssistantExit={hasOtherBrandKits}
-                            assistantCreationMode={assistantCreationMode && hasOtherBrandKits}
+                            assistantCreationMode={assistantCreationMode}
                             onAbortAssistantCreation={handleAbortAssistantCreation}
                             onCompleteAssistantCreation={handleCompleteAssistantCreation}
                             isDebug={searchParams.get('debug') === 'true'}
