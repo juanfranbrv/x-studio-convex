@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { BrandDNA, TextAssets } from '@/lib/brand-types'
@@ -12,13 +12,16 @@ import { HexColorPicker } from 'react-colorful'
 import { ContactSocialCard } from './ContactSocialCard'
 import { TypographySection } from './TypographySection'
 import { ImageGallery } from './VisualAssetComponents'
+import { BrandContextCard } from './BrandContextCard'
 
 type WizardStepId =
   | 'intro'
   | 'name'
   | 'url'
+  | 'post-analysis'
   | 'logos'
   | 'colors'
+  | 'brand-context'
   | 'contact'
   | 'typography'
   | 'slogan'
@@ -52,6 +55,7 @@ interface BrandKitAssistantWizardProps {
   onUpdateColor: (index: number, color: string) => void
   onUpdateColorRole: (index: number, role: string) => void
   onRemoveColor: (index: number) => void
+  onUpdateBrandContext: (value: string) => void
   onUpdateContact: (data: { socialLinks: { platform: string; url: string; username?: string }[]; emails: string[]; phones: string[]; addresses: string[] }) => void
   onAddFont: (font: string) => void
   onSelectFontForRole: (family: string, role: 'heading' | 'body') => void
@@ -73,17 +77,28 @@ interface BrandKitAssistantWizardProps {
   onRemoveImage: (index: number) => void
   onOpenLightbox: (url: string) => void
   isUploadingImages?: boolean
+  completionPercentage: number
+  minimumCompletionToFinish?: number
   onFinish: () => void
 }
 
-const STEPS: WizardStepId[] = ['intro', 'name', 'url', 'logos', 'colors', 'contact', 'typography', 'slogan', 'values', 'visual-styles', 'tone', 'marketing-hooks', 'ctas', 'image-gallery', 'done']
-const FLOW_STEPS: WizardStepId[] = ['name', 'url', 'logos', 'colors', 'contact', 'typography', 'slogan', 'values', 'visual-styles', 'tone', 'marketing-hooks', 'ctas', 'image-gallery', 'done']
+const STEPS: WizardStepId[] = ['intro', 'name', 'url', 'post-analysis', 'logos', 'colors', 'brand-context', 'contact', 'typography', 'slogan', 'values', 'visual-styles', 'tone', 'marketing-hooks', 'ctas', 'image-gallery', 'done']
+const FLOW_STEPS: WizardStepId[] = ['name', 'url', 'post-analysis', 'logos', 'colors', 'brand-context', 'contact', 'typography', 'slogan', 'values', 'visual-styles', 'tone', 'marketing-hooks', 'ctas', 'image-gallery', 'done']
 const ASSISTANT_STEP_KEY = 'brand-kit-assistant-step'
 const ANALYZING_MESSAGES = [
   'Conectando con tu web...',
+  'Abriendo la página en modo análisis...',
   'Leyendo estructura y estilos principales...',
-  'Detectando logo, colores y tipografías...',
+  'Detectando logo y variaciones de marca...',
+  'Extrayendo paleta de color dominante...',
+  'Identificando colores de apoyo y contraste...',
+  'Revisando tipografías visibles del sitio...',
+  'Analizando jerarquía visual y bloques clave...',
+  'Extrayendo textos útiles para tu marca...',
+  'Buscando imágenes y recursos destacados...',
+  'Unificando resultados de la web...',
   'Preparando una base de kit para ti...',
+  'Aplicando validaciones finales...',
 ]
 
 function normalizeUrl(raw: string): string | null {
@@ -94,10 +109,39 @@ function normalizeUrl(raw: string): string | null {
     const withProtocol = value.startsWith('http://') || value.startsWith('https://')
       ? value
       : `https://${value}`
-    return new URL(withProtocol).toString()
+    const parsed = new URL(withProtocol)
+    if (!isSyntacticallyValidWebHostname(parsed.hostname)) return null
+    return parsed.toString()
   } catch {
     return null
   }
+}
+
+function isSyntacticallyValidWebHostname(hostnameRaw: string): boolean {
+  const hostname = hostnameRaw.trim().toLowerCase()
+  if (!hostname) return false
+  if (/\s/.test(hostname)) return false
+
+  if (hostname === 'localhost') return true
+
+  const ipv4Match = hostname.match(/^(\d{1,3}\.){3}\d{1,3}$/)
+  if (ipv4Match) {
+    return hostname.split('.').every((part) => {
+      const n = Number(part)
+      return Number.isInteger(n) && n >= 0 && n <= 255
+    })
+  }
+
+  // Dominio web sintácticamente válido: labels + TLD (sin validar existencia)
+  if (!hostname.includes('.')) return false
+  const labels = hostname.split('.')
+  if (labels.some((label) => !label)) return false
+
+  const validLabel = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/
+  if (!labels.every((label) => validLabel.test(label))) return false
+
+  const tld = labels[labels.length - 1]
+  return /^[a-z]{2,63}$/.test(tld)
 }
 
 function getInitialAssistantStep(): number {
@@ -263,6 +307,7 @@ export function BrandKitAssistantWizard({
   onUpdateColor,
   onUpdateColorRole,
   onRemoveColor,
+  onUpdateBrandContext,
   onUpdateContact,
   onAddFont,
   onSelectFontForRole,
@@ -284,6 +329,8 @@ export function BrandKitAssistantWizard({
   onRemoveImage,
   onOpenLightbox,
   isUploadingImages = false,
+  completionPercentage,
+  minimumCompletionToFinish = 70,
   onFinish,
 }: BrandKitAssistantWizardProps) {
   const [stepIndex, setStepIndex] = useState(getInitialAssistantStep)
@@ -300,14 +347,20 @@ export function BrandKitAssistantWizard({
   const logoInputRef = useRef<HTMLInputElement | null>(null)
 
   const step = STEPS[stepIndex]
-  const totalSteps = STEPS.length
-  const progress = Math.round(((stepIndex + 1) / totalSteps) * 100)
   const flowStepIndex = FLOW_STEPS.indexOf(step)
+  const progress = step === 'intro'
+    ? 0
+    : Math.round(((Math.max(flowStepIndex, 0) + 1) / FLOW_STEPS.length) * 100)
   const headerStepLabel = step === 'intro'
     ? 'Introducción'
     : `Paso ${flowStepIndex + 1} de ${FLOW_STEPS.length}`
   const currentUrl = brand.url || ''
-  const canAnalyze = Boolean(normalizeUrl(currentUrl))
+  const isManualPlaceholderUrl = currentUrl.trim().toLowerCase().startsWith('manual-')
+  const visibleUrlValue = isManualPlaceholderUrl ? '' : currentUrl
+  const normalizedCurrentUrl = normalizeUrl(visibleUrlValue)
+  const canAnalyze = Boolean(normalizedCurrentUrl)
+  const hasTypedUrl = visibleUrlValue.trim().length > 0
+  const invalidUrl = hasTypedUrl && !canAnalyze
   const currentLogos = useMemo(
     () => brand.logos || (brand.logo_url ? [{ url: brand.logo_url, selected: true }] : []),
     [brand.logos, brand.logo_url]
@@ -347,6 +400,10 @@ export function BrandKitAssistantWizard({
   const hasHeadingFont = fonts.some((font) => font.role === 'heading')
   const hasBodyFont = fonts.some((font) => font.role === 'body')
   const canProceedFromTypography = hasHeadingFont && hasBodyFont
+  const completionClamped = Math.max(0, Math.min(100, completionPercentage))
+  const canFinishWizard = completionClamped >= minimumCompletionToFinish
+  const completionMissing = Math.max(0, minimumCompletionToFinish - completionClamped)
+  const hasUrlValue = hasTypedUrl
 
   const goNext = () => setStepIndex((prev) => Math.min(prev + 1, STEPS.length - 1))
   const goBack = () => setStepIndex((prev) => Math.max(prev - 1, 0))
@@ -370,7 +427,7 @@ export function BrandKitAssistantWizard({
     if (!previewAnalyzing) return
 
     const messageTimer = setInterval(() => {
-      setAnalyzingMessageIndex((prev) => (prev + 1) % ANALYZING_MESSAGES.length)
+      setAnalyzingMessageIndex((prev) => Math.min(prev + 1, ANALYZING_MESSAGES.length - 1))
     }, 1700)
 
     const progressTimer = setInterval(() => {
@@ -392,6 +449,7 @@ export function BrandKitAssistantWizard({
   }
 
   const completeWizard = () => {
+    if (!canFinishWizard) return
     onFinish()
     setStepIndex(0)
     if (typeof window !== 'undefined') {
@@ -400,7 +458,7 @@ export function BrandKitAssistantWizard({
   }
 
   const handleAnalyzeClick = async () => {
-    const normalizedUrl = normalizeUrl(currentUrl)
+    const normalizedUrl = normalizeUrl(visibleUrlValue)
     if (!normalizedUrl) return
 
     setPreviewOpen(true)
@@ -426,6 +484,22 @@ export function BrandKitAssistantWizard({
     }
   }
 
+  const handleNextClick = async () => {
+    if (step === 'url') {
+      if (!hasUrlValue) {
+        goNext()
+        return
+      }
+
+      if (!canAnalyze) return
+
+      await handleAnalyzeClick()
+      return
+    }
+
+    goNext()
+  }
+
   const confirmAnalyze = async () => {
     if (!previewData?.url) return
     setPreviewAnalyzing(true)
@@ -434,8 +508,8 @@ export function BrandKitAssistantWizard({
     setPreviewError('')
 
     const urlStep = STEPS.indexOf('url')
-    const logosStep = STEPS.indexOf('logos')
-    const nextStep = stepIndex <= urlStep ? logosStep : stepIndex
+    const postAnalysisStep = STEPS.indexOf('post-analysis')
+    const nextStep = stepIndex <= urlStep ? postAnalysisStep : stepIndex
     setStepIndex(nextStep)
     if (typeof window !== 'undefined') {
       window.sessionStorage.setItem(ASSISTANT_STEP_KEY, String(nextStep))
@@ -484,30 +558,23 @@ export function BrandKitAssistantWizard({
     }
   }
 
-  const swapTextAndBackgroundRoles = () => {
-    const textIdx = groupedColors.Texto[0]?.index
-    const backgroundIdx = groupedColors.Fondo[0]?.index
-    if (textIdx === undefined && backgroundIdx === undefined) return
-    if (textIdx !== undefined && backgroundIdx !== undefined) {
-      onUpdateColorRole(textIdx, 'Fondo')
-      onUpdateColorRole(backgroundIdx, 'Texto')
-      return
-    }
-    if (textIdx !== undefined) {
-      onUpdateColorRole(textIdx, 'Fondo')
-      return
-    }
-    if (backgroundIdx !== undefined) {
-      onUpdateColorRole(backgroundIdx, 'Texto')
-    }
-  }
+  const moveOrSwapRole = (
+    sourceRole: 'Texto' | 'Fondo' | 'Acento',
+    sourceIdx: number,
+    targetRole: 'Texto' | 'Fondo' | 'Acento',
+    explicitTargetIdx?: number
+  ) => {
+    if (sourceRole === targetRole && explicitTargetIdx === undefined) return
 
-  const moveOrSwapRole = (sourceRole: 'Texto' | 'Fondo' | 'Acento', sourceIdx: number, targetRole: 'Texto' | 'Fondo') => {
-    if (sourceRole === targetRole) return
-    const targetIdx = groupedColors[targetRole][0]?.index
+    let targetIdx = explicitTargetIdx
+    if (targetIdx === undefined && targetRole !== 'Acento') {
+      targetIdx = groupedColors[targetRole][0]?.index
+    }
+
     onUpdateColorRole(sourceIdx, targetRole)
-    if (targetIdx !== undefined) {
-      const fallbackRole = sourceRole === 'Acento' ? 'Acento' : sourceRole
+
+    if (targetIdx !== undefined && targetIdx !== sourceIdx) {
+      const fallbackRole: 'Texto' | 'Fondo' | 'Acento' = sourceRole === 'Acento' ? 'Acento' : sourceRole
       onUpdateColorRole(targetIdx, fallbackRole)
     }
   }
@@ -524,25 +591,39 @@ export function BrandKitAssistantWizard({
         onOpenChange(next)
       }}
     >
-      <DialogContent
-        showCloseButton={false}
-        overlayClassName="bg-black/70"
-        onEscapeKeyDown={(event) => {
-          if (forceMode) event.preventDefault()
-        }}
-        onPointerDownOutside={(event) => {
-          if (forceMode) event.preventDefault()
-        }}
-        className="w-[min(97.5vw,1040px)] max-w-[1040px] h-[min(90vh,820px)] p-0 overflow-hidden"
-      >
+        <DialogContent
+          showCloseButton={false}
+          overlayClassName="bg-black/85 backdrop-blur-md"
+          onEscapeKeyDown={(event) => {
+            if (forceMode) event.preventDefault()
+          }}
+          onPointerDownOutside={(event) => event.preventDefault()}
+          className="w-[min(97.5vw,1160px)] max-w-[1160px] h-[min(90vh,820px)] p-0 overflow-hidden"
+        >
         <div className="h-full min-h-0 flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50 shrink-0">
-            <DialogTitle className="flex items-center justify-between gap-3 text-xl md:text-2xl">
-              <span>Asistente de Kit de Marca</span>
-              <span className="text-sm text-muted-foreground font-medium">
-                {headerStepLabel}
-              </span>
-            </DialogTitle>
+            <div className="flex items-start justify-between gap-3">
+              <DialogTitle className="min-w-0 text-xl md:text-2xl truncate">
+                Asistente de Kit de Marca
+              </DialogTitle>
+              <div className="flex items-start gap-2 shrink-0">
+                <div className="text-sm text-muted-foreground font-medium whitespace-nowrap pt-1">
+                  {headerStepLabel}
+                </div>
+                {!forceMode && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 -mt-1"
+                    onClick={closeWizard}
+                    aria-label="Cerrar asistente"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
             <DialogDescription className="text-base">
               Te guiamos paso a paso.
             </DialogDescription>
@@ -552,19 +633,58 @@ export function BrandKitAssistantWizard({
             <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
               <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
             </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Completitud real del kit</p>
+                <p
+                  className={cn(
+                    'text-xs font-semibold',
+                    canFinishWizard ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                  )}
+                >
+                  {completionClamped}%
+                </p>
+              </div>
+              <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full transition-all duration-300',
+                    canFinishWizard ? 'bg-emerald-500' : 'bg-amber-500'
+                  )}
+                  style={{ width: `${completionClamped}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Este porcentaje sube con lo que completas manualmente y también con datos autocompletados al analizar la URL.
+              </p>
+            </div>
 
             {step === 'intro' && (
               <section className="rounded-2xl border border-border/70 bg-muted/25 p-6 md:p-8 space-y-5">
                 <div className="flex items-start gap-3">
                   <ShieldAlert className="w-6 h-6 text-primary mt-1" />
                   <div className="space-y-3">
-                    <p className="font-semibold text-2xl leading-tight">Tu kit de marca es necesario</p>
-                    <p className="text-lg text-muted-foreground leading-relaxed">
-                      Sin un kit por encima del 70% no se desbloquean Imagen ni el resto de modulos.
-                    </p>
-                    <p className="text-base text-muted-foreground">
-                      Completa este asistente y sigues directo al editor.
-                    </p>
+                    {forceMode ? (
+                      <>
+                        <p className="font-semibold text-2xl leading-tight">Tu kit de marca es necesario</p>
+                        <p className="text-lg text-muted-foreground leading-relaxed">
+                          Sin un kit por encima del 70% no se desbloquean Imagen ni el resto de modulos.
+                        </p>
+                        <p className="text-base text-muted-foreground">
+                          Completa este asistente y sigues directo al editor.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-semibold text-2xl leading-tight">Vamos a crear un nuevo kit de marca</p>
+                        <p className="text-lg text-muted-foreground leading-relaxed">
+                          Te guiaremos paso a paso para tenerlo listo rapidamente.
+                        </p>
+                        <p className="text-base text-muted-foreground">
+                          Puedes cerrar este asistente cuando quieras.
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               </section>
@@ -583,27 +703,69 @@ export function BrandKitAssistantWizard({
             )}
 
             {step === 'url' && (
-              <section className="space-y-4">
-                <div className="flex items-start gap-2">
-                  <Globe className="w-5 h-5 text-primary mt-0.5" />
-                <p className="text-base text-muted-foreground">
-                    Escribe aquí la dirección de tu página web (por ejemplo, `tudominio.com`).
+              <section className="space-y-5">
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Paso opcional: analiza tu web</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Si pones tu web, intentaremos extraer logos, colores, tipografias y textos automaticamente.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Input
-                    value={currentUrl}
-                    onChange={(e) => onUpdateUrl(e.target.value)}
-                    placeholder="https://tuweb.com"
-                    className="h-11 text-base"
-                  />
-                  <Button variant="outline" disabled={!canAnalyze} onClick={handleAnalyzeClick} className="h-11 text-base">
-                    Analizar URL
-                  </Button>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Direccion de tu pagina web
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      value={visibleUrlValue}
+                      onChange={(e) => onUpdateUrl(e.target.value)}
+                      placeholder="https://tuweb.com"
+                      className="h-11 text-base"
+                    />
+                    <Button variant="outline" disabled={!canAnalyze} onClick={handleAnalyzeClick} className="h-11 text-base">
+                      Analizar URL
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Intentaremos extraer datos automáticamente. Si no tienes web, puedes seguir.
-                </p>
+
+                {invalidUrl && (
+                  <p className="text-xs text-destructive">
+                    Revisa la URL. Ejemplo válido: `https://tuweb.com`.
+                  </p>
+                )}
+
+                {hasUrlValue && canAnalyze && (
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                    Formato de URL correcto. Puedes pulsar <span className="font-medium">Analizar URL</span> o <span className="font-medium">Siguiente</span> para empezar el análisis.
+                  </p>
+                )}
+
+                <div className="rounded-lg border border-dashed border-border/70 p-3">
+                  <p className="text-xs text-muted-foreground">
+                    Si ahora no tienes web, puedes continuar con <span className="font-medium text-foreground">Siguiente</span> y completar el kit manualmente.
+                  </p>
+                </div>
+
+              </section>
+            )}
+
+            {step === 'post-analysis' && (
+              <section className="rounded-2xl border border-border/70 bg-muted/25 p-6 md:p-8 space-y-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-primary mt-1" />
+                  <div className="space-y-3">
+                    <p className="font-semibold text-xl leading-tight">Hemos preparado una base de tu kit con la web</p>
+                    <p className="text-base text-muted-foreground">
+                      En los siguientes pasos verás logos, colores, textos y otros datos detectados automáticamente.
+                    </p>
+                    <p className="text-base text-muted-foreground">
+                      Tu papel ahora es revisarlo: puedes dejarlo como está, corregirlo o añadir lo que falte.
+                    </p>
+                  </div>
+                </div>
               </section>
             )}
 
@@ -658,9 +820,14 @@ export function BrandKitAssistantWizard({
                   multiple
                   className="hidden"
                   onChange={async (e) => {
-                    if (!e.target.files || e.target.files.length === 0) return
-                    await handleLogoFiles(e.target.files)
-                    e.currentTarget.value = ''
+                    const inputEl = e.currentTarget
+                    const files = inputEl.files
+                    if (!files || files.length === 0) return
+                    try {
+                      await handleLogoFiles(files)
+                    } finally {
+                      if (inputEl) inputEl.value = ''
+                    }
                   }}
                 />
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-1">
@@ -670,9 +837,13 @@ export function BrandKitAssistantWizard({
                     </div>
                   )}
                   {currentLogos.map((logo, index) => (
-                    <div key={`${logo.url}-${index}`} className="rounded-lg border border-border overflow-hidden">
-                      <div className="h-20 bg-muted/30">
-                        <img src={logo.url} alt={`Logo ${index + 1}`} className="w-full h-full object-contain p-2" />
+                    <div key={`${logo.url}-${index}`} className="rounded-lg border border-border overflow-hidden bg-card">
+                      <div className="h-20 transparency-grid bg-muted/20">
+                        <img
+                          src={logo.url}
+                          alt={`Logo ${index + 1}`}
+                          className="w-full h-full object-contain p-2 drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
+                        />
                       </div>
                       <div className="p-2 flex items-center justify-end gap-2">
                         <Button
@@ -699,10 +870,10 @@ export function BrandKitAssistantWizard({
                   <p className="text-base text-muted-foreground">Ajusta tu paleta. Texto, Fondo y hasta 5 acentos.</p>
                 </div>
 
-                <div className="flex items-end gap-4 flex-wrap">
+                <div className="grid grid-cols-[auto_auto_auto] items-start gap-x-2 gap-y-3">
                   <div
                     className={cn(
-                      'flex flex-col items-center gap-2 rounded-xl p-2 transition-colors',
+                      'w-[64px] flex flex-col items-center gap-1.5 rounded-xl p-1.5 transition-colors',
                       draggedColorSource && draggedColorSource.role !== 'Texto' ? 'bg-primary/5 border border-primary/20' : ''
                     )}
                     onDragOver={(event) => event.preventDefault()}
@@ -736,7 +907,7 @@ export function BrandKitAssistantWizard({
 
                   <div
                     className={cn(
-                      'flex flex-col items-center gap-2 rounded-xl p-2 transition-colors',
+                      'w-[64px] flex flex-col items-center gap-1.5 rounded-xl p-1.5 transition-colors',
                       draggedColorSource && draggedColorSource.role !== 'Fondo' ? 'bg-primary/5 border border-primary/20' : ''
                     )}
                     onDragOver={(event) => event.preventDefault()}
@@ -768,10 +939,23 @@ export function BrandKitAssistantWizard({
                     <span className="text-xs text-muted-foreground">Fondo</span>
                   </div>
 
-                  <div className="flex flex-col gap-2 min-w-0 pl-2">
+                  <div className="flex flex-col items-center gap-1.5 min-w-0 rounded-xl p-1.5">
                     <div className="flex items-center gap-2 flex-wrap">
                       {groupedColors.Acento.slice(0, 5).map((accent) => (
-                        <div key={accent.index} className="relative inline-flex items-center group/accent">
+                        <div
+                          key={accent.index}
+                          className={cn(
+                            'relative inline-flex items-center group/accent rounded-full',
+                            draggedColorSource && draggedColorSource.index !== accent.index ? 'ring-2 ring-primary/20' : ''
+                          )}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={(event) => {
+                            event.preventDefault()
+                            if (!draggedColorSource) return
+                            moveOrSwapRole(draggedColorSource.role, draggedColorSource.index, 'Acento', accent.index)
+                            setDraggedColorSource(null)
+                          }}
+                        >
                           <RoleColorSwatch
                             color={accent.color}
                             onCommit={(nextColor) => {
@@ -793,27 +977,35 @@ export function BrandKitAssistantWizard({
                           </button>
                         </div>
                       ))}
-                      <AddAccentSwatch
-                        onAdd={(nextColor) => {
-                          const accentCount = groupedColors.Acento.length
-                          if (accentCount >= 5) return
-                          const previousLength = brand.colors?.length || 0
-                          onAddColor()
-                          setPendingRoleAdd({ role: 'Acento', color: nextColor, previousLength })
-                        }}
-                        disabled={groupedColors.Acento.length >= 5}
-                      />
+                      {groupedColors.Acento.length < 5 && (
+                        <AddAccentSwatch
+                          onAdd={(nextColor) => {
+                            const accentCount = groupedColors.Acento.length
+                            if (accentCount >= 5) return
+                            const previousLength = brand.colors?.length || 0
+                            onAddColor()
+                            setPendingRoleAdd({ role: 'Acento', color: nextColor, previousLength })
+                          }}
+                        />
+                      )}
                     </div>
-                    <span className="text-xs text-muted-foreground text-center w-12">Acentos</span>
+                    <span className="text-xs text-muted-foreground">Acentos</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
+                  <p className="text-sm font-medium text-foreground">Como se usan estos roles</p>
                   <p className="text-xs text-muted-foreground">
-                    Arrastra `Texto`, `Fondo` o un `Acento` para intercambiar roles.
+                    El color de <span className="font-medium text-foreground">Texto</span> se usara para titulares y textos en las imagenes generadas.
                   </p>
-                  <Button type="button" variant="ghost" size="sm" className="h-8 text-xs" onClick={swapTextAndBackgroundRoles}>
-                    Intercambiar
-                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    El color de <span className="font-medium text-foreground">Fondo</span> sera el tono base predominante en las imagenes generadas.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Los <span className="font-medium text-foreground">Acentos</span> se usaran para resaltar elementos destacados.
+                  </p>
+                  <p className="text-xs text-muted-foreground pt-1">
+                    Arrastra un color sobre otro para intercambiar su rol (Texto, Fondo o Acento).
+                  </p>
                 </div>
               </section>
             )}
@@ -829,6 +1021,19 @@ export function BrandKitAssistantWizard({
                   phones={brand.phones || []}
                   addresses={brand.addresses || []}
                   onUpdate={onUpdateContact}
+                />
+              </section>
+            )}
+
+            {step === 'brand-context' && (
+              <section className="space-y-4">
+                <p className="text-base text-muted-foreground">
+                  Explica en pocas lineas que hace tu marca, para quien y con que enfoque.
+                </p>
+                <BrandContextCard
+                  context={brand.business_overview || brand.text_assets?.brand_context || ''}
+                  onUpdate={onUpdateBrandContext}
+                  minHeightClassName="min-h-[220px]"
                 />
               </section>
             )}
@@ -1080,35 +1285,43 @@ export function BrandKitAssistantWizard({
                   {(brand.fonts?.length || 0)} tipografías,{' '}
                   {(brand.images?.length || 0)} imágenes.
                 </div>
+                {!canFinishWizard && (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      Te falta {completionMissing}% para llegar al {minimumCompletionToFinish}% minimo y desbloquear Imagen.
+                    </p>
+                  </div>
+                )}
               </section>
             )}
           </div>
 
-          <DialogFooter className={cn('flex-col-reverse gap-2 sm:flex-row sm:justify-between px-6 py-4 border-t border-border/50 shrink-0')}>
-            <div className="flex items-center gap-2">
+          <div className="px-6 py-4 border-t border-border/50 shrink-0">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="flex items-center gap-2">
               <Button variant="outline" onClick={goBack} disabled={stepIndex === 0} className="h-11 text-base">
                 <ArrowLeft className="w-4 h-4 mr-1" />
                 Anterior
               </Button>
+              </div>
+              <div className="flex items-center justify-end gap-2 flex-wrap">
+                {step !== 'done' ? (
+                  <Button
+                    onClick={handleNextClick}
+                    className="h-11 text-base"
+                    disabled={previewLoading || previewAnalyzing}
+                  >
+                    {step === 'url' && hasUrlValue ? 'Analizar y seguir' : 'Siguiente'}
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                ) : (
+                  <Button onClick={completeWizard} className="h-11 text-base" disabled={!canFinishWizard}>
+                    {canFinishWizard ? 'Ir al editor' : `Te falta ${completionMissing}%`}
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              {!forceMode && (
-                <Button variant="ghost" onClick={closeWizard} className="h-11 text-base">Cerrar</Button>
-              )}
-              {step !== 'done' ? (
-                <Button
-                  onClick={goNext}
-                  className="h-11 text-base"
-                  disabled={step === 'typography' && !canProceedFromTypography}
-                >
-                  Siguiente
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              ) : (
-                <Button onClick={completeWizard} className="h-11 text-base">Ir al editor</Button>
-              )}
-            </div>
-          </DialogFooter>
+          </div>
         </div>
       </DialogContent>
       <Dialog
@@ -1126,7 +1339,7 @@ export function BrandKitAssistantWizard({
           onPointerDownOutside={(event) => {
             if (previewLoading || previewAnalyzing) event.preventDefault()
           }}
-          className="sm:max-w-[720px]"
+          className="w-[min(96vw,980px)] max-w-[980px]"
         >
           <DialogHeader>
             <DialogTitle>Confirma tu web</DialogTitle>
@@ -1164,11 +1377,11 @@ export function BrandKitAssistantWizard({
             )}
 
             {!previewLoading && previewData?.screenshotUrl && (
-              <div className="rounded-lg border border-border overflow-hidden bg-muted/20">
+              <div className="rounded-lg border border-border overflow-hidden bg-muted/20 flex items-center justify-center p-2">
                 <img
                   src={previewData.screenshotUrl}
                   alt="Vista previa de la web"
-                  className="w-full h-[280px] object-cover"
+                  className="w-full max-h-[520px] object-contain rounded-md"
                 />
               </div>
             )}

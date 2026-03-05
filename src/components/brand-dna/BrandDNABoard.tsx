@@ -30,6 +30,9 @@ interface BrandDNABoardProps {
     data: BrandDNA;
     isDebug?: boolean;
     allowAssistantExit?: boolean;
+    assistantCreationMode?: boolean;
+    onAbortAssistantCreation?: () => Promise<void> | void;
+    onCompleteAssistantCreation?: () => void;
     onRegenerate?: (urlOverride?: string) => void;
     onAnalyzeUrlFromAssistant?: (urlOverride?: string) => void;
     onPreviewUrlFromAssistant?: (url: string) => Promise<{
@@ -98,6 +101,9 @@ export function BrandDNABoard({
     data: initialData,
     isDebug = false,
     allowAssistantExit = false,
+    assistantCreationMode = false,
+    onAbortAssistantCreation,
+    onCompleteAssistantCreation,
     onRegenerate,
     onAnalyzeUrlFromAssistant,
     onPreviewUrlFromAssistant,
@@ -176,6 +182,10 @@ export function BrandDNABoard({
 
     const handleWizardOpenChange = (open: boolean) => {
         if (!open && mustForceAssistant) return;
+        if (!open && assistantCreationMode) {
+            void onAbortAssistantCreation?.();
+            return;
+        }
         setShowAssistantWizard(open);
         if (!open && data?.id && typeof window !== 'undefined') {
             window.sessionStorage.setItem(`brand-kit-wizard-dismissed:${data.id}`, '1');
@@ -498,6 +508,19 @@ export function BrandDNABoard({
             ...prev,
             text_assets: newTextAssets,
             business_overview: newTextAssets.brand_context || prev.business_overview
+        }));
+    };
+
+    const handleUpdateBrandContext = (value: string) => {
+        updateData(prev => ({
+            ...prev,
+            business_overview: value,
+            text_assets: prev.text_assets ? { ...prev.text_assets, brand_context: value } : {
+                marketing_hooks: [],
+                visual_keywords: [],
+                ctas: [],
+                brand_context: value
+            }
         }));
     };
 
@@ -890,6 +913,7 @@ export function BrandDNABoard({
                 onUpdateColor={handleUpdateColor}
                 onUpdateColorRole={handleUpdateColorRole}
                 onRemoveColor={handleRemoveColor}
+                onUpdateBrandContext={handleUpdateBrandContext}
                 onUpdateContact={handleUpdateContact}
                 onAddFont={handleAddFont}
                 onSelectFontForRole={handleSelectFontForRole}
@@ -911,12 +935,15 @@ export function BrandDNABoard({
                 onRemoveImage={handleRemoveImage}
                 onOpenLightbox={setLightboxImage}
                 isUploadingImages={isUploading}
+                completionPercentage={completeness.percentage}
+                minimumCompletionToFinish={70}
                 onFinish={() => {
                     setShowAssistantWizard(false);
                     setAssistantFlowLocked(false);
                     if (typeof window !== 'undefined') {
                         window.sessionStorage.removeItem(ASSISTANT_LOCK_KEY);
                     }
+                    onCompleteAssistantCreation?.();
                 }}
             />
         </div >

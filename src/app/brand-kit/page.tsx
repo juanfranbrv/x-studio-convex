@@ -66,6 +66,7 @@ const TECHNICAL_LOGS = [
 ];
 
 function BrandKitPageContent() {
+    const ASSISTANT_PREVIOUS_KIT_KEY = 'brand-kit-assistant-previous-id';
     const { user, isLoaded } = useUser();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -230,7 +231,7 @@ function BrandKitPageContent() {
     }, [loading]);
 
 
-    const createAssistantKitAndOpen = useCallback(async () => {
+    const createAssistantKitAndOpen = useCallback(async (options?: { draft?: boolean }) => {
         if (!user?.id || creatingAssistantKit) return;
         setCreatingAssistantKit(true);
         setError('');
@@ -247,8 +248,12 @@ function BrandKitPageContent() {
             const result = await response.json();
             const createdId = result?.data?.id;
             if (result.success && isValidBrandId(createdId)) {
+                if (options?.draft && typeof window !== 'undefined' && activeBrandKit?.id) {
+                    window.sessionStorage.setItem(ASSISTANT_PREVIOUS_KIT_KEY, activeBrandKit.id);
+                }
                 const debugParam = searchParams.get('debug') === 'true' ? '&debug=true' : '';
-                window.location.href = `/brand-kit?id=${createdId}${debugParam}`;
+                const draftParam = options?.draft ? '&creation=draft' : '';
+                window.location.href = `/brand-kit?id=${createdId}${draftParam}${debugParam}`;
                 return;
             }
 
@@ -259,14 +264,14 @@ function BrandKitPageContent() {
             setError('Ocurrio un error al crear el kit de marca.');
             setCreatingAssistantKit(false);
         }
-    }, [user?.id, creatingAssistantKit, searchParams]);
+    }, [user?.id, creatingAssistantKit, searchParams, activeBrandKit?.id]);
 
     // Handle initial state and query params
     useEffect(() => {
         if (!contextLoading) {
             const action = searchParams.get('action');
             if (action === 'new') {
-                void createAssistantKitAndOpen();
+                void createAssistantKitAndOpen({ draft: true });
                 // Clear the param without refreshing to avoid re-triggering on reload
                 const newParams = new URLSearchParams(searchParams.toString());
                 newParams.delete('action');
@@ -274,7 +279,7 @@ function BrandKitPageContent() {
             } else if (brandKits.length === 0) {
                 if (!autoCreateTriggeredRef.current) {
                     autoCreateTriggeredRef.current = true;
-                    void createAssistantKitAndOpen();
+                    void createAssistantKitAndOpen({ draft: false });
                 }
             }
         }
@@ -363,16 +368,8 @@ function BrandKitPageContent() {
     const handleBrandDelete = async (brandId: string) => {
         try {
             await deleteBrandKitById(brandId);
-            toast({
-                title: "Kit de marca eliminado",
-                description: "El kit de marca se ha eliminado correctamente.",
-            });
         } catch (err: any) {
-            toast({
-                title: "Error al eliminar",
-                description: err.message || "No se pudo eliminar el kit de marca.",
-                variant: "destructive",
-            });
+            console.error('Error al eliminar kit de marca:', err);
         }
     };
 
@@ -407,7 +404,41 @@ function BrandKitPageContent() {
     // Handler para crear nuevo kit
     const handleNewProfile = () => {
         setUrl('');
-        void createAssistantKitAndOpen();
+        void createAssistantKitAndOpen({ draft: true });
+    };
+
+    const assistantCreationMode = searchParams.get('creation') === 'draft';
+
+    const handleAbortAssistantCreation = async () => {
+        const createdKitId = activeBrandKit?.id;
+        if (createdKitId) {
+            await deleteBrandKitById(createdKitId);
+        }
+
+        let previousId: string | null = null;
+        if (typeof window !== 'undefined') {
+            previousId = window.sessionStorage.getItem(ASSISTANT_PREVIOUS_KIT_KEY);
+            window.sessionStorage.removeItem(ASSISTANT_PREVIOUS_KIT_KEY);
+        }
+
+        if (previousId) {
+            await setActiveBrandKit(previousId, true, false);
+        }
+
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('creation');
+        params.delete('id');
+        router.replace(`/brand-kit${params.toString() ? `?${params.toString()}` : ''}`);
+    };
+
+    const handleCompleteAssistantCreation = () => {
+        if (typeof window !== 'undefined') {
+            window.sessionStorage.removeItem(ASSISTANT_PREVIOUS_KIT_KEY);
+        }
+        const params = new URLSearchParams(searchParams.toString());
+        if (params.get('creation') !== 'draft') return;
+        params.delete('creation');
+        router.replace(`/brand-kit${params.toString() ? `?${params.toString()}` : ''}`);
     };
 
     const runRegenerateAnalysis = async (
@@ -1024,6 +1055,9 @@ function BrandKitPageContent() {
                             key={activeBrandKit.id || 'new'}
                             data={activeBrandKit}
                             allowAssistantExit={hasOtherBrandKits}
+                            assistantCreationMode={assistantCreationMode && hasOtherBrandKits}
+                            onAbortAssistantCreation={handleAbortAssistantCreation}
+                            onCompleteAssistantCreation={handleCompleteAssistantCreation}
                             isDebug={searchParams.get('debug') === 'true'}
                             onRegenerate={(urlOverride) => {
                                 setPendingRegenerateUrl(urlOverride || '');

@@ -843,11 +843,6 @@ export function ControlsPanel({
                                         </div>
                                     )}
                                 </div>
-                                {showLabCatalog && state.currentStep === 2 && state.selectedLayout && (
-                                    <div className="flex justify-end mt-3">
-                                        <Button size="sm" variant="secondary" onClick={() => creationFlow.setStep(3)} className="h-7 text-xs">Siguiente, Formato</Button>
-                                    </div>
-                                )}
                             </div>
                         )}
 

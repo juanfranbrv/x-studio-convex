@@ -46,6 +46,7 @@ export function ColorPalette({
     const [colorPickerOpen, setColorPickerOpen] = useState<number | null>(null);
     const [localColor, setLocalColor] = useState<{ index: number, color: string } | null>(null);
     const [copiedColor, setCopiedColor] = useState<string | null>(null);
+    const [draggedColorIndex, setDraggedColorIndex] = useState<number | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const { theme } = useTheme();
 
@@ -107,6 +108,14 @@ export function ColorPalette({
         }
     };
 
+    const swapColorRoles = (sourceIndex: number, targetIndex: number) => {
+        if (sourceIndex === targetIndex) return;
+        const sourceRole = colors[sourceIndex]?.role || 'Acento';
+        const targetRole = colors[targetIndex]?.role || 'Acento';
+        onUpdateRole(sourceIndex, targetRole);
+        onUpdateRole(targetIndex, sourceRole);
+    };
+
     return (
         <TooltipProvider delayDuration={400}>
             <Card className={cn(
@@ -165,19 +174,33 @@ export function ColorPalette({
                                         <TooltipTrigger asChild>
                                             <PopoverTrigger asChild>
                                                 <div
-                                                    draggable={onDragStart !== undefined}
-                                                    onDragStart={(e) => onDragStart?.(e, {
-                                                        id: `color-${idx}`,
-                                                        type: 'color',
-                                                        value: item.color,
-                                                        label: item.role || `Color ${idx + 1}`
-                                                    })}
-                                                    onDragEnd={onDragEnd}
+                                                    draggable
+                                                    onDragStart={(e) => {
+                                                        setDraggedColorIndex(idx);
+                                                        onDragStart?.(e, {
+                                                            id: `color-${idx}`,
+                                                            type: 'color',
+                                                            value: item.color,
+                                                            label: item.role || `Color ${idx + 1}`
+                                                        });
+                                                    }}
+                                                    onDragEnd={(e) => {
+                                                        setDraggedColorIndex(null);
+                                                        onDragEnd?.();
+                                                    }}
+                                                    onDragOver={(e) => e.preventDefault()}
+                                                    onDrop={(e) => {
+                                                        e.preventDefault();
+                                                        if (draggedColorIndex === null) return;
+                                                        swapColorRoles(draggedColorIndex, idx);
+                                                        setDraggedColorIndex(null);
+                                                    }}
                                                     className={cn(
                                                         "aspect-square rounded-full cursor-grab active:cursor-grabbing transition-all duration-300",
                                                         "hover:scale-110 hover:shadow-xl border-2",
                                                         "relative overflow-visible flex items-center justify-center",
                                                         colorPickerOpen === idx ? 'border-primary ring-2 ring-primary/20' : '',
+                                                        draggedColorIndex !== null && draggedColorIndex !== idx && 'ring-2 ring-primary/20',
                                                         selectedColorIds.includes(`color-${idx}`)
                                                             ? "border-primary shadow-md"
                                                             : "border-white/30 dark:border-white/20 hover:border-primary/50"
@@ -274,7 +297,7 @@ export function ColorPalette({
                                     <TooltipContent side="bottom" className="flex flex-col gap-1 p-2 bg-popover border-border shadow-md z-[110]">
                                         <p className="text-xs font-bold text-foreground">{item.role || 'Sin rol'}</p>
                                         <p className="text-[10px] font-mono text-muted-foreground">{item.color.toUpperCase()}</p>
-                                        <p className="text-[9px] text-muted-foreground/60">Doble clic para cambiar rol</p>
+                                        <p className="text-[9px] text-muted-foreground/60">Arrastra sobre otro color para intercambiar rol</p>
                                     </TooltipContent>
                                 </Tooltip>
 

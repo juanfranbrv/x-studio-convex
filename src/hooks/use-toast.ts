@@ -9,6 +9,7 @@ import type {
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
+const TOASTS_DISABLED_GLOBALLY = true
 
 type ToasterToast = ToastProps & {
     id: string
@@ -146,6 +147,14 @@ const isToastMutedForCurrentRoute = () => {
 }
 
 function toast({ ...props }: Toast) {
+    if (TOASTS_DISABLED_GLOBALLY) {
+        return {
+            id: "disabled",
+            dismiss: () => { },
+            update: () => { },
+        }
+    }
+
     if (isToastMutedForCurrentRoute()) {
         return {
             id: "muted",

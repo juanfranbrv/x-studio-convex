@@ -1,37 +1,37 @@
 ﻿'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { FileText } from 'lucide-react';
 
 interface BrandContextCardProps {
     context: string;
     onUpdate: (value: string) => void;
+    minHeightClassName?: string;
 }
 
-export function BrandContextCard({ context, onUpdate }: BrandContextCardProps) {
+export function BrandContextCard({ context, onUpdate, minHeightClassName = 'min-h-[120px]' }: BrandContextCardProps) {
     return (
-        <Card className="glass-panel border-0 shadow-none">
-            <CardHeader className="pb-2">
+        <Card className="glass-panel border-0 shadow-none overflow-hidden">
+            <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <FileText className="w-5 h-5 text-primary" />
                     Visión y Contexto de Marca
                 </CardTitle>
             </CardHeader>
-            <CardContent>
-                <div className="relative p-3 bg-muted/20 border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/30 transition-all min-h-[120px]">
-                    <textarea
-                        value={context}
-                        onChange={(e) => onUpdate(e.target.value)}
-                        className={cn(
-                            'w-full min-h-[120px] p-2 text-sm rounded-lg resize-y',
-                            'bg-background border border-border text-foreground leading-relaxed',
-                            'focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary'
-                        )}
-                        placeholder="Describe la visión y el contexto de tu marca..."
-                    />
-                </div>
-            </CardContent>
+            <div className="px-4 pb-4">
+                <textarea
+                    value={context}
+                    onChange={(e) => onUpdate(e.target.value)}
+                    className={cn(
+                        'w-full rounded-lg px-3 py-3 text-sm leading-relaxed resize-y',
+                        minHeightClassName,
+                        'bg-transparent border border-border/70 text-foreground',
+                        'focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary'
+                    )}
+                    placeholder="Describe la visión y el contexto de tu marca..."
+                />
+            </div>
         </Card>
     );
 }

@@ -158,7 +158,8 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                         className="hidden"
                         accept=".pdf,.txt,.md"
                         onChange={async (e) => {
-                            const file = e.target.files?.[0];
+                            const inputEl = e.currentTarget;
+                            const file = inputEl.files?.[0];
                             if (!file) return;
 
                             setIsAnalyzing(true);
@@ -181,7 +182,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                                 console.error(err);
                             } finally {
                                 setIsAnalyzing(false);
-                                e.target.value = '';
+                                if (inputEl) inputEl.value = '';
                             }
                         }}
                     />
