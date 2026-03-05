@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { analyzeBrandDNA } from '@/app/actions/analyze-brand-dna';
 import { previewBrandUrl } from '@/app/actions/preview-brand-url';
 import { getAllUserBrandKits } from '@/app/actions/get-user-brand-kit';
+import { updateUserBrandKit } from '@/app/actions/update-user-brand-kit';
 import { useBrandKit } from '@/contexts/BrandKitContext';
 import type { BrandDNA } from '@/lib/brand-types';
 import { cn } from '@/lib/utils';
@@ -24,7 +25,12 @@ import {
     TriangleAlert,
     Check,
     X,
-    Pencil
+    Pencil,
+    ListChecks,
+    Trash2,
+    Copy,
+    Upload,
+    Download
 } from 'lucide-react';
 import { BrandDNABoard } from '@/components/brand-dna/BrandDNABoard';
 import { BrandKitProgress } from '@/components/brand-dna/BrandKitProgress';
@@ -103,6 +109,11 @@ function BrandKitPageContent() {
     const autoCreateTriggeredRef = useRef(false);
     const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
     const [pendingRegenerateUrl, setPendingRegenerateUrl] = useState('');
+    const [assistantLaunchNonce, setAssistantLaunchNonce] = useState(0);
+    const [importLaunchNonce, setImportLaunchNonce] = useState(0);
+    const [exportLaunchNonce, setExportLaunchNonce] = useState(0);
+    const [showDeleteCurrentConfirm, setShowDeleteCurrentConfirm] = useState(false);
+    const [isDuplicatingCurrent, setIsDuplicatingCurrent] = useState(false);
 
     // Brand name editing
     const [isEditingBrandName, setIsEditingBrandName] = useState(false);
@@ -488,6 +499,134 @@ function BrandKitPageContent() {
         router.replace(`/brand-kit${params.toString() ? `?${params.toString()}` : ''}`);
     };
 
+    const handleOpenAssistant = () => {
+        if (!activeBrandKit) return;
+        setAssistantLaunchNonce((prev) => prev + 1);
+    };
+
+    const handleOpenImport = () => {
+        if (!activeBrandKit) return;
+        setImportLaunchNonce((prev) => prev + 1);
+    };
+
+    const handleOpenExport = () => {
+        if (!activeBrandKit) return;
+        setExportLaunchNonce((prev) => prev + 1);
+    };
+
+    const handleDeleteCurrentBrandKit = async () => {
+        if (!activeBrandKit?.id) return;
+        await handleBrandDelete(activeBrandKit.id);
+        setShowDeleteCurrentConfirm(false);
+    };
+
+    const handleDuplicateCurrentBrandKit = async () => {
+        if (!activeBrandKit || !user?.id || isDuplicatingCurrent) return;
+
+        setIsDuplicatingCurrent(true);
+        try {
+            const duplicateNameBase = (activeBrandKit.brand_name || 'Mi Marca').trim();
+            const duplicateName = duplicateNameBase.toLowerCase().includes('copia')
+                ? duplicateNameBase
+                : `${duplicateNameBase} (copia)`;
+
+            const createResponse = await fetch('/api/brand-kit/create-empty', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clerk_user_id: user.id,
+                    brand_name: duplicateName,
+                    source_url: activeBrandKit.url || undefined,
+                }),
+            });
+
+            const createResult = await createResponse.json();
+            const createdId = createResult?.data?.id as string | undefined;
+            if (!createResult?.success || !isValidBrandId(createdId)) {
+                throw new Error(createResult?.error || 'No se pudo crear la copia del kit.');
+            }
+
+            const duplicatedPayload: BrandDNA = {
+                ...activeBrandKit,
+                id: createdId,
+                brand_name: duplicateName,
+            };
+
+            const saveResult = await updateUserBrandKit(createdId, duplicatedPayload);
+            if (!saveResult.success) {
+                throw new Error(saveResult.error || 'No se pudo guardar la copia del kit.');
+            }
+
+            await reloadBrandKits(false);
+            await setActiveBrandKit(createdId, true, false);
+
+            toast({
+                title: "Kit duplicado",
+                description: `Se creó "${duplicateName}".`,
+            });
+        } catch (error) {
+            console.error('Error duplicating brand kit:', error);
+            toast({
+                title: "Error al duplicar",
+                description: error instanceof Error ? error.message : "No se pudo duplicar el kit actual.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsDuplicatingCurrent(false);
+        }
+    };
+
+    const assistantHeaderAction = activeBrandKit ? (
+        <div className="flex items-center gap-2">
+            <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleOpenAssistant}
+            >
+                <ListChecks className="w-4 h-4" />
+                Abrir asistente
+            </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => void handleDuplicateCurrentBrandKit()}
+                disabled={isDuplicatingCurrent}
+            >
+                {isDuplicatingCurrent ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
+                Duplicar kit actual
+            </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleOpenImport}
+            >
+                <Upload className="w-4 h-4" />
+                Importar
+            </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleOpenExport}
+            >
+                <Download className="w-4 h-4" />
+                Exportar
+            </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setShowDeleteCurrentConfirm(true)}
+            >
+                <Trash2 className="w-4 h-4" />
+                Borrar kit actual
+            </Button>
+        </div>
+    ) : null;
+
     const runRegenerateAnalysis = async (
         urlOverride?: string,
         options?: { useGlobalLoading?: boolean; showSuccessToast?: boolean }
@@ -658,6 +797,7 @@ function BrandKitPageContent() {
                 onBrandChange={setActiveBrandKit}
                 onBrandDelete={handleBrandDelete}
                 onNewBrandKit={handleNewProfile}
+                headerAfterBrandActions={assistantHeaderAction}
             >
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="text-center animate-in fade-in zoom-in duration-500">
@@ -676,6 +816,7 @@ function BrandKitPageContent() {
             onBrandChange={setActiveBrandKit}
             onBrandDelete={handleBrandDelete}
             onNewBrandKit={handleNewProfile}
+            headerAfterBrandActions={assistantHeaderAction}
         >
             <main className="p-6 md:p-12 max-w-7xl mx-auto">
 
@@ -1103,6 +1244,9 @@ function BrandKitPageContent() {
                             data={activeBrandKit}
                             allowAssistantExit={hasOtherBrandKits}
                             assistantCreationMode={assistantCreationMode}
+                            assistantLaunchNonce={assistantLaunchNonce}
+                            importLaunchNonce={importLaunchNonce}
+                            exportLaunchNonce={exportLaunchNonce}
                             onAbortAssistantCreation={handleAbortAssistantCreation}
                             onCompleteAssistantCreation={handleCompleteAssistantCreation}
                             isDebug={searchParams.get('debug') === 'true'}
@@ -1160,6 +1304,29 @@ function BrandKitPageContent() {
                             >
                                 <RefreshCcw className="w-4 h-4 mr-2" />
                                 Si, regenerar ahora
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                <AlertDialog open={showDeleteCurrentConfirm} onOpenChange={setShowDeleteCurrentConfirm}>
+                    <AlertDialogContent className="max-w-md">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                                <Trash2 className="w-5 h-5" />
+                                Borrar kit de marca actual
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Se eliminará <span className="font-semibold">{activeBrandKit?.brand_name || 'este kit'}</span> y no se podrá deshacer.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleDeleteCurrentBrandKit}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                                Borrar kit
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

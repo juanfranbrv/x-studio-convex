@@ -51,5 +51,6 @@ export interface BrandKitSummary {
     logo_url?: string;
     favicon_url?: string;
     screenshot_url?: string;
+    completeness?: number;
     updated_at?: string;
 }

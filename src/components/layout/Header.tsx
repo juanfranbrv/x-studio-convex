@@ -54,6 +54,17 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
         return name?.charAt(0).toUpperCase() || '?'
     }
 
+    const getCompletenessStyle = (value?: number) => {
+        const percentage = Number.isFinite(value) ? Number(value) : 0
+        if (percentage >= 100) {
+            return 'text-emerald-700 bg-emerald-500/15 border-emerald-500/30'
+        }
+        if (percentage < 70) {
+            return 'text-red-700 bg-red-500/15 border-red-500/30'
+        }
+        return 'text-amber-700 bg-amber-500/15 border-amber-500/30'
+    }
+
     const currentBrandName = ('brand_name' in (currentBrand || {}))
         ? (currentBrand as any).brand_name
         : t('common.switchBrand')
@@ -128,7 +139,14 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                                 </span>
                                             )}
                                         </div>
-                                        <span className="flex-1 truncate">{brand.brand_name}</span>
+                                        <div className="flex-1 min-w-0 flex items-center gap-2">
+                                            <span className="truncate">{brand.brand_name}</span>
+                                            <span
+                                                className={`text-[10px] px-1.5 py-0.5 rounded-md border font-semibold whitespace-nowrap ${getCompletenessStyle(brand.completeness)}`}
+                                            >
+                                                {Math.max(0, Math.min(100, Math.round(brand.completeness ?? 0)))}%
+                                            </span>
+                                        </div>
                                         <Button
                                             variant="ghost"
                                             size="icon"

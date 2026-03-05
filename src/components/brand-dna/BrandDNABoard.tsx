@@ -24,13 +24,16 @@ import { updateUserBrandKit } from '@/app/actions/update-user-brand-kit';
 import { hexToRgb } from '@/lib/color-utils';
 import { calculateBrandKitCompleteness } from '@/lib/brand-kit-utils';
 
-import { Save, Download, CheckCircle, RotateCcw, AlertCircle, X, Bug, Globe, ListChecks } from 'lucide-react';
+import { Save, CheckCircle, RotateCcw, AlertCircle, X, Bug, Globe } from 'lucide-react';
 
 interface BrandDNABoardProps {
     data: BrandDNA;
     isDebug?: boolean;
     allowAssistantExit?: boolean;
     assistantCreationMode?: boolean;
+    assistantLaunchNonce?: number;
+    importLaunchNonce?: number;
+    exportLaunchNonce?: number;
     onAbortAssistantCreation?: () => Promise<void> | void;
     onCompleteAssistantCreation?: () => void;
     onRegenerate?: (urlOverride?: string) => void;
@@ -44,6 +47,20 @@ interface BrandDNABoardProps {
     }>;
     onNewBrandKit?: () => void;
     onSaveSuccess?: () => void;
+}
+
+interface PortableEmbeddedAsset {
+    originalUrl: string;
+    dataUrl: string;
+    fileName: string;
+}
+
+interface PortableBrandKitPayload {
+    format: 'xstudio-brand-kit';
+    version: 1;
+    exportedAt: string;
+    brand: BrandDNA;
+    embeddedAssets: PortableEmbeddedAsset[];
 }
 
 function colorLuminance(hex?: string): number {
@@ -102,6 +119,9 @@ export function BrandDNABoard({
     isDebug = false,
     allowAssistantExit = false,
     assistantCreationMode = false,
+    assistantLaunchNonce = 0,
+    importLaunchNonce = 0,
+    exportLaunchNonce = 0,
     onAbortAssistantCreation,
     onCompleteAssistantCreation,
     onRegenerate,
@@ -112,13 +132,16 @@ export function BrandDNABoard({
 }: BrandDNABoardProps) {
     const ASSISTANT_LOCK_KEY = 'brand-kit-assistant-lock';
     const { user } = useUser();
-    const { syncActiveBrandKit } = useBrandKit();
+    const { syncActiveBrandKit, reloadBrandKits, setActiveBrandKit } = useBrandKit();
     const [data, setData] = useState<BrandDNA>(() => normalizeStudioColorRoles(initialData));
     const [isSaving, setIsSaving] = useState(false);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+    const [isExportingPortable, setIsExportingPortable] = useState(false);
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+    const importFileInputRef = useRef<HTMLInputElement | null>(null);
     const [errorModal, setErrorModal] = useState<{ open: boolean; title: string; message: string }>({
         open: false,
         title: '',
@@ -179,6 +202,11 @@ export function BrandDNABoard({
             setShowAssistantWizard(true);
         }
     }, [data?.id, isManualPlaceholderUrl, assistantCreationMode, assistantPriorityMode, assistantFlowLocked, allowAssistantExit]);
+
+    useEffect(() => {
+        if (assistantLaunchNonce <= 0) return;
+        setShowAssistantWizard(true);
+    }, [assistantLaunchNonce]);
 
     const handleWizardOpenChange = (open: boolean) => {
         if (!open && mustForceAssistant) return;
@@ -555,14 +583,243 @@ export function BrandDNABoard({
         updateData(prev => ({ ...prev, images: prev.images?.filter((_, i) => i !== idx) }));
     };
 
-    const handleExportJSON = () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", `brand-dna-${data.brand_name?.toLowerCase().replace(/\s+/g, '-')}.json`);
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
+    const extractAssetUrls = (kit: BrandDNA): string[] => {
+        const urls = new Set<string>();
+
+        const push = (value?: string) => {
+            const clean = (value || '').trim();
+            if (!clean) return;
+            urls.add(clean);
+        };
+
+        push(kit.logo_url);
+        push(kit.favicon_url);
+        push(kit.screenshot_url);
+        (kit.logos || []).forEach((logo) => push(logo?.url));
+        (kit.images || []).forEach((img) => push(img?.url));
+
+        return Array.from(urls);
+    };
+
+    const guessExtensionFromMime = (mimeType: string) => {
+        if (mimeType.includes('png')) return 'png';
+        if (mimeType.includes('jpeg') || mimeType.includes('jpg')) return 'jpg';
+        if (mimeType.includes('webp')) return 'webp';
+        if (mimeType.includes('gif')) return 'gif';
+        if (mimeType.includes('svg')) return 'svg';
+        return 'bin';
+    };
+
+    const readBlobAsDataUrl = (blob: Blob): Promise<string> =>
+        new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.onerror = () => reject(new Error('No se pudo leer la imagen para exportacion.'));
+            reader.readAsDataURL(blob);
+        });
+
+    const buildPortablePayload = async (kit: BrandDNA): Promise<PortableBrandKitPayload> => {
+        const brandForExport: BrandDNA = {
+            ...kit,
+            id: undefined,
+            created_at: undefined,
+            updated_at: undefined,
+            api_trace: undefined,
+            debug: undefined,
+        };
+
+        const embeddedAssets: PortableEmbeddedAsset[] = [];
+        const urls = extractAssetUrls(brandForExport);
+
+        for (const url of urls) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) continue;
+                const blob = await response.blob();
+                const dataUrl = await readBlobAsDataUrl(blob);
+                const mimeType = blob.type || 'application/octet-stream';
+                const ext = guessExtensionFromMime(mimeType);
+                const fileName = `asset-${embeddedAssets.length + 1}.${ext}`;
+                embeddedAssets.push({ originalUrl: url, dataUrl, fileName });
+            } catch {
+                // Si algun asset no se puede leer, el export sigue sin bloquear al usuario.
+            }
+        }
+
+        return {
+            format: 'xstudio-brand-kit',
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            brand: brandForExport,
+            embeddedAssets,
+        };
+    };
+
+    const sanitizeImportedBrand = (raw: BrandDNA): BrandDNA => ({
+        ...raw,
+        id: undefined,
+        url: raw.url || '',
+        brand_name: raw.brand_name || 'Mi Marca',
+        tagline: raw.tagline || '',
+        business_overview: raw.business_overview || '',
+        brand_values: Array.isArray(raw.brand_values) ? raw.brand_values : [],
+        tone_of_voice: Array.isArray(raw.tone_of_voice) ? raw.tone_of_voice : [],
+        visual_aesthetic: Array.isArray(raw.visual_aesthetic) ? raw.visual_aesthetic : [],
+        colors: Array.isArray(raw.colors) ? raw.colors : [],
+        fonts: Array.isArray(raw.fonts) ? raw.fonts : [],
+        logos: Array.isArray(raw.logos) ? raw.logos : [],
+        images: Array.isArray(raw.images) ? raw.images : [],
+        social_links: Array.isArray(raw.social_links) ? raw.social_links : [],
+        emails: Array.isArray(raw.emails) ? raw.emails : [],
+        phones: Array.isArray(raw.phones) ? raw.phones : [],
+        addresses: Array.isArray(raw.addresses) ? raw.addresses : [],
+        target_audience: Array.isArray(raw.target_audience) ? raw.target_audience : [],
+        created_at: undefined,
+        updated_at: undefined,
+        api_trace: undefined,
+        debug: undefined,
+    });
+
+    const dataUrlToFile = async (dataUrl: string, fileName: string): Promise<File> => {
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const mime = blob.type || 'image/webp';
+        return new File([blob], fileName, { type: mime });
+    };
+
+    const handleExportJSON = async () => {
+        setIsExportingPortable(true);
+        try {
+            const portablePayload = await buildPortablePayload(data);
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(portablePayload, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `brand-kit-${data.brand_name?.toLowerCase().replace(/\s+/g, '-') || 'export'}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        } catch (error) {
+            setErrorModal({
+                open: true,
+                title: 'Error al exportar',
+                message: error instanceof Error
+                    ? error.message
+                    : 'No se pudo exportar el kit en formato portable.',
+            });
+        } finally {
+            setIsExportingPortable(false);
+        }
+    };
+
+    const handleImportKitClick = () => {
+        importFileInputRef.current?.click();
+    };
+
+    useEffect(() => {
+        if (importLaunchNonce <= 0) return;
+        if (isImporting) return;
+        handleImportKitClick();
+    }, [importLaunchNonce, isImporting]);
+
+    useEffect(() => {
+        if (exportLaunchNonce <= 0) return;
+        if (isExportingPortable) return;
+        void handleExportJSON();
+    }, [exportLaunchNonce, isExportingPortable]);
+
+    const handleImportKitFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        if (!user?.id) {
+            setErrorModal({
+                open: true,
+                title: 'Sesion requerida',
+                message: 'Necesitas iniciar sesion para importar un kit de marca.',
+            });
+            event.target.value = '';
+            return;
+        }
+
+        setIsImporting(true);
+        try {
+            const text = await file.text();
+            const parsed = JSON.parse(text) as Partial<PortableBrandKitPayload> | BrandDNA;
+
+            const isPortable = (parsed as PortableBrandKitPayload)?.format === 'xstudio-brand-kit';
+            const rawBrand = (isPortable ? (parsed as PortableBrandKitPayload).brand : parsed) as BrandDNA;
+            const importedBrand = sanitizeImportedBrand(rawBrand);
+
+            const replacementMap = new Map<string, string>();
+            const portableAssets = isPortable ? ((parsed as PortableBrandKitPayload).embeddedAssets || []) : [];
+
+            for (const asset of portableAssets) {
+                if (!asset?.dataUrl || !asset?.originalUrl) continue;
+                try {
+                    const uploadFile = await dataUrlToFile(asset.dataUrl, asset.fileName || 'brand-kit-asset.webp');
+                    const formData = new FormData();
+                    formData.append('file', uploadFile);
+                    const uploaded = await uploadBrandImage(formData);
+                    if (uploaded.success && uploaded.url) {
+                        replacementMap.set(asset.originalUrl, uploaded.url);
+                    }
+                } catch {
+                    // No bloqueamos toda la importacion por una imagen concreta.
+                }
+            }
+
+            const mapUrl = (url?: string) => {
+                const clean = (url || '').trim();
+                if (!clean) return clean;
+                return replacementMap.get(clean) || clean;
+            };
+
+            importedBrand.logo_url = mapUrl(importedBrand.logo_url);
+            importedBrand.favicon_url = mapUrl(importedBrand.favicon_url);
+            importedBrand.screenshot_url = mapUrl(importedBrand.screenshot_url);
+            importedBrand.logos = (importedBrand.logos || []).map((logo) => ({ ...logo, url: mapUrl(logo.url) }));
+            importedBrand.images = (importedBrand.images || []).map((img) => ({ ...img, url: mapUrl(img.url) }));
+
+            const normalized = normalizeStudioColorRoles(importedBrand);
+
+            const createResponse = await fetch('/api/brand-kit/create-empty', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clerk_user_id: user.id,
+                    brand_name: normalized.brand_name?.trim() || 'Kit importado',
+                }),
+            });
+            const createResult = await createResponse.json();
+            const createdId = createResult?.data?.id as string | undefined;
+            if (!createResult?.success || !createdId) {
+                throw new Error(createResult?.error || 'No se pudo crear el kit para importarlo.');
+            }
+
+            const payloadToSave: BrandDNA = {
+                ...normalized,
+                id: createdId,
+            };
+            const saveResult = await updateUserBrandKit(createdId, payloadToSave);
+            if (!saveResult.success) {
+                throw new Error(saveResult.error || 'No se pudo guardar el kit importado.');
+            }
+
+            await reloadBrandKits(false);
+            await setActiveBrandKit(createdId, true, false);
+            setData(payloadToSave);
+            setHasUnsavedChanges(false);
+        } catch (error) {
+            setErrorModal({
+                open: true,
+                title: 'Error al importar',
+                message: error instanceof Error
+                    ? error.message
+                    : 'No se pudo importar el archivo del kit de marca.',
+            });
+        } finally {
+            setIsImporting(false);
+            event.target.value = '';
+        }
     };
 
     const handleAppendExtractedData = (extracted: any) => {
@@ -635,12 +892,12 @@ export function BrandDNABoard({
                             <p className="text-xs text-muted-foreground">Paso 1: Pon nombre a tu kit. Paso 2 (opcional): pega una URL y pulsa Analizar URL para autocompletar contenido.</p>
                         </div>
 
-                        <div className="flex items-start gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center text-accent-foreground shadow-sm shrink-0">
+                        <div className="flex items-stretch gap-3">
+                            <div className="w-20 md:w-24 rounded-xl bg-accent flex items-center justify-center text-accent-foreground shadow-sm shrink-0 self-stretch min-h-[132px]">
                                 {data.logo_url ? (
-                                    <img src={data.logo_url} className="w-8 h-8 object-contain" alt="Logo" />
+                                    <img src={data.logo_url} className="w-14 h-14 md:w-16 md:h-16 object-contain" alt="Logo" />
                                 ) : (
-                                    <span className="text-xl font-bold">{data.brand_name?.[0] || 'M'}</span>
+                                    <span className="text-2xl md:text-3xl font-bold">{data.brand_name?.[0] || 'M'}</span>
                                 )}
                             </div>
 
@@ -718,15 +975,13 @@ export function BrandDNABoard({
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center justify-end gap-3 border-t border-border/50 pt-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 h-9"
-                        onClick={() => setShowAssistantWizard(true)}
-                    >
-                        <ListChecks className="w-4 h-4" />
-                        Modo guiado
-                    </Button>
+                    <input
+                        ref={importFileInputRef}
+                        type="file"
+                        accept="application/json,.json"
+                        className="hidden"
+                        onChange={handleImportKitFile}
+                    />
                     {canUseDebugAudit && (
     <Button
         variant="ghost"
@@ -741,10 +996,6 @@ export function BrandDNABoard({
         Auditoria
     </Button>
 )}
-                    <Button variant="outline" size="sm" onClick={handleExportJSON} className="gap-2 h-9">
-                        <Download className="w-4 h-4" />
-                        Exportar
-                    </Button>
                     <Button
                         size="sm"
                         onClick={() => handleSave(false)}
@@ -765,7 +1016,7 @@ export function BrandDNABoard({
                         <p className="text-sm text-muted-foreground mb-4">
                             Cuando termines estos pasos, se desbloqueara el editor completo.
                         </p>
-                        <Button onClick={() => setShowAssistantWizard(true)}>Continuar asistente</Button>
+                        <Button onClick={() => setShowAssistantWizard(true)}>Abrir asistente</Button>
                     </div>
                 )
             ) : (

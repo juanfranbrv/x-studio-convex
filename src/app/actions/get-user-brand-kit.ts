@@ -5,6 +5,32 @@ import { api } from '../../../convex/_generated/api';
 import type { BrandDNA, BrandKitSummary } from '@/lib/brand-types';
 import { auth } from '@clerk/nextjs/server';
 
+function calculateCompletenessFromRawBrand(brand: any): number {
+    let score = 0;
+
+    if ((brand.brand_name || '').trim().length > 0) score += 10;
+    if ((brand.tagline || '').trim().length > 0) score += 10;
+    if ((brand.business_overview || '').trim().length > 20) score += 10;
+    if (Array.isArray(brand.colors) && brand.colors.length >= 3) score += 15;
+    if ((Array.isArray(brand.logos) && brand.logos.length >= 1) || Boolean(brand.logo_url)) score += 15;
+    if (Array.isArray(brand.fonts) && brand.fonts.length >= 1) score += 10;
+    if (Array.isArray(brand.images) && brand.images.length >= 1) score += 10;
+    if (Array.isArray(brand.brand_values) && brand.brand_values.length >= 1) score += 5;
+    if (Array.isArray(brand.tone_of_voice) && brand.tone_of_voice.length >= 1) score += 5;
+
+    const textAssets = brand.text_assets;
+    const hasTextAssets =
+        Boolean(textAssets) &&
+        (
+            (Array.isArray(textAssets?.marketing_hooks) && textAssets.marketing_hooks.length > 0) ||
+            (Array.isArray(textAssets?.ctas) && textAssets.ctas.length > 0) ||
+            ((textAssets?.brand_context || '').trim().length > 0)
+        );
+    if (hasTextAssets) score += 10;
+
+    return Math.max(0, Math.min(100, Math.round(score)));
+}
+
 /**
  * Normaliza el array de imágenes para asegurar que siempre sea un array de objetos con url y selected.
  */
@@ -75,6 +101,7 @@ export async function getAllUserBrandKits(clerkUserId: string): Promise<{
             logo_url: b.logo_url || null,
             favicon_url: b.favicon_url || null,
             screenshot_url: b.screenshot_url || null,
+            completeness: calculateCompletenessFromRawBrand(b),
             updated_at: b.updated_at
         }));
 
