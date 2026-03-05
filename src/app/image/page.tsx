@@ -1958,7 +1958,7 @@ export default function ImagePage() {
                                     })
                                 }
                             }}
-                            onCreateSession={() => void createNewImageSession(promptValue)}
+                            onCreateSession={() => void createNewImageSession()}
                             onDeleteSession={() => void handleDeleteCurrentSession()}
                             onClearSessions={() => void handleClearAllSessions()}
                             onSaveSessionNow={() => void handleSaveSessionNow()}
