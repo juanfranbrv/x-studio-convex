@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 
 import sharp from 'sharp';
 import { fetchMutation, fetchQuery } from "convex/nextjs";
@@ -8,10 +8,10 @@ export async function uploadBrandImage(formData: FormData) {
     try {
         const file = formData.get('file') as File;
         if (!file) {
-            return { success: false, error: 'No se ha proporcionado ningún archivo.' };
+            return { success: false, error: 'No se ha proporcionado ningun archivo.' };
         }
 
-        // Validaciones básicas
+        // Validaciones basicas
         if (!file.type.startsWith('image/')) {
             return { success: false, error: 'El archivo debe ser una imagen.' };
         }
@@ -59,8 +59,10 @@ export async function uploadBrandImage(formData: FormData) {
 
         return { success: true, url };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error inesperado al subir la imagen.'
         console.error('Error en uploadBrandImage:', error);
-        return { success: false, error: error.message || 'Ocurrió un error inesperado al subir la imagen.' };
+        return { success: false, error: message || 'Ocurrio un error inesperado al subir la imagen.' };
     }
 }
+

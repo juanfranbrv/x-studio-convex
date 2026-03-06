@@ -158,6 +158,7 @@ export default function ImagePage() {
     const [sessionRootPrompt, setSessionRootPrompt] = useState<string | null>(null)
     const [isHydratingSession, setIsHydratingSession] = useState(false)
     const [isSavingSession, setIsSavingSession] = useState(false)
+    const [isCreatingSession, setIsCreatingSession] = useState(false)
     const [sessionSavedAt, setSessionSavedAt] = useState<string | null>(null)
     const [sessionSaveError, setSessionSaveError] = useState<string | null>(null)
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
@@ -167,6 +168,7 @@ export default function ImagePage() {
     const hydrationScopeRef = useRef<string>('')
     const hasHydratedScopeRef = useRef(false)
     const lastSavedSnapshotSignatureRef = useRef<string | null>(null)
+    const createSessionInFlightRef = useRef(false)
     const persistedSessionImageCacheRef = useRef<Map<string, { storageId: string; imageUrl: string }>>(new Map())
     const persistImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string } | null>>>(new Map())
     const bypassUnsavedGuardRef = useRef(false)
@@ -386,44 +388,52 @@ export default function ImagePage() {
         options?: { skipUnsavedConfirm?: boolean }
     ) => {
         if (!user?.id || !scopedBrandId) return null
+        if (createSessionInFlightRef.current) return null
         if (!options?.skipUnsavedConfirm && !confirmDiscardUnsavedChanges('crear una sesión nueva')) return null
+        createSessionInFlightRef.current = true
+        setIsCreatingSession(true)
 
-        const prompt = initialPrompt ?? ''
-        const normalizedPrompt = normalizePromptForSession(prompt)
+        try {
+            const prompt = initialPrompt ?? ''
+            const normalizedPrompt = normalizePromptForSession(prompt)
 
-        creationFlow.reset()
-        setSessionGenerations([])
-        setDebugPromptData(null)
-        setSelectedContext([])
-        setEditPrompt('')
-        setPendingRetryRequest(null)
-        setLastGenerationRequest(null)
-        setPromptValue(prompt)
-        creationFlow.setRawMessage(prompt)
-        setSessionRootPrompt(normalizedPrompt)
-        setAuditFlowId(null)
-        auditFlowIdRef.current = null
+            creationFlow.reset()
+            setSessionGenerations([])
+            setDebugPromptData(null)
+            setSelectedContext([])
+            setEditPrompt('')
+            setPendingRetryRequest(null)
+            setLastGenerationRequest(null)
+            setPromptValue(prompt)
+            creationFlow.setRawMessage(prompt)
+            setSessionRootPrompt(normalizedPrompt)
+            setAuditFlowId(null)
+            auditFlowIdRef.current = null
 
-        const created = await createWorkSession({
-            user_id: user.id,
-            module: 'image',
-            brand_id: scopedBrandId,
-            title: buildSessionTitle(prompt),
-            root_prompt: normalizedPrompt || undefined,
-        })
-
-        const newId = String(created.session_id)
-        setCurrentSessionId(newId)
-        setSelectedSessionToLoad(newId)
-        setHasUnsavedChanges(false)
-
-        if (!silent) {
-            toast({
-                title: "Sesion nueva",
-                description: "Se ha iniciado una nueva sesion de trabajo para este kit de marca.",
+            const created = await createWorkSession({
+                user_id: user.id,
+                module: 'image',
+                brand_id: scopedBrandId,
+                title: buildSessionTitle(prompt),
+                root_prompt: normalizedPrompt || undefined,
             })
+
+            const newId = String(created.session_id)
+            setCurrentSessionId(newId)
+            setSelectedSessionToLoad(newId)
+            setHasUnsavedChanges(false)
+
+            if (!silent) {
+                toast({
+                    title: "Sesion nueva",
+                    description: "Se ha iniciado una nueva sesion de trabajo para este kit de marca.",
+                })
+            }
+            return newId
+        } finally {
+            createSessionInFlightRef.current = false
+            setIsCreatingSession(false)
         }
-        return newId
     }, [user?.id, scopedBrandId, normalizePromptForSession, creationFlow, createWorkSession, toast, buildSessionTitle, confirmDiscardUnsavedChanges])
 
     const handleLoadSession = useCallback(async (
@@ -515,18 +525,7 @@ export default function ImagePage() {
         }
 
         hasHydratedScopeRef.current = true
-        createWorkSession({
-            user_id: user.id,
-            module: 'image',
-            brand_id: scopedBrandId,
-            title: 'Sesion nueva',
-            snapshot: buildWorkspaceSnapshot(),
-        }).then((created) => {
-            const id = String(created.session_id)
-            setCurrentSessionId(id)
-            setSelectedSessionToLoad(id)
-            setHasUnsavedChanges(false)
-        }).catch((error) => {
+        createNewImageSession('', true, { skipUnsavedConfirm: true }).catch((error) => {
             hasHydratedScopeRef.current = false
             console.error('Error creating initial image work session:', error)
         })
@@ -534,8 +533,7 @@ export default function ImagePage() {
         user?.id,
         scopedBrandId,
         activeWorkSession,
-        createWorkSession,
-        buildWorkspaceSnapshot,
+        createNewImageSession,
         restoreWorkspaceFromSnapshot,
         normalizePromptForSession
     ])
@@ -1959,6 +1957,7 @@ export default function ImagePage() {
                                 }
                             }}
                             onCreateSession={() => void createNewImageSession()}
+                            isCreatingSession={isCreatingSession}
                             onDeleteSession={() => void handleDeleteCurrentSession()}
                             onClearSessions={() => void handleClearAllSessions()}
                             onSaveSessionNow={() => void handleSaveSessionNow()}

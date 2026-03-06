@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useMutation, useQuery } from 'convex/react'
+import { useMutation, usePaginatedQuery, useQuery } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
 import type { VisionAnalysis } from '@/lib/creation-flow-types'
@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { uploadBrandImage } from '@/app/actions/upload-image'
 
 type PresetRow = {
   _id: Id<'style_presets'>
@@ -36,6 +37,7 @@ interface StylePresetsManagerProps {
   adminEmail: string
 }
 
+const STYLE_PRESETS_PAGE_SIZE = 80
 const LOCAL_STORAGE_STYLE_MODEL_KEY = 'x-studio-admin-style-analysis-model'
 const FALLBACK_INTELLIGENCE_MODEL = 'wisdom/gemini-3-flash-preview'
 const BASE_INTELLIGENCE_MODELS = [
@@ -140,9 +142,31 @@ function extractStylePrompt(analysis: VisionAnalysis | null): string {
   return typeof firstKeyword === 'string' ? firstKeyword.trim() : ''
 }
 
+async function dataUrlToFile(dataUrl: string, fileName: string): Promise<File> {
+  const response = await fetch(dataUrl)
+  const blob = await response.blob()
+  return new File([blob], fileName, { type: blob.type || 'image/jpeg' })
+}
+
+function hasRenderableImage(url?: string): boolean {
+  return typeof url === 'string' && url.trim().length > 0
+}
+
 export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
   const { toast } = useToast()
-  const presets = useQuery(api.stylePresets.listAll, { admin_email: adminEmail }) as PresetRow[] | undefined
+  const {
+    results: paginatedPresets,
+    status: presetsStatus,
+    loadMore: loadMorePresets,
+  } = usePaginatedQuery(
+    api.stylePresets.listAllPaginated,
+    { admin_email: adminEmail },
+    { initialNumItems: STYLE_PRESETS_PAGE_SIZE }
+  )
+  const presets = useMemo(
+    () => (paginatedPresets || []) as PresetRow[],
+    [paginatedPresets]
+  )
   const modelCosts = useQuery(api.economic.listModelCosts, { admin_email: adminEmail }) as Array<{
     _id: Id<'model_costs'>
     model: string
@@ -164,6 +188,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
   const [savingId, setSavingId] = useState<string | null>(null)
   const [reanalyzingId, setReanalyzingId] = useState<string | null>(null)
   const [styleAnalysisModel, setStyleAnalysisModel] = useState<string>('')
+  const [failedImagePresetIds, setFailedImagePresetIds] = useState<Set<string>>(new Set())
 
   const intelligenceModelOptions = useMemo(() => {
     const modelsFromCosts = (modelCosts || [])
@@ -328,10 +353,18 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
 
     setIsCreating(true)
     try {
+      const uploadFile = await dataUrlToFile(newImageDataUrl, `${finalName || 'style'}.jpg`)
+      const formData = new FormData()
+      formData.append('file', uploadFile)
+      const uploaded = await uploadBrandImage(formData)
+      if (!uploaded.success || !uploaded.url) {
+        throw new Error(uploaded.error || 'No se pudo optimizar/subir la imagen del estilo.')
+      }
+
       await createPreset({
         admin_email: adminEmail,
         name: finalName,
-        image_url: newImageDataUrl,
+        image_url: uploaded.url,
         analysis: newAnalysis,
         is_active: newActive,
         sort_order: newSortOrder || nextSortOrder,
@@ -349,6 +382,11 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
     } finally {
       setIsCreating(false)
     }
+  }
+
+  const canRenderPresetImage = (preset: PresetRow) => {
+    if (!hasRenderableImage(preset.image_url)) return false
+    return !failedImagePresetIds.has(String(preset._id))
   }
 
   return (
@@ -452,7 +490,26 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
             {(presets || []).map((preset) => (
               <div key={preset._id} className="border rounded-xl p-3 space-y-3">
                 <div className="flex items-start gap-3">
-                  <img src={preset.image_url} alt={preset.name} className="w-16 aspect-[2/3] rounded-lg object-cover border shrink-0" />
+                  {canRenderPresetImage(preset) ? (
+                    <img
+                      src={preset.image_url}
+                      alt={preset.name}
+                      className="w-16 aspect-[2/3] rounded-lg object-cover border shrink-0"
+                      onError={() => {
+                        setFailedImagePresetIds((prev) => {
+                          const id = String(preset._id)
+                          if (prev.has(id)) return prev
+                          const next = new Set(prev)
+                          next.add(id)
+                          return next
+                        })
+                      }}
+                    />
+                  ) : (
+                    <div className="w-16 aspect-[2/3] rounded-lg border shrink-0 bg-muted/40 flex items-center justify-center text-[10px] text-muted-foreground text-center px-1">
+                      Sin imagen
+                    </div>
+                  )}
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Input
                     key={`${String(preset._id)}-${preset.name}`}
@@ -539,6 +596,22 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
 
           {(presets || []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No hay estilos aun.</p>
+          ) : null}
+
+          {presetsStatus !== 'Exhausted' ? (
+            <div className="flex justify-center pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => loadMorePresets(STYLE_PRESETS_PAGE_SIZE)}
+                disabled={presetsStatus === 'LoadingFirstPage' || presetsStatus === 'LoadingMore'}
+              >
+                {(presetsStatus === 'LoadingFirstPage' || presetsStatus === 'LoadingMore')
+                  ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  : null}
+                Cargar más estilos
+              </Button>
+            </div>
           ) : null}
         </CardContent>
       </Card>

@@ -321,6 +321,11 @@ export const createSession = mutation({
   handler: async (ctx, args) => {
     const moduleKey = ensureModule(args.module);
     const now = new Date().toISOString();
+    const nowMs = Date.now();
+    const dedupeWindowMs = 8_000;
+    const normalizedTitle = args.title?.trim() || undefined;
+    const normalizedRootPrompt = normalizePrompt(args.root_prompt);
+    const normalizedSnapshot = sanitizeSnapshot(args.snapshot);
     const rows = args.brand_id
       ? await ctx.db
           .query("work_sessions")
@@ -333,6 +338,22 @@ export const createSession = mutation({
           .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", moduleKey))
           .collect();
 
+    const recentSameIntent = rows
+      .filter((row) => row.active)
+      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+      .find((row) => {
+        const updatedAtMs = new Date(row.updated_at).getTime();
+        if (!Number.isFinite(updatedAtMs)) return false;
+        if ((nowMs - updatedAtMs) > dedupeWindowMs) return false;
+        if ((row.title || undefined) !== normalizedTitle) return false;
+        if ((row.root_prompt || undefined) !== normalizedRootPrompt) return false;
+        return true;
+      });
+
+    if (recentSameIntent) {
+      return { session_id: recentSameIntent._id };
+    }
+
     for (const row of rows) {
       if (!row.active) continue;
       await ctx.db.patch(row._id, { active: false, updated_at: now });
@@ -342,9 +363,9 @@ export const createSession = mutation({
       user_id: args.user_id,
       module: moduleKey,
       brand_id: args.brand_id,
-      title: args.title?.trim() || undefined,
-      root_prompt: normalizePrompt(args.root_prompt),
-      snapshot: sanitizeSnapshot(args.snapshot),
+      title: normalizedTitle,
+      root_prompt: normalizedRootPrompt,
+      snapshot: normalizedSnapshot,
       active: true,
       created_at: now,
       updated_at: now,

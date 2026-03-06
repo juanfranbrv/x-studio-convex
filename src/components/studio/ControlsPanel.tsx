@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { HexColorPicker } from 'react-colorful'
-import { useMutation, useQuery } from 'convex/react'
+import { useMutation, usePaginatedQuery, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
 import { useState, useRef, useEffect, useMemo } from 'react'
@@ -204,6 +204,8 @@ function AddAccentSwatch({
     )
 }
 
+const STYLE_PRESETS_PAGE_SIZE = 80
+
 interface ControlsPanelProps {
     creationFlow: ReturnType<typeof useCreationFlow>
     highlightedFields?: Set<string>
@@ -233,6 +235,7 @@ interface ControlsPanelProps {
     onDeleteSession?: () => void
     onClearSessions?: () => void
     onSaveSessionNow?: () => void
+    isCreatingSession?: boolean
     isSavingSession?: boolean
     sessionSavedAt?: string | null
     sessionSaveError?: string | null
@@ -263,6 +266,7 @@ export function ControlsPanel({
     onDeleteSession,
     onClearSessions,
     onSaveSessionNow,
+    isCreatingSession = false,
     isSavingSession = false,
     sessionSavedAt = null,
     sessionSaveError = null,
@@ -331,13 +335,22 @@ export function ControlsPanel({
             }
             : 'skip'
     )
-    const stylePresets = useQuery(api.stylePresets.listActive, {}) as Array<{
+    const {
+        results: stylePresetResults,
+        status: stylePresetsStatus,
+        loadMore: loadMoreStylePresets,
+    } = usePaginatedQuery(
+        api.stylePresets.listActivePaginated,
+        {},
+        { initialNumItems: STYLE_PRESETS_PAGE_SIZE }
+    )
+    const stylePresets = (stylePresetResults || []) as Array<{
         _id: string
         name: string
         description?: string
         image_url: string
         analysis: VisionAnalysis
-    }> | undefined
+    }>
 
     const lastInitBrandId = useRef<string | null>(null)
 
@@ -731,6 +744,7 @@ export function ControlsPanel({
                             size="sm"
                             className="h-7 px-2 text-[10px] gap-1"
                             onClick={onCreateSession}
+                            disabled={isCreatingSession}
                         >
                             <Plus className="w-3 h-3" />
                             Nueva
@@ -949,6 +963,8 @@ export function ControlsPanel({
                                     referenceImageRoles={state.referenceImageRoles}
                                     onReferenceRoleChange={setReferenceImageRole}
                                     stylePresets={stylePresets || []}
+                                    stylePresetsStatus={stylePresetsStatus}
+                                    onLoadMoreStylePresets={() => loadMoreStylePresets(STYLE_PRESETS_PAGE_SIZE)}
                                     selectedStylePresetId={state.selectedStylePresetId || null}
                                     selectedStylePresetName={state.selectedStylePresetName || null}
                                     onSelectStylePreset={(preset) => {

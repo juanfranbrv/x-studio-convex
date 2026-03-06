@@ -23,6 +23,8 @@ interface StyleImageCardProps {
         image_url: string
         analysis: unknown
     }>
+    stylePresetsStatus?: 'LoadingFirstPage' | 'CanLoadMore' | 'LoadingMore' | 'Exhausted'
+    onLoadMoreStylePresets?: () => void
     selectedStylePresetId?: string | null
     selectedStylePresetName?: string | null
     onSelectStylePreset?: (preset: { id: string; name: string; analysis: unknown } | null) => void
@@ -31,6 +33,7 @@ interface StyleImageCardProps {
 }
 
 const isStyleRole = (role?: ReferenceImageRole) => role === 'style' || role === 'style_content'
+const hasRenderableImage = (url?: string) => typeof url === 'string' && url.trim().length > 0
 
 export function StyleImageCard({
     uploadedImages = [],
@@ -42,8 +45,9 @@ export function StyleImageCard({
     referenceImageRoles = {},
     onReferenceRoleChange,
     stylePresets = [],
+    stylePresetsStatus = 'Exhausted',
+    onLoadMoreStylePresets,
     selectedStylePresetId = null,
-    selectedStylePresetName = null,
     onSelectStylePreset,
     isAnalyzing = false,
     error = null,
@@ -51,6 +55,7 @@ export function StyleImageCard({
     const [isDragging, setIsDragging] = useState(false)
     const [isBrandKitModalOpen, setIsBrandKitModalOpen] = useState(false)
     const [isPresetModalOpen, setIsPresetModalOpen] = useState(false)
+    const [failedImageUrls, setFailedImageUrls] = useState<Set<string>>(new Set())
     const inputRef = useRef<HTMLInputElement>(null)
     const previousUploadedRef = useRef<string[]>(uploadedImages)
     const waitingForUploadedStyleRef = useRef(false)
@@ -78,6 +83,19 @@ export function StyleImageCard({
         () => (selectedStylePresetId ? stylePresets.find((preset) => preset._id === selectedStylePresetId) || null : null),
         [selectedStylePresetId, stylePresets]
     )
+    const canRenderImageUrl = useCallback((url?: string) => {
+        if (!hasRenderableImage(url)) return false
+        return !failedImageUrls.has(String(url))
+    }, [failedImageUrls])
+    const markImageAsFailed = useCallback((url?: string) => {
+        if (!url) return
+        setFailedImageUrls((prev) => {
+            if (prev.has(url)) return prev
+            const next = new Set(prev)
+            next.add(url)
+            return next
+        })
+    }, [])
 
     const visualStylePreview = currentStyleImage
         ? {
@@ -226,11 +244,18 @@ export function StyleImageCard({
                 <div className="relative rounded-xl border border-border/60 bg-background p-3 min-h-[120px] group">
                     <div className="flex items-center gap-3">
                         <div className="rounded-lg border border-border/70 shadow-sm bg-background p-1 shrink-0 w-[6.5rem]">
-                            <img
-                                src={visualStylePreview.url}
-                                alt={visualStylePreview.title || 'Vista de estilo'}
-                                className="w-full aspect-[2/3] rounded-md object-cover"
-                            />
+                            {canRenderImageUrl(visualStylePreview.url) ? (
+                                <img
+                                    src={visualStylePreview.url}
+                                    alt={visualStylePreview.title || 'Vista de estilo'}
+                                    className="w-full aspect-[2/3] rounded-md object-cover"
+                                    onError={() => markImageAsFailed(visualStylePreview.url)}
+                                />
+                            ) : (
+                                <div className="w-full aspect-[2/3] rounded-md bg-muted/50 text-[11px] text-muted-foreground flex items-center justify-center">
+                                    Sin imagen
+                                </div>
+                            )}
                         </div>
                         <div className="min-w-0 flex-1 space-y-2">
                             <span className="inline-flex rounded-full px-2 py-1 text-[10px] font-semibold bg-violet-500/10 text-violet-700 border border-violet-500/30">
@@ -359,44 +384,73 @@ export function StyleImageCard({
 
                     <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
                         {stylePresets.length > 0 ? (
-                            <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] gap-3">
-                                {stylePresets.map((preset) => {
-                                    const isSelected = selectedStylePresetId === preset._id
-                                    return (
-                                        <button
-                                            key={preset._id}
-                                            type="button"
-                                            onClick={() => {
-                                                onSelectStylePreset?.({
-                                                    id: preset._id,
-                                                    name: preset.name,
-                                                    analysis: preset.analysis,
-                                                })
-                                                setIsPresetModalOpen(false)
-                                            }}
-                                            className={cn(
-                                                'relative w-full rounded-xl overflow-hidden border transition-all text-left group',
-                                                isSelected
-                                                    ? 'border-primary ring-2 ring-primary/20'
-                                                    : 'border-border hover:border-primary/40'
-                                            )}
-                                        >
-                                            <div className="aspect-[2/3]">
-                                                <img src={preset.image_url} alt={preset.name} className="w-full h-full object-cover" />
-                                            </div>
-                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent p-3">
-                                                <p className="text-white text-xs font-semibold truncate">
-                                                    {preset.name}
-                                                </p>
-                                            </div>
-                                            {isSelected && (
-                                                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
-                                                    <Check className="w-4 h-4" />
+                            <div className="space-y-4">
+                                <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] gap-3">
+                                    {stylePresets.map((preset) => {
+                                        const isSelected = selectedStylePresetId === preset._id
+                                        return (
+                                            <button
+                                                key={preset._id}
+                                                type="button"
+                                                onClick={() => {
+                                                    onSelectStylePreset?.({
+                                                        id: preset._id,
+                                                        name: preset.name,
+                                                        analysis: preset.analysis,
+                                                    })
+                                                    setIsPresetModalOpen(false)
+                                                }}
+                                                className={cn(
+                                                    'relative w-full rounded-xl overflow-hidden border transition-all text-left group',
+                                                    isSelected
+                                                        ? 'border-primary ring-2 ring-primary/20'
+                                                        : 'border-border hover:border-primary/40'
+                                                )}
+                                            >
+                                                <div className="aspect-[2/3]">
+                                                    {canRenderImageUrl(preset.image_url) ? (
+                                                        <img
+                                                            src={preset.image_url}
+                                                            alt={preset.name}
+                                                            className="w-full h-full object-cover"
+                                                            onError={() => markImageAsFailed(preset.image_url)}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full bg-muted/50 flex items-center justify-center text-[11px] text-muted-foreground font-medium">
+                                                            Sin imagen
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </button>
-                                    )
-                                })}
+                                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent p-3">
+                                                    <p className="text-white text-xs font-semibold truncate">
+                                                        {preset.name}
+                                                    </p>
+                                                </div>
+                                                {isSelected && (
+                                                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
+                                                        <Check className="w-4 h-4" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                                {stylePresetsStatus !== 'Exhausted' ? (
+                                    <div className="flex justify-center">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={onLoadMoreStylePresets}
+                                            disabled={stylePresetsStatus === 'LoadingFirstPage' || stylePresetsStatus === 'LoadingMore'}
+                                        >
+                                            {stylePresetsStatus === 'LoadingFirstPage' || stylePresetsStatus === 'LoadingMore'
+                                                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                : null}
+                                            Cargar más estilos
+                                        </Button>
+                                    </div>
+                                ) : null}
                             </div>
                         ) : (
                             <div className="rounded-xl border border-dashed border-border mt-1 p-6 text-center text-sm text-muted-foreground">
