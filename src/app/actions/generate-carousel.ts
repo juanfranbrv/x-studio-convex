@@ -201,6 +201,10 @@ export interface CarouselSlide {
     index: number
     imageUrl?: string
     image_storage_id?: string
+    imagePreviewUrl?: string
+    image_preview_storage_id?: string
+    imageOriginalUrl?: string
+    image_original_storage_id?: string
     title: string
     description: string
     status: 'pending' | 'generating' | 'done' | 'error'
@@ -393,7 +397,7 @@ async function decomposeIntoSlides(
         if (typeof value !== 'string') return undefined
         const normalized = value.toLowerCase().trim()
         if (['hook', 'gancho', 'portada', 'inicio'].includes(normalized)) return 'hook'
-        if (['cta', 'cierre', 'accion', 'acciÃ³n', 'conclusion', 'conclusiÃ³n'].includes(normalized)) return 'cta'
+        if (['cta', 'cierre', 'accion', 'acción', 'conclusion', 'conclusión'].includes(normalized)) return 'cta'
         if (['content', 'contenido', 'desarrollo', 'medio'].includes(normalized)) return 'content'
         return undefined
     }
@@ -1025,7 +1029,7 @@ const normalizeParsed = (parsed: any) => {
                 const fallbackUrl = brand.url?.trim()
                 const fallbackCTA = fallbackUrl
                     ? `Visita ${fallbackUrl} y empieza hoy.`
-                    : 'EscrÃ­benos y empecemos hoy mismo.'
+                    : 'Escríbenos y empecemos hoy mismo.'
 
                 slides[lastIndex] = {
                     ...slides[lastIndex],
@@ -1522,7 +1526,7 @@ export async function generateCarouselAction(
                     includeLogo: !!(includeLogoOnSlides && selectedLogoUrl),
                     isSequentialSlide: i > 0, // true for slides 2-5
                     // CTA for final slide only
-                    ctaText: isLastSlide ? (slideContent.title || 'MÃ¡s info') : undefined,
+                    ctaText: isLastSlide ? (slideContent.title || 'Más info') : undefined,
                     ctaUrl: isLastSlide ? finalUrl : undefined,
                     visualAnalysis: aiImageDescription,
                     language: input.language || detectLanguage(prompt) || 'es',

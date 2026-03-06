@@ -6,6 +6,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 interface Generation {
     id: string
     image_url: string
+    preview_image_url?: string
+    original_image_url?: string
     image_storage_id?: string
     created_at: string
     prompt_used?: string
@@ -88,9 +90,11 @@ export function ThumbnailHistory({
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {paginatedGenerations.map((gen) => {
-                    const isSelected = currentImageUrl === gen.image_url
+                    const selectedCandidates = [gen.image_url, gen.preview_image_url, gen.original_image_url].filter(Boolean)
+                    const isSelected = selectedCandidates.includes(currentImageUrl || '')
                     const skillLabel = getSkillLabel(gen)
-                    const imageUrl = typeof gen.image_url === 'string' ? gen.image_url.trim() : ''
+                    const imageUrl = (typeof gen.preview_image_url === 'string' && gen.preview_image_url.trim())
+                        || (typeof gen.image_url === 'string' ? gen.image_url.trim() : '')
                     return (
                         <button
                             key={gen.id}

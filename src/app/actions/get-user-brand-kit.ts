@@ -4,28 +4,59 @@ import { fetchQuery } from 'convex/nextjs';
 import { api } from '../../../convex/_generated/api';
 import type { BrandDNA, BrandKitSummary } from '@/lib/brand-types';
 import { auth } from '@clerk/nextjs/server';
+import type { Id } from '../../../convex/_generated/dataModel';
 
 function calculateCompletenessFromRawBrand(brand: any): number {
     let score = 0;
 
     if ((brand.brand_name || '').trim().length > 0) score += 10;
     if ((brand.tagline || '').trim().length > 0) score += 10;
-    if ((brand.business_overview || '').trim().length > 20) score += 10;
-    if (Array.isArray(brand.colors) && brand.colors.length >= 3) score += 15;
-    if ((Array.isArray(brand.logos) && brand.logos.length >= 1) || Boolean(brand.logo_url)) score += 15;
-    if (Array.isArray(brand.fonts) && brand.fonts.length >= 1) score += 10;
-    if (Array.isArray(brand.images) && brand.images.length >= 1) score += 10;
-    if (Array.isArray(brand.brand_values) && brand.brand_values.length >= 1) score += 5;
-    if (Array.isArray(brand.tone_of_voice) && brand.tone_of_voice.length >= 1) score += 5;
+    const businessOverviewLen =
+        typeof brand.business_overview_length === 'number'
+            ? brand.business_overview_length
+            : (brand.business_overview || '').trim().length;
+    const colorsCount =
+        typeof brand.colors_count === 'number'
+            ? brand.colors_count
+            : (Array.isArray(brand.colors) ? brand.colors.length : 0);
+    const logosCount =
+        typeof brand.logos_count === 'number'
+            ? brand.logos_count
+            : (Array.isArray(brand.logos) ? brand.logos.length : (brand.logo_url ? 1 : 0));
+    const fontsCount =
+        typeof brand.fonts_count === 'number'
+            ? brand.fonts_count
+            : (Array.isArray(brand.fonts) ? brand.fonts.length : 0);
+    const imagesCount =
+        typeof brand.images_count === 'number'
+            ? brand.images_count
+            : (Array.isArray(brand.images) ? brand.images.length : 0);
+    const brandValuesCount =
+        typeof brand.brand_values_count === 'number'
+            ? brand.brand_values_count
+            : (Array.isArray(brand.brand_values) ? brand.brand_values.length : 0);
+    const toneCount =
+        typeof brand.tone_of_voice_count === 'number'
+            ? brand.tone_of_voice_count
+            : (Array.isArray(brand.tone_of_voice) ? brand.tone_of_voice.length : 0);
+
+    if (businessOverviewLen > 20) score += 10;
+    if (colorsCount >= 3) score += 15;
+    if (logosCount >= 1 || Boolean(brand.logo_url)) score += 15;
+    if (fontsCount >= 1) score += 10;
+    if (imagesCount >= 1) score += 10;
+    if (brandValuesCount >= 1) score += 5;
+    if (toneCount >= 1) score += 5;
 
     const textAssets = brand.text_assets;
     const hasTextAssets =
-        Boolean(textAssets) &&
+        Boolean(brand.has_text_assets) ||
+        (Boolean(textAssets) &&
         (
             (Array.isArray(textAssets?.marketing_hooks) && textAssets.marketing_hooks.length > 0) ||
             (Array.isArray(textAssets?.ctas) && textAssets.ctas.length > 0) ||
             ((textAssets?.brand_context || '').trim().length > 0)
-        );
+        ));
     if (hasTextAssets) score += 10;
 
     return Math.max(0, Math.min(100, Math.round(score)));
@@ -83,8 +114,7 @@ export async function getAllUserBrandKits(clerkUserId: string): Promise<{
             return { success: false, error: 'No autorizado' };
         }
 
-        // CONVEX MIGRATION: fetchQuery
-        const brands = await fetchQuery(api.brands.getBrandDNAByClerkId, { clerk_user_id: userId });
+        const brands = await fetchQuery(api.brands.listSummariesByClerkId, { clerk_user_id: userId });
 
         // Client-side sort by updated_at desc since we can't easily index sort in Convex yet
         const sortedBrands = (brands || []).sort((a: any, b: any) => {
@@ -128,10 +158,12 @@ export async function getUserBrandKitById(brandKitId: string): Promise<{
 
         // Robust path: resolve from the current user's own list to avoid
         // stale/legacy IDs and keep strict user isolation.
-        const ownBrands = await fetchQuery(api.brands.getBrandDNAByClerkId, { clerk_user_id: userId });
-        const data = (ownBrands || []).find((b: any) => String(b._id) === String(brandKitId));
+        const data = await fetchQuery(api.brands.getBrandDNAById, {
+            id: brandKitId as Id<'brand_dna'>,
+            clerk_user_id: userId,
+        });
 
-        if (!data) {
+        if (!data || String(data._id) !== String(brandKitId)) {
             return { success: false, error: 'Brand Kit no encontrado' };
         }
 
@@ -185,7 +217,7 @@ export async function getUserBrandKit(clerkUserId: string): Promise<{
             return { success: false, exists: false, error: 'No autorizado' };
         }
 
-        const brands = await fetchQuery(api.brands.getBrandDNAByClerkId, { clerk_user_id: userId });
+        const brands = await fetchQuery(api.brands.listSummariesByClerkId, { clerk_user_id: userId });
 
         if (!brands || brands.length === 0) {
             return { success: true, exists: false };
@@ -199,33 +231,40 @@ export async function getUserBrandKit(clerkUserId: string): Promise<{
         });
 
         const record = brands[0];
+        const fullRecord = await fetchQuery(api.brands.getBrandDNAById, {
+            id: record._id as Id<'brand_dna'>,
+            clerk_user_id: userId,
+        });
+        if (!fullRecord) {
+            return { success: false, exists: false, error: 'Brand Kit no encontrado' };
+        }
 
         const brandDNA: BrandDNA = {
-            id: record._id,
-            url: record.url || '',
-            brand_name: record.brand_name || '',
-            cta_url_enabled: typeof record.cta_url_enabled === 'boolean' ? record.cta_url_enabled : false,
-            tagline: record.tagline || '',
-            business_overview: record.business_overview || '',
-            brand_values: record.brand_values || [],
-            tone_of_voice: record.tone_of_voice || [],
-            visual_aesthetic: record.visual_aesthetic || [],
-            colors: record.colors || [],
-            fonts: record.fonts || [],
-            logo_url: record.logo_url || '',
-            logos: normalizeImages(record.logos),
-            favicon_url: record.favicon_url || '',
-            screenshot_url: record.screenshot_url || '',
-            images: normalizeImages(record.images),
-            social_links: record.social_links || [],
-            emails: record.emails || [],
-            phones: record.phones || [],
-            addresses: record.addresses || [],
-            preferred_language: record.preferred_language || undefined,
-            api_trace: record.api_trace || [],
-            text_assets: record.text_assets || undefined,
-            debug: record.debug || undefined,
-            created_at: record.updated_at || new Date().toISOString(), // Using updated_at as created_at doesn't exist
+            id: fullRecord._id,
+            url: fullRecord.url || '',
+            brand_name: fullRecord.brand_name || '',
+            cta_url_enabled: typeof fullRecord.cta_url_enabled === 'boolean' ? fullRecord.cta_url_enabled : false,
+            tagline: fullRecord.tagline || '',
+            business_overview: fullRecord.business_overview || '',
+            brand_values: fullRecord.brand_values || [],
+            tone_of_voice: fullRecord.tone_of_voice || [],
+            visual_aesthetic: fullRecord.visual_aesthetic || [],
+            colors: fullRecord.colors || [],
+            fonts: fullRecord.fonts || [],
+            logo_url: fullRecord.logo_url || '',
+            logos: normalizeImages(fullRecord.logos),
+            favicon_url: fullRecord.favicon_url || '',
+            screenshot_url: fullRecord.screenshot_url || '',
+            images: normalizeImages(fullRecord.images),
+            social_links: fullRecord.social_links || [],
+            emails: fullRecord.emails || [],
+            phones: fullRecord.phones || [],
+            addresses: fullRecord.addresses || [],
+            preferred_language: fullRecord.preferred_language || undefined,
+            api_trace: fullRecord.api_trace || [],
+            text_assets: fullRecord.text_assets || undefined,
+            debug: fullRecord.debug || undefined,
+            created_at: fullRecord.updated_at || new Date().toISOString(), // Using updated_at as created_at doesn't exist
         };
 
         return { success: true, data: brandDNA, exists: true };

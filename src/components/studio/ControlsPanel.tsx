@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { HexColorPicker } from 'react-colorful'
-import { useMutation, usePaginatedQuery, useQuery } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
 import { useState, useRef, useEffect, useMemo } from 'react'
@@ -204,8 +204,6 @@ function AddAccentSwatch({
     )
 }
 
-const STYLE_PRESETS_PAGE_SIZE = 80
-
 interface ControlsPanelProps {
     creationFlow: ReturnType<typeof useCreationFlow>
     highlightedFields?: Set<string>
@@ -335,22 +333,12 @@ export function ControlsPanel({
             }
             : 'skip'
     )
-    const {
-        results: stylePresetResults,
-        status: stylePresetsStatus,
-        loadMore: loadMoreStylePresets,
-    } = usePaginatedQuery(
-        api.stylePresets.listActivePaginated,
-        {},
-        { initialNumItems: STYLE_PRESETS_PAGE_SIZE }
-    )
+    const stylePresetResults = useQuery(api.stylePresets.listActiveImages, {})
     const stylePresets = (stylePresetResults || []) as Array<{
         _id: string
-        name: string
-        description?: string
         image_url: string
-        analysis: VisionAnalysis
     }>
+    const stylePresetsStatus: 'Exhausted' = 'Exhausted'
 
     const lastInitBrandId = useRef<string | null>(null)
 
@@ -964,7 +952,6 @@ export function ControlsPanel({
                                     onReferenceRoleChange={setReferenceImageRole}
                                     stylePresets={stylePresets || []}
                                     stylePresetsStatus={stylePresetsStatus}
-                                    onLoadMoreStylePresets={() => loadMoreStylePresets(STYLE_PRESETS_PAGE_SIZE)}
                                     selectedStylePresetId={state.selectedStylePresetId || null}
                                     selectedStylePresetName={state.selectedStylePresetName || null}
                                     onSelectStylePreset={(preset) => {
@@ -974,8 +961,7 @@ export function ControlsPanel({
                                         }
                                         setStylePreset({
                                             id: preset.id,
-                                            name: preset.name,
-                                            analysis: preset.analysis as VisionAnalysis,
+                                            name: preset.name || 'Estilo',
                                         })
                                     }}
                                     isAnalyzing={state.isAnalyzing || false}

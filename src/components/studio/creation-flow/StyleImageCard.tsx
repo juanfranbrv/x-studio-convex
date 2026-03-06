@@ -18,16 +18,14 @@ interface StyleImageCardProps {
     onReferenceRoleChange?: (imageId: string, role: ReferenceImageRole) => void
     stylePresets?: Array<{
         _id: string
-        name: string
-        description?: string
+        name?: string
         image_url: string
-        analysis: unknown
     }>
     stylePresetsStatus?: 'LoadingFirstPage' | 'CanLoadMore' | 'LoadingMore' | 'Exhausted'
     onLoadMoreStylePresets?: () => void
     selectedStylePresetId?: string | null
     selectedStylePresetName?: string | null
-    onSelectStylePreset?: (preset: { id: string; name: string; analysis: unknown } | null) => void
+    onSelectStylePreset?: (preset: { id: string; name?: string } | null) => void
     isAnalyzing?: boolean
     error?: string | null
 }
@@ -105,12 +103,12 @@ export function StyleImageCard({
             title: currentStyleImage.name || 'Referencia de estilo',
             removable: true,
         }
-        : selectedPreset
+            : selectedPreset
             ? {
                 id: selectedPreset._id,
                 url: selectedPreset.image_url,
                 sourceLabel: 'Predefinido',
-                title: selectedPreset.name,
+                title: selectedPreset.name || 'Estilo predefinido',
                 removable: false,
             }
             : null
@@ -385,6 +383,9 @@ export function StyleImageCard({
                     <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
                         {stylePresets.length > 0 ? (
                             <div className="space-y-4">
+                                <div className="text-xs text-muted-foreground">
+                                    Mostrando {stylePresets.length} estilos
+                                </div>
                                 <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] gap-3">
                                     {stylePresets.map((preset) => {
                                         const isSelected = selectedStylePresetId === preset._id
@@ -396,7 +397,6 @@ export function StyleImageCard({
                                                     onSelectStylePreset?.({
                                                         id: preset._id,
                                                         name: preset.name,
-                                                        analysis: preset.analysis,
                                                     })
                                                     setIsPresetModalOpen(false)
                                                 }}
@@ -411,20 +411,15 @@ export function StyleImageCard({
                                                     {canRenderImageUrl(preset.image_url) ? (
                                                         <img
                                                             src={preset.image_url}
-                                                            alt={preset.name}
+                                                            alt={preset.name || 'Estilo predefinido'}
                                                             className="w-full h-full object-cover"
                                                             onError={() => markImageAsFailed(preset.image_url)}
                                                         />
-                                                    ) : (
+                                                ) : (
                                                         <div className="w-full h-full bg-muted/50 flex items-center justify-center text-[11px] text-muted-foreground font-medium">
                                                             Sin imagen
                                                         </div>
                                                     )}
-                                                </div>
-                                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent p-3">
-                                                    <p className="text-white text-xs font-semibold truncate">
-                                                        {preset.name}
-                                                    </p>
                                                 </div>
                                                 {isSelected && (
                                                     <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">

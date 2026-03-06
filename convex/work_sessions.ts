@@ -66,6 +66,10 @@ function compactSessionGenerations(value: unknown): unknown {
       id: row.id,
       image_url: row.image_url,
       image_storage_id: row.image_storage_id,
+      preview_image_url: row.preview_image_url,
+      preview_image_storage_id: row.preview_image_storage_id,
+      original_image_url: row.original_image_url,
+      original_image_storage_id: row.original_image_storage_id,
       created_at: row.created_at,
       prompt_used: typeof row.prompt_used === "string" ? row.prompt_used.slice(0, 1800) : row.prompt_used,
       error_title: row.error_title,
@@ -111,33 +115,110 @@ function safeStableStringify(value: unknown): string {
   }
 }
 
-async function getRowsForScope(
+async function getLatestForScope(
   ctx: MutationCtx | QueryCtx,
-  args: { user_id: string; module: "image" | "carousel"; brand_id?: Id<"brand_dna"> },
+  args: { user_id: string; module: "image" | "carousel"; brand_id?: Id<"brand_dna">; activeOnly?: boolean },
 ) {
-  const scopedRows = args.brand_id
-    ? await ctx.db
-        .query("work_sessions")
-        .withIndex("by_user_brand_module", (q) =>
-          q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", args.module),
-        )
-        .collect()
-    : await ctx.db
-        .query("work_sessions")
-        .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", args.module))
-        .collect();
+  const activeOnly = args.activeOnly === true;
 
-  if (!args.brand_id || scopedRows.length > 0) {
-    return scopedRows;
+  if (args.brand_id) {
+    const byBrand = activeOnly
+      ? await ctx.db
+          .query("work_sessions")
+          .withIndex("by_user_brand_module_active_updated", (q) =>
+            q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", args.module).eq("active", true),
+          )
+          .order("desc")
+          .take(1)
+      : await ctx.db
+          .query("work_sessions")
+          .withIndex("by_user_brand_module_updated", (q) =>
+            q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", args.module),
+          )
+          .order("desc")
+          .take(1);
+
+    if (byBrand[0]) return byBrand[0];
+
+    // Legacy fallback: older sessions could exist without brand_id.
+    const legacyRows = await ctx.db
+      .query("work_sessions")
+      .withIndex("by_user_module_updated", (q) => q.eq("user_id", args.user_id).eq("module", args.module))
+      .order("desc")
+      .take(200);
+    return legacyRows.find((row) => row.brand_id === undefined && (!activeOnly || row.active)) || null;
   }
 
-  // Legacy fallback: older sessions could exist without brand_id.
-  const legacyRows = await ctx.db
-    .query("work_sessions")
-    .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", args.module))
-    .collect();
+  const byUserModule = activeOnly
+    ? await ctx.db
+        .query("work_sessions")
+        .withIndex("by_user_module_active_updated", (q) =>
+          q.eq("user_id", args.user_id).eq("module", args.module).eq("active", true),
+        )
+        .order("desc")
+        .take(1)
+    : await ctx.db
+        .query("work_sessions")
+        .withIndex("by_user_module_updated", (q) => q.eq("user_id", args.user_id).eq("module", args.module))
+        .order("desc")
+        .take(1);
 
-  return legacyRows.filter((row) => row.brand_id === undefined);
+  return byUserModule[0] || null;
+}
+
+async function listLatestForScope(
+  ctx: MutationCtx | QueryCtx,
+  args: { user_id: string; module: "image" | "carousel"; brand_id?: Id<"brand_dna">; limit: number },
+) {
+  if (args.brand_id) {
+    const byBrand = await ctx.db
+      .query("work_sessions")
+      .withIndex("by_user_brand_module_updated", (q) =>
+        q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", args.module),
+      )
+      .order("desc")
+      .take(args.limit);
+
+    if (byBrand.length > 0) return byBrand;
+
+    // Legacy fallback.
+    const legacy = await ctx.db
+      .query("work_sessions")
+      .withIndex("by_user_module_updated", (q) => q.eq("user_id", args.user_id).eq("module", args.module))
+      .order("desc")
+      .take(Math.max(args.limit, 200));
+    return legacy.filter((row) => row.brand_id === undefined).slice(0, args.limit);
+  }
+
+  return await ctx.db
+    .query("work_sessions")
+    .withIndex("by_user_module_updated", (q) => q.eq("user_id", args.user_id).eq("module", args.module))
+    .order("desc")
+    .take(args.limit);
+}
+
+async function listActiveForScope(
+  ctx: MutationCtx | QueryCtx,
+  args: { user_id: string; module: "image" | "carousel"; brand_id?: Id<"brand_dna">; limit?: number },
+) {
+  const takeLimit = Math.max(1, Math.min(args.limit ?? 40, 200));
+  if (args.brand_id) {
+    return await ctx.db
+      .query("work_sessions")
+      .withIndex("by_user_brand_module_active_updated", (q) =>
+        q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", args.module).eq("active", true),
+      )
+      .order("desc")
+      .take(takeLimit);
+  }
+
+  return await ctx.db
+    .query("work_sessions")
+    .withIndex("by_user_module_active_updated", (q) =>
+      q.eq("user_id", args.user_id).eq("module", args.module).eq("active", true),
+    )
+    .order("desc")
+    .take(takeLimit);
 }
 
 async function resolveSnapshotImageUrls(
@@ -153,7 +234,25 @@ async function resolveSnapshotImageUrls(
         if (!row || typeof row !== "object") return row;
         const item = { ...(row as Record<string, unknown>) };
         const storageId = typeof item.image_storage_id === "string" ? item.image_storage_id.trim() : "";
-        if (storageId) {
+        const previewStorageId = typeof item.preview_image_storage_id === "string" ? item.preview_image_storage_id.trim() : "";
+        const originalStorageId = typeof item.original_image_storage_id === "string" ? item.original_image_storage_id.trim() : storageId;
+
+        if (previewStorageId) {
+          const previewUrl = await ctx.storage.getUrl(previewStorageId);
+          if (previewUrl) {
+            item.preview_image_url = previewUrl;
+            item.image_url = previewUrl;
+          }
+        }
+
+        if (originalStorageId) {
+          const originalUrl = await ctx.storage.getUrl(originalStorageId);
+          if (originalUrl) {
+            item.original_image_url = originalUrl;
+            item.original_image_storage_id = originalStorageId;
+            if (!item.image_url) item.image_url = originalUrl;
+          }
+        } else if (storageId) {
           const url = await ctx.storage.getUrl(storageId);
           if (url) item.image_url = url;
         }
@@ -173,7 +272,24 @@ async function resolveSnapshotImageUrls(
           if (!row || typeof row !== "object") return row;
           const item = { ...(row as Record<string, unknown>) };
           const storageId = typeof item.image_storage_id === "string" ? item.image_storage_id.trim() : "";
-          if (storageId) {
+          const previewStorageId = typeof item.image_preview_storage_id === "string" ? item.image_preview_storage_id.trim() : "";
+          const originalStorageId = typeof item.image_original_storage_id === "string" ? item.image_original_storage_id.trim() : storageId;
+
+          if (previewStorageId) {
+            const previewUrl = await ctx.storage.getUrl(previewStorageId);
+            if (previewUrl) {
+              item.imagePreviewUrl = previewUrl;
+              item.imageUrl = previewUrl;
+            }
+          }
+          if (originalStorageId) {
+            const originalUrl = await ctx.storage.getUrl(originalStorageId);
+            if (originalUrl) {
+              item.imageOriginalUrl = originalUrl;
+              item.image_original_storage_id = originalStorageId;
+              if (!item.imageUrl) item.imageUrl = originalUrl;
+            }
+          } else if (storageId) {
             const url = await ctx.storage.getUrl(storageId);
             if (url) item.imageUrl = url;
           }
@@ -198,7 +314,24 @@ async function resolveSnapshotImageUrls(
               if (!row || typeof row !== "object") return row;
               const item = { ...(row as Record<string, unknown>) };
               const storageId = typeof item.image_storage_id === "string" ? item.image_storage_id.trim() : "";
-              if (storageId) {
+              const previewStorageId = typeof item.image_preview_storage_id === "string" ? item.image_preview_storage_id.trim() : "";
+              const originalStorageId = typeof item.image_original_storage_id === "string" ? item.image_original_storage_id.trim() : storageId;
+
+              if (previewStorageId) {
+                const previewUrl = await ctx.storage.getUrl(previewStorageId);
+                if (previewUrl) {
+                  item.imagePreviewUrl = previewUrl;
+                  item.imageUrl = previewUrl;
+                }
+              }
+              if (originalStorageId) {
+                const originalUrl = await ctx.storage.getUrl(originalStorageId);
+                if (originalUrl) {
+                  item.imageOriginalUrl = originalUrl;
+                  item.image_original_storage_id = originalStorageId;
+                  if (!item.imageUrl) item.imageUrl = originalUrl;
+                }
+              } else if (storageId) {
                 const url = await ctx.storage.getUrl(storageId);
                 if (url) item.imageUrl = url;
               }
@@ -227,14 +360,20 @@ export const getActiveSession = query({
   },
   handler: async (ctx, args) => {
     const moduleKey = ensureModule(args.module);
-    const rows = await getRowsForScope(ctx, {
+    const active = await getLatestForScope(ctx, {
       user_id: args.user_id,
       module: moduleKey,
       brand_id: args.brand_id,
+      activeOnly: true,
     });
-
-    const active = rows.filter((row) => row.active).sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
-    const fallbackLatest = rows.sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
+    const fallbackLatest = active
+      ? null
+      : await getLatestForScope(ctx, {
+          user_id: args.user_id,
+          module: moduleKey,
+          brand_id: args.brand_id,
+          activeOnly: false,
+        });
     const selected = active || fallbackLatest;
 
     if (!selected) return null;
@@ -255,15 +394,15 @@ export const listSessions = query({
   },
   handler: async (ctx, args) => {
     const moduleKey = ensureModule(args.module);
-    const rows = await getRowsForScope(ctx, {
+    const limit = Math.max(1, Math.min(args.limit ?? 30, 200));
+    const rows = await listLatestForScope(ctx, {
       user_id: args.user_id,
       module: moduleKey,
       brand_id: args.brand_id,
+      limit,
     });
 
     return rows
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-      .slice(0, Math.max(1, Math.min(args.limit ?? 30, 200)))
       .map((row) => {
         const snapshot = row.snapshot as { generatedImage?: unknown } | undefined;
         return {
@@ -289,12 +428,14 @@ export const getLastVisitedModule = query({
     const [imageRows, carouselRows] = await Promise.all([
       ctx.db
         .query("work_sessions")
-        .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", "image"))
-        .collect(),
+        .withIndex("by_user_module_updated", (q) => q.eq("user_id", args.user_id).eq("module", "image"))
+        .order("desc")
+        .take(1),
       ctx.db
         .query("work_sessions")
-        .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", "carousel"))
-        .collect(),
+        .withIndex("by_user_module_updated", (q) => q.eq("user_id", args.user_id).eq("module", "carousel"))
+        .order("desc")
+        .take(1),
     ]);
 
     const latest = [...imageRows, ...carouselRows].sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
@@ -326,35 +467,32 @@ export const createSession = mutation({
     const normalizedTitle = args.title?.trim() || undefined;
     const normalizedRootPrompt = normalizePrompt(args.root_prompt);
     const normalizedSnapshot = sanitizeSnapshot(args.snapshot);
-    const rows = args.brand_id
-      ? await ctx.db
-          .query("work_sessions")
-          .withIndex("by_user_brand_module", (q) =>
-            q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", moduleKey),
-          )
-          .collect()
-      : await ctx.db
-          .query("work_sessions")
-          .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", moduleKey))
-          .collect();
-
-    const recentSameIntent = rows
-      .filter((row) => row.active)
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-      .find((row) => {
-        const updatedAtMs = new Date(row.updated_at).getTime();
-        if (!Number.isFinite(updatedAtMs)) return false;
-        if ((nowMs - updatedAtMs) > dedupeWindowMs) return false;
-        if ((row.title || undefined) !== normalizedTitle) return false;
-        if ((row.root_prompt || undefined) !== normalizedRootPrompt) return false;
-        return true;
-      });
+    const latestActive = await getLatestForScope(ctx, {
+      user_id: args.user_id,
+      module: moduleKey,
+      brand_id: args.brand_id,
+      activeOnly: true,
+    });
+    const recentSameIntent = latestActive && (() => {
+      const updatedAtMs = new Date(latestActive.updated_at).getTime();
+      if (!Number.isFinite(updatedAtMs)) return null;
+      if ((nowMs - updatedAtMs) > dedupeWindowMs) return null;
+      if ((latestActive.title || undefined) !== normalizedTitle) return null;
+      if ((latestActive.root_prompt || undefined) !== normalizedRootPrompt) return null;
+      return latestActive;
+    })();
 
     if (recentSameIntent) {
       return { session_id: recentSameIntent._id };
     }
 
-    for (const row of rows) {
+    const activeRows = await listActiveForScope(ctx, {
+      user_id: args.user_id,
+      module: moduleKey,
+      brand_id: args.brand_id,
+      limit: 40,
+    });
+    for (const row of activeRows) {
       if (!row.active) continue;
       await ctx.db.patch(row._id, { active: false, updated_at: now });
     }
@@ -397,10 +535,12 @@ export const upsertActiveSession = mutation({
       if (!existing || existing.user_id !== args.user_id) throw new Error("Session not found");
 
       if (!existing.active) {
-        const rows = await ctx.db
-          .query("work_sessions")
-          .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", moduleKey))
-          .collect();
+        const rows = await listActiveForScope(ctx, {
+          user_id: args.user_id,
+          module: moduleKey,
+          brand_id: args.brand_id,
+          limit: 40,
+        });
         for (const row of rows) {
           if (!row.active) continue;
           if (args.brand_id && row.brand_id !== args.brand_id) continue;
@@ -432,15 +572,12 @@ export const upsertActiveSession = mutation({
       return { session_id: args.session_id };
     }
 
-    const rows = await getRowsForScope(ctx, {
+    const current = await getLatestForScope(ctx, {
       user_id: args.user_id,
       module: moduleKey,
       brand_id: args.brand_id,
+      activeOnly: true,
     });
-
-    const current = rows
-      .filter((row) => row.active)
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
 
     if (current) {
       const nextTitle = normalizedTitle ?? current.title;
@@ -496,10 +633,12 @@ export const activateSession = mutation({
     const moduleKey = ensureModule(session.module);
     const now = new Date().toISOString();
 
-    const rows = await ctx.db
-      .query("work_sessions")
-      .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", moduleKey))
-      .collect();
+    const rows = await listActiveForScope(ctx, {
+      user_id: args.user_id,
+      module: moduleKey,
+      brand_id: session.brand_id,
+      limit: 40,
+    });
 
     for (const row of rows) {
       if (!row.active) continue;
@@ -562,12 +701,19 @@ export const clearSessions = mutation({
   },
   handler: async (ctx, args) => {
     const moduleKey = ensureModule(args.module);
-    const rows = await ctx.db
-      .query("work_sessions")
-      .withIndex("by_user_module", (q) => q.eq("user_id", args.user_id).eq("module", moduleKey))
-      .collect();
-
-    const targets = rows.filter((row) => row.brand_id === args.brand_id);
+    const targets = args.brand_id
+      ? await ctx.db
+          .query("work_sessions")
+          .withIndex("by_user_brand_module_updated", (q) =>
+            q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", moduleKey),
+          )
+          .order("desc")
+          .take(500)
+      : (await ctx.db
+          .query("work_sessions")
+          .withIndex("by_user_module_updated", (q) => q.eq("user_id", args.user_id).eq("module", moduleKey))
+          .order("desc")
+          .take(500)).filter((row) => row.brand_id === undefined);
     for (const row of targets) {
       await ctx.db.delete(row._id);
     }

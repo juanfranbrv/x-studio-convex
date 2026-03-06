@@ -398,7 +398,7 @@ export const submitBetaRequest = mutation({
         // Check if already a user
         const existingUser = await ctx.db
             .query("users")
-            .filter((q) => q.eq(q.field("email"), email))
+            .withIndex("by_email", (q) => q.eq("email", email))
             .first();
 
         if (existingUser) {
@@ -423,7 +423,7 @@ export const checkBetaAccess = query({
 
         const existingUser = await ctx.db
             .query("users")
-            .filter((q) => q.eq(q.field("email"), email))
+            .withIndex("by_email", (q) => q.eq("email", email))
             .first();
 
         if (existingUser) {

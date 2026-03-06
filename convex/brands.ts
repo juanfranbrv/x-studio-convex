@@ -173,6 +173,64 @@ export const getBrandDNAByClerkId = query({
     },
 });
 
+export const listSummariesByClerkId = query({
+    args: { clerk_user_id: v.string() },
+    handler: async (ctx, args) => {
+        const brands = await ctx.db
+            .query("brand_dna")
+            .withIndex("by_clerk_id", (q) => q.eq("clerk_user_id", args.clerk_user_id))
+            .order("desc")
+            .collect();
+
+        const needsResolve = (url: string) => !url.startsWith("http") || url.includes("/_storage/");
+        const extractId = (url: string) => url.includes("/_storage/") ? url.split("/_storage/").pop()! : url;
+        const resolveUrl = async (url: string | undefined) => {
+            if (!url) return null;
+            if (!needsResolve(url)) return url;
+            return (await ctx.storage.getUrl(extractId(url) as any)) || url;
+        };
+
+        return await Promise.all(
+            brands.map(async (brand) => {
+                const logo_url = await resolveUrl(brand.logo_url);
+                const favicon_url = await resolveUrl(brand.favicon_url);
+                const screenshot_url = await resolveUrl(brand.screenshot_url);
+                const logosCount = Array.isArray(brand.logos) ? brand.logos.length : (brand.logo_url ? 1 : 0);
+                const colorsCount = Array.isArray(brand.colors) ? brand.colors.length : 0;
+                const fontsCount = Array.isArray(brand.fonts) ? brand.fonts.length : 0;
+                const imagesCount = Array.isArray(brand.images) ? brand.images.length : 0;
+                const brandValuesCount = Array.isArray(brand.brand_values) ? brand.brand_values.length : 0;
+                const toneCount = Array.isArray(brand.tone_of_voice) ? brand.tone_of_voice.length : 0;
+                const textAssets = brand.text_assets as any;
+                const hasTextAssets = Boolean(textAssets) && (
+                    (Array.isArray(textAssets?.marketing_hooks) && textAssets.marketing_hooks.length > 0) ||
+                    (Array.isArray(textAssets?.ctas) && textAssets.ctas.length > 0) ||
+                    (String(textAssets?.brand_context || "").trim().length > 0)
+                );
+
+                return {
+                    _id: brand._id,
+                    brand_name: brand.brand_name,
+                    url: brand.url,
+                    tagline: brand.tagline || "",
+                    business_overview_length: String(brand.business_overview || "").trim().length,
+                    logo_url,
+                    favicon_url,
+                    screenshot_url,
+                    logos_count: logosCount,
+                    colors_count: colorsCount,
+                    fonts_count: fontsCount,
+                    images_count: imagesCount,
+                    brand_values_count: brandValuesCount,
+                    tone_of_voice_count: toneCount,
+                    has_text_assets: hasTextAssets,
+                    updated_at: brand.updated_at,
+                };
+            })
+        );
+    },
+});
+
 export const getBrandDNAById = query({
     args: { id: v.id("brand_dna"), clerk_user_id: v.string() },
     handler: async (ctx, args) => {

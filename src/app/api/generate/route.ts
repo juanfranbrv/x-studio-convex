@@ -116,40 +116,6 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        let nagaApiKey: string | undefined
-        let replicateApiKey: string | undefined
-        let atlasApiKey: string | undefined
-        if (model?.startsWith('naga/')) {
-            try {
-                const key = await convex.query(api.admin.getSetting, { key: 'provider_naga_api_key' })
-                if (typeof key === 'string' && key.trim().length > 0) {
-                    nagaApiKey = key.trim()
-                }
-            } catch (err) {
-                log.warn('API', 'No se pudo leer provider_naga_api_key', err)
-            }
-        }
-        if (model?.startsWith('replicate/')) {
-            try {
-                const key = await convex.query(api.admin.getSetting, { key: 'provider_replicate_api_key' })
-                if (typeof key === 'string' && key.trim().length > 0) {
-                    replicateApiKey = key.trim()
-                }
-            } catch (err) {
-                log.warn('API', 'No se pudo leer provider_replicate_api_key', err)
-            }
-        }
-        if (model?.startsWith('atlas/')) {
-            try {
-                const key = await convex.query(api.admin.getSetting, { key: 'provider_atlas_api_key' })
-                if (typeof key === 'string' && key.trim().length > 0) {
-                    atlasApiKey = key.trim()
-                }
-            } catch (err) {
-                log.warn('API', 'No se pudo leer provider_atlas_api_key', err)
-            }
-        }
-
         const provider = model?.startsWith('wisdom/')
             ? 'Wisdom'
             : model?.startsWith('naga/')
@@ -181,10 +147,7 @@ export async function POST(request: NextRequest) {
                 layoutReference,
                 aspectRatio,
                 selectedColors,
-                promptAlreadyBuilt,
-                nagaApiKey,
-                replicateApiKey,
-                atlasApiKey
+                promptAlreadyBuilt
             }
         )
 

@@ -50,6 +50,23 @@ export default defineSchema({
     .index("by_type", ["type"])
     .index("by_created", ["created_at"]),
 
+  // Session image assets: keep original file for publishing and lightweight preview for UI/session history.
+  session_images: defineTable({
+    user_id: v.string(),
+    source_hash: v.string(),
+    original_storage_id: v.string(),
+    original_url: v.string(),
+    preview_storage_id: v.string(),
+    preview_url: v.string(),
+    mime_type: v.optional(v.string()),
+    size_bytes: v.optional(v.number()),
+    created_at: v.string(),
+    last_used_at: v.string(),
+  }).index("by_user_hash", ["user_id", "source_hash"])
+    .index("by_user_original_storage", ["user_id", "original_storage_id"])
+    .index("by_user", ["user_id"])
+    .index("by_last_used", ["last_used_at"]),
+
   brands: defineTable({
     owner_id: v.string(), // clerk_id
     name: v.string(),
@@ -172,7 +189,10 @@ export default defineSchema({
     updated_at: v.string(),
   }).index("by_user_module", ["user_id", "module"])
     .index("by_user_module_updated", ["user_id", "module", "updated_at"])
-    .index("by_user_brand_module", ["user_id", "brand_id", "module"]),
+    .index("by_user_brand_module", ["user_id", "brand_id", "module"])
+    .index("by_user_module_active_updated", ["user_id", "module", "active", "updated_at"])
+    .index("by_user_brand_module_updated", ["user_id", "brand_id", "module", "updated_at"])
+    .index("by_user_brand_module_active_updated", ["user_id", "brand_id", "module", "active", "updated_at"]),
 
   carousel_structures: defineTable({
     structure_id: v.string(), // stable id (e.g., "problema-solucion")
@@ -265,7 +285,10 @@ export default defineSchema({
     name: v.string(),
     description: v.optional(v.string()),
     image_url: v.string(),
-    analysis: v.any(),                 // VisionAnalysis snapshot
+    thumbnail_url: v.optional(v.string()),
+    style_prompt: v.optional(v.string()),
+    analysis_preview: v.optional(v.any()),
+    analysis: v.optional(v.any()),     // Legacy compatibility only
     is_active: v.boolean(),
     sort_order: v.number(),
     created_at: v.string(),

@@ -21,6 +21,7 @@ export async function uploadBrandImage(formData: FormData) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
+        const shouldGenerateThumbnail = String(formData.get('generateThumbnail') || '').toLowerCase() === 'true'
 
         // Optimizar con Sharp (resize y convertir a webp)
         const optimizedBuffer = await sharp(buffer)
@@ -57,7 +58,33 @@ export async function uploadBrandImage(formData: FormData) {
             return { success: false, error: 'Error al obtener URL de la imagen.' };
         }
 
-        return { success: true, url };
+        if (!shouldGenerateThumbnail) {
+            return { success: true, url };
+        }
+
+        const thumbnailBuffer = await sharp(buffer)
+            .resize({ width: 320, withoutEnlargement: true })
+            .webp({ quality: 66 })
+            .toBuffer();
+
+        const thumbnailUploadUrl = await fetchMutation(api.assets.generateUploadUrl, {});
+        const thumbnailResult = await fetch(thumbnailUploadUrl, {
+            method: "POST",
+            body: new Blob([new Uint8Array(thumbnailBuffer)], { type: 'image/webp' }),
+            headers: { "Content-Type": "image/webp" },
+        });
+
+        if (!thumbnailResult.ok) {
+            throw new Error(`Thumbnail upload failed: ${thumbnailResult.statusText}`);
+        }
+
+        const { storageId: thumbnailStorageId } = await thumbnailResult.json();
+        const thumbnailUrl = await fetchQuery(api.assets.getImageUrl, { storageId: thumbnailStorageId });
+        if (!thumbnailUrl) {
+            throw new Error('Error al obtener URL de la miniatura.');
+        }
+
+        return { success: true, url, thumbnailUrl };
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Error inesperado al subir la imagen.'

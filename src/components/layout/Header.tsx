@@ -119,7 +119,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                     <ChevronDown className="h-4 w-4 shrink-0" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-[200px] md:w-72 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-white/30 shadow-aero-lg rounded-xl">
+                            <DropdownMenuContent align="start" className="w-[320px] md:w-[440px] bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-white/30 shadow-aero-lg rounded-xl">
                                 {brands.map((brand) => (
                                     <DropdownMenuItem
                                         key={brand.id}

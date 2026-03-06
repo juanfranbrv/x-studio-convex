@@ -30,6 +30,7 @@ import { useBrandKit } from '@/contexts/BrandKitContext'
 import { resizeImage } from '@/lib/image-utils'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
+import type { Id } from '../../convex/_generated/dataModel'
 
 // Priority-based prompt construction imports
 import * as P12 from '@/lib/prompts/priorities/p12-preferred-language'
@@ -85,6 +86,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const aiConfig = useQuery(api.settings.getAIConfig)
     const [state, setState] = useState<GenerationState>(INITIAL_GENERATION_STATE)
     const optionsRef = useRef(options)
+    const selectedStylePresetDetails = useQuery(
+        api.stylePresets.getActiveById,
+        state.selectedStylePresetId
+            ? { id: state.selectedStylePresetId as Id<'style_presets'> }
+            : 'skip'
+    )
 
     // Keep options reference up to date to avoid stale closures in callbacks
     useEffect(() => {
@@ -112,6 +119,35 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             }))
         }
     }, [aiConfig])
+
+    useEffect(() => {
+        if (!selectedStylePresetDetails?.analysis) return
+        const selectedId = String(selectedStylePresetDetails._id || '')
+        if (!selectedId) return
+
+        setState(prev => {
+            if (!prev.selectedStylePresetId || prev.selectedStylePresetId !== selectedId) return prev
+            const nextAnalysis = selectedStylePresetDetails.analysis as VisionAnalysis
+            const prevPrompt = (prev.firstVisionAnalysis?.keywords?.[0] || '').trim()
+            const nextPrompt = (nextAnalysis?.keywords?.[0] || '').trim()
+
+            if (
+                prevPrompt === nextPrompt &&
+                prev.firstReferenceId === null &&
+                prev.firstReferenceSource === null
+            ) {
+                return prev
+            }
+
+            return {
+                ...prev,
+                firstReferenceId: null,
+                firstReferenceSource: null,
+                firstVisionAnalysis: nextAnalysis,
+                visionAnalysis: nextAnalysis,
+            }
+        })
+    }, [selectedStylePresetDetails])
 
     // Track last initialized brand kit to allow re-syncing when it changes
     const [lastInitBrandId, setLastInitBrandId] = useState<string | null>(null)
@@ -953,7 +989,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     }, [invalidateFromStep])
 
     const setStylePreset = useCallback((
-        preset: { id: string; name: string; analysis: VisionAnalysis } | null
+        preset: { id: string; name: string; analysis?: VisionAnalysis | null } | null
     ) => {
         setState(prev => {
             if (!preset) {
@@ -961,6 +997,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                     ...prev,
                     selectedStylePresetId: null,
                     selectedStylePresetName: null,
+                    firstVisionAnalysis: null,
+                    visionAnalysis: null,
                     ...invalidateFromStep(prev, 4),
                 }
             }
@@ -979,8 +1017,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 selectedStylePresetName: preset.name,
                 firstReferenceId: null,
                 firstReferenceSource: null,
-                firstVisionAnalysis: preset.analysis,
-                visionAnalysis: preset.analysis,
+                firstVisionAnalysis: preset.analysis ?? null,
+                visionAnalysis: preset.analysis ?? null,
                 ...invalidateFromStep(prev, 4),
             }
         })

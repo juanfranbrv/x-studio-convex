@@ -40,6 +40,10 @@ interface Generation {
     id: string
     image_url: string
     image_storage_id?: string
+    preview_image_url?: string
+    preview_image_storage_id?: string
+    original_image_url?: string
+    original_image_storage_id?: string
     created_at: string
     prompt_used?: string
     request_payload?: Record<string, unknown>
@@ -60,7 +64,7 @@ interface ImageWorkspaceSnapshot {
     rootPrompt?: string
 }
 
-type CompactGeneration = Pick<Generation, 'id' | 'image_url' | 'image_storage_id' | 'created_at' | 'prompt_used' | 'error_title' | 'error_fallback'> & {
+type CompactGeneration = Pick<Generation, 'id' | 'image_url' | 'image_storage_id' | 'preview_image_url' | 'preview_image_storage_id' | 'original_image_url' | 'original_image_storage_id' | 'created_at' | 'prompt_used' | 'error_title' | 'error_fallback'> & {
     request_payload?: {
         prompt?: string
         model?: string
@@ -169,8 +173,15 @@ export default function ImagePage() {
     const hasHydratedScopeRef = useRef(false)
     const lastSavedSnapshotSignatureRef = useRef<string | null>(null)
     const createSessionInFlightRef = useRef(false)
-    const persistedSessionImageCacheRef = useRef<Map<string, { storageId: string; imageUrl: string }>>(new Map())
-    const persistImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string } | null>>>(new Map())
+    const persistedSessionImageCacheRef = useRef<Map<string, {
+        storageId: string
+        imageUrl: string
+        originalStorageId: string
+        originalImageUrl: string
+        previewStorageId: string
+        previewImageUrl: string
+    }>>(new Map())
+    const persistImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string; originalStorageId: string; originalImageUrl: string; previewStorageId: string; previewImageUrl: string } | null>>>(new Map())
     const bypassUnsavedGuardRef = useRef(false)
     const confirmDiscardUnsavedChanges = useCallback((action: string) => {
         if (!hasUnsavedChanges) return true
@@ -255,6 +266,10 @@ export default function ImagePage() {
                 id: generation.id,
                 image_url: generation.image_url,
                 image_storage_id: generation.image_storage_id,
+                preview_image_url: generation.preview_image_url,
+                preview_image_storage_id: generation.preview_image_storage_id,
+                original_image_url: generation.original_image_url,
+                original_image_storage_id: generation.original_image_storage_id,
                 created_at: generation.created_at,
                 prompt_used: generation.prompt_used?.slice(0, 2500),
                 error_title: generation.error_title,
@@ -292,13 +307,23 @@ export default function ImagePage() {
     ])
 
     const persistGenerationImage = useCallback(async (generation: Generation) => {
-        const imageUrl = typeof generation.image_url === 'string' ? generation.image_url.trim() : ''
-        if (!imageUrl || generation.image_storage_id) return null
+        const originalImageUrl = typeof generation.original_image_url === 'string' ? generation.original_image_url.trim() : ''
+        const previewImageUrl = typeof generation.preview_image_url === 'string' ? generation.preview_image_url.trim() : ''
+        const currentImageUrl = typeof generation.image_url === 'string' ? generation.image_url.trim() : ''
+        const originalStorageId = typeof generation.original_image_storage_id === 'string' ? generation.original_image_storage_id.trim() : ''
+        const legacyStorageId = typeof generation.image_storage_id === 'string' ? generation.image_storage_id.trim() : ''
+        const previewStorageId = typeof generation.preview_image_storage_id === 'string' ? generation.preview_image_storage_id.trim() : ''
+
+        if ((originalStorageId || legacyStorageId) && previewStorageId) return null
+
+        const sourceImage = originalImageUrl || currentImageUrl || previewImageUrl || originalStorageId || legacyStorageId
+        if (!sourceImage) return null
 
         const needsPersistence =
-            imageUrl.startsWith('data:') ||
-            imageUrl.startsWith('http://') ||
-            imageUrl.startsWith('https://')
+            sourceImage.startsWith('data:') ||
+            sourceImage.startsWith('http://') ||
+            sourceImage.startsWith('https://') ||
+            /^[a-z0-9]{20,}$/i.test(sourceImage)
 
         if (!needsPersistence) return null
 
@@ -312,7 +337,7 @@ export default function ImagePage() {
             const response = await fetch('/api/work-sessions/persist-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageUrl }),
+                body: JSON.stringify({ imageUrl: sourceImage }),
             })
 
             if (!response.ok) {
@@ -320,11 +345,25 @@ export default function ImagePage() {
                 throw new Error(errorData.error || 'No se pudo persistir la imagen de sesion')
             }
 
-            const data = await response.json() as { storageId?: string; imageUrl?: string }
-            if (!data.storageId || !data.imageUrl) {
+            const data = await response.json() as {
+                storageId?: string
+                imageUrl?: string
+                originalStorageId?: string
+                originalImageUrl?: string
+                previewStorageId?: string
+                previewImageUrl?: string
+            }
+            if (!data.storageId || !data.imageUrl || !data.originalStorageId || !data.originalImageUrl || !data.previewStorageId || !data.previewImageUrl) {
                 throw new Error('Persistencia de imagen incompleta')
             }
-            const persisted = { storageId: data.storageId, imageUrl: data.imageUrl }
+            const persisted = {
+                storageId: data.storageId,
+                imageUrl: data.imageUrl,
+                originalStorageId: data.originalStorageId,
+                originalImageUrl: data.originalImageUrl,
+                previewStorageId: data.previewStorageId,
+                previewImageUrl: data.previewImageUrl,
+            }
             persistedSessionImageCacheRef.current.set(generation.id, persisted)
             return persisted
         })()
@@ -344,8 +383,12 @@ export default function ImagePage() {
                 if (!persisted) return generation
                 return {
                     ...generation,
-                    image_storage_id: persisted.storageId,
-                    image_url: persisted.imageUrl,
+                    image_storage_id: persisted.originalStorageId,
+                    image_url: persisted.previewImageUrl,
+                    preview_image_storage_id: persisted.previewStorageId,
+                    preview_image_url: persisted.previewImageUrl,
+                    original_image_storage_id: persisted.originalStorageId,
+                    original_image_url: persisted.originalImageUrl,
                 }
             } catch (error) {
                 console.error('Session image persist failed:', error)
@@ -556,7 +599,11 @@ export default function ImagePage() {
             const persistedGenerations = await materializeGenerationsForSnapshot(sessionGenerations)
             const hasPersistedChanges = persistedGenerations.some((generation, index) => (
                 generation.image_storage_id !== sessionGenerations[index]?.image_storage_id ||
-                generation.image_url !== sessionGenerations[index]?.image_url
+                generation.image_url !== sessionGenerations[index]?.image_url ||
+                generation.preview_image_storage_id !== sessionGenerations[index]?.preview_image_storage_id ||
+                generation.preview_image_url !== sessionGenerations[index]?.preview_image_url ||
+                generation.original_image_storage_id !== sessionGenerations[index]?.original_image_storage_id ||
+                generation.original_image_url !== sessionGenerations[index]?.original_image_url
             ))
             if (hasPersistedChanges) {
                 setSessionGenerations(persistedGenerations)
@@ -823,6 +870,8 @@ export default function ImagePage() {
             setSessionGenerations(prev => [{
                 id: Date.now().toString(),
                 image_url: result.imageUrl,
+                preview_image_url: result.imageUrl,
+                original_image_url: result.imageUrl,
                 created_at: new Date().toISOString(),
                 prompt_used: typeof requestPayload.prompt === 'string' ? requestPayload.prompt : '',
                 request_payload: { ...requestPayload },
@@ -1360,6 +1409,8 @@ export default function ImagePage() {
                 setSessionGenerations(prev => [{
                     id: Date.now().toString(),
                     image_url: result.imageUrl,
+                    preview_image_url: result.imageUrl,
+                    original_image_url: result.imageUrl,
                     created_at: new Date().toISOString(),
                     prompt_used: typeof requestPayloadForApi.prompt === 'string' ? requestPayloadForApi.prompt : '',
                     request_payload: { ...requestPayloadForApi },
@@ -1487,6 +1538,8 @@ export default function ImagePage() {
                 setSessionGenerations(prev => [{
                     id: Date.now().toString(),
                     image_url: result.imageUrl,
+                    preview_image_url: result.imageUrl,
+                    original_image_url: result.imageUrl,
                     created_at: new Date().toISOString(),
                     prompt_used: typeof requestPayload.prompt === 'string' ? requestPayload.prompt : '',
                     request_payload: { ...requestPayload },
@@ -1881,7 +1934,7 @@ export default function ImagePage() {
                                     generations={displayGenerations}
                                     currentImageUrl={creationFlow.state.generatedImage}
                                     onSelectGeneration={(gen) => {
-                                        creationFlow.setGeneratedImage(gen.image_url)
+                                        creationFlow.setGeneratedImage(gen.original_image_url || gen.image_url)
                                         if (gen.request_payload) {
                                             setLastGenerationRequest({
                                                 payload: { ...gen.request_payload },

@@ -313,8 +313,22 @@ export function CarouselControlsPanel({
     const lastSavedSnapshotSignatureRef = useRef<string | null>(null)
     const hydrationScopeRef = useRef<string>('')
     const hasHydratedScopeRef = useRef(false)
-    const persistedSlideImageCacheRef = useRef<Map<string, { storageId: string; imageUrl: string }>>(new Map())
-    const persistSlideImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string } | null>>>(new Map())
+    const persistedSlideImageCacheRef = useRef<Map<string, {
+        storageId: string
+        imageUrl: string
+        originalStorageId: string
+        originalImageUrl: string
+        previewStorageId: string
+        previewImageUrl: string
+    }>>(new Map())
+    const persistSlideImageInFlightRef = useRef<Map<string, Promise<{
+        storageId: string
+        imageUrl: string
+        originalStorageId: string
+        originalImageUrl: string
+        previewStorageId: string
+        previewImageUrl: string
+    } | null>>>(new Map())
     const confirmDiscardUnsavedChanges = useCallback((action: string) => {
         if (!hasUnsavedChanges) return true
         return window.confirm(`Tienes cambios sin guardar. ¿Quieres continuar y perderlos al ${action}?`)
@@ -436,6 +450,10 @@ export function CarouselControlsPanel({
                     status: slide.status,
                     imageUrl: slide.imageUrl,
                     image_storage_id: slide.image_storage_id,
+                    imagePreviewUrl: slide.imagePreviewUrl,
+                    image_preview_storage_id: slide.image_preview_storage_id,
+                    imageOriginalUrl: slide.imageOriginalUrl,
+                    image_original_storage_id: slide.image_original_storage_id,
                     error: slide.error
                 })),
                 scriptSlides: Array.isArray(previewScriptSlides) ? previewScriptSlides : undefined,
@@ -453,6 +471,10 @@ export function CarouselControlsPanel({
                                 status: slide.status,
                                 imageUrl: slide.imageUrl,
                                 image_storage_id: slide.image_storage_id,
+                                imagePreviewUrl: slide.imagePreviewUrl,
+                                image_preview_storage_id: slide.image_preview_storage_id,
+                                imageOriginalUrl: slide.imageOriginalUrl,
+                                image_original_storage_id: slide.image_original_storage_id,
                                 error: slide.error
                             }))
                             : []
@@ -491,13 +513,23 @@ export function CarouselControlsPanel({
     }, [])
 
     const persistPreviewSlideImage = useCallback(async (slide: CarouselSlide) => {
-        const imageUrl = typeof slide.imageUrl === 'string' ? slide.imageUrl.trim() : ''
-        if (!imageUrl || slide.image_storage_id) return null
+        const originalUrl = typeof slide.imageOriginalUrl === 'string' ? slide.imageOriginalUrl.trim() : ''
+        const previewUrl = typeof slide.imagePreviewUrl === 'string' ? slide.imagePreviewUrl.trim() : ''
+        const currentUrl = typeof slide.imageUrl === 'string' ? slide.imageUrl.trim() : ''
+        const originalStorageId = typeof slide.image_original_storage_id === 'string' ? slide.image_original_storage_id.trim() : ''
+        const legacyStorageId = typeof slide.image_storage_id === 'string' ? slide.image_storage_id.trim() : ''
+        const previewStorageId = typeof slide.image_preview_storage_id === 'string' ? slide.image_preview_storage_id.trim() : ''
+
+        if ((originalStorageId || legacyStorageId) && previewStorageId) return null
+
+        const imageUrl = originalUrl || currentUrl || previewUrl || originalStorageId || legacyStorageId
+        if (!imageUrl) return null
 
         const needsPersistence =
             imageUrl.startsWith('data:') ||
             imageUrl.startsWith('http://') ||
-            imageUrl.startsWith('https://')
+            imageUrl.startsWith('https://') ||
+            /^[a-z0-9]{20,}$/i.test(imageUrl)
         if (!needsPersistence) return null
 
         const key = buildSlidePersistKey(slide, imageUrl)
@@ -519,11 +551,25 @@ export function CarouselControlsPanel({
                 throw new Error(errorData.error || 'No se pudo persistir imagen de slide')
             }
 
-            const data = await response.json() as { storageId?: string; imageUrl?: string }
-            if (!data.storageId || !data.imageUrl) {
+            const data = await response.json() as {
+                storageId?: string
+                imageUrl?: string
+                originalStorageId?: string
+                originalImageUrl?: string
+                previewStorageId?: string
+                previewImageUrl?: string
+            }
+            if (!data.storageId || !data.imageUrl || !data.originalStorageId || !data.originalImageUrl || !data.previewStorageId || !data.previewImageUrl) {
                 throw new Error('Persistencia de slide incompleta')
             }
-            const persisted = { storageId: data.storageId, imageUrl: data.imageUrl }
+            const persisted = {
+                storageId: data.storageId,
+                imageUrl: data.imageUrl,
+                originalStorageId: data.originalStorageId,
+                originalImageUrl: data.originalImageUrl,
+                previewStorageId: data.previewStorageId,
+                previewImageUrl: data.previewImageUrl,
+            }
             persistedSlideImageCacheRef.current.set(key, persisted)
             return persisted
         })()
@@ -545,8 +591,12 @@ export function CarouselControlsPanel({
                 if (!persisted) return slide
                 return {
                     ...slide,
-                    image_storage_id: persisted.storageId,
-                    imageUrl: persisted.imageUrl,
+                    image_storage_id: persisted.originalStorageId,
+                    imageUrl: persisted.previewImageUrl,
+                    image_preview_storage_id: persisted.previewStorageId,
+                    imagePreviewUrl: persisted.previewImageUrl,
+                    image_original_storage_id: persisted.originalStorageId,
+                    imageOriginalUrl: persisted.originalImageUrl,
                 }
             } catch {
                 return slide
@@ -576,8 +626,12 @@ export function CarouselControlsPanel({
                     if (!persisted) return slide
                     return {
                         ...slide,
-                        image_storage_id: persisted.storageId,
-                        imageUrl: persisted.imageUrl,
+                        image_storage_id: persisted.originalStorageId,
+                        imageUrl: persisted.previewImageUrl,
+                        image_preview_storage_id: persisted.previewStorageId,
+                        imagePreviewUrl: persisted.previewImageUrl,
+                        image_original_storage_id: persisted.originalStorageId,
+                        imageOriginalUrl: persisted.originalImageUrl,
                     }
                 } catch {
                     return slide

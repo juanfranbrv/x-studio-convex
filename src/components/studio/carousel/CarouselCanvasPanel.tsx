@@ -442,7 +442,7 @@ export function CarouselCanvasPanel({
     const handleDownloadCurrent = () => {
         if (!currentSlide?.imageUrl) return
         const link = document.createElement('a')
-        link.href = currentSlide.imageUrl
+        link.href = currentSlide.imageOriginalUrl || currentSlide.imageUrl
         link.download = `slide-${currentIndex + 1}.png`
         link.click()
     }
@@ -455,7 +455,7 @@ export function CarouselCanvasPanel({
         for (const [i, slide] of slides.entries()) {
             if (slide.imageUrl) {
                 try {
-                    const response = await fetch(slide.imageUrl)
+                    const response = await fetch(slide.imageOriginalUrl || slide.imageUrl)
                     const blob = await response.blob()
                     zip.file(`slide-${i + 1}.png`, blob)
                 } catch (e) {
