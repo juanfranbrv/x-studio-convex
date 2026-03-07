@@ -1886,13 +1886,13 @@ export default function ImagePage() {
                 <div className="flex-1 flex flex-col overflow-hidden relative">
                     {/* TOP AREA: 2 Columns */}
                     <div className={cn(
-                        "flex-1 flex overflow-hidden min-h-0",
-                        panelPosition === 'right' ? "flex-row" : "flex-row-reverse"
+                        "flex-1 flex flex-col overflow-hidden min-h-0 lg:flex-row",
+                        panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
                     )}>
                         {/* LEFT COLUMN (Main Canvas) */}
-                        <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto overflow-x-hidden min-w-0 no-scrollbar">
+                        <div className="flex-1 flex flex-col p-3 md:p-4 gap-3 md:gap-4 overflow-y-auto overflow-x-hidden min-w-0 no-scrollbar">
                             {/* Canvas Preview */}
-                            <div className="flex-1 min-h-[500px] flex flex-col overflow-x-hidden">
+                            <div className="flex-1 min-h-[340px] md:min-h-[500px] flex flex-col overflow-x-hidden">
                                 <CanvasPanel
                                     currentImage={creationFlow.state.generatedImage}
                                     generations={[]}
@@ -1968,7 +1968,7 @@ export default function ImagePage() {
                                     ? "fixed bottom-24 right-4"
                                     : cn(
                                         "absolute top-[30%] -translate-y-1/2",
-                                        panelPosition === 'right' ? "right-[32%]" : "left-[32%]"
+                                        panelPosition === 'right' ? "right-[28%]" : "left-[28%]"
                                     )
                             )}
                         />
@@ -2023,17 +2023,17 @@ export default function ImagePage() {
 
                     {/* BOTTOM BAR: Local Edits & Generate */}
                     <div className={cn(
-                        "flex-none flex border-t border-white/10 bg-background/50 backdrop-blur-md min-h-[80px]",
-                        panelPosition === 'right' ? "flex-row" : "flex-row-reverse"
+                        "studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-background/50 backdrop-blur-md min-h-[80px] lg:flex-row",
+                        panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
                     )}>
                         {/* Left: Text Area (Matches Canvas width) */}
-                        <div className="flex-1 p-4 flex items-end gap-2">
+                        <div className="flex-1 p-3 md:p-4 flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
                             <Textarea
                                 placeholder={creationFlow.state.generatedImage ? "Describe los cambios para editar la imagen..." : "Configura tu imagen en el panel derecho..."}
                                 value={editPrompt}
                                 onChange={(e) => setEditPrompt(e.target.value)}
                                 disabled={!creationFlow.state.generatedImage}
-                                className="w-full min-h-[44px] max-h-[120px] resize-none bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all"
+                                className="w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey) {
                                         e.preventDefault()
@@ -2047,9 +2047,9 @@ export default function ImagePage() {
                                 <Button
                                     onClick={() => handleEditImage(editPrompt)}
                                     disabled={isGenerating || !editPrompt.trim()}
-                                    className="h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold px-4 whitespace-nowrap"
+                                    className="group feedback-action h-[44px] w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold px-4 whitespace-nowrap"
                                 >
-                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    <Sparkles className="w-4 h-4 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
                                     Realizar corrección
                                 </Button>
                             )}
@@ -2057,14 +2057,14 @@ export default function ImagePage() {
 
                         {/* Right: Generate Button (Matches ControlsPanel width) */}
                         <div className={cn(
-                            "w-full md:w-[27%] p-4 flex flex-col justify-end",
-                            panelPosition === 'right' ? "border-l border-white/5" : "border-r border-white/5"
+                            "w-full lg:w-[27%] p-3 md:p-4 flex flex-col justify-end border-t lg:border-t-0",
+                            panelPosition === 'right' ? "lg:border-l border-border/40" : "lg:border-r border-border/40"
                         )}>
                             {creationFlow.state.generatedImage ? (
                                 <Button
                                     onClick={handleRetryLastPrompt}
                                     disabled={isGenerating || !lastGenerationRequest || creationFlow.state.isAnalyzing}
-                                    className="w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
+                                    className="group feedback-action w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
                                 >
                                     {isGenerating ? (
                                         <>
@@ -2073,7 +2073,7 @@ export default function ImagePage() {
                                         </>
                                     ) : (
                                         <>
-                                            <RotateCcw className="w-4 h-4 mr-2" />
+                                            <RotateCcw className="w-4 h-4 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
                                             Generar otra con mismos ajustes
                                         </>
                                     )}
@@ -2082,7 +2082,7 @@ export default function ImagePage() {
                                 <Button
                                     onClick={handleUnifiedAction}
                                     disabled={isGenerating || !canGenerate}
-                                    className="w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
+                                    className="group feedback-action w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
                                 >
                                     {isGenerating ? (
                                         <>
@@ -2091,7 +2091,7 @@ export default function ImagePage() {
                                         </>
                                     ) : (
                                         <>
-                                            <Sparkles className="w-5 h-5 mr-2" />
+                                            <Sparkles className="w-5 h-5 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
                                             Generar Imagen
                                         </>
                                     )}

@@ -322,7 +322,6 @@ export function CarouselCanvasPanel({
     const isGeneratingAny = isGenerating || slides.some(s => s.status === 'generating') || isRegenerating
     const hasAnyImage = slides.some(s => Boolean(s.imageUrl))
     const isLoaderVisible = Boolean(isGeneratingAny && !hasAnyImage)
-
     useEffect(() => {
         if (!currentSlide) return
         setDraftTitle(currentSlide.title || '')
@@ -877,7 +876,10 @@ export function CarouselCanvasPanel({
                 >
                     <div
                         ref={containerRef}
-                        className="canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-visible"
+                        className={cn(
+                            "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-visible",
+                            wasJustGenerated && "canvas-success-flash"
+                        )}
                         style={(() => {
                             const [w, h] = aspectRatio.split(':').map(Number)
                             const ratio = w / h

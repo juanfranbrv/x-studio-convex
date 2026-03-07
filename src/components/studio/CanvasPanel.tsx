@@ -772,7 +772,8 @@ export function CanvasPanel({
                         ref={containerRef}
                         className={cn(
                             "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot shrink-0 rounded-aero",
-                            "overflow-visible"
+                            "overflow-visible",
+                            wasJustGenerated && "canvas-success-flash"
                         )}
                         style={(() => {
                             const [w, h] = aspectRatio.split(':').map(Number);

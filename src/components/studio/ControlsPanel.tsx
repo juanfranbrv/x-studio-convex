@@ -52,7 +52,7 @@ const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = 
     6: { title: "Marca", description: "Elige la variante del logo y ajusta la paleta cromática." }
 }
 
-const PANEL_CARD_CLASS = "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(15,23,42,0.55)] transition-all duration-200 hover:border-primary/30"
+const PANEL_CARD_CLASS = "studio-tone-panel rounded-2xl border border-border/70 bg-card/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(15,23,42,0.55)] transition-all duration-200 hover:border-primary/30"
 const PANEL_CARD_PADDED_CLASS = `${PANEL_CARD_CLASS} p-4`
 const PANEL_CARD_PADDED_LG_CLASS = `${PANEL_CARD_CLASS} p-5`
 
@@ -655,7 +655,7 @@ export function ControlsPanel({
     }
 
     return (
-        <div className="w-full md:w-[27%] h-full controls-panel flex flex-col shrink-0 relative group/panel border-l border-border/40 bg-gradient-to-b from-background via-background to-muted/20">
+        <div className="studio-tone-shell w-full lg:w-[27%] h-auto lg:h-full controls-panel flex flex-col shrink-0 relative group/panel border-t lg:border-t-0 lg:border-l border-border/40 bg-gradient-to-b from-background via-background to-muted/20">
             <div className="flex-1 overflow-y-auto thin-scrollbar [scrollbar-gutter:stable] p-4 space-y-5">
                 {/* SECTION: Sessions */}
                 <div className={`${PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
@@ -787,7 +787,7 @@ export function ControlsPanel({
                                 size="sm"
                                 onClick={onAnalyze}
                                 disabled={isMagicParsing || !promptValue.trim()}
-                                className="ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
+                                className="group feedback-action ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
                             >
                                 Analizar
                             </Button>
@@ -1344,18 +1344,18 @@ function SuggestionsList({
                         <TooltipTrigger asChild>
                             <button
                                 onClick={() => onApply(idx)}
-                                className="group relative w-full flex items-center gap-2.5 p-2.5 rounded-lg border border-purple-100/50 bg-purple-50/50 hover:bg-white hover:border-purple-200 hover:shadow-sm transition-all duration-200 overflow-hidden text-left"
+                                className="studio-tone-suggestion group relative w-full flex items-center gap-2.5 p-2.5 rounded-lg border hover:shadow-sm transition-all duration-200 overflow-hidden text-left"
                             >
                                 {/* Title */}
-                                <span className="text-[11px] font-bold text-gray-900 shrink-0">
+                                <span className="text-[11px] font-bold text-foreground shrink-0">
                                     {suggestion.title}
                                 </span>
 
                                 {/* Separator - Vertical Line */}
-                                <div className="h-3 w-[1px] bg-purple-200 shrink-0" />
+                                <div className="studio-tone-divider h-3 w-[1px] shrink-0" />
 
                                 {/* Description - Truncated */}
-                                <span className="text-[11px] text-gray-500 truncate font-medium group-hover:text-purple-700 transition-colors">
+                                <span className="text-[11px] text-muted-foreground truncate font-medium group-hover:text-foreground transition-colors">
                                     {suggestion.subtitle}
                                 </span>
                             </button>

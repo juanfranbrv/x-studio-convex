@@ -111,9 +111,10 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
                         // Default positioning (can be overridden by className)
                         !className?.includes('absolute') && !className?.includes('fixed') && "fixed bottom-24 left-1/2 -translate-x-1/2",
                         "z-50 px-4 py-2.5 rounded-full",
-                        "glass-panel border border-white/20",
+                        "bg-card/90 backdrop-blur-xl border border-primary/20",
                         "flex items-center gap-2",
                         "opacity-90 hover:opacity-100",
+                        "hover:border-primary/40",
                         "hover:scale-105 active:scale-95",
                         "transition-all duration-300 ease-out",
                         "shadow-lg hover:shadow-xl",
@@ -133,7 +134,7 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
                 <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <div className={cn(
                         "w-80 p-5 rounded-2xl",
-                        "glass-panel border border-white/10",
+                        "studio-tone-panel border border-border/70 bg-card/95",
                         "shadow-2xl backdrop-blur-xl",
                         "space-y-4"
                     )}>
@@ -191,7 +192,7 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
                                     placeholder="Cuéntanos más (opcional)..."
                                     className={cn(
                                         "w-full h-20 px-3 py-2 text-sm rounded-xl",
-                                        "bg-muted/30 border border-white/10",
+                                        "bg-muted/40 border border-border/60",
                                         "placeholder:text-muted-foreground/50",
                                         "focus:outline-none focus:ring-2 focus:ring-primary/50",
                                         "resize-none transition-all"
@@ -212,7 +213,7 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                                             Enviando...
                                         </>
                                     ) : (
@@ -240,11 +241,11 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
                 <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in zoom-in duration-500">
                     <div className={cn(
                         "w-12 h-12 rounded-full",
-                        "bg-green-500/20 border border-green-500/30",
+                        "bg-primary/20 border border-primary/35",
                         "flex items-center justify-center",
                         "shadow-lg"
                     )}>
-                        <Check className="w-6 h-6 text-green-500" />
+                        <Check className="w-6 h-6 text-primary" />
                     </div>
                 </div>
             )}

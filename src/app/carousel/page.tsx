@@ -1277,7 +1277,10 @@ export default function CarouselPage() {
             onBrandDelete={deleteBrandKitById}
             onNewBrandKit={handleNewBrandKit}
         >
-            <div className="flex h-full">
+            <div className={cn(
+                "flex h-full flex-col lg:flex-row",
+                panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
+            )}>
                 {/* Canvas + Caption */}
                 <div className="flex-1 flex flex-col min-h-0">
                     <CarouselCanvasPanel
@@ -1320,7 +1323,7 @@ export default function CarouselPage() {
                             ? "fixed bottom-24 right-4"
                             : cn(
                                 "absolute top-[30%] -translate-y-1/2",
-                                panelPosition === 'right' ? "right-[32%]" : "left-[32%]"
+                                panelPosition === 'right' ? "right-[28%]" : "left-[28%]"
                             )
                     )}
                 />

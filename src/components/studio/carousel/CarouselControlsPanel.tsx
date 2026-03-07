@@ -182,7 +182,7 @@ type CarouselWorkspaceSnapshot = {
     }
 }
 
-const PANEL_CARD_CLASS = "rounded-2xl border border-border/70 bg-card/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(15,23,42,0.55)] transition-all duration-200 hover:border-primary/30"
+const PANEL_CARD_CLASS = "studio-tone-panel rounded-2xl border border-border/70 bg-card/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(15,23,42,0.55)] transition-all duration-200 hover:border-primary/30"
 const PANEL_CARD_PADDED_CLASS = `${PANEL_CARD_CLASS} p-4`
 const PANEL_CARD_PADDED_LG_CLASS = `${PANEL_CARD_CLASS} p-5`
 
@@ -1712,7 +1712,7 @@ export function CarouselControlsPanel({
     }
 
     return (
-        <div className="w-full md:w-[27%] h-full controls-panel flex flex-col shrink-0 relative group/panel border-l border-border/40 bg-gradient-to-b from-background via-background to-muted/20">
+        <div className="studio-tone-shell w-full lg:w-[27%] h-auto lg:h-full controls-panel flex flex-col shrink-0 relative group/panel border-t lg:border-t-0 lg:border-l border-border/40 bg-gradient-to-b from-background via-background to-muted/20">
             <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-5">
                                 {/* SECTION: Sessions */}
                 <div className={`${PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
@@ -1899,7 +1899,7 @@ export function CarouselControlsPanel({
                                 size="sm"
                                 onClick={handleAnalyze}
                                 disabled={!canAnalyze}
-                                className="ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
+                                className="group feedback-action ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
                             >
                                 Analizar
                             </Button>
@@ -2009,7 +2009,7 @@ export function CarouselControlsPanel({
                         <button
                             onClick={() => handleAspectRatioSelect('4:5')}
                             className={cn(
-                                "flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
+                                "feedback-action flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
                                 aspectRatio === '4:5' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                             )}
                         >
@@ -2027,7 +2027,7 @@ export function CarouselControlsPanel({
                         <button
                             onClick={() => handleAspectRatioSelect('3:4')}
                             className={cn(
-                                "flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
+                                "feedback-action flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
                                 aspectRatio === '3:4' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                             )}
                         >
@@ -2045,7 +2045,7 @@ export function CarouselControlsPanel({
                         <button
                             onClick={() => handleAspectRatioSelect('1:1')}
                             className={cn(
-                                "flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
+                                "feedback-action flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
                                 aspectRatio === '1:1' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                             )}
                         >
@@ -2209,7 +2209,7 @@ export function CarouselControlsPanel({
                 <Button
                     onClick={handleGenerate}
                     disabled={!canGenerate}
-                    className="w-full h-12 text-base font-semibold disabled:pointer-events-auto disabled:cursor-not-allowed"
+                    className="group feedback-action w-full h-12 text-base font-semibold disabled:pointer-events-auto disabled:cursor-not-allowed"
                 >
                     {isGenerating ? (
                         <>
@@ -2218,12 +2218,12 @@ export function CarouselControlsPanel({
                         </>
                     ) : generatedCount > 0 ? (
                         <>
-                            <RotateCcw className="w-5 h-5 mr-2" />
+                            <RotateCcw className="w-5 h-5 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
                             Generar otro carrusel con mismos ajustes
                         </>
                     ) : (
                         <>
-                            <Sparkles className="w-5 h-5 mr-2" />
+                            <Sparkles className="w-5 h-5 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
                             GENERAR CARRUSEL
                         </>
                     )}
@@ -2298,13 +2298,13 @@ function SuggestionsList({
                         <TooltipTrigger asChild>
                             <button
                                 onClick={() => onApply(idx)}
-                                className="group relative w-full flex items-center gap-2.5 p-2.5 rounded-lg border border-purple-100/50 bg-purple-50/50 hover:bg-white hover:border-purple-200 hover:shadow-sm transition-all duration-200 overflow-hidden text-left"
+                                className="studio-tone-suggestion group relative w-full flex items-center gap-2.5 p-2.5 rounded-lg border hover:shadow-sm transition-all duration-200 overflow-hidden text-left"
                             >
-                                <span className="text-[11px] font-bold text-gray-900 shrink-0">
+                                <span className="text-[11px] font-bold text-foreground shrink-0">
                                     {suggestion.title}
                                 </span>
-                                <div className="h-3 w-[1px] bg-purple-200 shrink-0" />
-                                <span className="text-[11px] text-gray-500 truncate font-medium group-hover:text-purple-700 transition-colors">
+                                <div className="studio-tone-divider h-3 w-[1px] shrink-0" />
+                                <span className="text-[11px] text-muted-foreground truncate font-medium group-hover:text-foreground transition-colors">
                                     {suggestion.subtitle}
                                 </span>
                             </button>
