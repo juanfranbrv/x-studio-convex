@@ -801,9 +801,15 @@ export function CarouselCanvasPanel({
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut}>
                             <ZoomOut className="w-4 h-4" />
                         </Button>
-                        <span className="text-[10px] font-mono w-10 text-center cursor-pointer" onClick={handleResetZoom}>
+                        <button
+                            type="button"
+                            className="text-[10px] font-mono w-10 text-center cursor-pointer"
+                            onClick={handleResetZoom}
+                            title="Restablecer zoom"
+                            aria-label="Restablecer zoom"
+                        >
                             {zoom}%
-                        </span>
+                        </button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn}>
                             <ZoomIn className="w-4 h-4" />
                         </Button>
@@ -1230,7 +1236,11 @@ export function CarouselCanvasPanel({
                                         )}
                                     >
                                         {slide.imageUrl ? (
-                                            <img src={slide.imageUrl} className="w-full h-full object-cover" />
+                                            <img
+                                                src={slide.imageUrl}
+                                                alt={`Miniatura del slide ${index + 1}`}
+                                                className="w-full h-full object-cover"
+                                            />
                                         ) : (
                                             <div className="w-full h-full bg-muted flex items-center justify-center">
                                                 <span className="text-[10px] font-mono opacity-50">{index + 1}</span>

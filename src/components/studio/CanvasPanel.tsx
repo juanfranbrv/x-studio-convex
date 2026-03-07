@@ -719,9 +719,15 @@ export function CanvasPanel({
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut} title="Zoom out">
                             <ZoomOutIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
-                        <span className="text-[10px] font-mono w-8 text-center" onClick={handleResetZoom} style={{ cursor: 'pointer' }} title="Reset zoom">
+                        <button
+                            type="button"
+                            className="text-[10px] font-mono w-8 text-center cursor-pointer"
+                            onClick={handleResetZoom}
+                            title="Reset zoom"
+                            aria-label="Restablecer zoom"
+                        >
                             {effectiveZoom}%
-                        </span>
+                        </button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn} title="Zoom in">
                             <ZoomInIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
