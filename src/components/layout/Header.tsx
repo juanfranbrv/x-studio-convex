@@ -1,11 +1,9 @@
 'use client'
 
 import { ReactNode, useState } from 'react'
-import { UserButton, useUser } from '@clerk/nextjs'
+import { useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
-import { useTheme } from 'next-themes'
-import { dark } from '@clerk/themes'
-import { Bot, Bell, ChevronDown, Trash2, Plus, Settings } from 'lucide-react'
+import { Bot, ChevronDown, Trash2, Plus, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { CreditsBadge } from './CreditsBadge'
@@ -41,7 +39,6 @@ interface HeaderProps {
 
 export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete, onNewBrandKit, afterBrandActions }: HeaderProps) {
     const { t } = useTranslation()
-    const { resolvedTheme } = useTheme()
     const { user } = useUser()
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [brandToDelete, setBrandToDelete] = useState<BrandKitSummary | BrandDNA | null>(null)
@@ -85,8 +82,8 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
     }
 
     return (
-            <>
-            <header className="h-16 border-b border-border/60 bg-background/80 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 shrink-0">
+        <>
+            <header className="h-16 border-b border-border/60 bg-background/95 backdrop-blur-sm flex items-center justify-between px-4 md:px-6 shrink-0">
                 <div className="flex items-center gap-2 md:gap-3">
                     {/* Mobile Menu Trigger */}
                     <MobileMenu />
@@ -99,7 +96,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     {brands.length > 0 && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-2 w-[140px] md:w-72 justify-between px-2 md:px-4 bg-card/70 border-border hover:bg-accent/60 hover:border-border rounded-xl">
+                                <Button variant="outline" size="sm" className="gap-2 w-[140px] md:w-72 justify-between px-2 md:px-4 bg-card border-border/70 hover:bg-accent/50 hover:border-border rounded-xl transition-colors">
                                     <span className="flex items-center gap-2 min-w-0">
                                         <span className="w-6 h-6 rounded-md bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                                             {currentBrandFavicon ? (
@@ -119,7 +116,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                     <ChevronDown className="h-4 w-4 shrink-0" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-[320px] md:w-[440px] bg-popover/95 backdrop-blur-xl border-border shadow-lg rounded-xl">
+                            <DropdownMenuContent align="start" className="w-[320px] md:w-[440px] bg-popover border-border shadow-lg rounded-xl">
                                 {brands.map((brand) => (
                                     <DropdownMenuItem
                                         key={brand.id}
@@ -142,7 +139,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                         <div className="flex-1 min-w-0 flex items-center gap-2">
                                             <span className="truncate">{brand.brand_name}</span>
                                             <span
-                                                className={`text-[10px] px-1.5 py-0.5 rounded-md border font-semibold whitespace-nowrap ${getCompletenessStyle(brand.completeness)}`}
+                                                className={`text-xs px-1.5 py-0.5 rounded-md border font-semibold whitespace-nowrap ${getCompletenessStyle(brand.completeness)}`}
                                             >
                                                 {Math.max(0, Math.min(100, Math.round(brand.completeness ?? 0)))}%
                                             </span>
@@ -168,7 +165,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     )}
 
                     {onNewBrandKit && (
-                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="gap-2 hidden md:flex bg-card/70 border-border hover:bg-accent/60 hover:border-border rounded-xl">
+                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="gap-2 hidden md:flex bg-card border-border/70 hover:bg-accent/50 hover:border-border rounded-xl transition-colors">
                             <Plus className="h-4 w-4" />
                             Nuevo Kit de Marca
                         </Button>
@@ -202,14 +199,6 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
 
                     <ThemeToggle className="rounded-full w-9 h-9 hover:bg-accent/60" />
 
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="relative hidden md:flex rounded-full w-9 h-9 hover:bg-accent/60"
-                    >
-                        <Bell className="h-4.5 w-4.5" />
-                        <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-brand-secondary rounded-full border border-background animate-pulse" />
-                    </Button>
                 </div>
             </header>
 

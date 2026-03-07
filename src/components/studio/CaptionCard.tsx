@@ -26,9 +26,9 @@ export function CaptionCard({
     }
 
     return (
-        <div className="glass-card p-4">
+        <div className="rounded-xl border border-border/60 bg-card/70 p-4">
             <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Caption para redes
                 </p>
                 <div className="flex items-center gap-1">
@@ -65,7 +65,7 @@ export function CaptionCard({
                 value={caption}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder="El caption aparecerá aquí después de generar..."
-                className="w-full min-h-[80px] text-sm p-3 rounded-lg border border-white/10 bg-white/5 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/60"
+                className="w-full min-h-[80px] text-sm p-3 rounded-lg border border-border/60 bg-background/70 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors placeholder:text-muted-foreground/70"
                 rows={3}
             />
         </div>

@@ -2,9 +2,6 @@
 
 import { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import DownloadIcon from '@mui/icons-material/Download'
-import ShareIcon from '@mui/icons-material/Share'
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 import AspectRatioOutlinedIcon from '@mui/icons-material/AspectRatioOutlined'
@@ -15,12 +12,6 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
 import JSZip from 'jszip'
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
     Select,
     SelectContent,
     SelectItem,
@@ -29,7 +20,7 @@ import {
 } from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/image/page'
-import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, ImagePlus, SquareArrowDown, ImageDown, Bug, Sparkles, Paintbrush } from 'lucide-react'
+import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, SquareArrowDown, ImageDown, Bug, Sparkles, Paintbrush } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
@@ -713,15 +704,15 @@ export function CanvasPanel({
 
                 {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}
                 {/* Zoom Controls & Actions */}
-                <div className="hidden md:flex pointer-events-auto glass-panel text-muted-foreground transition-all duration-300 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-1">
+                <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-1 border border-border/60 bg-background/85 backdrop-blur-sm">
                     {/* Zoom Controls */}
-                    <div className="flex flex-col items-center border-b border-white/10 pb-2 gap-1">
+                    <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
                         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut} title="Zoom out">
                             <ZoomOutIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
                         <button
                             type="button"
-                            className="text-[10px] font-mono w-8 text-center cursor-pointer"
+                            className="text-xs font-mono w-8 text-center cursor-pointer"
                             onClick={handleResetZoom}
                             title="Reset zoom"
                             aria-label="Restablecer zoom"
@@ -742,19 +733,6 @@ export function CanvasPanel({
                     <Button variant="ghost" size="icon" onClick={handleDownloadBundle} className="h-10 w-10" title="Descargar ZIP (imagen + copy)">
                         <SquareArrowDown className="w-4 h-4" />
                     </Button>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-10 w-10">
-                                <MoreHorizIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                                <ShareIcon fontSize="small" className="mr-2" />
-                                {t('canvas.share')}
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
             </div>
 
@@ -798,7 +776,7 @@ export function CanvasPanel({
                     <div
                         ref={containerRef}
                         className={cn(
-                            "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot shrink-0 rounded-aero",
+                            "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot shrink-0 rounded-aero",
                             "overflow-visible"
                         )}
                         style={(() => {
@@ -886,7 +864,7 @@ export function CanvasPanel({
                                             variant="ghost"
                                             size="icon"
                                             onClick={onOpenPromptDebug}
-                                            className="h-9 w-9 rounded-full bg-background/80 backdrop-blur border border-border shadow-sm hover:shadow-md transition-all hover:scale-[1.03] active:scale-[0.98]"
+                                            className="h-9 w-9 rounded-full bg-background/80 backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
                                             title="Ver prompt enviado"
                                         >
                                             <Bug className="w-4 h-4" />
@@ -935,7 +913,7 @@ export function CanvasPanel({
                                     <span className="text-3xl opacity-70">🎨</span>
                                 </div>
                                 <p className="text-sm font-medium text-muted-foreground/70">{t('canvas.noImage')}</p>
-                                <div className="mt-4 px-3 py-1 rounded-full bg-muted/50 text-[10px] uppercase tracking-wider font-mono text-muted-foreground/60 border border-border/30">
+                                <div className="mt-4 px-3 py-1 rounded-full bg-muted/50 text-xs uppercase tracking-wide font-mono text-muted-foreground/70 border border-border/30">
                                     {aspectRatio}
                                 </div>
                             </div>
@@ -1191,7 +1169,7 @@ export function CanvasPanel({
                                 <div
                                     key={item.id}
                                     className={cn(
-                                        "flex items-center gap-2 bg-background border border-border/50 rounded-lg shadow-sm group animate-in fade-in slide-in-from-bottom-1 transition-all overflow-hidden",
+                                        "flex items-center gap-2 bg-background border border-border/50 rounded-lg shadow-sm group animate-in fade-in slide-in-from-bottom-1 transition-colors transition-shadow duration-200 overflow-hidden",
                                         (item.type === 'image' || item.type === 'logo') ? "p-0 pr-1.5" : "px-2 py-1"
                                     )}
                                 >
@@ -1319,32 +1297,14 @@ export function CanvasPanel({
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         className={cn(
-                            "transition-all duration-300 relative mx-auto w-full max-w-[98%] mb-2 pointer-events-auto",
+                            "transition-transform duration-300 relative mx-auto w-full max-w-[98%] mb-2 pointer-events-auto",
                             isDraggingOver ? "scale-[1.01]" : ""
                         )}
                     >
-                        {isDraggingOver && (
-                            <div className="absolute inset-x-0 -top-12 flex justify-center pointer-events-none animate-bounce z-50">
-                                <div className="bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-bold shadow-lg ring-2 ring-background">
-                                    Suelta para añadir al contexto
-                                </div>
-                            </div>
-                        )}
-
                         <div className={cn(
-                            "flex items-center gap-2 p-2 pl-4 bg-background/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-[32px] transition-all duration-300",
+                            "flex items-center gap-2 p-2 pl-4 bg-background/85 backdrop-blur-sm border border-border/60 shadow-2xl rounded-[32px] transition-colors transition-shadow duration-200",
                             isDraggingOver ? "ring-2 ring-primary ring-offset-2 bg-background" : "hover:bg-background/90"
                         )}>
-                            {/* Add Image Icon */}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="shrink-0 h-10 w-10 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                                title="Añadir imagen de referencia (Próximamente)"
-                            >
-                                <ImagePlus className="w-5 h-5" />
-                            </Button>
-
                             {/* Input */}
                             <Textarea
                                 value={editPrompt}
@@ -1371,7 +1331,7 @@ export function CanvasPanel({
 
                                 label={currentImage && editPrompt.trim() ? "EDITAR IMAGEN" : "Generar"}
                                 isDisabled={!canGenerate && !editPrompt.trim()}
-                                className="h-14 px-8 rounded-xl font-bold shadow-lg hover:shadow-primary/25 bg-primary text-primary-foreground border-0 shrink-0 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="h-14 px-8 rounded-xl font-bold shadow-lg hover:shadow-primary/25 bg-primary text-primary-foreground border-0 shrink-0 transition-transform transition-shadow duration-200 hover:scale-[1.02] active:scale-[0.98]"
                             />
                         </div>
                     </div>

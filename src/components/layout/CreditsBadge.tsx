@@ -56,8 +56,22 @@ export function CreditsBadge() {
         )
     }
 
-    // Still loading or no user in database
-    if (!creditsData) return null
+    // Keep credits affordance visible even when data is not ready/available
+    if (!creditsData) {
+        return (
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Badge variant="secondary" className="gap-1.5 cursor-help">
+                        <Coins className="h-3 w-3" />
+                        <span className="font-mono text-xs">--</span>
+                    </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Créditos no disponibles todavía</p>
+                </TooltipContent>
+            </Tooltip>
+        )
+    }
 
     const { credits, isLow, status } = creditsData
 

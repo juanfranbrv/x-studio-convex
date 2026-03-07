@@ -58,7 +58,7 @@ export function CampaignBriefPanel({ onGenerate, isGenerating = false }: Campaig
                         key={id}
                         onClick={() => setSelectedPlatform(id)}
                         className={cn(
-                            'w-10 h-10 rounded-lg flex items-center justify-center transition-all',
+                            'w-10 h-10 rounded-lg flex items-center justify-center transition-colors transition-transform duration-200',
                             selectedPlatform === id
                                 ? `${color} text-white shadow-lg scale-110`
                                 : 'bg-muted hover:bg-muted/80 text-muted-foreground'

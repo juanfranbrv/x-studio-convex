@@ -384,7 +384,7 @@ export function CarouselCanvasPanel({
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 max-h-80 overflow-y-auto">
-                <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                <DropdownMenuLabel className="text-xs uppercase tracking-wide text-muted-foreground">
                     Textos del Kit de Marca
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -796,14 +796,14 @@ export function CarouselCanvasPanel({
                 )}
 
                 {/* Right: Actions */}
-                <div className="hidden md:flex pointer-events-auto glass-panel text-muted-foreground transition-all duration-300 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4">
-                    <div className="flex flex-col items-center border-b border-white/10 pb-2 gap-1">
+                <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4 border border-border/60 bg-background/85 backdrop-blur-sm">
+                    <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
                         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut}>
                             <ZoomOut className="w-4 h-4" />
                         </Button>
                         <button
                             type="button"
-                            className="text-[10px] font-mono w-10 text-center cursor-pointer"
+                            className="text-xs font-mono w-10 text-center cursor-pointer"
                             onClick={handleResetZoom}
                             title="Restablecer zoom"
                             aria-label="Restablecer zoom"
@@ -831,7 +831,7 @@ export function CarouselCanvasPanel({
                                 <MoreHorizontal className="w-4 h-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="glass-panel border-white/10">
+                        <DropdownMenuContent align="end" className="bg-popover/95 border-border/60 backdrop-blur-sm">
                             <DropdownMenuItem onClick={() => onRegenerateSlide(currentIndex)} disabled={!currentSlide || isRegenerating}>
                                 <RefreshCw className={cn("w-4 h-4 mr-2", isRegenerating && "animate-spin")} />
                                 Regenerar slide actual
@@ -877,7 +877,7 @@ export function CarouselCanvasPanel({
                 >
                     <div
                         ref={containerRef}
-                        className="canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-all duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-visible"
+                        className="canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-visible"
                         style={(() => {
                             const [w, h] = aspectRatio.split(':').map(Number)
                             const ratio = w / h
@@ -1044,7 +1044,7 @@ export function CarouselCanvasPanel({
                                     variant="ghost"
                                     size="icon"
                                     onClick={handleOpenDebug}
-                                    className="h-9 w-9 rounded-full bg-background/80 backdrop-blur border border-border shadow-sm hover:shadow-md transition-all hover:scale-[1.03] active:scale-[0.98]"
+                                    className="h-9 w-9 rounded-full bg-background/80 backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
                                     title="Ver prompt y referencias"
                                 >
                                     <Bug className="w-4 h-4" />
@@ -1130,14 +1130,14 @@ export function CarouselCanvasPanel({
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                className="h-8 px-3 text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-foreground transition-colors gap-2"
+                                                                className="h-8 px-3 text-xs uppercase font-bold tracking-wide text-muted-foreground hover:text-foreground transition-colors gap-2"
                                                             >
                                                                 <Fingerprint className="w-3.5 h-3.5 text-primary" />
                                                                 Textos de Marca
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="start" className="w-72 max-h-80 overflow-y-auto">
-                                                            <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                                                            <DropdownMenuLabel className="text-xs uppercase tracking-wide text-muted-foreground">
                                                                 Selecciona un texto del Kit de Marca
                                                             </DropdownMenuLabel>
                                                             <DropdownMenuSeparator />
@@ -1219,7 +1219,7 @@ export function CarouselCanvasPanel({
                                     key={index}
                                     onClick={() => onSelectSlide(index)}
                                     className={cn(
-                                        "relative flex-shrink-0 rounded-[18px] p-1.5 transition-all duration-300",
+                                        "relative flex-shrink-0 rounded-[18px] p-1.5 transition-colors transition-shadow transition-opacity duration-200",
                                         "bg-white/60 dark:bg-white/10 backdrop-blur border border-border/60",
                                         aspectRatio === '1:1' ? "w-16 h-16" : "w-14 h-20",
                                         currentIndex === index
@@ -1278,7 +1278,7 @@ export function CarouselCanvasPanel({
                 {sessionHistory.length > 0 && (
                     <div className="w-full max-w-[800px] shrink-0 pb-4">
                         <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Variaciones de la sesión</p>
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">Variaciones de la sesión</p>
                             <div className="flex gap-2 overflow-x-auto no-scrollbar">
                                 {sessionHistory.map((item) => {
                                     const thumb = item.slides.find((s) => s.imageUrl)?.imageUrl
@@ -1400,7 +1400,7 @@ export function CarouselCanvasPanel({
                                     <div
                                         key={`video-progress-square-${idx}`}
                                         className={cn(
-                                            'h-3 rounded-sm transition-all duration-200',
+                                            'h-3 rounded-sm transition-[width,background-color] duration-200',
                                             active ? 'bg-primary shadow-sm' : 'bg-muted'
                                         )}
                                     />

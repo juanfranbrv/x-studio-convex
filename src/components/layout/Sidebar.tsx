@@ -47,7 +47,7 @@ export function Sidebar({ className }: SidebarProps) {
     return (
         <aside
             className={cn(
-                'h-screen transition-all duration-300 ease-in-out border-r border-border/60 bg-background/80 backdrop-blur-xl flex flex-col shrink-0 w-[90px]',
+                'h-screen transition-colors duration-300 ease-in-out border-r border-border/60 bg-background/95 backdrop-blur-sm flex flex-col shrink-0 w-[90px]',
                 className
             )}
         >
@@ -65,7 +65,7 @@ export function Sidebar({ className }: SidebarProps) {
                             key={item.label}
                             href={item.href}
                             className={cn(
-                                'flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 group gap-1.5',
+                                'flex flex-col items-center justify-center p-2 rounded-xl transition-colors duration-200 group gap-1.5',
                                 isActive
                                     ? 'bg-primary text-primary-foreground shadow-lg'
                                     : 'hover:bg-accent/60 text-muted-foreground hover:text-foreground'
@@ -89,7 +89,7 @@ export function Sidebar({ className }: SidebarProps) {
                 <Link
                     href="/settings"
                     className={cn(
-                        'flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 group gap-1.5 w-full',
+                        'flex flex-col items-center justify-center p-2 rounded-xl transition-colors duration-200 group gap-1.5 w-full',
                         pathname === '/settings'
                             ? 'bg-primary text-primary-foreground shadow-lg'
                             : 'hover:bg-accent/60 text-muted-foreground hover:text-foreground'
@@ -105,7 +105,7 @@ export function Sidebar({ className }: SidebarProps) {
                 {/* User Profile - Avatar with Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button className="h-10 w-10 shrink-0 rounded-full border-2 border-brand-secondary overflow-hidden shadow-sm bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        <button className="h-10 w-10 shrink-0 rounded-full border-2 border-brand-secondary overflow-hidden shadow-sm bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-colors transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50">
                             {user?.imageUrl ? (
                                 <img
                                     src={user.imageUrl}
