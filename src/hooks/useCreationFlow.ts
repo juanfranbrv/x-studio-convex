@@ -2001,8 +2001,14 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             ? ''
             : buildSimpleTypographyDirection(activeState.typography, styleSignals)
         const visualDirectiveLine = buildVisualStyleDirective(customStyle, styleAnalysis)
+        const hasStyleDirectiveSource = Boolean(
+            customStyle ||
+            hasStylePresetSelected ||
+            hasActiveStyleReference ||
+            (styleAnalysis?.keywords?.length || 0) > 0
+        )
 
-        if (styleSignals.length > 0 || typographyDirection) {
+        if (hasStyleDirectiveSource || typographyDirection) {
             sections.push(
                 P05.PRIORITY_HEADER,
                 ``,
