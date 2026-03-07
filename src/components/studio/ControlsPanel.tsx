@@ -1,6 +1,5 @@
 ﻿'use client'
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCreationFlow } from '@/hooks/useCreationFlow'
 import { LayoutSelector } from './creation-flow/LayoutSelector'
 import { SocialFormatSelector } from './creation-flow/SocialFormatSelector'
@@ -31,6 +30,14 @@ import {
 } from '@/lib/creation-flow-types'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
 import { cn } from '@/lib/utils'
+import { SectionHeader } from '@/components/studio/shared/SectionHeader'
+import {
+    STUDIO_CONTROLS_SHELL_CLASS,
+    STUDIO_PANEL_CARD_PADDED_CLASS,
+    STUDIO_PANEL_CARD_PADDED_LG_CLASS,
+} from '@/components/studio/shared/panelStyles'
+import { SuggestionsList } from '@/components/studio/shared/SuggestionsList'
+import { OnboardingChecklist, type OnboardingStep } from '@/components/studio/shared/OnboardingChecklist'
 import {
     clearLegacyLayoutRatingStorage,
     getLayoutRatingStats,
@@ -51,33 +58,6 @@ const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = 
     4: { title: "Imagen", description: "Sube una referencia o usa una del Kit de marca." },
     6: { title: "Marca", description: "Elige la variante del logo y ajusta la paleta cromática." }
 }
-
-const PANEL_CARD_CLASS = "studio-tone-panel rounded-2xl border border-border/70 bg-card/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(15,23,42,0.55)] transition-all duration-200 hover:border-primary/30"
-const PANEL_CARD_PADDED_CLASS = `${PANEL_CARD_CLASS} p-4`
-const PANEL_CARD_PADDED_LG_CLASS = `${PANEL_CARD_CLASS} p-5`
-
-// Section header component
-const SectionHeader = ({
-    icon: Icon,
-    title,
-    extra,
-    className,
-}: {
-    icon: React.ElementType
-    title: string
-    extra?: React.ReactNode
-    className?: string
-}) => (
-    <div className={cn("flex items-center justify-between mb-3", className)}>
-        <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary ring-1 ring-primary/20">
-                <Icon className="w-3.5 h-3.5" />
-            </div>
-            <h3 className="text-[11px] font-semibold text-foreground/95 uppercase tracking-[0.12em]">{title}</h3>
-        </div>
-        {extra}
-    </div>
-)
 
 type BrandColorRole = 'Texto' | 'Fondo' | 'Acento'
 type DraggedBrandColor = { role: BrandColorRole; color: string } | null
@@ -478,6 +458,34 @@ export function ControlsPanel({
     const selectedLayoutRatingStats = state.selectedLayout
         ? getLayoutRatingStats(state.selectedLayout, layoutRatingStore)
         : null
+    const onboardingSteps: OnboardingStep[] = useMemo(() => [
+        { id: 'idea', label: 'Escribe tu idea principal en el prompt.', done: promptValue.trim().length > 0 },
+        { id: 'analyze', label: 'Pulsa Analizar para detectar intención y estructura.', done: Boolean(state.selectedIntent) },
+        { id: 'layout', label: 'Elige un diseño y un formato para la publicación.', done: Boolean(state.selectedLayout && state.selectedFormat) },
+        { id: 'generate', label: 'Genera tu primera imagen y revísala en el canvas.', done: Boolean(state.generatedImage) },
+    ], [promptValue, state.selectedIntent, state.selectedLayout, state.selectedFormat, state.generatedImage])
+    const reorientationSteps: OnboardingStep[] = useMemo(() => [
+        {
+            id: 'brand-assets',
+            label: 'Si ya tienes Brand Kit, añade referencia (imagen/logo) desde el panel.',
+            done: state.uploadedImages.length > 0 || state.selectedBrandKitImageIds.length > 0,
+        },
+        {
+            id: 'basic-analyze',
+            label: 'Mantén modo básico y pulsa Analizar antes de generar.',
+            done: Boolean(state.selectedIntent),
+        },
+        {
+            id: 'first-pass',
+            label: 'Genera una primera versión para abrir el ciclo de iteración.',
+            done: Boolean(state.generatedImage),
+        },
+        {
+            id: 'iterate',
+            label: 'Refina rápido desde abajo con “Realizar corrección” en vez de empezar de cero.',
+            done: Boolean(state.generatedImage && promptValue.trim().length > 0),
+        },
+    ], [state.uploadedImages.length, state.selectedBrandKitImageIds.length, state.selectedIntent, state.generatedImage, promptValue])
     const primaryEmail = useMemo(() => {
         const emails = (activeBrandKit as any)?.emails
         if (!Array.isArray(emails)) return ''
@@ -655,10 +663,10 @@ export function ControlsPanel({
     }
 
     return (
-        <div className="studio-tone-shell w-full lg:w-[27%] h-auto lg:h-full controls-panel flex flex-col shrink-0 relative group/panel border-t lg:border-t-0 lg:border-l border-border/40 bg-gradient-to-b from-background via-background to-muted/20">
+        <div className={STUDIO_CONTROLS_SHELL_CLASS}>
             <div className="flex-1 overflow-y-auto thin-scrollbar [scrollbar-gutter:stable] p-4 space-y-5">
                 {/* SECTION: Sessions */}
-                <div className={`${PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
+                <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader
                         icon={History}
                         title="Historial"
@@ -757,8 +765,25 @@ export function ControlsPanel({
                     </div>
                 </div>
 
+                <div className={STUDIO_PANEL_CARD_PADDED_CLASS}>
+                    <OnboardingChecklist
+                        storageKey="onboarding:image:welcome:v1"
+                        title="Primer resultado en 4 pasos"
+                        subtitle="Objetivo: tener una primera creatividad lista para iterar."
+                        steps={onboardingSteps}
+                    />
+                </div>
+                <div className={STUDIO_PANEL_CARD_PADDED_CLASS}>
+                    <OnboardingChecklist
+                        storageKey="onboarding:image:reorientation:v1"
+                        title="Ruta rápida (ya tengo Brand Kit)"
+                        subtitle="Si te pierdes en Imagen, sigue este orden para recuperar contexto rápido."
+                        steps={reorientationSteps}
+                    />
+                </div>
+
                 {/* STEP 1: Intent Input */}
-                <div ref={step1Ref} className={`${PANEL_CARD_PADDED_CLASS} space-y-3 relative group`}>
+                <div ref={step1Ref} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3 relative group`}>
                     {(isMagicParsing || isGenerating) && (
                         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 animate-shimmer" />
                     )}
@@ -825,7 +850,7 @@ export function ControlsPanel({
                     <>
                         {/* STEP 2: LAYOUT */}
                         {availableLayouts.length > 0 && (
-                            <div ref={step2Ref} className={`relative ${PANEL_CARD_PADDED_CLASS}`}>
+                            <div ref={step2Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 2 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[2]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step2Ref} />
                                 <SectionHeader
                                     icon={Layout}
@@ -887,7 +912,7 @@ export function ControlsPanel({
                         )}
 
                         {/* STEP 3: FORMAT */}
-                        <div ref={step3Ref} className={`relative ${PANEL_CARD_PADDED_CLASS}`}>
+                        <div ref={step3Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 3 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[3]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step3Ref} />
                                 <SectionHeader icon={Layers} title="Formato" />
                                 <SocialFormatSelector
@@ -904,7 +929,7 @@ export function ControlsPanel({
                         </div>
 
                         {/* STEP 4A: CONTENT */}
-                        <div ref={step4Ref} className={`relative ${PANEL_CARD_PADDED_CLASS}`}>
+                        <div ref={step4Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 4 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[4]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step4Ref} />
                                 <SectionHeader
                                     icon={ImagePlus}
@@ -939,7 +964,7 @@ export function ControlsPanel({
                         </div>
 
                         {/* STEP 4B: STYLE */}
-                        <div className={`relative ${PANEL_CARD_PADDED_CLASS}`}>
+                        <div className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <SectionHeader icon={Palette} title="Estilo" />
                                 <StyleImageCard
                                     uploadedImages={state.uploadedImages}
@@ -970,7 +995,7 @@ export function ControlsPanel({
                         </div>
 
                         {/* STEP 4C: AUXILIARY LOGOS */}
-                        <div className={`relative ${PANEL_CARD_PADDED_CLASS}`}>
+                        <div className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <AuxiliaryLogosCard
                                     uploadedImages={state.uploadedImages}
                                     onUpload={uploadImage}
@@ -986,7 +1011,7 @@ export function ControlsPanel({
                         </div>
 
                         {/* STEP 6: KIT DE MARCA */}
-                        <div ref={step6Ref} className={`relative ${PANEL_CARD_PADDED_CLASS} space-y-6`}>
+                        <div ref={step6Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-6`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep >= 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
                                 <SectionHeader icon={Fingerprint} title="Kit de marca" />
 
@@ -1304,69 +1329,5 @@ export function ControlsPanel({
             </div>
 
         </div>
-    )
-}
-
-function SuggestionsList({
-    suggestions,
-    onApply,
-    onUndo,
-    hasOriginalState
-}: {
-    suggestions?: any[],
-    onApply: (index: number) => void,
-    onUndo: () => void,
-    hasOriginalState: boolean
-}) {
-    if (!suggestions || suggestions.length === 0) return null
-
-    return (
-        <TooltipProvider delayDuration={300}>
-            <div className="mt-2 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-500">
-                <div className="flex items-center justify-between px-1">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80">
-                        Opciones alternativas
-                    </p>
-                    {hasOriginalState ? (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onUndo}
-                            className="h-5 px-1.5 text-[9px] text-muted-foreground hover:text-primary gap-1 opacity-60 hover:opacity-100 transition-opacity"
-                        >
-                            <RotateCcw className="w-2.5 h-2.5" />
-                            VOLVER AL ORIGINAL
-                        </Button>
-                    ) : <span />}
-                </div>
-                {suggestions.map((suggestion, idx) => (
-                    <Tooltip key={idx}>
-                        <TooltipTrigger asChild>
-                            <button
-                                onClick={() => onApply(idx)}
-                                className="studio-tone-suggestion group relative w-full flex items-center gap-2.5 p-2.5 rounded-lg border hover:shadow-sm transition-all duration-200 overflow-hidden text-left"
-                            >
-                                {/* Title */}
-                                <span className="text-[11px] font-bold text-foreground shrink-0">
-                                    {suggestion.title}
-                                </span>
-
-                                {/* Separator - Vertical Line */}
-                                <div className="studio-tone-divider h-3 w-[1px] shrink-0" />
-
-                                {/* Description - Truncated */}
-                                <span className="text-[11px] text-muted-foreground truncate font-medium group-hover:text-foreground transition-colors">
-                                    {suggestion.subtitle}
-                                </span>
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" align="start" className="max-w-[260px] text-xs bg-muted text-foreground border border-border shadow-md">
-                            <p className="font-semibold text-foreground mb-1">{suggestion.title}</p>
-                            <p className="text-muted-foreground">{suggestion.subtitle}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                ))}
-            </div>
-        </TooltipProvider>
     )
 }

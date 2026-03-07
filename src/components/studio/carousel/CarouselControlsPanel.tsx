@@ -19,9 +19,16 @@ import type { ReferenceImageRole, SelectedColor, VisionAnalysis } from '@/lib/cr
 import { buildPriority5StyleBlockFromAnalysis, mergeCustomStyleIntoStyleDirectives } from '@/lib/prompts/vision/style-priority-block'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../../convex/_generated/api'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Id } from '../../../../convex/_generated/dataModel'
 import { log } from '@/lib/logger'
+import { SectionHeader } from '@/components/studio/shared/SectionHeader'
+import {
+    STUDIO_CONTROLS_SHELL_CLASS,
+    STUDIO_PANEL_CARD_PADDED_CLASS,
+    STUDIO_PANEL_CARD_PADDED_LG_CLASS,
+} from '@/components/studio/shared/panelStyles'
+import { SuggestionsList } from '@/components/studio/shared/SuggestionsList'
+import { OnboardingChecklist, type OnboardingStep } from '@/components/studio/shared/OnboardingChecklist'
 
 export interface SlideConfig {
     index: number
@@ -181,32 +188,6 @@ type CarouselWorkspaceSnapshot = {
         }>
     }
 }
-
-const PANEL_CARD_CLASS = "studio-tone-panel rounded-2xl border border-border/70 bg-card/90 backdrop-blur-xl shadow-[0_10px_30px_-20px_rgba(15,23,42,0.55)] transition-all duration-200 hover:border-primary/30"
-const PANEL_CARD_PADDED_CLASS = `${PANEL_CARD_CLASS} p-4`
-const PANEL_CARD_PADDED_LG_CLASS = `${PANEL_CARD_CLASS} p-5`
-
-const SectionHeader = ({
-    icon: Icon,
-    title,
-    extra,
-    className,
-}: {
-    icon: React.ElementType
-    title: string
-    extra?: React.ReactNode
-    className?: string
-}) => (
-    <div className={cn("flex items-center justify-between mb-3", className)}>
-        <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary ring-1 ring-primary/20">
-                <Icon className="w-3.5 h-3.5" />
-            </div>
-            <h3 className="text-[11px] font-semibold text-foreground/95 uppercase tracking-[0.12em]">{title}</h3>
-        </div>
-        {extra}
-    </div>
-)
 
 const STYLE_OPTIONS = [
     { id: 'minimal', label: 'Minimalista' },
@@ -402,6 +383,34 @@ export function CarouselControlsPanel({
     const isStepVisible = (step: number) => showAllSteps || currentStep >= step
     const basicCompositions = compositions.filter((composition) => composition.mode === 'basic')
     const advancedCompositions = compositions
+    const onboardingSteps: OnboardingStep[] = useMemo(() => [
+        { id: 'slides', label: 'Define cuántas diapositivas tendrá tu carrusel.', done: slideCount > 0 },
+        { id: 'prompt', label: 'Escribe el objetivo del carrusel en el prompt.', done: prompt.trim().length > 0 },
+        { id: 'analyze', label: 'Pulsa Analizar para generar la estructura de contenido.', done: Boolean(analysisReady) },
+        { id: 'generate', label: 'Genera el carrusel y valida las primeras slides.', done: generatedCount > 0 || previewSlides.some((slide) => Boolean(slide.imageUrl)) },
+    ], [slideCount, prompt, analysisReady, generatedCount, previewSlides])
+    const reorientationSteps: OnboardingStep[] = useMemo(() => [
+        {
+            id: 'brand-source',
+            label: 'Usa referencias del Brand Kit o subida propia para evitar resultados genéricos.',
+            done: uploadedImages.length > 0 || selectedBrandKitImageIds.length > 0,
+        },
+        {
+            id: 'analyze-first',
+            label: 'Pulsa Analizar siempre antes de Generar para fijar estructura y composición.',
+            done: Boolean(analysisReady),
+        },
+        {
+            id: 'first-carousel',
+            label: 'Genera una primera pasada completa del carrusel.',
+            done: generatedCount > 0 || previewSlides.some((slide) => Boolean(slide.imageUrl)),
+        },
+        {
+            id: 'single-slide-iteration',
+            label: 'Si algo falla, regenera solo la slide necesaria desde el canvas.',
+            done: previewSlides.some((slide) => slide.status === 'done'),
+        },
+    ], [uploadedImages.length, selectedBrandKitImageIds.length, analysisReady, generatedCount, previewSlides])
 
     const buildSessionTitle = useCallback((value?: string | null) => {
         const cleaned = (value || '').replace(/\s+/g, ' ').trim()
@@ -1712,10 +1721,10 @@ export function CarouselControlsPanel({
     }
 
     return (
-        <div className="studio-tone-shell w-full lg:w-[27%] h-auto lg:h-full controls-panel flex flex-col shrink-0 relative group/panel border-t lg:border-t-0 lg:border-l border-border/40 bg-gradient-to-b from-background via-background to-muted/20">
+        <div className={STUDIO_CONTROLS_SHELL_CLASS}>
             <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-5">
                                 {/* SECTION: Sessions */}
-                <div className={`${PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
+                <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader
                         icon={History}
                         title="Historial"
@@ -1823,9 +1832,26 @@ export function CarouselControlsPanel({
                     </div>
                 </div>
 
+                <div className={STUDIO_PANEL_CARD_PADDED_CLASS}>
+                    <OnboardingChecklist
+                        storageKey="onboarding:carousel:welcome:v1"
+                        title="Primer carrusel en 4 pasos"
+                        subtitle="Objetivo: sacar una primera versión lista para iterar."
+                        steps={onboardingSteps}
+                    />
+                </div>
+                <div className={STUDIO_PANEL_CARD_PADDED_CLASS}>
+                    <OnboardingChecklist
+                        storageKey="onboarding:carousel:reorientation:v1"
+                        title="Ruta rápida (ya tengo Brand Kit)"
+                        subtitle="Si te pierdes en Carrusel, sigue este orden y vuelve al flujo en segundos."
+                        steps={reorientationSteps}
+                    />
+                </div>
+
                 {/* Slide Count */}
                 {isStepVisible(1) && (
-                <div ref={(el) => { stepRefs.current[1] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                <div ref={(el) => { stepRefs.current[1] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader icon={GalleryHorizontal} title="Numero de diapositivas" />
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(-1)} disabled={slideCount <= 0}>
@@ -1845,7 +1871,7 @@ export function CarouselControlsPanel({
 
                 {/* Prompt */}
                 {isStepVisible(2) && (
-                <div ref={(el) => { stepRefs.current[2] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                <div ref={(el) => { stepRefs.current[2] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
                         icon={Wand2}
                         title="¿Qué quieres crear?"
@@ -1916,7 +1942,7 @@ export function CarouselControlsPanel({
 
                 {/* Composition */}
                 {isStepVisible(3) && (
-                <div ref={(el) => { stepRefs.current[3] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                <div ref={(el) => { stepRefs.current[3] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
                         icon={Layout}
                         title="Diseño"
@@ -2003,7 +2029,7 @@ export function CarouselControlsPanel({
 
                 {/* Format */}
                 {isStepVisible(4) && (
-                <div ref={(el) => { stepRefs.current[4] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                <div ref={(el) => { stepRefs.current[4] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader icon={Layers} title="Formato" />
                     <div className="space-y-2">
                         <button
@@ -2066,7 +2092,7 @@ export function CarouselControlsPanel({
 
                 {/* Image */}
                 {isStepVisible(5) && (
-                <div ref={(el) => { stepRefs.current[5] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                <div ref={(el) => { stepRefs.current[5] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader icon={ImagePlus} title="Imagen de Referencia" />
                     <ImageReferenceSelector
                         uploadedImages={uploadedImages}
@@ -2115,7 +2141,7 @@ export function CarouselControlsPanel({
 
                 {/* Logo */}
                 {isStepVisible(6) && (
-                <div ref={(el) => { stepRefs.current[6] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-4`}>
+                <div ref={(el) => { stepRefs.current[6] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-4`}>
                     <SectionHeader icon={Fingerprint} title="Logo" />
                     {brandLogos.length > 0 || primaryLogo ? (
                         <>
@@ -2168,7 +2194,7 @@ export function CarouselControlsPanel({
                 )}
 
                 {isStepVisible(7) && (
-                <div ref={(el) => { stepRefs.current[7] = el }} className={`${PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                <div ref={(el) => { stepRefs.current[7] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
                         icon={Palette}
                         title="Colores"
@@ -2258,65 +2284,6 @@ export function CarouselControlsPanel({
                 )}
             </div>
         </div>
-    )
-}
-
-function SuggestionsList({
-    suggestions,
-    onApply,
-    onUndo,
-    hasOriginalState
-}: {
-    suggestions?: CarouselSuggestion[],
-    onApply: (index: number) => void,
-    onUndo: () => void,
-    hasOriginalState: boolean
-}) {
-    if (!suggestions || suggestions.length === 0) return null
-
-    return (
-        <TooltipProvider delayDuration={300}>
-            <div className="mt-2 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-500">
-                <div className="flex items-center justify-between px-1">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80">
-                        Opciones alternativas
-                    </p>
-                    {hasOriginalState ? (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onUndo}
-                            className="h-5 px-1.5 text-[9px] text-muted-foreground hover:text-primary gap-1 opacity-60 hover:opacity-100 transition-opacity"
-                        >
-                            <RotateCcw className="w-2.5 h-2.5" />
-                            VOLVER AL ORIGINAL
-                        </Button>
-                    ) : <span />}
-                </div>
-                {suggestions.map((suggestion, idx) => (
-                    <Tooltip key={idx}>
-                        <TooltipTrigger asChild>
-                            <button
-                                onClick={() => onApply(idx)}
-                                className="studio-tone-suggestion group relative w-full flex items-center gap-2.5 p-2.5 rounded-lg border hover:shadow-sm transition-all duration-200 overflow-hidden text-left"
-                            >
-                                <span className="text-[11px] font-bold text-foreground shrink-0">
-                                    {suggestion.title}
-                                </span>
-                                <div className="studio-tone-divider h-3 w-[1px] shrink-0" />
-                                <span className="text-[11px] text-muted-foreground truncate font-medium group-hover:text-foreground transition-colors">
-                                    {suggestion.subtitle}
-                                </span>
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" align="start" className="max-w-[260px] text-xs bg-muted text-foreground border border-border shadow-md">
-                            <p className="font-semibold text-foreground mb-1">{suggestion.title}</p>
-                            <p className="text-muted-foreground">{suggestion.subtitle}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                ))}
-            </div>
-        </TooltipProvider>
     )
 }
 
