@@ -8,10 +8,11 @@ import { cn } from '@/lib/utils'
 import type { ReferenceImageRole } from '@/lib/creation-flow-types'
 
 const MAX_REFERENCE_IMAGES = 10
+const MAX_AUX_LOGOS = 4
 
 interface AuxiliaryLogosCardProps {
   uploadedImages: string[]
-  onUpload: (file: File) => void
+  onUpload: (file: File, roleHint?: ReferenceImageRole) => void
   onRemoveUploadedImage?: (url: string) => void
   brandKitImages?: Array<{ id: string; url: string; name?: string }>
   // Backward compatibility: legacy source based on primary logos
@@ -55,6 +56,7 @@ export function AuxiliaryLogosCard({
     () => selectedBrandKitImageIds.filter((id) => isAuxLogoRole(referenceImageRoles[id])),
     [selectedBrandKitImageIds, referenceImageRoles]
   )
+  const auxTotalCount = auxUploadedIds.length + auxBrandKitIds.length
 
   const brandKitSources = useMemo(
     () => (brandKitImages.length > 0 ? brandKitImages : brandKitLogos),
@@ -85,12 +87,14 @@ export function AuxiliaryLogosCard({
     const imageFiles = files.filter((file) => file.type.startsWith('image/'))
     if (imageFiles.length === 0) return
 
-    const available = Math.max(0, MAX_REFERENCE_IMAGES - globalReferenceCount)
+    const availableGlobal = Math.max(0, MAX_REFERENCE_IMAGES - globalReferenceCount)
+    const availableAux = Math.max(0, MAX_AUX_LOGOS - auxTotalCount)
+    const available = Math.min(availableGlobal, availableAux)
     if (available <= 0) return
 
     waitingForUploadedAuxRef.current = true
-    imageFiles.slice(0, available).forEach((file) => onUpload(file))
-  }, [globalReferenceCount, onUpload])
+    imageFiles.slice(0, available).forEach((file) => onUpload(file, 'logo'))
+  }, [auxTotalCount, globalReferenceCount, onUpload])
 
   const removeAuxLogo = useCallback((id: string) => {
     if (uploadedImages.includes(id)) {
@@ -111,11 +115,12 @@ export function AuxiliaryLogosCard({
 
     if (!selectedBrandKitImageIds.includes(logo.id)) {
       if (globalReferenceCount >= MAX_REFERENCE_IMAGES) return
+      if (auxTotalCount >= MAX_AUX_LOGOS) return
       onToggleBrandKitImage?.(logo.id)
     }
 
     onReferenceRoleChange?.(logo.id, 'logo')
-  }, [auxBrandKitIds, globalReferenceCount, onReferenceRoleChange, onToggleBrandKitImage, selectedBrandKitImageIds])
+  }, [auxBrandKitIds, auxTotalCount, globalReferenceCount, onReferenceRoleChange, onToggleBrandKitImage, selectedBrandKitImageIds])
 
   const selectedBrandKitAssets = useMemo(
     () => auxBrandKitIds
@@ -294,7 +299,10 @@ export function AuxiliaryLogosCard({
               <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(132px,1fr))] gap-3">
                 {brandKitSources.map((item) => {
                   const isSelected = auxBrandKitIds.includes(item.id)
-                  const canSelect = isSelected || globalReferenceCount < MAX_REFERENCE_IMAGES || selectedBrandKitImageIds.includes(item.id)
+                  const canSelect = isSelected || (
+                    (globalReferenceCount < MAX_REFERENCE_IMAGES || selectedBrandKitImageIds.includes(item.id)) &&
+                    (auxTotalCount < MAX_AUX_LOGOS || auxBrandKitIds.includes(item.id))
+                  )
 
                   return (
                     <button

@@ -324,6 +324,7 @@ export function BrandDNAPanel({
             for (const file of toUpload) {
                 const formData = new FormData()
                 formData.append('file', file)
+                formData.append('assetKind', 'logo')
                 const result = await uploadBrandImage(formData)
                 if (result.success && result.url) {
                     uploadedUrls.push(result.url)
@@ -367,6 +368,7 @@ export function BrandDNAPanel({
             for (const file of files) {
                 const formData = new FormData()
                 formData.append('file', file)
+                formData.append('assetKind', 'image')
                 const result = await uploadBrandImage(formData)
                 if (result.success && result.url) {
                     uploadedImages.push({ url: result.url, selected: true })

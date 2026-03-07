@@ -439,6 +439,36 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     // -------------------------------------------------------------------------
 
     const MAX_REFERENCE_IMAGES = 10
+    const MAX_REFERENCE_UPLOAD_BYTES = 12 * 1024 * 1024 // 12MB
+    const MAX_REFERENCE_INPUT_DIMENSION = 6000
+    const STYLE_REFERENCE_LIMIT = 1
+    const AUX_LOGO_REFERENCE_LIMIT = 4
+    const CONTENT_REFERENCE_LIMIT = 8
+
+    const getReferenceRoleCounts = (
+        uploadedImages: string[],
+        brandKitIds: string[],
+        roles: Record<string, ReferenceImageRole>
+    ) => {
+        const counts = { style: 0, logo: 0, content: 0 }
+        const ids = [...uploadedImages, ...brandKitIds]
+
+        ids.forEach((id) => {
+            const role = roles[id] || 'content'
+            if (role === 'style' || role === 'style_content') counts.style += 1
+            if (role === 'logo') counts.logo += 1
+            if (role === 'content' || role === 'style_content') counts.content += 1
+        })
+
+        return counts
+    }
+
+    const getReferenceRoleLimitError = (counts: { style: number; logo: number; content: number }) => {
+        if (counts.style > STYLE_REFERENCE_LIMIT) return 'Solo puedes usar 1 referencia de estilo.'
+        if (counts.logo > AUX_LOGO_REFERENCE_LIMIT) return 'Maximo 4 logos auxiliares.'
+        if (counts.content > CONTENT_REFERENCE_LIMIT) return 'Maximo 8 imagenes de contenido.'
+        return null
+    }
 
     const pickStyleReference = (
         uploadedImages: string[],
@@ -675,10 +705,68 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         })
     }, [invalidateFromStep])
 
-    const uploadImage = useCallback(async (file: File) => {
+    const getImageDimensions = useCallback((file: File): Promise<{ width: number; height: number }> => {
+        return new Promise((resolve, reject) => {
+            const objectUrl = URL.createObjectURL(file)
+            const img = new Image()
+            img.onload = () => {
+                const dims = { width: img.naturalWidth || img.width, height: img.naturalHeight || img.height }
+                URL.revokeObjectURL(objectUrl)
+                resolve(dims)
+            }
+            img.onerror = () => {
+                URL.revokeObjectURL(objectUrl)
+                reject(new Error('No se pudieron leer las dimensiones de la imagen'))
+            }
+            img.src = objectUrl
+        })
+    }, [])
+
+    const prepareModelReferenceImage = useCallback(async (file: File, isLogoCandidate: boolean) => {
+        if (file.size > MAX_REFERENCE_UPLOAD_BYTES) {
+            throw new Error('La imagen supera el limite de 12MB')
+        }
+
+        const { width, height } = await getImageDimensions(file)
+        if (Math.max(width, height) > MAX_REFERENCE_INPUT_DIMENSION) {
+            throw new Error(`La imagen es demasiado grande (${width}x${height}). Maximo permitido: 6000px`)
+        }
+
+        const inputMime = String(file.type || '').toLowerCase()
+        const outputFormat: 'image/jpeg' | 'image/png' | 'image/webp' = isLogoCandidate
+            ? (inputMime.includes('png') ? 'image/png' : 'image/jpeg')
+            : 'image/webp'
+
+        const base64 = await resizeImage(file, {
+            maxWidth: 1536,
+            maxHeight: 1536,
+            quality: isLogoCandidate ? 0.9 : 0.78,
+            format: outputFormat,
+        })
+
+        const match = /^data:([^;]+);base64,/.exec(base64)
+        const mimeType = match?.[1] || outputFormat
+        return { base64, mimeType }
+    }, [getImageDimensions])
+
+    const uploadImage = useCallback(async (file: File, roleHint?: ReferenceImageRole) => {
         const currentTotal = state.uploadedImages.length + state.selectedBrandKitImageIds.length
         if (currentTotal >= MAX_REFERENCE_IMAGES) {
             console.warn('Max reference images reached')
+            return
+        }
+        const effectiveRole: ReferenceImageRole =
+            roleHint || (state.imageSourceMode === 'generate' ? 'logo' : 'content')
+        const syntheticId = '__new_upload__'
+        const projectedRoles = { ...state.referenceImageRoles, [syntheticId]: effectiveRole }
+        const projectedCounts = getReferenceRoleCounts(
+            [...state.uploadedImages, syntheticId],
+            state.selectedBrandKitImageIds,
+            projectedRoles
+        )
+        const roleLimitError = getReferenceRoleLimitError(projectedCounts)
+        if (roleLimitError) {
+            setState(prev => ({ ...prev, isAnalyzing: false, error: roleLimitError }))
             return
         }
 
@@ -690,17 +778,13 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }))
 
         try {
-            // Resize and compress image on client side to avoid 10MB payload limit
-            const base64 = await resizeImage(file, {
-                maxWidth: 1536,
-                maxHeight: 1536,
-                quality: 0.8,
-                format: 'image/jpeg'
-            })
+            const isLogoCandidate = effectiveRole === 'logo'
+            const prepared = await prepareModelReferenceImage(file, isLogoCandidate)
+            const base64 = prepared.base64
 
             setState(prev => {
-                const defaultRole: ReferenceImageRole =
-                    prev.imageSourceMode === 'generate' ? 'logo' : 'content'
+                const defaultRole: ReferenceImageRole = roleHint ||
+                    (prev.imageSourceMode === 'generate' ? 'logo' : 'content')
                 const nextRoles = { ...prev.referenceImageRoles, [base64]: defaultRole }
                 const pickedStyle = pickStyleReference([...prev.uploadedImages, base64], prev.selectedBrandKitImageIds, nextRoles)
                 const resetAnalysis =
@@ -732,7 +816,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 error: error instanceof Error ? error.message : 'Error analyzing image',
             }))
         }
-    }, [state.uploadedImages.length, state.selectedBrandKitImageIds.length, invalidateFromStep]) // Added dependencies
+    }, [state.uploadedImages, state.selectedBrandKitImageIds, state.referenceImageRoles, state.imageSourceMode, invalidateFromStep, prepareModelReferenceImage]) // Added dependencies
 
     const selectTheme = useCallback((theme: SeasonalTheme) => {
         const themeMeta = THEME_CATALOG.find(t => t.id === theme)
@@ -873,6 +957,18 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 const defaultRole: ReferenceImageRole =
                     prev.imageSourceMode === 'generate' ? 'logo' : 'content'
                 const nextRoles = { ...prev.referenceImageRoles, [imageId]: defaultRole }
+                const roleCounts = getReferenceRoleCounts(
+                    prev.uploadedImages,
+                    [...prev.selectedBrandKitImageIds, imageId],
+                    nextRoles
+                )
+                const roleLimitError = getReferenceRoleLimitError(roleCounts)
+                if (roleLimitError) {
+                    return {
+                        ...prev,
+                        error: roleLimitError,
+                    }
+                }
                 const pickedStyle = pickStyleReference(prev.uploadedImages, [...prev.selectedBrandKitImageIds, imageId], nextRoles)
                 const resetAnalysis =
                     pickedStyle.id !== prev.firstReferenceId || pickedStyle.source !== prev.firstReferenceSource
@@ -956,6 +1052,18 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 })
             }
             nextRoles[imageId] = safeRole
+            const roleCounts = getReferenceRoleCounts(
+                prev.uploadedImages,
+                prev.selectedBrandKitImageIds,
+                nextRoles
+            )
+            const roleLimitError = getReferenceRoleLimitError(roleCounts)
+            if (roleLimitError) {
+                return {
+                    ...prev,
+                    error: roleLimitError,
+                }
+            }
 
             const pickedStyle = pickStyleReference(prev.uploadedImages, prev.selectedBrandKitImageIds, nextRoles)
             const resetAnalysis =

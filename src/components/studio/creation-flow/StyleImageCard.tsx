@@ -9,7 +9,7 @@ import type { ReferenceImageRole } from '@/lib/creation-flow-types'
 
 interface StyleImageCardProps {
     uploadedImages: string[]
-    onUpload: (file: File) => void
+    onUpload: (file: File, roleHint?: ReferenceImageRole) => void
     onRemoveUploadedImage?: (url: string) => void
     brandKitImages?: Array<{ id: string; url: string; name?: string }>
     selectedBrandKitImageIds?: string[]
@@ -158,7 +158,7 @@ export function StyleImageCard({
         const file = files.find((item) => item.type.startsWith('image/'))
         if (!file) return
         waitingForUploadedStyleRef.current = true
-        onUpload(file)
+        onUpload(file, 'style')
     }, [onUpload])
 
     const handleDrop = useCallback((e: React.DragEvent) => {
@@ -175,58 +175,59 @@ export function StyleImageCard({
     return (
         <div className="space-y-3">
             <div className="flex items-center gap-2">
-                <div className="w-full flex flex-wrap items-center gap-2">
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 text-[10px] gap-1"
-                        onClick={() => inputRef.current?.click()}
-                    >
-                        <Upload className="w-3 h-3" />
-                        Subir estilo
-                    </Button>
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 text-[10px] gap-1"
-                        onClick={() => setIsBrandKitModalOpen(true)}
-                    >
-                        <Palette className="w-3 h-3" />
-                        Desde Kit de marca
-                    </Button>
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-7 px-2 text-[10px] gap-1"
-                        onClick={() => setIsPresetModalOpen(true)}
-                    >
-                        Estilo predefinido
-                    </Button>
-                    {currentStyleId && (
+                <div className="w-full flex items-center gap-2">
+                    <div className="grid grid-cols-3 gap-1.5 flex-1 min-w-0">
                         <Button
                             type="button"
                             size="sm"
-                            variant="ghost"
-                            className="h-7 px-2 text-[10px] ml-auto"
-                            onClick={() => removeStyleId(currentStyleId)}
+                            variant="outline"
+                            className="h-7 px-1.5 text-[10px] gap-1 min-w-0"
+                            onClick={() => inputRef.current?.click()}
                         >
-                            Limpiar
+                            <Upload className="w-3 h-3 shrink-0" />
+                            <span className="truncate">Subir estilo</span>
                         </Button>
-                    )}
-                    {!currentStyleId && selectedStylePresetId && (
                         <Button
                             type="button"
                             size="sm"
-                            variant="ghost"
-                            className="h-7 px-2 text-[10px] ml-auto"
-                            onClick={() => onSelectStylePreset?.(null)}
+                            variant="outline"
+                            className="h-7 px-1.5 text-[10px] gap-1 min-w-0"
+                            onClick={() => setIsBrandKitModalOpen(true)}
                         >
-                            Limpiar
+                            <Palette className="w-3 h-3 shrink-0" />
+                            <span className="truncate">Desde Kit de marca</span>
                         </Button>
-                    )}
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-1.5 text-[10px] gap-1 min-w-0"
+                            onClick={() => setIsPresetModalOpen(true)}
+                        >
+                            <span className="truncate">Estilo predefinido</span>
+                        </Button>
+                    </div>
+
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                            'h-7 px-2 text-[10px] shrink-0',
+                            !currentStyleId && !selectedStylePresetId && 'invisible pointer-events-none'
+                        )}
+                        onClick={() => {
+                            if (currentStyleId) {
+                                removeStyleId(currentStyleId)
+                                return
+                            }
+                            if (selectedStylePresetId) {
+                                onSelectStylePreset?.(null)
+                            }
+                        }}
+                    >
+                        Limpiar
+                    </Button>
                 </div>
             </div>
 

@@ -433,6 +433,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
       const uploadFile = await dataUrlToFile(newImageDataUrl, `${finalName || 'style'}.jpg`)
       const formData = new FormData()
       formData.append('file', uploadFile)
+      formData.append('assetKind', 'style_preset')
       formData.append('generateThumbnail', 'true')
       const uploaded = await uploadBrandImage(formData)
       if (!uploaded.success || !uploaded.url) {

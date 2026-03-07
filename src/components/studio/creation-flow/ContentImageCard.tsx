@@ -10,13 +10,13 @@ import type { ReferenceImageRole, VisionAnalysis } from '@/lib/creation-flow-typ
 
 type ImageSourceMode = 'upload' | 'brandkit' | 'generate'
 
-const MAX_CONTENT_IMAGES = 10
+const MAX_CONTENT_IMAGES = 8
 
 interface ContentImageCardProps {
     mode?: ImageSourceMode
     onModeChange?: (mode: ImageSourceMode) => void
     uploadedImages: string[]
-    onUpload: (file: File) => void
+    onUpload: (file: File, roleHint?: ReferenceImageRole) => void
     onRemoveUploadedImage?: (url: string) => void
     onClearUploadedImages?: () => void
     brandKitImages?: Array<{ id: string; url: string; name?: string }>
@@ -117,14 +117,14 @@ export function ContentImageCard({
         setIsDragging(false)
         if (isAiContentMode || !canAddMoreManual) return
         const files = Array.from(e.dataTransfer.files).filter((file) => file.type.startsWith('image/'))
-        files.slice(0, MAX_CONTENT_IMAGES - totalManualSelected).forEach((file) => onUpload(file))
+        files.slice(0, MAX_CONTENT_IMAGES - totalManualSelected).forEach((file) => onUpload(file, 'content'))
         setMode('upload')
     }, [isAiContentMode, canAddMoreManual, totalManualSelected, onUpload, setMode])
 
     const handleSelectFiles = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || [])
         if (isAiContentMode) return
-        files.slice(0, MAX_CONTENT_IMAGES - totalManualSelected).forEach((file) => onUpload(file))
+        files.slice(0, MAX_CONTENT_IMAGES - totalManualSelected).forEach((file) => onUpload(file, 'content'))
         if (files.length > 0) setMode('upload')
         if (inputRef.current) inputRef.current.value = ''
     }, [isAiContentMode, totalManualSelected, onUpload, setMode])

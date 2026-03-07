@@ -344,11 +344,12 @@ export function BrandDNABoard({
         try {
             const fileArray = Array.from(files);
             for (const file of fileArray) {
-                if (file.size > 3 * 1024 * 1024) {
-                    throw new Error(`La imagen ${file.name} supera los 3MB permitidos.`);
+                if (file.size > 12 * 1024 * 1024) {
+                    throw new Error(`La imagen ${file.name} supera los 12MB permitidos.`);
                 }
                 const formData = new FormData();
                 formData.append('file', file);
+                formData.append('assetKind', 'image');
                 const result = await uploadBrandImage(formData);
                 if (result.success && result.url) {
                     updateData(prev => ({
@@ -448,11 +449,12 @@ export function BrandDNABoard({
             const newLogos: { url: string; selected: boolean }[] = [];
 
             for (const file of fileArray) {
-                if (file.size > 3 * 1024 * 1024) {
-                    throw new Error(`El archivo ${file.name} supera los 3MB permitidos.`);
+                if (file.size > 12 * 1024 * 1024) {
+                    throw new Error(`El archivo ${file.name} supera los 12MB permitidos.`);
                 }
                 const formData = new FormData();
                 formData.append('file', file);
+                formData.append('assetKind', 'logo');
                 const result = await uploadBrandImage(formData);
                 if (result.success && result.url) {
                     newLogos.push({ url: result.url!, selected: true });
@@ -801,6 +803,7 @@ export function BrandDNABoard({
                     const uploadFile = await dataUrlToFile(asset.dataUrl, asset.fileName || 'brand-kit-asset.webp');
                     const formData = new FormData();
                     formData.append('file', uploadFile);
+                    formData.append('assetKind', 'image');
                     const uploaded = await uploadBrandImage(formData);
                     if (uploaded.success && uploaded.url) {
                         replacementMap.set(asset.originalUrl, uploaded.url);
