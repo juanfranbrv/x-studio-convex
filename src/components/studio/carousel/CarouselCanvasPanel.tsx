@@ -22,9 +22,9 @@ import {
     SquareArrowDown,
     Bug,
     Video,
-    Music
+    Music,
+    Maximize2
 } from 'lucide-react'
-import AspectRatioOutlinedIcon from '@mui/icons-material/AspectRatioOutlined'
 import JSZip from 'jszip'
 import {
     DropdownMenu,
@@ -814,7 +814,7 @@ export function CarouselCanvasPanel({
                             <ZoomIn className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-10 w-10 ml-1" onClick={handleMaximizeZoom}>
-                            <AspectRatioOutlinedIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
+                            <Maximize2 className="w-4 h-4" />
                         </Button>
                     </div>
 
@@ -974,6 +974,8 @@ export function CarouselCanvasPanel({
                                                         <img
                                                             src={item.url}
                                                             alt={`Logo Aux ${idx + 1}`}
+                                                            loading="lazy"
+                                                            decoding="async"
                                                             className="object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.28)]"
                                                             style={{ width: 'clamp(28px, 4.5cqw, 46px)', height: 'clamp(28px, 4.5cqw, 46px)' }}
                                                         />
@@ -1007,6 +1009,8 @@ export function CarouselCanvasPanel({
                                                             <img
                                                                 src={item.url}
                                                                 alt={`Contenido ${idx + 1}`}
+                                                                loading="lazy"
+                                                                decoding="async"
                                                                 className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]"
                                                                 style={{ width: 'clamp(60px, 11cqw, 112px)', height: 'clamp(60px, 11cqw, 112px)' }}
                                                             />
@@ -1028,6 +1032,8 @@ export function CarouselCanvasPanel({
                                         <img
                                             src={selectedLogoUrl}
                                             alt="Logo"
+                                            loading="lazy"
+                                            decoding="async"
                                             className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
                                             style={{ width: 'var(--canvas-logo-size)', height: 'var(--canvas-logo-size)' }}
                                         />
@@ -1055,7 +1061,7 @@ export function CarouselCanvasPanel({
                         {/* Content */}
                         {!currentSlide ? (
                             <div className="flex flex-col items-center justify-center text-muted-foreground p-12 text-center">
-                                <div className="w-20 h-20 rounded-3xl bg-white/5 dark:bg-zinc-800/50 shadow-inner flex items-center justify-center mb-6">
+                                <div className="w-20 h-20 rounded-3xl bg-background/70 border border-border/50 shadow-inner flex items-center justify-center mb-6">
                                     <Images className="w-10 h-10 opacity-20" />
                                 </div>
                                 <h3 className="text-lg font-semibold opacity-80">Empieza tu creación</h3>
@@ -1072,15 +1078,13 @@ export function CarouselCanvasPanel({
                             <div className="w-full h-full flex items-center justify-center">
                                 <motion.div
                                     key={currentSlide.imageUrl}
-                                    initial={wasJustGenerated ? { opacity: 0, filter: 'blur(20px)' } : { opacity: 1, filter: 'blur(0px)' }}
-                                    animate={{ opacity: 1, filter: 'blur(0px)' }}
+                                    initial={wasJustGenerated ? { opacity: 0, scale: 1.02 } : { opacity: 1, scale: 1 }}
+                                    animate={{ opacity: 1, scale: 1 }}
                                     transition={wasJustGenerated ? {
-                                        duration: 0.3,
+                                        duration: 0.24,
                                         ease: 'easeOut',
-                                        filter: { duration: 0.4 },
-                                        opacity: { duration: 0.2 }
                                     } : {
-                                        duration: 0.15
+                                        duration: 0.12
                                     }}
                                     className="w-full h-full flex items-center justify-center"
                                 >
@@ -1220,7 +1224,7 @@ export function CarouselCanvasPanel({
                                     onClick={() => onSelectSlide(index)}
                                     className={cn(
                                         "relative flex-shrink-0 rounded-[18px] p-1.5 transition-colors transition-shadow transition-opacity duration-200",
-                                        "bg-white/60 dark:bg-white/10 backdrop-blur border border-border/60",
+                                        "bg-background/70 backdrop-blur border border-border/60",
                                         aspectRatio === '1:1' ? "w-16 h-16" : "w-14 h-20",
                                         currentIndex === index
                                             ? "ring-2 ring-primary/70 shadow-[0_0_12px_hsl(var(--primary)/0.25)] z-10"
@@ -1228,10 +1232,10 @@ export function CarouselCanvasPanel({
                                     )}
                                 >
                                     {/* Phone skin notch */}
-                                    <div className="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1.5 rounded-full bg-black/10 dark:bg-white/15" />
+                                    <div className="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1.5 rounded-full bg-foreground/15" />
                                     <div
                                         className={cn(
-                                            "relative w-full h-full rounded-[14px] overflow-hidden bg-muted/60 border border-black/5",
+                                            "relative w-full h-full rounded-[14px] overflow-hidden bg-muted/60 border border-border/50",
                                             aspectRatio === '1:1' ? "aspect-square" : "aspect-[3/4]"
                                         )}
                                     >
@@ -1251,7 +1255,7 @@ export function CarouselCanvasPanel({
                                     </div>
                                     {slide.status === 'generating' && (
                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-[18px]">
-                                            <div className="w-1 h-1 bg-white rounded-full animate-ping" />
+                                            <div className="w-1 h-1 bg-primary-foreground rounded-full animate-ping" />
                                         </div>
                                     )}
                                 </button>
@@ -1290,7 +1294,7 @@ export function CarouselCanvasPanel({
                                             title={`Carrusel ${new Date(item.createdAt).toLocaleTimeString()}`}
                                         >
                                             {thumb ? (
-                                                <img src={thumb} alt="Variación carrusel" className="w-full h-full object-cover" />
+                                                <img src={thumb} alt="Variación carrusel" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">N/A</div>
                                             )}
@@ -1353,6 +1357,8 @@ export function CarouselCanvasPanel({
                                                 <img
                                                     src={ref.url}
                                                     alt={ref.label || ref.type}
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     className="w-full h-full object-cover"
                                                 />
                                             </div>

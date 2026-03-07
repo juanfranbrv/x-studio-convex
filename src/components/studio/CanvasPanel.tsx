@@ -2,11 +2,6 @@
 
 import { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import ZoomInIcon from '@mui/icons-material/ZoomIn'
-import ZoomOutIcon from '@mui/icons-material/ZoomOut'
-import AspectRatioOutlinedIcon from '@mui/icons-material/AspectRatioOutlined'
-import RestartAltIcon from '@mui/icons-material/RestartAlt'
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { Button } from '@/components/ui/button'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
@@ -20,7 +15,7 @@ import {
 } from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/image/page'
-import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, SquareArrowDown, ImageDown, Bug, Sparkles, Paintbrush } from 'lucide-react'
+import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, SquareArrowDown, ImageDown, Bug, Sparkles, Paintbrush, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
@@ -708,7 +703,7 @@ export function CanvasPanel({
                     {/* Zoom Controls */}
                     <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
                         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut} title="Zoom out">
-                            <ZoomOutIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
+                            <ZoomOut className="w-4 h-4" />
                         </Button>
                         <button
                             type="button"
@@ -720,10 +715,10 @@ export function CanvasPanel({
                             {effectiveZoom}%
                         </button>
                         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomIn} title="Zoom in">
-                            <ZoomInIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
+                            <ZoomIn className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-10 w-10 ml-1" onClick={handleMaximizeZoom} title="Ajustar al alto (Maximizar)">
-                            <AspectRatioOutlinedIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
+                            <Maximize2 className="w-4 h-4" />
                         </Button>
                     </div>
 
@@ -874,18 +869,13 @@ export function CanvasPanel({
                                 <div className="w-full h-full flex items-center justify-center text-center">
                                     <motion.div
                                         key={currentImage}
-                                        initial={wasJustGenerated ? { opacity: 0, filter: 'blur(20px)' } : { opacity: 1, filter: 'blur(0px)' }}
-                                        animate={{
-                                            opacity: 1,
-                                            filter: 'blur(0px)',
-                                        }}
+                                        initial={wasJustGenerated ? { opacity: 0, scale: 1.02 } : { opacity: 1, scale: 1 }}
+                                        animate={{ opacity: 1, scale: 1 }}
                                         transition={wasJustGenerated ? {
-                                            duration: 0.3,
+                                            duration: 0.24,
                                             ease: "easeOut",
-                                            filter: { duration: 0.4 },
-                                            opacity: { duration: 0.2 }
                                         } : {
-                                            duration: 0.15
+                                            duration: 0.12
                                         }}
                                         className="w-full h-full flex items-center justify-center"
                                     >
@@ -909,7 +899,7 @@ export function CanvasPanel({
                             </div>
                         ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
-                                <div className="w-16 h-16 rounded-2xl bg-white/50 dark:bg-zinc-800/50 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm">
+                                <div className="w-16 h-16 rounded-2xl bg-background/80 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm border border-border/50">
                                     <span className="text-3xl opacity-70">🎨</span>
                                 </div>
                                 <p className="text-sm font-medium text-muted-foreground/70">{t('canvas.noImage')}</p>
@@ -960,13 +950,15 @@ export function CanvasPanel({
                                                             variant === 'style' && "transition-transform duration-300 hover:-translate-y-0.5"
                                                         )}
                                                     >
-                                                            <img
-                                                                src={item.url}
-                                                                alt={`Ref ${idx + 1}`}
-                                                                className={cn(
-                                                                    "object-cover shadow-xl",
+                                        <img
+                                            src={item.url}
+                                            alt={`Ref ${idx + 1}`}
+                                            loading="lazy"
+                                            decoding="async"
+                                            className={cn(
+                                                "object-cover shadow-xl",
                                                                     variant === 'style'
-                                                                        ? "rounded-2xl border-2 border-violet-300/70 ring-4 ring-violet-500/15 bg-white p-1 -rotate-6 group-hover:rotate-0 transition-transform duration-300"
+                                                                        ? "rounded-2xl border-2 border-violet-300/70 ring-4 ring-violet-500/15 bg-background p-1 -rotate-6 group-hover:rotate-0 transition-transform duration-300"
                                                                         : "object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.28)]"
                                                                 )}
                                                                 style={variant === 'style'
@@ -1051,6 +1043,8 @@ export function CanvasPanel({
                                                             <img
                                                                 src={item.url}
                                                                 alt={`Contenido ${idx + 1}`}
+                                                                loading="lazy"
+                                                                decoding="async"
                                                                 className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]"
                                                                 style={{ width: 'clamp(60px, 11cqw, 112px)', height: 'clamp(60px, 11cqw, 112px)' }}
                                                             />
@@ -1183,6 +1177,8 @@ export function CanvasPanel({
                                         <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
                                             <img
                                                 src={item.value}
+                                                loading="lazy"
+                                                decoding="async"
                                                 className={cn(
                                                     "w-full h-full",
                                                     item.type === 'logo' ? "object-contain p-1" : "object-cover"
@@ -1247,6 +1243,8 @@ export function CanvasPanel({
                                             <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
                                                 <img
                                                     src={draggedElement.value}
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     className={cn(
                                                         "w-full h-full",
                                                         draggedElement.type === 'logo' ? "object-contain p-1" : "object-cover"
