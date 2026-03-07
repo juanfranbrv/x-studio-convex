@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Sparkles, Send, Loader2 } from 'lucide-react'
@@ -31,23 +31,20 @@ export function PromptCard({
 
     const handleSubmit = () => {
         if (hasGeneratedImage) {
-            // Edit mode: apply changes
             onGenerate()
         } else if (canGenerate) {
-            // Generate mode
             onGenerate()
         } else {
-            // Analyze first
             onAnalyze()
         }
     }
 
     const getButtonLabel = () => {
-        if (isGenerating) return "Generando..."
-        if (isAnalyzing) return "Analizando..."
-        if (hasGeneratedImage) return "Aplicar"
-        if (canGenerate) return "Generar"
-        return "Analizar"
+        if (isGenerating) return 'Generando...'
+        if (isAnalyzing) return 'Analizando...'
+        if (hasGeneratedImage) return 'Aplicar'
+        if (canGenerate) return 'Generar'
+        return 'Analizar'
     }
 
     const getPlaceholder = () => {
@@ -62,6 +59,8 @@ export function PromptCard({
             <div className="flex gap-3">
                 <div className="flex-1 relative">
                     <textarea
+                        id="prompt-card-input"
+                        aria-label={hasGeneratedImage ? 'Editar prompt de imagen generada' : 'Prompt para generar imagen'}
                         placeholder={getPlaceholder()}
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
@@ -70,6 +69,7 @@ export function PromptCard({
                     />
                     {!hasGeneratedImage && value.trim() && (
                         <button
+                            type="button"
                             onClick={onAnalyze}
                             disabled={isLoading}
                             className="absolute right-3 top-3 text-primary/70 hover:text-primary transition-colors disabled:opacity-50"

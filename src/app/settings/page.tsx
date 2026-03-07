@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useClerk, useUser } from '@clerk/nextjs';
@@ -192,13 +192,13 @@ export default function SettingsPage() {
                                 Colores de interfaz
                             </CardTitle>
                             <CardDescription>
-                                Personaliza los colores del sistema solo para tu sesiÃ³n
+                                Personaliza los colores del sistema solo para tu sesión
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <Separator />
                             <div className="flex flex-col gap-2">
-                                <Label className="text-sm text-muted-foreground">Presets rÃ¡pidos</Label>
+                                <Label className="text-sm text-muted-foreground">Presets rápidos</Label>
                                 <div className="flex gap-3">
                                     {[
                                         { primary: '#22c55e', secondary: '#38bdf8', title: 'Green & Blue' },
@@ -375,3 +375,5 @@ export default function SettingsPage() {
         </DashboardLayout>
     );
 }
+
+

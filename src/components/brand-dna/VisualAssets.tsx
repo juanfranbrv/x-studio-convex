@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { useRef } from 'react';
+import { useRef, KeyboardEvent } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -43,6 +43,13 @@ export function VisualAssets({
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
+    };
+
+    const handleKeyActivate = (event: KeyboardEvent<HTMLDivElement>, action: () => void) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            action();
+        }
     };
 
     return (
@@ -148,9 +155,13 @@ export function VisualAssets({
                                     key={idx}
                                     className={cn(
                                         "group relative aspect-square rounded-lg overflow-hidden bg-muted border border-border cursor-pointer transition-all duration-300",
-                                        item.selected === false && "grayscale-[0] opacity-100" // No atenua, igual que colores
+                                        item.selected === false && "grayscale-[0] opacity-100"
                                     )}
                                     onClick={() => onOpenLightbox(item.url)}
+                                    onKeyDown={(event) => handleKeyActivate(event, () => onOpenLightbox(item.url))}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`Abrir imagen ${idx + 1} en visor`}
                                 >
                                     <img
                                         src={item.url}
@@ -158,7 +169,6 @@ export function VisualAssets({
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
 
-                                    {/* Selection Toggle - Coherente con colores */}
                                     {onToggleSelection && (
                                         <button
                                             onClick={(e) => {
@@ -207,6 +217,10 @@ export function VisualAssets({
                                     onDrop={handleDrop}
                                     onDragOver={handleDragOver}
                                     onClick={() => fileInputRef.current?.click()}
+                                    onKeyDown={(event) => handleKeyActivate(event, () => fileInputRef.current?.click())}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label="Subir nueva imagen al kit"
                                 >
                                     <input
                                         type="file"
@@ -234,7 +248,7 @@ export function VisualAssets({
 
             <style jsx>{`
                 .transparency-grid {
-                    background-image: 
+                    background-image:
                         linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%),
                         linear-gradient(-45deg, rgba(0,0,0,0.05) 25%, transparent 25%),
                         linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.05) 75%),

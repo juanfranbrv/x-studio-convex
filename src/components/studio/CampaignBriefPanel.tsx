@@ -2,12 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import InstagramIcon from '@mui/icons-material/Instagram'
-import MusicNoteIcon from '@mui/icons-material/MusicNote'
-import YouTubeIcon from '@mui/icons-material/YouTube'
-import LinkedInIcon from '@mui/icons-material/LinkedIn'
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
-import CircularProgress from '@mui/material/CircularProgress'
+import { Instagram, Music2, Youtube, Linkedin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,11 +22,11 @@ interface CampaignBriefPanelProps {
     isGenerating?: boolean
 }
 
-const platforms: { id: Platform; icon: React.ComponentType<{ className?: string; fontSize?: 'small' | 'medium' | 'large' }>; color: string }[] = [
-    { id: 'instagram', icon: InstagramIcon, color: 'platform-instagram' },
-    { id: 'tiktok', icon: MusicNoteIcon, color: 'platform-tiktok' },
-    { id: 'youtube', icon: YouTubeIcon, color: 'platform-youtube' },
-    { id: 'linkedin', icon: LinkedInIcon, color: 'platform-linkedin' },
+const platforms: { id: Platform; icon: React.ComponentType<{ className?: string }>; color: string }[] = [
+    { id: 'instagram', icon: Instagram, color: 'platform-instagram' },
+    { id: 'tiktok', icon: Music2, color: 'platform-tiktok' },
+    { id: 'youtube', icon: Youtube, color: 'platform-youtube' },
+    { id: 'linkedin', icon: Linkedin, color: 'platform-linkedin' },
 ]
 
 export function CampaignBriefPanel({ onGenerate, isGenerating = false }: CampaignBriefPanelProps) {
@@ -52,7 +47,7 @@ export function CampaignBriefPanel({ onGenerate, isGenerating = false }: Campaig
     }
 
     return (
-        <div className="w-[320px] h-full bg-card border-l border-border p-4 flex flex-col gap-4 overflow-y-auto">
+        <div className="w-full lg:w-[320px] h-full bg-card border-l border-border p-4 flex flex-col gap-4 overflow-y-auto">
             {/* Header */}
             <h2 className="text-lg font-semibold font-heading">{t('campaign.title')}</h2>
 
@@ -69,7 +64,7 @@ export function CampaignBriefPanel({ onGenerate, isGenerating = false }: Campaig
                                 : 'bg-muted hover:bg-muted/80 text-muted-foreground'
                         )}
                     >
-                        <Icon fontSize="small" />
+                        <Icon className="h-4 w-4" />
                     </button>
                 ))}
             </div>

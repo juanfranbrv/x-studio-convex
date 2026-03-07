@@ -31,12 +31,21 @@ export function FloatingAssistance({
     const { toast } = useToast();
     const [mounted, setMounted] = useState(false);
     const [coords, setCoords] = useState({ top: 0, left: 0, right: 0, width: 0 });
+    const [viewportWidth, setViewportWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1200));
     const assistanceRef = useRef<HTMLDivElement>(null);
     const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    useEffect(() => {
+        if (!mounted) return;
+
+        const handleResize = () => setViewportWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [mounted]);
 
     // Track anchor position
     useEffect(() => {
@@ -61,13 +70,16 @@ export function FloatingAssistance({
         window.addEventListener('scroll', updatePosition, true);
         window.addEventListener('resize', updatePosition);
 
-        // Polling as fallback for dynamic changes (like panel width changes)
-        const interval = setInterval(updatePosition, 100);
+        const observer = new ResizeObserver(updatePosition);
+        observer.observe(anchorRef.current);
+        if (assistanceRef.current) {
+            observer.observe(assistanceRef.current);
+        }
 
         return () => {
             window.removeEventListener('scroll', updatePosition, true);
             window.removeEventListener('resize', updatePosition);
-            clearInterval(interval);
+            observer.disconnect();
         };
     }, [isVisible, anchorRef, mounted]);
 
@@ -83,7 +95,6 @@ export function FloatingAssistance({
     };
 
     const contentWidth = assistanceRef.current?.getBoundingClientRect().width ?? 280;
-    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
     const drift = side === 'left' ? 6 : -6;
     const desiredLeft = side === 'left'
         ? coords.left - contentWidth - 16
@@ -104,7 +115,7 @@ export function FloatingAssistance({
                     x: { duration: 1.2, ease: 'easeInOut', repeat: Infinity, repeatType: 'mirror', delay: 0.2 }
                 }}
                 className={cn(
-                    "fixed z-[9999] w-[280px] pointer-events-auto",
+                    "fixed z-[9999] w-[min(280px,calc(100vw-24px))] sm:w-[280px] pointer-events-auto",
                     "overflow-visible rounded-xl border border-primary/20",
                     "bg-background/95 backdrop-blur-xl shadow-2xl",
                     "p-4",

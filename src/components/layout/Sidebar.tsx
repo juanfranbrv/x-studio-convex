@@ -47,12 +47,12 @@ export function Sidebar({ className }: SidebarProps) {
     return (
         <aside
             className={cn(
-                'h-screen transition-all duration-300 ease-in-out border-r border-white/20 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl flex flex-col shrink-0 w-[90px]',
+                'h-screen transition-all duration-300 ease-in-out border-r border-border/60 bg-background/80 backdrop-blur-xl flex flex-col shrink-0 w-[90px]',
                 className
             )}
         >
             {/* 1. Header / Logo */}
-            <div className="p-4 flex flex-col items-center gap-2 border-b border-white/10">
+            <div className="p-4 flex flex-col items-center gap-2 border-b border-border/60">
                 <Bot className="h-8 w-8 text-primary" />
             </div>
 
@@ -68,7 +68,7 @@ export function Sidebar({ className }: SidebarProps) {
                                 'flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 group gap-1.5',
                                 isActive
                                     ? 'bg-primary text-primary-foreground shadow-lg'
-                                    : 'hover:bg-white/60 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground'
+                                    : 'hover:bg-accent/60 text-muted-foreground hover:text-foreground'
                             )}
                         >
                             <item.icon className={cn(
@@ -84,7 +84,7 @@ export function Sidebar({ className }: SidebarProps) {
             </nav>
 
             {/* 3. Bottom Section (Settings + Profile) */}
-            <div className="p-2 border-t border-white/20 flex flex-col gap-3 items-center pb-6">
+            <div className="p-2 border-t border-border/60 flex flex-col gap-3 items-center pb-6">
                 {/* Settings */}
                 <Link
                     href="/settings"
@@ -92,7 +92,7 @@ export function Sidebar({ className }: SidebarProps) {
                         'flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 group gap-1.5 w-full',
                         pathname === '/settings'
                             ? 'bg-primary text-primary-foreground shadow-lg'
-                            : 'hover:bg-white/60 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground'
+                            : 'hover:bg-accent/60 text-muted-foreground hover:text-foreground'
                     )}
                 >
                     <Settings className={cn(

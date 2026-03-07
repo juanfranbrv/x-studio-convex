@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Copy, RefreshCw, Check } from 'lucide-react'
@@ -60,6 +60,8 @@ export function CaptionCard({
                 </div>
             </div>
             <textarea
+                id="caption-card-input"
+                aria-label="Caption generado para redes"
                 value={caption}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder="El caption aparecerá aquí después de generar..."

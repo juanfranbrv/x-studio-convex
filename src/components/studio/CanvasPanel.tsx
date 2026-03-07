@@ -716,7 +716,7 @@ export function CanvasPanel({
                 <div className="hidden md:flex pointer-events-auto glass-panel text-muted-foreground transition-all duration-300 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-1">
                     {/* Zoom Controls */}
                     <div className="flex flex-col items-center border-b border-white/10 pb-2 gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut} title="Zoom out">
+                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut} title="Zoom out">
                             <ZoomOutIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
                         <button
@@ -728,23 +728,23 @@ export function CanvasPanel({
                         >
                             {effectiveZoom}%
                         </button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn} title="Zoom in">
+                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomIn} title="Zoom in">
                             <ZoomInIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 ml-1" onClick={handleMaximizeZoom} title="Ajustar al alto (Maximizar)">
+                        <Button variant="ghost" size="icon" className="h-10 w-10 ml-1" onClick={handleMaximizeZoom} title="Ajustar al alto (Maximizar)">
                             <AspectRatioOutlinedIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
                     </div>
 
-                    <Button variant="ghost" size="icon" onClick={handleDownload} className="h-7 w-7" title="Descargar imagen">
+                    <Button variant="ghost" size="icon" onClick={handleDownload} className="h-10 w-10" title="Descargar imagen">
                         <ImageDown className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleDownloadBundle} className="h-7 w-7" title="Descargar ZIP (imagen + copy)">
+                    <Button variant="ghost" size="icon" onClick={handleDownloadBundle} className="h-10 w-10" title="Descargar ZIP (imagen + copy)">
                         <SquareArrowDown className="w-4 h-4" />
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <Button variant="ghost" size="icon" className="h-10 w-10">
                                 <MoreHorizIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                             </Button>
                         </DropdownMenuTrigger>

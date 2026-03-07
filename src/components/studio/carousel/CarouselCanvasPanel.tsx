@@ -798,7 +798,7 @@ export function CarouselCanvasPanel({
                 {/* Right: Actions */}
                 <div className="hidden md:flex pointer-events-auto glass-panel text-muted-foreground transition-all duration-300 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4">
                     <div className="flex flex-col items-center border-b border-white/10 pb-2 gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomOut}>
+                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut}>
                             <ZoomOut className="w-4 h-4" />
                         </Button>
                         <button
@@ -810,24 +810,24 @@ export function CarouselCanvasPanel({
                         >
                             {zoom}%
                         </button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleZoomIn}>
+                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomIn}>
                             <ZoomIn className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 ml-1" onClick={handleMaximizeZoom}>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 ml-1" onClick={handleMaximizeZoom}>
                             <AspectRatioOutlinedIcon fontSize="small" style={{ fontSize: '1.2rem' }} />
                         </Button>
                     </div>
 
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDownloadCurrent} disabled={!currentSlide?.imageUrl} title="Descargar slide actual">
+                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadCurrent} disabled={!currentSlide?.imageUrl} title="Descargar slide actual">
                         <ImageDown className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDownloadBundle} disabled={completedSlides === 0} title="Descargar ZIP (carrusel + caption)">
+                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadBundle} disabled={completedSlides === 0} title="Descargar ZIP (carrusel + caption)">
                         <SquareArrowDown className="w-4 h-4" />
                     </Button>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <Button variant="ghost" size="icon" className="h-10 w-10">
                                 <MoreHorizontal className="w-4 h-4" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -1239,6 +1239,8 @@ export function CarouselCanvasPanel({
                                             <img
                                                 src={slide.imageUrl}
                                                 alt={`Miniatura del slide ${index + 1}`}
+                                                loading="lazy"
+                                                decoding="async"
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (

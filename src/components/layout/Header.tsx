@@ -85,8 +85,8 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
     }
 
     return (
-        <>
-            <header className="h-16 border-b border-white/20 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 shrink-0">
+            <>
+            <header className="h-16 border-b border-border/60 bg-background/80 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 shrink-0">
                 <div className="flex items-center gap-2 md:gap-3">
                     {/* Mobile Menu Trigger */}
                     <MobileMenu />
@@ -99,7 +99,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     {brands.length > 0 && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-2 w-[140px] md:w-72 justify-between px-2 md:px-4 bg-white/50 dark:bg-white/10 border-white/30 hover:bg-white/80 hover:border-primary/50 rounded-xl">
+                                <Button variant="outline" size="sm" className="gap-2 w-[140px] md:w-72 justify-between px-2 md:px-4 bg-card/70 border-border hover:bg-accent/60 hover:border-border rounded-xl">
                                     <span className="flex items-center gap-2 min-w-0">
                                         <span className="w-6 h-6 rounded-md bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                                             {currentBrandFavicon ? (
@@ -119,7 +119,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                     <ChevronDown className="h-4 w-4 shrink-0" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-[320px] md:w-[440px] bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-white/30 shadow-aero-lg rounded-xl">
+                            <DropdownMenuContent align="start" className="w-[320px] md:w-[440px] bg-popover/95 backdrop-blur-xl border-border shadow-lg rounded-xl">
                                 {brands.map((brand) => (
                                     <DropdownMenuItem
                                         key={brand.id}
@@ -168,7 +168,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     )}
 
                     {onNewBrandKit && (
-                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="gap-2 hidden md:flex bg-white/50 dark:bg-white/10 border-white/30 hover:bg-white/80 hover:border-primary/50 rounded-xl">
+                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="gap-2 hidden md:flex bg-card/70 border-border hover:bg-accent/60 hover:border-border rounded-xl">
                             <Plus className="h-4 w-4" />
                             Nuevo Kit de Marca
                         </Button>
@@ -193,22 +193,22 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                 variant="ghost"
                                 size="icon"
                                 title="Panel Admin"
-                                className="hidden md:flex rounded-full w-9 h-9 hover:bg-white/60 dark:hover:bg-white/10"
+                                className="hidden md:flex rounded-full w-9 h-9 hover:bg-accent/60"
                             >
                                 <Settings className="h-4.5 w-4.5" />
                             </Button>
                         </Link>
                     )}
 
-                    <ThemeToggle className="rounded-full w-9 h-9 hover:bg-white/60 dark:hover:bg-white/10" />
+                    <ThemeToggle className="rounded-full w-9 h-9 hover:bg-accent/60" />
 
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="relative hidden md:flex rounded-full w-9 h-9 hover:bg-white/60 dark:hover:bg-white/10"
+                        className="relative hidden md:flex rounded-full w-9 h-9 hover:bg-accent/60"
                     >
                         <Bell className="h-4.5 w-4.5" />
-                        <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-brand-secondary rounded-full border border-white dark:border-zinc-900 animate-pulse" />
+                        <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-brand-secondary rounded-full border border-background animate-pulse" />
                     </Button>
                 </div>
             </header>
