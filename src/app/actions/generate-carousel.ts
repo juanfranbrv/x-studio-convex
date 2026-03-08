@@ -2454,6 +2454,7 @@ export async function generateCarouselAction(
                     i,
                     effectiveSlideCount
                 )
+                const manualReferences = normalizeCarouselReferenceInputs(selectedReferenceImages, selectedImageUrls)
                 const auxiliaryLogoCount = manualReferences.filter((reference) => reference.role === 'logo').length
 
                 const promptToUse = buildFinalPrompt({
@@ -2489,8 +2490,6 @@ export async function generateCarouselAction(
 
                 // A. Reference images (style/layout guidance)
                 const hasMasterLayoutRef = generatedImageUrls.length > 0 && Boolean(generatedImageUrls[0])
-
-                const manualReferences = normalizeCarouselReferenceInputs(selectedReferenceImages, selectedImageUrls)
                 if (manualReferences.length > 0) {
                     let auxLogoCount = 0
                     let styleRefCount = 0
