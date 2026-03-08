@@ -1476,8 +1476,8 @@ export default function CarouselPage() {
                 title: s.title || '',
                 description: s.description || '',
                 visualPrompt: s.description || '',
-                mustKeepFacts: Array.isArray((s as SlideContent).mustKeepFacts)
-                    ? (s as SlideContent).mustKeepFacts
+                mustKeepFacts: 'mustKeepFacts' in s && Array.isArray(s.mustKeepFacts)
+                    ? s.mustKeepFacts
                     : []
             }))
         setScriptSlides(restoredScript)

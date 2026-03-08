@@ -1225,13 +1225,19 @@ export function CarouselControlsPanel({
         .map((logo, idx) => {
             const url = typeof logo === 'string' ? logo : logo?.url
             if (!url) return null
+            const logoName =
+                typeof logo === 'string'
+                    ? `Logo ${idx + 1}`
+                    : 'name' in logo && typeof logo.name === 'string' && logo.name.trim()
+                        ? logo.name
+                        : `Logo ${idx + 1}`
             return {
                 id: `logo-${idx}`,
                 url,
-                name: typeof logo === 'string' ? `Logo ${idx + 1}` : logo.name || `Logo ${idx + 1}`
+                name: logoName
             }
         })
-        .filter((logo): logo is { id: string; url: string; name?: string } => Boolean(logo))
+        .filter((logo): logo is { id: string; url: string; name: string } => Boolean(logo))
 
     const handleSlideCountChange = (delta: number) => {
         const newCount = Math.max(0, Math.min(15, slideCount + delta))
