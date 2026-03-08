@@ -507,7 +507,7 @@ export function CarouselControlsPanel({
             customStyle: '',
             selectedStylePresetId: null,
             selectedStylePresetName: null,
-            selectedLogoId: primaryLogoIndex !== null ? `logo-${primaryLogoIndex}` : null,
+            selectedLogoId: null,
             selectedColors: [],
             selectedBrandKitImageIds: [],
             referenceImageRoles: {},
@@ -521,7 +521,41 @@ export function CarouselControlsPanel({
                 sessionHistory: [],
             }
         }
-    }, [compositions, primaryLogoIndex])
+    }, [compositions])
+    const resetWorkspace = useCallback(() => {
+        setPrompt('')
+        setSlideCount(0)
+        setAspectRatio('4:5')
+        setStyle('minimal')
+        setSlides([])
+        const defaultStructureId = analysisStructure?.id || structures[0]?.id || 'problema-solucion'
+        const defaultCompositionId = pickCompositionId(
+            compositions,
+            'basic',
+            compositions[0]?.id,
+            `${defaultStructureId}|0`
+        )
+        setStructureId(defaultStructureId)
+        setCompositionMode('basic')
+        setCompositionId(defaultCompositionId)
+        setBasicSelectedCompositionId(null)
+        setSelectedLogoId(null)
+        setSelectedColors([])
+        setSelectedBrandKitImageIds([])
+        setReferenceImageRoles({})
+        setUploadedImages([])
+        setImageSourceMode('upload')
+        setAiImageDescription('')
+        setStyleAnalysisDescription('')
+        setCustomStyle('')
+        setSelectedStylePresetId(null)
+        setSelectedStylePresetName(null)
+        setIncludeLogoOnSlides(false)
+        setNeedsReanalysis(false)
+        setLastAnalyzedSignature('')
+        setCurrentStep(1)
+        onReset?.()
+    }, [analysisStructure?.id, structures, compositions, onReset])
 
     const buildWorkspaceSnapshot = useCallback((
         previewSlidesOverride?: CarouselSlide[],
@@ -1901,41 +1935,6 @@ export function CarouselControlsPanel({
         }
         handleGenerate()
     }
-
-    const resetWorkspace = useCallback(() => {
-        setPrompt('')
-        setSlideCount(0)
-        setAspectRatio('4:5')
-        setStyle('minimal')
-        setSlides([])
-        const defaultStructureId = analysisStructure?.id || structures[0]?.id || 'problema-solucion'
-        const defaultCompositionId = pickCompositionId(
-            compositions,
-            'basic',
-            compositions[0]?.id,
-            `${defaultStructureId}|0`
-        )
-        setStructureId(defaultStructureId)
-        setCompositionMode('basic')
-        setCompositionId(defaultCompositionId)
-        setBasicSelectedCompositionId(null)
-        setSelectedLogoId(primaryLogoIndex !== null ? `logo-${primaryLogoIndex}` : null)
-        setSelectedColors([])
-        setSelectedBrandKitImageIds([])
-        setReferenceImageRoles({})
-        setUploadedImages([])
-        setImageSourceMode('upload')
-        setAiImageDescription('')
-        setStyleAnalysisDescription('')
-        setCustomStyle('')
-        setSelectedStylePresetId(null)
-        setSelectedStylePresetName(null)
-        setIncludeLogoOnSlides(false)
-        setNeedsReanalysis(false)
-        setLastAnalyzedSignature('')
-        setCurrentStep(1)
-        onReset?.()
-    }, [analysisStructure?.id, structures, compositions, primaryLogoIndex, onReset])
 
     return (
         <div className={STUDIO_CONTROLS_SHELL_CLASS}>
