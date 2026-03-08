@@ -360,6 +360,23 @@ export function BrandingConfigurator({
     const { activeBrandKit } = useBrandKit()
 
     const logos = activeBrandKit?.logos || []
+    const primaryLogoId = useMemo(() => {
+        if (!logos.length) return null
+
+        const explicitPrimaryUrl = (activeBrandKit?.logo_url || '').trim()
+        if (explicitPrimaryUrl) {
+            const explicitMatchIndex = logos.findIndex((logo) => {
+                const url = typeof logo === 'string' ? logo : logo?.url
+                return url === explicitPrimaryUrl
+            })
+            if (explicitMatchIndex >= 0) return `logo-${explicitMatchIndex}`
+        }
+
+        const selectedMatchIndex = logos.findIndex((logo) => typeof logo !== 'string' && logo?.selected !== false)
+        if (selectedMatchIndex >= 0) return `logo-${selectedMatchIndex}`
+
+        return 'logo-0'
+    }, [activeBrandKit?.logo_url, logos])
     const fonts = propFonts || activeBrandKit?.fonts || []
 
     // Dynamically load Google Fonts if they are specified in the Brand Kit
@@ -440,10 +457,10 @@ export function BrandingConfigurator({
     const hasAutoSelected = useRef(false)
     useEffect(() => {
         if (!hasAutoSelected.current && logos.length > 0 && !selectedLogoId) {
-            onSelectLogo('logo-0')
+            onSelectLogo(primaryLogoId)
             hasAutoSelected.current = true
         }
-    }, [logos, selectedLogoId, onSelectLogo])
+    }, [logos, onSelectLogo, primaryLogoId, selectedLogoId])
 
     return (
         <div className="space-y-4">

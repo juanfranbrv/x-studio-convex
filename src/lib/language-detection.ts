@@ -44,6 +44,9 @@ export function detectLanguage(text: string): string {
                 'tambe', 'perque', 'dons', 'doncs', 'fins', 'despres', 'avui',
                 'hui', 'aci', 'eixe', 'eixa', 'xiquet', 'xiqueta', 'vosaltres', 'vostres',
                 'nostre', 'nostra', 'seua', 'seues', 'llengua', 'servei', 'cal',
+                'vols', 'titol', 'administracio', 'opositar', 'admissio', 'convalidacio',
+                'assignatures', 'estudis', 'universitaris', 'funcio', 'docent', 'obri',
+                'portes', 'teu', 'teua', 'moltes', 'falta', 'trencaclosques', 'professional',
             ],
         },
     } as const
@@ -77,10 +80,14 @@ export function detectLanguage(text: string): string {
 
     const countMatches = (source: string, regex: RegExp): number => (source.match(regex) || []).length
 
-    const frenchMarkers = countMatches(lowerText, /\b(c'est|d'accord|qu'|l'|j'|n'|d'|s'|t'|je|tu|vous|nous)\b/g)
+    const frenchMarkers = countMatches(lowerText, /\b(c'est|d'accord|qu'|j'|n'|s'|t'|je|tu|vous|nous|avec|dans|pour|sans|chez)\b/g)
     const catalanMarkers = countMatches(
         normalizedText,
-        /\b(aixo|aquest|aquesta|aquests|aquestes|allo|tambe|perque|doncs|fins|despres|avui|hui|aci|eixe|eixa|xiquet|xiqueta|vosaltres|vostres|seua|seues|llengua)\b/g
+        /\b(aixo|aquest|aquesta|aquests|aquestes|allo|tambe|perque|doncs|fins|despres|avui|hui|aci|eixe|eixa|xiquet|xiqueta|vosaltres|vostres|seua|seues|llengua|vols|titol|administracio|opositar|admissio|convalidacio|assignatures|estudis|universitaris|funcio|docent|obri|portes|teu|teua|moltes|trencaclosques)\b/g
+    )
+    const catalanApostropheMarkers = countMatches(
+        normalizedText,
+        /\b(l'|d'|m'|n'|s'|t')(?=(administracio|assignatures|universitat|universitari|estudi|escola|oposicio|opositar|idioma|valencia|funcio|article|acces|admissio))/g
     )
 
     if (countMatches(lowerText, /\u00e7\u00e3o|\u00e7\u00f5es|\u00f5es/g) > 0) scores.pt += 3
@@ -91,17 +98,26 @@ export function detectLanguage(text: string): string {
     if (countMatches(lowerText, /[\u00e0\u00e8\u00f2\u00ef\u00fc]/g) > 0 && countMatches(lowerText, /[\u00f1]/g) === 0) {
         scores.ca += 2
     }
+    if (countMatches(lowerText, /[\u00b7]/g) > 0) {
+        scores.ca += 2
+    }
     if (countMatches(lowerText, /[\u00e0\u00e2\u00e9\u00e8\u00ea\u00eb\u00ee\u00ef\u00f4\u00f9\u00fb\u00e7]/g) > 0) {
         scores.fr += 1
     }
 
     scores.fr += frenchMarkers * 3
     scores.ca += catalanMarkers * 3
+    scores.ca += catalanApostropheMarkers * 2
 
     // Penalize false French positives in Valencian/Catalan texts.
     if (frenchMarkers === 0 && catalanMarkers >= 2) {
         scores.ca += 4
         scores.fr = Math.max(0, scores.fr - 3)
+    }
+
+    if (catalanMarkers >= 2 || catalanApostropheMarkers >= 2) {
+        scores.ca += 3
+        scores.fr = Math.max(0, scores.fr - 4)
     }
 
     const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1])
@@ -122,8 +138,24 @@ export function detectLanguage(text: string): string {
         idioma: detectedLang,
         puntuaciones: scores,
         marcadores_ca: catalanMarkers,
+        apostrofos_ca: catalanApostropheMarkers,
         marcadores_fr: frenchMarkers,
     })
 
     return detectedLang
+}
+
+export function detectLanguageFromParts(
+    parts: Array<string | null | undefined>,
+    fallback = 'es'
+): string {
+    const normalizedParts = parts
+        .map((part) => (typeof part === 'string' ? part.trim() : ''))
+        .filter(Boolean)
+
+    if (normalizedParts.length === 0) return fallback
+
+    const combined = normalizedParts.join('\n')
+    const detected = detectLanguage(combined)
+    return detected || fallback
 }

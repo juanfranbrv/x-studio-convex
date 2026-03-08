@@ -1398,6 +1398,7 @@ export interface GenerationState {
     rawMessage: string // User's raw message for AI to use as context
     additionalInstructions: string // Direct instructions from user
     customStyle: string // User defined custom visual style
+    applyStyleToTypography: boolean
     selectedTextAssets: TextAsset[] // Text assets for prompt (CTA, Tagline, URL, custom)
 
     // Image Reference Options
@@ -1451,6 +1452,7 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     rawMessage: '',
     additionalInstructions: '',
     customStyle: '',
+    applyStyleToTypography: false,
     selectedTextAssets: [],
     imageSourceMode: 'generate',
     selectedBrandKitImageIds: [],

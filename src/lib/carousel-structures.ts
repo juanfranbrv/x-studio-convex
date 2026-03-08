@@ -164,7 +164,7 @@ export const BASIC_CAROUSEL_TEMPLATES: BasicCompositionTemplate[] = [
 2. TEXT SAFETY ZONE: Upper-left 2x1 cell span reserved as clean text surface with 8% inner padding.
 3. VISUAL FRAMING: Primary subject anchor at lower-right intersection; secondary mass constrained to center column.
 4. LOGO ANCHOR: Top-right corner with 5% inset from canvas edges.
-5. ARCHITECTURAL CONSISTENCY: Keep third lines, text span and anchor mapping fixed; final slide reserves bottom-right cell for action emphasis.`
+5. ARCHITECTURAL CONSISTENCY: Keep third lines, text span and anchor mapping fixed; final slide reserves bottom-center cell for action emphasis so the CTA never collides with the lower-right subject anchor.`
     },
     {
         baseId: 'basic-golden-spiral',

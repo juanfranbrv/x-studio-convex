@@ -25,6 +25,11 @@ export interface ImageGenerationOptions {
     nagaApiKey?: string
     replicateApiKey?: string
     atlasApiKey?: string
+    selectedStyles?: string[]
+    customStyle?: string
+    applyStyleToTypography?: boolean
+    styleAnalysisKeywords?: string[]
+    styleAnalysisSubject?: string
 }
 
 export function buildImagePrompt(
@@ -43,7 +48,13 @@ export function buildImagePrompt(
         ).join(', ')
     }
 
-    const typographyInstructions = buildTypographyInstructions(fonts || [])
+    const typographyInstructions = buildTypographyInstructions(fonts || [], {
+        selectedStyles: options.selectedStyles,
+        customStyle: options.customStyle,
+        applyStyleToTypography: options.applyStyleToTypography,
+        styleAnalysisKeywords: options.styleAnalysisKeywords,
+        styleAnalysisSubject: options.styleAnalysisSubject,
+    })
 
     // Process explicit context items (Drag & Drop)
     let contextInstructions = ''

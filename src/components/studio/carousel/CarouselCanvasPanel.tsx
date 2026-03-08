@@ -35,17 +35,18 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import type { CarouselSlide } from '@/app/actions/generate-carousel'
+import type { CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
 import { DigitalStaticLoader } from '../DigitalStaticLoader'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { ReferenceImageRole } from '@/lib/creation-flow-types'
 
 interface CarouselCanvasPanelProps {
     slides: CarouselSlide[]
+    scriptSlides?: SlideContent[] | null
     currentIndex: number
     onSelectSlide: (index: number) => void
     onRegenerateSlide: (index: number, correctionPrompt?: string) => void
-    onUpdateSlideScript?: (index: number, updates: { title?: string; description?: string }) => void
+    onUpdateSlideScript?: (index: number, updates: { title?: string; description?: string; visualPrompt?: string; mustKeepFacts?: string[] }) => void
     isGenerating?: boolean
     isRegenerating: boolean
     regeneratingIndex: number | null
@@ -56,13 +57,15 @@ interface CarouselCanvasPanelProps {
     isCaptionGenerating?: boolean
     isCaptionLocked?: boolean
     onToggleCaptionLock?: () => void
-    referenceImages?: Array<{ url: string; source: 'upload' | 'brandkit' }>
+    referenceImages?: Array<{ url: string; source: 'upload' | 'brandkit' | 'preset' }>
     referenceImageRoles?: Record<string, ReferenceImageRole>
     referenceImageMode?: 'upload' | 'brandkit' | 'generate'
     brandKitTexts?: Array<{ id: string; label: string; value: string }>
     brandName?: string
     hook?: string
     selectedLogoUrl?: string
+    showPrimaryLogoOnCurrentSlide?: boolean
+    compositionGhostIcon?: string
     sessionHistory?: Array<{
         id: string
         createdAt: string
@@ -71,6 +74,41 @@ interface CarouselCanvasPanelProps {
     }>
     onSelectSessionHistory?: (id: string) => void
     isAdmin?: boolean
+}
+
+const VISUAL_INTENT_MARKERS = [
+    'Objetivo visual de esta slide:',
+    'Objectiu visual d’aquesta slide:',
+    'Visual goal for this slide:',
+    'Objectif visuel de cette slide',
+    'Visuelles Ziel dieser Folie',
+    'Objetivo visual deste slide',
+    'Obiettivo visivo di questa slide',
+]
+
+function splitVisualPromptForEditor(value: string): { editable: string; hiddenIntent: string } {
+    const normalized = String(value || '').trim()
+    if (!normalized) {
+        return { editable: '', hiddenIntent: '' }
+    }
+
+    const markerIndexes = VISUAL_INTENT_MARKERS
+        .map((marker) => normalized.indexOf(marker))
+        .filter((index) => index > 0)
+
+    const firstMarkerIndex = markerIndexes.length > 0 ? Math.min(...markerIndexes) : -1
+
+    if (firstMarkerIndex === -1) {
+        return {
+            editable: normalized,
+            hiddenIntent: '',
+        }
+    }
+
+    return {
+        editable: normalized.slice(0, firstMarkerIndex).trim(),
+        hiddenIntent: normalized.slice(firstMarkerIndex).trim(),
+    }
 }
 
 function AiPromptIcon({ className, style }: { className?: string; style?: CSSProperties }) {
@@ -134,6 +172,29 @@ function AiPromptIcon({ className, style }: { className?: string; style?: CSSPro
     )
 }
 
+function renderCompositionGhostIcon(iconName: string) {
+    const trimmed = (iconName || '').trim()
+    if (!trimmed) return null
+
+    if (trimmed.startsWith('<svg')) {
+        return (
+            <div
+                className="w-[92%] h-[92%] max-w-[820px] max-h-[820px] text-primary/25 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block"
+                dangerouslySetInnerHTML={{ __html: trimmed }}
+            />
+        )
+    }
+
+    return (
+        <span
+            className="material-symbols-outlined text-primary/25 leading-none"
+            style={{ fontSize: 'clamp(140px, 56cqw, 760px)' }}
+        >
+            {trimmed}
+        </span>
+    )
+}
+
 function StyleReferenceCorner({ url }: { url: string }) {
     const containerRef = useRef<HTMLDivElement>(null)
     const [boxSize, setBoxSize] = useState({ w: 0, h: 0 })
@@ -189,6 +250,7 @@ function StyleReferenceCorner({ url }: { url: string }) {
 
 export function CarouselCanvasPanel({
     slides,
+    scriptSlides = null,
     currentIndex,
     onSelectSlide,
     onRegenerateSlide,
@@ -210,6 +272,8 @@ export function CarouselCanvasPanel({
     brandName,
     hook,
     selectedLogoUrl,
+    showPrimaryLogoOnCurrentSlide = true,
+    compositionGhostIcon,
     sessionHistory = [],
     onSelectSessionHistory,
     isAdmin = false
@@ -222,8 +286,10 @@ export function CarouselCanvasPanel({
     const [isMobile, setIsMobile] = useState(false)
     const lastViewportHeightRef = useRef<number | null>(null)
     const [isEditingScript, setIsEditingScript] = useState(false)
+    const [isEditingVisualContent, setIsEditingVisualContent] = useState(false)
     const [draftTitle, setDraftTitle] = useState('')
     const [draftDescription, setDraftDescription] = useState('')
+    const [draftVisualPrompt, setDraftVisualPrompt] = useState('')
     const loaderVisibleRef = useRef(false)
     const [debugOpen, setDebugOpen] = useState(false)
     const [debugSlide, setDebugSlide] = useState<CarouselSlide | null>(null)
@@ -310,6 +376,27 @@ export function CarouselCanvasPanel({
     }
 
     const currentSlide = slides[currentIndex]
+    const currentScriptSlide = useMemo(() => {
+        if (!Array.isArray(scriptSlides) || scriptSlides.length === 0) return null
+        const slideIndex = currentSlide?.index
+        if (typeof slideIndex === 'number') {
+            const byIndex = scriptSlides.find((slide) => slide.index === slideIndex)
+            if (byIndex) return byIndex
+        }
+        return scriptSlides[currentIndex] || null
+    }, [currentIndex, currentSlide?.index, scriptSlides])
+    const currentVisualContent = useMemo(() => {
+        const value = typeof currentScriptSlide?.visualPrompt === 'string'
+            ? currentScriptSlide.visualPrompt.trim()
+            : ''
+        return value || ''
+    }, [currentScriptSlide])
+    const currentVisualPromptParts = useMemo(
+        () => splitVisualPromptForEditor(currentVisualContent),
+        [currentVisualContent]
+    )
+    const currentVisualContentEditable = currentVisualPromptParts.editable
+    const currentVisualIntentHidden = currentVisualPromptParts.hiddenIntent
     const currentImageUrl = currentSlide?.imageUrl || null
 
     useEffect(() => {
@@ -326,9 +413,11 @@ export function CarouselCanvasPanel({
         if (!currentSlide) return
         setDraftTitle(currentSlide.title || '')
         setDraftDescription(currentSlide.description || '')
+        setDraftVisualPrompt(currentVisualContentEditable)
         setSlideCorrectionPrompt('')
         setIsEditingScript(false)
-    }, [currentSlide?.index])
+        setIsEditingVisualContent(false)
+    }, [currentSlide?.index, currentVisualContentEditable])
 
     useEffect(() => {
         loaderVisibleRef.current = isLoaderVisible
@@ -356,6 +445,16 @@ export function CarouselCanvasPanel({
             description: nextDescription
         })
         setIsEditingScript(false)
+    }
+
+    const handleSaveVisualContent = () => {
+        if (!currentSlide) return
+        const nextEditablePrompt = draftVisualPrompt.trim() || currentVisualContentEditable
+        const nextVisualPrompt = [nextEditablePrompt, currentVisualIntentHidden].filter(Boolean).join(' ').trim()
+        onUpdateSlideScript?.(currentSlide.index, {
+            visualPrompt: nextVisualPrompt
+        })
+        setIsEditingVisualContent(false)
     }
 
     const handleOpenDebug = () => {
@@ -916,6 +1015,12 @@ export function CarouselCanvasPanel({
                             )}
                         </AnimatePresence>
 
+                        {compositionGhostIcon && !isGeneratingAny && !currentSlide?.imageUrl && (
+                            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none opacity-50">
+                                {renderCompositionGhostIcon(compositionGhostIcon)}
+                            </div>
+                        )}
+
                         {/* Side Navigation */}
                         {slides.length > 1 && (
                             <>
@@ -965,7 +1070,7 @@ export function CarouselCanvasPanel({
                                     const contentPreviewImages = contentImages.slice(0, 6)
 
                                     const renderStrip = (
-                                        images: Array<{ url: string; source: 'upload' | 'brandkit'; key: string }>,
+                                        images: Array<{ url: string; source: 'upload' | 'brandkit' | 'preset'; key: string }>,
                                         positionClass: string
                                     ) => {
                                         if (images.length === 0) return null
@@ -1029,7 +1134,7 @@ export function CarouselCanvasPanel({
                                     )
                                 })()}
 
-                                {selectedLogoUrl && (
+                                {selectedLogoUrl && showPrimaryLogoOnCurrentSlide && (
                                     <div className="absolute top-1 left-4 z-20 group">
                                         <img
                                             src={selectedLogoUrl}
@@ -1099,7 +1204,8 @@ export function CarouselCanvasPanel({
                             </div>
                         ) : hasScript ? (
                             <div className="w-full h-full flex items-center justify-center p-10">
-                                <div className="carousel-script-preview w-full max-w-md rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm p-6 text-center shadow-lg space-y-3">
+                                <div className="w-full max-w-md space-y-3">
+                                    <div className="carousel-script-preview rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm p-6 text-center shadow-lg space-y-3">
                                     <p className="uppercase tracking-widest text-muted-foreground" style={{ fontSize: 'var(--cs-label)' }}>
                                         Guion previo
                                     </p>
@@ -1175,10 +1281,14 @@ export function CarouselCanvasPanel({
                                             <div
                                                 role="button"
                                                 tabIndex={0}
-                                                onClick={() => setIsEditingScript(true)}
+                                                onClick={() => {
+                                                    setIsEditingVisualContent(false)
+                                                    setIsEditingScript(true)
+                                                }}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter' || e.key === ' ') {
                                                         e.preventDefault()
+                                                        setIsEditingVisualContent(false)
                                                         setIsEditingScript(true)
                                                     }
                                                 }}
@@ -1196,13 +1306,80 @@ export function CarouselCanvasPanel({
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                onClick={() => setIsEditingScript(true)}
+                                                onClick={() => {
+                                                    setIsEditingVisualContent(false)
+                                                    setIsEditingScript(true)
+                                                }}
                                                 className="mt-2"
                                                 style={{ fontSize: 'var(--cs-button)' }}
                                             >
                                                 Editar guion
                                             </Button>
                                         </>
+                                    )}
+                                    </div>
+                                    {(currentVisualContentEditable || isEditingVisualContent) && (
+                                        <div className="rounded-2xl border border-border/60 bg-background/72 backdrop-blur-sm p-4 text-left shadow-md space-y-1.5">
+                                            <p
+                                                className="uppercase tracking-widest text-muted-foreground"
+                                                style={{ fontSize: 'calc(var(--cs-label) - 1px)' }}
+                                            >
+                                                Contenido visual previsto
+                                            </p>
+                                            {isEditingVisualContent ? (
+                                                <div className="space-y-3">
+                                                    <Textarea
+                                                        value={draftVisualPrompt}
+                                                        onChange={(e) => setDraftVisualPrompt(e.target.value)}
+                                                        placeholder="Contenido visual previsto"
+                                                        className="min-h-[110px] text-sm resize-none"
+                                                        disabled={isGeneratingAny}
+                                                    />
+                                                    {currentVisualIntentHidden ? (
+                                                        <p className="text-xs leading-relaxed text-muted-foreground">
+                                                            La intención narrativa y las reglas visuales avanzadas se mantienen internamente y no necesitas editarlas aquí.
+                                                        </p>
+                                                    ) : null}
+                                                    <div className="flex gap-2">
+                                                        <Button size="sm" onClick={handleSaveVisualContent} disabled={isGeneratingAny}>
+                                                            Guardar
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => {
+                                                                setDraftVisualPrompt(currentVisualContentEditable)
+                                                                setIsEditingVisualContent(false)
+                                                            }}
+                                                            disabled={isGeneratingAny}
+                                                        >
+                                                            Cancelar
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <p
+                                                        className="text-muted-foreground leading-relaxed"
+                                                        style={{ fontSize: 'var(--cs-body)' }}
+                                                    >
+                                                        {currentVisualContentEditable}
+                                                    </p>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            setIsEditingScript(false)
+                                                            setIsEditingVisualContent(true)
+                                                        }}
+                                                        className="mt-2"
+                                                        style={{ fontSize: 'var(--cs-button)' }}
+                                                    >
+                                                        Editar contenido visual
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </div>

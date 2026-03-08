@@ -14,13 +14,16 @@ export const PRIORITY_HEADER = `╔═══════════════
 
 export const BRAND_DNA_REQUIREMENT = `⚠️  REQUIREMENT: Final image MUST feel authentically aligned with this brand universe.`
 
-export const MANDATORY_TEXT_HEADER = `MANDATORY TEXT CONTENT (NOTHING ELSE). Render EXACTLY as provided. DO NOT add labels or prefixes like "CTA:" or "URL:".`
+export const MANDATORY_TEXT_HEADER = `MANDATORY TEXT CONTENT (NOTHING ELSE). Render EXACTLY as provided. DO NOT add labels or prefixes such as "call to action:", "url:", "headline:", or any internal production marker.`
 
 export const NO_TEXT_WARNING = `⚠️  NO TEXT PROVIDED: Image must be completely text-free.`
 
 export const TEXT_FIT_SAFETY_RULES = `TEXT FIT SAFETY (NON-NEGOTIABLE):
 - NEVER crop, truncate, mask, or hide any character of mandatory text.
-- Use strict GEOMETRIC SANS-SERIF typography. Font style must be BLOCKY, INDUSTRIAL, and STRUCTURAL. Resembles fonts like Roboto, Helvetica Bold, or Futura.
+- Use clear, modern, high-legibility typography with strong hierarchy and confident presence.
+- Interpret geometric or structural typography as clean, precise, contemporary letter construction with crisp readable edges and stable forms.
+- Font references such as Roboto, Helvetica Bold, Futura, or similar are guidance for clarity and tone only. They must never appear as visible text inside the image.
+- Internal prompt tokens, production shorthand, and control labels must never appear as visible copy. This includes standalone markers such as C T A, URL, HEADLINE, LABEL, PRIORITY, or STYLE DIRECTIVES.
 - Allow multi-line wrapping for headlines instead of clipping.
 - Keep a safety margin around text blocks (at least 8% from canvas edges).
 - Keep full ascenders/descenders visible (no top/bottom cut-off).
@@ -59,14 +62,20 @@ export function buildTypographyContract(fonts?: BrandFontInput[]): string {
 
     const lines = ['TYPOGRAPHY CONTRACT (NON-NEGOTIABLE):']
 
-    if (headlineValue) lines.push(`- HEADLINE_FONT = "${headlineValue}"`)
-    if (bodyValue) lines.push(`- BODY_FONT = "${bodyValue}"`)
-    if (!headlineValue && !bodyValue) {
-        lines.push('- HEADLINE_FONT = "brand-heading-font"')
-        lines.push('- BODY_FONT = "brand-body-font"')
+    if (headlineValue && bodyValue && headlineValue === bodyValue) {
+        lines.push(`- BRAND_TEXT_FONT = "${headlineValue}"`)
+        lines.push('- APPLY RULE: headline and body/support text MUST use BRAND_TEXT_FONT.')
+    } else {
+        if (headlineValue) lines.push(`- HEADLINE_FONT = "${headlineValue}"`)
+        if (bodyValue) lines.push(`- BODY_FONT = "${bodyValue}"`)
+        if (!headlineValue && !bodyValue) {
+            lines.push('- BRAND_TEXT_FONT = "brand-text-font"')
+            lines.push('- APPLY RULE: headline and body/support text MUST use BRAND_TEXT_FONT.')
+        } else {
+            lines.push('- APPLY RULE: headline MUST use HEADLINE_FONT; body/support text MUST use BODY_FONT.')
+        }
     }
 
-    lines.push('- APPLY RULE: headline MUST use HEADLINE_FONT; body/support text MUST use BODY_FONT.')
     lines.push('- FORBIDDEN: swapping fonts, mixing roles, or collapsing all text into one font style.')
     lines.push('- INTERNAL TOKENS: font names are instructions only; never render them as visible text.')
     lines.push('- FALLBACK: if a font is unavailable, use the closest stylistic equivalent without changing role mapping.')

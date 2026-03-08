@@ -55,6 +55,7 @@ export interface CarouselSettings {
     aiImageDescription?: string
     aiStyleDirectives?: string
     customStyleText?: string
+    applyStyleToTypography?: boolean
     // Brand Kit Context
     selectedLogoUrl?: string
     selectedColors: { color: string; role: string }[]
@@ -202,6 +203,7 @@ type CarouselWorkspaceSnapshot = {
     aiImageDescription: string
     aiStyleDirectives: string
     customStyle: string
+    applyStyleToTypography: boolean
     selectedStylePresetId: string | null
     selectedStylePresetName: string | null
     selectedLogoId: string | null
@@ -439,6 +441,7 @@ export function CarouselControlsPanel({
     const [aiImageDescription, setAiImageDescription] = useState('')
     const [styleAnalysisDescription, setStyleAnalysisDescription] = useState('')
     const [customStyle, setCustomStyle] = useState('')
+    const [applyStyleToTypography, setApplyStyleToTypography] = useState(false)
     const [selectedStylePresetId, setSelectedStylePresetId] = useState<string | null>(null)
     const [selectedStylePresetName, setSelectedStylePresetName] = useState<string | null>(null)
     const [isImageAnalyzing, setIsImageAnalyzing] = useState(false)
@@ -505,6 +508,7 @@ export function CarouselControlsPanel({
             aiImageDescription: '',
             aiStyleDirectives: '',
             customStyle: '',
+            applyStyleToTypography: false,
             selectedStylePresetId: null,
             selectedStylePresetName: null,
             selectedLogoId: null,
@@ -548,6 +552,7 @@ export function CarouselControlsPanel({
         setAiImageDescription('')
         setStyleAnalysisDescription('')
         setCustomStyle('')
+        setApplyStyleToTypography(false)
         setSelectedStylePresetId(null)
         setSelectedStylePresetName(null)
         setIncludeLogoOnSlides(false)
@@ -583,6 +588,7 @@ export function CarouselControlsPanel({
             aiImageDescription,
             aiStyleDirectives: styleAnalysisDescription,
             customStyle,
+            applyStyleToTypography,
             selectedStylePresetId,
             selectedStylePresetName,
             selectedLogoId,
@@ -643,6 +649,7 @@ export function CarouselControlsPanel({
         aiImageDescription,
         styleAnalysisDescription,
         customStyle,
+        applyStyleToTypography,
         selectedStylePresetId,
         selectedStylePresetName,
         selectedLogoId,
@@ -813,6 +820,7 @@ export function CarouselControlsPanel({
             setAiImageDescription(snapshot.aiImageDescription || '')
             setStyleAnalysisDescription(snapshot.aiStyleDirectives || '')
             setCustomStyle(snapshot.customStyle || '')
+            setApplyStyleToTypography(Boolean(snapshot.applyStyleToTypography))
             setSelectedStylePresetId(snapshot.selectedStylePresetId || null)
             setSelectedStylePresetName(snapshot.selectedStylePresetName || null)
             setSelectedLogoId(snapshot.selectedLogoId || null)
@@ -1361,6 +1369,7 @@ export function CarouselControlsPanel({
         setAiImageDescription('')
         setStyleAnalysisDescription('')
         setCustomStyle('')
+        setApplyStyleToTypography(false)
         setSelectedStylePresetId(null)
         setSelectedStylePresetName(null)
         setImageError(null)
@@ -1898,6 +1907,7 @@ export function CarouselControlsPanel({
             aiImageDescription: (overrides.aiImageDescription ?? aiImageDescription).trim() || undefined,
             aiStyleDirectives: mergedStyleDirectives || undefined,
             customStyleText: (customStyle || '').trim() || undefined,
+            applyStyleToTypography,
             selectedLogoUrl: resolveSelectedLogoUrl(),
             selectedColors: selectedColors.length > 0 ? selectedColors : brandColors.slice(0, 3).map(c => ({
                 color: c.color,
@@ -2502,6 +2512,19 @@ export function CarouselControlsPanel({
                                 isAnalyzing={isImageAnalyzing}
                                 error={imageError}
                             />
+                            <div className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/30 px-3 py-3">
+                                <div className="space-y-1">
+                                    <p className="text-[12px] font-medium leading-none">Aplicar el estilo también a las fuentes</p>
+                                    <p className="text-[11px] leading-snug text-muted-foreground">
+                                        Solo afecta al texto visible del diseño. Si lo activas, el título y el párrafo adoptan mejor el lenguaje del estilo; el párrafo seguirá priorizando claridad y legibilidad.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={applyStyleToTypography}
+                                    onCheckedChange={setApplyStyleToTypography}
+                                    aria-label="Aplicar el estilo también a las fuentes"
+                                />
+                            </div>
                         </div>
 
                         <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>

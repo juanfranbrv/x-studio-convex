@@ -969,6 +969,17 @@ export default function ImagePage() {
                 model: typeof requestPayload.model === 'string' ? requestPayload.model : undefined,
                 layoutReference: typeof requestPayload.layoutReference === 'string' ? requestPayload.layoutReference : undefined,
                 aspectRatio: typeof requestPayload.aspectRatio === 'string' ? requestPayload.aspectRatio : undefined,
+                selectedStyles: Array.isArray(requestPayload.selectedStyles)
+                    ? requestPayload.selectedStyles.filter((item): item is string => typeof item === 'string')
+                    : [],
+                customStyle: typeof requestPayload.customStyle === 'string' ? requestPayload.customStyle : undefined,
+                applyStyleToTypography: requestPayload.applyStyleToTypography === true,
+                styleAnalysisKeywords: Array.isArray(requestPayload.styleAnalysisKeywords)
+                    ? requestPayload.styleAnalysisKeywords.filter((item): item is string => typeof item === 'string')
+                    : [],
+                styleAnalysisSubject: typeof requestPayload.styleAnalysisSubject === 'string'
+                    ? requestPayload.styleAnalysisSubject
+                    : undefined,
                 selectedColors: Array.isArray(requestPayload.selectedColors)
                     ? requestPayload.selectedColors as Array<{ color: string; role: string } | string>
                     : []
@@ -1143,6 +1154,7 @@ export default function ImagePage() {
 
         const effectiveLayoutId = data.forcedLayoutId || creationFlow.state.selectedLayout
         const effectiveLayoutMeta = ALL_IMAGE_LAYOUTS.find((l) => l.id === effectiveLayoutId)
+        const activeStyleAnalysis = creationFlow.state.firstVisionAnalysis ?? creationFlow.state.visionAnalysis ?? null
         const compositionSkill = effectiveLayoutMeta?.skillVersion
             ? {
                 name: 'composiciones',
@@ -1168,6 +1180,11 @@ export default function ImagePage() {
             compositionSkill,
             layoutReference: effectiveLayoutMeta?.referenceImage,
             aspectRatio: SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio,
+            selectedStyles: creationFlow.state.selectedStyles,
+            customStyle: creationFlow.state.customStyle,
+            applyStyleToTypography: creationFlow.state.applyStyleToTypography,
+            styleAnalysisKeywords: Array.isArray(activeStyleAnalysis?.keywords) ? activeStyleAnalysis.keywords : [],
+            styleAnalysisSubject: typeof activeStyleAnalysis?.subjectLabel === 'string' ? activeStyleAnalysis.subjectLabel : undefined,
             selectedColors: creationFlow.state.selectedBrandColors,
             auditFlowId: data.auditFlowId
         } as Record<string, unknown>

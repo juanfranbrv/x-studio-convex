@@ -73,6 +73,8 @@ COHERENCIA OBLIGATORIA:
 - Trata la referencia de continuidad como MASTER LAYOUT.
 - No cambies la tipografia, escala, pesos ni jerarquia entre slides.
 - No cambies la posicion o tamano de cajas de texto ni bloques principales.
+- Si el kit de marca define fuentes para titular y cuerpo, son obligatorias por rol.
+- Nunca escribas ni renderices nombres internos de fuentes como texto visible.
 
 ${logoBlock}
 

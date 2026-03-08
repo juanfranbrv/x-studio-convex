@@ -1020,6 +1020,7 @@ export default function CarouselPage() {
                     settings.compositionId,
                     settings.structureId,
                     settings.aiStyleDirectives,
+                    settings.applyStyleToTypography,
                     settings.selectedReferenceImages,
                     settings.selectedImageUrls,
                     consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined,
@@ -1220,7 +1221,8 @@ export default function CarouselPage() {
                     ],
                     activeBrandKit?.preferred_language || 'es'
                 ),
-                fonts: activeBrandKit?.fonts as any
+                fonts: activeBrandKit?.fonts as any,
+                applyStyleToTypography: settingsWithStyle.applyStyleToTypography
             })
 
             // Build references array
@@ -1402,6 +1404,7 @@ export default function CarouselPage() {
                 carouselSettings.compositionId,
                 carouselSettings.structureId,
                 carouselSettings.aiStyleDirectives,
+                carouselSettings.applyStyleToTypography,
                 carouselSettings.selectedReferenceImages,
                 carouselSettings.selectedImageUrls,
                 consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined,

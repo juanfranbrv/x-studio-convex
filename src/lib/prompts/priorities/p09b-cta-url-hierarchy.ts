@@ -12,7 +12,9 @@ import {
     CTA_ONLY_TEMPLATE,
     CTA_SECONDARY_TEMPLATE,
     CRITICAL_HIERARCHY_TEMPLATE,
+    CRITICAL_URL_ONLY_TEMPLATE,
     FINAL_URL_VISIBILITY_TEMPLATE,
+    FINAL_URL_ONLY_VISIBILITY_TEMPLATE,
     URL_HERO_TEMPLATE,
 } from './p09b-cta-url-hierarchy.prompt'
 
@@ -33,11 +35,17 @@ export const P09B = {
     CRITICAL_HIERARCHY_INSTRUCTION: (url: string) =>
         CRITICAL_HIERARCHY_TEMPLATE.replaceAll('{{url}}', url),
 
+    CRITICAL_URL_ONLY_INSTRUCTION: (url: string) =>
+        CRITICAL_URL_ONLY_TEMPLATE.replaceAll('{{url}}', url),
+
     /**
      * Final layout check to keep URL hierarchy consistent.
      */
     FINAL_URL_VISIBILITY_INSTRUCTION: (url: string) =>
         FINAL_URL_VISIBILITY_TEMPLATE.replaceAll('{{url}}', url),
+
+    FINAL_URL_ONLY_VISIBILITY_INSTRUCTION: (url: string) =>
+        FINAL_URL_ONLY_VISIBILITY_TEMPLATE.replaceAll('{{url}}', url),
 
     /**
      * Fallback when only CTA text exists (no URL).

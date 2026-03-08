@@ -11,8 +11,10 @@ export const LANGUAGE_ENFORCEMENT_RULE = `
 ## ⚠️ LANGUAGE ENFORCEMENT (CRITICAL - MAXIMUM PRIORITY)
 **DETECT the language used in the "Intent" section below.**
 - If the user writes in SPANISH → ALL content (titles, descriptions, body text, hook, caption) MUST be in SPANISH.
+- If the user writes in CATALAN or VALENCIAN → ALL content (titles, descriptions, body text, hook, caption, visualPrompt) MUST be in CATALAN/VALENCIAN.
 - If the user writes in ENGLISH → ALL content MUST be in ENGLISH.
 - If the user writes in GERMAN → ALL content MUST be in GERMAN.
+- The "visualPrompt" field is ALSO content and MUST use the same language as the user's prompt.
 - **NEVER translate to another language. NEVER use a different language than the user's prompt.**
 - This rule has ABSOLUTE PRIORITY over any other consideration.
 - If you generate content in a language different from the user's prompt, you have FAILED.

@@ -49,6 +49,42 @@ import * as P02 from '@/lib/prompts/priorities/p02-technical-specs'
 
 export const NO_TEXT_TOKEN = '[NO_TEXT]'
 
+const resolveBrandKitLogoUrl = (logo?: { url?: string; selected?: boolean } | string | null) => {
+    if (!logo) return undefined
+    return typeof logo === 'string' ? logo : logo.url
+}
+
+const getPrimaryBrandKitLogoId = (brandKit?: { logo_url?: string; logos?: Array<{ url?: string; selected?: boolean } | string> | null }) => {
+    const logos = Array.isArray(brandKit?.logos) ? brandKit.logos : []
+    if (logos.length === 0) return null
+
+    const explicitPrimaryUrl = (brandKit?.logo_url || '').trim()
+    if (explicitPrimaryUrl) {
+        const explicitMatchIndex = logos.findIndex((logo) => resolveBrandKitLogoUrl(logo) === explicitPrimaryUrl)
+        if (explicitMatchIndex >= 0) return `logo-${explicitMatchIndex}`
+    }
+
+    const selectedMatchIndex = logos.findIndex((logo) => typeof logo !== 'string' && logo?.selected !== false)
+    if (selectedMatchIndex >= 0) return `logo-${selectedMatchIndex}`
+
+    return 'logo-0'
+}
+
+const resolveSelectedBrandKitLogo = (
+    brandKit: { logos?: Array<{ url?: string; selected?: boolean; _id?: string; id?: string } | string> | null } | null | undefined,
+    selectedLogoId?: string | null
+) => {
+    if (!selectedLogoId || !Array.isArray(brandKit?.logos)) return undefined
+
+    return brandKit.logos.find((logo, idx) => {
+        if (typeof logo !== 'string') {
+            if (logo?._id === selectedLogoId) return true
+            if (logo?.id === selectedLogoId) return true
+        }
+        return `logo-${idx}` === selectedLogoId
+    })
+}
+
 const sanitizeStructuralPromptForModel = (raw?: string | null): string => {
     if (!raw) return ''
 
@@ -232,9 +268,9 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 hasChanges = true
             }
 
-            // 3. Initialize Logo - Always default to first logo when switching brands
+            // 3. Initialize Logo - Follow the primary logo defined in Brand Kit
             if (activeBrandKit.logos && (activeBrandKit.logos as any[]).length > 0) {
-                nextState.selectedLogoId = 'logo-0'
+                nextState.selectedLogoId = getPrimaryBrandKitLogoId(activeBrandKit)
                 hasChanges = true
             }
 
@@ -1288,6 +1324,15 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         })
     }, [invalidateFromStep])
 
+    const setApplyStyleToTypography = useCallback((apply: boolean) => {
+        setState(prev => ({
+            ...prev,
+            applyStyleToTypography: Boolean(apply),
+            ...invalidateFromStep(prev, 4),
+            currentStep: prev.hasGeneratedImage ? 4 : Math.max(prev.currentStep, 5)
+        }))
+    }, [invalidateFromStep])
+
     const setTypographyMode = useCallback((mode: TypographyProfile['mode']) => {
         setState(prev => {
             if (mode === 'auto') {
@@ -1679,9 +1724,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         // PRIORITY 10 - ABSOLUTE OVERRIDE (Logo Integrity)
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         if (activeState.selectedLogoId && activeBrandKit?.logos) {
-            const logo = activeBrandKit.logos.find((l, idx) =>
-                (l as any)._id === activeState.selectedLogoId || `logo-${idx}` === activeState.selectedLogoId
-            )
+            const logo = resolveSelectedBrandKitLogo(activeBrandKit, activeState.selectedLogoId)
             if (logo) {
                 sections.push(
                     P10.PRIORITY_HEADER,
@@ -2179,6 +2222,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
                     rawMessage: state.rawMessage,
                     additionalInstructions: state.additionalInstructions,
                     customStyle: state.customStyle,
+                    applyStyleToTypography: state.applyStyleToTypography,
                     selectedTextAssets: state.selectedTextAssets,
                 }
 
@@ -2327,6 +2371,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             rawMessage: state.rawMessage,
             additionalInstructions: state.additionalInstructions,
             customStyle: state.customStyle,
+            applyStyleToTypography: state.applyStyleToTypography,
             selectedTextAssets: state.selectedTextAssets,
             generatedImage: state.generatedImage,
             hasGeneratedImage: state.hasGeneratedImage,
@@ -2518,6 +2563,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         setAdditionalInstructions,
         setRawMessage,
         setCustomStyle,
+        setApplyStyleToTypography,
         setTypographyMode,
         setTypographyField,
         setCustomText,

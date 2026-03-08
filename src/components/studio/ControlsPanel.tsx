@@ -37,7 +37,6 @@ import {
     STUDIO_PANEL_CARD_PADDED_LG_CLASS,
 } from '@/components/studio/shared/panelStyles'
 import { SuggestionsList } from '@/components/studio/shared/SuggestionsList'
-import { OnboardingChecklist, type OnboardingStep } from '@/components/studio/shared/OnboardingChecklist'
 import {
     clearLegacyLayoutRatingStorage,
     getLayoutRatingStats,
@@ -281,6 +280,7 @@ export function ControlsPanel({
         setCtaUrl,
         setCtaUrlEnabled,
         setCustomStyle,
+        setApplyStyleToTypography,
         toggleBrandColor,
         removeBrandColor,
         addCustomColor,
@@ -458,34 +458,6 @@ export function ControlsPanel({
     const selectedLayoutRatingStats = state.selectedLayout
         ? getLayoutRatingStats(state.selectedLayout, layoutRatingStore)
         : null
-    const onboardingSteps: OnboardingStep[] = useMemo(() => [
-        { id: 'idea', label: 'Escribe tu idea principal en el prompt.', done: promptValue.trim().length > 0 },
-        { id: 'analyze', label: 'Pulsa Analizar para detectar intención y estructura.', done: Boolean(state.selectedIntent) },
-        { id: 'layout', label: 'Elige un diseño y un formato para la publicación.', done: Boolean(state.selectedLayout && state.selectedFormat) },
-        { id: 'generate', label: 'Genera tu primera imagen y revísala en el canvas.', done: Boolean(state.generatedImage) },
-    ], [promptValue, state.selectedIntent, state.selectedLayout, state.selectedFormat, state.generatedImage])
-    const reorientationSteps: OnboardingStep[] = useMemo(() => [
-        {
-            id: 'brand-assets',
-            label: 'Si ya tienes Brand Kit, añade referencia (imagen/logo) desde el panel.',
-            done: state.uploadedImages.length > 0 || state.selectedBrandKitImageIds.length > 0,
-        },
-        {
-            id: 'basic-analyze',
-            label: 'Mantén modo básico y pulsa Analizar antes de generar.',
-            done: Boolean(state.selectedIntent),
-        },
-        {
-            id: 'first-pass',
-            label: 'Genera una primera versión para abrir el ciclo de iteración.',
-            done: Boolean(state.generatedImage),
-        },
-        {
-            id: 'iterate',
-            label: 'Refina rápido desde abajo con “Realizar corrección” en vez de empezar de cero.',
-            done: Boolean(state.generatedImage && promptValue.trim().length > 0),
-        },
-    ], [state.uploadedImages.length, state.selectedBrandKitImageIds.length, state.selectedIntent, state.generatedImage, promptValue])
     const primaryEmail = useMemo(() => {
         const emails = (activeBrandKit as any)?.emails
         if (!Array.isArray(emails)) return ''
@@ -765,23 +737,6 @@ export function ControlsPanel({
                     </div>
                 </div>
 
-                <div className={STUDIO_PANEL_CARD_PADDED_CLASS}>
-                    <OnboardingChecklist
-                        storageKey="onboarding:image:welcome:v1"
-                        title="Primer resultado en 4 pasos"
-                        subtitle="Objetivo: tener una primera creatividad lista para iterar."
-                        steps={onboardingSteps}
-                    />
-                </div>
-                <div className={STUDIO_PANEL_CARD_PADDED_CLASS}>
-                    <OnboardingChecklist
-                        storageKey="onboarding:image:reorientation:v1"
-                        title="Ruta rápida (ya tengo Brand Kit)"
-                        subtitle="Si te pierdes en Imagen, sigue este orden para recuperar contexto rápido."
-                        steps={reorientationSteps}
-                    />
-                </div>
-
                 {/* STEP 1: Intent Input */}
                 <div ref={step1Ref} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3 relative group`}>
                     {(isMagicParsing || isGenerating) && (
@@ -961,6 +916,21 @@ export function ControlsPanel({
                                     error={null}
                                     visionAnalysis={state.visionAnalysis ?? null}
                                 />
+                                <div className="mt-4 rounded-xl border border-border/70 bg-background/65 px-3 py-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="space-y-1">
+                                            <p className="text-[12px] font-medium leading-none">Aplicar el estilo también a las fuentes</p>
+                                            <p className="text-[11px] leading-relaxed text-muted-foreground">
+                                                Si lo activas, el título y el párrafo heredan mejor el lenguaje visual del estilo. El párrafo seguirá siendo claro y legible.
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={Boolean(state.applyStyleToTypography)}
+                                            onCheckedChange={setApplyStyleToTypography}
+                                            aria-label="Aplicar el estilo también a las fuentes"
+                                        />
+                                    </div>
+                                </div>
                         </div>
 
                         {/* STEP 4B: STYLE */}
