@@ -916,21 +916,6 @@ export function ControlsPanel({
                                     error={null}
                                     visionAnalysis={state.visionAnalysis ?? null}
                                 />
-                                <div className="mt-4 rounded-xl border border-border/70 bg-background/65 px-3 py-3">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="space-y-1">
-                                            <p className="text-[12px] font-medium leading-none">Aplicar el estilo también a las fuentes</p>
-                                            <p className="text-[11px] leading-relaxed text-muted-foreground">
-                                                Si lo activas, el título y el párrafo heredan mejor el lenguaje visual del estilo. El párrafo seguirá siendo claro y legible.
-                                            </p>
-                                        </div>
-                                        <Switch
-                                            checked={Boolean(state.applyStyleToTypography)}
-                                            onCheckedChange={setApplyStyleToTypography}
-                                            aria-label="Aplicar el estilo también a las fuentes"
-                                        />
-                                    </div>
-                                </div>
                         </div>
 
                         {/* STEP 4B: STYLE */}
@@ -962,6 +947,21 @@ export function ControlsPanel({
                                     isAnalyzing={state.isAnalyzing || false}
                                     error={state.error}
                                 />
+                                <div className="mt-4 rounded-xl border border-border/70 bg-background/65 px-3 py-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="space-y-1">
+                                            <p className="text-[12px] font-medium leading-none">Aplicar el estilo también a las fuentes</p>
+                                            <p className="text-[11px] leading-relaxed text-muted-foreground">
+                                                Si lo activas, el título y el párrafo heredan mejor el lenguaje visual del estilo. El párrafo seguirá siendo claro y legible.
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            checked={Boolean(state.applyStyleToTypography)}
+                                            onCheckedChange={setApplyStyleToTypography}
+                                            aria-label="Aplicar el estilo también a las fuentes"
+                                        />
+                                    </div>
+                                </div>
                         </div>
 
                         {/* STEP 4C: AUXILIARY LOGOS */}
