@@ -20,6 +20,7 @@ import { PROMOCION_OFERTA_COMPOSITIONS } from "../src/lib/prompts/carousel/promo
 import { CHECKLIST_DIAGNOSTICO_COMPOSITIONS } from "../src/lib/prompts/carousel/checklist-diagnostico";
 import { PREGUNTAS_RESPUESTAS_COMPOSITIONS } from "../src/lib/prompts/carousel/preguntas-respuestas";
 import { COMUNICADO_OPERATIVO_COMPOSITIONS } from "../src/lib/prompts/carousel/comunicado-operativo";
+import { getCarouselCompositionRecommendation } from "../src/lib/carousel-composition-governance";
 
 const ADMIN_EMAILS = ["juanfranbrv@gmail.com"];
 const isAdmin = (email: string) => ADMIN_EMAILS.includes(email.toLowerCase());
@@ -81,10 +82,18 @@ export const seedDefaults = mutation({
         for (let i = 0; i < BASIC_CAROUSEL_TEMPLATES.length; i += 1) {
             const item = BASIC_CAROUSEL_TEMPLATES[i];
             if (!force && compositionIds.has(item.baseId)) continue;
-            await ctx.db.insert("carousel_compositions", {
+            const recommendation = getCarouselCompositionRecommendation({
                 composition_id: item.baseId,
+                name: item.name,
+                description: item.description,
+                layoutPrompt: item.layoutPrompt,
                 scope: "global",
                 mode: "basic",
+            });
+            await ctx.db.insert("carousel_compositions", {
+                composition_id: item.baseId,
+                scope: recommendation.suggestedScope,
+                mode: recommendation.suggestedMode,
                 name: item.name,
                 description: item.description,
                 layoutPrompt: item.layoutPrompt,
@@ -101,11 +110,20 @@ export const seedDefaults = mutation({
             for (let i = 0; i < list.length; i += 1) {
                 const comp = list[i];
                 if (!force && compositionIds.has(comp.id)) continue;
-                await ctx.db.insert("carousel_compositions", {
+                const recommendation = getCarouselCompositionRecommendation({
                     composition_id: comp.id,
                     structure_id: narrativeId,
+                    name: comp.name,
+                    description: comp.description,
+                    layoutPrompt: comp.layoutPrompt,
                     scope: "narrative",
                     mode: "basic",
+                });
+                await ctx.db.insert("carousel_compositions", {
+                    composition_id: comp.id,
+                    structure_id: recommendation.suggestedScope === "global" ? undefined : narrativeId,
+                    scope: recommendation.suggestedScope,
+                    mode: recommendation.suggestedMode,
                     name: comp.name,
                     description: comp.description,
                     layoutPrompt: comp.layoutPrompt,
@@ -118,5 +136,93 @@ export const seedDefaults = mutation({
         }
 
         return { success: true };
+    }
+});
+
+export const ensureDefaultsIfEmpty = mutation({
+    args: {},
+    handler: async (ctx) => {
+        const existingStructures = await ctx.db.query("carousel_structures").collect();
+        if (existingStructures.length > 0) {
+            return { seeded: false, reason: "already-present" as const };
+        }
+
+        for (let i = 0; i < NARRATIVE_CONTEXTS.length; i += 1) {
+            const ctxItem = NARRATIVE_CONTEXTS[i];
+            await ctx.db.insert("carousel_structures", {
+                structure_id: ctxItem.id,
+                name: ctxItem.name,
+                summary: ctxItem.summary,
+                tension: ctxItem.tension,
+                flow: ctxItem.flow,
+                proof: ctxItem.proof,
+                cta: ctxItem.cta,
+                order: i,
+                isActive: true,
+                created_at: new Date().toISOString()
+            });
+        }
+
+        for (let i = 0; i < BASIC_CAROUSEL_TEMPLATES.length; i += 1) {
+            const item = BASIC_CAROUSEL_TEMPLATES[i];
+            const recommendation = getCarouselCompositionRecommendation({
+                composition_id: item.baseId,
+                name: item.name,
+                description: item.description,
+                layoutPrompt: item.layoutPrompt,
+                scope: "global",
+                mode: "basic",
+            });
+            await ctx.db.insert("carousel_compositions", {
+                composition_id: item.baseId,
+                scope: recommendation.suggestedScope,
+                mode: recommendation.suggestedMode,
+                name: item.name,
+                description: item.description,
+                layoutPrompt: item.layoutPrompt,
+                iconPrompt: item.iconPrompt,
+                order: i,
+                isActive: true,
+                created_at: new Date().toISOString()
+            });
+        }
+
+        const narrativeIds = Object.keys(NARRATIVE_COMPOSITIONS);
+        let narrativeCompositionCount = 0;
+        for (const narrativeId of narrativeIds) {
+            const list = NARRATIVE_COMPOSITIONS[narrativeId] || [];
+            for (let i = 0; i < list.length; i += 1) {
+                const comp = list[i];
+                const recommendation = getCarouselCompositionRecommendation({
+                    composition_id: comp.id,
+                    structure_id: narrativeId,
+                    name: comp.name,
+                    description: comp.description,
+                    layoutPrompt: comp.layoutPrompt,
+                    scope: "narrative",
+                    mode: "basic",
+                });
+                await ctx.db.insert("carousel_compositions", {
+                    composition_id: comp.id,
+                    structure_id: recommendation.suggestedScope === "global" ? undefined : narrativeId,
+                    scope: recommendation.suggestedScope,
+                    mode: recommendation.suggestedMode,
+                    name: comp.name,
+                    description: comp.description,
+                    layoutPrompt: comp.layoutPrompt,
+                    iconPrompt: comp.iconPrompt,
+                    order: i,
+                    isActive: true,
+                    created_at: new Date().toISOString()
+                });
+                narrativeCompositionCount += 1;
+            }
+        }
+
+        return {
+            seeded: true,
+            structures: NARRATIVE_CONTEXTS.length,
+            compositions: BASIC_CAROUSEL_TEMPLATES.length + narrativeCompositionCount,
+        };
     }
 });

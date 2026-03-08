@@ -3,6 +3,13 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -10,7 +17,9 @@ import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePl
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import type { CarouselSuggestion, CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
-import { ImageReferenceSelector } from '@/components/studio/creation-flow/ImageReferenceSelector'
+import { ContentImageCard } from '@/components/studio/creation-flow/ContentImageCard'
+import { StyleImageCard } from '@/components/studio/creation-flow/StyleImageCard'
+import { AuxiliaryLogosCard } from '@/components/studio/creation-flow/AuxiliaryLogosCard'
 import { resizeImage } from '@/lib/image-utils'
 import { getAutomaticBasicComposition } from '@/lib/carousel-selection'
 import { CarouselCompositionSelector } from '@/components/studio/carousel/CarouselCompositionSelector'
@@ -28,7 +37,6 @@ import {
     STUDIO_PANEL_CARD_PADDED_LG_CLASS,
 } from '@/components/studio/shared/panelStyles'
 import { SuggestionsList } from '@/components/studio/shared/SuggestionsList'
-import { OnboardingChecklist, type OnboardingStep } from '@/components/studio/shared/OnboardingChecklist'
 
 export interface SlideConfig {
     index: number
@@ -50,6 +58,7 @@ export interface CarouselSettings {
     // Brand Kit Context
     selectedLogoUrl?: string
     selectedColors: { color: string; role: string }[]
+    selectedReferenceImages: Array<{ url: string; role: ReferenceImageRole }>
     selectedImageUrls: string[]
     includeLogoOnSlides: boolean
 }
@@ -71,6 +80,8 @@ type DbComposition = {
     name: string
     description: string
     layoutPrompt: string
+    icon?: string
+    iconPrompt?: string
     order: number
 }
 
@@ -86,6 +97,9 @@ type UiComposition = {
     name: string
     description: string
     layoutPrompt: string
+    icon?: string
+    iconPrompt?: string
+    scope: 'global' | 'narrative'
     mode: 'basic' | 'advanced'
     order: number
 }
@@ -93,6 +107,7 @@ type UiComposition = {
 interface CarouselControlsPanelProps {
     onAnalyze: (settings: CarouselSettings) => Promise<void>
     onGenerate: (settings: CarouselSettings) => void
+    onPreviewCompositionChange?: (state: { structureId: string; compositionId: string }) => void
     onCancelAnalyze?: () => void
     onCancelGenerate?: () => void
     isCancelingAnalyze?: boolean
@@ -118,8 +133,10 @@ interface CarouselControlsPanelProps {
     onSlideCountOverrideApplied?: () => void
     suggestions?: CarouselSuggestion[]
     onApplySuggestion?: (index: number) => void
+    onApplySlideVariant?: (slideIndex: number, sourceId: string) => void
     onUndoSuggestion?: () => void
     hasOriginalSuggestion?: boolean
+    slideVariantSelection?: string[]
     suggestedImagePrompts?: string[]
     analysisReady?: boolean
     onInvalidatePreview?: () => void
@@ -128,9 +145,12 @@ interface CarouselControlsPanelProps {
         selectedBrandKitImageIds: string[]
         referenceImageRoles: Record<string, ReferenceImageRole>
         imageSourceMode: 'upload' | 'brandkit' | 'generate'
+        selectedStylePresetId: string | null
+        selectedStylePresetImageUrl: string | null
     }) => void
     previewSlides?: CarouselSlide[]
     previewScriptSlides?: SlideContent[] | null
+    originalScriptSlides?: SlideContent[] | null
     previewCaption?: string
     previewCurrentIndex?: number
     previewSessionHistory?: Array<{
@@ -169,6 +189,8 @@ type CarouselWorkspaceSnapshot = {
     aiImageDescription: string
     aiStyleDirectives: string
     customStyle: string
+    selectedStylePresetId: string | null
+    selectedStylePresetName: string | null
     selectedLogoId: string | null
     selectedColors: SelectedColor[]
     selectedBrandKitImageIds: string[]
@@ -223,6 +245,7 @@ function pickCompositionId(
 export function CarouselControlsPanel({
     onAnalyze,
     onGenerate,
+    onPreviewCompositionChange,
     onCancelAnalyze,
     onCancelGenerate,
     isCancelingAnalyze = false,
@@ -247,14 +270,17 @@ export function CarouselControlsPanel({
     onSlideCountOverrideApplied,
     suggestions,
     onApplySuggestion,
+    onApplySlideVariant,
     onUndoSuggestion,
     hasOriginalSuggestion = false,
+    slideVariantSelection = [],
     suggestedImagePrompts = [],
     analysisReady = false,
     onInvalidatePreview,
     onReferencePreviewStateChange,
     previewSlides = [],
     previewScriptSlides = null,
+    originalScriptSlides = null,
     previewCaption,
     previewCurrentIndex = 0,
     previewSessionHistory = [],
@@ -280,6 +306,13 @@ export function CarouselControlsPanel({
             : 'skip'
     )
     const structuresData = useQuery(api.carousel.listStructures, { includeInactive: false }) as DbStructure[] | undefined
+    const stylePresetResults = useQuery(api.stylePresets.listActiveImages, {})
+    const stylePresets = (stylePresetResults || []) as Array<{
+        _id: string
+        name?: string
+        image_url: string
+    }>
+    const stylePresetsStatus: 'Exhausted' = 'Exhausted'
     const structures: UiStructure[] = (structuresData || [])
         .map((s) => ({ id: s.structure_id, name: s.name, summary: s.summary, order: s.order }))
         .sort((a, b) => a.order - b.order)
@@ -335,6 +368,9 @@ export function CarouselControlsPanel({
             name: c.name,
             description: c.description,
             layoutPrompt: c.layoutPrompt,
+            icon: c.icon,
+            iconPrompt: c.iconPrompt,
+            scope: (c.scope as 'global' | 'narrative') || 'narrative',
             mode: (c.mode as 'basic' | 'advanced') || 'basic',
             order: c.order
         }))
@@ -361,11 +397,21 @@ export function CarouselControlsPanel({
     const [aiImageDescription, setAiImageDescription] = useState('')
     const [styleAnalysisDescription, setStyleAnalysisDescription] = useState('')
     const [customStyle, setCustomStyle] = useState('')
+    const [selectedStylePresetId, setSelectedStylePresetId] = useState<string | null>(null)
+    const [selectedStylePresetName, setSelectedStylePresetName] = useState<string | null>(null)
     const [isImageAnalyzing, setIsImageAnalyzing] = useState(false)
     const [imageError, setImageError] = useState<string | null>(null)
+    const selectedStylePresetDetails = useQuery(
+        api.stylePresets.getActiveById,
+        selectedStylePresetId
+            ? { id: selectedStylePresetId as Id<'style_presets'> }
+            : 'skip'
+    )
     const styleAnalysisCacheRef = useRef<Record<string, string>>({})
     const lastAutoStyleRef = useRef<string | null>(null)
-    const [includeLogoOnSlides, setIncludeLogoOnSlides] = useState(true)
+    const pendingStylePresetSelectionRef = useRef<string | null>(null)
+    const [includeLogoOnSlides, setIncludeLogoOnSlides] = useState(false)
+    const [isAdvancedCompositionOpen, setIsAdvancedCompositionOpen] = useState(false)
     const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1)
     const [needsReanalysis, setNeedsReanalysis] = useState(false)
     const [lastAnalyzedSignature, setLastAnalyzedSignature] = useState('')
@@ -376,42 +422,11 @@ export function CarouselControlsPanel({
     const hasReferenceSelection = selectedImageCount > 0 || (imageSourceMode === 'generate' && aiImageDescription.trim().length > 0)
     const canGenerate = prompt.trim().length > 0 && slideCount > 0 && !isGenerating && !isImageAnalyzing && brandKit !== null && analysisReady
     const canAnalyze = prompt.trim().length > 0 && slideCount > 0 && !isAnalyzing && !isImageAnalyzing && !isGenerating && brandKit !== null
-    const canContinueFromImage = imageSourceMode !== 'generate' || Boolean(aiImageDescription.trim())
     const isPriority5StyleBlock = (value?: string) =>
         typeof value === 'string' && /STYLE DIRECTIVES:/i.test(value)
-    const visibleAiImageDescription = aiImageDescription
     const isStepVisible = (step: number) => showAllSteps || currentStep >= step
     const basicCompositions = compositions.filter((composition) => composition.mode === 'basic')
     const advancedCompositions = compositions
-    const onboardingSteps: OnboardingStep[] = useMemo(() => [
-        { id: 'slides', label: 'Define cuántas diapositivas tendrá tu carrusel.', done: slideCount > 0 },
-        { id: 'prompt', label: 'Escribe el objetivo del carrusel en el prompt.', done: prompt.trim().length > 0 },
-        { id: 'analyze', label: 'Pulsa Analizar para generar la estructura de contenido.', done: Boolean(analysisReady) },
-        { id: 'generate', label: 'Genera el carrusel y valida las primeras slides.', done: generatedCount > 0 || previewSlides.some((slide) => Boolean(slide.imageUrl)) },
-    ], [slideCount, prompt, analysisReady, generatedCount, previewSlides])
-    const reorientationSteps: OnboardingStep[] = useMemo(() => [
-        {
-            id: 'brand-source',
-            label: 'Usa referencias del Brand Kit o subida propia para evitar resultados genéricos.',
-            done: uploadedImages.length > 0 || selectedBrandKitImageIds.length > 0,
-        },
-        {
-            id: 'analyze-first',
-            label: 'Pulsa Analizar siempre antes de Generar para fijar estructura y composición.',
-            done: Boolean(analysisReady),
-        },
-        {
-            id: 'first-carousel',
-            label: 'Genera una primera pasada completa del carrusel.',
-            done: generatedCount > 0 || previewSlides.some((slide) => Boolean(slide.imageUrl)),
-        },
-        {
-            id: 'single-slide-iteration',
-            label: 'Si algo falla, regenera solo la slide necesaria desde el canvas.',
-            done: previewSlides.some((slide) => slide.status === 'done'),
-        },
-    ], [uploadedImages.length, selectedBrandKitImageIds.length, analysisReady, generatedCount, previewSlides])
-
     const buildSessionTitle = useCallback((value?: string | null) => {
         const cleaned = (value || '').replace(/\s+/g, ' ').trim()
         if (!cleaned) return 'Sesion nueva'
@@ -445,6 +460,8 @@ export function CarouselControlsPanel({
             aiImageDescription,
             aiStyleDirectives: styleAnalysisDescription,
             customStyle,
+            selectedStylePresetId,
+            selectedStylePresetName,
             selectedLogoId,
             selectedColors,
             selectedBrandKitImageIds,
@@ -503,6 +520,8 @@ export function CarouselControlsPanel({
         aiImageDescription,
         styleAnalysisDescription,
         customStyle,
+        selectedStylePresetId,
+        selectedStylePresetName,
         selectedLogoId,
         selectedColors,
         selectedBrandKitImageIds,
@@ -671,12 +690,14 @@ export function CarouselControlsPanel({
             setAiImageDescription(snapshot.aiImageDescription || '')
             setStyleAnalysisDescription(snapshot.aiStyleDirectives || '')
             setCustomStyle(snapshot.customStyle || '')
+            setSelectedStylePresetId(snapshot.selectedStylePresetId || null)
+            setSelectedStylePresetName(snapshot.selectedStylePresetName || null)
             setSelectedLogoId(snapshot.selectedLogoId || null)
             setSelectedColors(Array.isArray(snapshot.selectedColors) ? snapshot.selectedColors : [])
             setSelectedBrandKitImageIds(Array.isArray(snapshot.selectedBrandKitImageIds) ? snapshot.selectedBrandKitImageIds : [])
             setReferenceImageRoles(snapshot.referenceImageRoles || {})
             setUploadedImages(Array.isArray(snapshot.uploadedImages) ? snapshot.uploadedImages : [])
-            setIncludeLogoOnSlides(snapshot.includeLogoOnSlides !== false)
+            setIncludeLogoOnSlides(Boolean(snapshot.includeLogoOnSlides))
             const savedPreview = snapshot.previewState
             if (savedPreview && onRestorePreviewState) {
                 onRestorePreviewState({
@@ -965,6 +986,7 @@ export function CarouselControlsPanel({
             imageSourceMode: 'upload' | 'brandkit' | 'generate'
             aiImageDescription: string
             aiStyleDirectives: string
+            selectedStylePresetId: string | null
             includeLogoOnSlides: boolean
             selectedLogoId: string | null
             selectedColors: SelectedColor[]
@@ -984,6 +1006,7 @@ export function CarouselControlsPanel({
             imageSourceMode: partial?.imageSourceMode ?? imageSourceMode,
             aiImageDescription: (partial?.aiImageDescription ?? aiImageDescription).trim(),
             aiStyleDirectives: (partial?.aiStyleDirectives ?? styleAnalysisDescription).trim(),
+            selectedStylePresetId: partial?.selectedStylePresetId ?? selectedStylePresetId,
             includeLogoOnSlides: partial?.includeLogoOnSlides ?? includeLogoOnSlides,
             selectedLogoId: partial?.selectedLogoId ?? selectedLogoId,
             selectedColors: (partial?.selectedColors ?? selectedColors).map(c => `${c.role}:${c.color}`).sort().join(','),
@@ -1004,13 +1027,79 @@ export function CarouselControlsPanel({
 
     // Get brand logos
     const brandLogos = brandKit?.logos || []
-    const primaryLogo = (typeof brandLogos[0] === 'string' ? brandLogos[0] : brandLogos[0]?.url) || brandKit?.logo_url
+    const resolveBrandLogoUrl = useCallback((logo: (typeof brandLogos)[number] | undefined) => {
+        if (!logo) return undefined
+        return typeof logo === 'string' ? logo : logo?.url
+    }, [])
+
+    const primaryLogoIndex = useMemo(() => {
+        if (!Array.isArray(brandLogos) || brandLogos.length === 0) return null
+
+        const explicitPrimaryUrl = (brandKit?.logo_url || '').trim()
+        if (explicitPrimaryUrl) {
+            const explicitMatchIndex = brandLogos.findIndex((logo) => resolveBrandLogoUrl(logo) === explicitPrimaryUrl)
+            if (explicitMatchIndex >= 0) return explicitMatchIndex
+        }
+
+        const selectedMatchIndex = brandLogos.findIndex((logo) => {
+            if (typeof logo === 'string') return false
+            return logo?.selected !== false
+        })
+        if (selectedMatchIndex >= 0) return selectedMatchIndex
+
+        return 0
+    }, [brandKit?.logo_url, brandLogos, resolveBrandLogoUrl])
+
+    const primaryLogo = useMemo(() => {
+        if (primaryLogoIndex !== null) {
+            return resolveBrandLogoUrl(brandLogos[primaryLogoIndex]) || brandKit?.logo_url
+        }
+        return brandKit?.logo_url
+    }, [brandKit?.logo_url, brandLogos, primaryLogoIndex, resolveBrandLogoUrl])
+
+    const slideVariantSources = useMemo(() => {
+        const originalSlides = Array.isArray(originalScriptSlides) && originalScriptSlides.length > 0
+            ? originalScriptSlides
+            : (Array.isArray(previewScriptSlides) ? previewScriptSlides : [])
+        if (originalSlides.length === 0) return []
+
+        return [
+            {
+                id: 'original',
+                label: 'Original',
+                tone: 'Base actual',
+                slides: originalSlides,
+            },
+            ...(Array.isArray(suggestions) ? suggestions : []).map((suggestion, index) => ({
+                id: `suggestion-${index}`,
+                label: suggestion.title,
+                tone: suggestion.subtitle,
+                slides: Array.isArray(suggestion.slides) ? suggestion.slides : [],
+            }))
+        ].filter((source) => source.slides.length > 0)
+    }, [originalScriptSlides, previewScriptSlides, suggestions])
 
     // Get brand colors
     const brandColors = (brandKit?.colors || []).filter(c => c.color)
 
     // Get brand images
     const brandImages = (brandKit?.images || []).filter(img => img.url)
+    const normalizedBrandImages = brandImages.map((img, idx) => ({
+        id: img.url,
+        url: img.url,
+        name: `Imagen ${idx + 1}`
+    }))
+    const normalizedBrandLogos = brandLogos
+        .map((logo, idx) => {
+            const url = typeof logo === 'string' ? logo : logo?.url
+            if (!url) return null
+            return {
+                id: `logo-${idx}`,
+                url,
+                name: typeof logo === 'string' ? `Logo ${idx + 1}` : logo.name || `Logo ${idx + 1}`
+            }
+        })
+        .filter((logo): logo is { id: string; url: string; name?: string } => Boolean(logo))
 
     const handleSlideCountChange = (delta: number) => {
         const newCount = Math.max(0, Math.min(15, slideCount + delta))
@@ -1051,10 +1140,35 @@ export function CarouselControlsPanel({
         markReanalysisNeeded()
     }
 
-    const handleCustomStyleChange = (value: string) => {
-        setCustomStyle(value)
+    const handleStylePresetChange = useCallback((preset: { id: string; name?: string } | null) => {
+        if (!preset) {
+            pendingStylePresetSelectionRef.current = null
+            setSelectedStylePresetId(null)
+            setSelectedStylePresetName(null)
+            markReanalysisNeeded()
+            return
+        }
+
+        const previousStyleIds = [...uploadedImages, ...selectedBrandKitImageIds].filter(
+            (id) => hasStyleRole(referenceImageRoles[id])
+        )
+        if (previousStyleIds.length > 0) {
+            setUploadedImages((prev) => prev.filter((id) => !previousStyleIds.includes(id)))
+            setSelectedBrandKitImageIds((prev) => prev.filter((id) => !previousStyleIds.includes(id)))
+        }
+
+        pendingStylePresetSelectionRef.current = preset.id
+        setReferenceImageRoles((prev) => {
+            const next = { ...prev }
+            previousStyleIds.forEach((id) => delete next[id])
+            return next
+        })
+        lastAutoStyleRef.current = null
+        setSelectedStylePresetId(preset.id)
+        setSelectedStylePresetName(preset.name || 'Estilo')
+        setImageError(null)
         markReanalysisNeeded()
-    }
+    }, [referenceImageRoles, selectedBrandKitImageIds, uploadedImages])
 
     const hasStyleRole = (role?: ReferenceImageRole) => role === 'style' || role === 'style_content'
     const findActiveStyleReference = (
@@ -1064,7 +1178,7 @@ export function CarouselControlsPanel({
     ) => [...uploadedIds, ...brandKitIds].find((id) => hasStyleRole(roles[id]))
 
     const analyzeStyleReference = async (imageRef: string) => {
-        if (!imageRef) return
+        if (!imageRef || pendingStylePresetSelectionRef.current) return
         const cached = styleAnalysisCacheRef.current[imageRef]
         if (cached) {
             setStyleAnalysisDescription(cached)
@@ -1099,61 +1213,10 @@ export function CarouselControlsPanel({
         }
     }
 
-    const hasActiveStyleRole = (
-        uploadedIds: string[],
-        brandKitIds: string[],
-        roles: Record<string, ReferenceImageRole>,
-        excludeId?: string
-    ) => [...uploadedIds, ...brandKitIds].some((id) => id !== excludeId && hasStyleRole(roles[id]))
-
-    const hasUploadedStyleRole = (
-        uploadedIds: string[],
-        roles: Record<string, ReferenceImageRole>,
-        excludeId?: string
-    ) => uploadedIds.some((id) => id !== excludeId && hasStyleRole(roles[id]))
-
-    const getDefaultRoleForNewImage = (
-        uploadedIds: string[],
-        brandKitIds: string[],
-        roles: Record<string, ReferenceImageRole>
-    ): ReferenceImageRole => (
-        hasActiveStyleRole(uploadedIds, brandKitIds, roles)
-            ? (imageSourceMode === 'generate' ? 'logo' : 'content')
-            : 'style'
-    )
+    const getDefaultRoleForNewImage = (): ReferenceImageRole => 'content'
 
     const handleImageSourceModeChange = (mode: 'upload' | 'brandkit' | 'generate') => {
         setImageSourceMode(mode)
-        setReferenceImageRoles((prev) => {
-            const selectedIds = [...uploadedImages, ...selectedBrandKitImageIds]
-            if (selectedIds.length === 0) return prev
-            const next = { ...prev }
-            let styleAssigned = false
-
-            selectedIds.forEach((id) => {
-                let role = next[id]
-                if (!role) {
-                    role = styleAssigned ? (mode === 'generate' ? 'logo' : 'content') : 'style'
-                }
-
-                if (mode === 'generate' && (role === 'content' || role === 'style_content')) {
-                    role = 'style'
-                }
-
-                if (hasStyleRole(role)) {
-                    if (!styleAssigned) {
-                        role = 'style'
-                        styleAssigned = true
-                    } else {
-                        role = mode === 'generate' ? 'logo' : 'content'
-                    }
-                }
-
-                next[id] = role
-            })
-
-            return next
-        })
         markReanalysisNeeded()
     }
 
@@ -1180,6 +1243,8 @@ export function CarouselControlsPanel({
         setAiImageDescription('')
         setStyleAnalysisDescription('')
         setCustomStyle('')
+        setSelectedStylePresetId(null)
+        setSelectedStylePresetName(null)
         setImageError(null)
         styleAnalysisCacheRef.current = {}
         lastAutoStyleRef.current = null
@@ -1207,13 +1272,13 @@ export function CarouselControlsPanel({
             setSelectedColors([])
         }
 
-        // 2. Initialize Logo - Always default to first logo when switching brands
+        // 2. Initialize Logo - Follow the primary logo defined in Brand Kit
         if (brandKit.logos && brandKit.logos.length > 0) {
-            setSelectedLogoId('logo-0')
+            setSelectedLogoId(primaryLogoIndex !== null ? `logo-${primaryLogoIndex}` : null)
         }
 
         setLastInitBrandId(currentBrandId)
-    }, [brandKit, lastInitBrandId, activeWorkSession, hasHydratedSession])
+    }, [brandKit, lastInitBrandId, activeWorkSession, hasHydratedSession, primaryLogoIndex])
 
     useEffect(() => {
         if (!onReferenceImagesChange) return
@@ -1223,6 +1288,20 @@ export function CarouselControlsPanel({
     }, [uploadedImages, selectedBrandKitImageIds, onReferenceImagesChange])
 
     useEffect(() => {
+        if (!selectedStylePresetDetails?.analysis) return
+        if (!selectedStylePresetId) return
+
+        const priority5Block = buildPriority5StyleBlockFromAnalysis(selectedStylePresetDetails.analysis as VisionAnalysis)
+        if (!priority5Block) return
+
+        pendingStylePresetSelectionRef.current = null
+        lastAutoStyleRef.current = null
+        setStyleAnalysisDescription(priority5Block)
+        setImageError(null)
+    }, [selectedStylePresetDetails, selectedStylePresetId])
+
+    useEffect(() => {
+        if (selectedStylePresetId || pendingStylePresetSelectionRef.current) return
         const activeStyleRef = findActiveStyleReference(
             uploadedImages,
             selectedBrandKitImageIds,
@@ -1241,20 +1320,32 @@ export function CarouselControlsPanel({
 
         lastAutoStyleRef.current = activeStyleRef
         void analyzeStyleReference(activeStyleRef)
-    }, [uploadedImages, selectedBrandKitImageIds, referenceImageRoles])
+    }, [uploadedImages, selectedBrandKitImageIds, referenceImageRoles, selectedStylePresetId])
 
     useEffect(() => {
+        const selectedPresetPreview =
+            (selectedStylePresetId
+                ? stylePresets.find((preset) => preset._id === selectedStylePresetId)?.image_url
+                : null)
+            || selectedStylePresetDetails?.image_url
+            || null
+
         onReferencePreviewStateChange?.({
             uploadedImages,
             selectedBrandKitImageIds,
             referenceImageRoles,
-            imageSourceMode
+            imageSourceMode,
+            selectedStylePresetId,
+            selectedStylePresetImageUrl: selectedPresetPreview
         })
     }, [
         uploadedImages,
         selectedBrandKitImageIds,
         referenceImageRoles,
         imageSourceMode,
+        selectedStylePresetId,
+        selectedStylePresetDetails,
+        stylePresets,
         onReferencePreviewStateChange
     ])
 
@@ -1307,6 +1398,11 @@ export function CarouselControlsPanel({
             setCompositionId(autoId)
         }
     }, [compositionMode, structureId, compositionId, prompt, slideCount, compositions])
+
+    useEffect(() => {
+        if (!structureId || !compositionId) return
+        onPreviewCompositionChange?.({ structureId, compositionId })
+    }, [structureId, compositionId, onPreviewCompositionChange])
 
     useEffect(() => {
         if (showAllSteps) {
@@ -1465,7 +1561,7 @@ export function CarouselControlsPanel({
         markReanalysisNeeded()
     }
 
-    const toggleBrandKitImage = (id: string) => {
+    const toggleBrandKitImage = (id: string, roleHint: ReferenceImageRole = 'content') => {
         setSelectedBrandKitImageIds((prev) => {
             if (prev.includes(id)) {
                 setReferenceImageRoles((prevRoles) => {
@@ -1479,9 +1575,7 @@ export function CarouselControlsPanel({
             const nextBrandKit = [...prev, id]
             setReferenceImageRoles((prevRoles) => {
                 const next = { ...prevRoles }
-                if (!next[id]) {
-                    next[id] = getDefaultRoleForNewImage(uploadedImages, nextBrandKit, next)
-                }
+                next[id] = roleHint
                 return next
             })
             return nextBrandKit
@@ -1489,7 +1583,7 @@ export function CarouselControlsPanel({
         markReanalysisNeeded()
     }
 
-    const handleUploadImage = async (file: File) => {
+    const handleUploadImage = async (file: File, roleHint?: ReferenceImageRole) => {
         const maxTotal = 10
         const totalSelected = uploadedImages.length + selectedBrandKitImageIds.length
         if (totalSelected >= maxTotal) return
@@ -1507,9 +1601,7 @@ export function CarouselControlsPanel({
                 const nextUploaded = [...prev, base64]
                 setReferenceImageRoles((prevRoles) => {
                     const next = { ...prevRoles }
-                    if (!next[base64]) {
-                        next[base64] = getDefaultRoleForNewImage(nextUploaded, selectedBrandKitImageIds, next)
-                    }
+                    next[base64] = roleHint || getDefaultRoleForNewImage()
                     return next
                 })
                 return nextUploaded
@@ -1552,44 +1644,81 @@ export function CarouselControlsPanel({
     }
 
     const setReferenceImageRole = (imageId: string, role: ReferenceImageRole) => {
-        setReferenceImageRoles((prev) => {
-            const isSelected = uploadedImages.includes(imageId) || selectedBrandKitImageIds.includes(imageId)
-            if (!isSelected) return prev
+        const isStyleSelection = role === 'style' || role === 'style_content'
+        const normalizedRole: ReferenceImageRole = isStyleSelection ? 'style' : role
 
-            const next = { ...prev }
-            const isTargetUpload = uploadedImages.includes(imageId)
-            const isTargetBrandKit = selectedBrandKitImageIds.includes(imageId)
-            let safeRole: ReferenceImageRole =
-                imageSourceMode === 'generate' && (role === 'content' || role === 'style_content')
-                    ? 'style'
-                    : role
+        if (isStyleSelection) {
+            const previousStyleIds = [...uploadedImages, ...selectedBrandKitImageIds].filter(
+                (id) => id !== imageId && hasStyleRole(referenceImageRoles[id])
+            )
 
-            if (
-                isTargetBrandKit &&
-                hasStyleRole(safeRole) &&
-                hasUploadedStyleRole(uploadedImages, next, imageId)
-            ) {
-                safeRole = imageSourceMode === 'generate'
-                    ? 'logo'
-                    : (hasStyleRole(next[imageId]) ? 'content' : (next[imageId] || 'content'))
+            if (previousStyleIds.length > 0) {
+                setUploadedImages((prev) => prev.filter((id) => !previousStyleIds.includes(id)))
+                setSelectedBrandKitImageIds((prev) => prev.filter((id) => !previousStyleIds.includes(id)))
             }
+        }
 
-            if (hasStyleRole(safeRole)) {
-                ;[...uploadedImages, ...selectedBrandKitImageIds].forEach((id) => {
+        setReferenceImageRoles((prev) => {
+            const next = { ...prev }
+
+            if (isStyleSelection) {
+                Object.keys(next).forEach((id) => {
                     if (id === imageId) return
-                    if (!hasStyleRole(next[id])) return
-                    const isOtherUpload = uploadedImages.includes(id)
-                    if (isTargetBrandKit && isOtherUpload) return
-                    if (isTargetUpload || !isOtherUpload) {
-                        next[id] = imageSourceMode === 'generate' ? 'logo' : 'content'
+                    if (hasStyleRole(next[id])) {
+                        delete next[id]
                     }
                 })
             }
 
-            next[imageId] = safeRole
+            next[imageId] = normalizedRole
             return next
         })
+
+        if (isStyleSelection) {
+            pendingStylePresetSelectionRef.current = null
+            setSelectedStylePresetId(null)
+            setSelectedStylePresetName(null)
+        }
         markReanalysisNeeded()
+    }
+
+    const handleContentUpload = (file: File) => {
+        return handleUploadImage(file, 'content')
+    }
+
+    const handleStyleUpload = (file: File) => {
+        return handleUploadImage(file, 'style')
+    }
+
+    const handleAuxLogoUpload = (file: File) => {
+        return handleUploadImage(file, 'logo')
+    }
+
+    const toggleBrandKitContentImage = (id: string) => {
+        toggleBrandKitImage(id, 'content')
+    }
+
+    const toggleBrandKitStyleImage = (id: string) => {
+        const isSelected = selectedBrandKitImageIds.includes(id)
+        if (!isSelected) {
+            const previousStyleIds = [...uploadedImages, ...selectedBrandKitImageIds].filter(
+                (currentId) => hasStyleRole(referenceImageRoles[currentId])
+            )
+            if (previousStyleIds.length > 0) {
+                setUploadedImages((prev) => prev.filter((currentId) => !previousStyleIds.includes(currentId)))
+                setSelectedBrandKitImageIds((prev) => prev.filter((currentId) => !previousStyleIds.includes(currentId)))
+                setReferenceImageRoles((prev) => {
+                    const next = { ...prev }
+                    previousStyleIds.forEach((currentId) => delete next[currentId])
+                    return next
+                })
+            }
+        }
+        toggleBrandKitImage(id, 'style')
+    }
+
+    const toggleBrandKitAuxLogo = (id: string) => {
+        toggleBrandKitImage(id, 'logo')
     }
 
     const handleEditSlide = (index: number) => {
@@ -1611,7 +1740,6 @@ export function CarouselControlsPanel({
     }
 
     const resolveSelectedLogoUrl = () => {
-        if (!includeLogoOnSlides) return undefined
         if (!selectedLogoId) return primaryLogo
         const match = selectedLogoId.match(/^logo-(\d+)$/)
         if (match) {
@@ -1626,7 +1754,7 @@ export function CarouselControlsPanel({
     useEffect(() => {
         if (!onSelectedLogoChange) return
         onSelectedLogoChange(selectedLogoId, resolveSelectedLogoUrl())
-    }, [selectedLogoId, includeLogoOnSlides, brandLogos, primaryLogo, onSelectedLogoChange])
+    }, [selectedLogoId, brandLogos, primaryLogo, onSelectedLogoChange])
 
     const buildSettings = (overrides: Partial<CarouselSettings> = {}) => {
         const promptValue = overrides.prompt ?? prompt
@@ -1643,12 +1771,25 @@ export function CarouselControlsPanel({
             ? slides
             : Array.from({ length: slideCountValue }, (_, i) => slides[i] || { index: i })
 
-        const selectedImageUrls =
-            imageSourceMode === 'upload'
-                ? uploadedImages
-                : imageSourceMode === 'brandkit'
-                    ? selectedBrandKitImageIds
-                    : []
+        const allReferenceImageIds = [...uploadedImages, ...selectedBrandKitImageIds]
+        const selectedReferenceImages = allReferenceImageIds
+            .map((url) => ({
+                url,
+                role: referenceImageRoles[url] || 'content' as ReferenceImageRole
+            }))
+            .filter((item) => {
+                if (imageSourceMode === 'generate' && item.role === 'content') return false
+                return true
+            })
+            .sort((a, b) => {
+                const priority: Record<ReferenceImageRole, number> = {
+                    style: 0,
+                    style_content: 1,
+                    logo: 2,
+                    content: 3
+                }
+                return priority[a.role] - priority[b.role]
+            })
 
         const mergedStyleDirectives = mergeCustomStyleIntoStyleDirectives(
             styleAnalysisDescription,
@@ -1672,7 +1813,8 @@ export function CarouselControlsPanel({
                 color: c.color,
                 role: (c.role || 'Acento') as any
             })),
-            selectedImageUrls,
+            selectedReferenceImages,
+            selectedImageUrls: selectedReferenceImages.map((item) => item.url),
             includeLogoOnSlides
         }
         return { ...baseSettings, ...overrides }
@@ -1704,7 +1846,7 @@ export function CarouselControlsPanel({
         setCompositionMode('basic')
         setCompositionId('free')
         setBasicSelectedCompositionId(null)
-        setSelectedLogoId(brandLogos.length > 0 ? 'logo-0' : null)
+        setSelectedLogoId(primaryLogoIndex !== null ? `logo-${primaryLogoIndex}` : null)
         setSelectedColors([])
         setSelectedBrandKitImageIds([])
         setReferenceImageRoles({})
@@ -1713,7 +1855,9 @@ export function CarouselControlsPanel({
         setAiImageDescription('')
         setStyleAnalysisDescription('')
         setCustomStyle('')
-        setIncludeLogoOnSlides(true)
+        setSelectedStylePresetId(null)
+        setSelectedStylePresetName(null)
+        setIncludeLogoOnSlides(false)
         setNeedsReanalysis(false)
         setLastAnalyzedSignature('')
         setCurrentStep(1)
@@ -1832,23 +1976,6 @@ export function CarouselControlsPanel({
                     </div>
                 </div>
 
-                <div className={STUDIO_PANEL_CARD_PADDED_CLASS}>
-                    <OnboardingChecklist
-                        storageKey="onboarding:carousel:welcome:v1"
-                        title="Primer carrusel en 4 pasos"
-                        subtitle="Objetivo: sacar una primera versión lista para iterar."
-                        steps={onboardingSteps}
-                    />
-                </div>
-                <div className={STUDIO_PANEL_CARD_PADDED_CLASS}>
-                    <OnboardingChecklist
-                        storageKey="onboarding:carousel:reorientation:v1"
-                        title="Ruta rápida (ya tengo Brand Kit)"
-                        subtitle="Si te pierdes en Carrusel, sigue este orden y vuelve al flujo en segundos."
-                        steps={reorientationSteps}
-                    />
-                </div>
-
                 {/* Slide Count */}
                 {isStepVisible(1) && (
                 <div ref={(el) => { stepRefs.current[1] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
@@ -1937,6 +2064,169 @@ export function CarouselControlsPanel({
                         onApply={(index) => onApplySuggestion?.(index)}
                         onUndo={() => onUndoSuggestion?.()}
                     />
+                    {previewScriptSlides && previewScriptSlides.length > 0 && slideVariantSources.length > 1 && (
+                        <>
+                            <motion.div
+                                initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+                                animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                                transition={shouldReduceMotion ? undefined : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                                className="rounded-2xl border border-border/70 bg-gradient-to-br from-background via-background to-primary/5 p-3 shadow-sm"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="space-y-1">
+                                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                                            <Layers className="h-3 w-3" />
+                                            Composición avanzada
+                                        </div>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            Mezcla lo mejor de cada propuesta
+                                        </p>
+                                        <p className="text-[11px] leading-relaxed text-muted-foreground">
+                                            Abre un editor amplio para elegir la mejor versión de cada diapositiva sin pelearte con el panel lateral.
+                                        </p>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => setIsAdvancedCompositionOpen(true)}
+                                        className="h-8 rounded-full px-3 text-[11px]"
+                                    >
+                                        Abrir editor
+                                    </Button>
+                                </div>
+                            </motion.div>
+
+                            <Dialog open={isAdvancedCompositionOpen} onOpenChange={setIsAdvancedCompositionOpen}>
+                                <DialogContent className="grid h-[92vh] w-[calc(100vw-3rem)] max-w-[1600px] grid-rows-[auto,minmax(0,1fr),auto] overflow-hidden p-0 sm:!max-w-[1600px]">
+                                    <DialogHeader className="shrink-0 border-b border-border/70 bg-gradient-to-r from-background to-primary/5 px-6 py-5">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="space-y-2">
+                                                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                                                    <Layers className="h-3.5 w-3.5" />
+                                                    Composición avanzada
+                                                </div>
+                                                <DialogTitle className="text-xl font-semibold">
+                                                    Monta el carrusel slide a slide
+                                                </DialogTitle>
+                                                <DialogDescription className="max-w-3xl text-sm leading-relaxed">
+                                                    Cada fila representa una diapositiva. En horizontal ves la opción original y todas las variantes disponibles para esa posición.
+                                                </DialogDescription>
+                                            </div>
+                                            {hasOriginalSuggestion && onUndoSuggestion && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={onUndoSuggestion}
+                                                    className="h-9 rounded-full px-4 text-[11px]"
+                                                >
+                                                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                                                    Volver al original
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </DialogHeader>
+
+                                    <div className="min-h-0 overflow-y-auto px-8 py-6">
+                                        <div className="space-y-4">
+                                            {previewScriptSlides.map((slide, slideIndex) => {
+                                                const selectedSource = slideVariantSelection[slideIndex] || 'original'
+                                                return (
+                                                    <div
+                                                        key={`variant-row-modal-${slideIndex}`}
+                                                        className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                                                    >
+                                                        <div className="mb-3 flex items-center justify-between gap-3">
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-primary/12 px-2 text-sm font-bold text-primary">
+                                                                    {slideIndex + 1}
+                                                                </span>
+                                                                <div>
+                                                                    <p className="text-sm font-semibold text-foreground">
+                                                                        {slide.role === 'hook' ? 'Hook' : slide.role === 'cta' ? 'Cierre / CTA' : `Slide ${slideIndex + 1}`}
+                                                                    </p>
+                                                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                                                        Activa: {slideVariantSources.find((source) => source.id === selectedSource)?.label || 'Original'}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <span className="rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                                                                {slideVariantSources.length} variantes
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                                                {slideVariantSources.map((source) => {
+                                                                    const candidate = source.slides[slideIndex]
+                                                                    if (!candidate) return null
+                                                                    const isSelected = selectedSource === source.id
+                                                                    return (
+                                                                        <button
+                                                                            key={`${source.id}-${slideIndex}`}
+                                                                            type="button"
+                                                                            onClick={() => onApplySlideVariant?.(slideIndex, source.id)}
+                                                                            className={cn(
+                                                                                "group min-h-[220px] w-full rounded-2xl border p-4 text-left transition-all duration-200",
+                                                                                isSelected
+                                                                                    ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/20"
+                                                                                    : "border-border/70 bg-muted/30 hover:border-primary/40 hover:bg-primary/5"
+                                                                            )}
+                                                                        >
+                                                                            <div className="flex items-start justify-between gap-2">
+                                                                                <div>
+                                                                                    <p className="text-xs font-semibold text-foreground">
+                                                                                        {source.label}
+                                                                                    </p>
+                                                                                    <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
+                                                                                        {source.tone}
+                                                                                    </p>
+                                                                                </div>
+                                                                                {isSelected && (
+                                                                                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                                                                                        ✓
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="mt-3 space-y-2">
+                                                                                <p className="line-clamp-2 text-base font-semibold leading-tight text-foreground">
+                                                                                    {candidate.title || 'Sin título'}
+                                                                                </p>
+                                                                                <p className="line-clamp-5 text-[12px] leading-relaxed text-muted-foreground">
+                                                                                    {candidate.description || 'Sin descripción'}
+                                                                                </p>
+                                                                            </div>
+                                                                        </button>
+                                                                    )
+                                                                })}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-background/95 px-6 py-4">
+                                        <p className="text-[11px] leading-relaxed text-muted-foreground">
+                                            Los cambios se aplican al instante mientras eliges variantes.
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() => setIsAdvancedCompositionOpen(false)}
+                                                className="h-9 rounded-full px-4 text-[11px]"
+                                            >
+                                                Seguir editando después
+                                            </Button>
+                                            <Button
+                                                onClick={() => setIsAdvancedCompositionOpen(false)}
+                                                className="h-9 rounded-full px-4 text-[11px]"
+                                            >
+                                                Usar esta composición
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </>
+                    )}
                 </div>
                 )}
 
@@ -2015,12 +2305,9 @@ export function CarouselControlsPanel({
                             </p>
                         </>
                     ) : (
-                        <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 space-y-1.5">
+                        <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
                             <p className="text-[11px] text-primary font-medium leading-relaxed">
-                                Modo basico activo. El sistema selecciona internamente el diseño mas adecuado segun tu prompt, con criterio determinista (no azar puro), sin mostrarlo al usuario final.
-                            </p>
-                            <p className="text-[11px] text-primary/80 leading-relaxed">
-                                La arquitectura se asigna en segundo plano y se mantiene consistente durante todo el carrusel.
+                                Modo básico activo: el diseño se selecciona automáticamente según lo que escribas. Activa el modo avanzado si quieres más control.
                             </p>
                         </div>
                     )}
@@ -2092,141 +2379,150 @@ export function CarouselControlsPanel({
 
                 {/* Image */}
                 {isStepVisible(5) && (
-                <div ref={(el) => { stepRefs.current[5] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                    <SectionHeader icon={ImagePlus} title="Imagen de Referencia" />
-                    <ImageReferenceSelector
-                        uploadedImages={uploadedImages}
-                        visionAnalysis={null}
-                        isAnalyzing={isImageAnalyzing}
-                        error={imageError}
-                        onUpload={handleUploadImage}
-                        onRemoveUploadedImage={removeUploadedImage}
-                        onClearUploadedImages={clearUploadedImages}
-                        brandKitImages={brandImages.map((img, idx) => ({
-                            id: img.url,
-                            url: img.url,
-                            name: `Imagen ${idx + 1}`
-                        }))}
-                        selectedBrandKitImageIds={selectedBrandKitImageIds}
-                        onToggleBrandKitImage={toggleBrandKitImage}
-                        onClearBrandKitImages={clearBrandKitImages}
-                        aiImageDescription={visibleAiImageDescription}
-                        onAiDescriptionChange={handleAiDescriptionChange}
-                        suggestedImagePrompts={suggestedImagePrompts}
-                        referenceImageRoles={referenceImageRoles}
-                        onReferenceRoleChange={setReferenceImageRole}
-                        customStyle={customStyle}
-                        onCustomStyleChange={handleCustomStyleChange}
-                        mode={imageSourceMode}
-                        onModeChange={handleImageSourceModeChange}
-                    />
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                        Sube una referencia o usa una del Brand Kit.
-                    </p>
-                    {!showAllSteps && !hasReferenceSelection && (
-                        <div className="flex justify-end">
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => setCurrentStep(6)}
-                                className="h-7 text-xs"
-                                disabled={!canContinueFromImage}
-                            >
-                                Siguiente, Logo
-                            </Button>
-                        </div>
-                    )}
-                </div>
-                )}
-
-                {/* Logo */}
-                {isStepVisible(6) && (
-                <div ref={(el) => { stepRefs.current[6] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-4`}>
-                    <SectionHeader icon={Fingerprint} title="Logo" />
-                    {brandLogos.length > 0 || primaryLogo ? (
-                        <>
-                            <BrandingConfigurator
-                                selectedLayout={null}
-                                selectedLogoId={selectedLogoId}
-                                selectedBrandColors={[]}
-                                onSelectLogo={handleSelectLogo}
-                                onToggleBrandColor={() => { }}
-                                onAddCustomColor={() => { }}
-                                showLogo={true}
-                                showColors={false}
-                                showTypography={false}
-                                showBrandTexts={false}
-                                rawMessage={prompt}
-                                debugLabel="Carousel-Logo"
+                    <>
+                        <div ref={(el) => { stepRefs.current[5] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                            <SectionHeader
+                                icon={ImagePlus}
+                                title={imageSourceMode === 'generate' ? 'Contenido generado por IA' : 'Contenido del usuario'}
+                                extra={(
+                                    <Switch
+                                        checked={imageSourceMode === 'generate'}
+                                        onCheckedChange={(checked) => handleImageSourceModeChange(checked ? 'generate' : 'upload')}
+                                    />
+                                )}
                             />
-                            <div className="flex items-center justify-between pt-1">
-                                <div className="space-y-0.5">
-                                    <p className="text-sm font-medium">Aplicar logo en todas</p>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        setIncludeLogoOnSlides(!includeLogoOnSlides)
-                                        markReanalysisNeeded()
-                                    }}
-                                    className={cn(
-                                        "w-10 h-6 rounded-full transition-colors",
-                                        includeLogoOnSlides ? "bg-primary" : "bg-muted"
-                                    )}
-                                >
-                                    <div className={cn(
-                                        "w-4 h-4 rounded-full bg-white transition-transform mx-1",
-                                        includeLogoOnSlides ? "translate-x-4" : "translate-x-0"
-                                    )} />
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <p className="text-xs text-muted-foreground">No hay logo en tu Brand Kit.</p>
-                    )}
-                    {!showAllSteps && (
-                        <div className="flex justify-end">
-                            <Button size="sm" variant="secondary" onClick={() => setCurrentStep(7)} className="h-7 text-xs">
-                                Siguiente, Colores
-                            </Button>
+                            <ContentImageCard
+                                mode={imageSourceMode}
+                                onModeChange={handleImageSourceModeChange}
+                                uploadedImages={uploadedImages}
+                                onUpload={handleContentUpload}
+                                onRemoveUploadedImage={removeUploadedImage}
+                                onClearUploadedImages={clearUploadedImages}
+                                brandKitImages={normalizedBrandImages}
+                                selectedBrandKitImageIds={selectedBrandKitImageIds}
+                                onToggleBrandKitImage={toggleBrandKitContentImage}
+                                onClearBrandKitImages={clearBrandKitImages}
+                                referenceImageRoles={referenceImageRoles}
+                                onReferenceRoleChange={setReferenceImageRole}
+                                aiImageDescription={aiImageDescription}
+                                onAiDescriptionChange={handleAiDescriptionChange}
+                                suggestedImagePrompts={suggestedImagePrompts}
+                                isAnalyzing={isImageAnalyzing}
+                                error={imageError}
+                                visionAnalysis={null}
+                            />
                         </div>
-                    )}
-                </div>
-                )}
 
-                {isStepVisible(7) && (
-                <div ref={(el) => { stepRefs.current[7] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                    <SectionHeader
-                        icon={Palette}
-                        title="Colores"
-                        extra={(
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={refreshBrandColorsFromKit}
-                                className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
-                            >
-                                <RotateCcw className="w-3 h-3" />
-                                Recargar
-                            </Button>
-                        )}
-                    />
-                    <BrandingConfigurator
-                        selectedLayout={null}
-                        selectedLogoId={null}
-                        selectedBrandColors={selectedColors}
-                        onSelectLogo={() => { }}
-                        onToggleBrandColor={toggleColor}
-                        onRemoveBrandColor={handleRemoveBrandColor}
-                        onAddCustomColor={handleAddCustomColor}
-                        showLogo={false}
-                        showColors={true}
-                        showTypography={false}
-                        showBrandTexts={false}
-                        rawMessage={prompt}
-                        debugLabel="Carousel-Colors"
-                        onlyShowSelectedColors={true}
-                    />
-                </div>
+                        <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                            <SectionHeader icon={Palette} title="Estilo" />
+                            <StyleImageCard
+                                uploadedImages={uploadedImages}
+                                onUpload={handleStyleUpload}
+                                onRemoveUploadedImage={removeUploadedImage}
+                                brandKitImages={normalizedBrandImages}
+                                selectedBrandKitImageIds={selectedBrandKitImageIds}
+                                onToggleBrandKitImage={toggleBrandKitStyleImage}
+                                referenceImageRoles={referenceImageRoles}
+                                onReferenceRoleChange={setReferenceImageRole}
+                                stylePresets={stylePresets}
+                                stylePresetsStatus={stylePresetsStatus}
+                                selectedStylePresetId={selectedStylePresetId}
+                                selectedStylePresetName={selectedStylePresetName}
+                                onSelectStylePreset={handleStylePresetChange}
+                                isAnalyzing={isImageAnalyzing}
+                                error={imageError}
+                            />
+                        </div>
+
+                        <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                            <AuxiliaryLogosCard
+                                uploadedImages={uploadedImages}
+                                onUpload={handleAuxLogoUpload}
+                                onRemoveUploadedImage={removeUploadedImage}
+                                brandKitImages={normalizedBrandImages}
+                                brandKitLogos={normalizedBrandLogos}
+                                selectedBrandKitImageIds={selectedBrandKitImageIds}
+                                onToggleBrandKitImage={toggleBrandKitAuxLogo}
+                                referenceImageRoles={referenceImageRoles}
+                                onReferenceRoleChange={setReferenceImageRole}
+                            />
+                        </div>
+
+                        <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-6`}>
+                            <SectionHeader icon={Fingerprint} title="Kit de marca" />
+
+                            <div className="space-y-3">
+                                <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Logo</p>
+                                <BrandingConfigurator
+                                    selectedLayout={null}
+                                    selectedLogoId={selectedLogoId}
+                                    selectedBrandColors={[]}
+                                    onSelectLogo={handleSelectLogo}
+                                    onToggleBrandColor={() => { }}
+                                    onAddCustomColor={() => { }}
+                                    showLogo={true}
+                                    showColors={false}
+                                    showTypography={false}
+                                    showBrandTexts={false}
+                                    rawMessage={prompt}
+                                    debugLabel="Carousel-Logo"
+                                />
+                                {(brandLogos.length > 0 || primaryLogo) && (
+                                    <div className="flex items-center justify-between pt-1">
+                                        <div className="space-y-0.5">
+                                            <p className="text-sm font-medium">Aplicar logo en todas</p>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setIncludeLogoOnSlides(!includeLogoOnSlides)
+                                                markReanalysisNeeded()
+                                            }}
+                                            className={cn(
+                                                'w-10 h-6 rounded-full transition-colors',
+                                                includeLogoOnSlides ? 'bg-primary' : 'bg-muted'
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                'w-4 h-4 rounded-full bg-white transition-transform mx-1',
+                                                includeLogoOnSlides ? 'translate-x-4' : 'translate-x-0'
+                                            )} />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-3 border-t border-border/60 pt-4">
+                                <div className="flex items-center justify-between gap-2">
+                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Colores</p>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={refreshBrandColorsFromKit}
+                                        className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                                    >
+                                        <RotateCcw className="w-3 h-3" />
+                                        Recargar
+                                    </Button>
+                                </div>
+                                <BrandingConfigurator
+                                    selectedLayout={null}
+                                    selectedLogoId={null}
+                                    selectedBrandColors={selectedColors}
+                                    onSelectLogo={() => { }}
+                                    onToggleBrandColor={toggleColor}
+                                    onRemoveBrandColor={handleRemoveBrandColor}
+                                    onAddCustomColor={handleAddCustomColor}
+                                    showLogo={false}
+                                    showColors={true}
+                                    showTypography={false}
+                                    showBrandTexts={false}
+                                    rawMessage={prompt}
+                                    debugLabel="Carousel-Colors"
+                                    onlyShowSelectedColors={true}
+                                />
+                            </div>
+                        </div>
+                    </>
                 )}
             </div>
 

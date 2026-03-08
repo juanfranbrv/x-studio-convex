@@ -1,5 +1,6 @@
 ﻿import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getCarouselCompositionRecommendation } from "../src/lib/carousel-composition-governance";
 
 const ADMIN_EMAILS = ["juanfranbrv@gmail.com"];
 const isAdmin = (email: string) => ADMIN_EMAILS.includes(email.toLowerCase());
@@ -73,6 +74,7 @@ export const updateStructure = mutation({
     handler: async (ctx, args) => {
         if (!isAdmin(args.admin_email)) throw new Error("Unauthorized");
         const { admin_email, id, ...patch } = args;
+        void admin_email;
         return await ctx.db.patch(id, { ...patch, updated_at: new Date().toISOString() });
     }
 });
@@ -143,7 +145,56 @@ export const updateComposition = mutation({
     handler: async (ctx, args) => {
         if (!isAdmin(args.admin_email)) throw new Error("Unauthorized");
         const { admin_email, id, ...patch } = args;
+        void admin_email;
         return await ctx.db.patch(id, { ...patch, updated_at: new Date().toISOString() });
+    }
+});
+
+export const applyAutomaticCompositionClassification = mutation({
+    args: { admin_email: v.string() },
+    handler: async (ctx, args) => {
+        if (!isAdmin(args.admin_email)) throw new Error("Unauthorized");
+
+        const rows = await ctx.db.query("carousel_compositions").collect();
+        let updated = 0;
+        let modeChanges = 0;
+        let scopeChanges = 0;
+
+        for (const row of rows) {
+            const recommendation = getCarouselCompositionRecommendation({
+                composition_id: row.composition_id,
+                name: row.name,
+                description: row.description,
+                layoutPrompt: row.layoutPrompt,
+                scope: row.scope,
+                mode: row.mode,
+                structure_id: row.structure_id,
+                isActive: row.isActive,
+            });
+
+            if (!recommendation.shouldChangeAnything) continue;
+
+            const nextScope = recommendation.suggestedScope;
+            const nextMode = recommendation.suggestedMode;
+
+            await ctx.db.patch(row._id, {
+                mode: nextMode,
+                scope: nextScope,
+                structure_id: nextScope === "global" ? undefined : row.structure_id,
+                updated_at: new Date().toISOString()
+            });
+
+            updated += 1;
+            if (row.mode !== nextMode) modeChanges += 1;
+            if (row.scope !== nextScope) scopeChanges += 1;
+        }
+
+        return {
+            total: rows.length,
+            updated,
+            modeChanges,
+            scopeChanges
+        };
     }
 });
 

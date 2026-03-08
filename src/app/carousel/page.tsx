@@ -21,7 +21,7 @@ import {
     CarouselSuggestion
 } from '@/app/actions/generate-carousel'
 import { parseLazyIntentAction } from '@/app/actions/parse-intent'
-import { useQuery } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { INTENT_CATALOG } from '@/lib/creation-flow-types'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
@@ -29,24 +29,58 @@ import type { DebugPromptData, ReferenceImageRole, VisionAnalysis } from '@/lib/
 import { buildCarouselImagePrompt } from '@/lib/prompts/carousel-image'
 import { buildCarouselBrandContext } from '@/lib/carousel-brand-context'
 import { extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
-
-const createAuditFlowId = (prefix: string) =>
-    `flow_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+import { resolveCarouselCompositionIcon } from '@/lib/carousel-composition-icon'
 import { buildPriority5StyleBlockFromAnalysis, mergeCustomStyleIntoStyleDirectives } from '@/lib/prompts/vision/style-priority-block'
+import { detectLanguageFromParts } from '@/lib/language-detection'
 import { log } from '@/lib/logger'
 import { FeedbackButton } from '@/components/studio/FeedbackButton'
 import { cn } from '@/lib/utils'
 import { Id } from '../../../convex/_generated/dataModel'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { getCarouselCompositionRecommendation } from '@/lib/carousel-composition-governance'
+import { Sparkles, Layers3, Power, Wand2 } from 'lucide-react'
+
+const createAuditFlowId = (prefix: string) =>
+    `flow_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+
+const shouldApplyPrimaryLogoToSlide = (
+    selectedLogoUrl: string | undefined,
+    includeLogoOnSlides: boolean | undefined,
+    slideIndex: number,
+    totalSlides: number
+) => {
+    if (!selectedLogoUrl) return false
+    if (includeLogoOnSlides !== false) return true
+    return slideIndex === Math.max(0, totalSlides - 1)
+}
+
+const getDebugReferenceWeight = (
+    role: ReferenceImageRole,
+    hasLayoutConsistencyRef: boolean
+) => {
+    if (role === 'logo') return 0.75
+    if (role === 'style' || role === 'style_content') {
+        return hasLayoutConsistencyRef ? 0.2 : 0.55
+    }
+    return hasLayoutConsistencyRef ? 0.34 : 0.92
+}
 
 export default function CarouselPage() {
     const router = useRouter()
     const { user } = useUser()
+    const isAdmin = user?.emailAddresses?.some(
+        email => email.emailAddress === 'juanfranbrv@gmail.com'
+    ) ?? false
     const { activeBrandKit, brandKits, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const { toast } = useToast()
     const { panelPosition } = useUI()
     const aiConfig = useQuery(api.settings.getAIConfig)
+    const carouselStructures = useQuery(api.carousel.listStructures, { includeInactive: false })
+    const ensureCarouselDefaults = useMutation(api.carouselSeed.ensureDefaultsIfEmpty)
+    const updateCarouselComposition = useMutation(api.carouselAdmin.updateComposition)
+    const hasTriggeredCarouselSeedRef = useRef(false)
 
     useEffect(() => {
         document.title = 'X Carrusel | Motor de Diseño Inteligente'
@@ -58,6 +92,18 @@ export default function CarouselPage() {
         window.addEventListener('resize', checkMobile)
         return () => window.removeEventListener('resize', checkMobile)
     }, [])
+
+    useEffect(() => {
+        if (!Array.isArray(carouselStructures)) return
+        if (carouselStructures.length > 0) return
+        if (hasTriggeredCarouselSeedRef.current) return
+
+        hasTriggeredCarouselSeedRef.current = true
+        void ensureCarouselDefaults({}).catch((error) => {
+            hasTriggeredCarouselSeedRef.current = false
+            log.warn('CAROUSEL', 'Auto-seed on page load failed', error)
+        })
+    }, [carouselStructures, ensureCarouselDefaults])
 
     const handleNewBrandKit = () => {
         router.push('/brand-kit/new')
@@ -72,12 +118,35 @@ export default function CarouselPage() {
     const [slides, setSlides] = useState<CarouselSlide[]>([])
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('4:5')
     const [carouselSettings, setCarouselSettings] = useState<CarouselSettings | null>(null)
+    const [previewCompositionState, setPreviewCompositionState] = useState<{
+        structureId: string | null
+        compositionId: string | null
+    }>({
+        structureId: null,
+        compositionId: null
+    })
     const compositionsForDebug = useQuery(
         api.carousel.listCompositions,
-        carouselSettings?.structureId
-            ? { structureId: carouselSettings.structureId, includeInactive: false, includeGlobals: true }
+        (previewCompositionState.structureId || carouselSettings?.structureId)
+            ? {
+                structureId: previewCompositionState.structureId || carouselSettings?.structureId || '',
+                includeInactive: Boolean(isAdmin),
+                includeGlobals: true
+            }
             : 'skip'
-    ) as Array<{ composition_id: string; name: string; description: string; layoutPrompt: string }> | undefined
+    ) as Array<{
+        _id: Id<'carousel_compositions'>
+        composition_id: string
+        name: string
+        description: string
+        layoutPrompt: string
+        icon?: string
+        iconPrompt?: string
+        scope: string
+        mode: string
+        structure_id?: string
+        isActive: boolean
+    }> | undefined
     const [scriptSlides, setScriptSlides] = useState<SlideContent[] | null>(null)
     const [scriptPrompt, setScriptPrompt] = useState('')
     const [scriptSlideCount, setScriptSlideCount] = useState<number | null>(null)
@@ -93,17 +162,22 @@ export default function CarouselPage() {
         selectedBrandKitImageIds: string[]
         referenceImageRoles: Record<string, ReferenceImageRole>
         imageSourceMode: 'upload' | 'brandkit' | 'generate'
+        selectedStylePresetId: string | null
+        selectedStylePresetImageUrl: string | null
     }>({
         uploadedImages: [],
         selectedBrandKitImageIds: [],
         referenceImageRoles: {},
-        imageSourceMode: 'upload'
+        imageSourceMode: 'upload',
+        selectedStylePresetId: null,
+        selectedStylePresetImageUrl: null
     })
     const [selectedLogoUrl, setSelectedLogoUrl] = useState<string | undefined>(undefined)
     const [showDebugModal, setShowDebugModal] = useState(false)
     const [debugPromptData, setDebugPromptData] = useState<DebugPromptData | null>(null)
     const [pendingGenerateSettings, setPendingGenerateSettings] = useState<CarouselSettings | null>(null)
     const [suggestions, setSuggestions] = useState<CarouselSuggestion[]>([])
+    const [slideVariantSelection, setSlideVariantSelection] = useState<string[]>([])
     const [imagePromptSuggestions, setImagePromptSuggestions] = useState<string[]>([])
     const [sessionHistory, setSessionHistory] = useState<Array<{
         id: string
@@ -128,6 +202,12 @@ export default function CarouselPage() {
         suggestedSlideCount?: number
     }>({ open: false, title: '', message: '' })
     const [slideCountOverride, setSlideCountOverride] = useState<number | null>(null)
+    const selectedStylePresetDetails = useQuery(
+        api.stylePresets.getActiveById,
+        referencePreviewState.selectedStylePresetId
+            ? { id: referencePreviewState.selectedStylePresetId as Id<'style_presets'> }
+            : 'skip'
+    )
     const cancelGenerationRef = useRef(false)
     const cancelAnalyzeRef = useRef(false)
     const styleAnalysisCacheRef = useRef<Record<string, string>>({})
@@ -138,10 +218,6 @@ export default function CarouselPage() {
         }
         return currentCreationFlowIdRef.current
     }, [])
-
-    const isAdmin = user?.emailAddresses?.some(
-        email => email.emailAddress === 'juanfranbrv@gmail.com'
-    ) ?? false
 
     const analysisIntentLabel = useMemo(() => {
         if (!analysisIntent) return undefined
@@ -345,7 +421,7 @@ export default function CarouselPage() {
             .toLowerCase()
     }, [])
 
-    const handleUpdateSlideScript = useCallback((index: number, updates: { title?: string; description?: string }) => {
+    const handleUpdateSlideScript = useCallback((index: number, updates: { title?: string; description?: string; visualPrompt?: string; mustKeepFacts?: string[] }) => {
         setSlides(prev => prev.map(s => s.index === index ? { ...s, ...updates } : s))
         setScriptSlides(prev => prev ? prev.map(s => s.index === index ? { ...s, ...updates } : s) : prev)
     }, [])
@@ -368,6 +444,7 @@ export default function CarouselPage() {
         setAspectRatio(settings.aspectRatio)
         setCarouselSettings(settings)
         setSuggestions([])
+        setSlideVariantSelection([])
         setOriginalAnalysis(null)
 
         try {
@@ -418,6 +495,7 @@ export default function CarouselPage() {
                 status: 'pending' as const
             }))
             setSlides(mappedSlides)
+            setSlideVariantSelection(Array.from({ length: result.slides.length }, () => 'original'))
             const nextSuggestions = Array.isArray(result.suggestions) ? result.suggestions : []
             const originalSignature = fingerprintSlides(result.slides)
             const filteredSuggestions = nextSuggestions.filter((suggestion) => {
@@ -499,6 +577,10 @@ export default function CarouselPage() {
     }, [toast])
 
     const resolveStyleReferenceImageUrl = useCallback((settings: CarouselSettings): string | undefined => {
+        if (referencePreviewState.selectedStylePresetImageUrl) {
+            return referencePreviewState.selectedStylePresetImageUrl
+        }
+
         const allSelectedReferences = [
             ...(referencePreviewState.uploadedImages || []),
             ...(referencePreviewState.selectedBrandKitImageIds || []),
@@ -512,11 +594,31 @@ export default function CarouselPage() {
             if (styleCandidate) return styleCandidate
         }
 
-        const fallbackFromSettings = (settings.selectedImageUrls || [])[0]
+        const fallbackFromSettings = settings.selectedReferenceImages?.find((item) =>
+            item.role === 'style' || item.role === 'style_content'
+        )?.url || (settings.selectedImageUrls || [])[0]
         return fallbackFromSettings
-    }, [referencePreviewState.referenceImageRoles, referencePreviewState.selectedBrandKitImageIds, referencePreviewState.uploadedImages])
+    }, [
+        referencePreviewState.referenceImageRoles,
+        referencePreviewState.selectedBrandKitImageIds,
+        referencePreviewState.selectedStylePresetImageUrl,
+        referencePreviewState.uploadedImages
+    ])
 
     const ensureStyleAnalysisInSettings = useCallback(async (settings: CarouselSettings, auditFlowId?: string): Promise<CarouselSettings> => {
+        if (referencePreviewState.selectedStylePresetId && selectedStylePresetDetails?.analysis) {
+            const presetStyleBlock = buildPriority5StyleBlockFromAnalysis(selectedStylePresetDetails.analysis as VisionAnalysis)
+            if (presetStyleBlock) {
+                return {
+                    ...settings,
+                    aiStyleDirectives: mergeCustomStyleIntoStyleDirectives(
+                        presetStyleBlock,
+                        settings.customStyleText?.trim() || ''
+                    ),
+                }
+            }
+        }
+
         const styleReferenceUrl = resolveStyleReferenceImageUrl(settings)
         if (!styleReferenceUrl) {
             return settings
@@ -561,7 +663,97 @@ export default function CarouselPage() {
             log.warn('CAROUSEL', 'Style analysis fallback failed', error)
             return settings
         }
-    }, [resolveStyleReferenceImageUrl])
+    }, [referencePreviewState.selectedStylePresetId, resolveStyleReferenceImageUrl, selectedStylePresetDetails])
+
+    const previewReferenceImages = useMemo(() => {
+        const baseImages = [...referenceImages]
+        const presetUrl = referencePreviewState.selectedStylePresetImageUrl
+        if (!presetUrl) return baseImages
+        if (baseImages.some((item) => item.url === presetUrl)) return baseImages
+        return [...baseImages, { url: presetUrl, source: 'preset' as const }]
+    }, [referenceImages, referencePreviewState.selectedStylePresetImageUrl])
+
+    const previewReferenceImageRoles = useMemo(() => {
+        const nextRoles = { ...referencePreviewState.referenceImageRoles }
+        const presetUrl = referencePreviewState.selectedStylePresetImageUrl
+        if (referencePreviewState.selectedStylePresetId && presetUrl) {
+            nextRoles[presetUrl] = 'style'
+        }
+        return nextRoles
+    }, [
+        referencePreviewState.referenceImageRoles,
+        referencePreviewState.selectedStylePresetId,
+        referencePreviewState.selectedStylePresetImageUrl
+    ])
+
+    const compositionGhostIcon = useMemo(() => {
+        const activeCompositionId = previewCompositionState.compositionId || carouselSettings?.compositionId
+        if (!activeCompositionId) return null
+
+        const composition = compositionsForDebug?.find((item) => item.composition_id === activeCompositionId)
+        if (composition) {
+            return resolveCarouselCompositionIcon({
+                id: composition.composition_id,
+                name: composition.name,
+                description: composition.description,
+                layoutPrompt: composition.layoutPrompt,
+                icon: composition.icon,
+                iconPrompt: composition.iconPrompt,
+            })
+        }
+
+        return resolveCarouselCompositionIcon({ id: activeCompositionId })
+    }, [previewCompositionState.compositionId, carouselSettings?.compositionId, compositionsForDebug])
+
+    const activeComposition = useMemo(() => {
+        const activeCompositionId = previewCompositionState.compositionId || carouselSettings?.compositionId
+        if (!activeCompositionId) return null
+        return compositionsForDebug?.find((item) => item.composition_id === activeCompositionId) || null
+    }, [previewCompositionState.compositionId, carouselSettings?.compositionId, compositionsForDebug])
+
+    const activeCompositionRecommendation = useMemo(() => {
+        if (!activeComposition) return null
+        return getCarouselCompositionRecommendation(activeComposition)
+    }, [activeComposition])
+
+    const handleAdminCompositionPatch = useCallback(async (patch: {
+        mode?: 'basic' | 'advanced'
+        scope?: 'global' | 'narrative'
+        isActive?: boolean
+    }) => {
+        if (!isAdmin || !activeComposition) return
+        try {
+            await updateCarouselComposition({
+                admin_email: 'juanfranbrv@gmail.com',
+                id: activeComposition._id,
+                mode: patch.mode,
+                scope: patch.scope,
+                structure_id: patch.scope === 'global'
+                    ? undefined
+                    : (activeComposition.structure_id || carouselSettings?.structureId || undefined),
+                isActive: patch.isActive
+            })
+
+            toast({
+                title: 'Composición actualizada',
+                description: `${activeComposition.name} se ha actualizado en el catálogo.`
+            })
+        } catch (error) {
+            toast({
+                title: 'No se pudo actualizar la composición',
+                description: error instanceof Error ? error.message : 'Inténtalo de nuevo.',
+                variant: 'destructive'
+            })
+        }
+    }, [activeComposition, carouselSettings?.structureId, isAdmin, toast, updateCarouselComposition])
+
+    const handleApplyAutomaticRecommendation = useCallback(async () => {
+        if (!activeComposition || !activeCompositionRecommendation) return
+        await handleAdminCompositionPatch({
+            mode: activeCompositionRecommendation.suggestedMode,
+            scope: activeCompositionRecommendation.suggestedScope
+        })
+    }, [activeComposition, activeCompositionRecommendation, handleAdminCompositionPatch])
 
     const handleAnalyze = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
@@ -602,6 +794,7 @@ export default function CarouselPage() {
         setAnalysisHook(suggestion.hook)
         setAnalysisStructure(suggestion.structure)
         setAnalysisIntent(suggestion.detectedIntent)
+        setSlideVariantSelection(Array.from({ length: suggestion.slides.length }, () => `suggestion-${index}`))
         if (!isCaptionLocked) {
             setCaption(suggestion.caption || '')
         }
@@ -620,6 +813,7 @@ export default function CarouselPage() {
         setAnalysisHook(originalAnalysis.hook)
         setAnalysisStructure(originalAnalysis.structure)
         setAnalysisIntent(originalAnalysis.detectedIntent)
+        setSlideVariantSelection(Array.from({ length: originalAnalysis.scriptSlides.length }, () => 'original'))
         if (!isCaptionLocked) {
             setCaption(originalAnalysis.caption || '')
         }
@@ -628,6 +822,45 @@ export default function CarouselPage() {
             description: 'Se ha vuelto al contenido original.'
         })
     }, [buildAiImageSuggestions, originalAnalysis, isCaptionLocked, toast])
+
+    const applySlideVariant = useCallback((slideIndex: number, sourceId: string) => {
+        const baseSlides = originalAnalysis?.scriptSlides || scriptSlides
+        if (!baseSlides || baseSlides.length === 0) return
+
+        const getSourceSlides = (id: string) => {
+            if (id === 'original') return originalAnalysis?.scriptSlides || baseSlides
+            const match = id.match(/^suggestion-(\d+)$/)
+            if (!match) return null
+            const suggestion = suggestions[Number(match[1])]
+            return suggestion?.slides || null
+        }
+
+        const nextSelection = Array.from({ length: baseSlides.length }, (_, index) =>
+            index === slideIndex ? sourceId : (slideVariantSelection[index] || 'original')
+        )
+
+        const remixedSlides = baseSlides.map((fallbackSlide, index) => {
+            const sourceSlides = getSourceSlides(nextSelection[index])
+            const sourceSlide = sourceSlides?.[index]
+            return sourceSlide ? { ...sourceSlide, index } : { ...fallbackSlide, index }
+        })
+
+        setSlideVariantSelection(nextSelection)
+        setScriptSlides(remixedSlides)
+        setSlides(remixedSlides.map((slide) => ({
+            index: slide.index,
+            title: slide.title,
+            description: slide.description,
+            status: 'pending' as const
+        })))
+        setScriptSlideCount(remixedSlides.length)
+        setImagePromptSuggestions(buildAiImageSuggestions(remixedSlides, suggestions.map((suggestion) => suggestion.slides)))
+
+        toast({
+            title: 'Slide ensamblada',
+            description: 'El carrusel se ha recompuesto con tu mezcla de variantes.'
+        })
+    }, [originalAnalysis, scriptSlides, suggestions, slideVariantSelection, buildAiImageSuggestions, toast])
 
     const handleRegenerateCaption = useCallback(async () => {
         if (!carouselSettings || !activeBrandKit) return
@@ -764,12 +997,20 @@ export default function CarouselPage() {
                 if (i > 0 && generatedImageUrls[i - 1]) {
                     consistencyRefUrls.push(generatedImageUrls[i - 1])
                 }
-                const selectedLogoUrl = settings.includeLogoOnSlides ? settings.selectedLogoUrl : undefined
+                const selectedLogoUrl = shouldApplyPrimaryLogoToSlide(
+                    settings.selectedLogoUrl,
+                    settings.includeLogoOnSlides,
+                    i,
+                    totalSlides
+                )
+                    ? settings.selectedLogoUrl
+                    : undefined
 
                 const result = await regenerateSlideAction(
                     i,
                     slideContent,
                     totalSlides,
+                    settings.prompt,
                     settings.style,
                     settings.aspectRatio,
                     activeBrandKit,
@@ -779,6 +1020,7 @@ export default function CarouselPage() {
                     settings.compositionId,
                     settings.structureId,
                     settings.aiStyleDirectives,
+                    settings.selectedReferenceImages,
                     settings.selectedImageUrls,
                     consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined,
                     generationAuditFlowId
@@ -826,7 +1068,6 @@ export default function CarouselPage() {
                     description: 'Se canceló la generación del carrusel.'
                 })
             } else {
-                setCurrentSlideIndex(0)
                 if (doneCount > 0) {
                     setSessionHistory((prev) => [
                         {
@@ -941,11 +1182,20 @@ export default function CarouselPage() {
         const slideDebug = slidesForPrompt.map((slide, idx) => {
             const currentMood = getMoodForSlide(idx, slideCount)
             const isLastSlide = idx === slideCount - 1
+            const hasLayoutConsistencyRef = idx > 0
             const urlPattern = /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+\.(?:com|es|org|net|io|co)[^\s]*)/i
             const urlMatch = slide.description?.match(urlPattern)
             const extractedUrl = urlMatch ? urlMatch[0] : undefined
             const brandUrl = activeBrandKit?.url?.trim()
             const finalUrl = brandUrl || extractedUrl
+            const includePrimaryLogo = shouldApplyPrimaryLogoToSlide(
+                settingsWithStyle.selectedLogoUrl,
+                settingsWithStyle.includeLogoOnSlides,
+                idx,
+                slideCount
+            )
+            const auxiliaryLogoCount = (settingsWithStyle.selectedReferenceImages || [])
+                .filter((item) => item.role === 'logo').length
             const prompt = buildFinalPrompt({
                 composition: resolvedCompositionPreset as any,
                 brandColors,
@@ -954,26 +1204,42 @@ export default function CarouselPage() {
                 currentSlide: idx + 1,
                 totalSlides: slideCount,
                 logoPosition: extractLogoPosition(resolvedCompositionPreset?.layoutPrompt || ''),
-                includeLogo: Boolean(settingsWithStyle.selectedLogoUrl),
+                includeLogo: includePrimaryLogo,
+                includeAuxiliaryLogos: includePrimaryLogo && auxiliaryLogoCount > 0,
+                auxiliaryLogoCount,
                 isSequentialSlide: idx > 0,
                 ctaText: isLastSlide ? (slide.title || 'Más info') : undefined,
                 ctaUrl: isLastSlide ? finalUrl : undefined,
                 visualAnalysis: settingsWithStyle?.aiStyleDirectives,
+                language: detectLanguageFromParts(
+                    [
+                        settingsWithStyle.prompt,
+                        slide.title,
+                        slide.description,
+                        slide.visualPrompt
+                    ],
+                    activeBrandKit?.preferred_language || 'es'
+                ),
                 fonts: activeBrandKit?.fonts as any
             })
 
             // Build references array
             const references: Array<{ type: string; label: string; weight: number; url: string }> = []
-            if (settingsWithStyle.selectedImageUrls?.[0]) {
+            settingsWithStyle.selectedReferenceImages?.forEach((item, refIndex) => {
+                if (item.role === 'logo' && !includePrimaryLogo) return
+                const shortUrl = item.url.length > 50 ? `${item.url.substring(0, 50)}...` : item.url
                 references.push({
-                    type: 'image',
-                    label: 'Master Layout Structure',
-                    weight: 0.8,
-                    url: settingsWithStyle.selectedImageUrls[0].length > 50
-                        ? settingsWithStyle.selectedImageUrls[0].substring(0, 50) + '...'
-                        : settingsWithStyle.selectedImageUrls[0]
+                    type: item.role === 'logo' ? 'aux_logo' : 'image',
+                    label:
+                        item.role === 'style' || item.role === 'style_content'
+                            ? 'Referencia de estilo'
+                            : item.role === 'logo'
+                                ? `Logo auxiliar ${refIndex + 1} (solo junto al principal)`
+                                : `Referencia ${refIndex + 1}`,
+                    weight: getDebugReferenceWeight(item.role, hasLayoutConsistencyRef),
+                    url: shortUrl
                 })
-            }
+            })
             if (idx > 0) {
                 references.push({
                     type: 'image',
@@ -982,7 +1248,7 @@ export default function CarouselPage() {
                     url: '(Generated from Slide 1)'
                 })
             }
-            if (settingsWithStyle.selectedLogoUrl) {
+            if (includePrimaryLogo && settingsWithStyle.selectedLogoUrl) {
                 references.push({
                     type: 'logo',
                     label: 'Brand Logo',
@@ -1005,14 +1271,22 @@ export default function CarouselPage() {
             .map((s) => `--- SLIDE ${s.slideNumber} ---\n${s.prompt}`)
             .join('\n\n')
 
+        const showAuxiliaryLogosInDebug = Boolean(settingsWithStyle.selectedLogoUrl)
         const debugContextItems = [
-            ...(settingsWithStyle.selectedImageUrls || []).map((url, idx) => ({
+            ...(settingsWithStyle.selectedReferenceImages || [])
+                .filter((item) => item.role !== 'logo' || showAuxiliaryLogosInDebug)
+                .map((item, idx) => ({
                 id: `carousel-ref-${idx}`,
-                type: 'image',
-                label: `Referencia ${idx + 1}`,
-                url,
+                type: item.role === 'logo' ? 'aux_logo' : 'image',
+                label:
+                    item.role === 'style' || item.role === 'style_content'
+                        ? 'Referencia de estilo'
+                        : item.role === 'logo'
+                            ? `Logo auxiliar ${idx + 1} (solo junto al principal)`
+                            : `Referencia ${idx + 1}`,
+                url: item.url,
                 source: 'unknown' as const,
-                role: 'content' as const,
+                role: item.role,
             })),
             ...(settingsWithStyle.selectedLogoUrl ? [{
                 id: 'carousel-logo',
@@ -1043,7 +1317,7 @@ export default function CarouselPage() {
         setDebugPromptData({
             finalPrompt,
             logoUrl: settingsWithStyle.selectedLogoUrl,
-            attachedImages: settingsWithStyle.selectedImageUrls,
+            attachedImages: settingsWithStyle.selectedReferenceImages?.map((item) => item.url) || settingsWithStyle.selectedImageUrls,
             selectedStyles: [settingsWithStyle.style],
             platform: 'Instagram Carousel',
             format: settingsWithStyle.aspectRatio,
@@ -1096,7 +1370,14 @@ export default function CarouselPage() {
                 throw new Error('Missing image model configuration')
             }
 
-            const selectedLogoUrl = carouselSettings.includeLogoOnSlides ? carouselSettings.selectedLogoUrl : undefined
+            const selectedLogoUrl = shouldApplyPrimaryLogoToSlide(
+                carouselSettings.selectedLogoUrl,
+                carouselSettings.includeLogoOnSlides,
+                index,
+                slides.length
+            )
+                ? carouselSettings.selectedLogoUrl
+                : undefined
             const consistencyRefUrls: string[] = []
             const firstSlideImageUrl = slides[0]?.imageUrl
             if (index > 0 && firstSlideImageUrl) {
@@ -1111,6 +1392,7 @@ export default function CarouselPage() {
                 index,
                 slideContent,
                 slides.length,
+                carouselSettings.prompt,
                 carouselSettings.style,
                 carouselSettings.aspectRatio,
                 activeBrandKit,
@@ -1120,6 +1402,7 @@ export default function CarouselPage() {
                 carouselSettings.compositionId,
                 carouselSettings.structureId,
                 carouselSettings.aiStyleDirectives,
+                carouselSettings.selectedReferenceImages,
                 carouselSettings.selectedImageUrls,
                 consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined,
                 createAuditFlowId('carousel_regenerate')
@@ -1136,7 +1419,7 @@ export default function CarouselPage() {
                 }
                 setSlides(newSlides)
                 toast({
-                    title: 'âœ… Slide regenerado',
+                    title: 'Slide regenerado',
                     description: `Slide ${index + 1} actualizado.`
                 })
             } else {
@@ -1189,7 +1472,10 @@ export default function CarouselPage() {
                 index: s.index,
                 title: s.title || '',
                 description: s.description || '',
-                visualPrompt: s.description || ''
+                visualPrompt: s.description || '',
+                mustKeepFacts: Array.isArray((s as SlideContent).mustKeepFacts)
+                    ? (s as SlideContent).mustKeepFacts
+                    : []
             }))
         setScriptSlides(restoredScript)
         setScriptSlideCount(restoredScript.length)
@@ -1283,8 +1569,183 @@ export default function CarouselPage() {
             )}>
                 {/* Canvas + Caption */}
                 <div className="flex-1 flex flex-col min-h-0">
+                    {isAdmin && activeComposition && activeCompositionRecommendation && (
+                        <div className="shrink-0 px-4 pt-4 md:px-6">
+                            <details className="rounded-2xl border border-border/70 bg-background/90 shadow-sm backdrop-blur-sm" open>
+                                <summary className="cursor-pointer list-none p-3">
+                                    <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                                        <div className="space-y-2">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <Badge variant="outline" className="gap-1">
+                                                    <Sparkles className="h-3 w-3" />
+                                                    Admin composición
+                                                </Badge>
+                                                <Badge variant={activeComposition.isActive ? 'default' : 'destructive'}>
+                                                    {activeComposition.isActive ? 'Activa' : 'Inactiva'}
+                                                </Badge>
+                                                <span className="text-xs text-muted-foreground">Mostrar / ocultar</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium">{activeComposition.name}</p>
+                                                <p className="text-xs font-mono text-muted-foreground">{activeComposition.composition_id}</p>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                                <span>Ahora:</span>
+                                                <Badge variant="secondary">{activeComposition.mode}</Badge>
+                                                <Badge variant="outline">{activeComposition.scope}</Badge>
+                                                <span className="text-muted-foreground/70">→</span>
+                                                <span>Propuesta:</span>
+                                                <Badge
+                                                    variant={activeCompositionRecommendation.shouldChangeMode ? 'default' : 'secondary'}
+                                                >
+                                                    {activeCompositionRecommendation.suggestedMode}
+                                                </Badge>
+                                                <Badge
+                                                    variant={activeCompositionRecommendation.shouldChangeScope ? 'default' : 'outline'}
+                                                >
+                                                    {activeCompositionRecommendation.suggestedScope}
+                                                </Badge>
+                                                {!activeCompositionRecommendation.shouldChangeAnything && (
+                                                    <span>Sin cambio sugerido.</span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="text-xs leading-relaxed text-muted-foreground xl:max-w-md">
+                                            <p className="font-medium text-foreground">Qué estás viendo aquí</p>
+                                            <p>
+                                                Las etiquetas de `Ahora` son el estado guardado de la composición. Las de `Propuesta`
+                                                son solo la recomendación automática. No cambia nada hasta que pulses un botón.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </summary>
+
+                                <div className="border-t border-border/70 px-3 pb-3 pt-3">
+                                    <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
+                                        <div className="space-y-3">
+                                            <div className="rounded-xl border border-border bg-muted/20 p-3">
+                                                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                                    Estado actual
+                                                </p>
+                                                <p className="mt-2 text-sm text-muted-foreground">
+                                                    Esta composición está guardada ahora mismo como
+                                                    {' '}
+                                                    <span className="font-medium text-foreground">{activeComposition.mode}</span>
+                                                    {' + '}
+                                                    <span className="font-medium text-foreground">{activeComposition.scope}</span>
+                                                    .
+                                                </p>
+                                                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                                    `basic` entra en autoselección. `advanced` solo aparece al trabajar en modo avanzado.
+                                                    `global` puede reutilizarse en cualquier narrativa. `narrative` solo dentro de su narrativa.
+                                                </p>
+                                            </div>
+
+                                            <div className="rounded-xl border border-border bg-muted/20 p-3">
+                                                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                                    Propuesta automática
+                                                </p>
+                                                <p className="mt-2 text-sm text-muted-foreground">
+                                                    La heurística propone dejarla como
+                                                    {' '}
+                                                    <span className="font-medium text-foreground">{activeCompositionRecommendation.suggestedMode}</span>
+                                                    {' + '}
+                                                    <span className="font-medium text-foreground">{activeCompositionRecommendation.suggestedScope}</span>
+                                                    .
+                                                </p>
+                                                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                                    {activeCompositionRecommendation.reasoning.join(' ')}
+                                                </p>
+                                                <p className="mt-2 text-[11px] text-muted-foreground/80">
+                                                    Score: basic {activeCompositionRecommendation.scores.basic}
+                                                    {' · '}
+                                                    advanced {activeCompositionRecommendation.scores.advanced}
+                                                    {' · '}
+                                                    global {activeCompositionRecommendation.scores.global}
+                                                    {' · '}
+                                                    narrative {activeCompositionRecommendation.scores.narrative}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <div className="rounded-xl border border-border bg-muted/20 p-3">
+                                                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                                    Cambios manuales
+                                                </p>
+                                                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                                                    Estos botones cambian directamente el estado guardado de la composición activa.
+                                                </p>
+                                                <div className="mt-3 flex flex-wrap gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant={activeComposition.mode === 'basic' ? 'default' : 'outline'}
+                                                        onClick={() => void handleAdminCompositionPatch({ mode: 'basic' })}
+                                                    >
+                                                        Básico
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant={activeComposition.mode === 'advanced' ? 'default' : 'outline'}
+                                                        onClick={() => void handleAdminCompositionPatch({ mode: 'advanced' })}
+                                                    >
+                                                        Avanzado
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant={activeComposition.scope === 'global' ? 'default' : 'outline'}
+                                                        onClick={() => void handleAdminCompositionPatch({ scope: 'global' })}
+                                                    >
+                                                        <Layers3 className="mr-1 h-4 w-4" />
+                                                        Global
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant={activeComposition.scope === 'narrative' ? 'secondary' : 'outline'}
+                                                        onClick={() => void handleAdminCompositionPatch({ scope: 'narrative' })}
+                                                    >
+                                                        Narrativa actual
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant={activeComposition.isActive ? 'outline' : 'destructive'}
+                                                        onClick={() => void handleAdminCompositionPatch({ isActive: !activeComposition.isActive })}
+                                                    >
+                                                        <Power className="mr-1 h-4 w-4" />
+                                                        {activeComposition.isActive ? 'Desactivar' : 'Activar'}
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            <div className="rounded-xl border border-border bg-muted/20 p-3">
+                                                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                                    Atajo automático
+                                                </p>
+                                                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                                                    Este botón aplica exactamente la propuesta automática sobre la composición activa.
+                                                </p>
+                                                <Button
+                                                    size="sm"
+                                                    className="mt-3 w-full"
+                                                    disabled={!activeCompositionRecommendation.shouldChangeAnything}
+                                                    onClick={() => void handleApplyAutomaticRecommendation()}
+                                                >
+                                                    <Wand2 className="mr-1 h-4 w-4" />
+                                                    {activeCompositionRecommendation.shouldChangeAnything
+                                                        ? 'Aplicar sugerencia automática'
+                                                        : 'La composición ya coincide con la sugerencia'}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    )}
                     <CarouselCanvasPanel
                         slides={slides}
+                        scriptSlides={scriptSlides}
                         currentIndex={currentSlideIndex}
                         onSelectSlide={setCurrentSlideIndex}
                         onRegenerateSlide={handleRegenerateSlide}
@@ -1301,13 +1762,20 @@ export default function CarouselPage() {
                         isCaptionGenerating={isCaptionGenerating}
                         isCaptionLocked={isCaptionLocked}
                         onToggleCaptionLock={() => setIsCaptionLocked(!isCaptionLocked)}
-                        referenceImages={referenceImages}
-                        referenceImageRoles={referencePreviewState.referenceImageRoles}
+                        referenceImages={previewReferenceImages}
+                        referenceImageRoles={previewReferenceImageRoles}
                         referenceImageMode={referencePreviewState.imageSourceMode}
                         brandKitTexts={brandKitTexts}
                         brandName={activeBrandKit?.brand_name}
                         hook={analysisHook}
                         selectedLogoUrl={selectedLogoUrl}
+                        showPrimaryLogoOnCurrentSlide={shouldApplyPrimaryLogoToSlide(
+                            selectedLogoUrl,
+                            carouselSettings?.includeLogoOnSlides,
+                            currentSlideIndex,
+                            Math.max(slides.length, 1)
+                        )}
+                        compositionGhostIcon={compositionGhostIcon || undefined}
                         isAdmin={Boolean(isAdmin)}
                     />
                 </div>
@@ -1332,6 +1800,7 @@ export default function CarouselPage() {
                 <CarouselControlsPanel
                     onAnalyze={handleAnalyze}
                     onGenerate={handleGenerate}
+                    onPreviewCompositionChange={setPreviewCompositionState}
                     onCancelAnalyze={handleCancelAnalyze}
                     onCancelGenerate={handleCancelGenerate}
                     isCancelingAnalyze={isCancelingAnalyze}
@@ -1349,8 +1818,10 @@ export default function CarouselPage() {
                     brandKit={activeBrandKit}
                     suggestions={suggestions}
                     onApplySuggestion={applySuggestion}
+                    onApplySlideVariant={applySlideVariant}
                     onUndoSuggestion={undoSuggestion}
                     hasOriginalSuggestion={!!originalAnalysis}
+                    slideVariantSelection={slideVariantSelection}
                     suggestedImagePrompts={imagePromptSuggestions}
                     analysisHook={analysisHook}
                     analysisStructure={analysisStructure}
@@ -1364,6 +1835,7 @@ export default function CarouselPage() {
                     onReferencePreviewStateChange={setReferencePreviewState}
                     previewSlides={slides}
                     previewScriptSlides={scriptSlides}
+                    originalScriptSlides={originalAnalysis?.scriptSlides || scriptSlides}
                     previewCaption={caption}
                     previewCurrentIndex={currentSlideIndex}
                     previewSessionHistory={sessionHistory}
