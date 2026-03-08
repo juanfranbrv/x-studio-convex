@@ -115,6 +115,153 @@ function safeStableStringify(value: unknown): string {
   }
 }
 
+function normalizeSessionText(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function summarizeContext(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const row = item as Record<string, unknown>;
+      return {
+        type: normalizeSessionText(row.type),
+        value: normalizeSessionText(row.value),
+        label: normalizeSessionText(row.label),
+      };
+    })
+    .filter(Boolean);
+}
+
+function summarizeImageGenerations(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (!item || typeof item !== "object") return null;
+    const row = item as Record<string, unknown>;
+    return {
+      image: normalizeSessionText(row.image_storage_id) || normalizeSessionText(row.image_url),
+      preview: normalizeSessionText(row.preview_image_storage_id) || normalizeSessionText(row.preview_image_url),
+      original: normalizeSessionText(row.original_image_storage_id) || normalizeSessionText(row.original_image_url),
+      prompt: normalizeSessionText(row.prompt_used),
+      error: normalizeSessionText(row.error_title),
+    };
+  }).filter(Boolean);
+}
+
+function summarizeCarouselSlides(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (!item || typeof item !== "object") return null;
+    const row = item as Record<string, unknown>;
+    return {
+      index: typeof row.index === "number" ? row.index : null,
+      title: normalizeSessionText(row.title),
+      description: normalizeSessionText(row.description),
+      status: normalizeSessionText(row.status),
+      image: normalizeSessionText(row.image_storage_id) || normalizeSessionText(row.imageUrl),
+      preview: normalizeSessionText(row.image_preview_storage_id) || normalizeSessionText(row.imagePreviewUrl),
+      original: normalizeSessionText(row.image_original_storage_id) || normalizeSessionText(row.imageOriginalUrl),
+      error: normalizeSessionText(row.error),
+    };
+  }).filter(Boolean);
+}
+
+function summarizeCarouselScriptSlides(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (!item || typeof item !== "object") return null;
+    const row = item as Record<string, unknown>;
+    return {
+      index: typeof row.index === "number" ? row.index : null,
+      title: normalizeSessionText(row.title),
+      description: normalizeSessionText(row.description),
+      visualPrompt: normalizeSessionText(row.visualPrompt),
+    };
+  }).filter(Boolean);
+}
+
+function summarizeSessionHistory(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (!item || typeof item !== "object") return null;
+    const row = item as Record<string, unknown>;
+    return {
+      caption: normalizeSessionText(row.caption),
+      slides: summarizeCarouselSlides(row.slides),
+    };
+  }).filter(Boolean);
+}
+
+function buildSessionFingerprint(session: {
+  module: string;
+  title?: string;
+  root_prompt?: string;
+  snapshot?: unknown;
+}) {
+  const snapshot = session.snapshot && typeof session.snapshot === "object"
+    ? session.snapshot as Record<string, unknown>
+    : {};
+
+  if (session.module === "image") {
+    return safeStableStringify({
+      module: "image",
+      title: normalizeSessionText(session.title),
+      rootPrompt: normalizeSessionText(session.root_prompt) || normalizeSessionText(snapshot.rootPrompt) || normalizeSessionText(snapshot.promptValue),
+      promptValue: normalizeSessionText(snapshot.promptValue),
+      editPrompt: normalizeSessionText(snapshot.editPrompt),
+      logoInclusion: snapshot.logoInclusion === true,
+      compositionMode: normalizeSessionText(snapshot.compositionMode),
+      selectedContext: summarizeContext(snapshot.selectedContext),
+      sessionGenerations: summarizeImageGenerations(snapshot.sessionGenerations),
+    });
+  }
+
+  const previewState = snapshot.previewState && typeof snapshot.previewState === "object"
+    ? snapshot.previewState as Record<string, unknown>
+    : {};
+
+  return safeStableStringify({
+    module: "carousel",
+    title: normalizeSessionText(session.title),
+    rootPrompt: normalizeSessionText(session.root_prompt) || normalizeSessionText(snapshot.prompt),
+    prompt: normalizeSessionText(snapshot.prompt),
+    slideCount: typeof snapshot.slideCount === "number" ? snapshot.slideCount : null,
+    aspectRatio: normalizeSessionText(snapshot.aspectRatio),
+    style: normalizeSessionText(snapshot.style),
+    structureId: normalizeSessionText(snapshot.structureId),
+    compositionId: normalizeSessionText(snapshot.compositionId),
+    compositionMode: normalizeSessionText(snapshot.compositionMode),
+    basicSelectedCompositionId: normalizeSessionText(snapshot.basicSelectedCompositionId),
+    imageSourceMode: normalizeSessionText(snapshot.imageSourceMode),
+    aiImageDescription: normalizeSessionText(snapshot.aiImageDescription),
+    aiStyleDirectives: normalizeSessionText(snapshot.aiStyleDirectives),
+    customStyle: normalizeSessionText(snapshot.customStyle),
+    selectedStylePresetId: normalizeSessionText(snapshot.selectedStylePresetId),
+    selectedStylePresetName: normalizeSessionText(snapshot.selectedStylePresetName),
+    selectedLogoId: normalizeSessionText(snapshot.selectedLogoId),
+    selectedColors: Array.isArray(snapshot.selectedColors) ? snapshot.selectedColors : [],
+    selectedBrandKitImageIds: Array.isArray(snapshot.selectedBrandKitImageIds) ? snapshot.selectedBrandKitImageIds : [],
+    referenceImageRoles: snapshot.referenceImageRoles && typeof snapshot.referenceImageRoles === "object" ? snapshot.referenceImageRoles : {},
+    uploadedImages: Array.isArray(snapshot.uploadedImages) ? snapshot.uploadedImages : [],
+    includeLogoOnSlides: snapshot.includeLogoOnSlides === true,
+    slides: summarizeCarouselSlides(previewState.slides),
+    scriptSlides: summarizeCarouselScriptSlides(previewState.scriptSlides),
+    caption: normalizeSessionText(previewState.caption),
+    sessionHistory: summarizeSessionHistory(previewState.sessionHistory),
+  });
+}
+
+function compareSessionsForKeep<
+  T extends { updated_at: string; created_at: string; active: boolean }
+>(a: T, b: T) {
+  const updatedDiff = b.updated_at.localeCompare(a.updated_at);
+  if (updatedDiff !== 0) return updatedDiff;
+  if (a.active !== b.active) return a.active ? -1 : 1;
+  return b.created_at.localeCompare(a.created_at);
+}
+
 async function getLatestForScope(
   ctx: MutationCtx | QueryCtx,
   args: { user_id: string; module: "image" | "carousel"; brand_id?: Id<"brand_dna">; activeOnly?: boolean },
@@ -719,5 +866,105 @@ export const clearSessions = mutation({
     }
 
     return { deleted: targets.length };
+  },
+});
+
+export const sanitizeSessions = mutation({
+  args: {
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const rows = await ctx.db.query("work_sessions").collect();
+    const dryRun = args.dryRun === true;
+    const grouped = new Map<string, typeof rows>();
+
+    for (const row of rows) {
+      const scopeKey = `${row.user_id}::${row.module}::${row.brand_id ?? "no-brand"}`;
+      const bucket = grouped.get(scopeKey);
+      if (bucket) {
+        bucket.push(row);
+      } else {
+        grouped.set(scopeKey, [row]);
+      }
+    }
+
+    let deleted = 0;
+    let reactivated = 0;
+    const deletedIds: string[] = [];
+    const reactivatedScopes: Array<{ scope: string; activeSessionId: string }> = [];
+    const duplicateGroups: Array<{ scope: string; fingerprint: string; count: number; kept: string; removed: string[] }> = [];
+
+    for (const [scope, bucket] of grouped.entries()) {
+      const sorted = [...bucket].sort(compareSessionsForKeep);
+      const keepByFingerprint = new Map<string, typeof sorted[number]>();
+      const toDelete: typeof sorted = [];
+
+      for (const row of sorted) {
+        const fingerprint = buildSessionFingerprint(row);
+        const existing = keepByFingerprint.get(fingerprint);
+        if (existing) {
+          toDelete.push(row);
+          const group = duplicateGroups.find((item) => item.scope === scope && item.fingerprint === fingerprint);
+          if (group) {
+            group.removed.push(String(row._id));
+            group.count += 1;
+          } else {
+            duplicateGroups.push({
+              scope,
+              fingerprint,
+              count: 2,
+              kept: String(existing._id),
+              removed: [String(row._id)],
+            });
+          }
+          continue;
+        }
+        keepByFingerprint.set(fingerprint, row);
+      }
+
+      const kept = [...keepByFingerprint.values()].sort(compareSessionsForKeep);
+      const desiredActive = kept.find((row) => row.active) ?? kept[0] ?? null;
+
+      if (desiredActive) {
+        for (const row of kept) {
+          const shouldBeActive = row._id === desiredActive._id;
+          if (row.active !== shouldBeActive) {
+            reactivated += 1;
+            if (!dryRun) {
+              await ctx.db.patch(row._id, {
+                active: shouldBeActive,
+                updated_at: row.updated_at,
+              });
+            }
+          }
+        }
+
+        if (kept.filter((row) => row.active).length !== 1) {
+          reactivatedScopes.push({
+            scope,
+            activeSessionId: String(desiredActive._id),
+          });
+        }
+      }
+
+      for (const row of toDelete) {
+        deleted += 1;
+        deletedIds.push(String(row._id));
+        if (!dryRun) {
+          await ctx.db.delete(row._id);
+        }
+      }
+    }
+
+    return {
+      dryRun,
+      total: rows.length,
+      scopes: grouped.size,
+      deleted,
+      reactivated,
+      duplicateGroups: duplicateGroups.slice(0, 50),
+      deletedIds: deletedIds.slice(0, 200),
+      reactivatedScopes: reactivatedScopes.slice(0, 50),
+    };
   },
 });

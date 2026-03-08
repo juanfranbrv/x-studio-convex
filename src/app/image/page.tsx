@@ -64,6 +64,19 @@ interface ImageWorkspaceSnapshot {
     rootPrompt?: string
 }
 
+type SessionDecisionButton = {
+    id: string
+    label: string
+    variant?: 'default' | 'outline' | 'destructive'
+}
+
+type SessionDecisionModalState = {
+    open: boolean
+    title: string
+    description: string
+    buttons: SessionDecisionButton[]
+}
+
 type CompactGeneration = Pick<Generation, 'id' | 'image_url' | 'image_storage_id' | 'preview_image_url' | 'preview_image_storage_id' | 'original_image_url' | 'original_image_storage_id' | 'created_at' | 'prompt_used' | 'error_title' | 'error_fallback'> & {
     request_payload?: {
         prompt?: string
@@ -183,10 +196,39 @@ export default function ImagePage() {
     }>>(new Map())
     const persistImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string; originalStorageId: string; originalImageUrl: string; previewStorageId: string; previewImageUrl: string } | null>>>(new Map())
     const bypassUnsavedGuardRef = useRef(false)
-    const confirmDiscardUnsavedChanges = useCallback((action: string) => {
+    const sessionDecisionResolverRef = useRef<((decision: string | null) => void) | null>(null)
+    const [sessionDecisionModal, setSessionDecisionModal] = useState<SessionDecisionModalState>({
+        open: false,
+        title: '',
+        description: '',
+        buttons: [],
+    })
+    const openSessionDecisionModal = useCallback((config: Omit<SessionDecisionModalState, 'open'>) => {
+        return new Promise<string | null>((resolve) => {
+            sessionDecisionResolverRef.current = resolve
+            setSessionDecisionModal({
+                open: true,
+                ...config,
+            })
+        })
+    }, [])
+    const closeSessionDecisionModal = useCallback((decision: string | null) => {
+        sessionDecisionResolverRef.current?.(decision)
+        sessionDecisionResolverRef.current = null
+        setSessionDecisionModal((prev) => ({ ...prev, open: false }))
+    }, [])
+    const confirmDiscardUnsavedChanges = useCallback(async (action: string) => {
         if (!hasUnsavedChanges) return true
-        return window.confirm(`Tienes cambios sin guardar. ¿Quieres continuar y perderlos al ${action}?`)
-    }, [hasUnsavedChanges])
+        const decision = await openSessionDecisionModal({
+            title: 'Hay cambios sin guardar',
+            description: `Si continúas para ${action}, perderás los cambios actuales de esta sesión. ¿Qué prefieres hacer?`,
+            buttons: [
+                { id: 'cancel', label: 'Seguir aquí', variant: 'outline' },
+                { id: 'discard', label: 'Descartar cambios', variant: 'destructive' },
+            ],
+        })
+        return decision === 'discard'
+    }, [hasUnsavedChanges, openSessionDecisionModal])
 
     const createWorkSession = useMutation(api.work_sessions.createSession)
     const upsertWorkSession = useMutation(api.work_sessions.upsertActiveSession)
@@ -432,7 +474,7 @@ export default function ImagePage() {
     ) => {
         if (!user?.id || !scopedBrandId) return null
         if (createSessionInFlightRef.current) return null
-        if (!options?.skipUnsavedConfirm && !confirmDiscardUnsavedChanges('crear una sesión nueva')) return null
+        if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges('crear una sesión nueva')) return null
         createSessionInFlightRef.current = true
         setIsCreatingSession(true)
 
@@ -484,7 +526,7 @@ export default function ImagePage() {
         options?: { skipUnsavedConfirm?: boolean }
     ) => {
         if (!sessionId || !user?.id) return false
-        if (!options?.skipUnsavedConfirm && !confirmDiscardUnsavedChanges('cambiar de sesión')) return false
+        if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges('cambiar de sesión')) return false
         const activated = await activateWorkSession({
             user_id: user.id,
             session_id: sessionId as Id<'work_sessions'>,
@@ -501,7 +543,15 @@ export default function ImagePage() {
 
     const handleDeleteCurrentSession = useCallback(async () => {
         if (!user?.id || !currentSessionId) return
-        if (!window.confirm('¿Quieres borrar esta sesión?')) return
+        const decision = await openSessionDecisionModal({
+            title: 'Borrar esta sesión',
+            description: 'Eliminarás esta sesión del módulo de imagen. El historial guardado de esta sesión dejará de estar disponible.',
+            buttons: [
+                { id: 'cancel', label: 'Cancelar', variant: 'outline' },
+                { id: 'delete', label: 'Borrar sesión', variant: 'destructive' },
+            ],
+        })
+        if (decision !== 'delete') return
 
         const result = await deleteWorkSession({
             user_id: user.id,
@@ -518,11 +568,19 @@ export default function ImagePage() {
             title: 'Sesion eliminada',
             description: 'La sesion se ha borrado correctamente.',
         })
-    }, [user?.id, currentSessionId, deleteWorkSession, handleLoadSession, createNewImageSession, toast])
+    }, [user?.id, currentSessionId, openSessionDecisionModal, deleteWorkSession, handleLoadSession, createNewImageSession, toast])
 
     const handleClearAllSessions = useCallback(async () => {
         if (!user?.id || !scopedBrandId) return
-        if (!window.confirm('¿Quieres borrar todas las sesiones de este kit de marca?')) return
+        const decision = await openSessionDecisionModal({
+            title: 'Borrar todas las sesiones',
+            description: 'Se eliminará todo el historial de sesiones del módulo de imagen para este kit de marca. Esta acción no se puede deshacer.',
+            buttons: [
+                { id: 'cancel', label: 'Cancelar', variant: 'outline' },
+                { id: 'clear', label: 'Borrar todo', variant: 'destructive' },
+            ],
+        })
+        if (decision !== 'clear') return
 
         await clearWorkSessions({
             user_id: user.id,
@@ -535,7 +593,7 @@ export default function ImagePage() {
             title: 'Sesiones borradas',
             description: 'Se han eliminado todas las sesiones de este kit.',
         })
-    }, [user?.id, scopedBrandId, clearWorkSessions, createNewImageSession, toast])
+    }, [user?.id, scopedBrandId, openSessionDecisionModal, clearWorkSessions, createNewImageSession, toast])
 
     // Hydrate one session per scope (user + module + brand kit).
     useEffect(() => {
@@ -1030,10 +1088,14 @@ export default function ImagePage() {
         }
 
         if (logoInclusion && creationFlow.state.selectedLogoId) {
-            const logo = activeBrandKit.logos?.find((l, idx) =>
-                (l as any).id === creationFlow.state.selectedLogoId || `logo-${idx}` === creationFlow.state.selectedLogoId
-            )
-            const logoUrl = logo?.url || null
+            const logo = activeBrandKit.logos?.find((l, idx) => {
+                if (typeof l !== 'string') {
+                    if ((l as any).id === creationFlow.state.selectedLogoId) return true
+                    if ((l as any)._id === creationFlow.state.selectedLogoId) return true
+                }
+                return `logo-${idx}` === creationFlow.state.selectedLogoId
+            })
+            const logoUrl = typeof logo === 'string' ? logo : logo?.url || null
             if (logoUrl) {
                 const hasLogo = finalContext.some(c => c.type === 'logo')
                 if (!hasLogo) {
@@ -1136,7 +1198,23 @@ export default function ImagePage() {
         try {
             const normalizedPrompt = normalizePromptForSession(promptValue)
             if (normalizedPrompt && sessionRootPrompt && normalizedPrompt !== sessionRootPrompt) {
-                await createNewImageSession(promptValue, true)
+                const decision = await openSessionDecisionModal({
+                    title: 'Este prompt parece una idea nueva',
+                    description: 'Puedes abrir una sesión nueva para mantener este trabajo separado, o seguir dentro de la sesión actual actualizando su idea principal.',
+                    buttons: [
+                        { id: 'cancel', label: 'Cancelar', variant: 'outline' },
+                        { id: 'keep', label: 'Seguir en esta sesión', variant: 'default' },
+                        { id: 'new', label: 'Crear sesión nueva', variant: 'default' },
+                    ],
+                })
+                if (decision === 'cancel' || decision === null) {
+                    return null
+                }
+                if (decision === 'new') {
+                    await createNewImageSession(promptValue, true, { skipUnsavedConfirm: true })
+                } else {
+                    setSessionRootPrompt(normalizedPrompt)
+                }
             } else if (normalizedPrompt && !sessionRootPrompt) {
                 setSessionRootPrompt(normalizedPrompt)
             }
@@ -2154,6 +2232,32 @@ export default function ImagePage() {
                         >
                             Guardar y salir
                         </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog
+                open={sessionDecisionModal.open}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        closeSessionDecisionModal(null)
+                    }
+                }}
+            >
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{sessionDecisionModal.title}</DialogTitle>
+                        <DialogDescription>{sessionDecisionModal.description}</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2">
+                        {sessionDecisionModal.buttons.map((button) => (
+                            <Button
+                                key={button.id}
+                                variant={button.variant || 'default'}
+                                onClick={() => closeSessionDecisionModal(button.id)}
+                            >
+                                {button.label}
+                            </Button>
+                        ))}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
