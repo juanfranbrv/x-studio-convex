@@ -321,23 +321,15 @@ function BrandKitPageContent() {
                         const serverKits = await getAllUserBrandKits(user.id);
                         const realCount = serverKits.success ? (serverKits.data?.length || 0) : -1;
 
-                        // Solo auto-creamos para usuarios realmente nuevos sin kits.
-                        if (realCount === 0) {
-                            await createAssistantKitAndOpen({ draft: false });
-                            return;
-                        }
-
-                        // Si hay kits en servidor, recargamos contexto y no creamos nada.
+                        // Nunca crear kits automáticamente al entrar.
+                        // Si hay kits reales, rehidratamos contexto.
                         if (realCount > 0) {
                             await reloadBrandKits(false);
                         }
                     } catch (error) {
-                        console.error('[AUTO-CREATE] Error verificando kits reales, se cancela creación automática:', error);
+                        console.error('[AUTO-CREATE] Error verificando kits reales:', error);
                     } finally {
-                        // Permite reintento solo si seguimos sin kit activo y sin kits en contexto.
-                        if (!activeBrandKit && brandKits.length === 0) {
-                            autoCreateTriggeredRef.current = false;
-                        }
+                        autoCreateTriggeredRef.current = false;
                     }
                 })();
             }

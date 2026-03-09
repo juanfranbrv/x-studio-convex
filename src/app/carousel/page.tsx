@@ -105,31 +105,6 @@ export default function CarouselPage() {
         })
     }, [carouselStructures, ensureCarouselDefaults])
 
-    const handleNewBrandKit = () => {
-        router.push('/brand-kit/new')
-    }
-
-    if (brandKitsLoading && !activeBrandKit) {
-        return (
-            <DashboardLayout
-                brands={brandKits}
-                currentBrand={activeBrandKit}
-                onBrandChange={setActiveBrandKit}
-                onBrandDelete={deleteBrandKitById}
-                onNewBrandKit={handleNewBrandKit}
-                isFixed={true}
-            >
-                <div className="flex h-full items-center justify-center">
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <span className="text-lg font-medium">Cargando Carrusel...</span>
-                    </div>
-                </div>
-            </DashboardLayout>
-        )
-    }
-
-
     const [isGenerating, setIsGenerating] = useState(false)
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
@@ -198,6 +173,30 @@ export default function CarouselPage() {
     const [pendingGenerateSettings, setPendingGenerateSettings] = useState<CarouselSettings | null>(null)
     const [suggestions, setSuggestions] = useState<CarouselSuggestion[]>([])
     const [slideVariantSelection, setSlideVariantSelection] = useState<string[]>([])
+
+    const handleNewBrandKit = () => {
+        router.push('/brand-kit/new')
+    }
+
+    if (brandKitsLoading && !activeBrandKit) {
+        return (
+            <DashboardLayout
+                brands={brandKits}
+                currentBrand={activeBrandKit}
+                onBrandChange={setActiveBrandKit}
+                onBrandDelete={deleteBrandKitById}
+                onNewBrandKit={handleNewBrandKit}
+                isFixed={true}
+            >
+                <div className="flex h-full items-center justify-center">
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <span className="text-lg font-medium">Cargando Carrusel...</span>
+                    </div>
+                </div>
+            </DashboardLayout>
+        )
+    }
     const [imagePromptSuggestions, setImagePromptSuggestions] = useState<string[]>([])
     const [sessionHistory, setSessionHistory] = useState<Array<{
         id: string
