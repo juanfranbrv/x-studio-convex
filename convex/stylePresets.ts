@@ -180,6 +180,7 @@ export const listActive = query({
     const rows = await ctx.db
       .query("style_presets")
       .withIndex("by_active_sort", (q) => q.eq("is_active", true))
+      .order("asc")
       .take(MAX_ACTIVE_PRESETS);
 
     return rows.map((row) => ({

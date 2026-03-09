@@ -1,19 +1,21 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Trash2, Save, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Save, CheckCircle2, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import type { CarouselSuggestion, CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
@@ -37,6 +39,8 @@ import {
     STUDIO_PANEL_CARD_PADDED_LG_CLASS,
 } from '@/components/studio/shared/panelStyles'
 import { SuggestionsList } from '@/components/studio/shared/SuggestionsList'
+import { useStylePresetImages } from '@/hooks/useStylePresetImages'
+import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialog'
 
 export interface SlideConfig {
     index: number
@@ -302,6 +306,7 @@ export function CarouselControlsPanel({
     onRestorePreviewState,
     getAuditFlowId
 }: CarouselControlsPanelProps) {
+    const router = useRouter()
     const createWorkSession = useMutation(api.work_sessions.createSession)
     const upsertWorkSession = useMutation(api.work_sessions.upsertActiveSession)
     const activateWorkSession = useMutation(api.work_sessions.activateSession)
@@ -321,12 +326,7 @@ export function CarouselControlsPanel({
             : 'skip'
     )
     const structuresData = useQuery(api.carousel.listStructures, { includeInactive: false }) as DbStructure[] | undefined
-    const stylePresetResults = useQuery(api.stylePresets.listActiveImages, {})
-    const stylePresets = (stylePresetResults || []) as Array<{
-        _id: string
-        name?: string
-        image_url: string
-    }>
+    const { stylePresets } = useStylePresetImages()
     const stylePresetsStatus: 'Exhausted' = 'Exhausted'
     const structures: UiStructure[] = (structuresData || [])
         .map((s) => ({ id: s.structure_id, name: s.name, summary: s.summary, order: s.order }))
@@ -339,7 +339,15 @@ export function CarouselControlsPanel({
     const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
     const [saveError, setSaveError] = useState<string | null>(null)
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+    const [unsavedNavModalOpen, setUnsavedNavModalOpen] = useState(false)
+    const [pendingNavigationTarget, setPendingNavigationTarget] = useState<{ href: string; external: boolean } | null>(null)
+    const [isResolvingUnsavedNavigation, setIsResolvingUnsavedNavigation] = useState(false)
     const lastSavedSnapshotSignatureRef = useRef<string | null>(null)
+    const pendingBaselineResetRef = useRef(false)
+    const baselineResetTimeoutRef = useRef<number | null>(null)
+    const savedPreviewVariantKeysRef = useRef<string[]>([])
+    const saveSessionBeforeContinueRef = useRef<() => Promise<boolean>>(async () => false)
+    const bypassUnsavedGuardRef = useRef(false)
     const hydrationScopeRef = useRef<string>('')
     const hasHydratedScopeRef = useRef(false)
     const persistedSlideImageCacheRef = useRef<Map<string, {
@@ -359,12 +367,15 @@ export function CarouselControlsPanel({
         previewImageUrl: string
     } | null>>>(new Map())
     const sessionDecisionResolverRef = useRef<((decision: string | null) => void) | null>(null)
+    const sessionTitleResolverRef = useRef<((title: string | null) => void) | null>(null)
     const [sessionDecisionModal, setSessionDecisionModal] = useState<SessionDecisionModalState>({
         open: false,
         title: '',
         description: '',
         buttons: [],
     })
+    const [sessionTitleDialogOpen, setSessionTitleDialogOpen] = useState(false)
+    const [sessionTitleDraft, setSessionTitleDraft] = useState('')
     const openSessionDecisionModal = useCallback((config: Omit<SessionDecisionModalState, 'open'>) => {
         return new Promise<string | null>((resolve) => {
             sessionDecisionResolverRef.current = resolve
@@ -379,6 +390,18 @@ export function CarouselControlsPanel({
         sessionDecisionResolverRef.current = null
         setSessionDecisionModal((prev) => ({ ...prev, open: false }))
     }, [])
+    const openSessionTitleDialog = useCallback((initialValue: string) => {
+        return new Promise<string | null>((resolve) => {
+            sessionTitleResolverRef.current = resolve
+            setSessionTitleDraft(initialValue)
+            setSessionTitleDialogOpen(true)
+        })
+    }, [])
+    const closeSessionTitleDialog = useCallback((title: string | null) => {
+        sessionTitleResolverRef.current?.(title)
+        sessionTitleResolverRef.current = null
+        setSessionTitleDialogOpen(false)
+    }, [])
     const confirmDiscardUnsavedChanges = useCallback(async (action: string) => {
         if (!hasUnsavedChanges) return true
         const decision = await openSessionDecisionModal({
@@ -386,9 +409,13 @@ export function CarouselControlsPanel({
             description: `Si continúas para ${action}, perderás los cambios de esta sesión. ¿Qué quieres hacer?`,
             buttons: [
                 { id: 'cancel', label: 'Seguir aquí', variant: 'outline' },
+                { id: 'save', label: 'Guardar y continuar', variant: 'default' },
                 { id: 'discard', label: 'Descartar cambios', variant: 'destructive' },
             ],
         })
+        if (decision === 'save') {
+            return await saveSessionBeforeContinueRef.current()
+        }
         return decision === 'discard'
     }, [hasUnsavedChanges, openSessionDecisionModal])
     const [prompt, setPrompt] = useState('')
@@ -485,6 +512,11 @@ export function CarouselControlsPanel({
         if (cleaned.length <= 48) return cleaned
         return `${cleaned.slice(0, 48)}...`
     }, [])
+    const activeSessionMeta = useMemo(() => {
+        const currentId = currentSessionId ? String(currentSessionId) : ''
+        if (!currentId) return null
+        return (workSessions || []).find((session) => String(session._id) === currentId) || null
+    }, [currentSessionId, workSessions])
     const buildEmptyWorkspaceSnapshot = useCallback((defaultStructureId: string): CarouselWorkspaceSnapshot => {
         const defaultCompositionId = pickCompositionId(
             compositions,
@@ -562,6 +594,17 @@ export function CarouselControlsPanel({
         onReset?.()
     }, [analysisStructure?.id, structures, compositions, onReset])
 
+    const resetCarouselDraft = useCallback(() => {
+        resetWorkspace()
+        setCurrentSessionId(null)
+        setSelectedSessionToLoad('')
+        setLastSavedAt(null)
+        setSaveError(null)
+        savedPreviewVariantKeysRef.current = []
+        pendingBaselineResetRef.current = true
+        setHasUnsavedChanges(false)
+    }, [resetWorkspace])
+
     const buildWorkspaceSnapshot = useCallback((
         previewSlidesOverride?: CarouselSlide[],
         sessionHistoryOverride?: Array<{
@@ -576,7 +619,7 @@ export function CarouselControlsPanel({
         return {
             version: 1,
             module: 'carousel',
-            prompt,
+            prompt: prompt.slice(0, 1800),
             slideCount,
             aspectRatio,
             style,
@@ -585,20 +628,20 @@ export function CarouselControlsPanel({
             compositionMode,
             basicSelectedCompositionId,
             imageSourceMode,
-            aiImageDescription,
-            aiStyleDirectives: styleAnalysisDescription,
-            customStyle,
+            aiImageDescription: aiImageDescription.slice(0, 1200),
+            aiStyleDirectives: styleAnalysisDescription.slice(0, 1200),
+            customStyle: customStyle.slice(0, 1200),
             applyStyleToTypography,
             selectedStylePresetId,
             selectedStylePresetName,
             selectedLogoId,
-            selectedColors,
-            selectedBrandKitImageIds,
-            referenceImageRoles,
-            uploadedImages,
+            selectedColors: selectedColors.slice(0, 10),
+            selectedBrandKitImageIds: selectedBrandKitImageIds.slice(0, 10),
+            referenceImageRoles: Object.fromEntries(Object.entries(referenceImageRoles).slice(0, 16)),
+            uploadedImages: uploadedImages.slice(0, 8),
             includeLogoOnSlides,
             previewState: {
-                slides: sourceSlides.map((slide) => ({
+                slides: sourceSlides.slice(-12).map((slide) => ({
                     index: slide.index,
                     title: slide.title,
                     description: slide.description,
@@ -611,15 +654,15 @@ export function CarouselControlsPanel({
                     image_original_storage_id: slide.image_original_storage_id,
                     error: slide.error
                 })),
-                scriptSlides: Array.isArray(previewScriptSlides) ? previewScriptSlides : undefined,
-                caption: previewCaption || undefined,
+                scriptSlides: Array.isArray(previewScriptSlides) ? previewScriptSlides.slice(-12) : undefined,
+                caption: previewCaption?.slice(0, 1200) || undefined,
                 currentIndex: previewCurrentIndex,
-                sessionHistory: sourceHistory.map((item) => ({
+                sessionHistory: sourceHistory.slice(-2).map((item) => ({
                         id: item.id,
                         createdAt: item.createdAt,
-                        caption: item.caption,
+                        caption: item.caption?.slice(0, 1200),
                         slides: Array.isArray(item.slides)
-                            ? item.slides.map((slide) => ({
+                            ? item.slides.slice(-12).map((slide) => ({
                                 index: slide.index,
                                 title: slide.title,
                                 description: slide.description,
@@ -664,6 +707,70 @@ export function CarouselControlsPanel({
         previewCurrentIndex,
         previewSessionHistory
     ])
+
+    const buildPreviewVariantKey = useCallback((
+        slides?: Array<{
+            index?: number
+            title?: string
+            description?: string
+            status?: string
+            imageUrl?: string
+            image_storage_id?: string
+            imagePreviewUrl?: string
+            image_preview_storage_id?: string
+            imageOriginalUrl?: string
+            image_original_storage_id?: string
+            error?: string
+        }>,
+        caption?: string
+    ) => {
+        const normalizedSlides = Array.isArray(slides)
+            ? slides.map((slide) => ({
+                index: slide.index ?? null,
+                title: slide.title || '',
+                description: slide.description || '',
+                status: slide.status || '',
+                image: slide.image_original_storage_id || slide.imageOriginalUrl || slide.image_preview_storage_id || slide.imagePreviewUrl || slide.image_storage_id || slide.imageUrl || '',
+                error: slide.error || '',
+            }))
+            : []
+
+        return JSON.stringify({
+            slides: normalizedSlides,
+            caption: caption || '',
+        })
+    }, [])
+
+    const extractSavedPreviewVariantKeys = useCallback((snapshot: CarouselWorkspaceSnapshot) => {
+        const previewState = snapshot.previewState || { slides: [] }
+        const keys = new Set<string>()
+        keys.add(buildPreviewVariantKey(previewState.slides, previewState.caption))
+
+        if (Array.isArray(previewState.sessionHistory)) {
+            previewState.sessionHistory.forEach((item) => {
+                keys.add(buildPreviewVariantKey(item?.slides, item?.caption))
+            })
+        }
+
+        return Array.from(keys)
+    }, [buildPreviewVariantKey])
+
+    const buildWorkspaceChangeSignature = useCallback((snapshot: CarouselWorkspaceSnapshot) => {
+        const previewState = snapshot.previewState || { slides: [] }
+        const currentPreviewVariantKey = buildPreviewVariantKey(previewState.slides, previewState.caption)
+        const isSavedPreviewVariant = savedPreviewVariantKeysRef.current.includes(currentPreviewVariantKey)
+
+        return JSON.stringify({
+            ...snapshot,
+            previewState: {
+                ...previewState,
+                slides: isSavedPreviewVariant ? [] : previewState.slides,
+                caption: isSavedPreviewVariant ? undefined : previewState.caption,
+                currentIndex: isSavedPreviewVariant ? 0 : previewState.currentIndex,
+                activeSavedVariant: isSavedPreviewVariant,
+            },
+        })
+    }, [buildPreviewVariantKey])
 
     const buildSlidePersistKey = useCallback((slide: CarouselSlide, imageUrl: string) => {
         const compactUrl = imageUrl.length > 160 ? `${imageUrl.slice(0, 160)}::${imageUrl.length}` : imageUrl
@@ -847,29 +954,47 @@ export function CarouselControlsPanel({
         }
     }, [onRestorePreviewState])
 
+    const scheduleBaselineReset = useCallback((signature: string) => {
+        if (baselineResetTimeoutRef.current !== null) {
+            window.clearTimeout(baselineResetTimeoutRef.current)
+        }
+        baselineResetTimeoutRef.current = window.setTimeout(() => {
+            pendingBaselineResetRef.current = false
+            lastSavedSnapshotSignatureRef.current = signature
+            setHasUnsavedChanges(false)
+            baselineResetTimeoutRef.current = null
+        }, 180)
+    }, [])
+
     const createNewCarouselSession = useCallback(async (
         silent = false,
-        options?: { skipUnsavedConfirm?: boolean }
+        options?: { skipUnsavedConfirm?: boolean; persist?: boolean }
     ) => {
         if (!userId || !scopedBrandId) return null
         if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges('crear una sesión nueva')) return null
 
         const defaultStructureId = analysisStructure?.id || structures[0]?.id || 'problema-solucion'
         const emptySnapshot = buildEmptyWorkspaceSnapshot(defaultStructureId)
-        resetWorkspace()
+        resetCarouselDraft()
+
+        if (!options?.persist) {
+            return null
+        }
 
         const created = await createWorkSession({
             user_id: userId,
             module: 'carousel',
             brand_id: scopedBrandId,
             title: buildSessionTitle(''),
+            title_customized: false,
             snapshot: emptySnapshot,
         })
 
         const id = String(created.session_id)
         setCurrentSessionId(id)
         setSelectedSessionToLoad(id)
-        lastSavedSnapshotSignatureRef.current = JSON.stringify(emptySnapshot)
+        savedPreviewVariantKeysRef.current = extractSavedPreviewVariantKeys(emptySnapshot)
+        lastSavedSnapshotSignatureRef.current = buildWorkspaceChangeSignature(emptySnapshot)
         setHasUnsavedChanges(false)
 
         if (!silent) {
@@ -878,7 +1003,7 @@ export function CarouselControlsPanel({
             }, 0)
         }
         return id
-    }, [userId, scopedBrandId, confirmDiscardUnsavedChanges, analysisStructure?.id, structures, buildEmptyWorkspaceSnapshot, createWorkSession, buildSessionTitle, resetWorkspace])
+    }, [userId, scopedBrandId, confirmDiscardUnsavedChanges, analysisStructure?.id, structures, buildEmptyWorkspaceSnapshot, createWorkSession, buildSessionTitle, resetCarouselDraft, extractSavedPreviewVariantKeys, buildWorkspaceChangeSignature])
 
     const handleLoadSession = useCallback(async (
         sessionId: string,
@@ -891,6 +1016,8 @@ export function CarouselControlsPanel({
             session_id: sessionId as Id<'work_sessions'>,
         })
         if (activated?.snapshot) {
+            pendingBaselineResetRef.current = true
+            savedPreviewVariantKeysRef.current = extractSavedPreviewVariantKeys(activated.snapshot as CarouselWorkspaceSnapshot)
             restoreWorkspaceFromSnapshot(activated.snapshot as CarouselWorkspaceSnapshot)
             log.success('SESSION', 'Sesion de carrusel restaurada', {
                 session_id: String(activated._id || sessionId),
@@ -901,7 +1028,7 @@ export function CarouselControlsPanel({
         setSelectedSessionToLoad(String(activated?._id || sessionId))
         setHasUnsavedChanges(false)
         return true
-    }, [userId, activateWorkSession, restoreWorkspaceFromSnapshot, confirmDiscardUnsavedChanges])
+    }, [userId, activateWorkSession, restoreWorkspaceFromSnapshot, confirmDiscardUnsavedChanges, extractSavedPreviewVariantKeys])
 
     const handleDeleteCurrentSession = useCallback(async () => {
         if (!userId || !currentSessionId) return
@@ -949,6 +1076,12 @@ export function CarouselControlsPanel({
     useEffect(() => {
         const scopeKey = `${userId || 'anon'}::carousel::${scopedBrandId || 'no-brand'}`
         if (hydrationScopeRef.current !== scopeKey) {
+            if (baselineResetTimeoutRef.current !== null) {
+                window.clearTimeout(baselineResetTimeoutRef.current)
+                baselineResetTimeoutRef.current = null
+            }
+            pendingBaselineResetRef.current = false
+            savedPreviewVariantKeysRef.current = []
             hydrationScopeRef.current = scopeKey
             hasHydratedScopeRef.current = false
             lastSavedSnapshotSignatureRef.current = null
@@ -966,10 +1099,11 @@ export function CarouselControlsPanel({
         if (hasHydratedScopeRef.current) return
 
         if (activeWorkSession?.snapshot) {
+            pendingBaselineResetRef.current = true
+            savedPreviewVariantKeysRef.current = extractSavedPreviewVariantKeys(activeWorkSession.snapshot as CarouselWorkspaceSnapshot)
             restoreWorkspaceFromSnapshot(activeWorkSession.snapshot as CarouselWorkspaceSnapshot)
             setCurrentSessionId(String(activeWorkSession._id))
             setSelectedSessionToLoad(String(activeWorkSession._id))
-            lastSavedSnapshotSignatureRef.current = JSON.stringify(activeWorkSession.snapshot)
             setHasUnsavedChanges(false)
             setHasHydratedSession(true)
             hasHydratedScopeRef.current = true
@@ -994,29 +1128,13 @@ export function CarouselControlsPanel({
 
         hasHydratedScopeRef.current = true
         setHasHydratedSession(true)
-        void createWorkSession({
-            user_id: userId,
-            module: 'carousel',
-            brand_id: scopedBrandId,
-            title: 'Sesion nueva',
-            snapshot: buildWorkspaceSnapshot(),
-        }).then((created) => {
-            const id = String(created.session_id)
-            setCurrentSessionId(id)
-            setSelectedSessionToLoad(id)
-            setHasUnsavedChanges(false)
-        }).catch(() => {
-            hasHydratedScopeRef.current = false
-            setHasHydratedSession(false)
-            log.warn('SESSION', 'No se pudo crear sesion inicial de carrusel')
-        })
+        pendingBaselineResetRef.current = true
+        setHasUnsavedChanges(false)
     }, [
         userId,
         scopedBrandId,
         activeWorkSession,
         workSessions,
-        createWorkSession,
-        buildWorkspaceSnapshot,
         restoreWorkspaceFromSnapshot,
         handleLoadSession
     ])
@@ -1025,6 +1143,8 @@ export function CarouselControlsPanel({
         silent?: boolean
         markSavedAt?: boolean
         force?: boolean
+        titleOverride?: string
+        titleCustomized?: boolean
     }) => {
         if (!userId || !scopedBrandId) return
         const isSilent = options?.silent === true
@@ -1038,7 +1158,7 @@ export function CarouselControlsPanel({
             const persistedSlides = await materializePreviewSlidesForSnapshot(previewSlides || [])
             const persistedHistory = await materializeSessionHistoryForSnapshot(previewSessionHistory || [])
             const snapshot = buildWorkspaceSnapshot(persistedSlides, persistedHistory)
-            const snapshotSignature = JSON.stringify(snapshot)
+            const snapshotSignature = buildWorkspaceChangeSignature(snapshot)
             if (!forcePersist && lastSavedSnapshotSignatureRef.current === snapshotSignature) {
                 if (shouldMarkSavedAt) {
                     setLastSavedAt(new Date().toISOString())
@@ -1051,7 +1171,8 @@ export function CarouselControlsPanel({
                 module: 'carousel',
                 brand_id: scopedBrandId,
                 session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
-                title: buildSessionTitle(snapshot.prompt || 'Sesion de carrusel'),
+                title: options?.titleOverride ?? buildSessionTitle(snapshot.prompt || 'Sesion de carrusel'),
+                title_customized: options?.titleCustomized,
                 snapshot,
             })
             const id = String(result.session_id)
@@ -1059,6 +1180,7 @@ export function CarouselControlsPanel({
                 setCurrentSessionId(id)
                 setSelectedSessionToLoad(id)
             }
+            savedPreviewVariantKeysRef.current = extractSavedPreviewVariantKeys(snapshot)
             lastSavedSnapshotSignatureRef.current = snapshotSignature
             setHasUnsavedChanges(false)
             if (shouldMarkSavedAt) {
@@ -1082,61 +1204,232 @@ export function CarouselControlsPanel({
         materializePreviewSlidesForSnapshot,
         materializeSessionHistoryForSnapshot,
         buildWorkspaceSnapshot,
+        buildWorkspaceChangeSignature,
+        extractSavedPreviewVariantKeys,
         upsertWorkSession,
         currentSessionId,
         buildSessionTitle
     ])
 
-    const handleSaveNow = useCallback(async () => {
-        if (!userId || !scopedBrandId || isHydratingSession) return
+    const ensureCarouselSessionForAnalyze = useCallback(async () => {
+        if (!userId || !scopedBrandId || currentSessionId) return currentSessionId
+
+        const snapshot = buildWorkspaceSnapshot(previewSlides || [], previewSessionHistory || [])
+        const created = await createWorkSession({
+            user_id: userId,
+            module: 'carousel',
+            brand_id: scopedBrandId,
+            title: buildSessionTitle(prompt || 'Sesion de carrusel'),
+            title_customized: false,
+            root_prompt: prompt.trim() || undefined,
+            snapshot,
+        })
+
+        const sessionId = String(created.session_id)
+        setCurrentSessionId(sessionId)
+        setSelectedSessionToLoad(sessionId)
+        savedPreviewVariantKeysRef.current = extractSavedPreviewVariantKeys(snapshot)
+        lastSavedSnapshotSignatureRef.current = buildWorkspaceChangeSignature(snapshot)
+        setHasUnsavedChanges(false)
+        return sessionId
+    }, [
+        userId,
+        scopedBrandId,
+        currentSessionId,
+        buildWorkspaceSnapshot,
+        previewSlides,
+        previewSessionHistory,
+        createWorkSession,
+        buildSessionTitle,
+        prompt,
+        extractSavedPreviewVariantKeys,
+        buildWorkspaceChangeSignature,
+    ])
+
+    const saveSessionBeforeContinue = useCallback(async () => {
+        if (!userId || !scopedBrandId || isHydratingSession) return false
         try {
+            if (activeSessionMeta?.title_customized !== true) {
+                const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || prompt || 'Sesion de carrusel')
+                const selectedTitle = await openSessionTitleDialog(suggestedTitle)
+                if (!selectedTitle) return false
+                await persistWorkspaceSnapshot({
+                    silent: false,
+                    markSavedAt: true,
+                    force: true,
+                    titleOverride: buildSessionTitle(selectedTitle),
+                    titleCustomized: true,
+                })
+                return true
+            }
             await persistWorkspaceSnapshot({
                 silent: false,
                 markSavedAt: true,
                 force: true,
             })
-            log.success('SESSION', 'Guardado manual de sesion de carrusel completado')
+            return true
         } catch {
-            log.warn('SESSION', 'Guardado manual de sesion de carrusel fallido')
+            log.warn('SESSION', 'Guardado previo a continuar en carrusel fallido')
+            return false
         }
-    }, [userId, scopedBrandId, isHydratingSession, persistWorkspaceSnapshot])
+    }, [
+        userId,
+        scopedBrandId,
+        isHydratingSession,
+        activeSessionMeta,
+        buildSessionTitle,
+        openSessionTitleDialog,
+        persistWorkspaceSnapshot,
+        prompt,
+    ])
+    saveSessionBeforeContinueRef.current = saveSessionBeforeContinue
+
+    const handleSaveNow = useCallback(async () => {
+        const saved = await saveSessionBeforeContinue()
+        if (saved) {
+            log.success('SESSION', 'Guardado manual de sesion de carrusel completado')
+        }
+    }, [saveSessionBeforeContinue])
+    const handleRenameCurrentSession = useCallback(async () => {
+        if (!userId || !scopedBrandId || isHydratingSession || !currentSessionId) return
+        const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || prompt || 'Sesion de carrusel')
+        const selectedTitle = await openSessionTitleDialog(suggestedTitle)
+        if (!selectedTitle) return
+        try {
+            await persistWorkspaceSnapshot({
+                silent: false,
+                markSavedAt: true,
+                force: true,
+                titleOverride: buildSessionTitle(selectedTitle),
+                titleCustomized: true,
+            })
+            log.success('SESSION', 'Sesion activa de carrusel renombrada')
+        } catch {
+            log.warn('SESSION', 'No se pudo renombrar la sesion activa de carrusel')
+        }
+    }, [userId, scopedBrandId, isHydratingSession, currentSessionId, activeSessionMeta, buildSessionTitle, openSessionTitleDialog, persistWorkspaceSnapshot, prompt])
 
     const workspaceSignature = useMemo(() => {
-        return JSON.stringify(buildWorkspaceSnapshot(previewSlides || [], previewSessionHistory || []))
-    }, [buildWorkspaceSnapshot, previewSlides, previewSessionHistory])
-
-    const wasHydratingRef = useRef(false)
-    useEffect(() => {
-        const wasHydrating = wasHydratingRef.current
-        wasHydratingRef.current = isHydratingSession
-
-        if (!wasHydrating || isHydratingSession || !hasHydratedSession) return
-
-        // Establish the restored session as the current saved baseline after
-        // any hydration-time normalization or auto-selection has settled.
-        lastSavedSnapshotSignatureRef.current = workspaceSignature
-        setHasUnsavedChanges(false)
-    }, [isHydratingSession, hasHydratedSession, workspaceSignature])
+        return buildWorkspaceChangeSignature(buildWorkspaceSnapshot(previewSlides || [], previewSessionHistory || []))
+    }, [buildWorkspaceSnapshot, buildWorkspaceChangeSignature, previewSlides, previewSessionHistory])
 
     useEffect(() => {
         if (!hasHydratedSession || isHydratingSession) return
+        if (pendingBaselineResetRef.current) {
+            scheduleBaselineReset(workspaceSignature)
+            return
+        }
         const lastSaved = lastSavedSnapshotSignatureRef.current
         if (!lastSaved) {
             setHasUnsavedChanges(true)
             return
         }
         setHasUnsavedChanges(lastSaved !== workspaceSignature)
-    }, [workspaceSignature, hasHydratedSession, isHydratingSession])
+    }, [workspaceSignature, hasHydratedSession, isHydratingSession, scheduleBaselineReset])
+
+    useEffect(() => {
+        return () => {
+            if (baselineResetTimeoutRef.current !== null) {
+                window.clearTimeout(baselineResetTimeoutRef.current)
+            }
+        }
+    }, [])
 
     useEffect(() => {
         if (!hasUnsavedChanges) return
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            if (bypassUnsavedGuardRef.current) return
             event.preventDefault()
             event.returnValue = ''
         }
         window.addEventListener('beforeunload', handleBeforeUnload)
         return () => window.removeEventListener('beforeunload', handleBeforeUnload)
     }, [hasUnsavedChanges])
+
+    useEffect(() => {
+        if (!hasUnsavedChanges) return
+
+        const onDocumentClickCapture = (event: MouseEvent) => {
+            if (bypassUnsavedGuardRef.current) return
+            if (event.defaultPrevented) return
+            if (event.button !== 0) return
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+
+            const target = event.target as HTMLElement | null
+            const anchor = target?.closest('a[href]') as HTMLAnchorElement | null
+            if (!anchor) return
+
+            const hrefAttr = anchor.getAttribute('href') || ''
+            if (!hrefAttr || hrefAttr.startsWith('#') || hrefAttr.startsWith('javascript:')) return
+            if (hrefAttr.startsWith('mailto:') || hrefAttr.startsWith('tel:')) return
+            if (anchor.hasAttribute('download')) return
+            if (anchor.target && anchor.target !== '_self') return
+
+            let targetUrl: URL
+            try {
+                targetUrl = new URL(anchor.href, window.location.href)
+            } catch {
+                return
+            }
+
+            const current = `${window.location.pathname}${window.location.search}${window.location.hash}`
+            const next = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`
+            if (current === next) return
+
+            event.preventDefault()
+            event.stopPropagation()
+            setPendingNavigationTarget({
+                href: targetUrl.href,
+                external: targetUrl.origin !== window.location.origin,
+            })
+            setUnsavedNavModalOpen(true)
+        }
+
+        document.addEventListener('click', onDocumentClickCapture, true)
+        return () => document.removeEventListener('click', onDocumentClickCapture, true)
+    }, [hasUnsavedChanges])
+
+    const continuePendingNavigation = useCallback(() => {
+        if (!pendingNavigationTarget) return
+        bypassUnsavedGuardRef.current = true
+        setUnsavedNavModalOpen(false)
+
+        if (pendingNavigationTarget.external) {
+            window.location.assign(pendingNavigationTarget.href)
+            return
+        }
+
+        const url = new URL(pendingNavigationTarget.href, window.location.origin)
+        router.push(`${url.pathname}${url.search}${url.hash}`)
+    }, [pendingNavigationTarget, router])
+
+    const handleUnsavedNavigateDiscard = useCallback(() => {
+        setIsResolvingUnsavedNavigation(true)
+        try {
+            continuePendingNavigation()
+        } finally {
+            setIsResolvingUnsavedNavigation(false)
+            setPendingNavigationTarget(null)
+        }
+    }, [continuePendingNavigation])
+
+    const handleUnsavedNavigateSave = useCallback(async () => {
+        if (!pendingNavigationTarget) return
+        setIsResolvingUnsavedNavigation(true)
+        try {
+            const saved = await saveSessionBeforeContinue()
+            if (!saved) return
+            continuePendingNavigation()
+        } finally {
+            setIsResolvingUnsavedNavigation(false)
+            setPendingNavigationTarget(null)
+        }
+    }, [pendingNavigationTarget, saveSessionBeforeContinue, continuePendingNavigation])
+
+    const handleUnsavedNavigateCancel = useCallback(() => {
+        setUnsavedNavModalOpen(false)
+        setPendingNavigationTarget(null)
+    }, [])
 
     const buildStructuralSignature = useCallback((
         partial?: Partial<{
@@ -1936,6 +2229,7 @@ export function CarouselControlsPanel({
         if (generatedCount > 0) {
             onInvalidatePreview?.()
         }
+        await ensureCarouselSessionForAnalyze()
         await onAnalyze(buildSettings())
         setNeedsReanalysis(false)
         setLastAnalyzedSignature(buildStructuralSignature())
@@ -1989,7 +2283,7 @@ export function CarouselControlsPanel({
                                     variant="ghost"
                                     className="h-7 w-7"
                                     onClick={() => void handleSaveNow()}
-                                    disabled={!userId || !scopedBrandId || isHydratingSession || isSavingSession}
+                                    disabled={!userId || !scopedBrandId || isHydratingSession || isSavingSession || !hasUnsavedChanges}
                                     title="Guardar sesion ahora"
                                 >
                                     {isSavingSession ? (
@@ -2046,12 +2340,20 @@ export function CarouselControlsPanel({
                         </Button>
                         <Button
                             variant="outline"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => void handleDeleteCurrentSession()}
-                            title="Borrar sesion"
+                            size="sm"
+                            className="h-7 px-2 text-[10px]"
+                            onClick={() => void handleRenameCurrentSession()}
+                            disabled={!currentSessionId}
                         >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            Renombrar sesión
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-[10px]"
+                            onClick={() => void handleDeleteCurrentSession()}
+                        >
+                            Borrar sesión
                         </Button>
                         <Button
                             variant="outline"
@@ -2059,7 +2361,7 @@ export function CarouselControlsPanel({
                             className="h-7 px-2 text-[10px]"
                             onClick={() => void handleClearAllSessions()}
                         >
-                            Limpiar
+                            Borrar historial
                         </Button>
                     </div>
                 </div>
@@ -2696,6 +2998,45 @@ export function CarouselControlsPanel({
                 )}
             </div>
             <Dialog
+                open={unsavedNavModalOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        handleUnsavedNavigateCancel()
+                    }
+                }}
+            >
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>¿Hay cambios sin guardar? ¿Desea guardarlos?</DialogTitle>
+                        <DialogDescription>
+                            Si continúas sin guardar, perderás los cambios de esta sesión.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={handleUnsavedNavigateCancel}
+                            disabled={isResolvingUnsavedNavigation}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleUnsavedNavigateDiscard}
+                            disabled={isResolvingUnsavedNavigation}
+                        >
+                            Descartar y salir
+                        </Button>
+                        <Button
+                            onClick={() => void handleUnsavedNavigateSave()}
+                            disabled={isResolvingUnsavedNavigation}
+                        >
+                            Guardar y salir
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog
                 open={sessionDecisionModal.open}
                 onOpenChange={(open) => {
                     if (!open) {
@@ -2708,7 +3049,7 @@ export function CarouselControlsPanel({
                         <DialogTitle>{sessionDecisionModal.title}</DialogTitle>
                         <DialogDescription>{sessionDecisionModal.description}</DialogDescription>
                     </DialogHeader>
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <DialogFooter className="gap-2">
                         {sessionDecisionModal.buttons.map((button) => (
                             <Button
                                 key={button.id}
@@ -2718,9 +3059,19 @@ export function CarouselControlsPanel({
                                 {button.label}
                             </Button>
                         ))}
-                    </div>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <SessionTitleDialog
+                open={sessionTitleDialogOpen}
+                title="Ponle nombre a la sesión"
+                description="La primera vez que guardes esta sesión puedes dejarle un nombre claro para encontrarla luego."
+                value={sessionTitleDraft}
+                confirmLabel="Guardar sesión"
+                onValueChange={setSessionTitleDraft}
+                onCancel={() => closeSessionTitleDialog(null)}
+                onConfirm={() => closeSessionTitleDialog(buildSessionTitle(sessionTitleDraft))}
+            />
         </div>
     )
 }

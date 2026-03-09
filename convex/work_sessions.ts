@@ -4,6 +4,16 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 
 const MODULES = new Set(["image", "carousel"]);
+const MAX_SESSION_GENERATIONS = 24;
+const MAX_SELECTED_CONTEXT = 16;
+const MAX_CAROUSEL_SLIDES = 12;
+const MAX_CAROUSEL_HISTORY = 2;
+const MAX_UPLOADED_IMAGES = 8;
+const MAX_SELECTED_COLORS = 10;
+const MAX_BRANDKIT_IMAGE_IDS = 10;
+const MAX_REFERENCE_IMAGE_ROLES = 16;
+const MAX_SESSIONS_PER_SCOPE = 40;
+const ADMIN_EMAILS = ["juanfranbrv@gmail.com"];
 
 function ensureModule(module: string): "image" | "carousel" {
   const normalized = module.trim().toLowerCase();
@@ -14,6 +24,23 @@ function ensureModule(module: string): "image" | "carousel" {
 function normalizePrompt(prompt?: string) {
   const clean = (prompt || "").trim();
   return clean.length > 0 ? clean : undefined;
+}
+
+function isAdmin(email: string) {
+  return ADMIN_EMAILS.includes((email || "").toLowerCase().trim());
+}
+
+function limitText(value: unknown, max: number): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const clean = value.trim();
+  if (!clean) return undefined;
+  return clean.length > max ? `${clean.slice(0, max)}...` : clean;
+}
+
+function takeLast<T>(value: T[], max: number): T[] {
+  if (!Array.isArray(value)) return [];
+  if (value.length <= max) return value;
+  return value.slice(value.length - max);
 }
 
 function recursivelyStripLargeStrings(value: unknown, fieldName?: string): unknown {
@@ -59,7 +86,7 @@ function compactSessionGenerations(value: unknown): unknown {
   const raw = snapshot.sessionGenerations;
   if (!Array.isArray(raw)) return snapshot;
 
-  snapshot.sessionGenerations = raw.map((item) => {
+  snapshot.sessionGenerations = takeLast(raw, MAX_SESSION_GENERATIONS).map((item) => {
     if (!item || typeof item !== "object") return item;
     const row = item as Record<string, unknown>;
     return {
@@ -71,7 +98,7 @@ function compactSessionGenerations(value: unknown): unknown {
       original_image_url: row.original_image_url,
       original_image_storage_id: row.original_image_storage_id,
       created_at: row.created_at,
-      prompt_used: typeof row.prompt_used === "string" ? row.prompt_used.slice(0, 1800) : row.prompt_used,
+      prompt_used: limitText(row.prompt_used, 900),
       error_title: row.error_title,
       error_fallback: row.error_fallback,
       request_payload: undefined,
@@ -80,9 +107,200 @@ function compactSessionGenerations(value: unknown): unknown {
   return snapshot;
 }
 
+function compactSelectedContext(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .slice(0, MAX_SELECTED_CONTEXT)
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const row = item as Record<string, unknown>;
+      return {
+        id: limitText(row.id, 120),
+        type: limitText(row.type, 40),
+        value: limitText(row.value, 500),
+        label: limitText(row.label, 160),
+      };
+    })
+    .filter(Boolean);
+}
+
+function compactReferenceImageRoles(value: unknown) {
+  if (!value || typeof value !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([key, role]) => Boolean(limitText(key, 240)) && typeof role === "string")
+      .slice(0, MAX_REFERENCE_IMAGE_ROLES)
+      .map(([key, role]) => [key, role]),
+  );
+}
+
+function compactSelectedColors(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, MAX_SELECTED_COLORS).map((item) => {
+    if (!item || typeof item !== "object") return null;
+    const row = item as Record<string, unknown>;
+    return {
+      color: limitText(row.color, 32),
+      role: limitText(row.role, 32),
+    };
+  }).filter(Boolean);
+}
+
+function compactCarouselSlideRow(item: unknown) {
+  if (!item || typeof item !== "object") return item;
+  const row = item as Record<string, unknown>;
+  return {
+    index: typeof row.index === "number" ? row.index : null,
+    title: limitText(row.title, 180),
+    description: limitText(row.description, 700),
+    status: limitText(row.status, 40),
+    imageUrl: row.imageUrl,
+    image_storage_id: row.image_storage_id,
+    imagePreviewUrl: row.imagePreviewUrl,
+    image_preview_storage_id: row.image_preview_storage_id,
+    imageOriginalUrl: row.imageOriginalUrl,
+    image_original_storage_id: row.image_original_storage_id,
+    error: limitText(row.error, 240),
+  };
+}
+
+function compactCarouselScriptSlideRow(item: unknown) {
+  if (!item || typeof item !== "object") return item;
+  const row = item as Record<string, unknown>;
+  return {
+    index: typeof row.index === "number" ? row.index : null,
+    title: limitText(row.title, 180),
+    description: limitText(row.description, 700),
+    visualPrompt: limitText(row.visualPrompt, 1200),
+  };
+}
+
+function compactImageCreationFlowState(value: unknown) {
+  if (!value || typeof value !== "object") return value;
+  const row = value as Record<string, unknown>;
+  return {
+    selectedPlatform: row.selectedPlatform,
+    selectedFormat: row.selectedFormat,
+    selectedGroup: row.selectedGroup,
+    selectedIntent: row.selectedIntent,
+    selectedSubMode: row.selectedSubMode,
+    uploadedImages: Array.isArray(row.uploadedImages) ? row.uploadedImages.slice(0, MAX_UPLOADED_IMAGES) : [],
+    selectedTheme: row.selectedTheme,
+    imageSourceMode: row.imageSourceMode,
+    selectedBrandKitImageIds: Array.isArray(row.selectedBrandKitImageIds) ? row.selectedBrandKitImageIds.slice(0, MAX_BRANDKIT_IMAGE_IDS) : [],
+    referenceImageRoles: compactReferenceImageRoles(row.referenceImageRoles),
+    aiImageDescription: limitText(row.aiImageDescription, 1200),
+    selectedStyles: Array.isArray(row.selectedStyles) ? row.selectedStyles.slice(0, 8) : [],
+    selectedStylePresetId: row.selectedStylePresetId,
+    selectedStylePresetName: limitText(row.selectedStylePresetName, 120),
+    selectedLayout: row.selectedLayout,
+    selectedLogoId: row.selectedLogoId,
+    headline: limitText(row.headline, 300),
+    cta: limitText(row.cta, 180),
+    caption: limitText(row.caption, 1200),
+    ctaUrl: limitText(row.ctaUrl, 300),
+    ctaUrlEnabled: row.ctaUrlEnabled === true,
+    customTexts: row.customTexts,
+    selectedBrandColors: compactSelectedColors(row.selectedBrandColors),
+    rawMessage: limitText(row.rawMessage, 1800),
+    additionalInstructions: limitText(row.additionalInstructions, 1200),
+    customStyle: limitText(row.customStyle, 1200),
+    applyStyleToTypography: row.applyStyleToTypography === true,
+    selectedTextAssets: Array.isArray(row.selectedTextAssets) ? row.selectedTextAssets.slice(0, 12) : [],
+    generatedImage: row.generatedImage,
+    hasGeneratedImage: row.hasGeneratedImage === true,
+  };
+}
+
+function compactImageSnapshot(value: unknown) {
+  if (!value || typeof value !== "object") return value;
+  const snapshot = value as Record<string, unknown>;
+  const compactGenerations = compactSessionGenerations({ sessionGenerations: snapshot.sessionGenerations }) as Record<string, unknown>;
+  return {
+    version: snapshot.version,
+    module: snapshot.module,
+    promptValue: limitText(snapshot.promptValue, 1800) || "",
+    editPrompt: limitText(snapshot.editPrompt, 1200) || "",
+    logoInclusion: snapshot.logoInclusion === true,
+    compositionMode: snapshot.compositionMode,
+    selectedContext: compactSelectedContext(snapshot.selectedContext),
+    sessionGenerations: compactGenerations.sessionGenerations,
+    creationFlowState: compactImageCreationFlowState(snapshot.creationFlowState),
+    rootPrompt: limitText(snapshot.rootPrompt, 1800),
+  };
+}
+
+function compactCarouselSnapshot(value: unknown) {
+  if (!value || typeof value !== "object") return value;
+  const snapshot = value as Record<string, unknown>;
+  const previewState = snapshot.previewState && typeof snapshot.previewState === "object"
+    ? snapshot.previewState as Record<string, unknown>
+    : {};
+
+  return {
+    version: snapshot.version,
+    module: snapshot.module,
+    prompt: limitText(snapshot.prompt, 1800) || "",
+    slideCount: snapshot.slideCount,
+    aspectRatio: snapshot.aspectRatio,
+    style: snapshot.style,
+    structureId: snapshot.structureId,
+    compositionId: snapshot.compositionId,
+    compositionMode: snapshot.compositionMode,
+    basicSelectedCompositionId: snapshot.basicSelectedCompositionId,
+    imageSourceMode: snapshot.imageSourceMode,
+    aiImageDescription: limitText(snapshot.aiImageDescription, 1200) || "",
+    aiStyleDirectives: limitText(snapshot.aiStyleDirectives, 1200) || "",
+    customStyle: limitText(snapshot.customStyle, 1200) || "",
+    applyStyleToTypography: snapshot.applyStyleToTypography === true,
+    selectedStylePresetId: snapshot.selectedStylePresetId,
+    selectedStylePresetName: limitText(snapshot.selectedStylePresetName, 120),
+    selectedLogoId: snapshot.selectedLogoId,
+    selectedColors: compactSelectedColors(snapshot.selectedColors),
+    selectedBrandKitImageIds: Array.isArray(snapshot.selectedBrandKitImageIds)
+      ? snapshot.selectedBrandKitImageIds.slice(0, MAX_BRANDKIT_IMAGE_IDS)
+      : [],
+    referenceImageRoles: compactReferenceImageRoles(snapshot.referenceImageRoles),
+    uploadedImages: Array.isArray(snapshot.uploadedImages) ? snapshot.uploadedImages.slice(0, MAX_UPLOADED_IMAGES) : [],
+    includeLogoOnSlides: snapshot.includeLogoOnSlides === true,
+    previewState: {
+      slides: Array.isArray(previewState.slides)
+        ? takeLast(previewState.slides, MAX_CAROUSEL_SLIDES).map((slide) => compactCarouselSlideRow(slide))
+        : [],
+      scriptSlides: Array.isArray(previewState.scriptSlides)
+        ? takeLast(previewState.scriptSlides, MAX_CAROUSEL_SLIDES).map((slide) => compactCarouselScriptSlideRow(slide))
+        : undefined,
+      caption: limitText(previewState.caption, 1200),
+      currentIndex: previewState.currentIndex,
+      sessionHistory: Array.isArray(previewState.sessionHistory)
+        ? takeLast(previewState.sessionHistory, MAX_CAROUSEL_HISTORY).map((entry) => {
+            if (!entry || typeof entry !== "object") return entry;
+            const row = entry as Record<string, unknown>;
+            return {
+              id: row.id,
+              createdAt: row.createdAt,
+              caption: limitText(row.caption, 1200),
+              slides: Array.isArray(row.slides)
+                ? takeLast(row.slides, MAX_CAROUSEL_SLIDES).map((slide) => compactCarouselSlideRow(slide))
+                : [],
+            };
+          })
+        : [],
+    },
+  };
+}
+
 function sanitizeSnapshot(snapshot: unknown): unknown {
   if (!snapshot) return snapshot;
   let next = recursivelyStripLargeStrings(snapshot);
+  const moduleKey = next && typeof next === "object" && typeof (next as Record<string, unknown>).module === "string"
+    ? (next as Record<string, unknown>).module
+    : "";
+  if (moduleKey === "image") {
+    next = compactImageSnapshot(next);
+  } else if (moduleKey === "carousel") {
+    next = compactCarouselSnapshot(next);
+  }
   let size = JSON.stringify(next).length;
 
   if (size > 900_000) {
@@ -368,6 +586,34 @@ async function listActiveForScope(
     .take(takeLimit);
 }
 
+async function pruneInactiveSessionsForScope(
+  ctx: MutationCtx,
+  args: { user_id: string; module: "image" | "carousel"; brand_id?: Id<"brand_dna"> },
+) {
+  const rows = args.brand_id
+    ? await ctx.db
+        .query("work_sessions")
+        .withIndex("by_user_brand_module_updated", (q) =>
+          q.eq("user_id", args.user_id).eq("brand_id", args.brand_id).eq("module", args.module),
+        )
+        .order("desc")
+        .take(200)
+    : (await ctx.db
+        .query("work_sessions")
+        .withIndex("by_user_module_updated", (q) => q.eq("user_id", args.user_id).eq("module", args.module))
+        .order("desc")
+        .take(200)).filter((row) => row.brand_id === undefined);
+
+  if (rows.length <= MAX_SESSIONS_PER_SCOPE) return;
+
+  const overflow = rows.slice(MAX_SESSIONS_PER_SCOPE);
+  const deletable = overflow.filter((row) => !row.active && row.title_customized !== true);
+
+  for (const row of deletable) {
+    await ctx.db.delete(row._id);
+  }
+}
+
 async function resolveSnapshotImageUrls(
   ctx: { storage: { getUrl: (storageId: string) => Promise<string | null> } },
   snapshot: unknown,
@@ -557,6 +803,7 @@ export const listSessions = query({
           module: row.module,
           brand_id: row.brand_id,
           title: row.title || "",
+          title_customized: row.title_customized === true,
           root_prompt: row.root_prompt || "",
           active: row.active,
           created_at: row.created_at,
@@ -603,6 +850,7 @@ export const createSession = mutation({
     module: v.string(),
     brand_id: v.optional(v.id("brand_dna")),
     title: v.optional(v.string()),
+    title_customized: v.optional(v.boolean()),
     root_prompt: v.optional(v.string()),
     snapshot: v.optional(v.any()),
   },
@@ -612,6 +860,7 @@ export const createSession = mutation({
     const nowMs = Date.now();
     const dedupeWindowMs = 8_000;
     const normalizedTitle = args.title?.trim() || undefined;
+    const normalizedTitleCustomized = args.title_customized === true && Boolean(normalizedTitle);
     const normalizedRootPrompt = normalizePrompt(args.root_prompt);
     const normalizedSnapshot = sanitizeSnapshot(args.snapshot);
     const latestActive = await getLatestForScope(ctx, {
@@ -649,11 +898,17 @@ export const createSession = mutation({
       module: moduleKey,
       brand_id: args.brand_id,
       title: normalizedTitle,
+      title_customized: normalizedTitleCustomized,
       root_prompt: normalizedRootPrompt,
       snapshot: normalizedSnapshot,
       active: true,
       created_at: now,
       updated_at: now,
+    });
+    await pruneInactiveSessionsForScope(ctx, {
+      user_id: args.user_id,
+      module: moduleKey,
+      brand_id: args.brand_id,
     });
 
     return { session_id: id };
@@ -667,6 +922,7 @@ export const upsertActiveSession = mutation({
     brand_id: v.optional(v.id("brand_dna")),
     session_id: v.optional(v.id("work_sessions")),
     title: v.optional(v.string()),
+    title_customized: v.optional(v.boolean()),
     root_prompt: v.optional(v.string()),
     snapshot: v.any(),
   },
@@ -675,6 +931,7 @@ export const upsertActiveSession = mutation({
     const now = new Date().toISOString();
     const sanitizedSnapshot = sanitizeSnapshot(args.snapshot);
     const normalizedTitle = args.title?.trim() || undefined;
+    const normalizedTitleCustomized = args.title_customized === true && Boolean(normalizedTitle);
     const normalizedRootPrompt = normalizePrompt(args.root_prompt) || undefined;
 
     if (args.session_id) {
@@ -697,19 +954,29 @@ export const upsertActiveSession = mutation({
         }
       }
 
-      const nextTitle = normalizedTitle ?? existing.title;
+      const preserveExistingCustomTitle = args.title_customized === undefined && existing.title_customized === true;
+      const nextTitle = preserveExistingCustomTitle
+        ? existing.title
+        : (normalizedTitle ?? existing.title);
+      const nextTitleCustomized = preserveExistingCustomTitle
+        ? true
+        : normalizedTitle !== undefined
+          ? normalizedTitleCustomized
+          : existing.title_customized === true;
       const nextRootPrompt = normalizedRootPrompt ?? existing.root_prompt;
       const snapshotChanged =
         safeStableStringify(existing.snapshot) !== safeStableStringify(sanitizedSnapshot);
       const shouldPatch =
         !existing.active ||
         existing.title !== nextTitle ||
+        (existing.title_customized === true) !== nextTitleCustomized ||
         existing.root_prompt !== nextRootPrompt ||
         snapshotChanged;
 
       if (shouldPatch) {
         await ctx.db.patch(args.session_id, {
           title: nextTitle,
+          title_customized: nextTitleCustomized,
           root_prompt: nextRootPrompt,
           snapshot: sanitizedSnapshot,
           active: true,
@@ -727,7 +994,15 @@ export const upsertActiveSession = mutation({
     });
 
     if (current) {
-      const nextTitle = normalizedTitle ?? current.title;
+      const preserveExistingCustomTitle = args.title_customized === undefined && current.title_customized === true;
+      const nextTitle = preserveExistingCustomTitle
+        ? current.title
+        : (normalizedTitle ?? current.title);
+      const nextTitleCustomized = preserveExistingCustomTitle
+        ? true
+        : normalizedTitle !== undefined
+          ? normalizedTitleCustomized
+          : current.title_customized === true;
       const nextRootPrompt = normalizedRootPrompt ?? current.root_prompt;
       const nextBrandId = args.brand_id ?? current.brand_id;
       const snapshotChanged =
@@ -735,6 +1010,7 @@ export const upsertActiveSession = mutation({
       const shouldPatch =
         !current.active ||
         current.title !== nextTitle ||
+        (current.title_customized === true) !== nextTitleCustomized ||
         current.root_prompt !== nextRootPrompt ||
         current.brand_id !== nextBrandId ||
         snapshotChanged;
@@ -743,6 +1019,7 @@ export const upsertActiveSession = mutation({
         await ctx.db.patch(current._id, {
           brand_id: nextBrandId,
           title: nextTitle,
+          title_customized: nextTitleCustomized,
           root_prompt: nextRootPrompt,
           snapshot: sanitizedSnapshot,
           active: true,
@@ -757,11 +1034,17 @@ export const upsertActiveSession = mutation({
       module: moduleKey,
       brand_id: args.brand_id,
       title: normalizedTitle,
+      title_customized: normalizedTitleCustomized,
       root_prompt: normalizedRootPrompt,
       snapshot: sanitizedSnapshot,
       active: true,
       created_at: now,
       updated_at: now,
+    });
+    await pruneInactiveSessionsForScope(ctx, {
+      user_id: args.user_id,
+      module: moduleKey,
+      brand_id: args.brand_id,
     });
 
     return { session_id: created };
@@ -965,6 +1248,54 @@ export const sanitizeSessions = mutation({
       duplicateGroups: duplicateGroups.slice(0, 50),
       deletedIds: deletedIds.slice(0, 200),
       reactivatedScopes: reactivatedScopes.slice(0, 50),
+    };
+  },
+});
+
+export const compactStoredSnapshots = mutation({
+  args: {
+    admin_email: v.string(),
+    dryRun: v.optional(v.boolean()),
+    limit: v.optional(v.number()),
+    module: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    if (!isAdmin(args.admin_email)) throw new Error("Unauthorized");
+    const dryRun = args.dryRun === true;
+    const takeLimit = Math.max(1, Math.min(args.limit ?? 200, 500));
+    const moduleFilter = args.module ? ensureModule(args.module) : null;
+    const rows = await ctx.db.query("work_sessions").order("desc").take(takeLimit);
+
+    let scanned = 0;
+    let compacted = 0;
+    let bytesBefore = 0;
+    let bytesAfter = 0;
+
+    for (const row of rows) {
+      if (moduleFilter && row.module !== moduleFilter) continue;
+      scanned += 1;
+      const before = safeStableStringify(row.snapshot);
+      const nextSnapshot = sanitizeSnapshot(row.snapshot);
+      const after = safeStableStringify(nextSnapshot);
+      bytesBefore += before.length;
+      bytesAfter += after.length;
+
+      if (before === after) continue;
+      compacted += 1;
+      if (!dryRun) {
+        await ctx.db.patch(row._id, {
+          snapshot: nextSnapshot,
+        });
+      }
+    }
+
+    return {
+      dryRun,
+      scanned,
+      compacted,
+      bytesBefore,
+      bytesAfter,
+      bytesSaved: Math.max(0, bytesBefore - bytesAfter),
     };
   },
 });

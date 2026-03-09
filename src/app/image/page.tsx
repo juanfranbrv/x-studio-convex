@@ -29,6 +29,7 @@ import { IntentCategory, TextAsset } from '@/lib/creation-flow-types'
 import { useUI } from '@/contexts/UIContext'
 import { hexToHslString } from '@/lib/color-utils'
 import { FeedbackButton } from '@/components/studio/FeedbackButton'
+import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialog'
 import { Id } from '../../../convex/_generated/dataModel'
 import type { BrandDNA } from '@/lib/brand-types'
 import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/admin-compositions-actions'
@@ -185,6 +186,8 @@ export default function ImagePage() {
     const hydrationScopeRef = useRef<string>('')
     const hasHydratedScopeRef = useRef(false)
     const lastSavedSnapshotSignatureRef = useRef<string | null>(null)
+    const pendingBaselineResetRef = useRef(false)
+    const baselineResetTimeoutRef = useRef<number | null>(null)
     const createSessionInFlightRef = useRef(false)
     const persistedSessionImageCacheRef = useRef<Map<string, {
         storageId: string
@@ -197,12 +200,15 @@ export default function ImagePage() {
     const persistImageInFlightRef = useRef<Map<string, Promise<{ storageId: string; imageUrl: string; originalStorageId: string; originalImageUrl: string; previewStorageId: string; previewImageUrl: string } | null>>>(new Map())
     const bypassUnsavedGuardRef = useRef(false)
     const sessionDecisionResolverRef = useRef<((decision: string | null) => void) | null>(null)
+    const sessionTitleResolverRef = useRef<((title: string | null) => void) | null>(null)
     const [sessionDecisionModal, setSessionDecisionModal] = useState<SessionDecisionModalState>({
         open: false,
         title: '',
         description: '',
         buttons: [],
     })
+    const [sessionTitleDialogOpen, setSessionTitleDialogOpen] = useState(false)
+    const [sessionTitleDraft, setSessionTitleDraft] = useState('')
     const openSessionDecisionModal = useCallback((config: Omit<SessionDecisionModalState, 'open'>) => {
         return new Promise<string | null>((resolve) => {
             sessionDecisionResolverRef.current = resolve
@@ -216,6 +222,18 @@ export default function ImagePage() {
         sessionDecisionResolverRef.current?.(decision)
         sessionDecisionResolverRef.current = null
         setSessionDecisionModal((prev) => ({ ...prev, open: false }))
+    }, [])
+    const openSessionTitleDialog = useCallback((initialValue: string) => {
+        return new Promise<string | null>((resolve) => {
+            sessionTitleResolverRef.current = resolve
+            setSessionTitleDraft(initialValue)
+            setSessionTitleDialogOpen(true)
+        })
+    }, [])
+    const closeSessionTitleDialog = useCallback((title: string | null) => {
+        sessionTitleResolverRef.current?.(title)
+        sessionTitleResolverRef.current = null
+        setSessionTitleDialogOpen(false)
     }, [])
     const confirmDiscardUnsavedChanges = useCallback(async (action: string) => {
         if (!hasUnsavedChanges) return true
@@ -299,10 +317,15 @@ export default function ImagePage() {
         if (cleaned.length <= 48) return cleaned
         return `${cleaned.slice(0, 48)}...`
     }, [])
+    const activeSessionMeta = useMemo(() => {
+        const currentId = currentSessionId ? String(currentSessionId) : ''
+        if (!currentId) return null
+        return (workSessions || []).find((session) => String(session._id) === currentId) || null
+    }, [currentSessionId, workSessions])
 
     const buildWorkspaceSnapshot = useCallback((rootPromptOverride?: string | null, generationsOverride?: Generation[]): ImageWorkspaceSnapshot => {
         const sourceGenerations = generationsOverride ?? sessionGenerations
-        const compactGenerations: CompactGeneration[] = sourceGenerations.slice(0, 120).map((generation) => {
+        const compactGenerations: CompactGeneration[] = sourceGenerations.slice(-24).map((generation) => {
             const payload = generation.request_payload || {}
             return {
                 id: generation.id,
@@ -313,11 +336,11 @@ export default function ImagePage() {
                 original_image_url: generation.original_image_url,
                 original_image_storage_id: generation.original_image_storage_id,
                 created_at: generation.created_at,
-                prompt_used: generation.prompt_used?.slice(0, 2500),
+                prompt_used: generation.prompt_used?.slice(0, 900),
                 error_title: generation.error_title,
                 error_fallback: generation.error_fallback,
                 request_payload: {
-                    prompt: typeof payload.prompt === 'string' ? payload.prompt.slice(0, 2500) : undefined,
+                    prompt: typeof payload.prompt === 'string' ? payload.prompt.slice(0, 900) : undefined,
                     model: typeof payload.model === 'string' ? payload.model : undefined,
                     layoutId: typeof payload.layoutId === 'string' ? payload.layoutId : undefined,
                     aspectRatio: typeof payload.aspectRatio === 'string' ? payload.aspectRatio : undefined,
@@ -328,14 +351,14 @@ export default function ImagePage() {
         return {
             version: 1,
             module: 'image',
-            promptValue,
-            editPrompt,
+            promptValue: promptValue.slice(0, 1800),
+            editPrompt: editPrompt.slice(0, 1200),
             logoInclusion,
             compositionMode,
-            selectedContext,
+            selectedContext: selectedContext.slice(0, 16),
             sessionGenerations: compactGenerations,
             creationFlowState: creationFlow.getStateSnapshot(),
-            rootPrompt: rootPromptOverride ?? sessionRootPrompt ?? undefined,
+            rootPrompt: (rootPromptOverride ?? sessionRootPrompt ?? undefined)?.slice(0, 1800),
         }
     }, [
         promptValue,
@@ -347,6 +370,25 @@ export default function ImagePage() {
         creationFlow,
         sessionRootPrompt
     ])
+
+    const buildWorkspaceChangeSignature = useCallback((snapshot: ImageWorkspaceSnapshot) => {
+        const normalizedCreationFlowState = (
+            snapshot.creationFlowState &&
+            typeof snapshot.creationFlowState === 'object' &&
+            !Array.isArray(snapshot.creationFlowState)
+        )
+            ? {
+                ...snapshot.creationFlowState,
+                generatedImage: null,
+                hasGeneratedImage: Array.isArray(snapshot.sessionGenerations) && snapshot.sessionGenerations.length > 0,
+            }
+            : snapshot.creationFlowState
+
+        return JSON.stringify({
+            ...snapshot,
+            creationFlowState: normalizedCreationFlowState,
+        })
+    }, [])
 
     const persistGenerationImage = useCallback(async (generation: Generation) => {
         const originalImageUrl = typeof generation.original_image_url === 'string' ? generation.original_image_url.trim() : ''
@@ -467,10 +509,43 @@ export default function ImagePage() {
         }
     }, [creationFlow, normalizePromptForSession])
 
+    const scheduleBaselineReset = useCallback((signature: string) => {
+        if (baselineResetTimeoutRef.current !== null) {
+            window.clearTimeout(baselineResetTimeoutRef.current)
+        }
+        baselineResetTimeoutRef.current = window.setTimeout(() => {
+            pendingBaselineResetRef.current = false
+            lastSavedSnapshotSignatureRef.current = signature
+            setHasUnsavedChanges(false)
+            baselineResetTimeoutRef.current = null
+        }, 180)
+    }, [])
+
+    const resetImageDraft = useCallback((initialPrompt = '') => {
+        creationFlow.reset()
+        setSessionGenerations([])
+        setDebugPromptData(null)
+        setSelectedContext([])
+        setEditPrompt('')
+        setPendingRetryRequest(null)
+        setLastGenerationRequest(null)
+        setPromptValue(initialPrompt)
+        creationFlow.setRawMessage(initialPrompt)
+        setSessionRootPrompt(null)
+        setAuditFlowId(null)
+        auditFlowIdRef.current = null
+        setCurrentSessionId(null)
+        setSelectedSessionToLoad('')
+        setSessionSavedAt(null)
+        setSessionSaveError(null)
+        pendingBaselineResetRef.current = true
+        setHasUnsavedChanges(false)
+    }, [creationFlow])
+
     const createNewImageSession = useCallback(async (
         initialPrompt?: string,
         silent = false,
-        options?: { skipUnsavedConfirm?: boolean }
+        options?: { skipUnsavedConfirm?: boolean; persist?: boolean }
     ) => {
         if (!user?.id || !scopedBrandId) return null
         if (createSessionInFlightRef.current) return null
@@ -481,31 +556,35 @@ export default function ImagePage() {
         try {
             const prompt = initialPrompt ?? ''
             const normalizedPrompt = normalizePromptForSession(prompt)
+            resetImageDraft(prompt)
 
-            creationFlow.reset()
-            setSessionGenerations([])
-            setDebugPromptData(null)
-            setSelectedContext([])
-            setEditPrompt('')
-            setPendingRetryRequest(null)
-            setLastGenerationRequest(null)
-            setPromptValue(prompt)
-            creationFlow.setRawMessage(prompt)
+            if (!options?.persist) {
+                if (!silent) {
+                    toast({
+                        title: "Sesion nueva",
+                        description: "Se ha preparado un borrador nuevo. La sesion se creara al analizar el prompt.",
+                    })
+                }
+                return null
+            }
+
             setSessionRootPrompt(normalizedPrompt)
-            setAuditFlowId(null)
-            auditFlowIdRef.current = null
+            const draftSnapshot = buildWorkspaceSnapshot(normalizedPrompt)
 
             const created = await createWorkSession({
                 user_id: user.id,
                 module: 'image',
                 brand_id: scopedBrandId,
                 title: buildSessionTitle(prompt),
+                title_customized: false,
                 root_prompt: normalizedPrompt || undefined,
+                snapshot: draftSnapshot,
             })
 
             const newId = String(created.session_id)
             setCurrentSessionId(newId)
             setSelectedSessionToLoad(newId)
+            lastSavedSnapshotSignatureRef.current = buildWorkspaceChangeSignature(draftSnapshot)
             setHasUnsavedChanges(false)
 
             if (!silent) {
@@ -519,7 +598,7 @@ export default function ImagePage() {
             createSessionInFlightRef.current = false
             setIsCreatingSession(false)
         }
-    }, [user?.id, scopedBrandId, normalizePromptForSession, creationFlow, createWorkSession, toast, buildSessionTitle, confirmDiscardUnsavedChanges])
+    }, [user?.id, scopedBrandId, normalizePromptForSession, resetImageDraft, createWorkSession, toast, buildSessionTitle, confirmDiscardUnsavedChanges, buildWorkspaceSnapshot, buildWorkspaceChangeSignature])
 
     const handleLoadSession = useCallback(async (
         sessionId: string,
@@ -532,6 +611,7 @@ export default function ImagePage() {
             session_id: sessionId as Id<'work_sessions'>,
         })
         if (activated?.snapshot) {
+            pendingBaselineResetRef.current = true
             restoreWorkspaceFromSnapshot(activated.snapshot as ImageWorkspaceSnapshot)
         }
         setCurrentSessionId(String(activated?._id || sessionId))
@@ -599,6 +679,11 @@ export default function ImagePage() {
     useEffect(() => {
         const scopeKey = `${user?.id || 'anon'}::image::${scopedBrandId || 'no-brand'}`
         if (hydrationScopeRef.current !== scopeKey) {
+            if (baselineResetTimeoutRef.current !== null) {
+                window.clearTimeout(baselineResetTimeoutRef.current)
+                baselineResetTimeoutRef.current = null
+            }
+            pendingBaselineResetRef.current = false
             hydrationScopeRef.current = scopeKey
             hasHydratedScopeRef.current = false
             lastSavedSnapshotSignatureRef.current = null
@@ -615,26 +700,23 @@ export default function ImagePage() {
         if (hasHydratedScopeRef.current) return
 
         if (activeWorkSession?.snapshot) {
+            pendingBaselineResetRef.current = true
             restoreWorkspaceFromSnapshot(activeWorkSession.snapshot as ImageWorkspaceSnapshot)
             setCurrentSessionId(String(activeWorkSession._id))
             setSelectedSessionToLoad(String(activeWorkSession._id))
             setSessionRootPrompt(normalizePromptForSession(activeWorkSession.root_prompt))
-            lastSavedSnapshotSignatureRef.current = JSON.stringify(activeWorkSession.snapshot)
             setHasUnsavedChanges(false)
             hasHydratedScopeRef.current = true
             return
         }
 
         hasHydratedScopeRef.current = true
-        createNewImageSession('', true, { skipUnsavedConfirm: true }).catch((error) => {
-            hasHydratedScopeRef.current = false
-            console.error('Error creating initial image work session:', error)
-        })
+        pendingBaselineResetRef.current = true
+        setHasUnsavedChanges(false)
     }, [
         user?.id,
         scopedBrandId,
         activeWorkSession,
-        createNewImageSession,
         restoreWorkspaceFromSnapshot,
         normalizePromptForSession
     ])
@@ -643,6 +725,8 @@ export default function ImagePage() {
         silent?: boolean
         markSavedAt?: boolean
         force?: boolean
+        titleOverride?: string
+        titleCustomized?: boolean
     }) => {
         if (!user?.id || !scopedBrandId) return
         const isSilent = options?.silent === true
@@ -668,7 +752,7 @@ export default function ImagePage() {
             }
 
             const snapshot = buildWorkspaceSnapshot(undefined, persistedGenerations)
-            const snapshotSignature = JSON.stringify(snapshot)
+            const snapshotSignature = buildWorkspaceChangeSignature(snapshot)
             if (!forcePersist && lastSavedSnapshotSignatureRef.current === snapshotSignature) {
                 if (shouldMarkSavedAt) {
                     setSessionSavedAt(new Date().toISOString())
@@ -681,7 +765,8 @@ export default function ImagePage() {
                 module: 'image',
                 brand_id: scopedBrandId,
                 session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
-                title: buildSessionTitle(snapshot.promptValue || 'Sesion de imagen'),
+                title: options?.titleOverride ?? buildSessionTitle(snapshot.promptValue || 'Sesion de imagen'),
+                title_customized: options?.titleCustomized,
                 root_prompt: normalizePromptForSession(snapshot.rootPrompt || snapshot.promptValue) || undefined,
                 snapshot,
             })
@@ -717,9 +802,45 @@ export default function ImagePage() {
         normalizePromptForSession
     ])
 
+    const ensureImageSessionForAnalyze = useCallback(async (normalizedPrompt: string | null) => {
+        if (!user?.id || !scopedBrandId || currentSessionId) return currentSessionId
+
+        const draftSnapshot = buildWorkspaceSnapshot(normalizedPrompt)
+        const created = await createWorkSession({
+            user_id: user.id,
+            module: 'image',
+            brand_id: scopedBrandId,
+            title: buildSessionTitle(promptValue || 'Sesion de imagen'),
+            title_customized: false,
+            root_prompt: normalizedPrompt || undefined,
+            snapshot: draftSnapshot,
+        })
+
+        const sessionId = String(created.session_id)
+        setCurrentSessionId(sessionId)
+        setSelectedSessionToLoad(sessionId)
+        setSessionRootPrompt(normalizedPrompt)
+        lastSavedSnapshotSignatureRef.current = buildWorkspaceChangeSignature(draftSnapshot)
+        setHasUnsavedChanges(false)
+        return sessionId
+    }, [user?.id, scopedBrandId, currentSessionId, buildWorkspaceSnapshot, createWorkSession, buildSessionTitle, promptValue, buildWorkspaceChangeSignature])
+
     const handleSaveSessionNow = useCallback(async () => {
         if (!user?.id || !scopedBrandId || isHydratingSession) return
         try {
+            if (activeSessionMeta?.title_customized !== true) {
+                const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || promptValue || 'Sesion de imagen')
+                const selectedTitle = await openSessionTitleDialog(suggestedTitle)
+                if (!selectedTitle) return
+                await persistImageWorkspaceSnapshot({
+                    silent: false,
+                    markSavedAt: true,
+                    force: true,
+                    titleOverride: buildSessionTitle(selectedTitle),
+                    titleCustomized: true,
+                })
+                return
+            }
             await persistImageWorkspaceSnapshot({
                 silent: false,
                 markSavedAt: true,
@@ -728,34 +849,50 @@ export default function ImagePage() {
         } catch (error) {
             console.error('Manual save session failed:', error)
         }
-    }, [user?.id, scopedBrandId, isHydratingSession, persistImageWorkspaceSnapshot])
+    }, [user?.id, scopedBrandId, isHydratingSession, activeSessionMeta, buildSessionTitle, openSessionTitleDialog, persistImageWorkspaceSnapshot, promptValue])
+    const handleRenameCurrentSession = useCallback(async () => {
+        if (!user?.id || !scopedBrandId || isHydratingSession || !currentSessionId) return
+        const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || promptValue || 'Sesion de imagen')
+        const selectedTitle = await openSessionTitleDialog(suggestedTitle)
+        if (!selectedTitle) return
+        try {
+            await persistImageWorkspaceSnapshot({
+                silent: false,
+                markSavedAt: true,
+                force: true,
+                titleOverride: buildSessionTitle(selectedTitle),
+                titleCustomized: true,
+            })
+        } catch (error) {
+            console.error('Rename session failed:', error)
+        }
+    }, [user?.id, scopedBrandId, isHydratingSession, currentSessionId, activeSessionMeta, buildSessionTitle, openSessionTitleDialog, persistImageWorkspaceSnapshot, promptValue])
 
     const workspaceSignature = useMemo(() => {
-        return JSON.stringify(buildWorkspaceSnapshot())
-    }, [buildWorkspaceSnapshot])
-
-    const wasHydratingRef = useRef(false)
-    useEffect(() => {
-        const wasHydrating = wasHydratingRef.current
-        wasHydratingRef.current = isHydratingSession
-
-        if (!wasHydrating || isHydratingSession || !hasHydratedScopeRef.current) return
-
-        // After restoring a session, establish the restored workspace as the saved baseline.
-        // This prevents false "unsaved changes" warnings caused by hydration-time normalization.
-        lastSavedSnapshotSignatureRef.current = workspaceSignature
-        setHasUnsavedChanges(false)
-    }, [isHydratingSession, workspaceSignature])
+        return buildWorkspaceChangeSignature(buildWorkspaceSnapshot())
+    }, [buildWorkspaceSnapshot, buildWorkspaceChangeSignature])
 
     useEffect(() => {
         if (!hasHydratedScopeRef.current || isHydratingSession) return
+        if (pendingBaselineResetRef.current) {
+            scheduleBaselineReset(workspaceSignature)
+            return
+        }
         const lastSaved = lastSavedSnapshotSignatureRef.current
         if (!lastSaved) {
             setHasUnsavedChanges(true)
             return
         }
         setHasUnsavedChanges(lastSaved !== workspaceSignature)
-    }, [workspaceSignature, isHydratingSession])
+    }, [workspaceSignature, isHydratingSession, scheduleBaselineReset])
+
+    useEffect(() => {
+        return () => {
+            if (baselineResetTimeoutRef.current !== null) {
+                window.clearTimeout(baselineResetTimeoutRef.current)
+            }
+        }
+    }, [])
 
     useEffect(() => {
         if (!hasUnsavedChanges) return
@@ -1235,6 +1372,8 @@ export default function ImagePage() {
             } else if (normalizedPrompt && !sessionRootPrompt) {
                 setSessionRootPrompt(normalizedPrompt)
             }
+
+            await ensureImageSessionForAnalyze(normalizedPrompt)
 
             const modelToUse = autoModel || aiConfig?.intelligenceModel
             if (!modelToUse) {
@@ -2105,6 +2244,7 @@ export default function ImagePage() {
                                 }
                             }}
                             onCreateSession={() => void createNewImageSession()}
+                            onRenameSession={() => void handleRenameCurrentSession()}
                             isCreatingSession={isCreatingSession}
                             onDeleteSession={() => void handleDeleteCurrentSession()}
                             onClearSessions={() => void handleClearAllSessions()}
@@ -2278,6 +2418,16 @@ export default function ImagePage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <SessionTitleDialog
+                open={sessionTitleDialogOpen}
+                title="Ponle nombre a la sesión"
+                description="La primera vez que guardes esta sesión puedes dejarle un nombre claro para encontrarla luego."
+                value={sessionTitleDraft}
+                confirmLabel="Guardar sesión"
+                onValueChange={setSessionTitleDraft}
+                onCancel={() => closeSessionTitleDialog(null)}
+                onConfirm={() => closeSessionTitleDialog(buildSessionTitle(sessionTitleDraft))}
+            />
         </DashboardLayout >
     )
 }

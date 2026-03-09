@@ -182,6 +182,7 @@ export default defineSchema({
     module: v.string(),                   // "image" | "carousel"
     brand_id: v.optional(v.id("brand_dna")),
     title: v.optional(v.string()),
+    title_customized: v.optional(v.boolean()),
     root_prompt: v.optional(v.string()),
     snapshot: v.optional(v.any()),        // full UI state
     active: v.boolean(),

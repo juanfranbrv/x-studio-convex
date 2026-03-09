@@ -8,7 +8,7 @@ import { ContentImageCard } from './creation-flow/ContentImageCard'
 import { StyleImageCard } from './creation-flow/StyleImageCard'
 import { AuxiliaryLogosCard } from './creation-flow/AuxiliaryLogosCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Layers, ImagePlus, Wand2, Loader2, Fingerprint, RotateCcw, History, Plus, Trash2, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { Palette, Layout, Layers, ImagePlus, Wand2, Loader2, Fingerprint, RotateCcw, History, Plus, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -21,6 +21,7 @@ import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useUI } from '@/contexts/UIContext'
+import { useStylePresetImages } from '@/hooks/useStylePresetImages'
 import {
     IntentCategory,
     INTENT_CATALOG,
@@ -209,6 +210,7 @@ interface ControlsPanelProps {
     selectedSessionId?: string
     onSelectSession?: (id: string) => void
     onCreateSession?: () => void
+    onRenameSession?: () => void
     onDeleteSession?: () => void
     onClearSessions?: () => void
     onSaveSessionNow?: () => void
@@ -237,9 +239,10 @@ export function ControlsPanel({
     onCompositionModeChange,
     layoutOverrides,
     sessions = [],
-    selectedSessionId = '',
+    selectedSessionId,
     onSelectSession,
     onCreateSession,
+    onRenameSession,
     onDeleteSession,
     onClearSessions,
     onSaveSessionNow,
@@ -313,11 +316,7 @@ export function ControlsPanel({
             }
             : 'skip'
     )
-    const stylePresetResults = useQuery(api.stylePresets.listActiveImages, {})
-    const stylePresets = (stylePresetResults || []) as Array<{
-        _id: string
-        image_url: string
-    }>
+    const { stylePresets } = useStylePresetImages()
     const stylePresetsStatus: 'Exhausted' = 'Exhausted'
 
     const lastInitBrandId = useRef<string | null>(null)
@@ -562,7 +561,9 @@ export function ControlsPanel({
             setColorRole(targetColor, returnRole)
         }
     }
-    const effectiveSessionId = selectedSessionId || sessions.find((session) => session.active)?.id || ''
+    const effectiveSessionId = selectedSessionId !== undefined
+        ? selectedSessionId
+        : (sessions.find((session) => session.active)?.id || '')
     const selectedIntentMeta = INTENT_CATALOG.find((intent) => intent.id === state.selectedIntent)
     const effectiveLayoutIntent: IntentCategory = (
         layoutIntentOverride === 'auto'
@@ -670,7 +671,7 @@ export function ControlsPanel({
                                     size="icon"
                                     className="h-7 w-7"
                                     onClick={onSaveSessionNow}
-                                    disabled={isSavingSession}
+                                    disabled={isSavingSession || !hasUnsavedChanges}
                                     title="Guardar historial ahora"
                                 >
                                     {isSavingSession ? (
@@ -719,12 +720,21 @@ export function ControlsPanel({
                         </Button>
                         <Button
                             variant="outline"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={onDeleteSession}
-                            title="Borrar sesion"
+                            size="sm"
+                            className="h-7 px-2 text-[10px]"
+                            onClick={onRenameSession}
+                            disabled={!effectiveSessionId}
                         >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            Renombrar sesión
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-[10px]"
+                            onClick={onDeleteSession}
+                            disabled={!effectiveSessionId}
+                        >
+                            Borrar sesión
                         </Button>
                         <Button
                             variant="outline"
@@ -732,7 +742,7 @@ export function ControlsPanel({
                             className="h-7 px-2 text-[10px]"
                             onClick={onClearSessions}
                         >
-                            Limpiar
+                            Borrar historial
                         </Button>
                     </div>
                 </div>

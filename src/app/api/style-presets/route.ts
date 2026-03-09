@@ -1,0 +1,37 @@
+import { NextResponse } from 'next/server'
+import { fetchQuery } from 'convex/nextjs'
+import { api } from '@/../convex/_generated/api'
+
+export const revalidate = 300
+
+type StylePresetImageRow = {
+  _id: string
+  image_url: string
+}
+
+export async function GET() {
+  try {
+    const rows = (await fetchQuery(api.stylePresets.listActiveImages, {})) as Array<{
+      _id: unknown
+      image_url: unknown
+    }>
+
+    const presets: StylePresetImageRow[] = rows.map((row) => ({
+      _id: String(row._id),
+      image_url: typeof row.image_url === 'string' ? row.image_url : '',
+    }))
+
+    return NextResponse.json(presets, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=86400',
+      },
+    })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : 'No se pudieron cargar los estilos',
+      },
+      { status: 500 },
+    )
+  }
+}
