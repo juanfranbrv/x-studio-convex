@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import type { LayoutOption, IntentCategory } from '@/lib/creation-flow-types'
 import { CompositionPreviewThumbnail, getCompositionPreviewData } from './MotifVisualPicker'
+import { renderLucideLayoutIcon } from '@/lib/layout-icon'
 import {
     getLayoutRatingStats,
     type LayoutRatingStoreEntry,
@@ -149,12 +150,16 @@ export function LayoutSelector({
                                     'w-10 h-10 flex items-center justify-center text-primary/70',
                                     opts?.recommended ? 'ring-1 ring-primary/20' : ''
                                 )}>
-                                    <span
-                                        className="material-symbols-outlined leading-none"
-                                        style={{ fontSize: '40px' }}
-                                    >
-                                        {layout.svgIcon}
-                                    </span>
+                                    {renderLucideLayoutIcon(layout.svgIcon, {
+                                        className: 'h-10 w-10 stroke-[1.75]',
+                                    }) ?? (
+                                        <span
+                                            className="material-symbols-outlined leading-none"
+                                            style={{ fontSize: '40px' }}
+                                        >
+                                            {layout.svgIcon}
+                                        </span>
+                                    )}
                                 </div>
                             ) : (
                                 <CompositionPreviewThumbnail

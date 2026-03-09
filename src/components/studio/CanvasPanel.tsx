@@ -26,6 +26,7 @@ import { generateSocialPost } from '@/app/actions/generate-social-post'
 import { WireframeRenderer } from './previews/WireframeRenderer'
 import { FloatingAssistance } from './creation-flow/FloatingAssistance'
 import { ALL_IMAGE_LAYOUTS, GenerationState, TextAsset } from '@/lib/creation-flow-types'
+import { renderLucideLayoutIcon } from '@/lib/layout-icon'
 
 export interface Generation {
     id: string
@@ -107,6 +108,17 @@ function renderLayoutIcon(svgIcon: string) {
                 className="w-[85%] h-[85%] text-primary/25 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block"
                 dangerouslySetInnerHTML={{ __html: trimmed }}
             />
+        )
+    }
+
+    const lucideIcon = renderLucideLayoutIcon(trimmed, {
+        className: 'w-[85%] h-[85%] text-primary/25 stroke-[1.25]',
+    })
+    if (lucideIcon) {
+        return (
+            <div className="w-[85%] h-[85%] flex items-center justify-center">
+                {lucideIcon}
+            </div>
         )
     }
 
