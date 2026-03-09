@@ -40,7 +40,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getCarouselCompositionRecommendation } from '@/lib/carousel-composition-governance'
-import { Sparkles, Layers3, Power, Wand2 } from 'lucide-react'
+import { Sparkles, Layers3, Loader2, Power, Wand2 } from 'lucide-react'
 
 const createAuditFlowId = (prefix: string) =>
     `flow_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
@@ -73,7 +73,7 @@ export default function CarouselPage() {
     const isAdmin = user?.emailAddresses?.some(
         email => email.emailAddress === 'juanfranbrv@gmail.com'
     ) ?? false
-    const { activeBrandKit, brandKits, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
+    const { activeBrandKit, brandKits, loading: brandKitsLoading, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const { toast } = useToast()
     const { panelPosition } = useUI()
     const aiConfig = useQuery(api.settings.getAIConfig)
@@ -107,6 +107,26 @@ export default function CarouselPage() {
 
     const handleNewBrandKit = () => {
         router.push('/brand-kit/new')
+    }
+
+    if (brandKitsLoading && !activeBrandKit) {
+        return (
+            <DashboardLayout
+                brands={brandKits}
+                currentBrand={activeBrandKit}
+                onBrandChange={setActiveBrandKit}
+                onBrandDelete={deleteBrandKitById}
+                onNewBrandKit={handleNewBrandKit}
+                isFixed={true}
+            >
+                <div className="flex h-full items-center justify-center">
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <span className="text-lg font-medium">Cargando Carrusel...</span>
+                    </div>
+                </div>
+            </DashboardLayout>
+        )
     }
 
 

@@ -27,6 +27,43 @@ const BrandKitContext = createContext<BrandKitContextType | undefined>(undefined
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+function calculateCompletenessFromSummary(brand: any): number {
+    let score = 0
+
+    if ((brand.brand_name || '').trim().length > 0) score += 10
+    if ((brand.tagline || '').trim().length > 0) score += 10
+    if ((brand.business_overview_length || 0) > 20) score += 10
+    if ((brand.colors_count || 0) >= 3) score += 15
+    if ((brand.logos_count || 0) >= 1 || Boolean(brand.logo_url)) score += 15
+    if ((brand.fonts_count || 0) >= 1) score += 10
+    if ((brand.images_count || 0) >= 1) score += 10
+    if ((brand.brand_values_count || 0) >= 1) score += 5
+    if ((brand.tone_of_voice_count || 0) >= 1) score += 5
+    if (Boolean(brand.has_text_assets)) score += 10
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+}
+
+function normalizeBrandKitSummaries(brands: any[] | undefined | null): BrandKitSummary[] {
+    return (brands || [])
+        .slice()
+        .sort((a: any, b: any) => {
+            const dateA = new Date(a.updated_at || 0).getTime()
+            const dateB = new Date(b.updated_at || 0).getTime()
+            return dateB - dateA
+        })
+        .map((brand: any) => ({
+            id: String(brand._id),
+            brand_name: brand.brand_name || '',
+            url: brand.url || '',
+            logo_url: brand.logo_url || null,
+            favicon_url: brand.favicon_url || null,
+            screenshot_url: brand.screenshot_url || null,
+            completeness: calculateCompletenessFromSummary(brand),
+            updated_at: brand.updated_at || new Date().toISOString(),
+        }))
+}
+
 export function BrandKitProvider({ children }: { children: ReactNode }) {
     const { user, isLoaded } = useUser()
     const [activeBrandKit, setActiveBrandKitState] = useState<BrandDNA | null>(null)
@@ -35,12 +72,15 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
 
     // Convex hooks
     const userRecord = useQuery(api.users.getUser, user?.id ? { clerk_id: user.id } : 'skip')
+    const liveBrandSummaries = useQuery(
+        api.brands.listSummariesByClerkId,
+        user?.id ? { clerk_user_id: user.id } : 'skip'
+    )
     const updateLastBrand = useMutation(api.users.setCurrentBrand)
     const upsertUser = useMutation(api.users.upsertUser)
 
-    // Track if we have already attempted initial load
-    const initialLoadAttempted = useRef(false)
     const activeSelectionHealing = useRef(false)
+    const loadingBrandDetailsRef = useRef<string | null>(null)
 
     const ensureConvexUser = async () => {
         if (!user?.id) return false
@@ -64,6 +104,16 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
     // Cargar todos los kits de marca del usuario
     const loadBrandKits = async (isSilent = false) => {
         if (!user?.id) return
+
+        if (Array.isArray(liveBrandSummaries)) {
+            const nextBrandKits = normalizeBrandKitSummaries(liveBrandSummaries)
+            setBrandKits(nextBrandKits)
+            if (nextBrandKits.length === 0) {
+                setActiveBrandKitState(null)
+            }
+            if (!isSilent) setLoading(false)
+            return
+        }
 
         if (!isSilent) setLoading(true)
         try {
@@ -218,37 +268,66 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         setActiveBrandKitState(data)
     }
 
-    // Cargar kits cuando usuario y datos de Convex esten disponibles
     useEffect(() => {
-        if (isLoaded && user && userRecord !== undefined && !initialLoadAttempted.current) {
-            initialLoadAttempted.current = true
-            loadBrandKits()
+        if (!isLoaded) {
+            setLoading(true)
+            return
         }
-    }, [isLoaded, user, userRecord])
 
-    // Invariante: si existen kits, debe haber un kit activo válido.
-    useEffect(() => {
-        if (loading) return
-        if (!user?.id) return
-        if (!Array.isArray(brandKits) || brandKits.length === 0) return
-        if (activeSelectionHealing.current) return
+        if (!user?.id) {
+            setActiveBrandKitState(null)
+            setBrandKits([])
+            setLoading(false)
+            return
+        }
+
+        if (liveBrandSummaries === undefined) {
+            setLoading(true)
+            return
+        }
+
+        const nextBrandKits = normalizeBrandKitSummaries(liveBrandSummaries)
+        setBrandKits(nextBrandKits)
+
+        if (nextBrandKits.length === 0) {
+            loadingBrandDetailsRef.current = null
+            setActiveBrandKitState(null)
+            setLoading(false)
+            return
+        }
 
         const activeId = activeBrandKit?.id
-        const hasValidActive = Boolean(activeId && brandKits.some((kit) => kit.id === activeId))
-        if (hasValidActive) return
+        const hasValidActive = Boolean(activeId && nextBrandKits.some((kit) => kit.id === activeId))
+        if (hasValidActive) {
+            loadingBrandDetailsRef.current = null
+            setLoading(false)
+            return
+        }
 
         const lastBrandId = userRecord?.current_brand_id
-        const preferredId = (lastBrandId && brandKits.some((kit) => kit.id === lastBrandId))
+        const preferredId = (lastBrandId && nextBrandKits.some((kit) => kit.id === lastBrandId))
             ? (lastBrandId as string)
-            : brandKits[0].id
+            : nextBrandKits[0].id
 
-        if (!preferredId) return
+        if (!preferredId) {
+            setLoading(false)
+            return
+        }
+
+        if (activeSelectionHealing.current && loadingBrandDetailsRef.current === preferredId) {
+            setLoading(true)
+            return
+        }
 
         activeSelectionHealing.current = true
-        void setActiveBrandKit(preferredId, true, true).finally(() => {
+        loadingBrandDetailsRef.current = preferredId
+        setLoading(true)
+        void setActiveBrandKit(preferredId, !Boolean(lastBrandId && lastBrandId === preferredId), true).finally(() => {
             activeSelectionHealing.current = false
+            loadingBrandDetailsRef.current = null
+            setLoading(false)
         })
-    }, [loading, user?.id, brandKits, activeBrandKit?.id, userRecord?.current_brand_id])
+    }, [isLoaded, user?.id, liveBrandSummaries, userRecord?.current_brand_id, activeBrandKit?.id])
 
     const value: BrandKitContextType = {
         activeBrandKit,
