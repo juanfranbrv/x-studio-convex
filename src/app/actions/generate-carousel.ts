@@ -9,7 +9,7 @@ import { buildCarouselPrompt } from '@/lib/prompts/carousel/builder'
 import { buildCarouselBriefInterpreterPrompt } from '@/lib/prompts/carousel-brief-interpreter'
 import { getMoodForSlide } from '@/lib/prompts/carousel/mood'
 import { buildFinalPrompt, generateCarouselSeed, extractLogoPosition } from '@/lib/prompts/carousel/builder/final-prompt'
-import { detectLanguageFromParts } from '@/lib/language-detection'
+import { detectLanguageFromParts, detectLanguageFromPartsWithApi } from '@/lib/language-detection'
 import type { NarrativeStructure, CarouselComposition as NarrativeComposition } from '@/lib/carousel-structures'
 import { fetchMutation, fetchQuery } from 'convex/nextjs'
 import { auth, currentUser } from '@clerk/nextjs/server'
@@ -1157,7 +1157,7 @@ async function decomposeIntoSlides(
     const auditFlowTag = options?.audit?.flowId || 'no-flow'
 
     // Auto-detect language from user prompt (like image module does)
-    const detectedLanguage = detectLanguageFromParts(
+    const detectedLanguage = await detectLanguageFromPartsWithApi(
         [prompt],
         options?.language || brand.preferred_language || 'es'
     )
@@ -2227,7 +2227,7 @@ async function generateSlideImage(
         ctaText: isLastSlide ? (slideContent.title || 'Mas info') : undefined,
         ctaUrl: isLastSlide ? finalUrl : undefined,
         visualAnalysis: aiImageDescription,
-        language: detectLanguageFromParts(
+        language: await detectLanguageFromPartsWithApi(
             [
                 sourcePrompt,
                 slideContent.title,
@@ -2473,7 +2473,7 @@ export async function generateCarouselAction(
                     ctaText: isLastSlide ? (slideContent.title || 'Más info') : undefined,
                     ctaUrl: isLastSlide ? finalUrl : undefined,
                     visualAnalysis: aiImageDescription,
-                    language: detectLanguageFromParts(
+                    language: await detectLanguageFromPartsWithApi(
                         [
                             prompt,
                             slideContent.title,

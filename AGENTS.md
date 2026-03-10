@@ -1,6 +1,11 @@
 
 - El usuario se llama Juanfran
 
+## Referencia técnica del proyecto
+- Existe un documento vivo de referencia técnica en `docs/TECHNICAL_REFERENCE.md`.
+- Úsalo como contexto técnico de proyecto para integraciones, decisiones compartidas y comportamientos transversales.
+- Cuando se documente una decisión técnica nueva, debe añadirse también ahí.
+
 ## 🧠 Instrucciones Críticas de Comportamiento (Persona & Workflow)
 
 ### 1. Razonamiento y Planificación (Core)

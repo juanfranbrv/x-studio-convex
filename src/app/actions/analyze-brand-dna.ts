@@ -15,7 +15,7 @@ import { buildBrandAnalysisPrompt } from '@/lib/prompts/actions/brand-analyst';
 import { BrandDNASchema } from '@/lib/prompts/schemas/brand-dna-schema';
 import { WEIGHTED_DOM_SCRIPT } from '@/lib/prompts/automation/weighted-dom';
 import { SYSTEM_FONTS } from '@/lib/prompts/data/system-fonts';
-import { detectLanguage } from '@/lib/language-detection';
+import { detectLanguageWithApi } from '@/lib/language-detection';
 
 function logDebug(message: string, data?: any) {
     const timestamp = new Date().toISOString();
@@ -2936,7 +2936,7 @@ export async function analyzeBrandDNA(url: string, forceRefresh: boolean = false
         // Detect language from content
         console.log('🌐 Detecting content language...');
         const textForDetection = `${result.brand_name} ${result.tagline} ${result.business_overview} ${result.brand_values.join(' ')} ${result.tone_of_voice.join(' ')}`;
-        const detectedLanguage = detectLanguage(textForDetection);
+        const detectedLanguage = await detectLanguageWithApi(textForDetection, 'es');
         result.preferred_language = detectedLanguage;
         console.log(`✅ Language detected: ${detectedLanguage}`);
 

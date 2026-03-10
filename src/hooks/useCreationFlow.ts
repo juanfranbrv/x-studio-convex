@@ -2355,6 +2355,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             aiImageDescription: state.aiImageDescription,
             suggestions: state.suggestions,
             imagePromptSuggestions: state.imagePromptSuggestions,
+            originalState: state.originalState,
             typography: state.typography,
             selectedStyles: state.selectedStyles,
             selectedStylePresetId: state.selectedStylePresetId,

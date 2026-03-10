@@ -175,6 +175,105 @@ function compactCarouselScriptSlideRow(item: unknown) {
   };
 }
 
+function compactCarouselSuggestion(item: unknown) {
+  if (!item || typeof item !== "object") return item;
+  const row = item as Record<string, unknown>;
+  return {
+    title: limitText(row.title, 120),
+    subtitle: limitText(row.subtitle, 240),
+    slides: Array.isArray(row.slides)
+      ? takeLast(row.slides, MAX_CAROUSEL_SLIDES).map((slide) => compactCarouselScriptSlideRow(slide))
+      : [],
+    hook: limitText(row.hook, 220),
+    structure: row.structure && typeof row.structure === "object"
+      ? {
+          id: limitText((row.structure as Record<string, unknown>).id, 120),
+          name: limitText((row.structure as Record<string, unknown>).name, 180),
+        }
+      : undefined,
+    optimalSlideCount: typeof row.optimalSlideCount === "number" ? row.optimalSlideCount : undefined,
+    detectedIntent: limitText(row.detectedIntent, 80),
+    caption: limitText(row.caption, 1200),
+  };
+}
+
+function compactImageTypography(value: unknown) {
+  if (!value || typeof value !== "object") return undefined;
+  const row = value as Record<string, unknown>;
+  return {
+    mode: limitText(row.mode, 32),
+    familyClass: limitText(row.familyClass, 32),
+    weight: limitText(row.weight, 32),
+    width: limitText(row.width, 32),
+    casing: limitText(row.casing, 32),
+    spacing: limitText(row.spacing, 32),
+    contrast: limitText(row.contrast, 32),
+    tone: limitText(row.tone, 32),
+  };
+}
+
+function compactImageTextAssets(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, 12).map((item) => {
+    if (!item || typeof item !== "object") return null;
+    const row = item as Record<string, unknown>;
+    return {
+      id: limitText(row.id, 120),
+      type: limitText(row.type, 32),
+      label: limitText(row.label, 120),
+      value: limitText(row.value, 500),
+    };
+  }).filter(Boolean);
+}
+
+function compactImageOriginalState(value: unknown) {
+  if (!value || typeof value !== "object") return undefined;
+  const row = value as Record<string, unknown>;
+  return {
+    headline: limitText(row.headline, 300),
+    cta: limitText(row.cta, 180),
+    ctaUrl: limitText(row.ctaUrl, 300),
+    ctaUrlEnabled: row.ctaUrlEnabled === true,
+    caption: limitText(row.caption, 1200),
+    typography: compactImageTypography(row.typography),
+    customTexts: row.customTexts,
+    selectedTextAssets: compactImageTextAssets(row.selectedTextAssets),
+  };
+}
+
+function compactImageSuggestion(item: unknown) {
+  if (!item || typeof item !== "object") return item;
+  const row = item as Record<string, unknown>;
+  const modifications = row.modifications && typeof row.modifications === "object"
+    ? row.modifications as Record<string, unknown>
+    : {};
+
+  return {
+    title: limitText(row.title, 120),
+    subtitle: limitText(row.subtitle, 240),
+    modifications: {
+      headline: limitText(modifications.headline, 300),
+      cta: limitText(modifications.cta, 180),
+      ctaUrl: limitText(modifications.ctaUrl, 300),
+      ctaUrlEnabled: modifications.ctaUrlEnabled === true,
+      caption: limitText(modifications.caption, 1200),
+      customTexts: modifications.customTexts,
+      selectedTextAssets: compactImageTextAssets(modifications.selectedTextAssets),
+      imageTexts: Array.isArray(modifications.imageTexts)
+        ? modifications.imageTexts.slice(0, 12).map((text) => {
+            if (!text || typeof text !== "object") return null;
+            const imageText = text as Record<string, unknown>;
+            return {
+              label: limitText(imageText.label, 120),
+              value: limitText(imageText.value, 500),
+              type: limitText(imageText.type, 32),
+            };
+          }).filter(Boolean)
+        : [],
+    },
+  };
+}
+
 function compactImageCreationFlowState(value: unknown) {
   if (!value || typeof value !== "object") return value;
   const row = value as Record<string, unknown>;
@@ -190,6 +289,13 @@ function compactImageCreationFlowState(value: unknown) {
     selectedBrandKitImageIds: Array.isArray(row.selectedBrandKitImageIds) ? row.selectedBrandKitImageIds.slice(0, MAX_BRANDKIT_IMAGE_IDS) : [],
     referenceImageRoles: compactReferenceImageRoles(row.referenceImageRoles),
     aiImageDescription: limitText(row.aiImageDescription, 1200),
+    suggestions: Array.isArray(row.suggestions)
+      ? row.suggestions.slice(0, 4).map((item) => compactImageSuggestion(item))
+      : [],
+    imagePromptSuggestions: Array.isArray(row.imagePromptSuggestions)
+      ? row.imagePromptSuggestions.slice(0, 4).map((item) => limitText(item, 280)).filter(Boolean)
+      : [],
+    originalState: compactImageOriginalState(row.originalState),
     selectedStyles: Array.isArray(row.selectedStyles) ? row.selectedStyles.slice(0, 8) : [],
     selectedStylePresetId: row.selectedStylePresetId,
     selectedStylePresetName: limitText(row.selectedStylePresetName, 120),
@@ -206,7 +312,7 @@ function compactImageCreationFlowState(value: unknown) {
     additionalInstructions: limitText(row.additionalInstructions, 1200),
     customStyle: limitText(row.customStyle, 1200),
     applyStyleToTypography: row.applyStyleToTypography === true,
-    selectedTextAssets: Array.isArray(row.selectedTextAssets) ? row.selectedTextAssets.slice(0, 12) : [],
+    selectedTextAssets: compactImageTextAssets(row.selectedTextAssets),
     generatedImage: row.generatedImage,
     hasGeneratedImage: row.hasGeneratedImage === true,
   };
@@ -263,6 +369,42 @@ function compactCarouselSnapshot(value: unknown) {
     referenceImageRoles: compactReferenceImageRoles(snapshot.referenceImageRoles),
     uploadedImages: Array.isArray(snapshot.uploadedImages) ? snapshot.uploadedImages.slice(0, MAX_UPLOADED_IMAGES) : [],
     includeLogoOnSlides: snapshot.includeLogoOnSlides === true,
+    suggestions: Array.isArray(snapshot.suggestions)
+      ? snapshot.suggestions.slice(0, 4).map((item) => compactCarouselSuggestion(item))
+      : [],
+    imagePromptSuggestions: Array.isArray(snapshot.imagePromptSuggestions)
+      ? snapshot.imagePromptSuggestions.slice(0, 4).map((item) => limitText(item, 280)).filter(Boolean)
+      : [],
+    slideVariantSelection: Array.isArray(snapshot.slideVariantSelection)
+      ? snapshot.slideVariantSelection.slice(0, MAX_CAROUSEL_SLIDES).map((item) => limitText(item, 32)).filter(Boolean)
+      : [],
+    analysisHook: limitText(snapshot.analysisHook, 220),
+    analysisStructure: snapshot.analysisStructure && typeof snapshot.analysisStructure === "object"
+      ? {
+          id: limitText((snapshot.analysisStructure as Record<string, unknown>).id, 120),
+          name: limitText((snapshot.analysisStructure as Record<string, unknown>).name, 180),
+        }
+      : undefined,
+    analysisIntent: limitText(snapshot.analysisIntent, 80),
+    originalAnalysis: snapshot.originalAnalysis && typeof snapshot.originalAnalysis === "object"
+      ? {
+          slides: Array.isArray((snapshot.originalAnalysis as Record<string, unknown>).slides)
+            ? takeLast((snapshot.originalAnalysis as Record<string, unknown>).slides as unknown[], MAX_CAROUSEL_SLIDES).map((slide) => compactCarouselSlideRow(slide))
+            : [],
+          scriptSlides: Array.isArray((snapshot.originalAnalysis as Record<string, unknown>).scriptSlides)
+            ? takeLast((snapshot.originalAnalysis as Record<string, unknown>).scriptSlides as unknown[], MAX_CAROUSEL_SLIDES).map((slide) => compactCarouselScriptSlideRow(slide))
+            : [],
+          hook: limitText((snapshot.originalAnalysis as Record<string, unknown>).hook, 220),
+          structure: (snapshot.originalAnalysis as Record<string, unknown>).structure && typeof (snapshot.originalAnalysis as Record<string, unknown>).structure === "object"
+            ? {
+                id: limitText((((snapshot.originalAnalysis as Record<string, unknown>).structure as Record<string, unknown>).id), 120),
+                name: limitText((((snapshot.originalAnalysis as Record<string, unknown>).structure as Record<string, unknown>).name), 180),
+              }
+            : undefined,
+          detectedIntent: limitText((snapshot.originalAnalysis as Record<string, unknown>).detectedIntent, 80),
+          caption: limitText((snapshot.originalAnalysis as Record<string, unknown>).caption, 1200),
+        }
+      : undefined,
     previewState: {
       slides: Array.isArray(previewState.slides)
         ? takeLast(previewState.slides, MAX_CAROUSEL_SLIDES).map((slide) => compactCarouselSlideRow(slide))

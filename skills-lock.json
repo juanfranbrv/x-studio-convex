@@ -86,6 +86,11 @@
       "sourceType": "github",
       "computedHash": "5ea368133caa4b5ff39b5c3f404de2c63501a03d3d2af3ec3e4cda2876ec7ecc"
     },
+    "create-readme": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "d0ece1b2164ce1376e4ab6e98d6ac079df3a2a94f5f02224362b6a1ce2516ae9"
+    },
     "critique": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
@@ -105,6 +110,11 @@
       "source": "pbakaus/impeccable",
       "sourceType": "github",
       "computedHash": "b9fb6ad6d67d798d918e0ff339322ed7f86212d2076ce4a280088b02b7ed0f86"
+    },
+    "documentation-writer": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "ee53d65b163cd7eb953a930c95841cfe398cc2c0bd24c06508bbaa07c432be35"
     },
     "extract": {
       "source": "pbakaus/impeccable",

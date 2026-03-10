@@ -169,6 +169,14 @@ interface CarouselControlsPanelProps {
     previewSlides?: CarouselSlide[]
     previewScriptSlides?: SlideContent[] | null
     originalScriptSlides?: SlideContent[] | null
+    originalAnalysis?: {
+        slides: CarouselSlide[]
+        scriptSlides: SlideContent[]
+        hook?: string
+        structure?: { id?: string; name?: string }
+        detectedIntent?: string
+        caption?: string
+    } | null
     previewCaption?: string
     previewCurrentIndex?: number
     previewSessionHistory?: Array<{
@@ -182,6 +190,20 @@ interface CarouselControlsPanelProps {
         scriptSlides?: SlideContent[]
         caption?: string
         currentIndex?: number
+        suggestions?: CarouselSuggestion[]
+        imagePromptSuggestions?: string[]
+        slideVariantSelection?: string[]
+        analysisHook?: string
+        analysisStructure?: { id?: string; name?: string }
+        analysisIntent?: string
+        originalAnalysis?: {
+            slides: CarouselSlide[]
+            scriptSlides: SlideContent[]
+            hook?: string
+            structure?: { id?: string; name?: string }
+            detectedIntent?: string
+            caption?: string
+        } | null
         sessionHistory?: Array<{
             id: string
             createdAt: string
@@ -216,6 +238,20 @@ type CarouselWorkspaceSnapshot = {
     referenceImageRoles: Record<string, ReferenceImageRole>
     uploadedImages: string[]
     includeLogoOnSlides: boolean
+    suggestions: CarouselSuggestion[]
+    imagePromptSuggestions: string[]
+    slideVariantSelection: string[]
+    analysisHook?: string
+    analysisStructure?: { id?: string; name?: string }
+    analysisIntent?: string
+    originalAnalysis?: {
+        slides: CarouselSlide[]
+        scriptSlides: SlideContent[]
+        hook?: string
+        structure?: { id?: string; name?: string }
+        detectedIntent?: string
+        caption?: string
+    }
     previewState: {
         slides: CarouselSlide[]
         scriptSlides?: SlideContent[]
@@ -300,6 +336,7 @@ export function CarouselControlsPanel({
     previewSlides = [],
     previewScriptSlides = null,
     originalScriptSlides = null,
+    originalAnalysis = null,
     previewCaption,
     previewCurrentIndex = 0,
     previewSessionHistory = [],
@@ -549,6 +586,13 @@ export function CarouselControlsPanel({
             referenceImageRoles: {},
             uploadedImages: [],
             includeLogoOnSlides: false,
+            suggestions: [],
+            imagePromptSuggestions: [],
+            slideVariantSelection: [],
+            analysisHook: undefined,
+            analysisStructure: undefined,
+            analysisIntent: undefined,
+            originalAnalysis: undefined,
             previewState: {
                 slides: [],
                 scriptSlides: undefined,
@@ -640,6 +684,43 @@ export function CarouselControlsPanel({
             referenceImageRoles: Object.fromEntries(Object.entries(referenceImageRoles).slice(0, 16)),
             uploadedImages: uploadedImages.slice(0, 8),
             includeLogoOnSlides,
+            suggestions: Array.isArray(suggestions) ? suggestions.slice(0, 4).map((suggestion) => ({
+                title: suggestion.title,
+                subtitle: suggestion.subtitle,
+                slides: Array.isArray(suggestion.slides) ? suggestion.slides.slice(-12) : [],
+                hook: suggestion.hook,
+                structure: suggestion.structure,
+                optimalSlideCount: suggestion.optimalSlideCount,
+                detectedIntent: suggestion.detectedIntent,
+                caption: suggestion.caption?.slice(0, 1200),
+            })) : [],
+            imagePromptSuggestions: Array.isArray(suggestedImagePrompts) ? suggestedImagePrompts.slice(0, 4) : [],
+            slideVariantSelection: Array.isArray(slideVariantSelection) ? slideVariantSelection.slice(0, 12) : [],
+            analysisHook,
+            analysisStructure,
+            analysisIntent,
+            originalAnalysis: originalAnalysis
+                ? {
+                    slides: Array.isArray(originalAnalysis.slides) ? originalAnalysis.slides.slice(-12).map((slide) => ({
+                        index: slide.index,
+                        title: slide.title,
+                        description: slide.description,
+                        status: slide.status,
+                        imageUrl: slide.imageUrl,
+                        image_storage_id: slide.image_storage_id,
+                        imagePreviewUrl: slide.imagePreviewUrl,
+                        image_preview_storage_id: slide.image_preview_storage_id,
+                        imageOriginalUrl: slide.imageOriginalUrl,
+                        image_original_storage_id: slide.image_original_storage_id,
+                        error: slide.error
+                    })) : [],
+                    scriptSlides: Array.isArray(originalAnalysis.scriptSlides) ? originalAnalysis.scriptSlides.slice(-12) : [],
+                    hook: originalAnalysis.hook,
+                    structure: originalAnalysis.structure,
+                    detectedIntent: originalAnalysis.detectedIntent,
+                    caption: originalAnalysis.caption?.slice(0, 1200),
+                }
+                : undefined,
             previewState: {
                 slides: sourceSlides.slice(-12).map((slide) => ({
                     index: slide.index,
@@ -706,6 +787,14 @@ export function CarouselControlsPanel({
         previewCaption,
         previewCurrentIndex,
         previewSessionHistory
+        ,
+        suggestions,
+        suggestedImagePrompts,
+        slideVariantSelection,
+        analysisHook,
+        analysisStructure,
+        analysisIntent,
+        originalAnalysis
     ])
 
     const buildPreviewVariantKey = useCallback((
@@ -943,10 +1032,17 @@ export function CarouselControlsPanel({
                     scriptSlides: Array.isArray(savedPreview.scriptSlides) ? savedPreview.scriptSlides : undefined,
                     caption: typeof savedPreview.caption === 'string' ? savedPreview.caption : undefined,
                     currentIndex: Number.isFinite(savedPreview.currentIndex) ? savedPreview.currentIndex : 0,
-                    sessionHistory: Array.isArray(savedPreview.sessionHistory) ? savedPreview.sessionHistory : undefined
+                    sessionHistory: Array.isArray(savedPreview.sessionHistory) ? savedPreview.sessionHistory : undefined,
+                    suggestions: Array.isArray(snapshot.suggestions) ? snapshot.suggestions : [],
+                    imagePromptSuggestions: Array.isArray(snapshot.imagePromptSuggestions) ? snapshot.imagePromptSuggestions : [],
+                    slideVariantSelection: Array.isArray(snapshot.slideVariantSelection) ? snapshot.slideVariantSelection : [],
+                    analysisHook: snapshot.analysisHook,
+                    analysisStructure: snapshot.analysisStructure,
+                    analysisIntent: snapshot.analysisIntent,
+                    originalAnalysis: snapshot.originalAnalysis || null,
                 })
             }
-            setCurrentStep(7)
+            setCurrentStep(Array.isArray(snapshot.suggestions) && snapshot.suggestions.length > 0 ? 7 : 6)
             setNeedsReanalysis(false)
             setLastAnalyzedSignature('')
         } finally {

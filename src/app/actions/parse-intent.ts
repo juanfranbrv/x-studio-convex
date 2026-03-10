@@ -4,7 +4,7 @@ import { generateTextUnified } from '@/lib/gemini'
 import { log } from '@/lib/logger'
 import { buildIntentParserPrompt } from '@/lib/prompts/intents/parser'
 import { INTENT_CATALOG, MERGED_LAYOUTS_BY_INTENT, type IntentCategory } from '@/lib/creation-flow-types'
-import { detectLanguage } from '@/lib/language-detection'
+import { detectLanguage, detectLanguageWithApi } from '@/lib/language-detection'
 import { auth } from '@clerk/nextjs/server'
 import { ConvexHttpClient } from 'convex/browser'
 import { api } from '@/../convex/_generated/api'
@@ -1307,6 +1307,11 @@ CREATIVE VARIATION MODE:
 
         // 8. Final organization layer:
         // keep headline/cta/url and collapse the rest into one coherent preview block.
+        const detectedUserLanguage = await detectLanguageWithApi(userText, 'es')
+        if (!parsed.detectedLanguage) {
+            parsed.detectedLanguage = detectedUserLanguage
+        }
+
         const organized = organizeParsedOutput(parsed, userText, brandWebsite)
         organized.suggestions = normalizeSuggestions(parsed.suggestions, organized, userText)
         organized.imagePromptSuggestions = buildImagePromptSuggestions(parsed, organized, userText)

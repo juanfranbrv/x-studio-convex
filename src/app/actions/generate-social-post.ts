@@ -3,7 +3,7 @@
 import { BrandDNA } from '@/lib/brand-types'
 import { generateTextUnified } from '@/lib/gemini'
 import { buildSocialManagerPrompt } from '@/lib/prompts/actions/social-manager'
-import { detectLanguage } from '@/lib/language-detection'
+import { detectLanguageWithApi } from '@/lib/language-detection'
 
 const FALLBACK_TAGS: Record<string, string[]> = {
     es: ['marketing', 'negocios', 'marca', 'socialmedia', 'contenido', 'diseno'],
@@ -101,7 +101,7 @@ export async function generateSocialPost(params: {
 
     try {
         // 1. Construct Prompt
-        const detectedLanguage = detectLanguage(userPrompt || topic || '') || 'es'
+        const detectedLanguage = await detectLanguageWithApi(userPrompt || topic || '', 'es')
         const prompt = buildSocialManagerPrompt(brand, topic, detectedLanguage)
 
         // 2. Prepare Images

@@ -178,25 +178,6 @@ export default function CarouselPage() {
         router.push('/brand-kit/new')
     }
 
-    if (brandKitsLoading && !activeBrandKit) {
-        return (
-            <DashboardLayout
-                brands={brandKits}
-                currentBrand={activeBrandKit}
-                onBrandChange={setActiveBrandKit}
-                onBrandDelete={deleteBrandKitById}
-                onNewBrandKit={handleNewBrandKit}
-                isFixed={true}
-            >
-                <div className="flex h-full items-center justify-center">
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <span className="text-lg font-medium">Cargando Carrusel...</span>
-                    </div>
-                </div>
-            </DashboardLayout>
-        )
-    }
     const [imagePromptSuggestions, setImagePromptSuggestions] = useState<string[]>([])
     const [sessionHistory, setSessionHistory] = useState<Array<{
         id: string
@@ -1476,6 +1457,20 @@ export default function CarouselPage() {
         scriptSlides?: SlideContent[]
         caption?: string
         currentIndex?: number
+        suggestions?: CarouselSuggestion[]
+        imagePromptSuggestions?: string[]
+        slideVariantSelection?: string[]
+        analysisHook?: string
+        analysisStructure?: { id?: string; name?: string }
+        analysisIntent?: string
+        originalAnalysis?: {
+            slides: CarouselSlide[]
+            scriptSlides: SlideContent[]
+            hook?: string
+            structure?: { id?: string; name?: string }
+            detectedIntent?: string
+            caption?: string
+        } | null
         sessionHistory?: Array<{
             id: string
             createdAt: string
@@ -1501,6 +1496,13 @@ export default function CarouselPage() {
             }))
         setScriptSlides(restoredScript)
         setScriptSlideCount(restoredScript.length)
+        setSuggestions(Array.isArray(state.suggestions) ? state.suggestions : [])
+        setImagePromptSuggestions(Array.isArray(state.imagePromptSuggestions) ? state.imagePromptSuggestions : [])
+        setSlideVariantSelection(Array.isArray(state.slideVariantSelection) ? state.slideVariantSelection : [])
+        setAnalysisHook(state.analysisHook)
+        setAnalysisStructure(state.analysisStructure)
+        setAnalysisIntent(state.analysisIntent)
+        setOriginalAnalysis(state.originalAnalysis || null)
 
         if (!isCaptionLocked) {
             setCaption(state.caption || '')
@@ -1576,6 +1578,26 @@ export default function CarouselPage() {
         setPendingGenerateSettings(null)
         setDebugPromptData(null)
     }, [])
+
+    if (brandKitsLoading && !activeBrandKit) {
+        return (
+            <DashboardLayout
+                brands={brandKits}
+                currentBrand={activeBrandKit}
+                onBrandChange={setActiveBrandKit}
+                onBrandDelete={deleteBrandKitById}
+                onNewBrandKit={handleNewBrandKit}
+                isFixed={true}
+            >
+                <div className="flex h-full items-center justify-center">
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <span className="text-lg font-medium">Cargando Carrusel...</span>
+                    </div>
+                </div>
+            </DashboardLayout>
+        )
+    }
 
     return (
         <DashboardLayout
@@ -1858,6 +1880,7 @@ export default function CarouselPage() {
                     previewSlides={slides}
                     previewScriptSlides={scriptSlides}
                     originalScriptSlides={originalAnalysis?.scriptSlides || scriptSlides}
+                    originalAnalysis={originalAnalysis}
                     previewCaption={caption}
                     previewCurrentIndex={currentSlideIndex}
                     previewSessionHistory={sessionHistory}
