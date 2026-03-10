@@ -107,6 +107,7 @@ function BrandKitPageContent() {
     const [showNewKitForm, setShowNewKitForm] = useState(false);
     const [creatingAssistantKit, setCreatingAssistantKit] = useState(false);
     const autoCreateTriggeredRef = useRef(false);
+    const emptyStateRepairUserRef = useRef<string | null>(null);
     const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
     const [pendingRegenerateUrl, setPendingRegenerateUrl] = useState('');
     const [assistantLaunchNonce, setAssistantLaunchNonce] = useState(0);
@@ -280,6 +281,11 @@ function BrandKitPageContent() {
         }
     }, [user?.id, creatingAssistantKit, searchParams, activeBrandKit?.id]);
 
+    useEffect(() => {
+        emptyStateRepairUserRef.current = null;
+        autoCreateTriggeredRef.current = false;
+    }, [user?.id]);
+
     // Handle initial state and query params
     useEffect(() => {
         if (!contextLoading) {
@@ -295,7 +301,7 @@ function BrandKitPageContent() {
                             const realCount = serverKits.success ? (serverKits.data?.length || 0) : -1;
                             if (realCount > 0) {
                                 shouldCreateDraft = false;
-                                await reloadBrandKits(false);
+                                await reloadBrandKits(true);
                             } else if (realCount === 0) {
                                 shouldCreateDraft = true;
                             }
@@ -314,8 +320,15 @@ function BrandKitPageContent() {
                     newParams.delete('action');
                     router.replace(`/brand-kit${newParams.toString() ? `?${newParams.toString()}` : ''}`);
                 })();
-            } else if (brandKits.length === 0 && !activeBrandKit && user?.id && !autoCreateTriggeredRef.current) {
+            } else if (
+                brandKits.length === 0 &&
+                !activeBrandKit &&
+                user?.id &&
+                !autoCreateTriggeredRef.current &&
+                emptyStateRepairUserRef.current !== user.id
+            ) {
                 autoCreateTriggeredRef.current = true;
+                emptyStateRepairUserRef.current = user.id;
                 void (async () => {
                     try {
                         const serverKits = await getAllUserBrandKits(user.id);
@@ -324,7 +337,7 @@ function BrandKitPageContent() {
                         // Nunca crear kits automáticamente al entrar.
                         // Si hay kits reales, rehidratamos contexto.
                         if (realCount > 0) {
-                            await reloadBrandKits(false);
+                            await reloadBrandKits(true);
                         }
                     } catch (error) {
                         console.error('[AUTO-CREATE] Error verificando kits reales:', error);

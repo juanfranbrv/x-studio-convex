@@ -36,6 +36,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
 
     const initialLoadAttempted = useRef(false)
     const activeSelectionHealing = useRef(false)
+    const initializedUserIdRef = useRef<string | null>(null)
 
     const ensureConvexUser = async () => {
         if (!user?.id) return false
@@ -57,7 +58,10 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
     }
 
     const loadBrandKits = async (isSilent = false) => {
-        if (!user?.id) return
+        if (!user?.id) {
+            if (!isSilent) setLoading(false)
+            return
+        }
 
         if (!isSilent) setLoading(true)
         try {
@@ -193,9 +197,24 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
     }
 
     useEffect(() => {
+        const nextUserId = user?.id ?? null
+        if (initializedUserIdRef.current === nextUserId) return
+
+        initializedUserIdRef.current = nextUserId
+        initialLoadAttempted.current = false
+        activeSelectionHealing.current = false
+        setActiveBrandKitState(null)
+        setBrandKits([])
+        setLoading(Boolean(nextUserId))
+    }, [user?.id])
+
+    useEffect(() => {
         if (isLoaded && user && userRecord !== undefined && !initialLoadAttempted.current) {
             initialLoadAttempted.current = true
             void loadBrandKits()
+        }
+        if (isLoaded && !user) {
+            setLoading(false)
         }
     }, [isLoaded, user, userRecord])
 
