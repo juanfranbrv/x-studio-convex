@@ -1021,6 +1021,9 @@ export default function CarouselPage() {
                     settings.structureId,
                     settings.aiStyleDirectives,
                     settings.applyStyleToTypography,
+                    settings.ctaUrlEnabled,
+                    settings.ctaUrl,
+                    settings.finalContactLines,
                     settings.selectedReferenceImages,
                     settings.selectedImageUrls,
                     consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined,
@@ -1188,7 +1191,9 @@ export default function CarouselPage() {
             const urlMatch = slide.description?.match(urlPattern)
             const extractedUrl = urlMatch ? urlMatch[0] : undefined
             const brandUrl = activeBrandKit?.url?.trim()
-            const finalUrl = brandUrl || extractedUrl
+            const finalUrl = settingsWithStyle.ctaUrlEnabled
+                ? (settingsWithStyle.ctaUrl?.trim() || brandUrl || extractedUrl)
+                : undefined
             const includePrimaryLogo = shouldApplyPrimaryLogoToSlide(
                 settingsWithStyle.selectedLogoUrl,
                 settingsWithStyle.includeLogoOnSlides,
@@ -1211,6 +1216,7 @@ export default function CarouselPage() {
                 isSequentialSlide: idx > 0,
                 ctaText: isLastSlide ? (slide.title || 'Más info') : undefined,
                 ctaUrl: isLastSlide ? finalUrl : undefined,
+                contactLines: isLastSlide ? settingsWithStyle.finalContactLines : undefined,
                 visualAnalysis: settingsWithStyle?.aiStyleDirectives,
                 language: detectLanguageFromParts(
                     [
@@ -1405,6 +1411,9 @@ export default function CarouselPage() {
                 carouselSettings.structureId,
                 carouselSettings.aiStyleDirectives,
                 carouselSettings.applyStyleToTypography,
+                carouselSettings.ctaUrlEnabled,
+                carouselSettings.ctaUrl,
+                carouselSettings.finalContactLines,
                 carouselSettings.selectedReferenceImages,
                 carouselSettings.selectedImageUrls,
                 consistencyRefUrls.length > 0 ? consistencyRefUrls : undefined,

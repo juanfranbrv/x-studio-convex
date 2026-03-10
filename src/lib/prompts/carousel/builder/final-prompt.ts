@@ -110,6 +110,7 @@ interface FinalPromptParams {
     isSequentialSlide: boolean // true for slides 2-5
     ctaText?: string
     ctaUrl?: string
+    contactLines?: string[]
     visualAnalysis?: string
     language?: string
     fonts?: { family: string; role?: 'heading' | 'body' }[]
@@ -548,6 +549,8 @@ function stripFontMentions(text: string, fonts?: { family: string; role?: 'headi
         'Inter',
         'Helvetica',
         'Arial',
+        'Baskerville',
+        'Libre Baskerville',
         'Futura',
         'Montserrat',
         'Poppins',
@@ -577,8 +580,29 @@ function buildFontLeakPreventionDirective(fonts?: { family: string; role?: 'head
     return `FONT NAME RENDER BAN (ABSOLUTE):
 - Font family names are internal production instructions only.
 - NEVER render any font family name as visible text.
+- NEVER place any font family name as headline, pretitle, kicker, label, watermark, signature, decorative stamp, or footer.
 - If any font family name appears anywhere else in this prompt, treat it as invisible metadata and remove it from the final artwork.
+- Font names, style labels, and typography instructions are not content. They must influence styling only and must never become printed words inside the image.
+- The only allowed visible words are the user-facing copy supplied in the TEXT block and, on the final slide, the approved CTA/URL block.
 - This applies to all Brand Kit font families${hasExplicitFamilies ? ' referenced in the typography contract above' : ''}.`
+}
+
+function buildContactDirective(contactLines: string[] | undefined): string {
+    const safeLines = Array.isArray(contactLines)
+        ? contactLines.map((line) => String(line || '').trim()).filter(Boolean).slice(0, 4)
+        : []
+
+    if (safeLines.length === 0) return ''
+
+    return `
+CONTACT DETAILS (FINAL SLIDE ONLY):
+- Render these details as a secondary contact block inside the final information zone.
+- Keep them clearly smaller than the headline and below the main CTA/URL hierarchy.
+- Use ONLY these exact visible contact strings:
+${safeLines.map((line) => `  - ${line}`).join('\n')}
+- Do not invent extra contact labels, icons, prefixes, or metadata.
+- Do not turn contact details into the hero message.
+`.trim()
 }
 
 function buildTypographyRenderGuard(applyStyleToTypography?: boolean): string {
@@ -586,13 +610,15 @@ function buildTypographyRenderGuard(applyStyleToTypography?: boolean): string {
         return [
             'Typography is style-driven in this generation.',
             'Choose the typography family and treatment from the active visual style of the image.',
-            'If a font family name appears anywhere else in the prompt, treat it as invisible production metadata and NEVER print it inside the image.'
+            'If a font family name appears anywhere else in the prompt, treat it as invisible production metadata and NEVER print it inside the image.',
+            'Do not invent extra visible labels that describe the typography choice. No family names, no typographic tags, no style descriptors rendered as text.'
         ].join('\n')
     }
 
     return [
         'Brand Kit fonts are mandatory when provided. Use them by role (headline/body), but NEVER render the font family names as visible text.',
-        'If a font name appears anywhere else in the prompt, treat it as invisible production metadata and NEVER print it inside the image.'
+        'If a font name appears anywhere else in the prompt, treat it as invisible production metadata and NEVER print it inside the image.',
+        'Do not invent extra visible labels that describe the typography choice. No family names, no typographic tags, no style descriptors rendered as text.'
     ].join('\n')
 }
 
@@ -638,6 +664,7 @@ export function buildFinalPrompt({
     logoPosition = 'Bottom-Right',
     ctaText,
     ctaUrl,
+    contactLines,
     includeLogo,
     includeAuxiliaryLogos = false,
     auxiliaryLogoCount = 0,
@@ -734,8 +761,10 @@ ${P10B.AVOID_INSTRUCTION}
     )
         ? undefined
         : ctaText
-    const finalActionBlock = (isLastSlide && (effectiveCtaText || ctaUrl))
-        ? buildCtaDirective(effectiveCtaText, ctaUrl, primaryAccentForCta)
+    const finalActionBlock = (isLastSlide && (effectiveCtaText || ctaUrl || (contactLines && contactLines.length > 0)))
+        ? [buildCtaDirective(effectiveCtaText, ctaUrl, primaryAccentForCta), buildContactDirective(contactLines)]
+            .filter(Boolean)
+            .join('\n\n')
         : ''
 
     const hasStyleDirectiveBlock = Boolean(

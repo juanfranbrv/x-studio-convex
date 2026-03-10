@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
     Dialog,
     DialogContent,
@@ -12,10 +13,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Save, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import type { CarouselSuggestion, CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
@@ -41,6 +43,7 @@ import {
 import { SuggestionsList } from '@/components/studio/shared/SuggestionsList'
 import { useStylePresetImages } from '@/hooks/useStylePresetImages'
 import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialog'
+import { HexColorPicker } from 'react-colorful'
 
 export interface SlideConfig {
     index: number
@@ -66,6 +69,136 @@ export interface CarouselSettings {
     selectedReferenceImages: Array<{ url: string; role: ReferenceImageRole }>
     selectedImageUrls: string[]
     includeLogoOnSlides: boolean
+    ctaUrlEnabled: boolean
+    ctaUrl?: string
+    selectedContactFields: Record<string, string>
+    finalContactLines: string[]
+}
+
+type BrandColorRole = 'Texto' | 'Fondo' | 'Acento'
+type DraggedBrandColor = { role: BrandColorRole; color: string } | null
+
+function normalizeHexColor(color: string): string {
+    const base = (color || '').trim().toLowerCase()
+    if (!base) return '#000000'
+    const withHash = base.startsWith('#') ? base : `#${base}`
+    return /^#[0-9a-f]{6}$/i.test(withHash) ? withHash : '#000000'
+}
+
+function RoleColorSwatch({
+    color,
+    onCommit,
+    draggable = false,
+    onDragStart,
+    onDragEnd,
+    sizeClass = "w-12 h-12 rounded-full",
+}: {
+    color: string
+    onCommit: (nextColor: string) => void
+    draggable?: boolean
+    onDragStart?: (event: React.DragEvent<HTMLButtonElement>) => void
+    onDragEnd?: (event: React.DragEvent<HTMLButtonElement>) => void
+    sizeClass?: string
+}) {
+    const initial = normalizeHexColor(color)
+    const [draft, setDraft] = useState(initial)
+    const [open, setOpen] = useState(false)
+
+    useEffect(() => {
+        setDraft(initial)
+    }, [initial])
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    className={cn(sizeClass, "border border-border/70 shadow-sm")}
+                    style={{ backgroundColor: initial }}
+                    title={initial}
+                    draggable={draggable}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
+                />
+            </PopoverTrigger>
+            <PopoverContent className="z-[140] w-56 space-y-3 border border-border/80 bg-card p-3 shadow-xl" align="start">
+                <HexColorPicker
+                    color={draft}
+                    onChange={(next) => setDraft(normalizeHexColor(next))}
+                    className="!h-28 !w-full"
+                />
+                <Input
+                    value={draft.toUpperCase()}
+                    onChange={(e) => setDraft(normalizeHexColor(e.target.value))}
+                    className="h-8 font-mono text-xs"
+                />
+                <Button
+                    type="button"
+                    size="sm"
+                    className="h-8 w-full text-xs"
+                    onClick={() => {
+                        onCommit(draft)
+                        setOpen(false)
+                    }}
+                >
+                    Aplicar color
+                </Button>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
+function AddAccentSwatch({
+    disabled,
+    onAdd,
+}: {
+    disabled?: boolean
+    onAdd: (nextColor: string) => void
+}) {
+    const [open, setOpen] = useState(false)
+    const [draft, setDraft] = useState('#4f46e5')
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    disabled={disabled}
+                    className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border/80 text-muted-foreground transition-colors",
+                        "hover:border-primary/60 hover:text-primary",
+                        disabled && "cursor-not-allowed opacity-40"
+                    )}
+                    title="Añadir acento"
+                >
+                    <Plus className="h-5 w-5" />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="z-[140] w-56 space-y-3 border border-border/80 bg-card p-3 shadow-xl" align="start">
+                <HexColorPicker
+                    color={draft}
+                    onChange={(next) => setDraft(normalizeHexColor(next))}
+                    className="!h-28 !w-full"
+                />
+                <Input
+                    value={draft.toUpperCase()}
+                    onChange={(e) => setDraft(normalizeHexColor(e.target.value))}
+                    className="h-8 font-mono text-xs"
+                />
+                <Button
+                    type="button"
+                    size="sm"
+                    className="h-8 w-full text-xs"
+                    onClick={() => {
+                        onAdd(draft)
+                        setOpen(false)
+                    }}
+                >
+                    Añadir acento
+                </Button>
+            </PopoverContent>
+        </Popover>
+    )
 }
 
 type CompositionMode = 'basic' | 'advanced'
@@ -238,6 +371,9 @@ type CarouselWorkspaceSnapshot = {
     referenceImageRoles: Record<string, ReferenceImageRole>
     uploadedImages: string[]
     includeLogoOnSlides: boolean
+    ctaUrlEnabled: boolean
+    ctaUrl: string
+    selectedContactFields: Record<string, string>
     suggestions: CarouselSuggestion[]
     imagePromptSuggestions: string[]
     slideVariantSelection: string[]
@@ -502,6 +638,9 @@ export function CarouselControlsPanel({
     const [referenceImageRoles, setReferenceImageRoles] = useState<Record<string, ReferenceImageRole>>({})
     const [uploadedImages, setUploadedImages] = useState<string[]>([])
     const [imageSourceMode, setImageSourceMode] = useState<'upload' | 'brandkit' | 'generate'>('upload')
+    const [ctaUrlEnabled, setCtaUrlEnabled] = useState(false)
+    const [ctaUrl, setCtaUrl] = useState('')
+    const [selectedContactFields, setSelectedContactFields] = useState<Record<string, string>>({})
     const [aiImageDescription, setAiImageDescription] = useState('')
     const [styleAnalysisDescription, setStyleAnalysisDescription] = useState('')
     const [customStyle, setCustomStyle] = useState('')
@@ -520,6 +659,7 @@ export function CarouselControlsPanel({
     const lastAutoStyleRef = useRef<string | null>(null)
     const pendingStylePresetSelectionRef = useRef<string | null>(null)
     const [includeLogoOnSlides, setIncludeLogoOnSlides] = useState(false)
+    const [draggedBrandColor, setDraggedBrandColor] = useState<DraggedBrandColor>(null)
     const [isAdvancedCompositionOpen, setIsAdvancedCompositionOpen] = useState(false)
     const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1)
     const [needsReanalysis, setNeedsReanalysis] = useState(false)
@@ -586,6 +726,9 @@ export function CarouselControlsPanel({
             referenceImageRoles: {},
             uploadedImages: [],
             includeLogoOnSlides: false,
+            ctaUrlEnabled: false,
+            ctaUrl: '',
+            selectedContactFields: {},
             suggestions: [],
             imagePromptSuggestions: [],
             slideVariantSelection: [],
@@ -625,6 +768,9 @@ export function CarouselControlsPanel({
         setReferenceImageRoles({})
         setUploadedImages([])
         setImageSourceMode('upload')
+        setCtaUrlEnabled(Boolean(brandKit?.cta_url_enabled && brandKit?.url))
+        setCtaUrl(brandKit?.url?.trim() || '')
+        setSelectedContactFields({})
         setAiImageDescription('')
         setStyleAnalysisDescription('')
         setCustomStyle('')
@@ -684,6 +830,13 @@ export function CarouselControlsPanel({
             referenceImageRoles: Object.fromEntries(Object.entries(referenceImageRoles).slice(0, 16)),
             uploadedImages: uploadedImages.slice(0, 8),
             includeLogoOnSlides,
+            ctaUrlEnabled,
+            ctaUrl: ctaUrl.slice(0, 280),
+            selectedContactFields: Object.fromEntries(
+                Object.entries(selectedContactFields)
+                    .slice(0, 8)
+                    .map(([key, value]) => [key, String(value || '').slice(0, 280)])
+            ),
             suggestions: Array.isArray(suggestions) ? suggestions.slice(0, 4).map((suggestion) => ({
                 title: suggestion.title,
                 subtitle: suggestion.subtitle,
@@ -782,6 +935,9 @@ export function CarouselControlsPanel({
         referenceImageRoles,
         uploadedImages,
         includeLogoOnSlides,
+        ctaUrlEnabled,
+        ctaUrl,
+        selectedContactFields,
         previewSlides,
         previewScriptSlides,
         previewCaption,
@@ -1025,6 +1181,9 @@ export function CarouselControlsPanel({
             setReferenceImageRoles(snapshot.referenceImageRoles || {})
             setUploadedImages(Array.isArray(snapshot.uploadedImages) ? snapshot.uploadedImages : [])
             setIncludeLogoOnSlides(Boolean(snapshot.includeLogoOnSlides))
+            setCtaUrlEnabled(Boolean(snapshot.ctaUrlEnabled))
+            setCtaUrl(snapshot.ctaUrl || '')
+            setSelectedContactFields(snapshot.selectedContactFields || {})
             const savedPreview = snapshot.previewState
             if (savedPreview && onRestorePreviewState) {
                 onRestorePreviewState({
@@ -1799,6 +1958,10 @@ export function CarouselControlsPanel({
             setSelectedLogoId(primaryLogoIndex !== null ? `logo-${primaryLogoIndex}` : null)
         }
 
+        setCtaUrlEnabled(Boolean(brandKit.cta_url_enabled && brandKit.url))
+        setCtaUrl(brandKit.url?.trim() || '')
+        setSelectedContactFields({})
+
         setLastInitBrandId(currentBrandId)
     }, [brandKit, lastInitBrandId, activeWorkSession, hasHydratedSession, primaryLogoIndex])
 
@@ -1897,10 +2060,10 @@ export function CarouselControlsPanel({
                 compositions,
                 compositionMode,
                 compositionId,
-                `${structureId}|${prompt.trim()}|${slideCount}`
+                `${structureId}|0`
             )
         )
-    }, [structureId, compositionMode, compositionId, prompt, slideCount, compositions])
+    }, [structureId, compositionMode, compositionId, compositions])
 
     useEffect(() => {
         if (!basicSelectedCompositionId) return
@@ -1914,12 +2077,12 @@ export function CarouselControlsPanel({
             compositions,
             'basic',
             compositionId,
-            `${structureId}|${prompt.trim()}|${slideCount}`
+            `${structureId}|0`
         )
         if (autoId !== compositionId) {
             setCompositionId(autoId)
         }
-    }, [compositionMode, structureId, compositionId, prompt, slideCount, compositions])
+    }, [compositionMode, structureId, compositionId, compositions])
 
     useEffect(() => {
         if (!structureId || !compositionId) return
@@ -2060,6 +2223,125 @@ export function CarouselControlsPanel({
             return newColors
         })
     }
+
+    const primaryEmail = useMemo(() => {
+        const emails = (brandKit as any)?.emails
+        if (!Array.isArray(emails)) return ''
+        return String(emails.find((value: unknown) => typeof value === 'string' && value.trim()) || '').trim()
+    }, [brandKit])
+
+    const phoneValues = useMemo(() => {
+        const phones = (brandKit as any)?.phones
+        if (!Array.isArray(phones)) return [] as string[]
+        return phones.map((value: unknown) => String(value || '').trim()).filter(Boolean)
+    }, [brandKit])
+
+    const addressValues = useMemo(() => {
+        const addresses = (brandKit as any)?.addresses
+        if (!Array.isArray(addresses)) return [] as string[]
+        return addresses.map((value: unknown) => String(value || '').trim()).filter(Boolean)
+    }, [brandKit])
+
+    const getContactFieldValue = useCallback((fieldId: string) => selectedContactFields[fieldId] || '', [selectedContactFields])
+
+    const setContactFieldChecked = useCallback((fieldId: string, value: string, checked: boolean) => {
+        setSelectedContactFields((prev) => {
+            if (checked) {
+                return {
+                    ...prev,
+                    [fieldId]: prev[fieldId] || value,
+                }
+            }
+            const next = { ...prev }
+            delete next[fieldId]
+            return next
+        })
+    }, [])
+
+    const updateContactFieldValue = useCallback((fieldId: string, value: string) => {
+        setSelectedContactFields((prev) => ({
+            ...prev,
+            [fieldId]: value,
+        }))
+    }, [])
+
+    const brandColorsByRole = useMemo(() => {
+        const grouped: Record<BrandColorRole, string[]> = {
+            Texto: [],
+            Fondo: [],
+            Acento: [],
+        }
+
+        selectedColors.forEach((item) => {
+            const normalized = normalizeHexColor(item.color)
+            const role = item.role === 'Texto' || item.role === 'Fondo' ? item.role : 'Acento'
+            if (!grouped[role].includes(normalized)) {
+                grouped[role].push(normalized)
+            }
+        })
+
+        return grouped
+    }, [selectedColors])
+
+    const removeBrandColor = useCallback((colorRaw: string) => {
+        handleRemoveBrandColor(normalizeHexColor(colorRaw))
+    }, [handleRemoveBrandColor])
+
+    const replaceRoleColor = useCallback((role: BrandColorRole, nextColorRaw: string, previousColor?: string) => {
+        const nextColor = normalizeHexColor(nextColorRaw)
+        const prevColor = previousColor ? normalizeHexColor(previousColor) : null
+
+        setSelectedColors((prev) => {
+            const withoutPrevious = prev.filter((item) => {
+                const itemColor = normalizeHexColor(item.color)
+                if (prevColor && itemColor === prevColor && itemColor !== nextColor) return false
+                if (role !== 'Acento' && item.role === role && itemColor !== prevColor && itemColor !== nextColor) return false
+                return true
+            })
+
+            const existingIndex = withoutPrevious.findIndex((item) => normalizeHexColor(item.color) === nextColor)
+            if (existingIndex !== -1) {
+                const next = [...withoutPrevious]
+                next[existingIndex] = { ...next[existingIndex], color: nextColor, role }
+                return next
+            }
+            return [...withoutPrevious, { color: nextColor, role }]
+        })
+    }, [])
+
+    const addAccentColor = useCallback((nextColorRaw: string) => {
+        const nextColor = normalizeHexColor(nextColorRaw)
+        if (brandColorsByRole.Acento.length >= 5) return
+        setSelectedColors((prev) => {
+            const existingIndex = prev.findIndex((item) => normalizeHexColor(item.color) === nextColor)
+            if (existingIndex !== -1) {
+                const next = [...prev]
+                next[existingIndex] = { ...next[existingIndex], role: 'Acento' }
+                return next
+            }
+            return [...prev, { color: nextColor, role: 'Acento' }]
+        })
+    }, [brandColorsByRole.Acento.length])
+
+    const swapBrandColorRoles = useCallback((
+        source: { role: BrandColorRole; color: string },
+        targetRole: BrandColorRole,
+        explicitTargetColor?: string
+    ) => {
+        const sourceColor = normalizeHexColor(source.color)
+        const targetColor = explicitTargetColor ? normalizeHexColor(explicitTargetColor) : null
+
+        setSelectedColors((prev) => prev.map((item) => {
+            const itemColor = normalizeHexColor(item.color)
+            if (itemColor === sourceColor) {
+                return { ...item, role: targetRole }
+            }
+            if (targetColor && itemColor === targetColor) {
+                return { ...item, role: source.role }
+            }
+            return item
+        }))
+    }, [])
 
     const toggleBrandKitImage = (id: string, roleHint: ReferenceImageRole = 'content') => {
         setSelectedBrandKitImageIds((prev) => {
@@ -2289,6 +2571,15 @@ export function CarouselControlsPanel({
             styleAnalysisDescription,
             customStyle
         )
+        const orderedContactIds = [
+            'contact-email-main',
+            ...phoneValues.map((_, idx) => `contact-phone-${idx}`),
+            ...addressValues.map((_, idx) => `contact-address-${idx}`)
+        ]
+        const finalContactLines = orderedContactIds
+            .map((fieldId) => (selectedContactFields[fieldId] || '').trim())
+            .filter(Boolean)
+            .slice(0, 4)
 
         const baseSettings = {
             prompt: promptValue,
@@ -2310,14 +2601,26 @@ export function CarouselControlsPanel({
             })),
             selectedReferenceImages,
             selectedImageUrls: selectedReferenceImages.map((item) => item.url),
-            includeLogoOnSlides
+            includeLogoOnSlides,
+            ctaUrlEnabled,
+            ctaUrl: ctaUrl.trim() || undefined,
+            selectedContactFields,
+            finalContactLines
         }
         return { ...baseSettings, ...overrides }
     }
 
     const handleGenerate = () => {
         if (!prompt.trim() || slideCount < 1) return
-        onGenerate(buildSettings())
+        const settings = buildSettings()
+        if (compositionMode === 'basic' && settings.compositionId !== compositionId) {
+            setCompositionId(settings.compositionId)
+        }
+        onPreviewCompositionChange?.({
+            structureId: settings.structureId,
+            compositionId: settings.compositionId
+        })
+        onGenerate(settings)
     }
 
     const handleAnalyze = async () => {
@@ -2325,8 +2628,16 @@ export function CarouselControlsPanel({
         if (generatedCount > 0) {
             onInvalidatePreview?.()
         }
+        const settings = buildSettings()
+        if (compositionMode === 'basic' && settings.compositionId !== compositionId) {
+            setCompositionId(settings.compositionId)
+        }
+        onPreviewCompositionChange?.({
+            structureId: settings.structureId,
+            compositionId: settings.compositionId
+        })
         await ensureCarouselSessionForAnalyze()
-        await onAnalyze(buildSettings())
+        await onAnalyze(settings)
         setNeedsReanalysis(false)
         setLastAnalyzedSignature(buildStructuralSignature())
     }
@@ -2729,18 +3040,18 @@ export function CarouselControlsPanel({
                                 </span>
                                 <Switch
                                     checked={compositionMode === 'advanced'}
-                                    onCheckedChange={(checked) => {
-                                        const nextMode: CompositionMode = checked ? 'advanced' : 'basic'
-                                        setCompositionMode(nextMode)
-                                        setCompositionId(
-                                            pickCompositionId(
-                                                compositions,
-                                                nextMode,
-                                                compositionId,
-                                                `${structureId}|${prompt.trim()}|${slideCount}`
-                                            )
+                                onCheckedChange={(checked) => {
+                                    const nextMode: CompositionMode = checked ? 'advanced' : 'basic'
+                                    setCompositionMode(nextMode)
+                                    setCompositionId(
+                                        pickCompositionId(
+                                            compositions,
+                                            nextMode,
+                                            compositionId,
+                                            `${structureId}|0`
                                         )
-                                    }}
+                                    )
+                                }}
                                     aria-label="Activar modo avanzado de diseño"
                                 />
                             </div>
@@ -2965,24 +3276,13 @@ export function CarouselControlsPanel({
                                     debugLabel="Carousel-Logo"
                                 />
                                 {(brandLogos.length > 0 || primaryLogo) && (
-                                    <div className="flex items-center justify-between pt-1">
-                                        <div className="space-y-0.5">
-                                            <p className="text-sm font-medium">Aplicar logo en todas</p>
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                setIncludeLogoOnSlides(!includeLogoOnSlides)
-                                            }}
-                                            className={cn(
-                                                'w-10 h-6 rounded-full transition-colors',
-                                                includeLogoOnSlides ? 'bg-primary' : 'bg-muted'
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                'w-4 h-4 rounded-full bg-white transition-transform mx-1',
-                                                includeLogoOnSlides ? 'translate-x-4' : 'translate-x-0'
-                                            )} />
-                                        </button>
+                                    <div className="flex items-center justify-between gap-2 pt-1">
+                                        <p className="text-sm font-medium">Aplicar logo en todas</p>
+                                        <Switch
+                                            checked={includeLogoOnSlides}
+                                            onCheckedChange={setIncludeLogoOnSlides}
+                                            aria-label="Aplicar logo en todas"
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -3000,23 +3300,237 @@ export function CarouselControlsPanel({
                                         Recargar
                                     </Button>
                                 </div>
-                                <BrandingConfigurator
-                                    selectedLayout={null}
-                                    selectedLogoId={null}
-                                    selectedBrandColors={selectedColors}
-                                    onSelectLogo={() => { }}
-                                    onToggleBrandColor={toggleColor}
-                                    onRemoveBrandColor={handleRemoveBrandColor}
-                                    onAddCustomColor={handleAddCustomColor}
-                                    showLogo={false}
-                                    showColors={true}
-                                    showTypography={false}
-                                    showBrandTexts={false}
-                                    rawMessage={prompt}
-                                    debugLabel="Carousel-Colors"
-                                    onlyShowSelectedColors={true}
-                                />
+                                <div className="flex flex-wrap items-end gap-3 pb-1">
+                                    <div
+                                        className={cn(
+                                            "flex flex-col items-center gap-1 rounded-xl p-1 transition-colors",
+                                            draggedBrandColor && draggedBrandColor.role !== 'Texto' && "border border-primary/20 bg-primary/5"
+                                        )}
+                                        onDragOver={(event) => event.preventDefault()}
+                                        onDrop={(event) => {
+                                            event.preventDefault()
+                                            if (!draggedBrandColor) return
+                                            swapBrandColorRoles(draggedBrandColor, 'Texto', brandColorsByRole.Texto[0])
+                                            setDraggedBrandColor(null)
+                                        }}
+                                    >
+                                        {brandColorsByRole.Texto[0] ? (
+                                            <RoleColorSwatch
+                                                color={brandColorsByRole.Texto[0]}
+                                                onCommit={(nextColor) => replaceRoleColor('Texto', nextColor, brandColorsByRole.Texto[0])}
+                                                draggable
+                                                onDragStart={() => setDraggedBrandColor({ role: 'Texto', color: brandColorsByRole.Texto[0] })}
+                                                onDragEnd={() => setDraggedBrandColor(null)}
+                                            />
+                                        ) : (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 px-2 text-[10px]"
+                                                onClick={() => replaceRoleColor('Texto', '#111111')}
+                                            >
+                                                Añadir
+                                            </Button>
+                                        )}
+                                        <span className="text-[10px] text-muted-foreground">Texto</span>
+                                    </div>
+
+                                    <div
+                                        className={cn(
+                                            "flex flex-col items-center gap-1 rounded-xl p-1 transition-colors",
+                                            draggedBrandColor && draggedBrandColor.role !== 'Fondo' && "border border-primary/20 bg-primary/5"
+                                        )}
+                                        onDragOver={(event) => event.preventDefault()}
+                                        onDrop={(event) => {
+                                            event.preventDefault()
+                                            if (!draggedBrandColor) return
+                                            swapBrandColorRoles(draggedBrandColor, 'Fondo', brandColorsByRole.Fondo[0])
+                                            setDraggedBrandColor(null)
+                                        }}
+                                    >
+                                        {brandColorsByRole.Fondo[0] ? (
+                                            <RoleColorSwatch
+                                                color={brandColorsByRole.Fondo[0]}
+                                                onCommit={(nextColor) => replaceRoleColor('Fondo', nextColor, brandColorsByRole.Fondo[0])}
+                                                draggable
+                                                onDragStart={() => setDraggedBrandColor({ role: 'Fondo', color: brandColorsByRole.Fondo[0] })}
+                                                onDragEnd={() => setDraggedBrandColor(null)}
+                                            />
+                                        ) : (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 px-2 text-[10px]"
+                                                onClick={() => replaceRoleColor('Fondo', '#ffffff')}
+                                            >
+                                                Añadir
+                                            </Button>
+                                        )}
+                                        <span className="text-[10px] text-muted-foreground">Fondo</span>
+                                    </div>
+
+                                    <div
+                                        className="ml-2 flex min-w-0 flex-col gap-1 rounded-xl p-1 pl-3"
+                                        onDragOver={(event) => event.preventDefault()}
+                                        onDrop={(event) => {
+                                            event.preventDefault()
+                                            if (!draggedBrandColor) return
+                                            swapBrandColorRoles(draggedBrandColor, 'Acento')
+                                            setDraggedBrandColor(null)
+                                        }}
+                                    >
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {brandColorsByRole.Acento.map((accentColor) => (
+                                                <div
+                                                    key={accentColor}
+                                                    className={cn(
+                                                        "group/accent relative inline-flex items-center rounded-full",
+                                                        draggedBrandColor && draggedBrandColor.color !== accentColor && "ring-2 ring-primary/30 ring-offset-1 ring-offset-background"
+                                                    )}
+                                                    onDragOver={(event) => event.preventDefault()}
+                                                    onDrop={(event) => {
+                                                        event.preventDefault()
+                                                        if (!draggedBrandColor) return
+                                                        swapBrandColorRoles(draggedBrandColor, 'Acento', accentColor)
+                                                        setDraggedBrandColor(null)
+                                                    }}
+                                                >
+                                                    <RoleColorSwatch
+                                                        color={accentColor}
+                                                        onCommit={(nextColor) => replaceRoleColor('Acento', nextColor, accentColor)}
+                                                        sizeClass="w-12 h-12 rounded-full"
+                                                        draggable
+                                                        onDragStart={() => setDraggedBrandColor({ role: 'Acento', color: accentColor })}
+                                                        onDragEnd={() => setDraggedBrandColor(null)}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full border border-border/70 bg-background text-muted-foreground shadow-sm transition-opacity opacity-0 group-hover/accent:opacity-100 group-focus-within/accent:opacity-100 hover:border-destructive/50 hover:text-destructive"
+                                                        onClick={() => removeBrandColor(accentColor)}
+                                                        title="Quitar acento"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            <AddAccentSwatch
+                                                onAdd={addAccentColor}
+                                                disabled={brandColorsByRole.Acento.length >= 5}
+                                            />
+                                        </div>
+                                        <span className="w-12 text-center text-[10px] text-muted-foreground">Acentos</span>
+                                    </div>
+                                </div>
                             </div>
+
+                            <div className="space-y-3 border-t border-border/60 pt-4">
+                                <div className="flex items-center justify-between gap-2">
+                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Enlace</p>
+                                    <Switch
+                                        checked={ctaUrlEnabled}
+                                        onCheckedChange={(checked) => {
+                                            setCtaUrlEnabled(checked)
+                                            if (checked && !ctaUrl.trim()) {
+                                                setCtaUrl(brandKit?.url?.trim() || '')
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                {ctaUrlEnabled ? (
+                                    <Input
+                                        value={ctaUrl}
+                                        onChange={(e) => setCtaUrl(e.target.value)}
+                                        placeholder={brandKit?.url?.trim() || 'tuweb.com'}
+                                        className="h-9 text-xs"
+                                    />
+                                ) : (
+                                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                                        Activa el enlace si quieres mostrar una URL en la última slide.
+                                    </p>
+                                )}
+                            </div>
+
+                            {(primaryEmail || phoneValues.length > 0 || addressValues.length > 0) ? (
+                                <div className="space-y-3 pt-1">
+                                    <div className="space-y-3">
+                                        {primaryEmail ? (
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Email</p>
+                                                    <Switch
+                                                        checked={Boolean(getContactFieldValue('contact-email-main'))}
+                                                        onCheckedChange={(checked) => setContactFieldChecked('contact-email-main', primaryEmail, checked)}
+                                                    />
+                                                </div>
+                                                {getContactFieldValue('contact-email-main') ? (
+                                                    <Input
+                                                        value={getContactFieldValue('contact-email-main')}
+                                                        onChange={(e) => updateContactFieldValue('contact-email-main', e.target.value)}
+                                                        placeholder={primaryEmail}
+                                                        className="h-9 text-xs"
+                                                    />
+                                                ) : (
+                                                    <p className="truncate text-[11px] text-muted-foreground">{primaryEmail}</p>
+                                                )}
+                                            </div>
+                                        ) : null}
+
+                                        {phoneValues.map((phone, idx) => {
+                                            const fieldId = `contact-phone-${idx}`
+                                            const selectedValue = getContactFieldValue(fieldId)
+                                            return (
+                                                <div key={fieldId} className="space-y-1.5">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{`Teléfono ${idx + 1}`}</p>
+                                                        <Switch
+                                                            checked={Boolean(selectedValue)}
+                                                            onCheckedChange={(checked) => setContactFieldChecked(fieldId, phone, checked)}
+                                                        />
+                                                    </div>
+                                                    {selectedValue ? (
+                                                        <Input
+                                                            value={selectedValue}
+                                                            onChange={(e) => updateContactFieldValue(fieldId, e.target.value)}
+                                                            placeholder={phone}
+                                                            className="h-9 text-xs"
+                                                        />
+                                                    ) : (
+                                                        <p className="truncate text-[11px] text-muted-foreground">{phone}</p>
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
+
+                                        {addressValues.map((address, idx) => {
+                                            const fieldId = `contact-address-${idx}`
+                                            const selectedValue = getContactFieldValue(fieldId)
+                                            return (
+                                                <div key={fieldId} className="space-y-1.5">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{`Dirección ${idx + 1}`}</p>
+                                                        <Switch
+                                                            checked={Boolean(selectedValue)}
+                                                            onCheckedChange={(checked) => setContactFieldChecked(fieldId, address, checked)}
+                                                        />
+                                                    </div>
+                                                    {selectedValue ? (
+                                                        <Input
+                                                            value={selectedValue}
+                                                            onChange={(e) => updateContactFieldValue(fieldId, e.target.value)}
+                                                            placeholder={address}
+                                                            className="h-9 text-xs"
+                                                        />
+                                                    ) : (
+                                                        <p className="break-words text-[11px] text-muted-foreground">{address}</p>
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            ) : null}
                         </div>
                     </>
                 )}

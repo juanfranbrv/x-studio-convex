@@ -331,6 +331,9 @@ export interface GenerateCarouselInput {
     selectedReferenceImages?: Array<{ url: string; role: ReferenceImageRole }>
     selectedImageUrls?: string[]
     includeLogoOnSlides?: boolean
+    ctaUrlEnabled?: boolean
+    ctaUrl?: string
+    finalContactLines?: string[]
     applyStyleToTypography?: boolean
     auditFlowId?: string
 }
@@ -2164,6 +2167,9 @@ async function generateSlideImage(
     selectedImageUrls?: string[],
     aiImageDescription?: string,
     applyStyleToTypography?: boolean,
+    ctaUrlEnabled?: boolean,
+    ctaUrl?: string,
+    contactLines?: string[],
     compositionId?: string,
     structureId?: string,
     consistencyRefUrls?: string[],
@@ -2205,7 +2211,9 @@ async function generateSlideImage(
     const urlPattern = /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+\.(?:com|es|org|net|io|co)[^\s]*)/i
     const extractedUrl = slideContent.description?.match(urlPattern)?.[0]
     const brandUrl = brand.url?.trim()
-    const finalUrl = brandUrl || extractedUrl
+    const finalUrl = ctaUrlEnabled
+        ? (ctaUrl?.trim() || brandUrl || extractedUrl)
+        : undefined
 
     const moodCurve = 'problem-solution'
     const currentMood = getMoodForSlide(slideContent.index, totalSlides, slideContent.role, moodCurve)
@@ -2226,6 +2234,7 @@ async function generateSlideImage(
         isSequentialSlide: slideContent.index > 0,
         ctaText: isLastSlide ? (slideContent.title || 'Mas info') : undefined,
         ctaUrl: isLastSlide ? finalUrl : undefined,
+        contactLines: isLastSlide ? contactLines : undefined,
         visualAnalysis: aiImageDescription,
         language: await detectLanguageFromPartsWithApi(
             [
@@ -2447,7 +2456,9 @@ export async function generateCarouselAction(
                 const urlMatch = slideContent.description?.match(urlPattern)
                 const extractedUrl = urlMatch ? urlMatch[0] : undefined
                 const brandUrl = brandDNA.url?.trim()
-                const finalUrl = brandUrl || extractedUrl
+                const finalUrl = input.ctaUrlEnabled
+                    ? (input.ctaUrl?.trim() || brandUrl || extractedUrl)
+                    : undefined
                 const includePrimaryLogo = shouldApplyPrimaryLogoToSlide(
                     selectedLogoUrl,
                     includeLogoOnSlides,
@@ -2472,6 +2483,7 @@ export async function generateCarouselAction(
                     // CTA for final slide only
                     ctaText: isLastSlide ? (slideContent.title || 'Más info') : undefined,
                     ctaUrl: isLastSlide ? finalUrl : undefined,
+                    contactLines: isLastSlide ? input.finalContactLines : undefined,
                     visualAnalysis: aiImageDescription,
                     language: await detectLanguageFromPartsWithApi(
                         [
@@ -2736,6 +2748,9 @@ export async function regenerateSlideAction(
     structureId?: string,
     aiImageDescription?: string,
     applyStyleToTypography?: boolean,
+    ctaUrlEnabled?: boolean,
+    ctaUrl?: string,
+    contactLines?: string[],
     selectedReferenceImages?: Array<{ url: string; role: ReferenceImageRole }>,
     selectedImageUrls?: string[],
     consistencyRefUrls?: string[],
@@ -2764,6 +2779,9 @@ export async function regenerateSlideAction(
             selectedImageUrls,
             aiImageDescription,
             applyStyleToTypography,
+            ctaUrlEnabled,
+            ctaUrl,
+            contactLines,
             compositionId,
             structureId,
             consistencyRefUrls,
