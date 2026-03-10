@@ -12,8 +12,16 @@ import { useBrandKit } from '@/contexts/BrandKitContext'
 export default function OnboardingPage() {
   const router = useRouter()
   const { user, isLoaded } = useUser()
-  const { brandKits, loading: brandKitsLoading, reloadBrandKits } = useBrandKit()
+  const {
+    brandKits,
+    activeBrandKit,
+    loading: brandKitsLoading,
+    reloadBrandKits,
+    setActiveBrandKit,
+  } = useBrandKit()
   const hasRetriedBrandKitLoadRef = useRef(false)
+  const isResolvingLastSessionRef = useRef(false)
+  const hasCompletedRedirectRef = useRef(false)
 
   const lastVisitedModule = useQuery(
     api.work_sessions.getLastVisitedModule,
@@ -28,25 +36,62 @@ export default function OnboardingPage() {
       return
     }
 
-    if (brandKitsLoading) return
+    if (hasCompletedRedirectRef.current) return
+
+    const redirectToLastModule = async () => {
+      if (!lastVisitedModule?.module) return false
+
+      const targetPath = lastVisitedModule.module === 'carousel' ? '/carousel' : '/image'
+      const targetBrandId = typeof lastVisitedModule.brand_id === 'string' ? lastVisitedModule.brand_id : null
+
+      if (targetBrandId && activeBrandKit?.id !== targetBrandId) {
+        const selected = await setActiveBrandKit(targetBrandId, true, true)
+        if (!selected) {
+          return false
+        }
+      }
+
+      hasCompletedRedirectRef.current = true
+      router.replace(targetPath)
+      return true
+    }
+
+    if (lastVisitedModule && !isResolvingLastSessionRef.current) {
+      isResolvingLastSessionRef.current = true
+      void redirectToLastModule().finally(() => {
+        isResolvingLastSessionRef.current = false
+      })
+      return
+    }
+
+    if (brandKitsLoading || lastVisitedModule === undefined) return
 
     if (!Array.isArray(brandKits) || brandKits.length === 0) {
       // Reintento defensivo para evitar falsos "sin kits" por carrera de carga.
       if (!hasRetriedBrandKitLoadRef.current) {
         hasRetriedBrandKitLoadRef.current = true
-        void reloadBrandKits(false)
+        void reloadBrandKits(true)
         return
       }
 
+      hasCompletedRedirectRef.current = true
       router.replace('/brand-kit')
       return
     }
 
-    if (lastVisitedModule === undefined) return
-
-    const targetPath = lastVisitedModule?.module === 'carousel' ? '/carousel' : '/image'
-    router.replace(targetPath)
-  }, [isLoaded, user?.id, brandKitsLoading, brandKits, lastVisitedModule, reloadBrandKits, router])
+    hasCompletedRedirectRef.current = true
+    router.replace('/image')
+  }, [
+    isLoaded,
+    user?.id,
+    brandKitsLoading,
+    brandKits,
+    activeBrandKit?.id,
+    lastVisitedModule,
+    reloadBrandKits,
+    router,
+    setActiveBrandKit,
+  ])
 
   return (
     <I18nProvider>
