@@ -187,7 +187,9 @@ export function BrandDNABoard({
     })();
     const completeness = calculateBrandKitCompleteness(data);
     const assistantPriorityMode = completeness.percentage < 70;
-    const mustForceAssistant = (assistantPriorityMode || assistantFlowLocked) && !allowAssistantExit;
+    const isDraftAssistantKit = assistantCreationMode && isManualPlaceholderUrl;
+    const shouldLockAssistant = assistantPriorityMode && !allowAssistantExit;
+    const mustForceAssistant = shouldLockAssistant || (assistantFlowLocked && !allowAssistantExit);
 
     useEffect(() => {
         setData(normalizeStudioColorRoles(initialData));
@@ -203,8 +205,21 @@ export function BrandDNABoard({
     }, []);
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
         if (!data?.id) return;
-        if (assistantPriorityMode && !allowAssistantExit) {
+
+        if (!assistantPriorityMode) {
+            window.sessionStorage.removeItem(ASSISTANT_LOCK_KEY);
+            setAssistantFlowLocked(false);
+            if (!isDraftAssistantKit) {
+                setShowAssistantWizard(false);
+            }
+        }
+    }, [data?.id, assistantPriorityMode, isDraftAssistantKit]);
+
+    useEffect(() => {
+        if (!data?.id) return;
+        if (shouldLockAssistant) {
             setAssistantFlowLocked(true);
             if (typeof window !== 'undefined') {
                 window.sessionStorage.setItem(ASSISTANT_LOCK_KEY, '1');
@@ -218,11 +233,11 @@ export function BrandDNABoard({
         }
         const key = `brand-kit-wizard-dismissed:${data.id}`;
         const dismissed = typeof window !== 'undefined' ? window.sessionStorage.getItem(key) : '1';
-        const shouldSuggestWizard = assistantCreationMode && isManualPlaceholderUrl;
+        const shouldSuggestWizard = isDraftAssistantKit;
         if (shouldSuggestWizard && !dismissed) {
             setShowAssistantWizard(true);
         }
-    }, [data?.id, isManualPlaceholderUrl, assistantCreationMode, assistantPriorityMode, assistantFlowLocked, allowAssistantExit]);
+    }, [data?.id, isDraftAssistantKit, shouldLockAssistant, assistantFlowLocked, allowAssistantExit]);
 
     useEffect(() => {
         if (assistantLaunchNonce <= 0) return;

@@ -423,8 +423,10 @@ function BrandKitPageContent() {
         }
     }, [activeBrandKit]);
 
-    const hasOtherBrandKits = Boolean(
-        activeBrandKit?.id && brandKits.some((kit) => kit.id !== activeBrandKit.id)
+    const hasOtherUnlockedBrandKits = Boolean(
+        activeBrandKit?.id && brandKits.some((kit) =>
+            kit.id !== activeBrandKit.id && (kit.completeness ?? 0) >= 70
+        )
     );
 
     const handleBrandDelete = async (brandId: string) => {
@@ -1252,7 +1254,7 @@ function BrandKitPageContent() {
                         <BrandDNABoard
                             key={activeBrandKit.id || 'new'}
                             data={activeBrandKit}
-                            allowAssistantExit={hasOtherBrandKits}
+                            allowAssistantExit={hasOtherUnlockedBrandKits}
                             assistantCreationMode={assistantCreationMode}
                             assistantLaunchNonce={assistantLaunchNonce}
                             importLaunchNonce={importLaunchNonce}

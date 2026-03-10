@@ -62,13 +62,12 @@ export function DashboardLayout({
     )
 
     const isBrandKitRoute = Boolean(pathname?.startsWith('/brand-kit'))
+    const hasIncompleteActiveBrandKit =
+        Boolean(activeBrandKit) && completeness.percentage < MIN_BRAND_KIT_COMPLETENESS
     const shouldBlockCurrentRoute =
         !brandKitsLoading &&
-        Boolean(activeBrandKit) &&
-        (
-            (!isBrandKitRoute && completeness.percentage < MIN_BRAND_KIT_COMPLETENESS) ||
-            !hasAnyUnlockedBrandKit
-        )
+        !isBrandKitRoute &&
+        hasIncompleteActiveBrandKit
 
     // Detectar si debemos mostrar el modal de onboarding
     useEffect(() => {
@@ -91,8 +90,14 @@ export function DashboardLayout({
     }, [user?.id, userRecord, brandKitsLoading, brandKits.length])
 
     useEffect(() => {
-        setShowCompletenessGate(shouldBlockCurrentRoute)
-    }, [shouldBlockCurrentRoute])
+        if (!shouldBlockCurrentRoute) {
+            setShowCompletenessGate(false)
+            return
+        }
+
+        setShowCompletenessGate(true)
+        router.replace('/brand-kit')
+    }, [shouldBlockCurrentRoute, router])
 
     const handleOnboardingComplete = async () => {
         if (user?.id) {
@@ -149,7 +154,13 @@ export function DashboardLayout({
 
                 <Dialog
                     open={showCompletenessGate}
-                    onOpenChange={setShowCompletenessGate}
+                    onOpenChange={(open) => {
+                        if (!open && shouldBlockCurrentRoute) {
+                            router.replace('/brand-kit')
+                            return
+                        }
+                        setShowCompletenessGate(open)
+                    }}
                 >
                     <DialogContent className="sm:max-w-[480px]">
                         <DialogHeader>

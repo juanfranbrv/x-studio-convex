@@ -4,7 +4,7 @@ import { generateTextUnified } from '@/lib/gemini'
 import { log } from '@/lib/logger'
 import { buildIntentParserPrompt } from '@/lib/prompts/intents/parser'
 import { INTENT_CATALOG, MERGED_LAYOUTS_BY_INTENT, type IntentCategory } from '@/lib/creation-flow-types'
-import { detectLanguage, detectLanguageWithApi } from '@/lib/language-detection'
+import { detectLanguage, detectLanguageWithApi, detectLanguageFromPartsWithApi } from '@/lib/language-detection'
 import { auth } from '@clerk/nextjs/server'
 import { ConvexHttpClient } from 'convex/browser'
 import { api } from '@/../convex/_generated/api'
@@ -384,9 +384,10 @@ function organizeParsedOutput(
         })
     }
 
+    const targetLanguage = normalizeLang(parsed.detectedLanguage) || 'es'
     const imageTexts = fragments.length > 0
         ? fragments.map((fragment, idx) => ({
-            label: idx === 0 ? 'Texto principal' : `Texto ${idx + 1}`,
+            label: getLocalizedTextLabel(idx, targetLanguage),
             value: fragment,
             type: 'custom' as const
         }))
@@ -405,30 +406,21 @@ function organizeParsedOutput(
 function buildSuggestionFromBase(
     base: ParsedIntentResult,
     mode: 'direct' | 'emotional' | 'proof',
-    coreSubject?: string
+    coreSubject?: string,
+    language = 'es'
 ) {
     const baseImageTexts = Array.isArray(base.imageTexts)
         ? base.imageTexts.map((item) => ({
-            label: item?.label || 'Texto principal',
+            label: item?.label || getLocalizedTextLabel(0, language),
             value: sanitizeUrlsInText(item?.value || ''),
             type: item?.type || 'custom'
         }))
         : []
-    const subjectSuffix = coreSubject ? ` (${coreSubject})` : ''
-    const title = mode === 'direct'
-        ? `Enfoque Directo${subjectSuffix}`
-        : mode === 'proof'
-            ? `Enfoque de Credibilidad${subjectSuffix}`
-            : `Enfoque Emocional${subjectSuffix}`
-    const subtitle = mode === 'direct'
-        ? 'Mensaje claro y accionable, orientado a conversion y comprension inmediata.'
-        : mode === 'proof'
-            ? 'Apoya la promesa con pruebas, datos o elementos concretos para aumentar confianza.'
-            : 'Mensaje inspirador y cercano, reforzando beneficio percibido y conexion emocional.'
+    const fallbackCopy = getSuggestionFallbackCopy(language, mode, coreSubject)
 
     return {
-        title,
-        subtitle,
+        title: fallbackCopy.title,
+        subtitle: fallbackCopy.subtitle,
         modifications: {
             headline: base.headline || '',
             cta: base.cta || '',
@@ -446,10 +438,89 @@ function extractCoreSubject(userText: string): string {
     return lines[0]?.trim().slice(0, 60) || ''
 }
 
+function normalizeLang(lang?: string) {
+    return (lang || '').trim().toLowerCase().slice(0, 2)
+}
+
+function getLocalizedTextLabel(index: number, language: string) {
+    const lang = normalizeLang(language) || 'es'
+    const maps: Record<string, { primary: string; secondary: (idx: number) => string }> = {
+        es: { primary: 'Texto principal', secondary: (idx) => `Texto ${idx + 1}` },
+        ca: { primary: 'Text principal', secondary: (idx) => `Text ${idx + 1}` },
+        en: { primary: 'Primary text', secondary: (idx) => `Text ${idx + 1}` },
+        pt: { primary: 'Texto principal', secondary: (idx) => `Texto ${idx + 1}` },
+        fr: { primary: 'Texte principal', secondary: (idx) => `Texte ${idx + 1}` },
+        de: { primary: 'Haupttext', secondary: (idx) => `Text ${idx + 1}` },
+        it: { primary: 'Testo principale', secondary: (idx) => `Testo ${idx + 1}` },
+    }
+
+    const locale = maps[lang] || maps.es
+    return index === 0 ? locale.primary : locale.secondary(index)
+}
+
+function getSuggestionFallbackCopy(language: string, mode: 'direct' | 'emotional' | 'proof', coreSubject?: string) {
+    const lang = normalizeLang(language) || 'es'
+    const subjectSuffix = coreSubject ? ` (${coreSubject})` : ''
+    const localized: Record<string, Record<'direct' | 'emotional' | 'proof', { title: string; subtitle: string }>> = {
+        es: {
+            direct: { title: `Enfoque Directo${subjectSuffix}`, subtitle: 'Mensaje claro y accionable, orientado a conversion y comprension inmediata.' },
+            proof: { title: `Enfoque de Credibilidad${subjectSuffix}`, subtitle: 'Apoya la promesa con pruebas, datos o elementos concretos para aumentar confianza.' },
+            emotional: { title: `Enfoque Emocional${subjectSuffix}`, subtitle: 'Mensaje inspirador y cercano, reforzando beneficio percibido y conexion emocional.' },
+        },
+        ca: {
+            direct: { title: `Enfocament Directe${subjectSuffix}`, subtitle: 'Missatge clar i accionable, orientat a la conversio i a la comprensio immediata.' },
+            proof: { title: `Enfocament de Credibilitat${subjectSuffix}`, subtitle: 'Reforca la promesa amb proves, dades o elements concrets per augmentar la confiança.' },
+            emotional: { title: `Enfocament Emocional${subjectSuffix}`, subtitle: 'Missatge inspirador i proper, reforcant el benefici percebut i la connexio emocional.' },
+        },
+        en: {
+            direct: { title: `Direct Angle${subjectSuffix}`, subtitle: 'Clear, actionable messaging focused on conversion and immediate understanding.' },
+            proof: { title: `Credibility Angle${subjectSuffix}`, subtitle: 'Supports the promise with proof, facts, or concrete details to increase trust.' },
+            emotional: { title: `Emotional Angle${subjectSuffix}`, subtitle: 'A warmer, inspiring message that reinforces perceived value and emotional connection.' },
+        },
+        pt: {
+            direct: { title: `Abordagem Direta${subjectSuffix}`, subtitle: 'Mensagem clara e acionavel, orientada para conversao e compreensao imediata.' },
+            proof: { title: `Abordagem de Credibilidade${subjectSuffix}`, subtitle: 'Sustenta a promessa com provas, dados ou elementos concretos para aumentar a confiança.' },
+            emotional: { title: `Abordagem Emocional${subjectSuffix}`, subtitle: 'Mensagem inspiradora e proxima, reforcando o beneficio percebido e a conexao emocional.' },
+        },
+        fr: {
+            direct: { title: `Approche Directe${subjectSuffix}`, subtitle: 'Message clair et actionnable, oriente vers la conversion et la comprehension immediate.' },
+            proof: { title: `Approche de Credibilite${subjectSuffix}`, subtitle: 'Soutient la promesse avec des preuves, des donnees ou des elements concrets pour renforcer la confiance.' },
+            emotional: { title: `Approche Emotionnelle${subjectSuffix}`, subtitle: 'Message inspirant et proche, renforçant le benefice perçu et la connexion emotionnelle.' },
+        },
+        de: {
+            direct: { title: `Direkter Ansatz${subjectSuffix}`, subtitle: 'Klare, umsetzbare Botschaft mit Fokus auf Conversion und sofortiges Verstaendnis.' },
+            proof: { title: `Glaubwuerdigkeits-Ansatz${subjectSuffix}`, subtitle: 'Stuetzt das Versprechen mit Belegen, Daten oder konkreten Elementen, um Vertrauen zu staerken.' },
+            emotional: { title: `Emotionaler Ansatz${subjectSuffix}`, subtitle: 'Nahbare, inspirierende Botschaft, die wahrgenommenen Nutzen und emotionale Bindung verstaerkt.' },
+        },
+        it: {
+            direct: { title: `Approccio Diretto${subjectSuffix}`, subtitle: 'Messaggio chiaro e orientato all azione, pensato per conversione e comprensione immediata.' },
+            proof: { title: `Approccio di Credibilita${subjectSuffix}`, subtitle: 'Sostiene la promessa con prove, dati o elementi concreti per aumentare la fiducia.' },
+            emotional: { title: `Approccio Emotivo${subjectSuffix}`, subtitle: 'Messaggio vicino e ispiratore che rafforza il beneficio percepito e la connessione emotiva.' },
+        },
+    }
+
+    return (localized[lang] || localized.es)[mode]
+}
+
+function getLocalizedOptimizedSubtitle(language: string) {
+    const lang = normalizeLang(language) || 'es'
+    const copy: Record<string, string> = {
+        es: 'Variante optimizada para este objetivo.',
+        ca: 'Variant optimitzada per a aquest objectiu.',
+        en: 'Variant optimized for this goal.',
+        pt: 'Variante otimizada para este objetivo.',
+        fr: 'Variante optimisee pour cet objectif.',
+        de: 'Fuer dieses Ziel optimierte Variante.',
+        it: 'Variante ottimizzata per questo obiettivo.',
+    }
+    return copy[lang] || copy.es
+}
+
 function normalizeSuggestions(
     parsedSuggestions: ParsedIntentResult['suggestions'],
     organizedBase: ParsedIntentResult,
-    userText: string
+    userText: string,
+    targetLanguage = 'es'
 ): ParsedIntentResult['suggestions'] {
     const TARGET_COUNT = 5
     const source = Array.isArray(parsedSuggestions) ? parsedSuggestions : []
@@ -471,10 +542,10 @@ function normalizeSuggestions(
         return {
             title: typeof suggestion?.title === 'string' && suggestion.title.trim()
                 ? suggestion.title.trim()
-                : buildSuggestionFromBase(organizedBase, 'direct', coreSubject)?.title,
+                : buildSuggestionFromBase(organizedBase, 'direct', coreSubject, targetLanguage)?.title,
             subtitle: typeof suggestion?.subtitle === 'string' && suggestion.subtitle.trim()
                 ? suggestion.subtitle.trim()
-                : 'Variante optimizada para este objetivo.',
+                : getLocalizedOptimizedSubtitle(targetLanguage),
             modifications: {
                 headline: maybeReplace(sanitizeUrlsInText(headlineText) || organizedBase.headline || ''),
                 cta: maybeReplace(sanitizeUrlsInText(ctaText) || organizedBase.cta || ''),
@@ -487,7 +558,7 @@ function normalizeSuggestions(
                     ? imageTexts.map((item: unknown) => {
                         const typedItem = (item && typeof item === 'object') ? (item as Record<string, unknown>) : {}
                         return {
-                            label: typeof typedItem.label === 'string' && typedItem.label.trim() ? typedItem.label : 'Texto principal',
+                            label: typeof typedItem.label === 'string' && typedItem.label.trim() ? typedItem.label : getLocalizedTextLabel(0, targetLanguage),
                             value: maybeReplace(sanitizeUrlsInText(String(typedItem.value || ''))),
                             type: typedItem.type === 'tagline' || typedItem.type === 'hook' ? typedItem.type : 'custom'
                         }
@@ -501,11 +572,11 @@ function normalizeSuggestions(
         return normalized.slice(0, TARGET_COUNT)
     }
 
-    const fallbackDirect = buildSuggestionFromBase(organizedBase, 'direct', coreSubject)
-    const fallbackEmotional = buildSuggestionFromBase(organizedBase, 'emotional', coreSubject)
-    const fallbackProof = buildSuggestionFromBase(organizedBase, 'proof', coreSubject)
-    const fallbackProof2 = buildSuggestionFromBase(organizedBase, 'proof', coreSubject)
-    const fallbackDirect2 = buildSuggestionFromBase(organizedBase, 'direct', coreSubject)
+    const fallbackDirect = buildSuggestionFromBase(organizedBase, 'direct', coreSubject, targetLanguage)
+    const fallbackEmotional = buildSuggestionFromBase(organizedBase, 'emotional', coreSubject, targetLanguage)
+    const fallbackProof = buildSuggestionFromBase(organizedBase, 'proof', coreSubject, targetLanguage)
+    const fallbackProof2 = buildSuggestionFromBase(organizedBase, 'proof', coreSubject, targetLanguage)
+    const fallbackDirect2 = buildSuggestionFromBase(organizedBase, 'direct', coreSubject, targetLanguage)
     const seeded = [...normalized]
 
     if (seeded.length === 0) {
@@ -525,18 +596,18 @@ function normalizeSuggestions(
     return seeded.slice(0, TARGET_COUNT)
 }
 
-function buildImagePromptSuggestions(
+async function buildImagePromptSuggestions(
     parsed: ParsedIntentResult,
     organizedBase: ParsedIntentResult,
-    userText: string
-): string[] {
-    const normalizeLang = (lang?: string) => (lang || '').trim().toLowerCase().slice(0, 2)
-    const targetLang = normalizeLang(parsed.detectedLanguage) || normalizeLang(detectLanguage(userText)) || 'es'
+    userText: string,
+    targetLanguage = 'es'
+): Promise<string[]> {
+    const targetLang = normalizeLang(targetLanguage) || normalizeLang(parsed.detectedLanguage) || 'es'
 
-    const isSuggestionInTargetLanguage = (text: string) => {
+    const isSuggestionInTargetLanguage = async (text: string) => {
         const clean = sanitizePromptSuggestion(text)
         if (!clean) return false
-        const detected = normalizeLang(detectLanguage(clean)) || 'es'
+        const detected = normalizeLang(await detectLanguageFromPartsWithApi([clean], targetLang)) || targetLang
         return detected === targetLang
     }
 
@@ -595,7 +666,11 @@ function buildImagePromptSuggestions(
         : []
 
     if (fromModel.length > 0) {
-        const inLang = fromModel.filter(isSuggestionInTargetLanguage)
+        const checks = await Promise.all(fromModel.map(async (item) => ({
+            item,
+            matches: await isSuggestionInTargetLanguage(item)
+        })))
+        const inLang = checks.filter((entry) => entry.matches).map((entry) => entry.item)
         const source = inLang.length > 0 ? inLang : fromModel
         const semantic = source.filter(hasSceneStructure)
         const base = semantic.length > 0 ? semantic : source
@@ -618,7 +693,11 @@ function buildImagePromptSuggestions(
         : []
 
     if (fromSuggestions.length > 0) {
-        const inLang = fromSuggestions.filter(isSuggestionInTargetLanguage)
+        const checks = await Promise.all(fromSuggestions.map(async (item) => ({
+            item,
+            matches: await isSuggestionInTargetLanguage(item)
+        })))
+        const inLang = checks.filter((entry) => entry.matches).map((entry) => entry.item)
         const source = inLang.length > 0 ? inLang : fromSuggestions
         const semantic = source.filter(hasSceneStructure)
         const base = semantic.length > 0 ? semantic : source
@@ -663,7 +742,8 @@ function buildImagePromptSuggestions(
 function buildSafeFallbackParsedOutput(
     userText: string,
     brandWebsite?: string,
-    intentId?: string
+    intentId?: string,
+    detectedLanguage = 'es'
 ): ParsedIntentResult {
     const inferredIntent =
         (intentId && INTENT_CATALOG.some((i) => i.id === intentId) ? intentId : undefined) ||
@@ -672,13 +752,13 @@ function buildSafeFallbackParsedOutput(
 
     const base: ParsedIntentResult = {
         detectedIntent: inferredIntent,
-        detectedLanguage: 'es',
+        detectedLanguage: normalizeLang(detectedLanguage) || 'es',
         confidence: 0.25,
         headline: '',
         cta: '',
         ctaUrl: brandWebsite?.trim() || '',
         caption: sanitizeUrlsInText(userText),
-        imageTexts: [{ label: 'Texto principal', value: sanitizeUrlsInText(userText), type: 'custom' }],
+        imageTexts: [{ label: getLocalizedTextLabel(0, detectedLanguage), value: sanitizeUrlsInText(userText), type: 'custom' }],
     }
 
     return organizeParsedOutput(base, userText, brandWebsite)
@@ -1159,8 +1239,18 @@ export async function parseLazyIntentAction({
         const modelToUse = intelligenceModel
         log.info('LazyPrompt', `Parsing with model ${modelToUse} ${intent ? `for intent: ${intent.name}` : 'with auto-detection'}`)
 
+        const detectedUserLanguage = await detectLanguageWithApi(userText, 'es')
+
         // 2. Build Prompt Parts (Include system prompt in body for maximum adherence across all models)
-        const prompt = buildIntentParserPrompt(userText, brandWebsite, brandDNA, intent, layout, previewTextContext)
+        const prompt = buildIntentParserPrompt(
+            userText,
+            brandWebsite,
+            brandDNA,
+            intent,
+            layout,
+            previewTextContext,
+            detectedUserLanguage
+        )
         const creativeLenses = [
             'beneficio directo y claridad accionable',
             'prueba social y credibilidad concreta',
@@ -1307,14 +1397,15 @@ CREATIVE VARIATION MODE:
 
         // 8. Final organization layer:
         // keep headline/cta/url and collapse the rest into one coherent preview block.
-        const detectedUserLanguage = await detectLanguageWithApi(userText, 'es')
         if (!parsed.detectedLanguage) {
             parsed.detectedLanguage = detectedUserLanguage
         }
 
         const organized = organizeParsedOutput(parsed, userText, brandWebsite)
-        organized.suggestions = normalizeSuggestions(parsed.suggestions, organized, userText)
-        organized.imagePromptSuggestions = buildImagePromptSuggestions(parsed, organized, userText)
+        const resolvedLanguage = normalizeLang(parsed.detectedLanguage) || detectedUserLanguage || 'es'
+        organized.detectedLanguage = resolvedLanguage
+        organized.suggestions = normalizeSuggestions(parsed.suggestions, organized, userText, resolvedLanguage)
+        organized.imagePromptSuggestions = await buildImagePromptSuggestions(parsed, organized, userText, resolvedLanguage)
         return organized
     } catch (error) {
         log.error('LazyPrompt', 'Error', error)
