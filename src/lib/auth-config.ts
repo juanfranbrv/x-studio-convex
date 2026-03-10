@@ -12,6 +12,7 @@ export const authConfig = {
   appBaseUrl: normalizeBaseUrl(process.env.NEXT_PUBLIC_APP_URL),
   signInPath: "/sign-in",
   signUpPath: "/sign-up",
+  ssoCallbackPath: "/sso-callback",
   onboardingPath: "/onboarding",
   signedInDefaultPath: "/image",
   afterSignOutPath: "/",

@@ -1,21 +1,6 @@
-import { SignUp } from '@clerk/nextjs'
+import { redirect } from 'next/navigation'
 import { authConfig } from '@/lib/auth-config'
 
 export default function SignUpPage() {
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-            <SignUp
-                path={authConfig.signUpPath}
-                signInUrl={authConfig.signInPath}
-                forceRedirectUrl={authConfig.onboardingPath}
-                fallbackRedirectUrl={authConfig.onboardingPath}
-                appearance={{
-                    elements: {
-                        rootBox: 'mx-auto',
-                        card: 'bg-card border border-border shadow-xl',
-                    },
-                }}
-            />
-        </div>
-    )
+  redirect(authConfig.signInPath)
 }

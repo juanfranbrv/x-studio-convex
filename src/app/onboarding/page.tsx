@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Bot, Loader2 } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { useBrandKit } from '@/contexts/BrandKitContext'
@@ -64,9 +64,15 @@ export default function OnboardingPage() {
       const targetBrandId = typeof lastVisitedModule.brand_id === 'string' ? lastVisitedModule.brand_id : null
 
       if (targetBrandId && activeBrandKit?.id !== targetBrandId) {
-        const selected = await setActiveBrandKit(targetBrandId, true, true)
-        if (!selected) {
-          return false
+        const selectionResult = await Promise.race([
+          setActiveBrandKit(targetBrandId, true, true),
+          new Promise<boolean>((resolve) => {
+            setTimeout(() => resolve(false), 1500)
+          }),
+        ])
+
+        if (!selectionResult) {
+          void setActiveBrandKit(targetBrandId, true, true)
         }
       }
 
@@ -128,11 +134,11 @@ export default function OnboardingPage() {
         <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-3xl items-center justify-center px-6">
           <div className="glass-card w-full max-w-xl border-white/20 p-10 text-center shadow-2xl backdrop-blur-xl">
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-              <Sparkles className="h-8 w-8 text-primary" />
+              <Bot className="h-8 w-8 text-primary" />
             </div>
             <h1 className="text-3xl font-heading font-bold tracking-tight">Preparando tu Kit de Marca</h1>
             <p className="mt-3 text-muted-foreground">
-              Te estamos llevando al flujo correcto segun tu ultima sesion.
+              Te estamos llevando al flujo correcto según tu última sesión.
             </p>
             <div className="mt-8 flex items-center justify-center gap-3 text-primary">
               <Loader2 className="h-5 w-5 animate-spin" />

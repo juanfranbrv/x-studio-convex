@@ -1,21 +1,5 @@
-import { SignIn } from '@clerk/nextjs'
-import { authConfig } from '@/lib/auth-config'
+import { GoogleAuthPage } from '@/components/auth/GoogleAuthCard'
 
 export default function SignInPage() {
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-            <SignIn
-                path={authConfig.signInPath}
-                signUpUrl={authConfig.signUpPath}
-                forceRedirectUrl={authConfig.onboardingPath}
-                fallbackRedirectUrl={authConfig.onboardingPath}
-                appearance={{
-                    elements: {
-                        rootBox: 'mx-auto',
-                        card: 'bg-card border border-border shadow-xl',
-                    },
-                }}
-            />
-        </div>
-    )
+  return <GoogleAuthPage />
 }
