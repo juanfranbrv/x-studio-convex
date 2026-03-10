@@ -1,13 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Sparkles } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
-import { useQuery } from 'convex/react'
-import { api } from '@/../convex/_generated/api'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { useBrandKit } from '@/contexts/BrandKitContext'
+import { getLastVisitedModuleAction } from '@/app/actions/get-last-visited-module'
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -20,13 +19,33 @@ export default function OnboardingPage() {
     setActiveBrandKit,
   } = useBrandKit()
   const hasRetriedBrandKitLoadRef = useRef(false)
-  const isResolvingLastSessionRef = useRef(false)
   const hasCompletedRedirectRef = useRef(false)
+  const hasResolvedLastSessionRef = useRef(false)
+  const [lastVisitedModule, setLastVisitedModule] = useState<{
+    module: 'image' | 'carousel'
+    session_id: string
+    brand_id?: string | null
+    updated_at: string
+  } | null | undefined>(undefined)
 
-  const lastVisitedModule = useQuery(
-    api.work_sessions.getLastVisitedModule,
-    isLoaded && user?.id ? { user_id: user.id } : 'skip'
-  )
+  useEffect(() => {
+    hasResolvedLastSessionRef.current = false
+    setLastVisitedModule(undefined)
+
+    if (!isLoaded || !user?.id) return
+
+    let cancelled = false
+    void (async () => {
+      const result = await getLastVisitedModuleAction(user.id)
+      if (cancelled) return
+      hasResolvedLastSessionRef.current = true
+      setLastVisitedModule(result.success ? (result.data ?? null) : null)
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isLoaded, user?.id])
 
   useEffect(() => {
     if (!isLoaded) return
@@ -56,15 +75,14 @@ export default function OnboardingPage() {
       return true
     }
 
-    if (lastVisitedModule && !isResolvingLastSessionRef.current) {
-      isResolvingLastSessionRef.current = true
-      void redirectToLastModule().finally(() => {
-        isResolvingLastSessionRef.current = false
-      })
+    if (lastVisitedModule) {
+      void redirectToLastModule()
       return
     }
 
-    if (brandKitsLoading || lastVisitedModule === undefined) return
+    if (brandKitsLoading) return
+
+    if (lastVisitedModule === undefined || !hasResolvedLastSessionRef.current) return
 
     if (!Array.isArray(brandKits) || brandKits.length === 0) {
       // Reintento defensivo para evitar falsos "sin kits" por carrera de carga.
@@ -79,8 +97,16 @@ export default function OnboardingPage() {
       return
     }
 
+    if (!activeBrandKit?.id && brandKits[0]?.id) {
+      void setActiveBrandKit(brandKits[0].id, true, true).finally(() => {
+        hasCompletedRedirectRef.current = true
+        router.replace('/brand-kit')
+      })
+      return
+    }
+
     hasCompletedRedirectRef.current = true
-    router.replace('/image')
+    router.replace('/brand-kit')
   }, [
     isLoaded,
     user?.id,
