@@ -637,7 +637,7 @@ export function ControlsPanel({
 
     return (
         <div className={STUDIO_CONTROLS_SHELL_CLASS}>
-            <div className="flex-1 overflow-y-auto thin-scrollbar [scrollbar-gutter:stable] p-4 space-y-5">
+            <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-5">
                 {/* SECTION: Sessions */}
                 <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader

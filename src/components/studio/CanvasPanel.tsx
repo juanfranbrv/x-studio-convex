@@ -711,7 +711,7 @@ export function CanvasPanel({
 
                 {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}
                 {/* Zoom Controls & Actions */}
-                <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-1 border border-border/60 bg-background/85 backdrop-blur-sm">
+                <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4 border border-border/60 bg-background/85 backdrop-blur-sm">
                     {/* Zoom Controls */}
                     <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
                         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut} title="Zoom out">
@@ -719,7 +719,7 @@ export function CanvasPanel({
                         </Button>
                         <button
                             type="button"
-                            className="text-xs font-mono w-8 text-center cursor-pointer"
+                            className="text-xs font-mono w-10 text-center cursor-pointer"
                             onClick={handleResetZoom}
                             title="Reset zoom"
                             aria-label="Restablecer zoom"
@@ -744,8 +744,8 @@ export function CanvasPanel({
             </div>
 
             <div className={cn(
-                "flex-1 relative flex flex-col items-center justify-start pb-12 overflow-y-auto overflow-x-hidden thin-scrollbar gap-12",
-                isMobile ? "px-0 pt-1" : "px-6 pt-1"
+                "flex-1 relative flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden thin-scrollbar",
+                isMobile ? "pt-5 px-4" : "pt-5 px-6"
             )}>
                 {/* Canvas Wrapper - reserves correct space and prevents overflow */}
                 <div
@@ -1146,7 +1146,7 @@ export function CanvasPanel({
 
                 {/* CAPTION CARD - Shows below texts */}
                 {(creationState.caption || isGeneratingCopy || creationState.selectedIntent) && (
-                    <div className="w-full max-w-[800px] shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-20">
+                    <div className="mt-3 w-full max-w-[800px] shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-20">
                         <GeneratedCopyCard
                             copy={creationState.caption || generatedCopy}
                             hashtags={generatedHashtags}

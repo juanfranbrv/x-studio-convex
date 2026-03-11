@@ -66,13 +66,6 @@ interface CarouselCanvasPanelProps {
     selectedLogoUrl?: string
     showPrimaryLogoOnCurrentSlide?: boolean
     compositionGhostIcon?: string
-    sessionHistory?: Array<{
-        id: string
-        createdAt: string
-        slides: CarouselSlide[]
-        caption?: string
-    }>
-    onSelectSessionHistory?: (id: string) => void
     isAdmin?: boolean
 }
 
@@ -274,8 +267,6 @@ export function CarouselCanvasPanel({
     selectedLogoUrl,
     showPrimaryLogoOnCurrentSlide = true,
     compositionGhostIcon,
-    sessionHistory = [],
-    onSelectSessionHistory,
     isAdmin = false
 }: CarouselCanvasPanelProps) {
     const [zoom, setZoom] = useState(110)
@@ -296,7 +287,6 @@ export function CarouselCanvasPanel({
     const [isExportingVideo, setIsExportingVideo] = useState(false)
     const [videoExportProgress, setVideoExportProgress] = useState(0)
     const [videoExportPhase, setVideoExportPhase] = useState('')
-    const [slideCorrectionPrompt, setSlideCorrectionPrompt] = useState('')
     const [prevImageUrl, setPrevImageUrl] = useState<string | null>(null)
     const [wasJustGenerated, setWasJustGenerated] = useState(false)
     const { toast } = useToast()
@@ -407,6 +397,7 @@ export function CarouselCanvasPanel({
     const hasScript = Boolean(currentSlide && !currentSlide.imageUrl && (currentSlide.title || currentSlide.description))
     const completedSlides = slides.filter(s => s.status === 'done').length
     const isGeneratingAny = isGenerating || slides.some(s => s.status === 'generating') || isRegenerating
+    const isCurrentSlideRegenerating = Boolean(isRegenerating && regeneratingIndex === currentIndex)
     const hasAnyImage = slides.some(s => Boolean(s.imageUrl))
     const isLoaderVisible = Boolean(isGeneratingAny && !hasAnyImage)
     useEffect(() => {
@@ -414,7 +405,6 @@ export function CarouselCanvasPanel({
         setDraftTitle(currentSlide.title || '')
         setDraftDescription(currentSlide.description || '')
         setDraftVisualPrompt(currentVisualContentEditable)
-        setSlideCorrectionPrompt('')
         setIsEditingScript(false)
         setIsEditingVisualContent(false)
     }, [currentSlide?.index, currentVisualContentEditable])
@@ -529,13 +519,6 @@ export function CarouselCanvasPanel({
         setZoom(calcMaxZoom())
     }
 
-    const handleApplySlideCorrection = () => {
-        if (!currentSlide?.imageUrl) return
-        const correction = slideCorrectionPrompt.trim()
-        if (!correction) return
-        onRegenerateSlide(currentIndex, correction)
-    }
-
     // Download handlers
     const handleDownloadCurrent = () => {
         if (!currentSlide?.imageUrl) return
@@ -636,18 +619,19 @@ export function CarouselCanvasPanel({
     const buildMusicTrack = async (musicUrl: string): Promise<{
         stream: MediaStream
         cleanup: () => void
-        start: () => Promise<void>
+        start: (targetDurationMs: number) => Promise<void>
     }> => {
         const audioContext = new AudioContext()
         const destination = audioContext.createMediaStreamDestination()
+        const gainNode = audioContext.createGain()
         const audioElement = new Audio(musicUrl)
         audioElement.crossOrigin = 'anonymous'
         audioElement.preload = 'auto'
         audioElement.loop = true
-        audioElement.volume = 0.9
 
         const sourceNode = audioContext.createMediaElementSource(audioElement)
-        sourceNode.connect(destination)
+        sourceNode.connect(gainNode)
+        gainNode.connect(destination)
 
         return {
             stream: destination.stream,
@@ -660,17 +644,41 @@ export function CarouselCanvasPanel({
                     sourceNode.disconnect()
                 } catch { }
                 try {
+                    gainNode.disconnect()
+                } catch { }
+                try {
                     destination.disconnect()
                 } catch { }
                 void audioContext.close()
             },
-            start: async () => {
+            start: async (targetDurationMs: number) => {
                 if (audioContext.state === 'suspended') {
                     await audioContext.resume()
                 }
+                const durationSeconds = Math.max(1, targetDurationMs / 1000)
+                const now = audioContext.currentTime
+                const fadeInSeconds = Math.min(1.2, durationSeconds * 0.16)
+                const fadeOutSeconds = 0.75
+                const fadeOutStart = Math.max(now + fadeInSeconds, now + durationSeconds - fadeOutSeconds)
+
+                gainNode.gain.cancelScheduledValues(now)
+                gainNode.gain.setValueAtTime(0, now)
+                gainNode.gain.linearRampToValueAtTime(0.88, now + fadeInSeconds)
+                gainNode.gain.setValueAtTime(0.88, fadeOutStart)
+                gainNode.gain.linearRampToValueAtTime(0, fadeOutStart + fadeOutSeconds)
+                audioElement.currentTime = 0
                 await audioElement.play()
             }
         }
+    }
+
+    const fetchExperimentalSongs = async (): Promise<Array<{ name: string; label: string; url: string }>> => {
+        const response = await fetch('/api/experimental-songs', { cache: 'no-store' })
+        if (!response.ok) {
+            throw new Error('No se pudo cargar la lista de canciones experimentales.')
+        }
+        const payload = await response.json()
+        return Array.isArray(payload?.songs) ? payload.songs : []
     }
 
     const exportCarouselVideo = async (withMusic: boolean) => {
@@ -696,12 +704,6 @@ export function CarouselCanvasPanel({
             })
             return
         }
-
-        const musicUrl = withMusic
-            ? (window.prompt('URL directa de musica (mp3/wav/m4a). Deja vacio para cancelar:') || '').trim()
-            : ''
-
-        if (withMusic && !musicUrl) return
 
         const mimeType = pickVideoMimeType()
         if (!mimeType) {
@@ -740,10 +742,20 @@ export function CarouselCanvasPanel({
         let music: Awaited<ReturnType<typeof buildMusicTrack>> | null = null
         let outputStream: MediaStream = videoStream
         const chunks: BlobPart[] = []
+        let selectedSongLabel = ''
 
         try {
-            if (musicUrl) {
-                music = await buildMusicTrack(musicUrl)
+            const totalDurationMs = completedSlidesOrdered.reduce((sum, _slide, idx) => sum + (idx === completedSlidesOrdered.length - 1 ? 6000 : 4000), 0)
+
+            if (withMusic) {
+                setVideoExportPhase('Cargando pista experimental')
+                const songs = await fetchExperimentalSongs()
+                if (songs.length === 0) {
+                    throw new Error('No hay pistas experimentales disponibles en /songs.')
+                }
+                const selectedSong = songs[Math.floor(Math.random() * songs.length)]
+                selectedSongLabel = selectedSong.label
+                music = await buildMusicTrack(selectedSong.url)
                 outputStream = new MediaStream([
                     ...videoStream.getVideoTracks(),
                     ...music.stream.getAudioTracks()
@@ -774,14 +786,17 @@ export function CarouselCanvasPanel({
 
             recorder.start(250)
             if (music) {
-                await music.start()
+                await music.start(totalDurationMs)
             }
 
-            const totalDurationMs = loaded.reduce((sum, _slide, idx) => sum + (idx === loaded.length - 1 ? 6000 : 4000), 0)
             let renderedMs = 0
             let lastProgressUpdate = 0
             setVideoExportProgress(22)
-            setVideoExportPhase('Renderizando video')
+            setVideoExportPhase(
+                music
+                    ? `Renderizando video con audio: ${selectedSongLabel || 'pista experimental'}`
+                    : 'Renderizando video'
+            )
 
             for (let i = 0; i < loaded.length; i++) {
                 const durationMs = i === loaded.length - 1 ? 6000 : 4000
@@ -922,6 +937,26 @@ export function CarouselCanvasPanel({
                     <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadBundle} disabled={completedSlides === 0} title="Descargar ZIP (carrusel + caption)">
                         <SquareArrowDown className="w-4 h-4" />
                     </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10"
+                        onClick={() => onRegenerateSlide(currentIndex)}
+                        disabled={!currentSlide || isRegenerating}
+                        title={isCurrentSlideRegenerating ? 'Regenerando slide actual...' : 'Regenerar slide actual'}
+                    >
+                        <RefreshCw className={cn("w-4 h-4", isRegenerating && "animate-spin")} />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10"
+                        onClick={() => exportCarouselVideo(true)}
+                        disabled={isExportingVideo || completedSlides === 0}
+                        title="Exportar video con musica"
+                    >
+                        <Music className={cn("w-4 h-4", isExportingVideo && "animate-pulse")} />
+                    </Button>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -930,17 +965,9 @@ export function CarouselCanvasPanel({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-popover/95 border-border/60 backdrop-blur-sm">
-                            <DropdownMenuItem onClick={() => onRegenerateSlide(currentIndex)} disabled={!currentSlide || isRegenerating}>
-                                <RefreshCw className={cn("w-4 h-4 mr-2", isRegenerating && "animate-spin")} />
-                                Regenerar slide actual
-                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => exportCarouselVideo(false)} disabled={isExportingVideo || completedSlides === 0}>
                                 <Video className={cn("w-4 h-4 mr-2", isExportingVideo && "animate-pulse")} />
                                 Exportar video (4s / 6s)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => exportCarouselVideo(true)} disabled={isExportingVideo || completedSlides === 0}>
-                                <Music className={cn("w-4 h-4 mr-2", isExportingVideo && "animate-pulse")} />
-                                Exportar video con musica
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                                 <Share2 className="w-4 h-4 mr-2" />
@@ -1195,6 +1222,16 @@ export function CarouselCanvasPanel({
                                     }}
                                     className="w-full h-full flex items-center justify-center"
                                 >
+                                    {isCurrentSlideRegenerating && (
+                                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-background/42 backdrop-blur-sm">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border/60 bg-background/80 shadow-lg">
+                                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                            </div>
+                                            <div className="rounded-full border border-border/60 bg-background/85 px-4 py-2 text-sm font-medium shadow-sm">
+                                                Regenerando esta diapositiva...
+                                            </div>
+                                        </div>
+                                    )}
                                     <img
                                         src={currentSlide.imageUrl}
                                         alt={`Slide ${currentIndex + 1}`}
@@ -1458,58 +1495,6 @@ export function CarouselCanvasPanel({
                     </div>
                 )}
 
-                {sessionHistory.length > 0 && (
-                    <div className="w-full max-w-[800px] shrink-0 pb-4">
-                        <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">Variaciones de la sesión</p>
-                            <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                                {sessionHistory.map((item) => {
-                                    const thumb = item.slides.find((s) => s.imageUrl)?.imageUrl
-                                    return (
-                                        <button
-                                            key={item.id}
-                                            onClick={() => onSelectSessionHistory?.(item.id)}
-                                            className="relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-border hover:border-primary/60 transition-colors bg-muted/40"
-                                            title={`Carrusel ${new Date(item.createdAt).toLocaleTimeString()}`}
-                                        >
-                                            {thumb ? (
-                                                <img src={thumb} alt="Variación carrusel" loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">N/A</div>
-                                            )}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {currentSlide?.imageUrl && (
-                    <div className="w-full max-w-[800px] shrink-0 pb-8">
-                        <div className="flex items-end gap-2">
-                            <Textarea
-                                placeholder="Describe los cambios para esta diapositiva..."
-                                value={slideCorrectionPrompt}
-                                onChange={(e) => setSlideCorrectionPrompt(e.target.value)}
-                                className="min-h-[44px] max-h-[120px] resize-none"
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault()
-                                        handleApplySlideCorrection()
-                                    }
-                                }}
-                            />
-                            <Button
-                                onClick={handleApplySlideCorrection}
-                                disabled={isGeneratingAny || !slideCorrectionPrompt.trim()}
-                                className="h-[44px] whitespace-nowrap"
-                            >
-                                Realizar corrección
-                            </Button>
-                        </div>
-                    </div>
-                )}
             </div>
 
             <Dialog open={debugOpen} onOpenChange={setDebugOpen}>

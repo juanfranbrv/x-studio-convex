@@ -3537,7 +3537,7 @@ export function CarouselControlsPanel({
             </div>
 
             {/* Generate */}
-            <div className="p-6 border-t border-border/40">
+            <div className="border-t border-border/40 p-3 md:p-4">
                 {primaryActionRequiresReanalysis && (
                     <div className="mb-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2">
                         <p className="text-[11px] leading-relaxed text-muted-foreground">
@@ -3549,7 +3549,7 @@ export function CarouselControlsPanel({
                 <Button
                     onClick={handlePrimaryAction}
                     disabled={primaryActionDisabled}
-                    className="group feedback-action w-full h-12 text-base font-semibold disabled:pointer-events-auto disabled:cursor-not-allowed"
+                    className="group feedback-action w-full h-[44px] rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold disabled:pointer-events-auto disabled:cursor-not-allowed"
                 >
                     {isAnalyzing ? (
                         <>

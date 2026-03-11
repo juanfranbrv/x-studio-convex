@@ -19,7 +19,7 @@ import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
 import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import { SOCIAL_FORMATS, ALL_IMAGE_LAYOUTS, LAYOUTS_BY_INTENT, type DebugPromptData, type DebugContextItem } from '@/lib/creation-flow-types'
-import { Loader2, Plus, RotateCcw, Sparkles } from 'lucide-react'
+import { ArrowUp, Loader2, Plus, RotateCcw, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 import { buildEditPrompt } from '@/lib/prompts/image-edit'
@@ -2124,7 +2124,7 @@ export default function ImagePage() {
                         panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
                     )}>
                         {/* LEFT COLUMN (Main Canvas) */}
-                        <div className="flex-1 flex flex-col p-3 md:p-4 gap-3 md:gap-4 overflow-y-auto overflow-x-hidden min-w-0 no-scrollbar">
+                        <div className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar">
                             {/* Canvas Preview */}
                             <div className="flex-1 min-h-[340px] md:min-h-[500px] flex flex-col overflow-x-hidden">
                                 <CanvasPanel
@@ -2163,7 +2163,7 @@ export default function ImagePage() {
                             </div>
 
                             {/* Thumbnail History (Moved below Canvas) */}
-                            <div className="flex-shrink-0">
+                            <div className="flex-shrink-0 p-3 md:p-4 pt-0">
                                 <ThumbnailHistory
                                     generations={displayGenerations}
                                     currentImageUrl={creationFlow.state.generatedImage}
@@ -2187,8 +2187,8 @@ export default function ImagePage() {
                                         }
                                     }}
                                 />
-                            </div >
-                        </div >
+                            </div>
+                        </div>
 
                         {/* Feedback Button - Floating to the right of the canvas area */}
                         <FeedbackButton
@@ -2196,16 +2196,16 @@ export default function ImagePage() {
                             brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
                             intent={creationFlow.state.selectedIntent || undefined}
                             layout={creationFlow.selectedLayoutMeta?.id}
-                            className={cn(
-                                "z-50 transition-all duration-300",
-                                isMobile
-                                    ? "fixed bottom-24 right-4"
-                                    : cn(
-                                        "absolute top-[30%] -translate-y-1/2",
-                                        panelPosition === 'right' ? "right-[28%]" : "left-[28%]"
-                                    )
-                            )}
-                        />
+                              className={cn(
+                                  "z-50 transition-all duration-300",
+                                  isMobile
+                                      ? "fixed bottom-24 right-4"
+                                      : cn(
+                                          "absolute top-[42%] -translate-y-1/2",
+                                          panelPosition === 'right' ? "right-[28%]" : "left-[28%]"
+                                      )
+                              )}
+                          />
 
                         {/* RIGHT COLUMN - Controls Panel */}
                         <ControlsPanel
@@ -2282,9 +2282,9 @@ export default function ImagePage() {
                                 <Button
                                     onClick={() => handleEditImage(editPrompt)}
                                     disabled={isGenerating || !editPrompt.trim()}
-                                    className="group feedback-action h-[44px] w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold px-4 whitespace-nowrap"
+                                    className="group feedback-action h-[44px] rounded-xl w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold px-4 whitespace-nowrap"
                                 >
-                                    <Sparkles className="w-4 h-4 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                                    <ArrowUp className="w-4 h-4 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-translate-y-0.5" />
                                     Realizar corrección
                                 </Button>
                             )}
@@ -2299,7 +2299,7 @@ export default function ImagePage() {
                                 <Button
                                     onClick={handleRetryLastPrompt}
                                     disabled={isGenerating || !lastGenerationRequest || creationFlow.state.isAnalyzing}
-                                    className="group feedback-action w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
+                                    className="group feedback-action w-full h-[44px] rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
                                 >
                                     {isGenerating ? (
                                         <>
@@ -2317,7 +2317,7 @@ export default function ImagePage() {
                                 <Button
                                     onClick={handleUnifiedAction}
                                     disabled={isGenerating || !canGenerate}
-                                    className="group feedback-action w-full h-[44px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
+                                    className="group feedback-action w-full h-[44px] rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
                                 >
                                     {isGenerating ? (
                                         <>

@@ -39,8 +39,10 @@ import { Id } from '../../../convex/_generated/dataModel'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
 import { getCarouselCompositionRecommendation } from '@/lib/carousel-composition-governance'
-import { Sparkles, Layers3, Loader2, Power, Wand2 } from 'lucide-react'
+import { ArrowUp, Layers3, Loader2, Power, Sparkles, Wand2 } from 'lucide-react'
 
 const createAuditFlowId = (prefix: string) =>
     `flow_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
@@ -111,6 +113,7 @@ export default function CarouselPage() {
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
     const [generatedCount, setGeneratedCount] = useState(0)
     const [slides, setSlides] = useState<CarouselSlide[]>([])
+    const [slideCorrectionPrompt, setSlideCorrectionPrompt] = useState('')
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('4:5')
     const [carouselSettings, setCarouselSettings] = useState<CarouselSettings | null>(null)
     const [previewCompositionState, setPreviewCompositionState] = useState<{
@@ -202,6 +205,7 @@ export default function CarouselPage() {
         suggestedSlideCount?: number
     }>({ open: false, title: '', message: '' })
     const [slideCountOverride, setSlideCountOverride] = useState<number | null>(null)
+    const [isAdminCompositionOpen, setIsAdminCompositionOpen] = useState(false)
     const selectedStylePresetDetails = useQuery(
         api.stylePresets.getActiveById,
         referencePreviewState.selectedStylePresetId
@@ -1363,6 +1367,11 @@ export default function CarouselPage() {
 
         setIsRegenerating(true)
         setRegeneratingIndex(index)
+        setSlides((prev) => prev.map((item, itemIndex) => (
+            itemIndex === index
+                ? { ...item, status: 'generating' as const, error: undefined }
+                : item
+        )))
 
         try {
             const slideContent: SlideContent = {
@@ -1449,6 +1458,40 @@ export default function CarouselPage() {
             setRegeneratingIndex(null)
         }
     }, [slides, carouselSettings, activeBrandKit, aiConfig?.imageModel, toast])
+
+    useEffect(() => {
+        setSlideCorrectionPrompt('')
+    }, [currentSlideIndex])
+
+    const currentSlide = slides[currentSlideIndex] || null
+    const mappedSessionGenerations = useMemo(() => {
+        return sessionHistory
+            .map((item) => {
+                const thumb = item.slides.find((s) => s.imageUrl)?.imageUrl
+                if (!thumb) return null
+                return {
+                    id: item.id,
+                    image_url: thumb,
+                    preview_image_url: thumb,
+                    original_image_url: thumb,
+                    created_at: item.createdAt,
+                }
+            })
+            .filter(Boolean) as Array<{
+                id: string
+                image_url: string
+                preview_image_url?: string
+                original_image_url?: string
+                created_at: string
+            }>
+    }, [sessionHistory])
+
+    const handleApplySlideCorrection = useCallback(() => {
+        if (!currentSlide?.imageUrl) return
+        const correction = slideCorrectionPrompt.trim()
+        if (!correction) return
+        void handleRegenerateSlide(currentSlideIndex, correction)
+    }, [currentSlide?.imageUrl, currentSlideIndex, handleRegenerateSlide, slideCorrectionPrompt])
 
     const handleSelectSessionHistory = useCallback((id: string) => {
         const selected = sessionHistory.find((item) => item.id === id)
@@ -1616,32 +1659,34 @@ export default function CarouselPage() {
             onBrandDelete={deleteBrandKitById}
             onNewBrandKit={handleNewBrandKit}
         >
-            <div className={cn(
-                "flex h-full flex-col lg:flex-row",
-                panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
-            )}>
-                {/* Canvas + Caption */}
-                <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 flex flex-col overflow-hidden relative">
+                <div className={cn(
+                    "flex-1 flex flex-col overflow-hidden min-h-0 lg:flex-row",
+                    panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
+                )}>
+                {/* LEFT COLUMN (Main Canvas) */}
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar">
                     {isAdmin && activeComposition && activeCompositionRecommendation && (
                         <div className="shrink-0 px-4 pt-4 md:px-6">
-                            <details className="rounded-2xl border border-border/70 bg-background/90 shadow-sm backdrop-blur-sm" open>
-                                <summary className="cursor-pointer list-none p-3">
-                                    <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                                        <div className="space-y-2">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <Badge variant="outline" className="gap-1">
-                                                    <Sparkles className="h-3 w-3" />
-                                                    Admin composición
-                                                </Badge>
-                                                <Badge variant={activeComposition.isActive ? 'default' : 'destructive'}>
-                                                    {activeComposition.isActive ? 'Activa' : 'Inactiva'}
-                                                </Badge>
-                                                <span className="text-xs text-muted-foreground">Mostrar / ocultar</span>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium">{activeComposition.name}</p>
-                                                <p className="text-xs font-mono text-muted-foreground">{activeComposition.composition_id}</p>
-                                            </div>
+                            <div className="rounded-2xl border border-border/70 bg-background/90 shadow-sm backdrop-blur-sm">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAdminCompositionOpen((prev) => !prev)}
+                                    className="flex w-full items-center justify-between gap-3 p-3 text-left"
+                                >
+                                    <div className="min-w-0 flex flex-1 flex-wrap items-center gap-2">
+                                        <Badge variant="outline" className="gap-1">
+                                            <Sparkles className="h-3 w-3" />
+                                            Admin composición
+                                        </Badge>
+                                        <Badge variant={activeComposition.isActive ? 'default' : 'destructive'}>
+                                            {activeComposition.isActive ? 'Activa' : 'Inactiva'}
+                                        </Badge>
+                                        <span className="truncate text-sm font-medium">{activeComposition.name}</span>
+                                        <span className="truncate text-xs font-mono text-muted-foreground">
+                                            {activeComposition.composition_id}
+                                        </span>
+                                        {isAdminCompositionOpen && (
                                             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                                                 <span>Ahora:</span>
                                                 <Badge variant="secondary">{activeComposition.mode}</Badge>
@@ -1662,19 +1707,15 @@ export default function CarouselPage() {
                                                     <span>Sin cambio sugerido.</span>
                                                 )}
                                             </div>
-                                        </div>
-
-                                        <div className="text-xs leading-relaxed text-muted-foreground xl:max-w-md">
-                                            <p className="font-medium text-foreground">Qué estás viendo aquí</p>
-                                            <p>
-                                                Las etiquetas de `Ahora` son el estado guardado de la composición. Las de `Propuesta`
-                                                son solo la recomendación automática. No cambia nada hasta que pulses un botón.
-                                            </p>
-                                        </div>
+                                        )}
                                     </div>
-                                </summary>
+                                    <span className="shrink-0 text-xs text-muted-foreground">
+                                        {isAdminCompositionOpen ? 'Ocultar' : 'Mostrar'}
+                                    </span>
+                                </button>
 
-                                <div className="border-t border-border/70 px-3 pb-3 pt-3">
+                                {isAdminCompositionOpen && (
+                                    <div className="border-t border-border/70 px-3 pb-3 pt-3">
                                     <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
                                         <div className="space-y-3">
                                             <div className="rounded-xl border border-border bg-muted/20 p-3">
@@ -1792,8 +1833,9 @@ export default function CarouselPage() {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </details>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                     <CarouselCanvasPanel
@@ -1802,8 +1844,6 @@ export default function CarouselPage() {
                         currentIndex={currentSlideIndex}
                         onSelectSlide={setCurrentSlideIndex}
                         onRegenerateSlide={handleRegenerateSlide}
-                        sessionHistory={sessionHistory}
-                        onSelectSessionHistory={handleSelectSessionHistory}
                         onUpdateSlideScript={handleUpdateSlideScript}
                         isGenerating={isGenerating}
                         isRegenerating={isRegenerating}
@@ -1831,6 +1871,52 @@ export default function CarouselPage() {
                         compositionGhostIcon={compositionGhostIcon || undefined}
                         isAdmin={Boolean(isAdmin)}
                     />
+
+                    {mappedSessionGenerations.length > 0 && (
+                        <div className="flex-shrink-0 p-3 md:p-4 pt-0">
+                            <ThumbnailHistory
+                                generations={mappedSessionGenerations}
+                                currentImageUrl={currentSlide?.imageUrl || null}
+                                onSelectGeneration={(gen) => handleSelectSessionHistory(gen.id)}
+                            />
+                        </div>
+                    )}
+                    <div className="studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-background/50 backdrop-blur-md min-h-[80px]">
+                        <div className="flex-1 p-3 md:p-4 flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+                            <Textarea
+                                placeholder={currentSlide?.imageUrl ? "Describe los cambios para editar la diapositiva..." : "Configura tu carrusel en el panel derecho..."}
+                                value={slideCorrectionPrompt}
+                                onChange={(e) => setSlideCorrectionPrompt(e.target.value)}
+                                disabled={!currentSlide?.imageUrl || (isRegenerating && regeneratingIndex === currentSlideIndex)}
+                                className="w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault()
+                                        handleApplySlideCorrection()
+                                    }
+                                }}
+                            />
+                            {currentSlide?.imageUrl && (
+                                <Button
+                                    onClick={handleApplySlideCorrection}
+                                    disabled={isGenerating || (isRegenerating && regeneratingIndex === currentSlideIndex) || !slideCorrectionPrompt.trim()}
+                                    className="group feedback-action h-[44px] rounded-xl w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold px-4 whitespace-nowrap"
+                                >
+                                    {isRegenerating && regeneratingIndex === currentSlideIndex ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Corrigiendo...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ArrowUp className="w-4 h-4 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-translate-y-0.5" />
+                                            Realizar corrección
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <FeedbackButton
@@ -1843,13 +1929,13 @@ export default function CarouselPage() {
                         isMobile
                             ? "fixed bottom-24 right-4"
                             : cn(
-                                "absolute top-[30%] -translate-y-1/2",
+                                "absolute top-[42%] -translate-y-1/2",
                                 panelPosition === 'right' ? "right-[28%]" : "left-[28%]"
                             )
                     )}
                 />
 
-                {/* Controls Panel (Right Side) */}
+                {/* RIGHT COLUMN - Controls Panel */}
                 <CarouselControlsPanel
                     onAnalyze={handleAnalyze}
                     onGenerate={handleGenerate}
@@ -1896,6 +1982,7 @@ export default function CarouselPage() {
                     onRestorePreviewState={handleRestorePreviewFromPreset}
                     getAuditFlowId={getOrCreateCreationFlowId}
                 />
+                </div>
             </div>
 
             <PromptDebugModal
