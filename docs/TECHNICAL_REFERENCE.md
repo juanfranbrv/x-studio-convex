@@ -251,3 +251,30 @@ La arquitectura queda preparada para sumar mas idiomas anadiendo nuevos director
 - `referral_purchase_reward_percentage`
 
 These values are editable from Admin and must remain the single source of truth for referral rewards.
+
+## Chrome remote debug workflow
+
+### Goal
+
+- Make Chrome DevTools remote debugging reproducible for QA and responsive reviews.
+- Avoid depending on a personal Chrome session or on a random open port.
+
+### Commands
+
+- `npm run chrome:debug`: launch Chrome with remote debugging on `9222` and an isolated profile.
+- `npm run chrome:debug:studio`: same flow, opening `/studio`.
+- `npm run chrome:debug:kill`: stop only the debug Chrome instances created for this project.
+- `npm run dev:debug-browser`: ensure the local app is running and then open Chrome in debug mode against `/studio`.
+
+### Rules
+
+1. The debug browser must always use the isolated profile `.tmp/chrome-debug`.
+2. Before using Chrome DevTools MCP, verify `127.0.0.1:9222` is reachable.
+3. If the port is not reachable, relaunch Chrome through `scripts/start-chrome-debug.ps1`.
+4. If DevTools still cannot attach, continue with Playwright and browser console instead of blocking the task.
+
+### Implementation notes
+
+- Shared helpers live in `scripts/chrome-debug-common.ps1`.
+- The launcher queries `http://127.0.0.1:9222/json/version` to confirm the debugging endpoint is alive.
+- The stop script only targets Chrome processes started with the debug port or the isolated profile, so the normal user browser session is not killed.

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useRef, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
@@ -23,6 +23,7 @@ interface BrandKitContextType {
 const BrandKitContext = createContext<BrandKitContextType | undefined>(undefined)
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const EMPTY_BRANDKIT_RECOVERY_DELAYS_MS = [1800, 4500, 9000]
 
 export function BrandKitProvider({ children }: { children: ReactNode }) {
     const { user, isLoaded } = useUser()
@@ -37,8 +38,36 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
     const initialLoadAttempted = useRef(false)
     const activeSelectionHealing = useRef(false)
     const initializedUserIdRef = useRef<string | null>(null)
+    const loadRequestIdRef = useRef(0)
+    const loadInFlightRef = useRef(false)
+    const backgroundRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const emptyRecoveryAttemptRef = useRef(0)
+    const loadBrandKitsRef = useRef<(isSilent?: boolean) => Promise<void>>(async () => { })
+    const setActiveBrandKitRef = useRef<BrandKitContextType['setActiveBrandKit']>(async () => false)
 
-    const ensureConvexUser = async () => {
+    const clearBackgroundRetry = useCallback(() => {
+        if (backgroundRetryTimeoutRef.current) {
+            clearTimeout(backgroundRetryTimeoutRef.current)
+            backgroundRetryTimeoutRef.current = null
+        }
+    }, [])
+
+    const scheduleBackgroundRecovery = useCallback(() => {
+        if (!user?.id) return
+        if (backgroundRetryTimeoutRef.current) return
+
+        const attemptIndex = emptyRecoveryAttemptRef.current
+        const delay = EMPTY_BRANDKIT_RECOVERY_DELAYS_MS[attemptIndex]
+        if (typeof delay !== 'number') return
+
+        backgroundRetryTimeoutRef.current = setTimeout(() => {
+            backgroundRetryTimeoutRef.current = null
+            emptyRecoveryAttemptRef.current += 1
+            void loadBrandKitsRef.current(true)
+        }, delay)
+    }, [user?.id])
+
+    const ensureConvexUser = useCallback(async () => {
         if (!user?.id) return false
         if (userRecord) return true
 
@@ -55,13 +84,17 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
             console.warn('[CONTEXT] Could not create user before persisting brand:', error)
             return false
         }
-    }
+    }, [upsertUser, user?.emailAddresses, user?.id, userRecord])
 
-    const loadBrandKits = async (isSilent = false) => {
+    const loadBrandKits = useCallback(async (isSilent = false) => {
         if (!user?.id) {
             if (!isSilent) setLoading(false)
             return
         }
+
+        if (loadInFlightRef.current) return
+        loadInFlightRef.current = true
+        const requestId = ++loadRequestIdRef.current
 
         if (!isSilent) setLoading(true)
         try {
@@ -83,8 +116,17 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                 }
             }
 
+            if (requestId !== loadRequestIdRef.current) return
+
             if (result.success && result.data) {
                 setBrandKits(result.data)
+
+                if (result.data.length > 0) {
+                    emptyRecoveryAttemptRef.current = 0
+                    clearBackgroundRetry()
+                } else {
+                    scheduleBackgroundRecovery()
+                }
 
                 if (result.data.length > 0 && !activeBrandKit) {
                     const lastBrandId = userRecord?.current_brand_id
@@ -93,20 +135,24 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                         ? (lastBrandId as string)
                         : result.data[0].id
 
-                    const selected = await setActiveBrandKit(brandToSelect, !hasPersistedBrand)
+                    const selected = await setActiveBrandKitRef.current(brandToSelect, !hasPersistedBrand)
                     if (!selected && result.data[0]?.id && result.data[0].id !== brandToSelect) {
-                        await setActiveBrandKit(result.data[0].id, true, true)
+                        await setActiveBrandKitRef.current(result.data[0].id, true, true)
                     }
                 }
+            } else {
+                scheduleBackgroundRecovery()
             }
         } catch (error) {
             console.error('Error loading brand kits:', error)
+            scheduleBackgroundRecovery()
         } finally {
+            loadInFlightRef.current = false
             if (!isSilent) setLoading(false)
         }
-    }
+    }, [user?.id, activeBrandKit, userRecord?.current_brand_id, clearBackgroundRetry, scheduleBackgroundRecovery])
 
-    const setActiveBrandKit = async (
+    const setActiveBrandKit = useCallback(async (
         id: string,
         shouldPersist = true,
         allowFallback = true
@@ -152,11 +198,21 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
             console.error('Error loading brand kit:', error)
             return false
         }
-    }
+    }, [brandKits, ensureConvexUser, updateLastBrand, user?.id, userRecord])
 
-    const reloadBrandKits = async (isSilent = true) => {
+    useEffect(() => {
+        loadBrandKitsRef.current = loadBrandKits
+    }, [loadBrandKits])
+
+    useEffect(() => {
+        setActiveBrandKitRef.current = setActiveBrandKit
+    }, [setActiveBrandKit])
+
+    const reloadBrandKits = useCallback(async (isSilent = true) => {
+        clearBackgroundRetry()
+        emptyRecoveryAttemptRef.current = 0
         await loadBrandKits(isSilent)
-    }
+    }, [clearBackgroundRetry, loadBrandKits])
 
     const deleteBrandKitById = async (id: string) => {
         try {
@@ -203,10 +259,13 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         initializedUserIdRef.current = nextUserId
         initialLoadAttempted.current = false
         activeSelectionHealing.current = false
+        clearBackgroundRetry()
+        loadInFlightRef.current = false
+        emptyRecoveryAttemptRef.current = 0
         setActiveBrandKitState(null)
         setBrandKits([])
         setLoading(Boolean(nextUserId))
-    }, [user?.id])
+    }, [clearBackgroundRetry, user?.id])
 
     useEffect(() => {
         if (isLoaded && user && userRecord !== undefined && !initialLoadAttempted.current) {
@@ -216,7 +275,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         if (isLoaded && !user) {
             setLoading(false)
         }
-    }, [isLoaded, user, userRecord])
+    }, [isLoaded, loadBrandKits, user, userRecord])
 
     useEffect(() => {
         if (loading) return
@@ -239,7 +298,36 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         void setActiveBrandKit(preferredId, true, true).finally(() => {
             activeSelectionHealing.current = false
         })
-    }, [loading, user?.id, brandKits, activeBrandKit?.id, userRecord?.current_brand_id])
+    }, [loading, user?.id, brandKits, activeBrandKit?.id, setActiveBrandKit, userRecord?.current_brand_id])
+
+    useEffect(() => {
+        if (!user?.id) return
+
+        const shouldHeal = () => {
+            if (document.visibilityState !== 'visible') return
+            if (loadInFlightRef.current) return
+            if (loading) return
+            if (brandKits.length > 0) return
+            void loadBrandKits(true)
+        }
+
+        const handleVisibilityChange = () => shouldHeal()
+        const handleFocus = () => shouldHeal()
+
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        window.addEventListener('focus', handleFocus)
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
+            window.removeEventListener('focus', handleFocus)
+        }
+    }, [brandKits.length, loadBrandKits, loading, user?.id])
+
+    useEffect(() => {
+        return () => {
+            clearBackgroundRetry()
+        }
+    }, [clearBackgroundRetry])
 
     const value: BrandKitContextType = {
         activeBrandKit,
