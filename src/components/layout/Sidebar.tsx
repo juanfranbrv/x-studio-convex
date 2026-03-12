@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
-import { Bot, CreditCard, FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, PanelsTopLeft, Play, Settings, User } from 'lucide-react'
+import { Bot, FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, PanelsTopLeft, Play, Settings, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
     DropdownMenu,
@@ -22,7 +22,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
-    const { t } = useTranslation(['common', 'billing'])
+    const { t } = useTranslation('common')
     const pathname = usePathname()
     const { user } = useUser()
     const { signOut } = useClerk()
@@ -35,7 +35,6 @@ export function Sidebar({ className }: SidebarProps) {
         { icon: PanelsTopLeft, label: t('nav.studioWorkspace'), href: '/studio' },
         { icon: GalleryHorizontal, label: t('nav.carousel'), href: '/carousel' },
         { icon: Play, label: t('nav.video'), href: '/video' },
-        { icon: CreditCard, label: t('billing:nav.billing'), href: '/billing' },
     ]
 
     const handleLogout = async () => {

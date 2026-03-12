@@ -173,13 +173,13 @@ export function AuthShell({
   const isSignIn = mode === 'sign-in'
 
   return (
-    <div className="relative min-h-[100dvh] overflow-hidden bg-mesh text-foreground">
+    <div className="relative min-h-[100dvh] overflow-x-hidden overflow-y-hidden bg-mesh text-foreground">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(212,138,52,0.12),transparent_26%),radial-gradient(circle_at_80%_20%,rgba(15,74,163,0.08),transparent_22%),linear-gradient(135deg,hsl(var(--background)/0.97),hsl(var(--muted)/0.82))]" />
-      <div className="pointer-events-none absolute -left-20 top-0 h-80 w-80 rounded-full bg-[#d48a34]/10 blur-[130px]" />
-      <div className="pointer-events-none absolute bottom-[-8rem] right-[-3rem] h-80 w-80 rounded-full bg-[#0f4aa3]/8 blur-[140px]" />
+      <div className="pointer-events-none absolute -left-12 top-0 h-64 w-64 rounded-full bg-[#d48a34]/10 blur-[110px] sm:-left-20 sm:h-80 sm:w-80 sm:blur-[130px]" />
+      <div className="pointer-events-none absolute bottom-[-7rem] right-[-2rem] h-64 w-64 rounded-full bg-[#0f4aa3]/8 blur-[110px] sm:bottom-[-8rem] sm:right-[-3rem] sm:h-80 sm:w-80 sm:blur-[140px]" />
 
       <main className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid w-full gap-10 lg:grid-cols-[1.18fr_0.82fr] lg:items-center">
+        <div className="grid w-full gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(21rem,0.92fr)] lg:items-center xl:gap-14">
           <section className="hidden lg:block">
             <div className="space-y-8">
               <div className="inline-flex items-center gap-3 rounded-full border border-primary/15 bg-background/72 px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
@@ -207,13 +207,22 @@ export function AuthShell({
           </section>
 
           <section className="flex items-center justify-center">
-            <div className="relative w-full max-w-[30rem]">
+            <div className="relative w-full max-w-[32rem] rounded-[2rem] border border-white/40 bg-background/68 p-5 shadow-[0_26px_70px_-40px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-6 lg:border-none lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-0">
               <div className="mb-8 space-y-3">
+                <div className="flex items-center gap-3 lg:hidden">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/12 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                    <Bot className="h-5 w-5" strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/80">x-studio</p>
+                    <p className="text-sm font-medium text-foreground/72">{t('shell.systemAccess')}</p>
+                  </div>
+                </div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary/80">
                   {isSignIn ? t('shell.privateAccess') : t('shell.earlyAccess')}
                 </p>
                 <div className="space-y-2">
-                  <h2 className="max-w-sm font-heading text-3xl font-bold tracking-tight text-foreground">
+                  <h2 className="max-w-sm font-heading text-3xl font-bold tracking-tight text-foreground sm:text-[2.15rem]">
                     {t('shell.title')}
                   </h2>
                   <p className="max-w-md text-sm leading-6 text-muted-foreground">

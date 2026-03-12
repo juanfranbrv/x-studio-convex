@@ -95,7 +95,7 @@
       "description": "The credits are already in your account. You can go back to work or top up again.",
       "loading": "Confirming payment with Stripe...",
       "error": "We could not confirm the payment yet.",
-      "goBilling": "Go to billing",
+      "goBilling": "Go to credits",
       "goImage": "Back to image"
     }
   },
@@ -104,6 +104,32 @@
     "errorTitle": "Checkout could not be started",
     "portalErrorTitle": "The payment portal could not be opened",
     "packMissing": "The requested pack does not exist or is no longer active."
+  },
+  "referrals": {
+    "title": "Referrals",
+    "description": "Share your link, bring new users in, and keep the reward flow inside the same product ledger.",
+    "rewardRule": "You earn {{signup}} credits when someone signs up with your link and {{percentage}}% of the credits they buy afterwards.",
+    "linkLabel": "Your personal link",
+    "linkPending": "Generating link...",
+    "copy": "Copy link",
+    "copied": "Copied",
+    "copySuccessTitle": "Link copied",
+    "copySuccessBody": "It is ready to paste wherever you want.",
+    "copyErrorTitle": "Copy failed",
+    "copyErrorBody": "Try again in a few seconds.",
+    "activityTitle": "Recent activity",
+    "activityDescription": "Tracked signups and the credits accumulated from each invite.",
+    "emptyTitle": "There is no referral activity yet",
+    "emptyBody": "When someone signs up through your link, you will see it here together with the rewards.",
+    "stats": {
+      "totalReferrals": "Referrals",
+      "signupCredits": "Signup credits",
+      "totalCreditsEarned": "Total earned"
+    },
+    "badges": {
+      "signup": "signup",
+      "purchase": "from purchases"
+    }
   },
   "admin": {
     "tab": "Billing",
@@ -130,7 +156,36 @@
     "empty": "There are no purchases yet.",
     "active": "Active",
     "inactive": "Off",
-    "stripePending": "Stripe pending"
+    "stripePending": "Stripe pending",
+    "referrals": {
+      "title": "Referral program",
+      "description": "Configure the fixed signup reward and the purchase percentage without touching code.",
+      "signupRewardLabel": "Signup credits",
+      "purchaseRewardLabel": "Purchase percentage",
+      "save": "Save program",
+      "saving": "Saving...",
+      "savedTitle": "Referral program updated",
+      "savedBody": "The new values are now active for future signups and purchases.",
+      "savedError": "The referral configuration could not be saved.",
+      "recentRewardsTitle": "Recent rewards",
+      "recentRewardsDescription": "Latest bonuses granted by the referral system.",
+      "empty": "There are no referral rewards yet.",
+      "stats": {
+        "totalReferrals": "Total referrals",
+        "activeReferrers": "Users inviting others",
+        "signupCreditsAwarded": "Signup credits",
+        "purchaseCreditsAwarded": "Purchase credits"
+      },
+      "headers": {
+        "referrer": "Referrer",
+        "referred": "Referred user",
+        "type": "Type"
+      },
+      "types": {
+        "signup": "Signup",
+        "purchase": "Purchase"
+      }
+    }
   },
   "labels": {
     "creditsIncluded": "{{count}} credits included",

@@ -88,6 +88,39 @@ async function findUserByEmail(ctx: MutationCtx, email: string) {
         .first();
 }
 
+function buildReferralBase(email: string) {
+    const localPart = email.toLowerCase().trim().split('@')[0] || 'studio'
+    const sanitized = localPart.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    return (sanitized || 'STUDIO').slice(0, 6)
+}
+
+async function createUniqueReferralCode(ctx: MutationCtx, email: string) {
+    const base = buildReferralBase(email)
+
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+        const suffix = Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4).padEnd(4, 'X')
+        const code = `${base}${suffix}`.slice(0, 10)
+        const existing = await ctx.db
+            .query('users')
+            .withIndex('by_referral_code', (q) => q.eq('referral_code', code))
+            .first()
+
+        if (!existing) {
+            return code
+        }
+    }
+
+    throw new Error('Could not allocate referral code')
+}
+
+async function ensureUserReferralCode(ctx: MutationCtx, user: Doc<"users">) {
+    if (user.referral_code) return user.referral_code
+
+    const referralCode = await createUniqueReferralCode(ctx, user.email)
+    await ctx.db.patch(user._id, { referral_code: referralCode })
+    return referralCode
+}
+
 async function findUsersByEmail(ctx: MutationCtx, email: string) {
     const emailLower = email.toLowerCase().trim();
     return await ctx.db
@@ -129,7 +162,32 @@ async function reconcileUsersByEmail(
             .query("credit_transactions")
             .withIndex("by_user", (q) => q.eq("user_id", duplicate._id))
             .collect();
+        const referredUsers = await ctx.db
+            .query("users")
+            .withIndex("by_referred_by_user_id", (q) => q.eq("referred_by_user_id", duplicate._id))
+            .collect();
+        const referralsAsReferrer = await ctx.db
+            .query("referrals")
+            .withIndex("by_referrer_user_id", (q) => q.eq("referrer_user_id", duplicate._id))
+            .collect();
+        const referralsAsReferred = await ctx.db
+            .query("referrals")
+            .withIndex("by_referred_user_id", (q) => q.eq("referred_user_id", duplicate._id))
+            .collect();
+        const rewardsAsReferrer = await ctx.db
+            .query("referral_rewards")
+            .withIndex("by_referrer_user_id", (q) => q.eq("referrer_user_id", duplicate._id))
+            .collect();
+        const rewardsAsReferred = await ctx.db
+            .query("referral_rewards")
+            .withIndex("by_referred_user_id", (q) => q.eq("referred_user_id", duplicate._id))
+            .collect();
         await Promise.all(txs.map((tx) => ctx.db.patch(tx._id, { user_id: targetUser._id })));
+        await Promise.all(referredUsers.map((item) => ctx.db.patch(item._id, { referred_by_user_id: targetUser._id })));
+        await Promise.all(referralsAsReferrer.map((item) => ctx.db.patch(item._id, { referrer_user_id: targetUser._id })));
+        await Promise.all(referralsAsReferred.map((item) => ctx.db.patch(item._id, { referred_user_id: targetUser._id })));
+        await Promise.all(rewardsAsReferrer.map((item) => ctx.db.patch(item._id, { referrer_user_id: targetUser._id })));
+        await Promise.all(rewardsAsReferred.map((item) => ctx.db.patch(item._id, { referred_user_id: targetUser._id })));
 
         await ctx.db.delete(duplicate._id);
     }
@@ -300,6 +358,7 @@ export const upsertUser = mutation({
         if (existing) {
             const reconciled = await reconcileUsersByEmail(ctx, existing, args.clerk_id, emailLower);
             await updateUserAccessAndCredits(ctx, reconciled, access, emailLower, "Activation after beta approval");
+            await ensureUserReferralCode(ctx, reconciled);
             return reconciled._id;
         }
 
@@ -311,6 +370,7 @@ export const upsertUser = mutation({
             }
             const reconciled = await reconcileUsersByEmail(ctx, existingByEmail, args.clerk_id, emailLower);
             await updateUserAccessAndCredits(ctx, reconciled, access, emailLower, "Activation after beta approval");
+            await ensureUserReferralCode(ctx, reconciled);
             return reconciled._id;
         }
 
@@ -321,6 +381,7 @@ export const upsertUser = mutation({
         const userId = await ctx.db.insert("users", {
             clerk_id: args.clerk_id,
             email: emailLower,
+            referral_code: await createUniqueReferralCode(ctx, emailLower),
             created_at: new Date().toISOString(),
             credits: initialCredits,
             status: access.status,
@@ -392,6 +453,7 @@ export const syncUserFromClerkWebhook = mutation({
                 emailLower,
                 "Clerk webhook beta approval"
             );
+            await ensureUserReferralCode(ctx, reconciled);
             return { action: "updated", userId: reconciled._id, role: effectiveAccess.role, status: effectiveAccess.status };
         }
 
@@ -409,12 +471,14 @@ export const syncUserFromClerkWebhook = mutation({
                 emailLower,
                 "Clerk webhook beta approval"
             );
+            await ensureUserReferralCode(ctx, reconciled);
             return { action: "updated", userId: reconciled._id, role: effectiveAccess.role, status: effectiveAccess.status };
         }
 
         const userId = await ctx.db.insert("users", {
             clerk_id: args.clerk_id,
             email: emailLower,
+            referral_code: await createUniqueReferralCode(ctx, emailLower),
             created_at: new Date().toISOString(),
             credits: initialCredits,
             status: access.status,

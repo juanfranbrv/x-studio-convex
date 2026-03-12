@@ -128,17 +128,17 @@ export default function OnboardingPage() {
 
   return (
     <I18nProvider>
-      <div className="relative min-h-screen bg-mesh text-foreground overflow-hidden">
-        <div className="pointer-events-none absolute top-12 left-1/2 -translate-x-1/2 h-72 w-[42rem] rounded-full bg-primary/15 blur-[120px]" />
-        <div className="pointer-events-none absolute -bottom-16 right-0 h-80 w-80 rounded-full bg-secondary/15 blur-[120px]" />
+      <div className="relative min-h-screen overflow-x-hidden bg-mesh text-foreground">
+        <div className="pointer-events-none absolute left-1/2 top-12 h-64 w-[20rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[96px] sm:h-72 sm:w-[42rem] sm:blur-[120px]" />
+        <div className="pointer-events-none absolute -bottom-16 right-0 h-64 w-64 rounded-full bg-secondary/15 blur-[96px] sm:h-80 sm:w-80 sm:blur-[120px]" />
 
-        <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-3xl items-center justify-center px-6">
-          <div className="glass-card w-full max-w-xl border-white/20 p-10 text-center shadow-2xl backdrop-blur-xl">
+        <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-3xl items-center justify-center px-4 sm:px-6">
+          <div className="glass-card w-full max-w-xl border-white/20 p-6 text-center shadow-2xl backdrop-blur-xl sm:p-10">
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
               <Bot className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="text-3xl font-heading font-bold tracking-tight">Preparando tu Kit de Marca</h1>
-            <p className="mt-3 text-muted-foreground">
+            <h1 className="text-2xl font-heading font-bold tracking-tight sm:text-3xl">Preparando tu Kit de Marca</h1>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">
               Te estamos llevando al flujo correcto según tu última sesión.
             </p>
             <div className="mt-8 flex items-center justify-center gap-3 text-primary">

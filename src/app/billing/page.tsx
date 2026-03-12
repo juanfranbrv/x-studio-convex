@@ -1,6 +1,5 @@
-import { BillingPageClient } from "@/components/billing/BillingPageClient";
+import { redirect } from "next/navigation";
 
 export default function BillingPage() {
-  return <BillingPageClient />;
+  redirect("/settings#credits");
 }
-

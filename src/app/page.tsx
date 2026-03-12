@@ -96,9 +96,9 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col">
-      <nav className="fixed left-0 right-0 top-0 z-50 px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 transition-all duration-300">
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden">
+      <nav className="fixed left-0 right-0 top-0 z-50 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-[1.75rem] border border-white/10 bg-background/72 px-4 py-4 shadow-[0_18px_50px_-32px_rgba(15,23,42,0.32)] backdrop-blur-xl transition-all duration-300 sm:px-6">
           <div className="group flex items-center gap-4">
             <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
               <Bot className="h-8 w-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)]" />
@@ -106,7 +106,7 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
             <span className="font-heading text-xl font-bold tracking-tight opacity-90">Adstudio</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link href="/pricing" className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:inline-flex">
               Pricing
             </Link>
@@ -207,8 +207,8 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
           </div>
         </div>
 
-        <div className="mx-auto mt-32 max-w-7xl">
-          <div className="grid gap-8 md:grid-cols-3">
+        <div className="mx-auto mt-24 w-full max-w-7xl sm:mt-32">
+          <div className="grid gap-6 md:grid-cols-3 xl:gap-8">
             <FeatureCard
               icon={<Palette className="h-8 w-8 text-primary" />}
               title={t('features.brandDNA.title')}
@@ -231,8 +231,8 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
         </div>
       </main>
 
-      <footer className="mt-auto px-8 py-12">
-        <div className="glass-card mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 border-white/5 p-8 md:flex-row">
+      <footer className="mt-auto px-4 py-10 sm:px-8 sm:py-12">
+        <div className="glass-card mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 border-white/5 p-6 sm:p-8 md:flex-row">
           <div className="flex items-center gap-3">
             <Bot className="h-6 w-6 text-primary" />
             <span className="text-lg font-bold tracking-tight">Adstudio</span>
@@ -240,7 +240,7 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
           <p className="text-center text-sm font-medium text-muted-foreground/60 md:text-left">
             {t('footer.copyright')}
           </p>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 sm:gap-x-6">
             <Link href="/privacy" className="text-xs font-bold uppercase leading-none tracking-widest text-muted-foreground/40 transition-colors hover:text-primary">
               {t('footer.privacy')}
             </Link>
@@ -266,15 +266,15 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
 function FeatureCard({ icon, title, description, delay }: { icon: React.ReactNode, title: string, description: string, delay: string }) {
   return (
     <div className={cn(
-      'glass-card group relative overflow-hidden border-white/10 p-10 transition-all duration-500 hover:scale-[1.03] hover:border-primary/30',
+      'glass-card group relative overflow-hidden border-white/10 p-6 transition-all duration-500 hover:scale-[1.02] hover:border-primary/30 sm:p-8 lg:p-10',
       delay
     )}>
       <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary/5 blur-2xl transition-all duration-500 group-hover:bg-primary/10" />
-      <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/5 bg-white/5 shadow-inner transition-all group-hover:bg-primary/10">
+      <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/5 bg-white/5 shadow-inner transition-all group-hover:bg-primary/10 sm:mb-8">
         {icon}
       </div>
-      <h3 className="mb-4 text-2xl font-bold tracking-tight">{title}</h3>
-      <p className="text-lg leading-relaxed text-muted-foreground">{description}</p>
+      <h3 className="mb-3 text-xl font-bold tracking-tight sm:mb-4 sm:text-2xl">{title}</h3>
+      <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">{description}</p>
     </div>
   )
 }

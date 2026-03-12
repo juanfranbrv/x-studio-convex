@@ -160,7 +160,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                 </div>
 
                 <div className="ml-2 flex shrink-0 items-center gap-1 md:gap-2">
-                    <Link href="/billing" className="origin-right scale-75 sm:scale-90 md:mr-2 md:scale-100">
+                    <Link href="/settings#credits" className="origin-right scale-75 sm:scale-90 md:mr-2 md:scale-100">
                         <CreditsBadge />
                     </Link>
 
@@ -177,8 +177,10 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                         </Link>
                     ) : null}
 
-                    <LanguageSwitcher />
-                    <ThemeToggle className="h-9 w-9 rounded-full hover:bg-accent/60" />
+                    <div className="hidden md:block">
+                        <LanguageSwitcher />
+                    </div>
+                    <ThemeToggle className="hidden h-9 w-9 rounded-full hover:bg-accent/60 md:inline-flex" />
                 </div>
             </header>
 

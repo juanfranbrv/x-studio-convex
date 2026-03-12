@@ -85,6 +85,8 @@ export const initializeSettings = mutation({
             { key: "provider_naga_api_key", value: "", description: "API key de NagaAI para modelos naga/*" },
             { key: "provider_replicate_api_key", value: "", description: "API key de Replicate para modelos replicate/*" },
             { key: "provider_atlas_api_key", value: "", description: "API key de Atlas para modelos atlas/*" },
+            { key: "referral_signup_reward_credits", value: 5, description: "Creditos fijos por alta con referido" },
+            { key: "referral_purchase_reward_percentage", value: 50, description: "Porcentaje de creditos del pack que gana quien invita" },
         ];
 
         for (const setting of defaults) {

@@ -4,7 +4,7 @@
     "title": "Recarga Adstudio sin pelearte con planes infinitos",
     "body": "Compra creditos cuando de verdad los necesites. Todo queda reflejado en tu cuenta, con historial, facturas y consumo claro.",
     "ctaPrimary": "Comprar ahora",
-    "ctaSecondary": "Ver mi facturacion",
+    "ctaSecondary": "Ver mis creditos",
     "contact": "Hablar con nosotros",
     "backHome": "Volver al inicio",
     "trust": {
@@ -95,7 +95,7 @@
       "description": "Los creditos ya estan en tu cuenta. Puedes volver al trabajo o seguir recargando.",
       "loading": "Confirmando pago con Stripe...",
       "error": "No hemos podido confirmar el pago todavia.",
-      "goBilling": "Ir a facturacion",
+      "goBilling": "Ir a creditos",
       "goImage": "Volver a imagen"
     }
   },
@@ -104,6 +104,32 @@
     "errorTitle": "No se pudo iniciar el checkout",
     "portalErrorTitle": "No se pudo abrir el portal de pagos",
     "packMissing": "El pack solicitado no existe o ya no esta activo."
+  },
+  "referrals": {
+    "title": "Referidos",
+    "description": "Comparte tu enlace, activa nuevos usuarios y cobra creditos dentro del mismo ledger del producto.",
+    "rewardRule": "Ganas {{signup}} creditos cuando se registra con tu enlace y el {{percentage}}% de los creditos que compre despues.",
+    "linkLabel": "Tu enlace personal",
+    "linkPending": "Generando enlace...",
+    "copy": "Copiar enlace",
+    "copied": "Copiado",
+    "copySuccessTitle": "Enlace copiado",
+    "copySuccessBody": "Ya puedes pegarlo donde quieras sin andar persiguiendo capturas.",
+    "copyErrorTitle": "No se pudo copiar",
+    "copyErrorBody": "Intentalo otra vez en unos segundos.",
+    "activityTitle": "Actividad reciente",
+    "activityDescription": "Altas atribuidas y creditos acumulados por cada invitacion.",
+    "emptyTitle": "Todavia no hay actividad de referidos",
+    "emptyBody": "Cuando alguien use tu enlace y se registre, lo veras aqui con sus recompensas.",
+    "stats": {
+      "totalReferrals": "Referidos",
+      "signupCredits": "Creditos por alta",
+      "totalCreditsEarned": "Total ganado"
+    },
+    "badges": {
+      "signup": "alta",
+      "purchase": "por compras"
+    }
   },
   "admin": {
     "tab": "Billing",
@@ -130,7 +156,36 @@
     "empty": "Todavia no hay compras.",
     "active": "Activo",
     "inactive": "Apagado",
-    "stripePending": "Pendiente en Stripe"
+    "stripePending": "Pendiente en Stripe",
+    "referrals": {
+      "title": "Programa de referidos",
+      "description": "Configura la recompensa fija de alta y el porcentaje por compra sin tocar codigo.",
+      "signupRewardLabel": "Creditos por alta",
+      "purchaseRewardLabel": "Porcentaje por compra",
+      "save": "Guardar programa",
+      "saving": "Guardando...",
+      "savedTitle": "Programa de referidos actualizado",
+      "savedBody": "Los nuevos valores ya quedan activos para altas y compras futuras.",
+      "savedError": "No se pudo guardar la configuracion del programa.",
+      "recentRewardsTitle": "Recompensas recientes",
+      "recentRewardsDescription": "Ultimas bonificaciones concedidas por el sistema de referidos.",
+      "empty": "Todavia no hay recompensas de referidos.",
+      "stats": {
+        "totalReferrals": "Referidos totales",
+        "activeReferrers": "Usuarios que invitan",
+        "signupCreditsAwarded": "Creditos por alta",
+        "purchaseCreditsAwarded": "Creditos por compra"
+      },
+      "headers": {
+        "referrer": "Invita",
+        "referred": "Invitado",
+        "type": "Tipo"
+      },
+      "types": {
+        "signup": "Alta",
+        "purchase": "Compra"
+      }
+    }
   },
   "labels": {
     "creditsIncluded": "{{count}} creditos incluidos",

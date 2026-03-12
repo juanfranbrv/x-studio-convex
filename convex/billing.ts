@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import type { Doc, Id } from "./_generated/dataModel";
-import { BILLING_PACKS, getBillingPackDefinition } from "../src/lib/billing";
+import type { Doc } from "./_generated/dataModel";
+import { BILLING_PACKS } from "../src/lib/billing";
 
 const ADMIN_EMAILS = ["juanfranbrv@gmail.com"];
 const isAdmin = (email: string) => ADMIN_EMAILS.includes(email.toLowerCase().trim());
@@ -29,6 +30,15 @@ async function getPackRecordBySlug(ctx: any, slug: string) {
     .query("billing_packs")
     .withIndex("by_slug", (q: any) => q.eq("slug", slug))
     .first();
+}
+
+async function getNumberSetting(ctx: any, key: string, fallback: number) {
+  const setting = await ctx.db
+    .query("app_settings")
+    .withIndex("by_key", (q: any) => q.eq("key", key))
+    .first();
+
+  return typeof setting?.value === "number" ? setting.value : fallback;
 }
 
 async function ensureDefaultPacks(ctx: any) {
@@ -119,7 +129,8 @@ export const getUserBillingOverview = query({
       ctx.db.query("credit_transactions").withIndex("by_user", (q) => q.eq("user_id", user._id)).collect(),
     ]);
 
-    const orderedPurchases = purchases.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const completedPurchases = purchases.filter((purchase) => purchase.status === "completed");
+    const orderedPurchases = completedPurchases.sort((a, b) => b.created_at.localeCompare(a.created_at));
     const orderedLedger = ledger.sort((a, b) => b.created_at.localeCompare(a.created_at));
     const totals = summarizeLedger(ledger);
 
@@ -129,7 +140,7 @@ export const getUserBillingOverview = query({
       latestPurchase: orderedPurchases[0] || null,
       totalPurchased: totals.purchased,
       totalSpent: totals.spent,
-      purchaseCount: purchases.filter((purchase) => purchase.status === "completed").length,
+      purchaseCount: orderedPurchases.length,
       portalAvailable: Boolean(customer?.stripe_customer_id),
       purchases: orderedPurchases.slice(0, 10),
       ledger: orderedLedger.slice(0, 25),
@@ -416,6 +427,65 @@ export const finalizeCheckoutSecure = mutation({
       });
     }
 
+    if (user.referred_by_user_id) {
+      const referral = await ctx.db
+        .query("referrals")
+        .withIndex("by_referred_user_id", (q) => q.eq("referred_user_id", user._id))
+        .first();
+
+      if (referral) {
+        const existingReward = await ctx.db
+          .query("referral_rewards")
+          .withIndex("by_purchase_id", (q) => q.eq("purchase_id", purchase._id))
+          .first();
+
+        if (!existingReward) {
+          const rewardPercentage = await getNumberSetting(ctx, "referral_purchase_reward_percentage", 50);
+          const rewardCredits = Math.floor((purchase.credits * rewardPercentage) / 100);
+
+          if (rewardCredits > 0) {
+            const referrer = await ctx.db.get(referral.referrer_user_id);
+            if (referrer) {
+              const referrerBalance = (referrer.credits || 0) + rewardCredits;
+              const rewardTimestamp = new Date().toISOString();
+
+              await ctx.db.patch(referrer._id, { credits: referrerBalance });
+              await ctx.db.patch(referral._id, {
+                total_purchase_reward_credits: (referral.total_purchase_reward_credits || 0) + rewardCredits,
+                updated_at: rewardTimestamp,
+              });
+              await ctx.db.insert("credit_transactions", {
+                user_id: referrer._id,
+                type: "referral_purchase_bonus",
+                amount: rewardCredits,
+                balance_after: referrerBalance,
+                metadata: {
+                  purchase_id: purchase._id,
+                  referred_user_id: user._id,
+                  checkout_session_id: args.stripe_checkout_session_id,
+                },
+                created_at: rewardTimestamp,
+              });
+              await ctx.db.insert("referral_rewards", {
+                referral_id: referral._id,
+                referrer_user_id: referrer._id,
+                referred_user_id: user._id,
+                reward_type: "purchase",
+                credits_awarded: rewardCredits,
+                status: "granted",
+                purchase_id: purchase._id,
+                metadata: {
+                  checkout_session_id: args.stripe_checkout_session_id,
+                },
+                created_at: rewardTimestamp,
+                updated_at: rewardTimestamp,
+              });
+            }
+          }
+        }
+      }
+    }
+
     await ctx.db.patch(purchase._id, {
       status: "completed",
       stripe_customer_id: args.stripe_customer_id,
@@ -449,7 +519,7 @@ export const markPurchaseStatusSecure = mutation({
   },
   handler: async (ctx, args) => {
     assertStripeAccess(args.access_key);
-    let purchase =
+    const purchase =
       (args.stripe_checkout_session_id
         ? await ctx.db
             .query("billing_purchases")
@@ -521,6 +591,49 @@ export const markPurchaseRefundedSecure = mutation({
       },
       created_at: new Date().toISOString(),
     });
+
+    const purchaseReward = await ctx.db
+      .query("referral_rewards")
+      .withIndex("by_purchase_id", (q) => q.eq("purchase_id", purchase._id))
+      .first();
+
+    if (purchaseReward && purchaseReward.status === "granted") {
+      const referrer = await ctx.db.get(purchaseReward.referrer_user_id);
+      const referral = await ctx.db.get(purchaseReward.referral_id);
+      const reversalTimestamp = new Date().toISOString();
+
+      if (referrer) {
+        const referrerBalance = Math.max(0, (referrer.credits || 0) - purchaseReward.credits_awarded);
+        await ctx.db.patch(referrer._id, { credits: referrerBalance });
+        await ctx.db.insert("credit_transactions", {
+          user_id: referrer._id,
+          type: "referral_purchase_reversal",
+          amount: -purchaseReward.credits_awarded,
+          balance_after: referrerBalance,
+          metadata: {
+            purchase_id: purchase._id,
+            stripe_charge_id: args.stripe_charge_id,
+          },
+          created_at: reversalTimestamp,
+        });
+      }
+
+      if (referral) {
+        await ctx.db.patch(referral._id, {
+          total_purchase_reward_credits: Math.max(0, (referral.total_purchase_reward_credits || 0) - purchaseReward.credits_awarded),
+          updated_at: reversalTimestamp,
+        });
+      }
+
+      await ctx.db.patch(purchaseReward._id, {
+        status: "reversed",
+        updated_at: reversalTimestamp,
+        metadata: {
+          ...(purchaseReward.metadata || {}),
+          refunded_at: reversalTimestamp,
+        },
+      });
+    }
 
     return purchase._id;
   },

@@ -24,6 +24,10 @@ export default defineSchema({
   users: defineTable({
     clerk_id: v.string(),
     email: v.string(),
+    referral_code: v.optional(v.string()),
+    referred_by_user_id: v.optional(v.id("users")),
+    referred_by_code: v.optional(v.string()),
+    referral_attributed_at: v.optional(v.string()),
     current_brand_id: v.optional(v.string()),
     created_at: v.string(),
     // Credits system
@@ -36,7 +40,39 @@ export default defineSchema({
     onboarding_completed: v.optional(v.boolean()),
     onboarding_completed_at: v.optional(v.string()),
   }).index("by_clerk_id", ["clerk_id"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_referral_code", ["referral_code"])
+    .index("by_referred_by_user_id", ["referred_by_user_id"]),
+
+  referrals: defineTable({
+    referrer_user_id: v.id("users"),
+    referred_user_id: v.id("users"),
+    referral_code: v.string(),
+    signup_reward_credits: v.optional(v.number()),
+    signup_reward_granted_at: v.optional(v.string()),
+    total_purchase_reward_credits: v.number(),
+    created_at: v.string(),
+    updated_at: v.string(),
+  }).index("by_referrer_user_id", ["referrer_user_id"])
+    .index("by_referred_user_id", ["referred_user_id"])
+    .index("by_referral_code", ["referral_code"])
+    .index("by_referrer_user_id_and_created_at", ["referrer_user_id", "created_at"]),
+
+  referral_rewards: defineTable({
+    referral_id: v.id("referrals"),
+    referrer_user_id: v.id("users"),
+    referred_user_id: v.id("users"),
+    reward_type: v.string(),
+    credits_awarded: v.number(),
+    status: v.string(),
+    purchase_id: v.optional(v.id("billing_purchases")),
+    metadata: v.optional(v.any()),
+    created_at: v.string(),
+    updated_at: v.string(),
+  }).index("by_referral_id", ["referral_id"])
+    .index("by_referrer_user_id", ["referrer_user_id"])
+    .index("by_referred_user_id", ["referred_user_id"])
+    .index("by_purchase_id", ["purchase_id"]),
 
   // Credit transaction audit log
   credit_transactions: defineTable({

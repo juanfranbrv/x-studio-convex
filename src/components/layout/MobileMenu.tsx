@@ -5,10 +5,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
-import { Bot, CreditCard, FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, Menu, PanelsTopLeft, Play, Settings } from 'lucide-react'
+import { Bot, FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, Menu, PanelsTopLeft, Play, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import {
     Sheet,
     SheetContent,
@@ -18,7 +19,7 @@ import {
 } from '@/components/ui/sheet'
 
 export function MobileMenu() {
-    const { t } = useTranslation(['common', 'billing'])
+    const { t } = useTranslation('common')
     const pathname = usePathname()
     const { signOut } = useClerk()
     const { user } = useUser()
@@ -32,7 +33,6 @@ export function MobileMenu() {
         { icon: GalleryHorizontal, label: 'nav.carousel', href: '/carousel' },
         { icon: Play, label: 'nav.video', href: '/video' },
         { icon: Settings, label: 'nav.settings', href: '/settings' },
-        { icon: CreditCard, label: 'billing:nav.billing', href: '/billing' },
     ]
 
     return (
@@ -102,9 +102,15 @@ export function MobileMenu() {
                             </div>
                         ) : null}
 
-                        <div className="mb-3 flex items-center justify-between rounded-xl border border-border/60 bg-background/80 px-3 py-2.5">
-                            <span className="text-sm font-medium text-foreground">{t('labels.language')}</span>
-                            <LanguageSwitcher compact align="end" />
+                        <div className="mb-3 grid gap-3 rounded-2xl border border-border/60 bg-background/80 p-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-sm font-medium text-foreground">{t('labels.language')}</span>
+                                <LanguageSwitcher compact align="end" />
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-sm font-medium text-foreground">{t('labels.theme')}</span>
+                                <ThemeToggle className="h-9 w-9 rounded-full hover:bg-accent/60" />
+                            </div>
                         </div>
 
                         <Button

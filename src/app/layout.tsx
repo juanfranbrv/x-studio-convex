@@ -1,4 +1,5 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
+import { Suspense } from "react";
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { DynamicThemeProvider } from "@/components/providers/DynamicThemeProvider";
@@ -6,6 +7,7 @@ import { I18nProvider } from "@/components/providers/I18nProvider";
 import { BrandKitProvider } from "@/contexts/BrandKitContext";
 import { UIProvider } from "@/contexts/UIContext";
 import { Toaster } from "@/components/ui/toaster";
+import { ReferralTracker } from "@/components/providers/ReferralTracker";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -15,8 +17,8 @@ export const metadata: Metadata = {
   keywords: ["IA", "diseno", "marketing", "branding", "generacion de imagenes", "carruseles", "contenido visual"],
   icons: {
     icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: 'any' }
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
     ],
   },
 };
@@ -34,7 +36,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen font-sans antialiased overflow-x-hidden",
-          "bg-mesh" // Animated mesh gradient background
+          "bg-mesh"
         )}
       >
         <ConvexClientProvider>
@@ -48,10 +50,11 @@ export default function RootLayout({
               <DynamicThemeProvider>
                 <BrandKitProvider>
                   <UIProvider>
-                    {/* Main container with floating elements support */}
                     <div className="relative flex min-h-dvh flex-col">
-                      {/* Decorative glow in top-left corner */}
                       <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/10 blur-[100px]" />
+                      <Suspense fallback={null}>
+                        <ReferralTracker />
+                      </Suspense>
                       <main className="flex-1">
                         {children}
                       </main>
@@ -67,4 +70,3 @@ export default function RootLayout({
     </html>
   );
 }
-

@@ -65,7 +65,7 @@ export function BillingSuccessClient() {
             </div>
           ) : null}
           <div className="flex flex-wrap gap-3">
-            <Link href="/billing">
+            <Link href="/settings#credits">
               <Button className="rounded-full px-5">{t("account.success.goBilling")}</Button>
             </Link>
             <Link href="/image">

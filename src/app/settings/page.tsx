@@ -1,23 +1,19 @@
-﻿'use client'
+'use client'
 
-import { Loader2 } from '@/components/ui/spinner'
 import { useEffect, useMemo, useState } from 'react'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { useTheme } from 'next-themes'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from 'convex/react'
-import { CreditCard, Layout, LogOut, Moon, Palette, Settings, Sun } from 'lucide-react'
-import Link from 'next/link'
+import { ArrowDownRight, Settings2 } from 'lucide-react'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Separator } from '@/components/ui/separator'
 import { useUI } from '@/contexts/UIContext'
-import { applyThemeColors, DEFAULT_THEME_COLORS, readThemeColors, writeThemeColors } from '@/lib/theme-colors'
 import { api } from '../../../convex/_generated/api'
+import { DEFAULT_THEME_COLORS, readThemeColors } from '@/lib/theme-colors'
+import { SettingsManagementSection } from '@/components/settings/SettingsManagementSection'
+import { SettingsBillingSection } from '@/components/settings/SettingsBillingSection'
+import { SettingsProfileSection } from '@/components/settings/SettingsProfileSection'
 
 export default function SettingsPage() {
     const { t } = useTranslation(['settings', 'common', 'billing'])
@@ -101,258 +97,81 @@ export default function SettingsPage() {
         }
     }
 
-    const saveThemeColors = (nextPrimary: string, nextSecondary: string) => {
-        const payload = { primary: nextPrimary, secondary: nextSecondary }
-        writeThemeColors(userId, payload)
-        applyThemeColors(payload)
-    }
-
-    const presetColors = [
-        { primary: '#22c55e', secondary: '#38bdf8', title: 'Green & Blue' },
-        { primary: '#a855f7', secondary: '#fb923c', title: 'Purple & Orange' },
-        { primary: '#6366f1', secondary: '#ec4899', title: 'Indigo & Pink' },
-        { primary: '#ef4444', secondary: '#f97316', title: 'Red & Amber' },
-        { primary: '#0ea5e9', secondary: '#14b8a6', title: 'Ocean Breeze' },
-    ]
-
     return (
         <DashboardLayout brands={brandKits} currentBrand={activeBrandKit} onBrandChange={setActiveBrandKit}>
-            <main className="mx-auto max-w-5xl p-6 md:p-12">
-                <div className="mb-8">
-                    <div className="mb-2 flex items-center gap-3">
-                        <div className="rounded-2xl bg-brand-gradient p-3 shadow-aero-glow">
-                            <Settings className="h-6 w-6 text-white" />
+            <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-5 md:px-8 md:py-8">
+                <section className="overflow-hidden rounded-[2.25rem] border border-border/70 bg-background/90 shadow-sm">
+                    <div className="grid gap-6 px-6 py-7 md:px-8 lg:grid-cols-[1.1fr_0.9fr]">
+                        <div className="space-y-4">
+                            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-muted-foreground">
+                                {t('hero.eyebrow')}
+                            </p>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="rounded-full border border-border/70 bg-muted/40 p-3 text-muted-foreground">
+                                        <Settings2 className="h-5 w-5" />
+                                    </div>
+                                    <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+                                        {t('headerTitle')}
+                                    </h1>
+                                </div>
+                                <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
+                                    {t('headerDescription')}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-foreground">{t('headerTitle')}</h1>
-                            <p className="text-muted-foreground">{t('headerDescription')}</p>
+
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            <AnchorChip href="#management" title={t('sections.management.title')} description={t('sections.management.short')} />
+                            <AnchorChip href="#credits" title={t('sections.credits.title')} description={t('sections.credits.short')} />
+                            <AnchorChip href="#profile" title={t('sections.profile.title')} description={t('sections.profile.short')} />
                         </div>
                     </div>
+                </section>
+
+                <div id="management">
+                    <SettingsManagementSection
+                        t={t}
+                        panelPosition={panelPosition}
+                        setPanelPosition={setPanelPosition}
+                        assistanceEnabled={assistanceEnabled}
+                        setAssistanceEnabled={setAssistanceEnabled}
+                        resolvedTheme={resolvedTheme}
+                        setTheme={setTheme}
+                        primaryColor={primaryColor}
+                        secondaryColor={secondaryColor}
+                        setPrimaryColor={setPrimaryColor}
+                        setSecondaryColor={setSecondaryColor}
+                        userId={userId}
+                    />
                 </div>
 
-                <div className="space-y-6">
-                    <Card className="glass-panel border-0 border-primary/20 bg-primary/5 shadow-aero">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-foreground">
-                                <Layout className="h-5 w-5 text-primary" />
-                                {t('interface.title')}
-                            </CardTitle>
-                            <CardDescription>{t('interface.description')}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Separator />
-                            <div className="space-y-2">
-                                <div className="space-y-0.5">
-                                    <Label>{t('interface.panelTitle')}</Label>
-                                    <p className="text-sm text-muted-foreground">{t('interface.panelDescription')}</p>
-                                </div>
-                                <div className="flex w-full items-center rounded-full bg-muted/60 p-1">
-                                    <Button
-                                        variant={panelPosition === 'right' ? 'secondary' : 'ghost'}
-                                        className="h-10 flex-1 rounded-full text-sm font-medium"
-                                        onClick={() => setPanelPosition('right')}
-                                    >
-                                        {t('interface.right')}
-                                    </Button>
-                                    <Button
-                                        variant={panelPosition === 'left' ? 'secondary' : 'ghost'}
-                                        className="h-10 flex-1 rounded-full text-sm font-medium"
-                                        onClick={() => setPanelPosition('left')}
-                                    >
-                                        {t('interface.left')}
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="guided-assistance">{t('interface.guidedTitle')}</Label>
-                                    <p className="text-sm text-muted-foreground">{t('interface.guidedDescription')}</p>
-                                </div>
-                                <Switch id="guided-assistance" checked={assistanceEnabled} onCheckedChange={setAssistanceEnabled} />
-                            </div>
-                        </CardContent>
-                    </Card>
+                <SettingsBillingSection />
 
-                    <Card className="glass-panel border-0 shadow-aero">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-foreground">
-                                <Palette className="h-5 w-5 text-primary" />
-                                {t('colors.title')}
-                            </CardTitle>
-                            <CardDescription>{t('colors.description')}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Separator />
-                            <div className="flex flex-col gap-2">
-                                <Label className="text-sm text-muted-foreground">{t('colors.presets')}</Label>
-                                <div className="flex gap-3">
-                                    {presetColors.map((preset) => (
-                                        <button
-                                            key={preset.title}
-                                            onClick={() => {
-                                                setPrimaryColor(preset.primary)
-                                                setSecondaryColor(preset.secondary)
-                                                saveThemeColors(preset.primary, preset.secondary)
-                                            }}
-                                            className="group relative h-10 w-10 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                                            style={{ background: `linear-gradient(135deg, ${preset.primary}, ${preset.secondary})` }}
-                                            title={preset.title}
-                                        >
-                                            <span className="sr-only">{preset.title}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="grid max-w-md grid-cols-2 gap-6">
-                                <div className="flex flex-col gap-2">
-                                    <Label>{t('colors.primary')}</Label>
-                                    <div className="flex items-center gap-3">
-                                        <div className="relative h-10 w-10 overflow-hidden rounded-lg border shadow-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                                            <input
-                                                type="color"
-                                                value={primaryColor}
-                                                onChange={(e) => {
-                                                    const hex = e.target.value
-                                                    setPrimaryColor(hex)
-                                                    saveThemeColors(hex, secondaryColor)
-                                                }}
-                                                className="absolute -left-1/2 -top-1/2 h-[200%] w-[200%] cursor-pointer border-none p-0"
-                                            />
-                                        </div>
-                                        <span className="font-mono text-sm uppercase text-muted-foreground">{primaryColor}</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <Label>{t('colors.secondary')}</Label>
-                                    <div className="flex items-center gap-3">
-                                        <div className="relative h-10 w-10 overflow-hidden rounded-lg border shadow-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                                            <input
-                                                type="color"
-                                                value={secondaryColor}
-                                                onChange={(e) => {
-                                                    const hex = e.target.value
-                                                    setSecondaryColor(hex)
-                                                    saveThemeColors(primaryColor, hex)
-                                                }}
-                                                className="absolute -left-1/2 -top-1/2 h-[200%] w-[200%] cursor-pointer border-none p-0"
-                                            />
-                                        </div>
-                                        <span className="font-mono text-sm uppercase text-muted-foreground">{secondaryColor}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="glass-panel border-0 shadow-aero">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-foreground">
-                                <CreditCard className="h-5 w-5 text-primary" />
-                                {t('billing:account.title')}
-                            </CardTitle>
-                            <CardDescription>{t('billing:account.description')}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex flex-wrap gap-3">
-                                <Link href="/billing">
-                                    <Button className="h-10 rounded-full px-5">
-                                        {t('billing:account.actions.openPortal')}
-                                    </Button>
-                                </Link>
-                                <Link href="/pricing">
-                                    <Button variant="outline" className="h-10 rounded-full px-5">
-                                        {t('billing:account.actions.viewPricing')}
-                                    </Button>
-                                </Link>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="glass-panel border-0 shadow-aero">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-foreground">
-                                <Palette className="h-5 w-5 text-primary" />
-                                {t('appearance.title')}
-                            </CardTitle>
-                            <CardDescription>{t('appearance.description')}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label>{t('appearance.theme')}</Label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button
-                                        variant={resolvedTheme === 'light' ? 'secondary' : 'outline'}
-                                        className="h-10 justify-start gap-2 transition-all"
-                                        onClick={() => setTheme('light')}
-                                    >
-                                        <Sun className="h-4 w-4" />
-                                        {t('appearance.light')}
-                                    </Button>
-                                    <Button
-                                        variant={resolvedTheme === 'dark' ? 'secondary' : 'outline'}
-                                        className="h-10 justify-start gap-2 transition-all"
-                                        onClick={() => setTheme('dark')}
-                                    >
-                                        <Moon className="h-4 w-4" />
-                                        {t('appearance.dark')}
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="glass-panel border-0 shadow-aero">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-foreground">
-                                <LogOut className="h-5 w-5 text-primary" />
-                                {t('session.title')}
-                            </CardTitle>
-                            <CardDescription>{t('session.description')}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center gap-4">
-                                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-primary/20 bg-muted shadow-sm">
-                                    {user?.imageUrl ? (
-                                        <img src={user.imageUrl} alt={user.firstName || t('common:labels.user')} className="h-full w-full object-cover" />
-                                    ) : (
-                                        <div className="flex h-full w-full items-center justify-center text-lg font-bold text-muted-foreground">
-                                            {user?.firstName?.[0] || 'U'}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <p className="font-medium text-foreground">{user?.fullName || user?.firstName || t('common:labels.user')}</p>
-                                    <p className="text-sm text-muted-foreground">{user?.primaryEmailAddress?.emailAddress || t('common:labels.noEmail')}</p>
-                                </div>
-                            </div>
-                            <Separator />
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <p className="text-sm font-medium text-foreground">{t('session.logoutTitle')}</p>
-                                    <p className="text-sm text-muted-foreground">{t('session.logoutDescription')}</p>
-                                </div>
-                                <Button variant="destructive" onClick={handleLogout} disabled={isLoggingOut} className="h-10 gap-2">
-                                    {isLoggingOut ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4" />
-                                            {t('common:actions.loggingOut')}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <LogOut className="h-4 w-4" />
-                                            {t('common:actions.logout')}
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                <div id="profile">
+                    <SettingsProfileSection
+                        t={t}
+                        user={user}
+                        isLoggingOut={isLoggingOut}
+                        onLogout={handleLogout}
+                    />
                 </div>
             </main>
         </DashboardLayout>
     )
 }
 
-
+function AnchorChip({ href, title, description }: { href: string; title: string; description: string }) {
+    return (
+        <a
+            href={href}
+            className="group flex min-h-28 flex-col justify-between rounded-[1.75rem] border border-border/70 bg-muted/20 p-4 transition-colors hover:bg-muted/35"
+        >
+            <ArrowDownRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:translate-y-0.5" />
+            <div className="space-y-1">
+                <p className="font-medium text-foreground">{title}</p>
+                <p className="text-sm leading-5 text-muted-foreground">{description}</p>
+            </div>
+        </a>
+    )
+}

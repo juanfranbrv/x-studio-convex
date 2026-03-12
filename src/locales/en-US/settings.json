@@ -1,34 +1,83 @@
 {
-  "headerTitle": "Settings",
-  "headerDescription": "Customize your experience in X Studio",
+  "headerTitle": "Account and studio settings",
+  "headerDescription": "Manage how you work, how your credits behave, and how your profile is presented from one focused screen.",
+  "hero": {
+    "eyebrow": "Control centre"
+  },
+  "sections": {
+    "management": {
+      "eyebrow": "Management",
+      "title": "Interface and working rhythm",
+      "description": "Control how the studio behaves: panel position, active guidance, theme, and system colours.",
+      "short": "Panel, guidance, theme, and palette"
+    },
+    "credits": {
+      "eyebrow": "Economics",
+      "title": "Credits and purchases",
+      "description": "Your balance, your top-ups, and direct access to Stripe without filler screens.",
+      "short": "Balance, packs, and history",
+      "quickBuyTitle": "Quick purchase",
+      "quickBuyDescription": "If you already know the packs, jump straight to checkout from here. If you want to compare first, use the pricing page.",
+      "historyTitle": "Purchase history",
+      "historyDescription": "Only completed purchases appear here. No aborted attempts, no extra noise.",
+      "historyEmptyTitle": "No completed purchases yet",
+      "referralsTitle": "Referrals",
+      "referralsDescription": "Share your link and track the credits brought by each invited user."
+    },
+    "profile": {
+      "eyebrow": "Account",
+      "title": "Personal details and session",
+      "description": "Review your active identity and sign out when you need to.",
+      "short": "Profile and access"
+    }
+  },
+  "management": {
+    "workspace": {
+      "title": "Workspace",
+      "description": "Settings that directly affect how the studio moves while you create."
+    },
+    "colors": {
+      "title": "System palette",
+      "description": "Colours applied only to your session so you can personalise the interface without breaking the shared design system.",
+      "reset": "Reset"
+    },
+    "preview": {
+      "title": "System preview",
+      "palette": "Accent preview",
+      "primaryCta": "Primary action",
+      "secondaryCta": "Secondary action",
+      "helper": "Active theme"
+    }
+  },
   "interface": {
-    "title": "Interface (X Studio)",
-    "description": "Control the guidance you see while creating",
     "panelTitle": "Controls panel",
-    "panelDescription": "Place the panel on the right or left",
+    "panelDescription": "Place the main panel where it feels most natural for your workflow.",
     "right": "Right",
     "left": "Left",
     "guidedTitle": "Guided assistance",
-    "guidedDescription": "Show contextual help step by step"
+    "guidedDescription": "Show contextual help step by step while you build a piece."
   },
   "colors": {
-    "title": "Interface colors",
-    "description": "Customize system colors just for your session",
-    "presets": "Quick presets",
-    "primary": "Primary color",
-    "secondary": "Secondary color"
+    "primary": "Primary colour",
+    "secondary": "Secondary colour"
   },
   "appearance": {
     "title": "Appearance",
-    "description": "Choose a light or dark theme",
-    "theme": "Theme",
     "light": "Light",
     "dark": "Dark"
   },
   "session": {
     "title": "Session",
-    "description": "Manage your active session",
-    "logoutTitle": "Sign out",
-    "logoutDescription": "Sign out on all your devices"
+    "logoutDescription": "Sign out of your current session and return to the access screen."
+  },
+  "profile": {
+    "fields": {
+      "account": "Account type",
+      "access": "Access method"
+    },
+    "values": {
+      "private": "Private account",
+      "google": "Google / Clerk"
+    }
   }
 }

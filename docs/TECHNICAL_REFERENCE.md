@@ -226,3 +226,28 @@ La arquitectura queda preparada para sumar mas idiomas anadiendo nuevos director
 
 - `/pricing` debe seguir marcada como publica en [src/proxy.ts](F:/_PROYECTOS/x-studio/src/proxy.ts).
 - `/api/stripe/webhook` tambien debe seguir publica para que Stripe entregue eventos.
+
+## Referral program
+
+### Architecture
+
+- Referral attribution is persisted in Convex and not inferred from transient checkout metadata.
+- User codes live on `users.referral_code`.
+- Referral relationships live on `referrals`.
+- Granted and reversed rewards live on `referral_rewards`.
+- Credits are always reflected in the existing `credit_transactions` ledger.
+
+### Runtime flow
+
+1. A shared client tracker captures `?ref=` and stores it locally.
+2. Once the invited user authenticates with Clerk, `/api/referrals/claim` resolves the real authenticated user and claims the code securely.
+3. The referrer receives a fixed signup reward from `app_settings.referral_signup_reward_credits`.
+4. When the referred user completes a paid Stripe checkout, `finalizeCheckoutSecure` grants the referrer a percentage of purchased credits using `app_settings.referral_purchase_reward_percentage`.
+5. If that purchase is refunded, the referral bonus is reversed from the referrer to keep the ledger coherent.
+
+### Admin knobs
+
+- `referral_signup_reward_credits`
+- `referral_purchase_reward_percentage`
+
+These values are editable from Admin and must remain the single source of truth for referral rewards.

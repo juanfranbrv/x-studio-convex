@@ -1,34 +1,83 @@
 {
-  "headerTitle": "Configuracion",
-  "headerDescription": "Personaliza tu experiencia en X Studio",
+  "headerTitle": "Ajustes de cuenta y estudio",
+  "headerDescription": "Gestiona tu forma de trabajar, tus créditos y tu perfil desde una sola pantalla clara y útil.",
+  "hero": {
+    "eyebrow": "Centro de control"
+  },
+  "sections": {
+    "management": {
+      "eyebrow": "Gestión",
+      "title": "Interfaz y ritmo de trabajo",
+      "description": "Decide cómo se comporta el estudio: posición del panel, ayudas activas, tema y color del sistema.",
+      "short": "Panel, ayuda, tema y paleta"
+    },
+    "credits": {
+      "eyebrow": "Economía",
+      "title": "Créditos y compras",
+      "description": "Tu saldo, tus recargas y un acceso directo a Stripe sin pantallas de relleno.",
+      "short": "Saldo, packs e historial",
+      "quickBuyTitle": "Compra rápida",
+      "quickBuyDescription": "Si ya conoces los packs, entra directo al checkout desde aquí. Si quieres comparar con calma, usa la página de pricing.",
+      "historyTitle": "Historial de compras",
+      "historyDescription": "Solo aparecen compras completadas. Nada de intentos abortados ni ruido innecesario.",
+      "historyEmptyTitle": "Aún no hay compras cerradas",
+      "referralsTitle": "Referidos",
+      "referralsDescription": "Comparte tu enlace y sigue los creditos que te va trayendo cada usuario."
+    },
+    "profile": {
+      "eyebrow": "Cuenta",
+      "title": "Información personal y sesión",
+      "description": "Consulta tu identidad activa y cierra sesión cuando lo necesites.",
+      "short": "Perfil y acceso"
+    }
+  },
+  "management": {
+    "workspace": {
+      "title": "Espacio de trabajo",
+      "description": "Ajustes que influyen directamente en cómo se mueve el estudio mientras creas."
+    },
+    "colors": {
+      "title": "Paleta del sistema",
+      "description": "Colores aplicados a tu sesión para personalizar la interfaz sin romper el diseño compartido.",
+      "reset": "Restablecer"
+    },
+    "preview": {
+      "title": "Vista de sistema",
+      "palette": "Previsualización de acentos",
+      "primaryCta": "Acción principal",
+      "secondaryCta": "Acción secundaria",
+      "helper": "Tema activo"
+    }
+  },
   "interface": {
-    "title": "Interfaz (X Studio)",
-    "description": "Controla las ayudas que ves mientras creas",
     "panelTitle": "Panel de controles",
-    "panelDescription": "Coloca el panel a la derecha o a la izquierda",
+    "panelDescription": "Coloca el panel principal donde te resulte más natural trabajar.",
     "right": "Derecha",
     "left": "Izquierda",
     "guidedTitle": "Asistencia guiada",
-    "guidedDescription": "Muestra ayudas contextuales paso a paso"
+    "guidedDescription": "Muestra ayudas contextuales paso a paso mientras construyes una pieza."
   },
   "colors": {
-    "title": "Colores de interfaz",
-    "description": "Personaliza los colores del sistema solo para tu sesion",
-    "presets": "Presets rapidos",
     "primary": "Color primario",
     "secondary": "Color secundario"
   },
   "appearance": {
     "title": "Apariencia",
-    "description": "Elige un tema claro u oscuro",
-    "theme": "Tema",
     "light": "Claro",
     "dark": "Oscuro"
   },
   "session": {
-    "title": "Sesion",
-    "description": "Gestiona tu sesion activa",
-    "logoutTitle": "Cerrar sesion",
-    "logoutDescription": "Cierra tu sesion en todos los dispositivos"
+    "title": "Sesión",
+    "logoutDescription": "Cierra tu sesión actual y vuelve a la pantalla de acceso."
+  },
+  "profile": {
+    "fields": {
+      "account": "Tipo de cuenta",
+      "access": "Método de acceso"
+    },
+    "values": {
+      "private": "Cuenta privada",
+      "google": "Google / Clerk"
+    }
   }
 }
