@@ -9,6 +9,9 @@ import { I18nProvider } from '@/components/providers/I18nProvider'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { getLastVisitedModuleAction } from '@/app/actions/get-last-visited-module'
 
+const LAST_SESSION_TIMEOUT_MS = 2500
+const ONBOARDING_ESCAPE_TIMEOUT_MS = 4500
+
 export default function OnboardingPage() {
   const router = useRouter()
   const { user, isLoaded } = useUser()
@@ -22,6 +25,7 @@ export default function OnboardingPage() {
   const hasRetriedBrandKitLoadRef = useRef(false)
   const hasCompletedRedirectRef = useRef(false)
   const hasResolvedLastSessionRef = useRef(false)
+  const onboardingEscapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [lastVisitedModule, setLastVisitedModule] = useState<{
     module: 'image' | 'carousel'
     session_id: string
@@ -30,14 +34,26 @@ export default function OnboardingPage() {
   } | null | undefined>(undefined)
 
   useEffect(() => {
+    return () => {
+      if (onboardingEscapeTimeoutRef.current) {
+        clearTimeout(onboardingEscapeTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     hasResolvedLastSessionRef.current = false
-    setLastVisitedModule(undefined)
 
     if (!isLoaded || !user?.id) return
 
     let cancelled = false
     void (async () => {
-      const result = await getLastVisitedModuleAction(user.id)
+      const result = await Promise.race([
+        getLastVisitedModuleAction(user.id),
+        new Promise<{ success: false; error: string }>((resolve) => {
+          setTimeout(() => resolve({ success: false, error: 'timeout' }), LAST_SESSION_TIMEOUT_MS)
+        }),
+      ])
       if (cancelled) return
       hasResolvedLastSessionRef.current = true
       setLastVisitedModule(result.success ? (result.data ?? null) : null)
@@ -52,11 +68,33 @@ export default function OnboardingPage() {
     if (!isLoaded) return
 
     if (!user?.id) {
+      if (onboardingEscapeTimeoutRef.current) {
+        clearTimeout(onboardingEscapeTimeoutRef.current)
+      }
       router.replace('/sign-in')
       return
     }
 
     if (hasCompletedRedirectRef.current) return
+
+    if (!onboardingEscapeTimeoutRef.current) {
+      onboardingEscapeTimeoutRef.current = setTimeout(() => {
+        if (hasCompletedRedirectRef.current) return
+        hasCompletedRedirectRef.current = true
+        const fallbackPath = Array.isArray(brandKits) && brandKits.length > 0 ? '/brand-kit' : '/image'
+        router.replace(fallbackPath)
+      }, ONBOARDING_ESCAPE_TIMEOUT_MS)
+    }
+
+    const completeRedirect = (path: string) => {
+      if (hasCompletedRedirectRef.current) return
+      hasCompletedRedirectRef.current = true
+      if (onboardingEscapeTimeoutRef.current) {
+        clearTimeout(onboardingEscapeTimeoutRef.current)
+        onboardingEscapeTimeoutRef.current = null
+      }
+      router.replace(path)
+    }
 
     const redirectToLastModule = async () => {
       if (!lastVisitedModule?.module) return false
@@ -77,8 +115,7 @@ export default function OnboardingPage() {
         }
       }
 
-      hasCompletedRedirectRef.current = true
-      router.replace(targetPath)
+      completeRedirect(targetPath)
       return true
     }
 
@@ -99,21 +136,18 @@ export default function OnboardingPage() {
         return
       }
 
-      hasCompletedRedirectRef.current = true
-      router.replace('/brand-kit')
+      completeRedirect('/brand-kit')
       return
     }
 
     if (!activeBrandKit?.id && brandKits[0]?.id) {
       void setActiveBrandKit(brandKits[0].id, true, true).finally(() => {
-        hasCompletedRedirectRef.current = true
-        router.replace('/brand-kit')
+        completeRedirect('/brand-kit')
       })
       return
     }
 
-    hasCompletedRedirectRef.current = true
-    router.replace('/brand-kit')
+    completeRedirect('/brand-kit')
   }, [
     isLoaded,
     user?.id,

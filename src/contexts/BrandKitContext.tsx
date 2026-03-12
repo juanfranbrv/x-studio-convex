@@ -268,14 +268,14 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
     }, [clearBackgroundRetry, user?.id])
 
     useEffect(() => {
-        if (isLoaded && user && userRecord !== undefined && !initialLoadAttempted.current) {
+        if (isLoaded && user && !initialLoadAttempted.current) {
             initialLoadAttempted.current = true
             void loadBrandKits()
         }
         if (isLoaded && !user) {
             setLoading(false)
         }
-    }, [isLoaded, loadBrandKits, user, userRecord])
+    }, [isLoaded, loadBrandKits, user])
 
     useEffect(() => {
         if (loading) return
