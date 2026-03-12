@@ -12,10 +12,10 @@ export function MobileNav() {
 
     const navItems = [
         { icon: Home, label: 'nav.home', href: '/' },
-        { icon: FileSpreadsheet, label: 'Kit de Marca', href: '/brand-kit' },
-        { icon: Image, label: 'nav.studio', href: '/image' },
-        { icon: PanelsTopLeft, label: 'Estudio', href: '/studio' },
-        { icon: Settings, label: 'nav.settings', href: '/settings' }, // Assuming settings page or modal, maybe just placeholder
+        { icon: FileSpreadsheet, label: 'nav.brandKit', href: '/brand-kit' },
+        { icon: Image, label: 'nav.image', href: '/image' },
+        { icon: PanelsTopLeft, label: 'nav.studioWorkspace', href: '/studio' },
+        { icon: Settings, label: 'nav.settings', href: '/settings' },
     ]
 
     return (
@@ -33,7 +33,7 @@ export function MobileNav() {
                     >
                         <item.icon className={cn("w-6 h-6", isActive && "fill-current/10")} strokeWidth={isActive ? 2.5 : 2} />
                         <span className="text-[10px] font-medium leading-none">
-                            {item.label.includes('.') ? t(item.label) : item.label}
+                            {t(item.label)}
                         </span>
                     </Link>
                 )

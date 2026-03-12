@@ -167,14 +167,19 @@
       "computedHash": "8e5da52a7a3ae87742749f2920701403e92a443cd742552d17ebd706e2618d2a"
     },
     "responsive-design": {
-      "source": "wshobson/agents",
+      "source": "supercent-io/skills-template",
       "sourceType": "github",
-      "computedHash": "07fa30d210a3ce6f752599f29bf19f319a6180b3fb96d318bd9092fdeae9793f"
+      "computedHash": "1c2c94867cc1eeca74977d57b0d9818616934a62a58e100d9350ff11cd7244fd"
     },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
       "computedHash": "b1cc1defe03f0e8f78652b7d20e4d4e6421babc2b45835d4f361afe684dc47a2"
+    },
+    "stripe-integration": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "bc5d0d76d6640f534371039426425284176955816a026fa1e0142c9bd160de50"
     },
     "teach-impeccable": {
       "source": "pbakaus/impeccable",

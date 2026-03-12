@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { BrandDNA } from '@/lib/brand-types';
@@ -23,6 +24,7 @@ import { uploadBrandImage } from '@/app/actions/upload-image';
 import { updateUserBrandKit } from '@/app/actions/update-user-brand-kit';
 import { hexToRgb } from '@/lib/color-utils';
 import { calculateBrandKitCompleteness } from '@/lib/brand-kit-utils';
+import { useTranslation } from 'react-i18next';
 
 import { Save, CheckCircle, RotateCcw, AlertCircle, X, Bug, Globe } from 'lucide-react';
 
@@ -42,6 +44,7 @@ interface BrandDNABoardProps {
     onCompleteAssistantCreation?: () => void;
     onRegenerate?: (urlOverride?: string) => void;
     onAnalyzeUrlFromAssistant?: (urlOverride?: string) => void;
+    onStopAnalyzeUrlFromAssistant?: () => void;
     onPreviewUrlFromAssistant?: (url: string) => Promise<{
         success: boolean;
         url: string;
@@ -134,11 +137,13 @@ export function BrandDNABoard({
     onCompleteAssistantCreation,
     onRegenerate,
     onAnalyzeUrlFromAssistant,
+    onStopAnalyzeUrlFromAssistant,
     onPreviewUrlFromAssistant,
     onNewBrandKit,
     onSaveSuccess
 }: BrandDNABoardProps) {
     const ASSISTANT_LOCK_KEY = 'brand-kit-assistant-lock';
+    const { t } = useTranslation('brandKit');
     const { user } = useUser();
     const { syncActiveBrandKit, reloadBrandKits, setActiveBrandKit } = useBrandKit();
     const [data, setData] = useState<BrandDNA>(() => normalizeStudioColorRoles(initialData));
@@ -260,11 +265,11 @@ export function BrandDNABoard({
     const handleSave = async (isAuto = false) => {
         if (!user || !hasUnsavedChanges) return;
         if (!data.id) {
-            console.error('âŒ Cannot save: Brand Kit ID is missing.', data);
+            console.error('Cannot save: Brand Kit ID is missing.', data);
             setErrorModal({
                 open: true,
-                title: 'Error de Identificador',
-                message: 'No se puede guardar porque falta el ID del Brand Kit. Intente recargar la página o regenerar.'
+                title: t('toasts.identifierErrorTitle', { defaultValue: 'Identifier error' }),
+                message: t('toasts.identifierErrorDescription', { defaultValue: 'The Brand Kit cannot be saved because its ID is missing. Try reloading the page or regenerating it.' })
             });
             return;
         }
@@ -281,14 +286,14 @@ export function BrandDNABoard({
                 // Solo llamar a onSaveSuccess si NO es autoguardado para evitar re-refrescos silenciosos en la UI global
                 if (onSaveSuccess && !isAuto) onSaveSuccess();
             } else {
-                throw new Error(result.error || 'Error al guardar');
+                throw new Error(result.error || t('board.saveError', { defaultValue: 'Error saving' }));
             }
         } catch (error: any) {
             console.error('Error saving brand kit:', error);
             setErrorModal({
                 open: true,
-                title: 'Error al Guardar',
-                message: error.message || 'No se pudo sincronizar los cambios con la base de datos.'
+                title: t('board.saveErrorTitle', { defaultValue: 'Error saving' }),
+                message: error.message || t('board.saveErrorDescription', { defaultValue: 'The changes could not be synchronized with the database.' })
             });
         } finally {
             setIsSaving(false);
@@ -372,11 +377,11 @@ export function BrandDNABoard({
                         images: [...(prev.images || []), { url: result.url! }]
                     }));
                 } else {
-                    throw new Error(result.error || 'Error al subir imagen');
+                    throw new Error(result.error || t('toasts.uploadImageError', { defaultValue: 'Error uploading image' }));
                 }
             }
         } catch (error: any) {
-            setErrorModal({ open: true, title: 'Error de Subida', message: error.message });
+            setErrorModal({ open: true, title: t('toasts.uploadErrorTitle', { defaultValue: 'Upload error' }), message: error.message });
         } finally {
             setIsUploading(false);
         }
@@ -452,8 +457,8 @@ export function BrandDNABoard({
         if (currentCount + files.length > 6) {
             setErrorModal({
                 open: true,
-                title: 'Límite Excedido',
-                message: 'Solo puedes tener hasta 6 logos.'
+                title: t('toasts.limitExceededTitle', { defaultValue: 'Limit exceeded' }),
+                message: t('toasts.logoLimitDescription', { defaultValue: 'You can only have up to 6 logos.' })
             });
             return;
         }
@@ -474,7 +479,7 @@ export function BrandDNABoard({
                 if (result.success && result.url) {
                     newLogos.push({ url: result.url!, selected: true });
                 } else {
-                    throw new Error(result.error || 'Error al subir logo');
+                    throw new Error(result.error || t('visualAssets.uploadError', { defaultValue: 'Error uploading logo' }));
                 }
             }
 
@@ -495,7 +500,7 @@ export function BrandDNABoard({
             }
 
         } catch (error: any) {
-            setErrorModal({ open: true, title: 'Error de Subida', message: error.message });
+            setErrorModal({ open: true, title: t('toasts.uploadErrorTitle', { defaultValue: 'Upload error' }), message: error.message });
         } finally {
             setIsUploading(false);
         }
@@ -652,7 +657,7 @@ export function BrandDNABoard({
         new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(String(reader.result || ''));
-            reader.onerror = () => reject(new Error('No se pudo leer la imagen para exportacion.'));
+            reader.onerror = () => reject(new Error(t('board.readImageExportError', { defaultValue: 'The image could not be read for export.' })));
             reader.readAsDataURL(blob);
         });
 
@@ -739,10 +744,10 @@ export function BrandDNABoard({
         } catch (error) {
             setErrorModal({
                 open: true,
-                title: 'Error al exportar',
+                title: t('board.exportErrorTitle', { defaultValue: 'Export error' }),
                 message: error instanceof Error
                     ? error.message
-                    : 'No se pudo exportar el kit en formato portable.',
+                    : t('board.exportErrorDescription', { defaultValue: 'The kit could not be exported in portable format.' }),
             });
         } finally {
             setIsExportingPortable(false);
@@ -806,7 +811,7 @@ export function BrandDNABoard({
             setImportProgressModal((prev) => ({
                 ...prev,
                 progress: 25,
-                message: 'Normalizando datos del kit importado...',
+                message: t('toasts.normalizingImportedKit', { defaultValue: 'Normalizing imported kit data...' }),
             }));
 
             const replacementMap = new Map<string, string>();
@@ -864,7 +869,7 @@ export function BrandDNABoard({
             const createResult = await createResponse.json();
             const createdId = createResult?.data?.id as string | undefined;
             if (!createResult?.success || !createdId) {
-                throw new Error(createResult?.error || 'No se pudo crear el kit para importarlo.');
+                throw new Error(createResult?.error || t('board.importCreateError', { defaultValue: 'The kit could not be created for import.' }));
             }
             setImportProgressModal((prev) => ({
                 ...prev,
@@ -878,7 +883,7 @@ export function BrandDNABoard({
             };
             const saveResult = await updateUserBrandKit(createdId, payloadToSave);
             if (!saveResult.success) {
-                throw new Error(saveResult.error || 'No se pudo guardar el kit importado.');
+                throw new Error(saveResult.error || t('board.importSaveError', { defaultValue: 'The imported kit could not be saved.' }));
             }
 
             setImportProgressModal((prev) => ({
@@ -903,7 +908,7 @@ export function BrandDNABoard({
                 title: 'Error al importar',
                 message: error instanceof Error
                     ? error.message
-                    : 'No se pudo importar el archivo del kit de marca.',
+                    : t('board.importFileError', { defaultValue: 'The Brand Kit file could not be imported.' }),
             });
         } finally {
             setIsImporting(false);
@@ -977,8 +982,8 @@ export function BrandDNABoard({
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex-1 space-y-4">
                         <div className="rounded-xl border border-border/60 bg-background/60 p-3">
-                            <p className="text-xs font-semibold text-foreground mb-1">Como completar este bloque</p>
-                            <p className="text-xs text-muted-foreground">Paso 1: Pon nombre a tu kit. Paso 2 (opcional): pega una URL y pulsa Analizar URL para autocompletar contenido.</p>
+                            <p className="text-xs font-semibold text-foreground mb-1">{t('board.howToCompleteTitle', { defaultValue: 'How to complete this section' })}</p>
+                            <p className="text-xs text-muted-foreground">{t('board.howToCompleteDescription', { defaultValue: 'Step 1: give your kit a name. Step 2 (optional): paste a URL and click Analyze URL to autofill content.' })}</p>
                         </div>
 
                         <div className="flex items-stretch gap-3">
@@ -992,7 +997,7 @@ export function BrandDNABoard({
 
                             <div className="flex-1 space-y-3">
                                 <div>
-                                    <p className="text-[11px] font-medium text-muted-foreground mb-1">Paso 1 · Nombre del kit</p>
+                                    <p className="text-[11px] font-medium text-muted-foreground mb-1">{t('board.stepName', { defaultValue: 'Step 1 · Kit name' })}</p>
                                     <Input
                                         value={data.brand_name || ''}
                                         onChange={(e) => {
@@ -1000,14 +1005,14 @@ export function BrandDNABoard({
                                             setHasUnsavedChanges(true);
                                         }}
                                         className="h-10 px-3 bg-background border-border focus-visible:ring-primary font-semibold"
-                                        placeholder="Ej: Mi Marca"
+                                        placeholder={t('board.namePlaceholder', { defaultValue: 'Ex: My Brand' })}
                                     />
                                 </div>
 
                                 <div>
                                     <p className="text-[11px] font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
                                         <Globe className="w-3.5 h-3.5" />
-                                        Paso 2 (opcional) · URL web para analizar
+                                        {t('board.stepUrl', { defaultValue: 'Step 2 (optional) · Website URL to analyze' })}
                                     </p>
                                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                                         <Input
@@ -1016,7 +1021,7 @@ export function BrandDNABoard({
                                                 setData((prev) => ({ ...prev, url: e.target.value }));
                                                 setHasUnsavedChanges(true);
                                             }}
-                                            placeholder="https://tuweb.com"
+                                            placeholder={t('board.urlPlaceholder', { defaultValue: 'https://your-site.com' })}
                                             className="text-xs h-9 px-3 bg-background border-border focus-visible:ring-primary sm:max-w-[360px]"
                                         />
                                         {onRegenerate && (
@@ -1027,16 +1032,16 @@ export function BrandDNABoard({
                                                 disabled={!normalizedAnalysisUrl}
                                                 onClick={() => onRegenerate(normalizedAnalysisUrl || rawBrandUrl)}
                                             >
-                                                Analizar URL
+                                                {t('board.analyzeUrl', { defaultValue: 'Analyze URL' })}
                                             </Button>
                                         )}
                                     </div>
                                     <p className="text-[11px] text-muted-foreground/80 mt-1">
                                         {isManualPlaceholderUrl
-                                            ? 'Tu kit se creó manualmente. Añade una URL válida para completar datos automáticamente.'
+                                            ? t('board.manualUrlHint', { defaultValue: 'Your kit was created manually. Add a valid URL to complete it automatically.' })
                                             : normalizedAnalysisUrl
-                                                ? 'URL válida. Pulsa "Analizar URL" para actualizar este kit con datos de la web.'
-                                                : 'Si añades una URL válida, podrás analizarla para completar este kit más rápido.'}
+                                                ? t('board.validUrlHint', { defaultValue: 'Valid URL. Click "Analyze URL" to update this kit with website data.' })
+                                                : t('board.emptyUrlHint', { defaultValue: 'If you add a valid URL, you can analyze it to complete this kit faster.' })}
                                     </p>
                                 </div>
                             </div>
@@ -1046,18 +1051,18 @@ export function BrandDNABoard({
                     <div className="flex items-center gap-3 lg:pt-1">
                         {isSaving ? (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium animate-pulse">
-                                <RotateCcw className="w-4 h-4 mr-2 animate-spin" />
-                                Guardando...
+                                <Loader2 className="w-4 h-4 mr-2" />
+                                {t('board.saving', { defaultValue: 'Saving...' })}
                             </div>
                         ) : hasUnsavedChanges ? (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
                                 <Save className="w-4 h-4 mr-2" />
-                                Cambios pendientes
+                                {t('board.pendingChanges', { defaultValue: 'Pending changes' })}
                             </div>
                         ) : (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                Sincronizado
+                                {t('board.synced', { defaultValue: 'Synced' })}
                             </div>
                         )}
                     </div>
@@ -1082,7 +1087,7 @@ export function BrandDNABoard({
         onClick={() => setShowDebug(!showDebug)}
     >
         <Bug className="w-4 h-4" />
-        Auditoria
+        {t('board.audit', { defaultValue: 'Audit' })}
     </Button>
 )}
                     <Button
@@ -1091,8 +1096,8 @@ export function BrandDNABoard({
                         disabled={!hasUnsavedChanges || isSaving}
                         className="gap-2 h-9 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
                     >
-                        {isSaving ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        Guardar Ahora
+                        {isSaving ? <Loader2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                        {t('board.saveNow', { defaultValue: 'Save now' })}
                     </Button>
                 </div>
             </div>
@@ -1101,11 +1106,11 @@ export function BrandDNABoard({
             {assistantPriorityMode && !allowAssistantExit ? (
                 !showAssistantWizard && (
                     <div className="rounded-xl border border-dashed border-border/70 p-6 bg-muted/20">
-                        <p className="text-base font-medium text-foreground mb-1">Completa primero el asistente guiado</p>
+                        <p className="text-base font-medium text-foreground mb-1">{t('board.completeAssistantTitle', { defaultValue: 'Complete the guided assistant first' })}</p>
                         <p className="text-sm text-muted-foreground mb-4">
-                            Cuando termines estos pasos, se desbloqueara el editor completo.
+                            {t('board.completeAssistantDescription', { defaultValue: 'When you finish these steps, the full editor will unlock.' })}
                         </p>
-                        <Button onClick={() => setShowAssistantWizard(true)}>Abrir asistente</Button>
+                        <Button onClick={() => setShowAssistantWizard(true)}>{t('board.openAssistant', { defaultValue: 'Open assistant' })}</Button>
                     </div>
                 )
             ) : (
@@ -1292,7 +1297,7 @@ export function BrandDNABoard({
                     <DialogFooter>
                         {!importProgressModal.completed ? (
                             <div className="w-full text-sm text-muted-foreground flex items-center justify-end gap-2">
-                                <RotateCcw className="w-4 h-4 animate-spin" />
+                                <Loader2 className="w-4 h-4" />
                                 Procesando...
                             </div>
                         ) : (
@@ -1314,6 +1319,7 @@ export function BrandDNABoard({
                 onUpdateBrandName={(value) => updateData((prev) => ({ ...prev, brand_name: value }))}
                 onUpdateUrl={(value) => updateData((prev) => ({ ...prev, url: value }))}
                 onAnalyzeUrl={(urlOverride) => (onAnalyzeUrlFromAssistant || onRegenerate)?.(urlOverride || data.url || '')}
+                onStopAnalyzeUrl={onStopAnalyzeUrlFromAssistant}
                 onPreviewUrl={async (targetUrl) => {
                     if (!onPreviewUrlFromAssistant) {
                         return { success: false, url: targetUrl, error: 'Preview no disponible' };

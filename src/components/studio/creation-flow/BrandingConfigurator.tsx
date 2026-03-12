@@ -1,15 +1,8 @@
+﻿'use client'
+
+import { Loader2 } from '@/components/ui/spinner'
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
-import {
-    Check,
-    Plus,
-    Palette,
-    Pipette,
-    X,
-    Type,
-    Sparkles,
-    Fingerprint,
-    Loader2,
-} from 'lucide-react'
+import { Check, Plus, Palette, Pipette, X, Type, Sparkles, Fingerprint } from 'lucide-react'
 import { HexColorPicker } from 'react-colorful'
 import Link from 'next/link'
 import { useBrandKit } from '@/contexts/BrandKitContext'
@@ -30,6 +23,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useTranslation } from 'react-i18next'
 
 import { type LayoutOption, type SelectedColor, type TextAsset } from '@/lib/creation-flow-types'
 
@@ -88,6 +82,7 @@ function CustomColorPicker({
     onAdd: (color: string) => void
     presetColors?: string[]
 }) {
+    const { t } = useTranslation('common')
     const [value, setValue] = useState('#')
     const [isOpen, setIsOpen] = useState(false)
 
@@ -123,7 +118,7 @@ function CustomColorPicker({
             <PopoverTrigger asChild>
                 <button
                     className="aspect-square rounded-full border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center text-muted-foreground hover:text-primary group"
-                    title="Añadir color personalizado"
+                    title={t('brandingConfigurator.addCustomColor', { defaultValue: 'Add custom color' })}
                 >
                     <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 </button>
@@ -131,7 +126,7 @@ function CustomColorPicker({
             <PopoverContent className="w-64 p-4 shadow-xl border-border/50 bg-background/95 backdrop-blur-sm z-[100]" align="start" sideOffset={8}>
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Color Personalizado</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('brandingConfigurator.customColor', { defaultValue: 'Custom color' })}</p>
                         <button
                             onClick={() => setIsOpen(false)}
                             className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
@@ -143,7 +138,7 @@ function CustomColorPicker({
                     <div className="custom-picker-wrapper space-y-4">
                         {presetColors.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Colores de marca</p>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('brandingConfigurator.brandColors', { defaultValue: 'Brand colors' })}</p>
                                 <div className="flex flex-wrap gap-1.5">
                                     {Array.from(new Set(presetColors.map((c) => {
                                         const hex = extractHex(c)
@@ -158,7 +153,7 @@ function CustomColorPicker({
                                             }}
                                             className="w-6 h-6 rounded-full border border-border/60 hover:border-primary/60 transition-colors"
                                             style={{ backgroundColor: hex }}
-                                            title={`Añadir ${hex}`}
+                                            title={`${t('actions.add', { defaultValue: 'Add' })} ${hex}`}
                                         />
                                     ))}
                                 </div>
@@ -179,7 +174,7 @@ function CustomColorPicker({
                             className="w-full h-9 gap-2 text-xs font-semibold bg-background hover:bg-accent border-border/50 shadow-sm"
                         >
                             <Pipette className="w-3.5 h-3.5 text-primary" />
-                            Capturar
+                            {t('brandingConfigurator.capture', { defaultValue: 'Capture' })}
                         </Button>
 
                         <div className="flex gap-2 pt-1">
@@ -223,6 +218,7 @@ interface TextAssetRowProps {
 }
 
 function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, onGenerateText, headingFont, bodyFont }: TextAssetRowProps) {
+    const { t } = useTranslation('common')
     const [isGenerating, setIsGenerating] = useState(false)
 
     const assetFont = asset.type === 'headline' || asset.type === 'cta' || asset.label.toLowerCase().includes('titulo')
@@ -254,7 +250,7 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
                     value={asset.value}
                     onChange={(e) => onUpdate(asset.id, e.target.value)}
                     className="h-7 text-xs pr-7 transition-all focus:ring-1 focus:ring-primary/30"
-                    placeholder={`Valor para ${asset.label}...`}
+                    placeholder={`{t('textLayerEditor.assetPlaceholder', { defaultValue: 'Value for {{label}}...', label: asset.label })}${asset.label}...`}
                     style={{ fontFamily: assetFont ? `"${assetFont}", sans-serif` : undefined }}
                 />
                 {/* Fingerprint - Brand Kit Presets */}
@@ -262,19 +258,19 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
                     <DropdownMenuTrigger asChild>
                         <button
                             className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 hover:text-primary transition-colors text-muted-foreground/50 hover:text-muted-foreground"
-                            title="Usar texto del Kit de Marca"
+                            title={t('preview.useBrandText', { defaultValue: 'Use Brand Kit text' })}
                         >
                             <Fingerprint className="w-4 h-4" />
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 max-h-60 overflow-y-auto">
                         <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                            Textos del Kit de Marca
+                            {t('preview.brandTexts', { defaultValue: 'Brand Kit texts' })}
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {textResources.length === 0 ? (
                             <DropdownMenuItem disabled className="text-xs text-muted-foreground italic">
-                                Sin textos disponibles
+                                {t('preview.noBrandTexts', { defaultValue: 'No texts available' })}
                             </DropdownMenuItem>
                         ) : (
                             textResources.map((resource, idx) => (
@@ -302,10 +298,10 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
                         ? "hover:text-primary hover:bg-primary/10 text-muted-foreground"
                         : "text-muted-foreground/30 cursor-not-allowed"
                 )}
-                title={rawMessage ? "Generar con IA" : "Introduce primero tu intención"}
+                title={rawMessage ? t('brandingConfigurator.generateWithAi', { defaultValue: 'Generate with AI' }) : t('brandingConfigurator.enterIntentFirst', { defaultValue: 'Enter your intent first' })}
             >
                 {isGenerating ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4" />
                 ) : (
                     <Sparkles className="w-4 h-4" />
                 )}
@@ -315,7 +311,7 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
             <button
                 onClick={() => onRemove(asset.id)}
                 className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-destructive"
-                title="Eliminar"
+                title={t('actions.delete', { defaultValue: 'Delete' })}
             >
                 <X className="w-3.5 h-3.5" />
             </button>
@@ -326,7 +322,7 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
                     className="absolute -bottom-4 right-10 text-[10px] text-primary/60 font-medium italic pointer-events-none"
                     style={{ fontFamily: `"${assetFont}", sans-serif` }}
                 >
-                    Vista previa: {asset.value.length > 25 ? asset.value.substring(0, 25) + '...' : asset.value}
+                    {t('brandingConfigurator.preview', { defaultValue: 'Preview:' })} {asset.value.length > 25 ? asset.value.substring(0, 25) + '...' : asset.value}
                 </div>
             )}
         </div>
@@ -357,6 +353,7 @@ export function BrandingConfigurator({
     debugLabel = 'Unknown',
     onlyShowSelectedColors = false
 }: BrandingConfiguratorProps) {
+    const { t } = useTranslation('common')
     const { activeBrandKit } = useBrandKit()
 
     const logos = activeBrandKit?.logos || []
@@ -574,7 +571,7 @@ export function BrandingConfigurator({
                                                 onRemoveBrandColor(color)
                                             }}
                                             className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center opacity-0 group-hover/swatch:opacity-100 transition-all hover:scale-110 z-20"
-                                            title="Eliminar color"
+                                            title={`${t('actions.delete', { defaultValue: 'Delete' })} color`}
                                         >
                                             <X className="w-2.5 h-2.5" />
                                         </button>
@@ -595,13 +592,13 @@ export function BrandingConfigurator({
                     <div className="flex items-center justify-between">
                         <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                             <Type className="w-3 h-3 text-primary" />
-                            Tipografía
+                            {t('brandingConfigurator.typography', { defaultValue: 'Typography' })}
                         </label>
                         <Link
                             href="/brand-kit"
                             className="text-[9px] text-primary hover:underline font-medium bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10 transition-colors"
                         >
-                            Editar en Kit
+                            {t('brandingConfigurator.editInKit', { defaultValue: 'Edit in Kit' })}
                         </Link>
                     </div>
 
@@ -609,7 +606,7 @@ export function BrandingConfigurator({
                         {/* Heading Fonts */}
                         {headingFonts.length > 0 && (
                             <div className="space-y-1">
-                                <p className="text-[8px] uppercase font-bold text-muted-foreground/40 px-0.5">Titulares</p>
+                                <p className="text-[8px] uppercase font-bold text-muted-foreground/40 px-0.5">{t('brandingConfigurator.headings', { defaultValue: 'Headings' })}</p>
                                 <div className="flex flex-wrap gap-1.5">
                                     {headingFonts.map((font, idx) => (
                                         <Badge
@@ -628,7 +625,7 @@ export function BrandingConfigurator({
                                         className="text-2xl md:text-3xl font-bold tracking-tighter text-foreground mt-4 px-0.5 leading-[1.05]"
                                         style={{ fontFamily: `"${headingFonts[0].family}", sans-serif` }}
                                     >
-                                        Explora nuevos universos visuales.
+                                        {t('brandingConfigurator.headingSample', { defaultValue: 'Explore new visual worlds.' })}
                                     </p>
                                 )}
                             </div>
@@ -637,7 +634,7 @@ export function BrandingConfigurator({
                         {/* Body Fonts */}
                         {bodyFonts.length > 0 && (
                             <div className="space-y-1">
-                                <p className="text-[8px] uppercase font-bold text-muted-foreground/40 px-0.5">Párrafos</p>
+                                <p className="text-[8px] uppercase font-bold text-muted-foreground/40 px-0.5">{t('brandingConfigurator.paragraphs', { defaultValue: 'Paragraphs' })}</p>
                                 <div className="flex flex-wrap gap-1.5">
                                     {bodyFonts.map((font, idx) => (
                                         <Badge
@@ -656,7 +653,7 @@ export function BrandingConfigurator({
                                         className="text-base opacity-90 mt-3 px-0.5 leading-normal"
                                         style={{ fontFamily: `"${bodyFonts[0].family}", sans-serif` }}
                                     >
-                                        Diseño inteligente para marcas con propósito y visión de futuro.
+                                        {t('brandingConfigurator.bodySample', { defaultValue: 'Intelligent design for brands with purpose and future vision.' })}
                                     </p>
                                 )}
                             </div>
@@ -690,7 +687,7 @@ export function BrandingConfigurator({
                 <div className="space-y-3 pt-2 border-t border-border/10">
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                         <Fingerprint className="w-3 h-3 text-primary" />
-                        Textos de Marca
+                        {t('preview.brandTexts', { defaultValue: 'Brand Kit texts' })}
                     </label>
 
                     <div className="space-y-6">
@@ -713,3 +710,5 @@ export function BrandingConfigurator({
         </div>
     )
 }
+
+

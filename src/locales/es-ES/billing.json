@@ -1,0 +1,143 @@
+{
+  "pricing": {
+    "eyebrow": "Credito directo, sin permanencias",
+    "title": "Recarga Adstudio sin pelearte con planes infinitos",
+    "body": "Compra creditos cuando de verdad los necesites. Todo queda reflejado en tu cuenta, con historial, facturas y consumo claro.",
+    "ctaPrimary": "Comprar ahora",
+    "ctaSecondary": "Ver mi facturacion",
+    "contact": "Hablar con nosotros",
+    "backHome": "Volver al inicio",
+    "trust": {
+      "title1": "Checkout alojado por Stripe",
+      "body1": "Pago seguro, compatible con 3D Secure y sin tocar PCI en tu app.",
+      "title2": "Creditos sin caducidad",
+      "body2": "No hay reinicios mensuales ni sustos al cerrar un ciclo.",
+      "title3": "Historial y recibos",
+      "body3": "Todo queda trazado: compra, consumo, saldo y enlace al recibo."
+    },
+    "faqTitle": "Lo importante, sin letra pequena",
+    "faq": {
+      "q1": "¿Los creditos caducan?",
+      "a1": "No. Los creditos se acumulan y no caducan.",
+      "q2": "¿Hay suscripcion?",
+      "a2": "No. Son packs de pago unico.",
+      "q3": "¿Puedo descargar facturas o recibos?",
+      "a3": "Si. Desde tu cuenta y, cuando proceda, desde el portal de Stripe."
+    }
+  },
+  "packs": {
+    "trail-10": {
+      "name": "Trail",
+      "badge": "Probar",
+      "description": "La entrada ligera para validar el flujo real con dinero de verdad pero sin drama.",
+      "tagline": "10 creditos para sentir el producto",
+      "cta": "Empezar por Trail"
+    },
+    "studio-30": {
+      "name": "Studio",
+      "badge": "Equilibrado",
+      "description": "El pack natural para trabajo recurrente sin quedarte corto en la segunda tarde.",
+      "tagline": "30 creditos para iterar con soltura",
+      "cta": "Ir a Studio"
+    },
+    "orbit-100": {
+      "name": "Orbit",
+      "badge": "Reserva seria",
+      "description": "La reserva amplia para sesiones largas, equipos exigentes o varias marcas dando guerra.",
+      "tagline": "100 creditos para trabajar sin mirar el contador",
+      "cta": "Ir a Orbit"
+    }
+  },
+  "account": {
+    "title": "Facturacion y creditos",
+    "description": "Tu saldo, tus compras y todo el rastro economico en un solo sitio.",
+    "summary": {
+      "credits": "Saldo disponible",
+      "latestPack": "Ultimo pack",
+      "totalPurchased": "Creditos comprados",
+      "totalSpent": "Creditos gastados",
+      "noPack": "Aun no has comprado ningun pack"
+    },
+    "actions": {
+      "buyCredits": "Comprar creditos",
+      "openPortal": "Gestionar pagos",
+      "openPortalHelp": "Abre Stripe para ver recibos y metodos guardados.",
+      "openingPortal": "Abriendo portal...",
+      "viewPricing": "Ver pricing"
+    },
+    "history": {
+      "purchasesTitle": "Compras",
+      "ledgerTitle": "Movimiento de creditos",
+      "headers": {
+        "pack": "Pack",
+        "status": "Estado",
+        "credits": "Creditos",
+        "amount": "Importe",
+        "links": "Enlaces",
+        "type": "Tipo",
+        "balance": "Saldo",
+        "date": "Fecha"
+      },
+      "emptyPurchases": "Todavia no hay compras registradas.",
+      "emptyLedger": "Todavia no hay movimientos de creditos.",
+      "receipt": "Recibo",
+      "invoice": "Factura",
+      "status": {
+        "pending": "Pendiente",
+        "completed": "Completado",
+        "failed": "Fallido",
+        "refunded": "Reembolsado",
+        "expired": "Expirado"
+      }
+    },
+    "success": {
+      "title": "Pago confirmado",
+      "description": "Los creditos ya estan en tu cuenta. Puedes volver al trabajo o seguir recargando.",
+      "loading": "Confirmando pago con Stripe...",
+      "error": "No hemos podido confirmar el pago todavia.",
+      "goBilling": "Ir a facturacion",
+      "goImage": "Volver a imagen"
+    }
+  },
+  "checkout": {
+    "redirecting": "Redirigiendo a Stripe...",
+    "errorTitle": "No se pudo iniciar el checkout",
+    "portalErrorTitle": "No se pudo abrir el portal de pagos",
+    "packMissing": "El pack solicitado no existe o ya no esta activo."
+  },
+  "admin": {
+    "tab": "Billing",
+    "title": "Packs y cobros",
+    "description": "Control de packs, sincronizacion con Stripe y seguimiento de compras reales.",
+    "stats": {
+      "revenue": "Ingresos",
+      "purchases": "Compras",
+      "customers": "Clientes de pago",
+      "creditsSold": "Creditos vendidos"
+    },
+    "packsTitle": "Catalogo de packs",
+    "purchasesTitle": "Compras recientes",
+    "headers": {
+      "pack": "Pack",
+      "status": "Estado",
+      "credits": "Creditos",
+      "amount": "Importe",
+      "date": "Fecha"
+    },
+    "sync": "Sincronizar Stripe",
+    "syncing": "Sincronizando...",
+    "synced": "Stripe sincronizado",
+    "empty": "Todavia no hay compras.",
+    "active": "Activo",
+    "inactive": "Apagado",
+    "stripePending": "Pendiente en Stripe"
+  },
+  "labels": {
+    "creditsIncluded": "{{count}} creditos incluidos",
+    "portalPacks": "Recarga disponible"
+  },
+  "nav": {
+    "pricing": "Pricing",
+    "billing": "Facturacion"
+  }
+}

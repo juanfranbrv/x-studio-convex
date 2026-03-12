@@ -1,0 +1,143 @@
+{
+  "common": {
+    "backHome": "Volver al inicio",
+    "trustCenter": "Centro de confianza",
+    "lastUpdated": "Última actualización",
+    "relatedTitle": "Más información",
+    "onThisPage": "En esta página",
+    "contactTitle": "Contacto",
+    "contactDescription": "Si necesitas soporte, una solicitud legal o una conversación sobre producto, usa el canal de soporte asociado a tu cuenta o responde al correo de acceso a beta."
+  },
+  "privacy": {
+    "eyebrow": "Privacidad",
+    "title": "Cómo tratamos tus datos en Adstudio",
+    "intro": "Explicamos qué información utilizamos, por qué la necesitamos y cómo protegemos el uso de tu cuenta, tus prompts y los resultados que generas dentro de la plataforma.",
+    "updatedAt": "11 de marzo de 2026",
+    "sections": {
+      "controller": {
+        "label": "01",
+        "title": "Quién gestiona la información",
+        "body": "Adstudio actúa como responsable del tratamiento de los datos vinculados al funcionamiento del servicio. Esto incluye la gestión de cuentas, la autenticación, el soporte y la infraestructura técnica necesaria para operar la aplicación."
+      },
+      "data": {
+        "label": "02",
+        "title": "Qué datos utilizamos",
+        "body": "Tratamos datos de cuenta como el correo electrónico y los identificadores técnicos, información de uso como sesiones, preferencias o créditos, y el contenido necesario para prestar el servicio, incluyendo prompts, referencias visuales, configuraciones y resultados generados."
+      },
+      "purpose": {
+        "label": "03",
+        "title": "Para qué se usan",
+        "body": "Usamos estos datos para autenticar usuarios, generar contenido visual, mantener el historial de trabajo, prevenir abusos, mejorar la calidad del producto y ofrecer soporte cuando se produce un error o se solicita ayuda."
+      },
+      "sharing": {
+        "label": "04",
+        "title": "Proveedores y transferencias",
+        "body": "Algunas operaciones dependen de proveedores tecnológicos de autenticación, almacenamiento, ejecución de modelos o analítica operativa. Solo compartimos la información imprescindible para que esas piezas funcionen y bajo acuerdos adecuados de tratamiento."
+      },
+      "retention": {
+        "label": "05",
+        "title": "Cuánto tiempo se conserva",
+        "body": "Conservamos los datos mientras tu cuenta siga activa, mientras sean necesarios para prestar el servicio o durante el plazo exigido por obligaciones legales, seguridad o prevención de fraude."
+      },
+      "rights": {
+        "label": "06",
+        "title": "Tus derechos",
+        "body": "Puedes solicitar acceso, rectificación, supresión, limitación u oposición cuando proceda conforme a la normativa aplicable. También puedes pedir información adicional sobre tratamiento o conservación a través del canal de soporte habilitado."
+      }
+    }
+  },
+  "terms": {
+    "eyebrow": "Términos",
+    "title": "Reglas de uso del servicio",
+    "intro": "Estos términos definen qué puedes esperar de Adstudio y qué esperamos de quien utiliza la plataforma para generar, revisar y exportar contenido.",
+    "updatedAt": "11 de marzo de 2026",
+    "sections": {
+      "service": {
+        "label": "01",
+        "title": "Objeto del servicio",
+        "body": "Adstudio ofrece un entorno para crear contenido visual asistido por inteligencia artificial, gestionar kits de marca y mantener sesiones de trabajo asociadas a una cuenta autenticada."
+      },
+      "account": {
+        "label": "02",
+        "title": "Cuenta y acceso",
+        "body": "El acceso depende de una cuenta válida y del estado operativo asignado a esa cuenta. Eres responsable de mantener la confidencialidad de tus credenciales y del uso que se haga desde tu sesión."
+      },
+      "acceptableUse": {
+        "label": "03",
+        "title": "Uso permitido",
+        "body": "No puedes emplear la plataforma para actividades ilícitas, abusivas, fraudulentas o que vulneren derechos de terceros. Tampoco está permitido intentar degradar la seguridad, el rendimiento o la disponibilidad del servicio."
+      },
+      "content": {
+        "label": "04",
+        "title": "Contenido del usuario",
+        "body": "Mantienes la titularidad del contenido que aportas. Nos autorizas únicamente a tratarlo en la medida necesaria para ejecutar las funciones del producto, almacenar tu historial y mejorar la fiabilidad técnica del sistema."
+      },
+      "availability": {
+        "label": "05",
+        "title": "Disponibilidad y cambios",
+        "body": "El servicio puede evolucionar, entrar en mantenimiento o sufrir interrupciones puntuales. Podemos ajustar funcionalidades, límites o flujos si eso mejora la seguridad, la calidad o la viabilidad operativa del producto."
+      },
+      "liability": {
+        "label": "06",
+        "title": "Responsabilidad",
+        "body": "Adstudio se ofrece tal cual, dentro de un entorno de mejora continua. No garantizamos resultados específicos ni asumimos responsabilidad por un uso incorrecto de los materiales generados fuera del contexto razonable del servicio."
+      }
+    }
+  },
+  "cookies": {
+    "eyebrow": "Cookies",
+    "title": "Uso de cookies y almacenamiento local",
+    "intro": "Adstudio utiliza mecanismos técnicos de almacenamiento para mantener la sesión, recordar preferencias y conservar ciertos estados de trabajo sin obligarte a reconfigurar la aplicación cada vez.",
+    "updatedAt": "11 de marzo de 2026",
+    "sections": {
+      "essential": {
+        "label": "01",
+        "title": "Cookies esenciales",
+        "body": "Son las necesarias para iniciar sesión, mantener el estado de autenticación, proteger formularios o preservar la seguridad básica del servicio. Sin ellas la aplicación no puede funcionar correctamente."
+      },
+      "preferences": {
+        "label": "02",
+        "title": "Preferencias y almacenamiento local",
+        "body": "Además de cookies, usamos almacenamiento local del navegador para recordar idioma, preferencias visuales o pequeños estados de interfaz que mejoran la continuidad del trabajo entre sesiones."
+      },
+      "analytics": {
+        "label": "03",
+        "title": "Medición operativa",
+        "body": "Podemos utilizar señales técnicas mínimas para entender estabilidad, errores o rendimiento. La finalidad es mejorar la experiencia y detectar fallos, no construir perfiles invasivos de comportamiento."
+      },
+      "management": {
+        "label": "04",
+        "title": "Cómo gestionarlas",
+        "body": "Puedes borrar cookies o almacenamiento local desde la configuración del navegador. Ten en cuenta que eso puede cerrar tu sesión, restaurar preferencias por defecto o eliminar estados temporales de trabajo guardados en tu equipo."
+      }
+    }
+  },
+  "contact": {
+    "eyebrow": "Contacto",
+    "title": "Quiénes somos y cómo hablar con nosotros",
+    "intro": "Adstudio es un producto centrado en convertir la identidad de marca en un sistema operativo creativo: menos fricción, más consistencia y una relación más útil entre criterio humano y automatización.",
+    "updatedAt": "11 de marzo de 2026",
+    "sections": {
+      "about": {
+        "label": "01",
+        "title": "Qué estamos construyendo",
+        "body": "Estamos diseñando una suite donde Imagen, Carrusel, Vídeo y Brand Kit trabajen como partes de un mismo cerebro visual. La idea no es generar por generar, sino ayudar a marcas y equipos a producir con criterio propio."
+      },
+      "approach": {
+        "label": "02",
+        "title": "Cómo trabajamos",
+        "body": "Priorizamos consistencia visual, velocidad de iteración y control real sobre el resultado. Eso significa mezclar automatización con supervisión humana, dar trazabilidad a los prompts y tratar el brand system como una fuente de verdad compartida."
+      },
+      "support": {
+        "label": "03",
+        "title": "Canales de soporte",
+        "body": "Para incidencias, feedback o ayuda sobre tu cuenta, utiliza el feedback in-app, el correo vinculado a tu acceso beta o el canal oficial que recibiste al activar tu cuenta. Así podemos responder con contexto y trazabilidad."
+      },
+      "partnerships": {
+        "label": "04",
+        "title": "Colaboraciones y legal",
+        "body": "Si necesitas tratar temas de privacidad, uso empresarial, integraciones o acuerdos específicos, utiliza el mismo canal oficial de soporte y detalla el contexto de tu solicitud para derivarla correctamente."
+      }
+    }
+  }
+}

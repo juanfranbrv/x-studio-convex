@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Palette, Info, RotateCcw, X, Pipette, Check, Plus, Copy } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { hexToRgb, rgbToLab } from '@/lib/color-utils';
+import { useTranslation } from 'react-i18next';
 
 interface ColorPaletteProps {
     colors: { color: string; sources: string[]; score: number; role?: string; selected?: boolean }[];
@@ -42,6 +43,7 @@ export function ColorPalette({
     onDragStart,
     onDragEnd
 }: ColorPaletteProps) {
+    const { t } = useTranslation('brandKit');
     const [colorPickerOpen, setColorPickerOpen] = useState<number | null>(null);
     const [localColor, setLocalColor] = useState<{ index: number, color: string } | null>(null);
     const [draggedColorIndex, setDraggedColorIndex] = useState<number | null>(null);
@@ -143,7 +145,7 @@ export function ColorPalette({
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
                                 <Palette className="w-5 h-5 text-primary" />
-                                Paleta de colores
+                                {t('palette.title', { defaultValue: 'Color palette' })}
                             </CardTitle>
                             <div className="flex items-center gap-2">
                                 <Tooltip>
@@ -153,7 +155,7 @@ export function ColorPalette({
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="max-w-xs text-xs bg-popover border-border text-popover-foreground">
-                                        <p>Colores principales y secundarios de la marca.</p>
+                                        <p>{t('palette.tooltip', { defaultValue: 'Primary and secondary brand colors.' })}</p>
                                     </TooltipContent>
                                 </Tooltip>
                                 {isEdited && (
@@ -164,7 +166,7 @@ export function ColorPalette({
                                         className="text-xs h-7 gap-1"
                                     >
                                         <RotateCcw className="w-3.5 h-3.5" />
-                                        Restablecer
+                                        {t('palette.reset', { defaultValue: 'Reset' })}
                                     </Button>
                                 )}
                             </div>
@@ -254,7 +256,7 @@ export function ColorPalette({
                                         <PopoverContent className="w-[240px] p-3 border-border bg-popover z-[100]" side="right" align="start">
                                             <div className="space-y-4">
                                                 <div>
-                                                    <p className="text-[10px] uppercase font-bold text-muted-foreground/60 mb-2 px-1">Color de Marca</p>
+                                                    <p className="text-[10px] uppercase font-bold text-muted-foreground/60 mb-2 px-1">{t('palette.brandColor', { defaultValue: 'Brand color' })}</p>
                                                     <HexColorPicker
                                                         color={localColor?.index === idx ? localColor.color : item.color}
                                                         onChange={(newColor) => {
@@ -265,7 +267,7 @@ export function ColorPalette({
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <p className="text-[10px] uppercase font-bold text-muted-foreground/60 px-1">Rol del Color</p>
+                                                    <p className="text-[10px] uppercase font-bold text-muted-foreground/60 px-1">{t('palette.colorRole', { defaultValue: 'Color role' })}</p>
                                                     <div className="flex gap-1 bg-muted/30 p-1 rounded-xl border border-white/10">
                                                         {(['Texto', 'Fondo', 'Acento'] as const).map(role => (
                                                             <Button
@@ -280,7 +282,7 @@ export function ColorPalette({
                                                                 )}
                                                                 onClick={() => onUpdateRole(idx, role)}
                                                             >
-                                                                {role}
+                                                                {t(`palette.roles.${role}`, { defaultValue: role })}
                                                             </Button>
                                                         ))}
                                                     </div>
@@ -294,7 +296,7 @@ export function ColorPalette({
                                                         className="flex-1 gap-1 h-8 text-xs font-medium rounded-lg"
                                                     >
                                                         <Pipette className="w-4 h-4" />
-                                                        Capturar
+                                                        {t('palette.capture', { defaultValue: 'Capture' })}
                                                     </Button>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => setColorPickerOpen(null)}>
                                                         <X className="w-4 h-4" />
@@ -304,12 +306,12 @@ export function ColorPalette({
                                         </PopoverContent>
                                     </Popover>
                                     <TooltipContent side="bottom" className="flex flex-col gap-1 p-2 bg-popover border-border shadow-md z-[110]">
-                                        <p className="text-xs font-bold text-foreground">{role}</p>
-                                        <p className="text-[9px] text-muted-foreground/60">Arrastra sobre otro color para intercambiar rol</p>
+                                        <p className="text-xs font-bold text-foreground">{t(`palette.roles.${role}`, { defaultValue: role })}</p>
+                                        <p className="text-[9px] text-muted-foreground/60">{t('palette.dragHint', { defaultValue: 'Drag onto another color to swap roles' })}</p>
                                     </TooltipContent>
                                 </Tooltip>
                                 <div className={cn("mt-2 text-center", addLeftSpacingForAccents && "ml-2")}>
-                                    <span className="text-xs text-muted-foreground">{role === 'Acento' ? 'Acento' : role}</span>
+                                    <span className="text-xs text-muted-foreground">{t(`palette.roles.${role}`, { defaultValue: role })}</span>
                                 </div>
                             </div>
                         )})}

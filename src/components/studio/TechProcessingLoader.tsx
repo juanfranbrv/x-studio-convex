@@ -1,5 +1,6 @@
 'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { motion } from 'framer-motion'
 
 export function TechProcessingLoader() {
@@ -11,6 +12,7 @@ export function TechProcessingLoader() {
 
             {/* Central Entity: Abstract "Thinking" Particles */}
             <div className="relative flex items-center justify-center gap-2">
+                <Loader2 className="absolute -top-14 h-10 w-10 text-white/90" />
                 {[0, 1, 2].map((i) => (
                     <motion.div
                         key={i}

@@ -1,0 +1,42 @@
+{
+  "maintenanceToastTitle": "Module under construction",
+  "maintenanceToastBody": "The video module is not operational yet. We're finishing it.",
+  "missingPromptTitle": "Error",
+  "missingPromptBody": "Please enter a prompt to generate the video.",
+  "starting": "Starting generation...",
+  "processing": "Processing with Veo 3.1...",
+  "temporarilyUnavailable": "Video module temporarily unavailable.",
+  "generationError": "The video could not be generated.",
+  "controls": {
+    "maintenanceBanner": "Module under construction: temporarily unavailable",
+    "referenceImage": "Reference image (optional)",
+    "startEndFrames": "Start and end frames",
+    "clickOrDrop": "Click or drop an image here",
+    "imageFormats": "JPG, JPEG, or PNG up to 10 MB",
+    "startFrame": "Start frame",
+    "endFrame": "End frame",
+    "startEndMode": "Start-end frame mode",
+    "prompt": "Prompt",
+    "promptPlaceholder": "Please describe the video content",
+    "preset": "Preset",
+    "promptImprove": "Improve prompt",
+    "aspectRatio": "Output aspect ratio",
+    "quality": "Quality",
+    "duration": "Duration",
+    "underConstruction": "Under construction",
+    "generate": "Generate"
+  },
+  "canvas": {
+    "shareTitle": "Video generated with Veo 3.1",
+    "bannerTitle": "Video module under construction",
+    "bannerBody": "Video generation is temporarily disabled and not operational yet.",
+    "emptyTitleMaintenance": "Module temporarily unavailable",
+    "emptyBodyMaintenance": "We're working on this feature. It will be back soon.",
+    "emptyTitleReady": "Your video will appear here",
+    "emptyBodyReady": "Describe your video and press \"Generate\" to create AI content",
+    "generating": "Generating video with Veo 3.1...",
+    "longWait": "This can take a few minutes",
+    "download": "Download",
+    "share": "Share"
+  }
+}

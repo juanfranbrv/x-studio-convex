@@ -9,6 +9,7 @@ import {
     getLayoutRatingStats,
     type LayoutRatingStoreEntry,
 } from '@/lib/layout-ratings'
+import { useTranslation } from 'react-i18next'
 
 
 interface LayoutSelectorProps {
@@ -32,6 +33,7 @@ export function LayoutSelector({
     isAdmin = false,
     layoutRatings = {},
 }: LayoutSelectorProps) {
+    const { t } = useTranslation('common')
     if (availableLayouts.length === 0) {
         return null
     }
@@ -45,17 +47,17 @@ export function LayoutSelector({
 
     const textZoneLabel = (zone: LayoutOption['textZone']) => {
         switch (zone) {
-            case 'top': return 'zona superior'
-            case 'bottom': return 'zona inferior'
-            case 'left': return 'columna izquierda'
-            case 'right': return 'columna derecha'
-            case 'center': return 'área central'
-            case 'top-left': return 'esquina superior izquierda'
-            case 'top-right': return 'esquina superior derecha'
-            case 'bottom-left': return 'esquina inferior izquierda'
-            case 'bottom-right': return 'esquina inferior derecha'
-            case 'overlay': return 'superposición sobre imagen'
-            default: return 'zona principal'
+            case 'top': return t('layoutSelector.zones.top', { defaultValue: 'top area' })
+            case 'bottom': return t('layoutSelector.zones.bottom', { defaultValue: 'bottom area' })
+            case 'left': return t('layoutSelector.zones.left', { defaultValue: 'left column' })
+            case 'right': return t('layoutSelector.zones.right', { defaultValue: 'right column' })
+            case 'center': return t('layoutSelector.zones.center', { defaultValue: 'central area' })
+            case 'top-left': return t('layoutSelector.zones.topLeft', { defaultValue: 'top-left corner' })
+            case 'top-right': return t('layoutSelector.zones.topRight', { defaultValue: 'top-right corner' })
+            case 'bottom-left': return t('layoutSelector.zones.bottomLeft', { defaultValue: 'bottom-left corner' })
+            case 'bottom-right': return t('layoutSelector.zones.bottomRight', { defaultValue: 'bottom-right corner' })
+            case 'overlay': return t('layoutSelector.zones.overlay', { defaultValue: 'image overlay' })
+            default: return t('layoutSelector.zones.default', { defaultValue: 'main area' })
         }
     }
 
@@ -65,11 +67,14 @@ export function LayoutSelector({
         if (structureMatch?.[1]) {
             return cleanSentence(structureMatch[1])
         }
-        return cleanSentence(`Distribución pensada para lectura clara en ${textZoneLabel(layout.textZone)}`)
+        return cleanSentence(t('layoutSelector.structuralFallback', {
+            defaultValue: 'Layout designed for clear reading in {{zone}}',
+            zone: textZoneLabel(layout.textZone)
+        }))
     }
 
     const buildTooltip = (layout: LayoutOption) => {
-        const line1 = cleanSentence(layout.description) || cleanSentence('Diseño de lectura visual')
+        const line1 = cleanSentence(layout.description) || cleanSentence(t('layoutSelector.visualReadingDesign', { defaultValue: 'Visual reading layout' }))
         const line2 = extractStructuralLine(layout)
         return [line1, line2].join('\n')
     }
@@ -78,7 +83,7 @@ export function LayoutSelector({
         <div className="grid grid-cols-3 gap-2">
             {layouts.map(layout => {
                 const isSelected = selectedLayout === layout.id
-                const title = layout.name || 'Diseño'
+                const title = layout.name || t('layoutSelector.defaultTitle', { defaultValue: 'Layout' })
                 // description already contains the fallback to structuralPrompt and cleaning logic
                 const description = cleanSentence(layout.description) || extractStructuralLine(layout)
 
@@ -126,7 +131,7 @@ export function LayoutSelector({
                         )}
                         {opts?.recommended && (
                             <span className="absolute top-1.5 left-1.5 z-10 rounded-full bg-primary/90 text-primary-foreground text-[8px] px-1.5 py-0.5 uppercase tracking-wide font-semibold">
-                                Recom.
+                                {t('layoutSelector.recommendedBadge', { defaultValue: 'Rec.' })}
                             </span>
                         )}
                         <div className={cn(
@@ -212,7 +217,7 @@ export function LayoutSelector({
                 <>
                     <div className="space-y-2">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/80">
-                            Recomendadas para tu intención
+                            {t('layoutSelector.recommendedForIntent', { defaultValue: 'Recommended for your intent' })}
                         </p>
                         <div className="rounded-xl border border-primary/20 bg-primary/5 p-2">
                             {renderGrid(recommendedLayouts || [], { recommended: true })}
@@ -220,7 +225,7 @@ export function LayoutSelector({
                     </div>
                     <div className="space-y-2">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Todos los diseños
+                            {t('layoutSelector.allDesigns', { defaultValue: 'All layouts' })}
                         </p>
                         <div className="rounded-xl border border-border/60 bg-background/40 p-2">
                             {renderGrid(allLayouts || [])}

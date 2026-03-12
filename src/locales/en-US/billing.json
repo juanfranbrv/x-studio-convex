@@ -1,0 +1,143 @@
+{
+  "pricing": {
+    "eyebrow": "Direct credits, no recurring lock-in",
+    "title": "Top up Adstudio without the usual subscription theatre",
+    "body": "Buy credits only when you actually need them. Your account keeps the full trail: balance, purchases, receipts, and usage.",
+    "ctaPrimary": "Buy credits",
+    "ctaSecondary": "Open billing",
+    "contact": "Talk to us",
+    "backHome": "Back home",
+    "trust": {
+      "title1": "Stripe-hosted checkout",
+      "body1": "Secure payment flow with 3D Secure support and no PCI burden inside the app.",
+      "title2": "Credits never expire",
+      "body2": "No monthly reset and no surprise countdown sitting over your shoulder.",
+      "title3": "Receipts and usage history",
+      "body3": "Every purchase and credit movement stays visible in your account."
+    },
+    "faqTitle": "The useful bits, minus the fog",
+    "faq": {
+      "q1": "Do credits expire?",
+      "a1": "No. Credits accumulate and never expire.",
+      "q2": "Is this a subscription?",
+      "a2": "No. These are one-time packs.",
+      "q3": "Can I download receipts or invoices?",
+      "a3": "Yes. From your billing area and, when available, from Stripe's portal."
+    }
+  },
+  "packs": {
+    "trail-10": {
+      "name": "Trail",
+      "badge": "Try it",
+      "description": "The light entry point for testing the real flow with real money and almost no drama.",
+      "tagline": "10 credits to feel the product",
+      "cta": "Start with Trail"
+    },
+    "studio-30": {
+      "name": "Studio",
+      "badge": "Balanced",
+      "description": "The natural pack for recurring work when you do not want to run out halfway through the second session.",
+      "tagline": "30 credits to iterate properly",
+      "cta": "Choose Studio"
+    },
+    "orbit-100": {
+      "name": "Orbit",
+      "badge": "Serious reserve",
+      "description": "A wider reserve for longer sessions, demanding teams, or several brands asking for attention at once.",
+      "tagline": "100 credits to work without staring at the counter",
+      "cta": "Choose Orbit"
+    }
+  },
+  "account": {
+    "title": "Billing and credits",
+    "description": "Your balance, purchases, and the full economic trail in one place.",
+    "summary": {
+      "credits": "Available balance",
+      "latestPack": "Latest pack",
+      "totalPurchased": "Credits purchased",
+      "totalSpent": "Credits spent",
+      "noPack": "You have not bought any pack yet"
+    },
+    "actions": {
+      "buyCredits": "Buy credits",
+      "openPortal": "Manage payments",
+      "openPortalHelp": "Open Stripe to review receipts and saved payment methods.",
+      "openingPortal": "Opening portal...",
+      "viewPricing": "View pricing"
+    },
+    "history": {
+      "purchasesTitle": "Purchases",
+      "ledgerTitle": "Credit activity",
+      "headers": {
+        "pack": "Pack",
+        "status": "Status",
+        "credits": "Credits",
+        "amount": "Amount",
+        "links": "Links",
+        "type": "Type",
+        "balance": "Balance",
+        "date": "Date"
+      },
+      "emptyPurchases": "There are no purchases yet.",
+      "emptyLedger": "There is no credit activity yet.",
+      "receipt": "Receipt",
+      "invoice": "Invoice",
+      "status": {
+        "pending": "Pending",
+        "completed": "Completed",
+        "failed": "Failed",
+        "refunded": "Refunded",
+        "expired": "Expired"
+      }
+    },
+    "success": {
+      "title": "Payment confirmed",
+      "description": "The credits are already in your account. You can go back to work or top up again.",
+      "loading": "Confirming payment with Stripe...",
+      "error": "We could not confirm the payment yet.",
+      "goBilling": "Go to billing",
+      "goImage": "Back to image"
+    }
+  },
+  "checkout": {
+    "redirecting": "Redirecting to Stripe...",
+    "errorTitle": "Checkout could not be started",
+    "portalErrorTitle": "The payment portal could not be opened",
+    "packMissing": "The requested pack does not exist or is no longer active."
+  },
+  "admin": {
+    "tab": "Billing",
+    "title": "Packs and payments",
+    "description": "Control packs, Stripe sync, and track real purchases.",
+    "stats": {
+      "revenue": "Revenue",
+      "purchases": "Purchases",
+      "customers": "Paying customers",
+      "creditsSold": "Credits sold"
+    },
+    "packsTitle": "Pack catalog",
+    "purchasesTitle": "Recent purchases",
+    "headers": {
+      "pack": "Pack",
+      "status": "Status",
+      "credits": "Credits",
+      "amount": "Amount",
+      "date": "Date"
+    },
+    "sync": "Sync Stripe",
+    "syncing": "Syncing...",
+    "synced": "Stripe synced",
+    "empty": "There are no purchases yet.",
+    "active": "Active",
+    "inactive": "Off",
+    "stripePending": "Stripe pending"
+  },
+  "labels": {
+    "creditsIncluded": "{{count}} credits included",
+    "portalPacks": "Available top-ups"
+  },
+  "nav": {
+    "pricing": "Pricing",
+    "billing": "Billing"
+  }
+}

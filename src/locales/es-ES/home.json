@@ -1,0 +1,49 @@
+{
+  "pending": {
+    "titlePending": "Solicitud pendiente",
+    "titleRejected": "Acceso denegado",
+    "bodyPending": "Tu solicitud para {{email}} esta siendo revisada por nuestro equipo.",
+    "bodyRejected": "Tu solicitud no fue aprobada en esta ocasion.",
+    "backHome": "Volver a la pagina principal"
+  },
+  "landing": {
+    "privateBeta": "Beta privada",
+    "login": "Entrar",
+    "heroTitleLine1": "Tu director creativo",
+    "heroTitleHighlight": "con inteligencia de marca",
+    "heroBody": "Genera assets de marketing que respetan tu ADN sin esfuerzo. Coherencia visual total impulsada por un motor inteligente.",
+    "accessConfirmed": "Acceso confirmado",
+    "accessReady": "Tu cuenta esta lista para empezar a crear assets de impacto.",
+    "enterStudio": "Entrar al estudio",
+    "joinBeta": "Unete a la beta privada",
+    "joinBetaBody": "Acceso exclusivo y limitado para creadores y marcas.",
+    "onList": "Ya estas en la lista",
+    "onListBody": "Te avisaremos en cuanto tu acceso este habilitado.",
+    "requestInvite": "Solicitar invitacion",
+    "alreadyHaveAccount": "Ya tengo cuenta, llevame al estudio.",
+    "requestError": "Error al enviar solicitud",
+    "registrationCompleted": "Registro completado"
+  },
+  "features": {
+    "brandDNA": {
+      "title": "Brand DNA",
+      "description": "Define tu identidad una vez y deja que la IA se encargue de aplicarla en cada pixel."
+    },
+    "multiBrand": {
+      "title": "Multi-Brand",
+      "description": "Gestiona universos visuales distintos con coherencia absoluta desde un solo lugar."
+    },
+    "visualIteration": {
+      "title": "Visual Iteration",
+      "description": "Edicion semantica y espacial. Habla con la IA como si fuera tu disenador senior."
+    }
+  },
+  "footer": {
+    "copyright": "© 2024 Adstudio. Powered by Creative AI.",
+    "privacy": "Privacidad",
+    "terms": "Terminos",
+    "cookies": "Cookies",
+    "contact": "Contacto",
+    "pricing": "Pricing"
+  }
+}

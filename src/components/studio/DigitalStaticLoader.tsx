@@ -1,30 +1,9 @@
 'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { memo, useEffect, useMemo, useState } from 'react'
-
-const GENERATION_MESSAGES = [
-    'Analizando composici\u00f3n...',
-    'Mezclando estilos...',
-    'Ajustando paleta crom\u00e1tica...',
-    'Sintetizando p\u00edxeles...',
-    'Refinando detalles...',
-    'Componiendo elementos...',
-    'Calibrando luz y sombras...',
-    'Fusionando conceptos...',
-    'Materializando visi\u00f3n...',
-    'Procesando ADN de marca...',
-    'Horneando creatividad...',
-    'Destilando inspiraci\u00f3n...',
-    'Tejiendo narrativa visual...',
-]
-
-const PHASE_LABELS = [
-    'Preparando escena',
-    'Construyendo capas',
-    'Sintetizando slides',
-    'Pulido final',
-]
+import { useTranslation } from 'react-i18next'
 
 const makeRng = (seed: number) => {
     let t = seed + 0x6D2B79F5
@@ -42,32 +21,58 @@ type DigitalStaticLoaderProps = {
 }
 
 export const DigitalStaticLoader = memo(({ variant = 0, mode = 'classic', seed }: DigitalStaticLoaderProps) => {
+    const { t } = useTranslation('common')
     const [messageIndex, setMessageIndex] = useState(0)
     const variantIndex = Math.abs(variant) % 4
     const shouldReduceMotion = useReducedMotion()
     const resolvedSeed = useMemo(() => (Number.isFinite(seed) ? (seed as number) : Date.now()), [seed])
+
+    const generationMessages = useMemo(() => ([
+        t('loader.messages.analyzingComposition', { defaultValue: 'Analyzing composition...' }),
+        t('loader.messages.mixingStyles', { defaultValue: 'Mixing styles...' }),
+        t('loader.messages.adjustingPalette', { defaultValue: 'Adjusting color palette...' }),
+        t('loader.messages.synthesizingPixels', { defaultValue: 'Synthesizing pixels...' }),
+        t('loader.messages.refiningDetails', { defaultValue: 'Refining details...' }),
+        t('loader.messages.composingElements', { defaultValue: 'Composing elements...' }),
+        t('loader.messages.calibratingLight', { defaultValue: 'Calibrating light and shadows...' }),
+        t('loader.messages.fusingConcepts', { defaultValue: 'Fusing concepts...' }),
+        t('loader.messages.materializingVision', { defaultValue: 'Materializing vision...' }),
+        t('loader.messages.processingBrandDna', { defaultValue: 'Processing brand DNA...' }),
+        t('loader.messages.bakingCreativity', { defaultValue: 'Baking creativity...' }),
+        t('loader.messages.distillingInspiration', { defaultValue: 'Distilling inspiration...' }),
+        t('loader.messages.weavingNarrative', { defaultValue: 'Weaving visual narrative...' }),
+    ]), [t])
+
+    const phaseLabels = useMemo(() => ([
+        t('loader.phases.preparingScene', { defaultValue: 'Preparing scene' }),
+        t('loader.phases.buildingLayers', { defaultValue: 'Building layers' }),
+        t('loader.phases.synthesizingSlides', { defaultValue: 'Synthesizing slides' }),
+        t('loader.phases.finalPolish', { defaultValue: 'Final polish' }),
+    ]), [t])
+
     const messageOrder = useMemo(() => {
         const rng = makeRng(resolvedSeed + 101)
-        const copy = [...GENERATION_MESSAGES]
+        const copy = [...generationMessages]
         for (let i = copy.length - 1; i > 0; i--) {
             const j = Math.floor(rng() * (i + 1))
             ;[copy[i], copy[j]] = [copy[j], copy[i]]
         }
         return copy
-    }, [resolvedSeed])
+    }, [generationMessages, resolvedSeed])
 
     const initialPhase = useMemo(() => {
         const rng = makeRng(resolvedSeed)
-        return Math.floor(rng() * PHASE_LABELS.length)
-    }, [resolvedSeed])
+        return Math.floor(rng() * phaseLabels.length)
+    }, [phaseLabels, resolvedSeed])
+
     const [phaseIndex, setPhaseIndex] = useState(initialPhase)
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setMessageIndex(prev => (prev + 1) % GENERATION_MESSAGES.length)
+            setMessageIndex(prev => (prev + 1) % generationMessages.length)
         }, 2200)
         return () => clearInterval(interval)
-    }, [])
+    }, [generationMessages.length])
 
     useEffect(() => {
         setPhaseIndex(initialPhase)
@@ -75,10 +80,10 @@ export const DigitalStaticLoader = memo(({ variant = 0, mode = 'classic', seed }
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setPhaseIndex(prev => (prev + 1) % PHASE_LABELS.length)
+            setPhaseIndex(prev => (prev + 1) % phaseLabels.length)
         }, 6000)
         return () => clearInterval(interval)
-    }, [])
+    }, [phaseLabels.length])
 
     const orbits = useMemo(() => {
         const rng = makeRng(resolvedSeed + 51)
@@ -224,6 +229,7 @@ export const DigitalStaticLoader = memo(({ variant = 0, mode = 'classic', seed }
                     </div>
                     {mode === 'spectacle' && (
                         <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="h-10 w-10 text-primary/90" />
                             <div className="flex items-center gap-2">
                                 <motion.div
                                     animate={{ scale: [0.9, 1.05, 0.9], opacity: [0.4, 0.9, 0.4] }}
@@ -231,7 +237,7 @@ export const DigitalStaticLoader = memo(({ variant = 0, mode = 'classic', seed }
                                     className="h-2 w-2 rounded-full bg-primary/70"
                                 />
                                 <span className="text-xs font-semibold uppercase tracking-[0.3em] text-foreground/80">
-                                    Generando
+                                    {t('loader.generating', { defaultValue: 'Generating' })}
                                 </span>
                                 <motion.div
                                     animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.9, 0.4] }}
@@ -241,7 +247,7 @@ export const DigitalStaticLoader = memo(({ variant = 0, mode = 'classic', seed }
                             </div>
                             <div className="flex flex-col items-center gap-2">
                                 <span className="text-[10px] uppercase tracking-[0.35em] text-foreground/60">
-                                    {PHASE_LABELS[phaseIndex]}
+                                    {phaseLabels[phaseIndex]}
                                 </span>
                                 <div className="h-1.5 w-40 rounded-full bg-white/10 overflow-hidden">
                                     <motion.div

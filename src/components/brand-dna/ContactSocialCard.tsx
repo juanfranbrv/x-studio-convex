@@ -6,6 +6,7 @@ import { Mail, Facebook, Instagram, Twitter, Linkedin, Youtube, Link as LinkIcon
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslation } from 'react-i18next';
 
 interface ContactSocialCardProps {
     socialLinks?: { platform: string; url: string; username?: string }[];
@@ -26,6 +27,7 @@ const platformIcons: Record<string, any> = {
 };
 
 export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], addresses = [], onUpdate }: ContactSocialCardProps) {
+    const { t } = useTranslation('brandKit');
     const [localSocials, setLocalSocials] = useState(socialLinks);
     const [localEmails, setLocalEmails] = useState(emails);
     const [localPhones, setLocalPhones] = useState(phones);
@@ -129,12 +131,12 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
     );
 
     const FieldRow = ({ children, onDelete }: { children: React.ReactNode; onDelete: () => void }) => (
-        <div className="group relative flex items-center gap-2 py-1">
+        <div className="group relative flex items-center gap-2 py-1.5">
             <div className="flex-1">{children}</div>
             <button
-                className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-500 md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100"
                 onClick={onDelete}
-                aria-label="Eliminar"
+                aria-label={t('contact.deleteAria', { defaultValue: 'Delete' })}
                 type="button"
             >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -148,21 +150,21 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground font-bold">
                     <LinkIcon className="w-5 h-5 text-primary" />
-                    Canales y Contacto Directo
+                    {t('contact.title', { defaultValue: 'Channels and direct contact' })}
                 </CardTitle>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Información de contacto oficial detectada en la web</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{t('contact.subtitle', { defaultValue: 'Official contact information detected on the website' })}</p>
             </CardHeader>
             <CardContent className="space-y-6 pt-2 pb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                        <SectionTitle icon={Mail} title="Correos Electrónicos" />
+                        <SectionTitle icon={Mail} title={t('contact.emailsTitle', { defaultValue: 'Email addresses' })} />
                         <div className="space-y-1">
                             {localEmails.map((email, idx) => (
                                 <FieldRow key={`email-${idx}`} onDelete={() => handleDelete('email', idx)}>
                                     <Input
                                         value={email}
                                         onChange={(e) => updateEmailAt(idx, e.target.value)}
-                                        placeholder="correo@empresa.com"
+                                        placeholder={t('contact.emailPlaceholder', { defaultValue: 'email@company.com' })}
                                         className="h-9 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
                                     />
                                 </FieldRow>
@@ -175,13 +177,13 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                                 type="button"
                             >
                                 <Plus className="w-3.5 h-3.5 mr-1.5" />
-                                Añadir Email
+                                {t('contact.addEmail', { defaultValue: 'Add email' })}
                             </Button>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <SectionTitle icon={Phone} title="Teléfonos de Contacto" />
+                        <SectionTitle icon={Phone} title={t('contact.phonesTitle', { defaultValue: 'Contact phone numbers' })} />
                         <div className="space-y-1">
                             {localPhones.map((phone, idx) => (
                                 <FieldRow key={`phone-${idx}`} onDelete={() => handleDelete('phone', idx)}>
@@ -201,21 +203,21 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                                 type="button"
                             >
                                 <Plus className="w-3.5 h-3.5 mr-1.5" />
-                                Añadir Teléfono
+                                {t('contact.addPhone', { defaultValue: 'Add phone' })}
                             </Button>
                         </div>
                     </div>
                 </div>
 
                 <div className="space-y-4 pt-2">
-                    <SectionTitle icon={MapPin} title="Direcciones Físicas" />
+                    <SectionTitle icon={MapPin} title={t('contact.addressesTitle', { defaultValue: 'Physical addresses' })} />
                     <div className="space-y-1">
                         {localAddresses.map((address, idx) => (
                             <FieldRow key={`address-${idx}`} onDelete={() => handleDelete('address', idx)}>
                                 <Input
                                     value={address}
                                     onChange={(e) => updateAddressAt(idx, e.target.value)}
-                                    placeholder="Calle, número, ciudad, código postal"
+                                    placeholder={t('contact.addressPlaceholder', { defaultValue: 'Street, number, city, postal code' })}
                                     className="h-9 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
                                 />
                             </FieldRow>
@@ -228,13 +230,13 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                             type="button"
                         >
                             <Plus className="w-3.5 h-3.5 mr-1.5" />
-                            Añadir Dirección
+                            {t('contact.addAddress', { defaultValue: 'Add address' })}
                         </Button>
                     </div>
                 </div>
 
                 <div className="space-y-4 pt-2">
-                    <SectionTitle icon={Globe} title="Presencia en Redes Sociales" />
+                    <SectionTitle icon={Globe} title={t('contact.socialTitle', { defaultValue: 'Social media presence' })} />
                     <div className="flex flex-col gap-1">
                         {localSocials.map((social, idx) => {
                             const Icon = platformIcons[(social.platform || 'other').toLowerCase()] || LinkIcon;
@@ -271,7 +273,7 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                                         <Input
                                             value={social.username || ''}
                                             onChange={(e) => updateSocialAt(idx, { username: e.target.value })}
-                                            placeholder="@usuario"
+                                            placeholder={t('contact.usernamePlaceholder', { defaultValue: '@username' })}
                                             className="h-9 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
                                         />
                                     </div>
@@ -286,7 +288,7 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                             type="button"
                         >
                             <Plus className="w-3.5 h-3.5 mr-1.5" />
-                            Añadir Red Social
+                            {t('contact.addSocial', { defaultValue: 'Add social profile' })}
                         </Button>
                     </div>
                 </div>

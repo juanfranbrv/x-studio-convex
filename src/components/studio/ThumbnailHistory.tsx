@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface Generation {
     id: string
@@ -29,6 +30,7 @@ export function ThumbnailHistory({
     currentImageUrl,
     onSelectGeneration,
 }: ThumbnailHistoryProps) {
+    const { t } = useTranslation('common')
     const [page, setPage] = useState(1)
 
     const totalPages = Math.max(1, Math.ceil(generations.length / ITEMS_PER_PAGE))
@@ -51,7 +53,10 @@ export function ThumbnailHistory({
         }
         const layoutSkillVersion = payload.layoutSkillVersion as string | undefined
         if (layoutSkillVersion) {
-            return `diseños v${layoutSkillVersion}`
+            return t('thumbnailHistory.layoutsVersion', {
+                defaultValue: 'Layouts v{{version}}',
+                version: layoutSkillVersion,
+            })
         }
         return null
     }
@@ -60,7 +65,7 @@ export function ThumbnailHistory({
         <div className="glass-card p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                    Variaciones de la sesion
+                    {t('preview.sessionVariations')}
                 </p>
                 {totalPages > 1 ? (
                     <div className="flex items-center gap-1">
@@ -69,7 +74,7 @@ export function ThumbnailHistory({
                             className="inline-flex h-6 w-6 items-center justify-center rounded border border-border/70 text-muted-foreground transition hover:bg-muted disabled:opacity-40"
                             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                             disabled={safePage <= 1}
-                            aria-label="Pagina anterior"
+                            aria-label={t('preview.previousPage')}
                         >
                             <ChevronLeft className="h-3.5 w-3.5" />
                         </button>
@@ -81,7 +86,7 @@ export function ThumbnailHistory({
                             className="inline-flex h-6 w-6 items-center justify-center rounded border border-border/70 text-muted-foreground transition hover:bg-muted disabled:opacity-40"
                             onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                             disabled={safePage >= totalPages}
-                            aria-label="Pagina siguiente"
+                            aria-label={t('preview.nextPage')}
                         >
                             <ChevronRight className="h-3.5 w-3.5" />
                         </button>

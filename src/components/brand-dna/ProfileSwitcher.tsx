@@ -1,7 +1,10 @@
-'use client';
+﻿'use client'
+
+import { Loader2 } from '@/components/ui/spinner'
+;
 
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Plus, Check, Globe, Building2, Loader2 } from 'lucide-react';
+import { ChevronDown, Plus, Check, Globe, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { BrandKitSummary } from '@/lib/brand-types';
@@ -55,7 +58,7 @@ export function ProfileSwitcher({
                 )}
             >
                 {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    <Loader2 className="w-5 h-5 text-muted-foreground" />
                 ) : activeProfile?.favicon_url ? (
                     <img
                         src={activeProfile.favicon_url}
@@ -153,3 +156,5 @@ export function ProfileSwitcher({
         </div>
     );
 }
+
+

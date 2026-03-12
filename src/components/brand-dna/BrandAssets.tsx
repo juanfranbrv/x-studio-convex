@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ARTISTIC_STYLE_CATALOG, ARTISTIC_STYLE_GROUPS } from '@/lib/creation-flow-types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useTranslation } from 'react-i18next';
 
 import { Trash2, Plus, Sparkles, Type, MessageCircle, Quote } from 'lucide-react';
 
@@ -40,6 +41,7 @@ export function BrandAssets({
     onAddTone,
     onRemoveTone,
 }: BrandAssetsProps) {
+    const { t } = useTranslation('brandKit');
     const [openSuggestionIndex, setOpenSuggestionIndex] = useState<number | null>(null);
 
     const groupedSuggestions = useMemo(() => {
@@ -68,19 +70,19 @@ export function BrandAssets({
         placeholder: string;
         right?: React.ReactNode;
     }) => (
-        <div className="group relative flex items-center gap-2 py-1">
+        <div className="group relative flex items-center gap-2 py-1.5">
             <Input
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
-                className="h-9 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
+                className="h-10 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
             />
             {right}
             <button
-                className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-500 md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100"
                 onClick={onDelete}
                 type="button"
-                aria-label="Eliminar"
+                aria-label={t('assets.deleteAria', { defaultValue: 'Delete' })}
             >
                 <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -93,7 +95,7 @@ export function BrandAssets({
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Quote className="w-5 h-5 text-primary" />
-                        Eslogan
+                        {t('assets.taglineTitle', { defaultValue: 'Tagline' })}
                     </CardTitle>
                 </CardHeader>
             <CardContent>
@@ -102,7 +104,7 @@ export function BrandAssets({
                             value={tagline}
                             onChange={(e) => onUpdateTagline(e.target.value)}
                             className="h-10 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
-                            placeholder="Escribe el eslogan de marca"
+                            placeholder={t('assets.taglinePlaceholder', { defaultValue: 'Write the brand tagline' })}
                         />
                     </div>
                 </CardContent>
@@ -112,7 +114,7 @@ export function BrandAssets({
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Sparkles className="w-5 h-5 text-primary" />
-                        Valores
+                        {t('assets.valuesTitle', { defaultValue: 'Values' })}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1">
@@ -122,12 +124,12 @@ export function BrandAssets({
                             value={v}
                             onChange={(val) => onUpdateValue(i, val)}
                             onDelete={() => onRemoveValue(i)}
-                            placeholder="Valor de marca"
+                            placeholder={t('assets.valuePlaceholder', { defaultValue: 'Brand value' })}
                         />
                     ))}
-                    <Button variant="outline" size="sm" className="w-full border-dashed border-border hover:border-primary hover:bg-primary/5 h-8 text-xs" onClick={onAddValue} type="button">
+                    <Button variant="outline" size="sm" className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5" onClick={onAddValue} type="button">
                         <Plus className="w-4 h-4 mr-1" />
-                        Añadir Valor
+                        {t('assets.addValue', { defaultValue: 'Add value' })}
                     </Button>
                 </CardContent>
             </Card>
@@ -136,9 +138,9 @@ export function BrandAssets({
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Type className="w-5 h-5 text-primary" />
-                        Estilos Visuales
+                        {t('assets.visualStylesTitle', { defaultValue: 'Visual styles' })}
                     </CardTitle>
-                    <p className="text-xs text-muted-foreground">Para generación de imágenes en el panel Imagen</p>
+                    <p className="text-xs text-muted-foreground">{t('assets.visualStylesDescription', { defaultValue: 'Used for image generation in the Image module.' })}</p>
                 </CardHeader>
                 <CardContent className="space-y-1">
                     {aesthetic.map((v, i) => (
@@ -147,16 +149,16 @@ export function BrandAssets({
                             value={v}
                             onChange={(val) => onUpdateAesthetic(i, val)}
                             onDelete={() => onRemoveAesthetic(i)}
-                            placeholder="Estilo visual"
+                            placeholder={t('assets.visualStylePlaceholder', { defaultValue: 'Visual style' })}
                             right={
                                 <Popover open={openSuggestionIndex === i} onOpenChange={(open) => setOpenSuggestionIndex(open ? i : null)}>
                                     <PopoverTrigger asChild>
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="h-8 w-8 p-0 hover:bg-primary/10"
+                                            className="h-9 w-9 p-0 hover:bg-primary/10"
                                             type="button"
-                                            title="Sugerencias de estilos"
+                                            title={t('assets.styleSuggestionsTitle', { defaultValue: 'Style suggestions' })}
                                         >
                                             <Sparkles className="w-3.5 h-3.5" />
                                         </Button>
@@ -192,9 +194,9 @@ export function BrandAssets({
                             }
                         />
                     ))}
-                    <Button variant="outline" size="sm" className="w-full border-dashed border-border hover:border-primary hover:bg-primary/5 h-8 text-xs" onClick={onAddAesthetic} type="button">
+                    <Button variant="outline" size="sm" className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5" onClick={onAddAesthetic} type="button">
                         <Plus className="w-4 h-4 mr-1" />
-                        Añadir Estilo
+                        {t('assets.addStyle', { defaultValue: 'Add style' })}
                     </Button>
                 </CardContent>
             </Card>
@@ -203,7 +205,7 @@ export function BrandAssets({
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <MessageCircle className="w-5 h-5 text-primary" />
-                        Tono de voz
+                        {t('assets.toneTitle', { defaultValue: 'Tone of voice' })}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1">
@@ -213,12 +215,12 @@ export function BrandAssets({
                             value={v}
                             onChange={(val) => onUpdateTone(i, val)}
                             onDelete={() => onRemoveTone(i)}
-                            placeholder="Tono de voz"
+                            placeholder={t('assets.tonePlaceholder', { defaultValue: 'Tone of voice' })}
                         />
                     ))}
-                    <Button variant="outline" size="sm" className="w-full border-dashed border-border hover:border-primary hover:bg-primary/5 h-8 text-xs" onClick={onAddTone} type="button">
+                    <Button variant="outline" size="sm" className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5" onClick={onAddTone} type="button">
                         <Plus className="w-4 h-4 mr-1" />
-                        Añadir Tono
+                        {t('assets.addTone', { defaultValue: 'Add tone' })}
                     </Button>
                 </CardContent>
             </Card>

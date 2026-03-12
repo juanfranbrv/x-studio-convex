@@ -7210,3 +7210,78 @@
     "brand_context": "Rosella de Rubielos es un alojamiento rural de alquiler íntegro ubicado a 962 metros de altitud en Fuentes de Rubielos, Teruel. La propiedad destaca por su construcción en piedra local y una distribución pensada para grupos de 10 a 12 personas, contando con cinco habitaciones temáticas (Azul, Columbia, Java, Verde y Morada), tres baños completos, calefacción central, chimenea y un salón de juegos con billar. Su ubicación estratégica facilita el acceso a actividades de turismo activo como esquí en Javalambre y Valdelinares, senderismo, BTT y visitas culturales a pueblos históricos de la Comarca de Gúdar-Javalambre como Rubielos de Mora y Albarracín."
   }
 }
+[2026-03-11T22:14:24.946Z] 📄 HTML cargado. Longitud: 23531 caracteres.
+[2026-03-11T22:14:24.947Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-11T22:14:24.948Z] 🔤 Fuentes iniciales extraídas: 1 ["Poppins"]
+[2026-03-11T22:14:24.951Z] 🔍 Favicon encontrado: https://www.google.com/s2/favicons?domain=roselladerubielos.com&sz=256 (0 candidatos)
+[2026-03-11T22:14:24.953Z] 📱 Social links found: 0, Emails: 1, Phones: 2
+[2026-03-11T22:14:24.971Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-11T22:14:24.972Z]    - SVGs en header encontrados: 0
+[2026-03-11T22:14:24.973Z]    - IMGs en header encontrados: 1
+[2026-03-11T22:14:24.974Z]    - firstHeaderSvg.length: 0
+[2026-03-11T22:14:24.974Z] 🎯 Primera IMG en header detectada
+[2026-03-11T22:14:24.975Z] 🎯 BOOST: IMG existente en header potenciada (+300)
+[2026-03-11T22:14:24.976Z] 🖼️ Logo candidates encontrados: 1 (Top score: 460)
+[2026-03-11T22:14:24.977Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-11T22:14:24.977Z]    1. URL: https://roselladerubielos.com/img-struct/logo.png - Score: 460
+[2026-03-11T22:14:25.069Z] 🔍 Extracción inicial: 0 RRSS, 1 emails, 2 teléfonos, 0 direcciones
+[2026-03-11T22:14:46.248Z] ✅ Gemini Response: {
+  "brand_name": "Rosella de Rubielos",
+  "tagline": "Sencilla, acogedora y con carácter",
+  "business_overview": "Casa rural de alquiler completo ubicada en Fuentes de Rubielos, Teruel, diseñada para alojar grupos de entre 10 y 12 personas. La vivienda destaca por su construcción tradicional en piedra y su ambiente cálido, ofreciendo una estancia de excepcional calidad en plena naturaleza.",
+  "brand_values": [
+    "Tradición",
+    "Acogida",
+    "Calidad",
+    "Naturaleza",
+    "Tranquilidad"
+  ],
+  "tone_of_voice": [
+    "Cercano",
+    "Cálido",
+    "Sereno"
+  ],
+  "visual_aesthetic": [
+    "Rustic Modernism",
+    "Arts and Crafts",
+    "Vernacular Architecture"
+  ],
+  "target_audience": [
+    "Familias numerosas",
+    "Grupos de amigos",
+    "Aficionados al turismo activo"
+  ],
+  "colors": [
+    "#FF0100",
+    "#0400FF",
+    "#00ACBA",
+    "#3E4951",
+    "#F4F4F0"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Escápate a una joya de piedra en la Sierra de Gúdar",
+      "El refugio perfecto para 12 personas junto a la chimenea",
+      "Naturaleza, esquí y barbacoas en Rosella de Rubielos",
+      "Descubre el encanto rural con todas las comodidades modernas",
+      "Tu próxima reunión familiar merece un entorno único y acogedor"
+    ],
+    "visual_keywords": [
+      "Rustic Modernism",
+      "Arts and Crafts",
+      "Vintage Travel Poster",
+      "Regionalist Art",
+      "Environmental Design"
+    ],
+    "ctas": [
+      "Reserva tu estancia",
+      "Consulta nuestras tarifas",
+      "Explora la casa"
+    ],
+    "brand_context": "Rosella de Rubielos es un alojamiento de alquiler íntegro situado a 962 metros de altitud en Fuentes de Rubielos, Teruel. La propiedad destaca por su arquitectura de piedra local y una decoración cuidada que equilibra lo rústico con el confort contemporáneo. Con capacidad para grupos grandes, la casa cuenta con calefacción central, chimenea, barbacoa, salón de juegos con billar y tres baños completos. Su ubicación es estratégica para el turismo de nieve en Javalambre y Valdelinares, así como para el senderismo, BTT y visitas culturales a Rubielos de Mora, Mora de Rubielos y Albarracín."
+  }
+}

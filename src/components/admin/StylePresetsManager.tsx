@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
@@ -13,7 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { GripVertical, Loader2, Pencil, Plus, RefreshCw, Search, Trash2 } from 'lucide-react'
+import { GripVertical, Pencil, Plus, RefreshCw, Search, Trash2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 
@@ -618,11 +619,11 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
 
           <div className="flex flex-wrap items-center gap-2">
             <Button type="button" variant="outline" onClick={analyzeNewImage} disabled={!newImageDataUrl || isAnalyzing}>
-              {isAnalyzing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {isAnalyzing ? <Loader2 className="w-4 h-4 mr-2" /> : null}
               Analizar estilo
             </Button>
             <Button type="button" onClick={createNewPreset} disabled={isCreating || !newAnalysis}>
-              {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+              {isCreating ? <Loader2 className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
               Guardar estilo
             </Button>
           </div>
@@ -812,7 +813,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
                         disabled={Boolean(reanalyzingId)}
                       >
                         {reanalyzingId === String(preset._id)
-                          ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                          ? <Loader2 className="w-3.5 h-3.5 mr-1" />
                           : <RefreshCw className="w-3.5 h-3.5 mr-1" />
                         }
                         Reanalizar
@@ -833,7 +834,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
                     </div>
                     {savingId === String(preset._id) ? (
                       <div className="flex justify-end">
-                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                        <Loader2 className="w-4 h-4 text-muted-foreground" />
                       </div>
                     ) : null}
                   </div>
@@ -863,7 +864,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
 
           {!editingPreset ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4" />
               Cargando estilo...
             </div>
           ) : (
@@ -906,7 +907,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
               Cancelar
             </Button>
             <Button type="button" onClick={savePromptDraft} disabled={!editingPreset || isSavingPrompt}>
-              {isSavingPrompt ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {isSavingPrompt ? <Loader2 className="w-4 h-4 mr-2" /> : null}
               Guardar prompt
             </Button>
           </DialogFooter>
@@ -915,3 +916,5 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
     </div>
   )
 }
+
+

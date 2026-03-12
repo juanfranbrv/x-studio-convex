@@ -1,23 +1,13 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState, useCallback, useRef, useEffect } from 'react'
-import {
-    Upload,
-    Image as ImageIcon,
-    Loader2,
-    X,
-    Sparkles,
-    Palette,
-    Check,
-    Plus,
-    Wand2,
-    RefreshCw,
-    Type,
-} from 'lucide-react'
+import { Upload, Image as ImageIcon, X, Sparkles, Palette, Check, Plus, Wand2, RefreshCw, Type } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import type { VisionAnalysis, ReferenceImageRole } from '@/lib/creation-flow-types'
+import { useTranslation } from 'react-i18next'
 
 type ImageSourceMode = 'upload' | 'brandkit' | 'generate'
 
@@ -76,6 +66,7 @@ export function ImageReferenceSelector({
     mode = 'upload',
     onModeChange,
 }: ImageReferenceSelectorProps) {
+    const { t } = useTranslation('common')
     const [isDragging, setIsDragging] = useState(false)
     const [activeSuggestionIdx, setActiveSuggestionIdx] = useState(0)
     const [editedSuggestionDescriptions, setEditedSuggestionDescriptions] = useState<Record<number, string>>({})
@@ -191,10 +182,10 @@ export function ImageReferenceSelector({
     }
 
     const roleLabel = (role: ReferenceImageRole) => {
-        if (role === 'style') return 'Estilo'
-        if (role === 'style_content') return 'Estilo+Contenido'
-        if (role === 'logo') return 'Logo Aux'
-        return 'Contenido'
+        if (role === 'style') return t('imageReference.roleStyle', { defaultValue: 'Style' })
+        if (role === 'style_content') return `${t('imageReference.roleStyle', { defaultValue: 'Style' })}+${t('imageReference.roleContent', { defaultValue: 'Content' })}`
+        if (role === 'logo') return t('imageReference.roleAuxLogo', { defaultValue: 'Aux logo' })
+        return t('imageReference.roleContent', { defaultValue: 'Content' })
     }
 
     const roleChipClasses = (role: ReferenceImageRole) => {
@@ -210,7 +201,7 @@ export function ImageReferenceSelector({
                 <div className="flex items-center justify-between gap-2">
                     <div className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                         <Wand2 className="w-3.5 h-3.5" />
-                        Contenido generado con IA
+                        {t('imageReference.aiGeneratedContent', { defaultValue: 'AI-generated content' })}
                     </div>
                     <div className="flex items-center gap-2">
                         <Switch checked={isAiContentMode} onCheckedChange={handleToggleAiContentMode} />
@@ -231,7 +222,7 @@ export function ImageReferenceSelector({
                                             : 'border-border bg-background text-muted-foreground hover:text-foreground'
                                     )}
                                 >
-                                    Propuesta {idx + 1}
+                                    {t('imageReference.suggestion', { defaultValue: 'Suggestion' })} {idx + 1}
                             </button>
                         ))}
                     </div>
@@ -240,7 +231,7 @@ export function ImageReferenceSelector({
                     <>
                         <div className="rounded-xl border border-dashed border-border bg-background px-3 py-3">
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Aún no hay una propuesta visual sugerida. Pulsa Analizar para que el modelo proponga una dirección de imagen.
+                                {t('imageReference.noSuggestedDirection', { defaultValue: 'There is no suggested visual direction yet. Press Analyze so the model can propose an image direction.' })}
                             </p>
                         </div>
                     </>
@@ -260,13 +251,13 @@ export function ImageReferenceSelector({
                         }
                         setMode('generate')
                     }}
-                    placeholder="Describe la imagen que quieres generar..."
+                    placeholder={t('imageReference.descriptionPlaceholder', { defaultValue: 'Describe the image you want to generate...' })}
                     className="min-h-[96px] text-xs resize-none"
                 />
                 <div className="flex items-center justify-between px-0.5">
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
                         <Sparkles className="w-3 h-3 text-primary" />
-                        La IA generará una imagen con esta descripción
+                        {t('imageReference.aiWillGenerate', { defaultValue: 'AI will generate an image with this description' })}
                     </p>
                     {hasSuggestions && (
                         <button
@@ -283,7 +274,7 @@ export function ImageReferenceSelector({
                             }}
                             className="text-[10px] text-muted-foreground hover:text-foreground"
                         >
-                            Restaurar
+                            {t('actions.reload', { defaultValue: 'Reload' })}
                         </button>
                     )}
                     {!hasSuggestions && !!aiImageDescription.trim() && (
@@ -292,13 +283,13 @@ export function ImageReferenceSelector({
                             onClick={() => onAiDescriptionChange?.('')}
                             className="text-[10px] text-muted-foreground hover:text-foreground"
                         >
-                            Restaurar
+                            {t('actions.reload', { defaultValue: 'Reload' })}
                         </button>
                     )}
                 </div>
                 {isAiContentMode && (
                     <p className="text-[10px] text-muted-foreground">
-                        Modo IA activo: las referencias solo pueden marcarse como `Estilo` o `Logo Aux` para mantener consistencia visual en la generación.
+                        {t('imageReference.aiModeHint', { defaultValue: 'AI mode is active: references can only be tagged as `Style` or `Aux logo` to keep the generation visually consistent.' })}
                     </p>
                 )}
             </div>
@@ -308,7 +299,7 @@ export function ImageReferenceSelector({
                 <div className="flex items-center justify-between">
                     <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                         <Upload className="w-3.5 h-3.5" />
-                        Subir referencias
+                        {t('imageReference.uploadReferences', { defaultValue: 'Upload references' })}
                     </p>
                 </div>
 
@@ -333,7 +324,7 @@ export function ImageReferenceSelector({
                                             const currentRole = referenceImageRoles[img] || 'content'
                                             onReferenceRoleChange(img, getNextRole(img, currentRole))
                                         }}
-                                        title="Cambiar rol"
+                                        title={t('imageReference.changeRole', { defaultValue: 'Change role' })}
                                         className={cn('absolute top-1 left-1 text-[9px] px-2 py-0.5 rounded-full font-semibold transition-all z-10', roleChipClasses(referenceImageRoles[img] || 'content'))}
                                     >
                                         {roleLabel(referenceImageRoles[img] || 'content')}
@@ -361,24 +352,24 @@ export function ImageReferenceSelector({
                             {isDragging ? <Upload className="w-4 h-4" /> : uploadedImages.length > 0 ? <Plus className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
                         </div>
                         <p className="text-xs font-semibold text-foreground">
-                            {isDragging ? 'Suelta las imágenes' : uploadedImages.length > 0 ? 'Añadir más imágenes' : 'Sube tus referencias'}
+                            {isDragging ? t('imageReference.dropImages', { defaultValue: 'Drop the images' }) : uploadedImages.length > 0 ? t('imageReference.addMoreImages', { defaultValue: 'Add more images' }) : t('imageReference.uploadYourReferences', { defaultValue: 'Upload your references' })}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                            {uploadedImages.length > 0 ? `${MAX_REFERENCE_IMAGES - totalSelected} disponibles` : 'Arrastra o haz clic (max. 10)'}
+                            {uploadedImages.length > 0 ? t('imageReference.availableCount', { defaultValue: '{{count}} available', count: MAX_REFERENCE_IMAGES - totalSelected }) : t('imageReference.dragOrClickMax', { defaultValue: 'Drag or click (max. 10)' })}
                         </p>
                     </div>
                 )}
 
                 {!canAddMore && (
                     <div className="text-center py-2 px-3 bg-muted rounded-lg border border-border">
-                        <p className="text-[10px] text-muted-foreground">Máximo de {MAX_REFERENCE_IMAGES} imágenes alcanzado</p>
+                        <p className="text-[10px] text-muted-foreground">{t('imageReference.maxReached', { defaultValue: 'Maximum of {{count}} images reached', count: MAX_REFERENCE_IMAGES })}</p>
                     </div>
                 )}
 
                 {isAnalyzing && (
                     <div className="mt-1 flex items-center gap-2 px-1">
-                        <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                        <span className="text-[10px] text-muted-foreground">Analizando imagen...</span>
+                        <Loader2 className="w-3 h-3 text-primary" />
+                        <span className="text-[10px] text-muted-foreground">{t('imageReference.analyzingImage', { defaultValue: 'Analyzing image...' })}</span>
                     </div>
                 )}
 
@@ -394,7 +385,7 @@ export function ImageReferenceSelector({
                 <div className="flex items-center justify-between">
                     <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                         <Palette className="w-3.5 h-3.5" />
-                        Kit de Marca
+                        {t('nav.brandKit', { defaultValue: 'Brand Kit' })}
                     </p>
                     <div className="flex items-center gap-2">
                         {selectedBrandKitImageIds.length > 0 && (
@@ -403,7 +394,7 @@ export function ImageReferenceSelector({
                                 onClick={() => onClearBrandKitImages?.()}
                                 className="text-[10px] text-muted-foreground hover:text-foreground"
                             >
-                                Limpiar
+                                {t('styleImage.clear', { defaultValue: 'Clear' })}
                             </button>
                         )}
                     </div>
@@ -450,7 +441,7 @@ export function ImageReferenceSelector({
                                                     onReferenceRoleChange(img.id, getNextRole(img.id, currentRole))
                                                 }
                                             }}
-                                            title="Cambiar rol"
+                                            title={t('imageReference.changeRole', { defaultValue: 'Change role' })}
                                             className={cn('absolute top-1 left-1 text-[9px] px-2 py-0.5 rounded-full font-semibold transition-all z-30 cursor-pointer', roleChipClasses(referenceImageRoles[img.id] || 'content'))}
                                         >
                                             {roleLabel(referenceImageRoles[img.id] || 'content')}
@@ -472,17 +463,17 @@ export function ImageReferenceSelector({
                         <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                             <Palette className="w-4 h-4 text-muted-foreground" />
                         </div>
-                        <p className="text-[10px] text-muted-foreground">No hay imágenes en el Kit de Marca</p>
+                        <p className="text-[10px] text-muted-foreground">{t('imageReference.noBrandKitImages', { defaultValue: 'There are no images in the Brand Kit' })}</p>
                     </div>
                 )}
             </div>
 
             {onReferenceRoleChange && (
                 <p className="text-[10px] text-muted-foreground">
-                    Tip: pulsa la etiqueta de cada imagen seleccionada para cambiar su rol
+                    {t('imageReference.tip', { defaultValue: 'Tip: tap the label of each selected image to change its role' })}
                     {isAiContentMode
-                        ? ' (`Estilo` o `Logo Aux`).'
-                        : ' (`Estilo`, `Estilo+Contenido`, `Contenido` o `Logo`).'}
+                        ? t('imageReference.tipAiMode', { defaultValue: ' (`Style` or `Aux logo`).' })
+                        : t('imageReference.tipNormalMode', { defaultValue: ' (`Style`, `Style+Content`, `Content`, or `Logo`).' })}
                 </p>
             )}
 
@@ -490,7 +481,7 @@ export function ImageReferenceSelector({
                 <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-3.5 transition-all">
                     <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                         <Type className="w-3.5 h-3.5" />
-                        Estilo por texto
+                        {t('imageReference.textStyle', { defaultValue: 'Text style' })}
                     </p>
                     <div className="relative group">
                         <input
@@ -504,7 +495,7 @@ export function ImageReferenceSelector({
                                 if (isManualStyleBlocked) return
                                 setMode('generate')
                             }}
-                            placeholder="Escribe aquí el estilo (ej: Cyberpunk, Acuarela, Lego...)"
+                            placeholder={t('imageReference.customStylePlaceholder', { defaultValue: 'Write the style here (e.g. Cyberpunk, Watercolor, Lego...)' })}
                             disabled={isManualStyleBlocked}
                             className={cn(
                                 'w-full h-11 px-4 rounded-xl bg-background border border-border',
@@ -519,8 +510,8 @@ export function ImageReferenceSelector({
                                 type="button"
                                 onClick={() => onCustomStyleChange('')}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                aria-label="Limpiar estilo por texto"
-                                title="Limpiar"
+                                aria-label={t('imageReference.clearTextStyle', { defaultValue: 'Clear text style' })}
+                                title={t('styleImage.clear', { defaultValue: 'Clear' })}
                             >
                                 <X className="w-3.5 h-3.5" />
                             </button>
@@ -536,7 +527,7 @@ export function ImageReferenceSelector({
             {(visionAnalysis || !isOptional || totalSelected > 0) && (
                 <div className="flex items-center justify-between pt-1 px-0.5">
                     <p className="text-[10px] text-muted-foreground">
-                        {totalSelected > 0 ? `${totalSelected} referencia(s) activa(s)` : 'Puedes continuar sin referencia'}
+                        {totalSelected > 0 ? t('imageReference.activeReferences', { defaultValue: '{{count}} active reference(s)', count: totalSelected }) : t('imageReference.noReferenceNeeded', { defaultValue: 'You can continue without a reference' })}
                     </p>
                     {totalSelected > 0 && (
                         <button
@@ -547,7 +538,7 @@ export function ImageReferenceSelector({
                             }}
                             className="text-[10px] text-muted-foreground hover:text-foreground"
                         >
-                            Limpiar todo
+                            {t('imageReference.clearAll', { defaultValue: 'Clear all' })}
                         </button>
                     )}
                 </div>
@@ -555,3 +546,5 @@ export function ImageReferenceSelector({
         </div>
     )
 }
+
+

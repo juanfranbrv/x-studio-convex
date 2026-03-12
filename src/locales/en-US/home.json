@@ -1,0 +1,49 @@
+{
+  "pending": {
+    "titlePending": "Request pending",
+    "titleRejected": "Access denied",
+    "bodyPending": "Your request for {{email}} is being reviewed by our team.",
+    "bodyRejected": "Your request was not approved this time.",
+    "backHome": "Back to homepage"
+  },
+  "landing": {
+    "privateBeta": "Private beta",
+    "login": "Log in",
+    "heroTitleLine1": "Your creative director",
+    "heroTitleHighlight": "with brand intelligence",
+    "heroBody": "Generate marketing assets that respect your DNA without friction. Total visual consistency powered by an intelligent engine.",
+    "accessConfirmed": "Access confirmed",
+    "accessReady": "Your account is ready to start creating high-impact assets.",
+    "enterStudio": "Enter the studio",
+    "joinBeta": "Join the private beta",
+    "joinBetaBody": "Exclusive, limited access for creators and brands.",
+    "onList": "You're on the list",
+    "onListBody": "We'll let you know as soon as your access is enabled.",
+    "requestInvite": "Request invite",
+    "alreadyHaveAccount": "I already have an account, take me to the studio.",
+    "requestError": "Error sending request",
+    "registrationCompleted": "Registration completed"
+  },
+  "features": {
+    "brandDNA": {
+      "title": "Brand DNA",
+      "description": "Define your identity once and let AI apply it to every pixel."
+    },
+    "multiBrand": {
+      "title": "Multi-Brand",
+      "description": "Manage different visual worlds with total consistency from one place."
+    },
+    "visualIteration": {
+      "title": "Visual Iteration",
+      "description": "Semantic and spatial editing. Talk to AI as if it were your senior designer."
+    }
+  },
+  "footer": {
+    "copyright": "© 2024 Adstudio. Powered by Creative AI.",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "cookies": "Cookies",
+    "contact": "About us",
+    "pricing": "Pricing"
+  }
+}

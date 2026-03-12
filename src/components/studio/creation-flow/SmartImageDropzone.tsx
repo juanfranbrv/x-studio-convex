@@ -1,9 +1,11 @@
-'use client'
+﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useCallback, useState, useRef } from 'react'
-import { Upload, Image as ImageIcon, Loader2, X, Check } from 'lucide-react'
+import { Upload, Image as ImageIcon, X, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { VisionAnalysis } from '@/lib/creation-flow-types'
+import { useTranslation } from 'react-i18next'
 
 interface SmartImageDropzoneProps {
     uploadedImage: string | null
@@ -25,6 +27,7 @@ export function SmartImageDropzone({
     onClear,
     isOptional = false,
 }: SmartImageDropzoneProps) {
+    const { t } = useTranslation('common')
     const [isDragging, setIsDragging] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
 
@@ -63,7 +66,7 @@ export function SmartImageDropzone({
                 >
                     <img
                         src={uploadedImage}
-                        alt="Uploaded"
+                        alt={t('smartDropzone.uploadedAlt', { defaultValue: 'Uploaded image' })}
                         className="w-full h-32 object-cover transition-transform group-hover:scale-105"
                     />
 
@@ -83,7 +86,7 @@ export function SmartImageDropzone({
                     {/* Change indicator overlay */}
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                         <p className="text-[10px] text-white font-medium bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
-                            Haz clic para cambiar
+                            {t('smartDropzone.clickToChange', { defaultValue: 'Click to change' })}
                         </p>
                     </div>
 
@@ -91,8 +94,8 @@ export function SmartImageDropzone({
                     {isAnalyzing && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                             <div className="flex items-center gap-2 text-white text-sm">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                <span>Analizando...</span>
+                                <Loader2 className="w-4 h-4" />
+                                <span>{t('promptCard.analyzing', { defaultValue: 'Analyzing...' })}</span>
                             </div>
                         </div>
                     )}
@@ -103,13 +106,13 @@ export function SmartImageDropzone({
                     <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
                         <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
                             <Check className="w-3.5 h-3.5" />
-                            <span className="font-medium">Detectado: {visionAnalysis.subjectLabel}</span>
+                            <span className="font-medium">{t('smartDropzone.detected', { defaultValue: 'Detected' })}: {visionAnalysis.subjectLabel}</span>
                         </div>
 
                         {/* Extracted Colors */}
                         {visionAnalysis.colorPalette.length > 0 && (
                             <div className="flex items-center gap-1">
-                                <span className="text-[10px] text-muted-foreground mr-1">Colores:</span>
+                                <span className="text-[10px] text-muted-foreground mr-1">{t('smartDropzone.colors', { defaultValue: 'Colors' })}:</span>
                                 {visionAnalysis.colorPalette.slice(0, 5).map((color, idx) => (
                                     <div
                                         key={idx}
@@ -182,7 +185,7 @@ export function SmartImageDropzone({
 
                 <div className="text-center">
                     <p className="text-xs font-medium">
-                        {isDragging ? 'Suelta aquí' : 'Arrastra o haz clic'}
+                        {isDragging ? t('smartDropzone.dropHere', { defaultValue: 'Drop here' }) : t('smartDropzone.dragOrClick', { defaultValue: 'Drag or click' })}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
                         JPG, PNG, WebP
@@ -192,3 +195,5 @@ export function SmartImageDropzone({
         </div>
     )
 }
+
+

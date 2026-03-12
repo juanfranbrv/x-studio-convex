@@ -1,7 +1,8 @@
-﻿'use client'
+'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
@@ -11,12 +12,14 @@ import { VideoCanvasPanel } from '@/components/studio/video/VideoCanvasPanel'
 const VIDEO_MODULE_ENABLED = false
 
 export default function VideoPage() {
+    const { t } = useTranslation('video')
     const router = useRouter()
     const { activeBrandKit, brandKits, setActiveBrandKit, deleteBrandKitById } = useBrandKit()
     const { toast } = useToast()
 
     const [isGenerating, setIsGenerating] = useState(false)
-    const [progress, setProgress] = useState<string>('')
+    const [isCancelingGenerate, setIsCancelingGenerate] = useState(false)
+    const [progress, setProgress] = useState('')
     const [videoUrl, setVideoUrl] = useState<string | null>(null)
     const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('16:9')
 
@@ -28,41 +31,49 @@ export default function VideoPage() {
         if (!VIDEO_MODULE_ENABLED) {
             setAspectRatio(settings.aspectRatio)
             toast({
-                title: 'Modulo en construccion',
-                description: 'El modulo de video aun no esta operativo. Estamos terminandolo.',
+                title: t('maintenanceToastTitle'),
+                description: t('maintenanceToastBody'),
             })
             return
         }
 
         if (!settings.prompt.trim()) {
             toast({
-                title: 'Error',
-                description: 'Por favor, introduce un prompt para generar el video.',
-                variant: 'destructive'
+                title: t('missingPromptTitle'),
+                description: t('missingPromptBody'),
+                variant: 'destructive',
             })
             return
         }
 
+        setIsCancelingGenerate(false)
         setIsGenerating(true)
-        setProgress('Iniciando generacion...')
+        setProgress(t('starting'))
         setAspectRatio(settings.aspectRatio)
         setVideoUrl(null)
 
         try {
-            setProgress('Procesando con Veo 3.1...')
-            throw new Error('Modulo de video temporalmente no operativo.')
+            setProgress(t('processing'))
+            throw new Error(t('temporarilyUnavailable'))
         } catch (error) {
             console.error('Video generation error:', error)
             toast({
-                title: 'Error',
-                description: error instanceof Error ? error.message : 'No se pudo generar el video.',
-                variant: 'destructive'
+                title: t('missingPromptTitle'),
+                description: error instanceof Error ? error.message : t('generationError'),
+                variant: 'destructive',
             })
         } finally {
             setIsGenerating(false)
             setProgress('')
         }
-    }, [toast])
+    }, [t, toast])
+
+    const handleCancelGenerate = useCallback(() => {
+        setIsCancelingGenerate(true)
+        setIsGenerating(false)
+        setProgress('')
+        window.setTimeout(() => setIsCancelingGenerate(false), 900)
+    }, [])
 
     return (
         <DashboardLayout
@@ -72,7 +83,7 @@ export default function VideoPage() {
             onBrandDelete={deleteBrandKitById}
             onNewBrandKit={handleNewBrandKit}
         >
-            <div className="flex h-full">
+            <div className="flex h-full flex-col md:flex-row">
                 <VideoCanvasPanel
                     videoUrl={videoUrl}
                     isGenerating={isGenerating}
@@ -83,7 +94,9 @@ export default function VideoPage() {
 
                 <VideoControlsPanel
                     onGenerate={handleGenerate}
+                    onCancelGenerate={handleCancelGenerate}
                     isGenerating={isGenerating}
+                    isCancelingGenerate={isCancelingGenerate}
                     progress={progress}
                     maintenanceMode={!VIDEO_MODULE_ENABLED}
                 />
@@ -91,4 +104,3 @@ export default function VideoPage() {
         </DashboardLayout>
     )
 }
-

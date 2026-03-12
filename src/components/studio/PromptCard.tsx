@@ -1,8 +1,10 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState } from 'react'
-import { Sparkles, Send, Loader2 } from 'lucide-react'
+import { Sparkles, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useTranslation } from 'react-i18next'
 
 interface PromptCardProps {
     value: string
@@ -25,8 +27,9 @@ export function PromptCard({
     isGenerating = false,
     canGenerate = false,
     hasGeneratedImage = false,
-    placeholder = "Describe lo que quieres crear...",
+    placeholder,
 }: PromptCardProps) {
+    const { t } = useTranslation('common')
     const isLoading = isAnalyzing || isGenerating
 
     const handleSubmit = () => {
@@ -40,18 +43,18 @@ export function PromptCard({
     }
 
     const getButtonLabel = () => {
-        if (isGenerating) return 'Generando...'
-        if (isAnalyzing) return 'Analizando...'
-        if (hasGeneratedImage) return 'Aplicar'
-        if (canGenerate) return 'Generar'
-        return 'Analizar'
+        if (isGenerating) return t('promptCard.generating', { defaultValue: 'Generating...' })
+        if (isAnalyzing) return t('promptCard.analyzing', { defaultValue: 'Analyzing...' })
+        if (hasGeneratedImage) return t('promptCard.apply', { defaultValue: 'Apply' })
+        if (canGenerate) return t('promptCard.generate', { defaultValue: 'Generate' })
+        return t('promptCard.analyze', { defaultValue: 'Analyze' })
     }
 
     const getPlaceholder = () => {
         if (hasGeneratedImage) {
-            return "Describe los cambios: 'hazla más oscura', 'cambia el fondo'..."
+            return t('promptCard.editPlaceholder', { defaultValue: "Describe the changes: 'make it darker', 'change the background'..." })
         }
-        return placeholder
+        return placeholder || t('promptCard.createPlaceholder', { defaultValue: 'Describe what you want to create...' })
     }
 
     return (
@@ -60,7 +63,9 @@ export function PromptCard({
                 <div className="flex-1 relative">
                     <textarea
                         id="prompt-card-input"
-                        aria-label={hasGeneratedImage ? 'Editar prompt de imagen generada' : 'Prompt para generar imagen'}
+                        aria-label={hasGeneratedImage
+                            ? t('promptCard.editAria', { defaultValue: 'Edit generated image prompt' })
+                            : t('promptCard.createAria', { defaultValue: 'Prompt to generate image' })}
                         placeholder={getPlaceholder()}
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
@@ -73,7 +78,7 @@ export function PromptCard({
                             onClick={onAnalyze}
                             disabled={isLoading}
                             className="absolute right-3 top-3 text-primary/70 hover:text-primary transition-colors disabled:opacity-50"
-                            title="Analizar con IA"
+                            title={t('promptCard.analyzeWithAi', { defaultValue: 'Analyze with AI' })}
                         >
                             <Sparkles className="w-4 h-4" />
                         </button>
@@ -85,7 +90,7 @@ export function PromptCard({
                     className="h-auto px-5 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl shadow-lg"
                 >
                     {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-4 h-4" />
                     ) : (
                         <>
                             <Send className="w-4 h-4 mr-2" />
@@ -97,3 +102,5 @@ export function PromptCard({
         </div>
     )
 }
+
+

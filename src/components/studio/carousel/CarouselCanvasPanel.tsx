@@ -1,5 +1,6 @@
-'use client'
+﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
@@ -7,24 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { GeneratedCopyCard } from '@/components/studio/GeneratedCopyCard'
 import { useToast } from '@/hooks/use-toast'
-import {
-    ChevronLeft,
-    ChevronRight,
-    RefreshCw,
-    ZoomIn,
-    ZoomOut,
-    MoreHorizontal,
-    Share2,
-    Images,
-    Loader2,
-    Fingerprint,
-    ImageDown,
-    SquareArrowDown,
-    Bug,
-    Video,
-    Music,
-    Maximize2
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, RefreshCw, ZoomIn, ZoomOut, MoreHorizontal, Share2, Images, Fingerprint, ImageDown, SquareArrowDown, Bug, Video, Music, Maximize2 } from 'lucide-react'
 import JSZip from 'jszip'
 import {
     DropdownMenu,
@@ -39,6 +23,7 @@ import type { CarouselSlide, SlideContent } from '@/app/actions/generate-carouse
 import { DigitalStaticLoader } from '../DigitalStaticLoader'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { ReferenceImageRole } from '@/lib/creation-flow-types'
+import { useTranslation } from 'react-i18next'
 
 interface CarouselCanvasPanelProps {
     slides: CarouselSlide[]
@@ -54,7 +39,9 @@ interface CarouselCanvasPanelProps {
     caption?: string
     onCaptionChange?: (value: string) => void
     onRegenerateCaption?: () => void
+    onCancelCaptionGeneration?: () => void
     isCaptionGenerating?: boolean
+    isCancelingCaption?: boolean
     isCaptionLocked?: boolean
     onToggleCaptionLock?: () => void
     referenceImages?: Array<{ url: string; source: 'upload' | 'brandkit' | 'preset' }>
@@ -189,6 +176,7 @@ function renderCompositionGhostIcon(iconName: string) {
 }
 
 function StyleReferenceCorner({ url }: { url: string }) {
+    const { t } = useTranslation('common')
     const containerRef = useRef<HTMLDivElement>(null)
     const [boxSize, setBoxSize] = useState({ w: 0, h: 0 })
     const [naturalSize, setNaturalSize] = useState({ w: 1, h: 1 })
@@ -227,7 +215,7 @@ function StyleReferenceCorner({ url }: { url: string }) {
             >
                 <img
                     src={url}
-                    alt="Referencia de estilo"
+                    alt={t('styleImage.referenceTitle', { defaultValue: 'Style reference' })}
                     className="w-full h-full object-contain object-left-bottom origin-bottom-left -rotate-[10deg] drop-shadow-[0_12px_22px_rgba(0,0,0,0.24)]"
                     onLoad={(e) => {
                         const target = e.currentTarget
@@ -255,7 +243,9 @@ export function CarouselCanvasPanel({
     caption,
     onCaptionChange,
     onRegenerateCaption,
+    onCancelCaptionGeneration,
     isCaptionGenerating = false,
+    isCancelingCaption = false,
     isCaptionLocked = false,
     onToggleCaptionLock,
     referenceImages = [],
@@ -269,6 +259,9 @@ export function CarouselCanvasPanel({
     compositionGhostIcon,
     isAdmin = false
 }: CarouselCanvasPanelProps) {
+    const { t } = useTranslation()
+    const tt = (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+        t(key, { defaultValue, ...options })
     const [zoom, setZoom] = useState(110)
     const [hasManualZoom, setHasManualZoom] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -304,17 +297,17 @@ export function CarouselCanvasPanel({
     }, [])
 
     const getWidthBucket = (width: number) => {
-        if (width <= 1366) return '1:HD (≤1366)'
-        if (width <= 1600) return '2:HD+ (1367–1600)'
-        if (width <= 1920) return '3:FHD (1601–1920)'
-        return '4:QHD+ (≥1921)'
+        if (width <= 1366) return '1:HD (<=1366)'
+        if (width <= 1600) return '2:HD+ (1367-1600)'
+        if (width <= 1920) return '3:FHD (1601-1920)'
+        return '4:QHD+ (>=1921)'
     }
 
     const getHeightBucket = (height: number) => {
-        if (height <= 760) return 'H1:≤760'
-        if (height <= 900) return 'H2:761–900'
-        if (height <= 1080) return 'H3:901–1080'
-        return 'H4:≥1081'
+        if (height <= 760) return 'H1:<=760'
+        if (height <= 900) return 'H2:761-900'
+        if (height <= 1080) return 'H3:901-1080'
+        return 'H4:>=1081'
     }
 
     useEffect(() => {
@@ -334,6 +327,7 @@ export function CarouselCanvasPanel({
     }
 
     const getAutoZoomBoost = (height: number) => {
+        if (isMobile) return 1
         if (height <= 760) return 1.25
         if (height <= 900) return 1.2
         if (height <= 1080) return 1.14
@@ -341,6 +335,7 @@ export function CarouselCanvasPanel({
     }
 
     const calcMaxZoom = () => {
+        if (isMobile) return 100
         const [w, h] = aspectRatio.split(':').map(Number)
         const ratio = w / h
         const footerOffset = getFooterOffset()
@@ -394,6 +389,12 @@ export function CarouselCanvasPanel({
         const autoZoom = calcMaxZoom()
         if (zoom !== autoZoom) setZoom(autoZoom)
     }, [hasManualZoom, isMobile, viewportHeight, zoom, currentSlide?.imageUrl, aspectRatio])
+
+    useEffect(() => {
+        if (!isMobile) return
+        setHasManualZoom(false)
+        setZoom(100)
+    }, [isMobile, currentSlide?.imageUrl, aspectRatio])
     const hasScript = Boolean(currentSlide && !currentSlide.imageUrl && (currentSlide.title || currentSlide.description))
     const completedSlides = slides.filter(s => s.status === 'done').length
     const isGeneratingAny = isGenerating || slides.some(s => s.status === 'generating') || isRegenerating
@@ -466,19 +467,19 @@ export function CarouselCanvasPanel({
                 <button
                     type="button"
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    title="Usar texto del Kit de Marca"
+                    title={tt('common:preview.useBrandText', 'Use Brand Kit text')}
                 >
                     <Fingerprint className="w-4 h-4" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 max-h-80 overflow-y-auto">
                 <DropdownMenuLabel className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Textos del Kit de Marca
+                    {tt('common:preview.brandTexts', 'Brand Kit texts')}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {brandKitTexts.length === 0 ? (
                     <DropdownMenuItem disabled className="text-xs text-muted-foreground italic">
-                        Sin textos disponibles
+                        {tt('common:preview.noBrandTexts', 'No texts available')}
                     </DropdownMenuItem>
                 ) : (
                     brandKitTexts.map((option) => (
@@ -688,8 +689,8 @@ export function CarouselCanvasPanel({
 
         if (completedSlidesOrdered.length === 0) {
             toast({
-                title: 'No hay slides exportables',
-                description: 'Genera al menos una slide antes de exportar video.',
+                title: tt('common:preview.noExportableSlidesTitle', 'No exportable slides'),
+                description: tt('common:preview.noExportableSlidesDescription', 'Generate at least one slide before exporting video.'),
                 variant: 'destructive'
             })
             return
@@ -698,8 +699,8 @@ export function CarouselCanvasPanel({
         const hasAllSlides = completedSlidesOrdered.length === slides.length
         if (!hasAllSlides) {
             toast({
-                title: 'Faltan slides por generar',
-                description: 'Para un MP4 completo, termina de generar todas las slides.',
+                title: tt('common:preview.missingSlidesTitle', 'Slides still pending'),
+                description: tt('common:preview.missingSlidesDescription', 'To export a full MP4, finish generating all the slides.'),
                 variant: 'destructive'
             })
             return
@@ -708,8 +709,8 @@ export function CarouselCanvasPanel({
         const mimeType = pickVideoMimeType()
         if (!mimeType) {
             toast({
-                title: 'Navegador no compatible',
-                description: 'Este navegador no permite grabar video del canvas.',
+                title: tt('common:preview.browserUnsupportedTitle', 'Unsupported browser'),
+                description: tt('common:preview.browserUnsupportedDescription', 'This browser cannot record video from the canvas.'),
                 variant: 'destructive'
             })
             return
@@ -722,8 +723,8 @@ export function CarouselCanvasPanel({
         const ctx = canvas.getContext('2d')
         if (!ctx) {
             toast({
-                title: 'Error de canvas',
-                description: 'No se pudo inicializar el render del video.',
+                title: tt('common:preview.canvasErrorTitle', 'Canvas error'),
+                description: tt('common:preview.canvasErrorDescription', 'The video render could not be initialized.'),
                 variant: 'destructive'
             })
             return
@@ -731,10 +732,10 @@ export function CarouselCanvasPanel({
 
         setIsExportingVideo(true)
         setVideoExportProgress(5)
-        setVideoExportPhase('Preparando exportacion')
+        setVideoExportPhase(tt('common:preview.preparingExport', 'Preparing export'))
         toast({
-            title: 'Exportando video',
-            description: 'Estamos montando el MP4 del carrusel. Puede tardar un poco.'
+            title: tt('common:preview.exportingVideoTitle', 'Exporting video'),
+            description: tt('common:preview.exportingVideoDescription', 'We are assembling the carousel MP4. This can take a moment.')
         })
 
         const fps = 30
@@ -748,10 +749,10 @@ export function CarouselCanvasPanel({
             const totalDurationMs = completedSlidesOrdered.reduce((sum, _slide, idx) => sum + (idx === completedSlidesOrdered.length - 1 ? 6000 : 4000), 0)
 
             if (withMusic) {
-                setVideoExportPhase('Cargando pista experimental')
+                setVideoExportPhase(tt('common:preview.loadingExperimentalTrack', 'Loading experimental track'))
                 const songs = await fetchExperimentalSongs()
                 if (songs.length === 0) {
-                    throw new Error('No hay pistas experimentales disponibles en /songs.')
+        throw new Error(tt('common:preview.noExperimentalTracks', 'No experimental tracks are available in /songs.'))
                 }
                 const selectedSong = songs[Math.floor(Math.random() * songs.length)]
                 selectedSongLabel = selectedSong.label
@@ -779,7 +780,7 @@ export function CarouselCanvasPanel({
             })
 
             setVideoExportProgress(15)
-            setVideoExportPhase('Cargando slides')
+            setVideoExportPhase(tt('common:preview.loadingSlides', 'Loading slides'))
             const loaded = await Promise.all(
                 completedSlidesOrdered.map((slide) => loadImageToCanvasSource(slide.imageUrl as string))
             )
@@ -794,8 +795,8 @@ export function CarouselCanvasPanel({
             setVideoExportProgress(22)
             setVideoExportPhase(
                 music
-                    ? `Renderizando video con audio: ${selectedSongLabel || 'pista experimental'}`
-                    : 'Renderizando video'
+                    ? tt('common:preview.renderingVideoWithAudio', 'Rendering video with audio: {{track}}', { track: selectedSongLabel || tt('common:preview.experimentalTrack', 'experimental track') })
+                    : tt('common:preview.renderingVideo', 'Rendering video')
             )
 
             for (let i = 0; i < loaded.length; i++) {
@@ -817,7 +818,7 @@ export function CarouselCanvasPanel({
             }
 
             setVideoExportProgress(94)
-            setVideoExportPhase('Finalizando archivo')
+            setVideoExportPhase(tt('common:preview.finalizingFile', 'Finalizing file'))
             recorder.stop()
             await recordDone
             loaded.forEach((item) => item.revoke?.())
@@ -839,19 +840,21 @@ export function CarouselCanvasPanel({
             document.body.removeChild(link)
             URL.revokeObjectURL(downloadUrl)
             setVideoExportProgress(100)
-            setVideoExportPhase('Completado')
+            setVideoExportPhase(tt('common:preview.completed', 'Completed'))
 
             toast({
-                title: extension === 'mp4' ? 'MP4 exportado' : 'Video exportado',
+                title: extension === 'mp4'
+                    ? tt('common:preview.mp4ExportedTitle', 'MP4 exported')
+                    : tt('common:preview.videoExportedTitle', 'Video exported'),
                 description: extension === 'mp4'
-                    ? 'Listo para publicar en Facebook/TikTok.'
-                    : 'Tu navegador exporto WebM. Si quieres MP4, probamos otra estrategia de encoding.'
+                    ? tt('common:preview.mp4ExportedDescription', 'Ready to publish on Facebook or TikTok.')
+                    : tt('common:preview.webmExportedDescription', 'Your browser exported WebM. If you need MP4, we can try a different encoding strategy.')
             })
         } catch (error) {
             console.error('Video export error:', error)
             toast({
-                title: 'Error al exportar video',
-                description: error instanceof Error ? error.message : 'No se pudo generar el video.',
+                title: tt('common:preview.videoExportErrorTitle', 'Video export error'),
+                description: error instanceof Error ? error.message : tt('common:preview.videoExportErrorDescription', 'The video could not be generated.'),
                 variant: 'destructive'
             })
         } finally {
@@ -918,8 +921,8 @@ export function CarouselCanvasPanel({
                             type="button"
                             className="text-xs font-mono w-10 text-center cursor-pointer"
                             onClick={handleResetZoom}
-                            title="Restablecer zoom"
-                            aria-label="Restablecer zoom"
+                            title={tt('common:preview.resetZoom', 'Reset zoom')}
+                            aria-label={tt('common:preview.resetZoomAria', 'Reset zoom')}
                         >
                             {zoom}%
                         </button>
@@ -931,10 +934,10 @@ export function CarouselCanvasPanel({
                         </Button>
                     </div>
 
-                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadCurrent} disabled={!currentSlide?.imageUrl} title="Descargar slide actual">
+                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadCurrent} disabled={!currentSlide?.imageUrl} title={tt('common:preview.downloadCurrentSlide', 'Download current slide')}>
                         <ImageDown className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadBundle} disabled={completedSlides === 0} title="Descargar ZIP (carrusel + caption)">
+                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadBundle} disabled={completedSlides === 0} title={tt('common:preview.downloadCarouselZip', 'Download carousel ZIP')}>
                         <SquareArrowDown className="w-4 h-4" />
                     </Button>
                     <Button
@@ -943,9 +946,11 @@ export function CarouselCanvasPanel({
                         className="h-10 w-10"
                         onClick={() => onRegenerateSlide(currentIndex)}
                         disabled={!currentSlide || isRegenerating}
-                        title={isCurrentSlideRegenerating ? 'Regenerando slide actual...' : 'Regenerar slide actual'}
+                        title={isCurrentSlideRegenerating
+                            ? tt('common:preview.regeneratingCurrentSlide', 'Regenerating current slide...')
+                            : tt('common:preview.regenerateCurrentSlide', 'Regenerate current slide')}
                     >
-                        <RefreshCw className={cn("w-4 h-4", isRegenerating && "animate-spin")} />
+                        {isRegenerating ? <Loader2 className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
                     </Button>
                     <Button
                         variant="ghost"
@@ -953,7 +958,7 @@ export function CarouselCanvasPanel({
                         className="h-10 w-10"
                         onClick={() => exportCarouselVideo(true)}
                         disabled={isExportingVideo || completedSlides === 0}
-                        title="Exportar video con musica"
+                        title={tt('common:preview.exportVideoWithMusic', 'Export video with music')}
                     >
                         <Music className={cn("w-4 h-4", isExportingVideo && "animate-pulse")} />
                     </Button>
@@ -967,11 +972,11 @@ export function CarouselCanvasPanel({
                         <DropdownMenuContent align="end" className="bg-popover/95 border-border/60 backdrop-blur-sm">
                             <DropdownMenuItem onClick={() => exportCarouselVideo(false)} disabled={isExportingVideo || completedSlides === 0}>
                                 <Video className={cn("w-4 h-4 mr-2", isExportingVideo && "animate-pulse")} />
-                                Exportar video (4s / 6s)
+                                {tt('common:preview.exportVideoDurations', 'Export video (4s / 6s)')}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                                 <Share2 className="w-4 h-4 mr-2" />
-                                Compartir carrusel
+                                {tt('common:preview.shareCarousel', 'Share carousel')}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -1060,7 +1065,7 @@ export function CarouselCanvasPanel({
                                         "absolute left-3 top-1/2 -translate-y-1/2 z-40 h-10 w-10 rounded-full",
                                         "bg-background/80 backdrop-blur border border-border shadow-sm"
                                     )}
-                                    aria-label="Slide anterior"
+                                    aria-label={tt('common:preview.previousSlide', 'Previous slide')}
                                 >
                                     <ChevronLeft className="w-5 h-5" />
                                 </Button>
@@ -1073,14 +1078,14 @@ export function CarouselCanvasPanel({
                                         "absolute right-3 top-1/2 -translate-y-1/2 z-40 h-10 w-10 rounded-full",
                                         "bg-background/80 backdrop-blur border border-border shadow-sm"
                                     )}
-                                    aria-label="Slide siguiente"
+                                    aria-label={tt('common:preview.nextSlide', 'Next slide')}
                                 >
                                     <ChevronRight className="w-5 h-5" />
                                 </Button>
                             </>
                         )}
 
-                        {/* PREVIEW OVERLAYS (igual módulo imagen) */}
+                        {/* PREVIEW OVERLAYS (same as image module) */}
                         {!currentSlide?.imageUrl && (
                             <>
                                 {(() => {
@@ -1107,7 +1112,7 @@ export function CarouselCanvasPanel({
                                                     <div key={item.key} className="relative group">
                                                         <img
                                                             src={item.url}
-                                                            alt={`Logo Aux ${idx + 1}`}
+                                                            alt={tt('common:auxLogos.uploadedAlt', 'Uploaded auxiliary logo {{index}}', { index: idx + 1 })}
                                                             loading="lazy"
                                                             decoding="async"
                                                             className="object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.28)]"
@@ -1142,7 +1147,7 @@ export function CarouselCanvasPanel({
                                                         <div key={item.key} className="relative group">
                                                             <img
                                                                 src={item.url}
-                                                                alt={`Contenido ${idx + 1}`}
+                                                                alt={tt('common:contentImage.ownImageAlt', 'Own content image {{index}}', { index: idx + 1 })}
                                                                 loading="lazy"
                                                                 decoding="async"
                                                                 className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.28)]"
@@ -1165,7 +1170,7 @@ export function CarouselCanvasPanel({
                                     <div className="absolute top-1 left-4 z-20 group">
                                         <img
                                             src={selectedLogoUrl}
-                                            alt="Logo"
+                                            alt={tt('common:brandDnaPanel.logoAlt', 'Logo')}
                                             loading="lazy"
                                             decoding="async"
                                             className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
@@ -1185,7 +1190,7 @@ export function CarouselCanvasPanel({
                                     size="icon"
                                     onClick={handleOpenDebug}
                                     className="h-9 w-9 rounded-full bg-background/80 backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
-                                    title="Ver prompt y referencias"
+                                    title={tt('common:preview.promptDebug', 'Prompt debug')}
                                 >
                                     <Bug className="w-4 h-4" />
                                 </Button>
@@ -1198,14 +1203,14 @@ export function CarouselCanvasPanel({
                                 <div className="w-20 h-20 rounded-3xl bg-background/70 border border-border/50 shadow-inner flex items-center justify-center mb-6">
                                     <Images className="w-10 h-10 opacity-20" />
                                 </div>
-                                <h3 className="text-lg font-semibold opacity-80">Empieza tu creación</h3>
-                                <p className="text-sm opacity-50 max-w-[200px] mt-1">Configura los detalles en el panel derecho para generar slides</p>
+                                <h3 className="text-lg font-semibold opacity-80">{tt('common:preview.startCreation', 'Start your creation')}</h3>
+                                <p className="text-sm opacity-50 max-w-[200px] mt-1">{tt('common:preview.configureCarouselPanel', 'Set up the details in the right panel to generate slides')}</p>
                             </div>
                         ) : currentSlide.status === 'error' ? (
                             <div className="flex flex-col items-center justify-center bg-destructive/10 p-8 rounded-xl border border-destructive/20">
-                                <p className="text-destructive font-medium mb-4">{currentSlide.error || 'Error en este slide'}</p>
+                                <p className="text-destructive font-medium mb-4">{currentSlide.error || tt('common:preview.slideError', 'Error on this slide')}</p>
                                 <Button variant="outline" size="sm" onClick={() => onRegenerateSlide(currentIndex)}>
-                                    <RefreshCw className="w-4 h-4 mr-2" /> Reintentar
+                                    <RefreshCw className="w-4 h-4 mr-2" /> {tt('common:actions.retry', 'Retry')}
                                 </Button>
                             </div>
                         ) : currentSlide.imageUrl ? (
@@ -1225,16 +1230,16 @@ export function CarouselCanvasPanel({
                                     {isCurrentSlideRegenerating && (
                                         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-background/42 backdrop-blur-sm">
                                             <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border/60 bg-background/80 shadow-lg">
-                                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                                <Loader2 className="h-6 w-6 text-primary" />
                                             </div>
                                             <div className="rounded-full border border-border/60 bg-background/85 px-4 py-2 text-sm font-medium shadow-sm">
-                                                Regenerando esta diapositiva...
+                                                {tt('common:preview.regeneratingCurrentSlide', 'Regenerating this slide...')}
                                             </div>
                                         </div>
                                     )}
                                     <img
                                         src={currentSlide.imageUrl}
-                                        alt={`Slide ${currentIndex + 1}`}
+                                        alt={tt('common:preview.slideThumbnailAlt', 'Slide {{index}} thumbnail', { index: currentIndex + 1 })}
                                         className="w-full h-full object-cover"
                                     />
                                 </motion.div>
@@ -1244,7 +1249,7 @@ export function CarouselCanvasPanel({
                                 <div className="w-full max-w-md space-y-3">
                                     <div className="carousel-script-preview rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm p-6 text-center shadow-lg space-y-3">
                                     <p className="uppercase tracking-widest text-muted-foreground" style={{ fontSize: 'var(--cs-label)' }}>
-                                        Guion previo
+                                        {tt('common:preview.scriptPreview', 'Script preview')}
                                     </p>
                                     {isEditingScript ? (
                                         <div className="space-y-3 text-left">
@@ -1252,7 +1257,7 @@ export function CarouselCanvasPanel({
                                                 <Input
                                                     value={draftTitle}
                                                     onChange={(e) => setDraftTitle(e.target.value)}
-                                                    placeholder="Título del slide"
+                                                    placeholder={tt('common:preview.slideTitlePlaceholder', 'Slide title')}
                                                     className="text-sm pr-9"
                                                     disabled={isGeneratingAny}
                                                 />
@@ -1264,7 +1269,7 @@ export function CarouselCanvasPanel({
                                                 <Textarea
                                                     value={draftDescription}
                                                     onChange={(e) => setDraftDescription(e.target.value)}
-                                                    placeholder="Descripción del slide"
+                                                    placeholder={tt('common:preview.slideDescription', 'Slide description')}
                                                     className="min-h-[90px] text-sm resize-none pr-9"
                                                     disabled={isGeneratingAny}
                                                 />
@@ -1282,12 +1287,12 @@ export function CarouselCanvasPanel({
                                                                 className="h-8 px-3 text-xs uppercase font-bold tracking-wide text-muted-foreground hover:text-foreground transition-colors gap-2"
                                                             >
                                                                 <Fingerprint className="w-3.5 h-3.5 text-primary" />
-                                                                Textos de Marca
+                                                                {tt('common:preview.brandTexts', 'Brand Kit texts')}
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="start" className="w-72 max-h-80 overflow-y-auto">
                                                             <DropdownMenuLabel className="text-xs uppercase tracking-wide text-muted-foreground">
-                                                                Selecciona un texto del Kit de Marca
+                                                                {tt('common:preview.selectBrandText', 'Select a Brand Kit text')}
                                                             </DropdownMenuLabel>
                                                             <DropdownMenuSeparator />
                                                             {brandKitTexts.map((option) => (
@@ -1306,10 +1311,10 @@ export function CarouselCanvasPanel({
                                             )}
                                             <div className="flex gap-2">
                                                 <Button size="sm" onClick={handleSaveScript} disabled={isGeneratingAny}>
-                                                    Guardar
+                                                    {tt('common:actions.save', 'Save')}
                                                 </Button>
                                                 <Button size="sm" variant="outline" onClick={() => setIsEditingScript(false)} disabled={isGeneratingAny}>
-                                                    Cancelar
+                                                    {tt('common:actions.cancel', 'Cancel')}
                                                 </Button>
                                             </div>
                                         </div>
@@ -1330,14 +1335,14 @@ export function CarouselCanvasPanel({
                                                     }
                                                 }}
                                                 className="space-y-2 cursor-text"
-                                                aria-label="Editar guion"
-                                                title="Haz clic para editar"
+                                                aria-label={tt('common:preview.editScript', 'Edit script')}
+                                                title={tt('common:preview.clickToEdit', 'Click to edit')}
                                             >
                                                 <h3 className="font-semibold text-foreground" style={{ fontSize: 'var(--cs-title)', lineHeight: 1.2 }}>
-                                                    {currentSlide?.title || `Slide ${currentIndex + 1}`}
+                                                    {currentSlide?.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
                                                 </h3>
                                                 <p className="text-muted-foreground leading-relaxed" style={{ fontSize: 'var(--cs-body)' }}>
-                                                    {currentSlide?.description || 'Sin descripcion'}
+                                                    {currentSlide?.description || tt('common:preview.noDescription', 'No description')}
                                                 </p>
                                             </div>
                                             <Button
@@ -1350,7 +1355,7 @@ export function CarouselCanvasPanel({
                                                 className="mt-2"
                                                 style={{ fontSize: 'var(--cs-button)' }}
                                             >
-                                                Editar guion
+                                                {tt('common:preview.editScript', 'Edit script')}
                                             </Button>
                                         </>
                                     )}
@@ -1361,25 +1366,25 @@ export function CarouselCanvasPanel({
                                                 className="uppercase tracking-widest text-muted-foreground"
                                                 style={{ fontSize: 'calc(var(--cs-label) - 1px)' }}
                                             >
-                                                Contenido visual previsto
+                                                {tt('common:preview.visualContent', 'Planned visual content')}
                                             </p>
                                             {isEditingVisualContent ? (
                                                 <div className="space-y-3">
                                                     <Textarea
                                                         value={draftVisualPrompt}
                                                         onChange={(e) => setDraftVisualPrompt(e.target.value)}
-                                                        placeholder="Contenido visual previsto"
+                                                        placeholder={tt('common:preview.visualContent', 'Planned visual content')}
                                                         className="min-h-[110px] text-sm resize-none"
                                                         disabled={isGeneratingAny}
                                                     />
                                                     {currentVisualIntentHidden ? (
                                                         <p className="text-xs leading-relaxed text-muted-foreground">
-                                                            La intención narrativa y las reglas visuales avanzadas se mantienen internamente y no necesitas editarlas aquí.
+                                                            {tt('common:preview.visualContentHint', 'The narrative intent and advanced visual rules are kept internally, so you do not need to edit them here.')}
                                                         </p>
                                                     ) : null}
                                                     <div className="flex gap-2">
                                                         <Button size="sm" onClick={handleSaveVisualContent} disabled={isGeneratingAny}>
-                                                            Guardar
+                                                            {tt('common:actions.save', 'Save')}
                                                         </Button>
                                                         <Button
                                                             size="sm"
@@ -1390,7 +1395,7 @@ export function CarouselCanvasPanel({
                                                             }}
                                                             disabled={isGeneratingAny}
                                                         >
-                                                            Cancelar
+                                                            {tt('common:actions.cancel', 'Cancel')}
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -1412,7 +1417,7 @@ export function CarouselCanvasPanel({
                                                         className="mt-2"
                                                         style={{ fontSize: 'var(--cs-button)' }}
                                                     >
-                                                        Editar contenido visual
+                                                        {tt('common:preview.editVisualContent', 'Edit visual content')}
                                                     </Button>
                                                 </>
                                             )}
@@ -1422,8 +1427,8 @@ export function CarouselCanvasPanel({
                             </div>
                         ) : (
                             <div className="text-muted-foreground opacity-30 flex flex-col items-center gap-2">
-                                <Loader2 className="w-8 h-8 animate-spin" />
-                                <span className="text-xs uppercase tracking-tighter font-mono">Pendiente</span>
+                                <Loader2 className="w-8 h-8" />
+                                <span className="text-xs uppercase tracking-tighter font-mono">{tt('common:preview.pending', 'Pending')}</span>
                             </div>
                         )}
                     </div>
@@ -1458,7 +1463,9 @@ export function CarouselCanvasPanel({
                                         {slide.imageUrl ? (
                                             <img
                                                 src={slide.imageUrl}
-                                                alt={`Miniatura del slide ${index + 1}`}
+                                                alt={tt('common:preview.slideThumbnailAlt', 'Slide {{index}} thumbnail', {
+                                                    index: index + 1,
+                                                })}
                                                 loading="lazy"
                                                 decoding="async"
                                                 className="w-full h-full object-cover"
@@ -1487,7 +1494,9 @@ export function CarouselCanvasPanel({
                             copy={caption}
                             hashtags={[]}
                             onRegenerate={onRegenerateCaption}
+                            onCancel={onCancelCaptionGeneration}
                             isLoading={isCaptionGenerating}
+                            isCanceling={isCancelingCaption}
                             isLocked={isCaptionLocked}
                             onToggleLock={onToggleCaptionLock}
                             onCopyChange={(val) => onCaptionChange?.(val)}
@@ -1504,14 +1513,14 @@ export function CarouselCanvasPanel({
                 >
                     <DialogHeader>
                         <DialogTitle>
-                            Debug de prompt - Slide {debugSlide ? debugSlide.index + 1 : currentIndex + 1}
+                            {tt('common:preview.promptDebug', 'Prompt debug')} - {tt('common:preview.slide', 'Slide')} {debugSlide ? debugSlide.index + 1 : currentIndex + 1}
                         </DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-6 overflow-y-auto pr-1">
                         <div className="space-y-3">
                             <div className="text-sm uppercase tracking-wider text-muted-foreground">
-                                Imágenes enviadas en la llamada
+                                {tt('common:preview.sentImages', 'Images sent in the request')}
                             </div>
                             {debugSlide?.debugReferences && debugSlide.debugReferences.length > 0 ? (
                                 <div className="flex flex-wrap gap-3">
@@ -1534,18 +1543,18 @@ export function CarouselCanvasPanel({
                                 </div>
                             ) : (
                                 <div className="text-sm text-muted-foreground">
-                                    No se enviaron imágenes en esta llamada.
+                                    {tt('common:preview.noSentImages', 'No images were sent in this request.')}
                                 </div>
                             )}
                         </div>
 
                         <div className="space-y-3">
                             <div className="text-sm uppercase tracking-wider text-muted-foreground">
-                                Prompt enviado al modelo
+                                {tt('common:preview.promptSent', 'Prompt sent to the model')}
                             </div>
                             <div className="flex-1 overflow-y-auto rounded-lg border border-border bg-muted/30 p-4">
                                 <pre className="whitespace-pre-wrap text-sm leading-relaxed font-mono text-foreground">
-                                    {debugSlide?.debugPrompt || 'No hay prompt registrado para este slide.'}
+                                    {debugSlide?.debugPrompt || tt('common:preview.noPromptForSlide', 'There is no prompt recorded for this slide.')}
                                 </pre>
                             </div>
                         </div>
@@ -1556,11 +1565,11 @@ export function CarouselCanvasPanel({
             <Dialog open={isExportingVideo} onOpenChange={() => { }}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Generando video del carrusel</DialogTitle>
+                        <DialogTitle>{tt('common:preview.generatingVideo', 'Generating carousel video')}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                         <p className="text-sm text-muted-foreground">
-                            {videoExportPhase || 'Procesando'}
+                            {videoExportPhase || tt('common:preview.processing', 'Processing')}
                         </p>
                         <div className="grid grid-cols-10 gap-1.5">
                             {Array.from({ length: 30 }).map((_, idx) => {
@@ -1578,7 +1587,7 @@ export function CarouselCanvasPanel({
                             })}
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>Progreso</span>
+                            <span>{tt('common:preview.progress', 'Progress')}</span>
                             <span className="font-mono">{videoExportProgress}%</span>
                         </div>
                     </div>
@@ -1587,5 +1596,7 @@ export function CarouselCanvasPanel({
         </div>
     )
 }
+
+
 
 

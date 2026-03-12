@@ -8,7 +8,6 @@ import { api } from '@/../convex/_generated/api'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { cn } from '@/lib/utils'
-import { I18nProvider } from '@/components/providers/I18nProvider'
 import { ProtectedRoute } from '@/components/providers/ProtectedRoute'
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
 import { useBrandKit } from '@/contexts/BrandKitContext'
@@ -16,7 +15,6 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertTriangle } from 'lucide-react'
 import { calculateBrandKitCompleteness } from '@/lib/brand-kit-utils'
-
 import { BrandKitSummary, BrandDNA } from '@/lib/brand-types'
 
 const MIN_BRAND_KIT_COMPLETENESS = 70
@@ -116,84 +114,80 @@ export function DashboardLayout({
 
     return (
         <ProtectedRoute>
-            <I18nProvider>
-                <div className="flex h-screen bg-mesh text-foreground overflow-hidden">
-                    {/* Lateral Navigation (Desktop Only) */}
-                    <Sidebar className="hidden md:flex" />
+            <div className="flex min-h-dvh bg-mesh text-foreground overflow-hidden md:h-dvh">
+                {/* Lateral Navigation (Desktop Only) */}
+                <Sidebar className="hidden md:flex" />
 
-                    {/* Main Content Area */}
-                    <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                        {/* Top Bar (Fixed) */}
-                        <Header
-                            brands={brands}
-                            currentBrand={currentBrand}
-                            onBrandChange={onBrandChange}
-                            onBrandDelete={onBrandDelete}
-                            onNewBrandKit={onNewBrandKit}
-                            afterBrandActions={headerAfterBrandActions}
-                        />
+                {/* Main Content Area */}
+                <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+                    {/* Top Bar (Fixed) */}
+                    <Header
+                        brands={brands}
+                        currentBrand={currentBrand}
+                        onBrandChange={onBrandChange}
+                        onBrandDelete={onBrandDelete}
+                        onNewBrandKit={onNewBrandKit}
+                        afterBrandActions={headerAfterBrandActions}
+                    />
 
-                        {/* Scrollable Content Container */}
-                        <div className={cn(
-                            "flex-1 min-w-0 overflow-x-hidden scrollbar-hide flex flex-col min-h-0 md:pb-0",
-                            isFixed ? "overflow-hidden" : "overflow-y-auto"
-                        )}>
-                            {children}
-                        </div>
-
-                        {/* Mobile Navigation (Bottom Fixed) - Deprecated, moved to Header Menu */}
+                    {/* Scrollable Content Container */}
+                    <div className={cn(
+                        "scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden",
+                        isFixed ? "overflow-hidden" : "overflow-y-auto"
+                    )}>
+                        {children}
                     </div>
                 </div>
+            </div>
 
-                {/* Onboarding Modal */}
-                <OnboardingModal
-                    isOpen={showOnboarding}
-                    onClose={() => setShowOnboarding(false)}
-                    onComplete={handleOnboardingComplete}
-                />
+            {/* Onboarding Modal */}
+            <OnboardingModal
+                isOpen={showOnboarding}
+                onClose={() => setShowOnboarding(false)}
+                onComplete={handleOnboardingComplete}
+            />
 
-                <Dialog
-                    open={showCompletenessGate}
-                    onOpenChange={(open) => {
-                        if (!open && shouldBlockCurrentRoute) {
-                            router.replace('/brand-kit')
-                            return
-                        }
-                        setShowCompletenessGate(open)
-                    }}
-                >
-                    <DialogContent className="sm:max-w-[480px]">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                                Completa tu Kit de Marca primero
-                            </DialogTitle>
-                            <DialogDescription className="pt-2 space-y-2">
-                                <span className="block">
-                                    Tu kit esta al {completeness.percentage}% y necesitas al menos un {MIN_BRAND_KIT_COMPLETENESS}% para usar este modulo.
-                                </span>
-                                <span className="block">
-                                    {!hasAnyUnlockedBrandKit
-                                        ? 'Ahora mismo no tienes ningun kit por encima del minimo. Completa uno para desbloquear toda la app.'
-                                        : 'Sin ese minimo no se desbloquean Imagen ni el resto de modulos.'}
-                                </span>
-                            </DialogDescription>
-                        </DialogHeader>
+            <Dialog
+                open={showCompletenessGate}
+                onOpenChange={(open) => {
+                    if (!open && shouldBlockCurrentRoute) {
+                        router.replace('/brand-kit')
+                        return
+                    }
+                    setShowCompletenessGate(open)
+                }}
+            >
+                <DialogContent className="sm:max-w-[480px]">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-amber-500" />
+                            Completa tu Kit de Marca primero
+                        </DialogTitle>
+                        <DialogDescription className="pt-2 space-y-2">
+                            <span className="block">
+                                Tu kit esta al {completeness.percentage}% y necesitas al menos un {MIN_BRAND_KIT_COMPLETENESS}% para usar este modulo.
+                            </span>
+                            <span className="block">
+                                {!hasAnyUnlockedBrandKit
+                                    ? 'Ahora mismo no tienes ningun kit por encima del minimo. Completa uno para desbloquear toda la app.'
+                                    : 'Sin ese minimo no se desbloquean Imagen ni el resto de modulos.'}
+                            </span>
+                        </DialogDescription>
+                    </DialogHeader>
 
-                        {completeness.tips.length > 0 && (
-                            <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
-                                {completeness.tips[0]}
-                            </div>
-                        )}
+                    {completeness.tips.length > 0 && (
+                        <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
+                            {completeness.tips[0]}
+                        </div>
+                    )}
 
-                        <DialogFooter>
-                            <Button onClick={handleCompletenessGateAccept}>
-                                Ir a Kit de Marca
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </I18nProvider>
+                    <DialogFooter>
+                        <Button onClick={handleCompletenessGateAccept}>
+                            Ir a Kit de Marca
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </ProtectedRoute>
     )
 }

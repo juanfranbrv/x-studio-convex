@@ -1,6 +1,9 @@
-﻿'use client';
+﻿'use client'
 
-import { useState, useEffect, Suspense, useRef, useCallback } from 'react';
+import { Loader2 } from '@/components/ui/spinner'
+;
+
+import { useState, useEffect, Suspense, useRef, useCallback, useMemo } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { analyzeBrandDNA } from '@/app/actions/analyze-brand-dna';
@@ -14,24 +17,7 @@ import { fetchQuery } from 'convex/nextjs';
 import { api } from '../../../convex/_generated/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-    Globe,
-    Sparkles,
-    ArrowRight,
-    Package,
-    Loader2,
-    RefreshCcw,
-    Plus,
-    TriangleAlert,
-    Check,
-    X,
-    Pencil,
-    ListChecks,
-    Trash2,
-    Copy,
-    Upload,
-    Download
-} from 'lucide-react';
+import { Globe, Sparkles, ArrowRight, Package, RefreshCcw, Plus, TriangleAlert, Check, X, Pencil, ListChecks, Trash2, Copy, Upload, Download } from 'lucide-react';
 import { BrandDNABoard } from '@/components/brand-dna/BrandDNABoard';
 import { BrandKitProgress } from '@/components/brand-dna/BrandKitProgress';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,32 +33,32 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-
-const LOADING_MESSAGES = [
-    "Iniciando motores de análisis...",
-    "Conectando con Microlink API...",
-    "Capturando esencia visual de la web...",
-    "Extrayendo paleta técnica (DOM)...",
-    "Analizando candidatos a logo...",
-    "Descubriendo tipografías en CSS...",
-    "Extrayendo ADN de marca con IA...",
-    "Generando activos y paletas finales...",
-    "Puliendo los últimos detalles..."
-];
-
-const TECHNICAL_LOGS = [
-    "[INFO] Initializing analyze-engine v2.4...",
-    "[NETWORK] Connecting to headfull browser cluster...",
-    "[DOM] Analyzing 428 nodes for color frequency...",
-    "[IMAGE] Processing full-page screenshot (1920x1080)...",
-    "[AI] Injecting multimodal payload into vision-core pipeline...",
-    "[STYLE] Extracting computed CSS variables...",
-    "[LOGO] Scoring candidates based on prominence...",
-    "[CONSENSUS] Running Delta-E clustering algorithm...",
-    "[DONE] Brand DNA architecture complete."
-];
+import { useTranslation } from 'react-i18next';
 
 function BrandKitPageContent() {
+    const { t } = useTranslation('brandKit');
+    const loadingMessages = useMemo(() => ([
+        t('loadingStages.starting', { defaultValue: 'Starting analysis engines...' }),
+        t('loadingStages.connectingMicrolink', { defaultValue: 'Connecting to Microlink API...' }),
+        t('loadingStages.capturingVisualEssence', { defaultValue: 'Capturing the visual essence of the website...' }),
+        t('loadingStages.extractingTechnicalPalette', { defaultValue: 'Extracting the technical palette (DOM)...' }),
+        t('loadingStages.analyzingLogos', { defaultValue: 'Analyzing logo candidates...' }),
+        t('loadingStages.discoveringTypography', { defaultValue: 'Discovering typography in CSS...' }),
+        t('loadingStages.extractingDna', { defaultValue: 'Extracting brand DNA with AI...' }),
+        t('loadingStages.generatingAssets', { defaultValue: 'Generating final assets and palettes...' }),
+        t('loadingStages.polishing', { defaultValue: 'Polishing the final details...' }),
+    ]), [t]);
+    const technicalLogs = useMemo(() => ([
+        '[INFO] Initializing analyze-engine v2.4...',
+        '[NETWORK] Connecting to headfull browser cluster...',
+        '[DOM] Analyzing 428 nodes for color frequency...',
+        '[IMAGE] Processing full-page screenshot (1920x1080)...',
+        '[AI] Injecting multimodal payload into vision-core pipeline...',
+        '[STYLE] Extracting computed CSS variables...',
+        '[LOGO] Scoring candidates based on prominence...',
+        '[CONSENSUS] Running Delta-E clustering algorithm...',
+        '[DONE] Brand DNA architecture complete.'
+    ]), []);
     const ASSISTANT_PREVIOUS_KIT_KEY = 'brand-kit-assistant-previous-id';
     const { user, isLoaded } = useUser();
     const searchParams = useSearchParams();
@@ -91,11 +77,13 @@ function BrandKitPageContent() {
     const { toast } = useToast();
     const [url, setUrl] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isCancelingAnalysis, setIsCancelingAnalysis] = useState(false);
     const [error, setError] = useState('');
     const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
     const [progress, setProgress] = useState(0);
     const [loadingScreenshot, setLoadingScreenshot] = useState<string | null>(null);
     const [isSocialUrl, setIsSocialUrl] = useState(false);
+    const cancelAnalysisRef = useRef(false);
 
     const isValidBrandId = (value: unknown): value is string => {
         if (typeof value !== 'string') return false;
@@ -172,7 +160,7 @@ function BrandKitPageContent() {
 
         try {
             // Extract brand name from social URL if available
-            let brandName = 'Mi Marca';
+            let brandName = t('board.namePlaceholder', { defaultValue: 'My Brand' });
             if (url && isSocialUrl) {
                 try {
                     const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
@@ -212,11 +200,11 @@ function BrandKitPageContent() {
                 // Navigate to the new brand kit
                 window.location.href = `/brand-kit?id=${createdId}`;
             } else {
-                setError(result.error || 'No se pudo crear el kit de marca manual.');
+                setError(result.error || t('toasts.manualCreateError', { defaultValue: 'The manual Brand Kit could not be created.' }));
             }
         } catch (err) {
             console.error('Error creating manual brand kit:', err);
-            setError('Ocurrio un error al crear el kit de marca.');
+            setError(t('toasts.createError', { defaultValue: 'The Brand Kit could not be created.' }));
         } finally {
             setLoading(false);
         }
@@ -238,12 +226,12 @@ function BrandKitPageContent() {
 
                 setLoadingMessageIndex(prev => {
                     const next = prev + 1;
-                    return next < LOADING_MESSAGES.length ? next : prev;
+                    return next < loadingMessages.length ? next : prev;
                 });
             }, 2500);
         }
         return () => clearInterval(interval);
-    }, [loading]);
+    }, [loading, loadingMessages.length]);
 
 
     const createAssistantKitAndOpen = useCallback(async (options?: { draft?: boolean }) => {
@@ -256,7 +244,7 @@ function BrandKitPageContent() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     clerk_user_id: user.id,
-                    brand_name: 'Mi Marca',
+                    brand_name: t('board.namePlaceholder', { defaultValue: 'My Brand' }),
                 }),
             });
 
@@ -272,11 +260,11 @@ function BrandKitPageContent() {
                 return;
             }
 
-            setError(result.error || 'No se pudo crear el kit de marca.');
+            setError(result.error || t('toasts.createError', { defaultValue: 'The Brand Kit could not be created.' }));
             setCreatingAssistantKit(false);
         } catch (err) {
             console.error('Error creating assistant brand kit:', err);
-            setError('Ocurrio un error al crear el kit de marca.');
+            setError(t('toasts.createError', { defaultValue: 'The Brand Kit could not be created.' }));
             setCreatingAssistantKit(false);
         }
     }, [user?.id, creatingAssistantKit, searchParams, activeBrandKit?.id]);
@@ -458,21 +446,21 @@ function BrandKitPageContent() {
 
             if (success) {
                 toast({
-                    title: "Nombre actualizado",
-                    description: "El nombre del kit de marca se ha actualizado correctamente.",
+                    title: t('toasts.nameUpdatedTitle'),
+                    description: t('toasts.nameUpdatedDescription'),
                 });
             } else {
                 toast({
-                    title: "Error al actualizar",
-                    description: "No se pudo actualizar el nombre.",
+                    title: t('toasts.nameUpdateErrorTitle'),
+                    description: t('toasts.nameUpdateErrorDescription'),
                     variant: "destructive",
                 });
             }
         } catch (error) {
             console.error('Error updating brand name:', error);
             toast({
-                title: "Error",
-                description: "Ocurrió un error al actualizar el nombre.",
+                title: t('toasts.genericErrorTitle'),
+                description: t('toasts.genericErrorDescription'),
                 variant: "destructive",
             });
         }
@@ -512,6 +500,17 @@ function BrandKitPageContent() {
         router.replace(`/brand-kit${params.toString() ? `?${params.toString()}` : ''}`);
     };
 
+    const handleStopAnalysis = useCallback(() => {
+        cancelAnalysisRef.current = true;
+        setLoading(false);
+        setIsCancelingAnalysis(true);
+        toast({
+            title: t('loading.stopTitle', { defaultValue: 'Analysis stopped' }),
+            description: t('loading.stopDescription', { defaultValue: 'The Brand Kit analysis was canceled.' }),
+        });
+        window.setTimeout(() => setIsCancelingAnalysis(false), 900);
+    }, [t, toast]);
+
     const handleCompleteAssistantCreation = () => {
         if (typeof window !== 'undefined') {
             window.sessionStorage.removeItem(ASSISTANT_PREVIOUS_KIT_KEY);
@@ -550,7 +549,7 @@ function BrandKitPageContent() {
 
         setIsDuplicatingCurrent(true);
         try {
-            const duplicateNameBase = (activeBrandKit.brand_name || 'Mi Marca').trim();
+            const duplicateNameBase = (activeBrandKit.brand_name || t('board.namePlaceholder', { defaultValue: 'My Brand' })).trim();
             const duplicateName = duplicateNameBase.toLowerCase().includes('copia')
                 ? duplicateNameBase
                 : `${duplicateNameBase} (copia)`;
@@ -568,7 +567,7 @@ function BrandKitPageContent() {
             const createResult = await createResponse.json();
             const createdId = createResult?.data?.id as string | undefined;
             if (!createResult?.success || !isValidBrandId(createdId)) {
-                throw new Error(createResult?.error || 'No se pudo crear la copia del kit.');
+                throw new Error(createResult?.error || t('toasts.duplicateCreateError', { defaultValue: 'The kit copy could not be created.' }));
             }
 
             const duplicatedPayload: BrandDNA = {
@@ -579,21 +578,21 @@ function BrandKitPageContent() {
 
             const saveResult = await updateUserBrandKit(createdId, duplicatedPayload);
             if (!saveResult.success) {
-                throw new Error(saveResult.error || 'No se pudo guardar la copia del kit.');
+                throw new Error(saveResult.error || t('toasts.duplicateSaveError', { defaultValue: 'The kit copy could not be saved.' }));
             }
 
             await reloadBrandKits(false);
             await setActiveBrandKit(createdId, true, false);
 
             toast({
-                title: "Kit duplicado",
-                description: `Se creó "${duplicateName}".`,
+                title: t('toasts.duplicatedTitle'),
+                    description: t('toasts.duplicateCreatedDescription', { name: duplicateName, defaultValue: '"{{name}}" was created.' }),
             });
         } catch (error) {
             console.error('Error duplicating brand kit:', error);
             toast({
-                title: "Error al duplicar",
-                description: error instanceof Error ? error.message : "No se pudo duplicar el kit actual.",
+                title: t('toasts.duplicateErrorTitle'),
+                description: error instanceof Error ? error.message : t('toasts.duplicateErrorDescription'),
                 variant: "destructive",
             });
         } finally {
@@ -619,7 +618,7 @@ function BrandKitPageContent() {
                 onClick={() => void handleDuplicateCurrentBrandKit()}
                 disabled={isDuplicatingCurrent}
             >
-                {isDuplicatingCurrent ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
+                {isDuplicatingCurrent ? <Loader2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 Duplicar kit actual
             </Button>
             <Button
@@ -665,15 +664,15 @@ function BrandKitPageContent() {
             || normalizeUrlForAnalysis(activeBrandKit?.url || '');
 
         if (!targetUrl || !user?.id) {
-            console.warn('âŒ Cannot regenerate: No URL found', {
+            console.warn('Cannot regenerate: no URL found', {
                 pendingRegenerateUrl,
                 url,
                 activeBrandKitUrl: activeBrandKit?.url
             });
-            const message = 'Introduce una URL valida en el campo web del Kit de Marca para poder analizarla.';
+            const message = t('hero.validUrlRequired', { defaultValue: 'Enter a valid URL in the Brand Kit website field to analyze it.' });
             setError(message);
             toast({
-                title: "URL no valida",
+                title: t('toasts.invalidUrlTitle'),
                 description: message,
                 variant: "destructive",
             });
@@ -681,11 +680,17 @@ function BrandKitPageContent() {
         }
 
         if (useGlobalLoading) setLoading(true);
+        cancelAnalysisRef.current = false;
+        setIsCancelingAnalysis(false);
         setError('');
         if (useGlobalLoading) setLoadingScreenshot(null);
 
         try {
             const response = await analyzeBrandDNA(targetUrl, true, user.id);
+
+            if (cancelAnalysisRef.current) {
+                return { success: false, error: t('loading.stopDescription', { defaultValue: 'The Brand Kit analysis was canceled.' }) };
+            }
 
             if (response.success && response.data) {
                 setShowNewKitForm(false);
@@ -711,19 +716,19 @@ function BrandKitPageContent() {
 
                 if (showSuccessToast) {
                     toast({
-                        title: "Kit de marca regenerado",
-                        description: "El análisis se ha completado correctamente.",
+                        title: t('toasts.regeneratedTitle'),
+                        description: t('toasts.regeneratedDescription'),
                     });
                 }
                 return { success: true };
             } else {
-                const message = response.error || 'No se pudo regenerar el kit de marca.';
+                const message = response.error || t('toasts.regenerateErrorDescription', { defaultValue: 'The Brand Kit could not be regenerated.' });
                 setError(message);
                 return { success: false, error: message };
             }
         } catch (err) {
             console.error('Unexpected error during regenerate:', err);
-            const message = 'Ocurrió un error inesperado al regenerar.';
+                const message = t('toasts.regenerateUnexpectedError', { defaultValue: 'An unexpected error occurred while regenerating.' });
             setError(message);
             return { success: false, error: message };
         } finally {
@@ -742,7 +747,7 @@ function BrandKitPageContent() {
     const handleAnalyzeFromAssistant = async (urlOverride?: string) => {
         const result = await runRegenerateAnalysis(urlOverride, { useGlobalLoading: false, showSuccessToast: false });
         if (!result.success) {
-            throw new Error(result.error || 'No se pudo analizar la web.');
+            throw new Error(result.error || t('wizard.errors.analyzeUrl', { defaultValue: 'We could not analyze the website. Check the URL and try again.' }));
         }
     };
 
@@ -769,11 +774,16 @@ function BrandKitPageContent() {
         if (!url || !user?.id) return;
 
         setLoading(true);
+        cancelAnalysisRef.current = false;
+        setIsCancelingAnalysis(false);
         setError('');
         setLoadingScreenshot(null);
 
         try {
             const response = await analyzeBrandDNA(url, true, user.id);
+            if (cancelAnalysisRef.current) {
+                return;
+            }
             const createdId = response?.data?.id;
 
             if (response.success && response.data) {
@@ -783,12 +793,12 @@ function BrandKitPageContent() {
                 setShowNewKitForm(false);
 
                 // CRITICAL: Wait for Convex to propagate
-                console.log('[NEW BRAND KIT] â³ Waiting 2 seconds for Convex propagation...');
+                console.log('[NEW BRAND KIT] Waiting 2 seconds for Convex propagation...');
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
                 // FORCE NAVIGATION to the new brand kit using URL parameter
                 if (!isValidBrandId(createdId) && !response.data.url) {
-                    setError('No se pudo identificar el kit de marca recien creado.');
+                    setError(t('toasts.identifyCreatedError', { defaultValue: 'The newly created Brand Kit could not be identified.' }));
                     return;
                 }
                 const targetParam = isValidBrandId(createdId)
@@ -799,15 +809,15 @@ function BrandKitPageContent() {
                 window.location.href = `/brand-kit?${targetParam}${debugParam}`;
 
                 toast({
-                    title: "Kit de marca creado",
-                    description: "Cargando resultados...",
+                    title: t('toasts.createdTitle'),
+                    description: t('loading.creatingDescription'),
                 });
             } else {
-                setError(response.error || 'No se pudo crear el kit de marca.');
+                setError(response.error || t('toasts.createError', { defaultValue: 'The Brand Kit could not be created.' }));
             }
         } catch (err) {
-            console.error('âŒ Unexpected error during submit:', err);
-            setError('Ocurrió un error inesperado.');
+            console.error('Unexpected error during submit:', err);
+            setError(t('toasts.unexpectedError', { defaultValue: 'An unexpected error occurred.' }));
         } finally {
             setLoading(false);
         }
@@ -826,8 +836,8 @@ function BrandKitPageContent() {
             >
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="text-center animate-in fade-in zoom-in duration-500">
-                        <Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin mx-auto" />
-                        <p className="text-[var(--text-secondary)] mt-4 text-sm font-medium">Cargando tus kits de marca...</p>
+                        <Loader2 className="w-8 h-8 text-[var(--accent)] mx-auto" />
+                        <p className="text-[var(--text-secondary)] mt-4 text-sm font-medium">{t('loading.kits')}</p>
                     </div>
                 </div>
             </DashboardLayout>
@@ -848,10 +858,10 @@ function BrandKitPageContent() {
                 {creatingAssistantKit && (
                     <div className="max-w-2xl mx-auto py-20 text-center">
                         <div className="glass-panel rounded-3xl p-10 space-y-4">
-                            <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
-                            <h2 className="text-2xl font-bold">Preparando tu nuevo kit de marca</h2>
+                            <Loader2 className="w-8 h-8 text-primary mx-auto" />
+                            <h2 className="text-2xl font-bold">{t('loading.preparingTitle')}</h2>
                             <p className="text-muted-foreground">
-                                En unos segundos abriremos el asistente guiado.
+                                {t('loading.preparingDescription')}
                             </p>
                         </div>
                     </div>
@@ -882,15 +892,17 @@ function BrandKitPageContent() {
                             </motion.div>
 
                             <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                                {brandKits.length === 0 ? 'Bienvenido a X Imagen' : 'Crear nuevo kit de marca'}
+                                {brandKits.length === 0
+                                    ? t('hero.welcomeTitle', { defaultValue: 'Welcome to X Imagen' })
+                                    : t('hero.createTitle', { defaultValue: 'Create a new brand kit' })}
                             </h2>
                             <p className="text-muted-foreground mb-8 max-w-lg mx-auto text-lg">
                                 {brandKits.length === 0
-                                    ? 'Tu kit de marca es la base para obtener resultados consistentes en Imagen, Carrusel y Video.'
-                                    : 'Antes de generar contenido, dedica unos minutos a construir un kit de marca completo y coherente.'}
+                                    ? t('hero.welcomeDescription', { defaultValue: 'Your brand kit is the foundation for getting consistent results in Image, Carousel, and Video.' })
+                                    : t('hero.createDescription', { defaultValue: 'Before generating content, spend a few minutes building a complete and coherent brand kit.' })}
                             </p>
                             <p className="text-muted-foreground/90 mb-8 max-w-2xl mx-auto text-sm leading-relaxed">
-                                Cuanto mejor definido este tu kit de marca (colores, tono, tipografias y referencias), mejor funcionaran todos los modulos de creacion.
+                                {t('hero.helper', { defaultValue: 'The better defined your brand kit is, the better every creation module will perform.' })}
                             </p>
 
                             {/* URL Input */}
@@ -906,7 +918,7 @@ function BrandKitPageContent() {
                                         )} />
                                     </div>
                                     <Input
-                                        placeholder="ejemplo.com o https://ejemplo.com"
+                                        placeholder={t('hero.urlPlaceholder', { defaultValue: 'example.com or https://example.com' })}
                                         className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-lg h-14 placeholder:text-muted-foreground/40 font-medium"
                                         value={url}
                                         onChange={handleUrlChange}
@@ -919,12 +931,12 @@ function BrandKitPageContent() {
                                         size="lg"
                                         className="btn-gradient rounded-xl px-8 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mr-1"
                                     >
-                                        {loading ? (
-                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                {loading ? (
+                                            <Loader2 className="w-5 h-5" />
                                         ) : (
                                             <>
                                                 <Sparkles className="w-5 h-5 mr-2" />
-                                                Analizar
+                                                {t('hero.analyze', { defaultValue: 'Analyze' })}
                                             </>
                                         )}
                                     </Button>
@@ -938,10 +950,10 @@ function BrandKitPageContent() {
                                         className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-600 dark:text-amber-400"
                                     >
                                         <p className="text-sm font-medium mb-2">
-                                            📱 Las redes sociales no se pueden analizar automáticamente
+                                            {t('hero.socialWarningTitle', { defaultValue: 'Social media URLs cannot be analyzed automatically' })}
                                         </p>
                                         <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mb-3">
-                                            Las URLs de Instagram, Facebook, TikTok y otras redes sociales no permiten la extracción automática de estilos.
+                                            {t('hero.socialWarningDescription', { defaultValue: 'Instagram, Facebook, TikTok and other social URLs do not allow automatic style extraction.' })}
                                         </p>
                                         <Button
                                             type="button"
@@ -951,7 +963,7 @@ function BrandKitPageContent() {
                                             className="border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
                                         >
                                             <Pencil className="w-4 h-4 mr-2" />
-                                            Construir Kit de Marca manualmente
+                                            {t('hero.buildManually', { defaultValue: 'Build the Brand Kit manually' })}
                                         </Button>
                                     </motion.div>
                                 )}
@@ -964,7 +976,7 @@ function BrandKitPageContent() {
                                     onClick={handleManualCreation}
                                     className="underline underline-offset-4 hover:text-foreground transition-colors"
                                 >
-                                    No tengo web, construire mi kit de marca manualmente
+                                    {t('hero.noWebsite', { defaultValue: 'I do not have a website, I will build my brand kit manually' })}
                                 </button>
                             </p>
 
@@ -980,7 +992,7 @@ function BrandKitPageContent() {
                                     }}
                                 >
                                     <X className="w-4 h-4 mr-2" />
-                                    Cancelar
+                                    {t('common:actions.cancel', { defaultValue: 'Cancel' })}
                                 </Button>
                             )}
                         </div>
@@ -1202,12 +1214,12 @@ function BrandKitPageContent() {
                                     exit={{ opacity: 0, y: -10 }}
                                     className="text-3xl font-bold text-foreground"
                                 >
-                                    {progress < 20 && "Analizando estructura del sitio..."}
-                                    {progress >= 20 && progress < 40 && "Conectando con el motor visual..."}
-                                    {progress >= 40 && progress < 60 && "Extrayendo ADN de marca..."}
-                                    {progress >= 60 && progress < 80 && "Procesando activos visuales..."}
-                                    {progress >= 80 && progress < 95 && "Generando paletas de diseño..."}
-                                    {progress >= 95 && "Finalizando el Kit de Marca..."}
+                                    {progress < 20 && t('loadingStages.analyzingStructure', { defaultValue: 'Analyzing site structure...' })}
+                                    {progress >= 20 && progress < 40 && t('loadingStages.connectingEngine', { defaultValue: 'Connecting to the visual engine...' })}
+                                    {progress >= 40 && progress < 60 && t('loadingStages.extractingDna', { defaultValue: 'Extracting brand DNA...' })}
+                                    {progress >= 60 && progress < 80 && t('loadingStages.processingAssets', { defaultValue: 'Processing visual assets...' })}
+                                    {progress >= 80 && progress < 95 && t('loadingStages.generatingPalettes', { defaultValue: 'Generating design palettes...' })}
+                                    {progress >= 95 && t('loadingStages.finishing', { defaultValue: 'Finalizing the Brand Kit...' })}
                                 </motion.h3>
 
                                 {/* Technical Log */}
@@ -1217,9 +1229,9 @@ function BrandKitPageContent() {
                                         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                                         className="space-y-2"
                                     >
-                                        {[...TECHNICAL_LOGS, ...TECHNICAL_LOGS, ...TECHNICAL_LOGS].map((log, i) => (
+                                        {[...technicalLogs, ...technicalLogs, ...technicalLogs].map((log, i) => (
                                             <div key={i} className="flex items-center gap-2 text-muted-foreground/40 text-sm font-mono">
-                                                <span className="text-primary/40">â–¸</span>
+                                                <span className="text-primary/40">▸</span>
                                                 <span className="truncate">{log}</span>
                                             </div>
                                         ))}
@@ -1245,6 +1257,19 @@ function BrandKitPageContent() {
                                     ))}
                                 </div>
 
+                                <div className="flex flex-col items-center gap-3">
+                                    <Loader2 className="h-10 w-10 text-primary" />
+                                    <button
+                                        type="button"
+                                        onClick={handleStopAnalysis}
+                                        className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
+                                    >
+                                        {isCancelingAnalysis
+                                            ? t('loading.canceling', { defaultValue: 'Canceling...' })
+                                            : t('loading.stop', { defaultValue: 'Stop' })}
+                                    </button>
+                                </div>
+
                                 {/* Engine info */}
                                 <motion.p
                                     className="text-sm text-muted-foreground/40 font-medium"
@@ -1252,7 +1277,7 @@ function BrandKitPageContent() {
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 0.8 }}
                                 >
-                                    FIRE-SC Engine v4.0 â€¢ Vision-Core Runtime â€¢ Headless-Chromium
+                                    FIRE-SC Engine v4.0 · Vision-Core Runtime · Headless-Chromium
                                 </motion.p>
                             </motion.div>
                         </div>
@@ -1290,6 +1315,7 @@ function BrandKitPageContent() {
                                 setShowRegenerateConfirm(true);
                             }}
                             onAnalyzeUrlFromAssistant={handleAnalyzeFromAssistant}
+                            onStopAnalyzeUrlFromAssistant={handleStopAnalysis}
                             onPreviewUrlFromAssistant={handlePreviewFromAssistant}
                             onNewBrandKit={handleNewProfile}
                             onSaveSuccess={reloadBrandKits}
@@ -1312,10 +1338,12 @@ function BrandKitPageContent() {
                                     <div className="p-2.5 rounded-full bg-amber-500/10 text-amber-500">
                                         <TriangleAlert className="w-6 h-6 animate-pulse" />
                                     </div>
-                                    Regenerar kit de marca
+                                    {t('dialogs.regenerateTitle', { defaultValue: 'Regenerate brand kit' })}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription className="text-muted-foreground pt-4 text-base leading-relaxed">
-                                    Esta accion volvera a analizar el sitio web <span className='font-semibold text-foreground'>{normalizeUrlForAnalysis(pendingRegenerateUrl) || normalizeUrlForAnalysis(activeBrandKit?.url || '') || 'sin URL valida'}</span> desde cero.
+                                    {t('dialogs.regenerateDescriptionBefore', { defaultValue: 'This action will analyze the website ' })}
+                                    <span className='font-semibold text-foreground'>{normalizeUrlForAnalysis(pendingRegenerateUrl) || normalizeUrlForAnalysis(activeBrandKit?.url || '') || t('dialogs.invalidUrl', { defaultValue: 'without a valid URL' })}</span>
+                                    {t('dialogs.regenerateDescriptionAfter', { defaultValue: ' again from scratch.' })}
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                         </div>
@@ -1324,21 +1352,21 @@ function BrandKitPageContent() {
                             <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-4 flex gap-3">
                                 <TriangleAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                 <p className="text-sm text-red-500/90 font-medium">
-                                    Cuidado: se perderan permanentemente todos los cambios manuales que hayas realizado en este perfil.
+                                    {t('dialogs.regenerateWarning', { defaultValue: 'Warning: all the manual changes you made in this profile will be permanently lost.' })}
                                 </p>
                             </div>
                         </div>
 
                         <AlertDialogFooter className="p-6 border-t border-border flex-row justify-end gap-3 sm:space-x-0">
                             <AlertDialogCancel className="mt-0 border-border hover:bg-accent hover:text-accent-foreground text-foreground transition-all active:scale-95">
-                                Cancelar
+                                {t('common:actions.cancel', { defaultValue: 'Cancel' })}
                             </AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleRegenerate}
                                 className="shadow-lg transition-all active:scale-95"
                             >
                                 <RefreshCcw className="w-4 h-4 mr-2" />
-                                Si, regenerar ahora
+                                {t('dialogs.regenerateConfirm', { defaultValue: 'Yes, regenerate now' })}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
@@ -1349,19 +1377,21 @@ function BrandKitPageContent() {
                         <AlertDialogHeader>
                             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
                                 <Trash2 className="w-5 h-5" />
-                                Borrar kit de marca actual
+                                {t('dialogs.deleteCurrentTitle', { defaultValue: 'Delete current brand kit' })}
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                                Se eliminará <span className="font-semibold">{activeBrandKit?.brand_name || 'este kit'}</span> y no se podrá deshacer.
+                                {t('dialogs.deleteCurrentBefore', { defaultValue: 'The following will be deleted: ' })}
+                                <span className="font-semibold">{activeBrandKit?.brand_name || t('dialogs.thisKit', { defaultValue: 'this kit' })}</span>
+                                {t('dialogs.deleteCurrentAfter', { defaultValue: ' and this action cannot be undone.' })}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogCancel>{t('common:actions.cancel', { defaultValue: 'Cancel' })}</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleDeleteCurrentBrandKit}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                                Borrar kit
+                                {t('dialogs.deleteCurrentConfirm', { defaultValue: 'Delete kit' })}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
@@ -1375,12 +1405,14 @@ export default function BrandKitPage() {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center min-h-screen">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <Loader2 className="w-8 h-8 text-primary" />
             </div>
         }>
             <BrandKitPageContent />
         </Suspense>
     );
 }
+
+
 
 

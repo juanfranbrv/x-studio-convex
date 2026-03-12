@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -17,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Minus, Sparkles, Loader2, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { Plus, Minus, Sparkles, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import type { CarouselSuggestion, CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
@@ -28,6 +29,12 @@ import { resizeImage } from '@/lib/image-utils'
 import { getAutomaticBasicComposition } from '@/lib/carousel-selection'
 import { CarouselCompositionSelector } from '@/components/studio/carousel/CarouselCompositionSelector'
 import { BrandingConfigurator } from '@/components/studio/creation-flow/BrandingConfigurator'
+import {
+    localizeCarouselCompositionDescription,
+    localizeCarouselCompositionName,
+    localizeCarouselStructureName,
+    localizeCarouselStructureSummary,
+} from '@/lib/carousel-localization'
 import type { ReferenceImageRole, SelectedColor, VisionAnalysis } from '@/lib/creation-flow-types'
 import { buildPriority5StyleBlockFromAnalysis, mergeCustomStyleIntoStyleDirectives } from '@/lib/prompts/vision/style-priority-block'
 import { useMutation, useQuery } from 'convex/react'
@@ -44,6 +51,7 @@ import { SuggestionsList } from '@/components/studio/shared/SuggestionsList'
 import { useStylePresetImages } from '@/hooks/useStylePresetImages'
 import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialog'
 import { HexColorPicker } from 'react-colorful'
+import { useTranslation } from 'react-i18next'
 
 export interface SlideConfig {
     index: number
@@ -88,6 +96,7 @@ function normalizeHexColor(color: string): string {
 function RoleColorSwatch({
     color,
     onCommit,
+    applyLabel,
     draggable = false,
     onDragStart,
     onDragEnd,
@@ -95,6 +104,7 @@ function RoleColorSwatch({
 }: {
     color: string
     onCommit: (nextColor: string) => void
+    applyLabel: string
     draggable?: boolean
     onDragStart?: (event: React.DragEvent<HTMLButtonElement>) => void
     onDragEnd?: (event: React.DragEvent<HTMLButtonElement>) => void
@@ -141,7 +151,7 @@ function RoleColorSwatch({
                         setOpen(false)
                     }}
                 >
-                    Aplicar color
+                    {applyLabel}
                 </Button>
             </PopoverContent>
         </Popover>
@@ -151,9 +161,11 @@ function RoleColorSwatch({
 function AddAccentSwatch({
     disabled,
     onAdd,
+    label,
 }: {
     disabled?: boolean
     onAdd: (nextColor: string) => void
+    label: string
 }) {
     const [open, setOpen] = useState(false)
     const [draft, setDraft] = useState('#4f46e5')
@@ -169,7 +181,7 @@ function AddAccentSwatch({
                         "hover:border-primary/60 hover:text-primary",
                         disabled && "cursor-not-allowed opacity-40"
                     )}
-                    title="Añadir acento"
+                    title={label}
                 >
                     <Plus className="h-5 w-5" />
                 </button>
@@ -194,7 +206,7 @@ function AddAccentSwatch({
                         setOpen(false)
                     }}
                 >
-                    Añadir acento
+                    {label}
                 </Button>
             </PopoverContent>
         </Popover>
@@ -403,12 +415,12 @@ type CarouselWorkspaceSnapshot = {
 }
 
 const STYLE_OPTIONS = [
-    { id: 'minimal', label: 'Minimalista' },
-    { id: 'gradient', label: 'Gradientes' },
-    { id: 'photo', label: 'Fotográfico' },
-    { id: 'illustration', label: 'Ilustración' },
-    { id: 'bold', label: 'Bold & Tipográfico' },
-    { id: 'elegant', label: 'Elegante' },
+    { id: 'minimal', label: 'Minimalist' },
+    { id: 'gradient', label: 'Gradients' },
+    { id: 'photo', label: 'Photographic' },
+    { id: 'illustration', label: 'Illustration' },
+    { id: 'bold', label: 'Bold & Typographic' },
+    { id: 'elegant', label: 'Elegant' },
 ]
 
 function pickCompositionId(
@@ -479,6 +491,7 @@ export function CarouselControlsPanel({
     onRestorePreviewState,
     getAuditFlowId
 }: CarouselControlsPanelProps) {
+    const { t, i18n } = useTranslation('carousel')
     const router = useRouter()
     const createWorkSession = useMutation(api.work_sessions.createSession)
     const upsertWorkSession = useMutation(api.work_sessions.upsertActiveSession)
@@ -502,7 +515,12 @@ export function CarouselControlsPanel({
     const { stylePresets } = useStylePresetImages()
     const stylePresetsStatus: 'Exhausted' = 'Exhausted'
     const structures: UiStructure[] = (structuresData || [])
-        .map((s) => ({ id: s.structure_id, name: s.name, summary: s.summary, order: s.order }))
+        .map((s) => ({
+            id: s.structure_id,
+            name: localizeCarouselStructureName(s.structure_id, s.name, i18n.language),
+            summary: localizeCarouselStructureSummary(s.structure_id, s.summary, i18n.language),
+            order: s.order,
+        }))
         .sort((a, b) => a.order - b.order)
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
     const [selectedSessionToLoad, setSelectedSessionToLoad] = useState<string>('')
@@ -578,12 +596,15 @@ export function CarouselControlsPanel({
     const confirmDiscardUnsavedChanges = useCallback(async (action: string) => {
         if (!hasUnsavedChanges) return true
         const decision = await openSessionDecisionModal({
-            title: 'Hay cambios sin guardar',
-            description: `Si continúas para ${action}, perderás los cambios de esta sesión. ¿Qué quieres hacer?`,
+            title: t('ui.unsavedChangesTitle', { defaultValue: 'There are unsaved changes' }),
+            description: t('ui.unsavedChangesDescription', {
+                defaultValue: 'If you continue to {{action}}, you will lose the changes in this session. What would you like to do?',
+                action,
+            }),
             buttons: [
-                { id: 'cancel', label: 'Seguir aquí', variant: 'outline' },
-                { id: 'save', label: 'Guardar y continuar', variant: 'default' },
-                { id: 'discard', label: 'Descartar cambios', variant: 'destructive' },
+                { id: 'cancel', label: t('ui.stayHere', { defaultValue: 'Stay here' }), variant: 'outline' },
+                { id: 'save', label: t('ui.saveAndContinue', { defaultValue: 'Save and continue' }), variant: 'default' },
+                { id: 'discard', label: t('ui.discardChanges', { defaultValue: 'Discard changes' }), variant: 'destructive' },
             ],
         })
         if (decision === 'save') {
@@ -609,8 +630,13 @@ export function CarouselControlsPanel({
     const compositions: UiComposition[] = (compositionsData || [])
         .map((c) => ({
             id: c.composition_id,
-            name: c.name,
-            description: c.description,
+            name: localizeCarouselCompositionName(c.composition_id, c.name, i18n.language),
+            description: localizeCarouselCompositionDescription(
+                c.composition_id,
+                c.description,
+                c.layoutPrompt,
+                i18n.language
+            ),
             layoutPrompt: c.layoutPrompt,
             icon: c.icon,
             iconPrompt: c.iconPrompt,
@@ -685,7 +711,7 @@ export function CarouselControlsPanel({
     const advancedCompositions = compositions
     const buildSessionTitle = useCallback((value?: string | null) => {
         const cleaned = (value || '').replace(/\s+/g, ' ').trim()
-        if (!cleaned) return 'Sesion nueva'
+        if (!cleaned) return t('ui.newSessionTitle', { defaultValue: 'New session' })
         if (cleaned.length <= 48) return cleaned
         return `${cleaned.slice(0, 48)}...`
     }, [])
@@ -1226,7 +1252,7 @@ export function CarouselControlsPanel({
         options?: { skipUnsavedConfirm?: boolean; persist?: boolean }
     ) => {
         if (!userId || !scopedBrandId) return null
-        if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges('crear una sesión nueva')) return null
+        if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges(t('ui.createNewSessionAction', { defaultValue: 'create a new session' }))) return null
 
         const defaultStructureId = analysisStructure?.id || structures[0]?.id || 'problema-solucion'
         const emptySnapshot = buildEmptyWorkspaceSnapshot(defaultStructureId)
@@ -1265,7 +1291,7 @@ export function CarouselControlsPanel({
         options?: { skipUnsavedConfirm?: boolean }
     ) => {
         if (!sessionId || !userId) return false
-        if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges('cambiar de sesión')) return false
+        if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges(t('ui.switchSessionAction', { defaultValue: 'switch sessions' }))) return false
         const activated = await activateWorkSession({
             user_id: userId,
             session_id: sessionId as Id<'work_sessions'>,
@@ -1274,7 +1300,7 @@ export function CarouselControlsPanel({
             pendingBaselineResetRef.current = true
             savedPreviewVariantKeysRef.current = extractSavedPreviewVariantKeys(activated.snapshot as CarouselWorkspaceSnapshot)
             restoreWorkspaceFromSnapshot(activated.snapshot as CarouselWorkspaceSnapshot)
-            log.success('SESSION', 'Sesion de carrusel restaurada', {
+            log.success('SESSION', 'Carousel session restored', {
                 session_id: String(activated._id || sessionId),
                 module: 'carousel',
             })
@@ -1288,11 +1314,11 @@ export function CarouselControlsPanel({
     const handleDeleteCurrentSession = useCallback(async () => {
         if (!userId || !currentSessionId) return
         const decision = await openSessionDecisionModal({
-            title: 'Borrar esta sesión',
-            description: 'Eliminarás esta sesión de carrusel. El contenido guardado de esta sesión dejará de estar disponible.',
+            title: t('ui.deleteThisSessionTitle', { defaultValue: 'Delete this session' }),
+            description: t('ui.deleteThisSessionDescription', { defaultValue: 'This carousel session will be deleted. The saved content from this session will no longer be available.' }),
             buttons: [
-                { id: 'cancel', label: 'Cancelar', variant: 'outline' },
-                { id: 'delete', label: 'Borrar sesión', variant: 'destructive' },
+                { id: 'cancel', label: t('common:actions.cancel', { defaultValue: 'Cancel' }), variant: 'outline' },
+                { id: 'delete', label: t('ui.deleteSessionConfirm', { defaultValue: 'Delete session' }), variant: 'destructive' },
             ],
         })
         if (decision !== 'delete') return
@@ -1312,11 +1338,11 @@ export function CarouselControlsPanel({
     const handleClearAllSessions = useCallback(async () => {
         if (!userId || !scopedBrandId) return
         const decision = await openSessionDecisionModal({
-            title: 'Borrar todas las sesiones',
-            description: 'Se eliminará todo el historial de sesiones de carrusel de este kit de marca. Esta acción no se puede deshacer.',
+            title: t('ui.deleteAllSessionsTitle', { defaultValue: 'Delete all sessions' }),
+            description: t('ui.deleteAllSessionsDescription', { defaultValue: 'The entire carousel session history for this Brand Kit will be deleted. This action cannot be undone.' }),
             buttons: [
-                { id: 'cancel', label: 'Cancelar', variant: 'outline' },
-                { id: 'clear', label: 'Borrar todo', variant: 'destructive' },
+                { id: 'cancel', label: t('common:actions.cancel', { defaultValue: 'Cancel' }), variant: 'outline' },
+                { id: 'clear', label: t('ui.deleteAllSessionsConfirm', { defaultValue: 'Delete all' }), variant: 'destructive' },
             ],
         })
         if (decision !== 'clear') return
@@ -2388,7 +2414,7 @@ export function CarouselControlsPanel({
                 return nextUploaded
             })
         } catch (error) {
-            setImageError(error instanceof Error ? error.message : 'Error al subir imagen')
+            setImageError(error instanceof Error ? error.message : t('ui.uploadImageError', { defaultValue: 'Error uploading image' }))
         } finally {
             setIsImageAnalyzing(false)
         }
@@ -2660,29 +2686,31 @@ export function CarouselControlsPanel({
                 <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader
                         icon={History}
-                        title="Historial"
+                        title={t('ui.history')}
                         className="mb-2"
                         extra={
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
                                     {isSavingSession ? (
                                         <>
-                                            <Loader2 className="h-3 w-3 animate-spin" />
-                                            Guardando...
+                                            <Loader2 className="h-3 w-3" />
+                                            {t('ui.saving')}
                                         </>
                                     ) : saveError ? (
                                         <>
                                             <AlertCircle className="h-3 w-3" />
-                                            Error
+                                            {t('ui.errorShort')}
                                         </>
                                     ) : hasUnsavedChanges ? (
-                                        'Hay cambios por guardar'
+                                        t('ui.unsavedChanges')
                                     ) : lastSavedAt ? (
                                         <>
                                             <CheckCircle2 className="h-3 w-3" />
-                                            {`Guardado ${new Date(lastSavedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
+                                            {t('ui.savedAt', {
+                                                time: new Date(lastSavedAt).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })
+                                            })}
                                         </>
-                                    ) : 'Sin cambios'}
+                                    ) : t('ui.noChanges')}
                                 </span>
                                 <Button
                                     type="button"
@@ -2691,10 +2719,10 @@ export function CarouselControlsPanel({
                                     className="h-7 w-7"
                                     onClick={() => void handleSaveNow()}
                                     disabled={!userId || !scopedBrandId || isHydratingSession || isSavingSession || !hasUnsavedChanges}
-                                    title="Guardar sesion ahora"
+                                    title={t('ui.saveSessionNow')}
                                 >
                                     {isSavingSession ? (
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        <Loader2 className="h-3.5 w-3.5" />
                                     ) : (
                                         <Save
                                             className={cn(
@@ -2726,11 +2754,11 @@ export function CarouselControlsPanel({
                             }}
                         >
                             {(workSessions || []).length === 0 ? (
-                                <option value="">Sin sesiones</option>
+                                <option value="">{t('ui.noSessions')}</option>
                             ) : null}
                             {(workSessions || []).map((session) => (
                                 <option key={String(session._id)} value={String(session._id)}>
-                                    {buildSessionTitle(session.title || 'Sesion sin titulo')} {session.active ? '(Activa)' : ''} - {new Date(session.updated_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                    {buildSessionTitle(session.title || t('ui.untitledSession'))} {session.active ? `(${t('ui.activeSession')})` : ''} - {new Date(session.updated_at).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })}
                                 </option>
                             ))}
                         </select>
@@ -2743,7 +2771,7 @@ export function CarouselControlsPanel({
                             onClick={() => void createNewCarouselSession()}
                         >
                             <Plus className="w-3 h-3" />
-                            Nueva
+                            {t('ui.newSession')}
                         </Button>
                         <Button
                             variant="outline"
@@ -2752,7 +2780,7 @@ export function CarouselControlsPanel({
                             onClick={() => void handleRenameCurrentSession()}
                             disabled={!currentSessionId}
                         >
-                            Renombrar sesión
+                            {t('ui.renameSession')}
                         </Button>
                         <Button
                             variant="outline"
@@ -2760,7 +2788,7 @@ export function CarouselControlsPanel({
                             className="h-7 px-2 text-[10px]"
                             onClick={() => void handleDeleteCurrentSession()}
                         >
-                            Borrar sesión
+                            {t('ui.deleteSession')}
                         </Button>
                         <Button
                             variant="outline"
@@ -2768,7 +2796,7 @@ export function CarouselControlsPanel({
                             className="h-7 px-2 text-[10px]"
                             onClick={() => void handleClearAllSessions()}
                         >
-                            Borrar historial
+                            {t('ui.deleteHistory')}
                         </Button>
                     </div>
                 </div>
@@ -2776,20 +2804,20 @@ export function CarouselControlsPanel({
                 {/* Slide Count */}
                 {isStepVisible(1) && (
                 <div ref={(el) => { stepRefs.current[1] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                    <SectionHeader icon={GalleryHorizontal} title="Numero de diapositivas" />
+                    <SectionHeader icon={GalleryHorizontal} title={t('ui.slideCount')} />
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(-1)} disabled={slideCount <= 0}>
                             <Minus className="w-4 h-4" />
                         </Button>
                         <div className="flex-1 text-center">
                             <span className="text-3xl font-bold">{slideCount}</span>
-                            <span className="text-sm text-muted-foreground ml-2">slides</span>
+                            <span className="text-sm text-muted-foreground ml-2">{t('ui.slides')}</span>
                         </div>
                         <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(1)} disabled={slideCount >= 15}>
                             <Plus className="w-4 h-4" />
                         </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">Entre 1 y 15 diapositivas.</p>
+                    <p className="text-xs text-muted-foreground">{t('ui.slideRange')}</p>
                 </div>
                 )}
 
@@ -2798,11 +2826,11 @@ export function CarouselControlsPanel({
                 <div ref={(el) => { stepRefs.current[2] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
                         icon={Wand2}
-                        title="¿Qué quieres crear?"
+                        title={t('ui.whatToCreate')}
                     />
                     <div className="relative">
                         <Textarea
-                            placeholder="Ej: Quiero dar valor real. Sácame los 5 errores típicos que cometemos los españoles al hablar inglés y cómo corregirlos. Algo que la gente quiera guardar para repasar luego."
+                            placeholder={t('ui.promptPlaceholder')}
                             value={prompt}
                             onChange={(e) => {
                                 const nextPrompt = e.target.value
@@ -2822,7 +2850,7 @@ export function CarouselControlsPanel({
                         />
                         <div className="absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2">
                             <div className="flex items-center gap-2">
-                                {isAnalyzing && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                                {isAnalyzing && <Loader2 className="w-4 h-4 text-primary" />}
                                 {isAnalyzing && onCancelAnalyze && (
                                     <div className="flex items-center gap-2">
                                         <Button
@@ -2832,7 +2860,7 @@ export function CarouselControlsPanel({
                                             onClick={onCancelAnalyze}
                                             className="h-6 px-1 text-[11px]"
                                         >
-                                            Detener
+                                            {t('ui.stop')}
                                         </Button>
                                         <motion.span
                                             initial={{ opacity: 0 }}
@@ -2840,7 +2868,7 @@ export function CarouselControlsPanel({
                                             transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
                                             className="text-[10px] uppercase tracking-wider text-muted-foreground"
                                         >
-                                            Cancelando...
+                                            {t('ui.canceling')}
                                         </motion.span>
                                     </div>
                                 )}
@@ -2851,7 +2879,7 @@ export function CarouselControlsPanel({
                                 disabled={!canAnalyze}
                                 className="group feedback-action ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
                             >
-                                {primaryActionRequiresReanalysis ? 'Reanalizar' : 'Analizar'}
+                                {primaryActionRequiresReanalysis ? t('ui.reanalyze') : t('ui.analyze')}
                             </Button>
                         </div>
                     </div>
@@ -2873,13 +2901,13 @@ export function CarouselControlsPanel({
                                     <div className="space-y-1">
                                         <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
                                             <Layers className="h-3 w-3" />
-                                            Composición avanzada
+                                            {t('ui.advancedCompositionBadge', { defaultValue: 'Advanced composition' })}
                                         </div>
                                         <p className="text-sm font-semibold text-foreground">
-                                            Mezcla lo mejor de cada propuesta
+                                            {t('ui.advancedCompositionTitle', { defaultValue: 'Mix the best of each proposal' })}
                                         </p>
                                         <p className="text-[11px] leading-relaxed text-muted-foreground">
-                                            Abre un editor amplio para elegir la mejor versión de cada diapositiva sin pelearte con el panel lateral.
+                                            {t('ui.advancedCompositionDescription', { defaultValue: 'Open a wide editor to choose the best version of each slide without fighting the side panel.' })}
                                         </p>
                                     </div>
                                     <Button
@@ -2887,7 +2915,7 @@ export function CarouselControlsPanel({
                                         onClick={() => setIsAdvancedCompositionOpen(true)}
                                         className="h-8 rounded-full px-3 text-[11px]"
                                     >
-                                        Abrir editor
+                                        {t('ui.openEditor', { defaultValue: 'Open editor' })}
                                     </Button>
                                 </div>
                             </motion.div>
@@ -2899,13 +2927,13 @@ export function CarouselControlsPanel({
                                             <div className="space-y-2">
                                                 <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
                                                     <Layers className="h-3.5 w-3.5" />
-                                                    Composición avanzada
+                                                    {t('ui.advancedCompositionBadge', { defaultValue: 'Advanced composition' })}
                                                 </div>
                                                 <DialogTitle className="text-xl font-semibold">
-                                                    Monta el carrusel slide a slide
+                                                    {t('ui.composeSlideBySlide', { defaultValue: 'Build the carousel slide by slide' })}
                                                 </DialogTitle>
                                                 <DialogDescription className="max-w-3xl text-sm leading-relaxed">
-                                                    Cada fila representa una diapositiva. En horizontal ves la opción original y todas las variantes disponibles para esa posición.
+                                                    {t('ui.composeSlideBySlideDescription', { defaultValue: 'Each row represents one slide. Horizontally you see the original option and every available variant for that position.' })}
                                                 </DialogDescription>
                                             </div>
                                             {hasOriginalSuggestion && onUndoSuggestion && (
@@ -2916,7 +2944,7 @@ export function CarouselControlsPanel({
                                                     className="h-9 rounded-full px-4 text-[11px]"
                                                 >
                                                     <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-                                                    Volver al original
+                                                    {t('common:suggestions.backToOriginal', { defaultValue: 'Back to original' })}
                                                 </Button>
                                             )}
                                         </div>
@@ -2938,15 +2966,19 @@ export function CarouselControlsPanel({
                                                                 </span>
                                                                 <div>
                                                                     <p className="text-sm font-semibold text-foreground">
-                                                                        {slide.role === 'hook' ? 'Hook' : slide.role === 'cta' ? 'Cierre / CTA' : `Slide ${slideIndex + 1}`}
+                                                                        {slide.role === 'hook'
+                                                                            ? t('ui.hook', { defaultValue: 'Hook' })
+                                                                            : slide.role === 'cta'
+                                                                                ? t('ui.closingCta', { defaultValue: 'Closing / CTA' })
+                                                                                : t('ui.slideLabel', { index: slideIndex + 1, defaultValue: 'Slide {{index}}' })}
                                                                     </p>
                                                                     <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                                                                        Activa: {slideVariantSources.find((source) => source.id === selectedSource)?.label || 'Original'}
+                                                                        {t('ui.activeVariant', { defaultValue: 'Active' })}: {slideVariantSources.find((source) => source.id === selectedSource)?.label || t('ui.original', { defaultValue: 'Original' })}
                                                                     </p>
                                                                 </div>
                                                             </div>
                                                             <span className="rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                                                                {slideVariantSources.length} variantes
+                                                                {t('ui.variantsCount', { count: slideVariantSources.length, defaultValue: '{{count}} variants' })}
                                                             </span>
                                                         </div>
 
@@ -2984,10 +3016,10 @@ export function CarouselControlsPanel({
                                                                             </div>
                                                                             <div className="mt-3 space-y-2">
                                                                                 <p className="line-clamp-2 text-base font-semibold leading-tight text-foreground">
-                                                                                    {candidate.title || 'Sin título'}
+                                                                                    {candidate.title || t('ui.untitled', { defaultValue: 'Untitled' })}
                                                                                 </p>
                                                                                 <p className="line-clamp-5 text-[12px] leading-relaxed text-muted-foreground">
-                                                                                    {candidate.description || 'Sin descripción'}
+                                    {candidate.description || t('ui.noDescription', { defaultValue: 'No description' })}
                                                                                 </p>
                                                                             </div>
                                                                         </button>
@@ -3002,7 +3034,7 @@ export function CarouselControlsPanel({
 
                                     <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-background/95 px-6 py-4">
                                         <p className="text-[11px] leading-relaxed text-muted-foreground">
-                                            Los cambios se aplican al instante mientras eliges variantes.
+                                            {t('ui.variantChangesInstant', { defaultValue: 'Changes apply instantly while you choose variants.' })}
                                         </p>
                                         <div className="flex items-center gap-2">
                                             <Button
@@ -3010,13 +3042,13 @@ export function CarouselControlsPanel({
                                                 onClick={() => setIsAdvancedCompositionOpen(false)}
                                                 className="h-9 rounded-full px-4 text-[11px]"
                                             >
-                                                Seguir editando después
+                                                {t('ui.keepEditingLater', { defaultValue: 'Keep editing later' })}
                                             </Button>
                                             <Button
                                                 onClick={() => setIsAdvancedCompositionOpen(false)}
                                                 className="h-9 rounded-full px-4 text-[11px]"
                                             >
-                                                Usar esta composición
+                                                {t('ui.useThisComposition', { defaultValue: 'Use this composition' })}
                                             </Button>
                                         </div>
                                     </div>
@@ -3032,11 +3064,11 @@ export function CarouselControlsPanel({
                 <div ref={(el) => { stepRefs.current[3] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
                         icon={Layout}
-                        title="Diseño"
+                        title={t('ui.designTitle')}
                         extra={
                             <div className="flex items-center gap-2">
                                 <span className={cn("text-[10px] font-medium", compositionMode === 'advanced' ? "text-primary" : "text-muted-foreground")}>
-                                    Avanzado
+                                    {t('ui.advancedMode')}
                                 </span>
                                 <Switch
                                     checked={compositionMode === 'advanced'}
@@ -3052,7 +3084,7 @@ export function CarouselControlsPanel({
                                         )
                                     )
                                 }}
-                                    aria-label="Activar modo avanzado de diseño"
+                                    aria-label={t('ui.designAdvancedAria')}
                                 />
                             </div>
                         }
@@ -3069,7 +3101,7 @@ export function CarouselControlsPanel({
                             size="sm"
                             className="h-6 px-2 text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 rounded-full shadow-none"
                         >
-                            <SelectValue placeholder="Estructura" />
+                            <SelectValue placeholder={t('ui.structurePlaceholder')} />
                         </SelectTrigger>
                         <SelectContent align="end">
                             {structures.map((structure) => (
@@ -3096,13 +3128,13 @@ export function CarouselControlsPanel({
                                 }}
                             />
                             <p className="text-[11px] text-muted-foreground leading-snug">
-                                Modo avanzado: eliges manualmente el diseño.
+                                {t('ui.advancedModeDescription')}
                             </p>
                         </>
                     ) : (
                         <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5">
                             <p className="text-[11px] text-primary font-medium leading-relaxed">
-                                Modo básico activo: el diseño se selecciona automáticamente según lo que escribas. Activa el modo avanzado si quieres más control.
+                                {t('ui.basicModeDescription')}
                             </p>
                         </div>
                     )}
@@ -3112,7 +3144,7 @@ export function CarouselControlsPanel({
                 {/* Format */}
                 {isStepVisible(4) && (
                 <div ref={(el) => { stepRefs.current[4] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                    <SectionHeader icon={Layers} title="Formato" />
+                    <SectionHeader icon={Layers} title={t('ui.formatTitle')} />
                     <div className="space-y-2">
                         <button
                             onClick={() => handleAspectRatioSelect('4:5')}
@@ -3124,11 +3156,11 @@ export function CarouselControlsPanel({
                             <div className="w-8 h-10 rounded bg-muted border border-border" />
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold">Vertical Estándar (Retrato)</span>
+                                    <span className="text-xs font-semibold">{t('ui.formatVerticalTitle', { defaultValue: 'Standard vertical (portrait)' })}</span>
                                     <span className="text-[10px] font-medium text-muted-foreground">4:5</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1350 · el estándar más seguro para evitar recortes en dispositivos antiguos o Meta Ads.
+                                    {t('ui.formatVerticalDescription', { defaultValue: '1080x1350 · the safest standard to avoid cropping on older devices or Meta Ads.' })}
                                 </p>
                             </div>
                         </button>
@@ -3142,11 +3174,11 @@ export function CarouselControlsPanel({
                             <div className="w-8 h-10 rounded bg-muted border border-border" />
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold">Tall / Vertical Extendido (Tendencia 2026)</span>
+                                    <span className="text-xs font-semibold">{t('ui.formatTallTitle', { defaultValue: 'Tall / extended vertical (2026 trend)' })}</span>
                                     <span className="text-[10px] font-medium text-muted-foreground">3:4</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1440 · +6.6% pantalla · domina el feed y encaja con la nueva cuadrícula vertical.
+                                    {t('ui.formatTallDescription', { defaultValue: '1080x1440 · +6.6% more screen space · dominates the feed and fits the new vertical grid.' })}
                                 </p>
                             </div>
                         </button>
@@ -3160,11 +3192,11 @@ export function CarouselControlsPanel({
                             <div className="w-10 h-10 rounded bg-muted border border-border" />
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold">Cuadrado (Tradicional)</span>
+                                    <span className="text-xs font-semibold">{t('ui.formatSquareTitle', { defaultValue: 'Square (traditional)' })}</span>
                                     <span className="text-[10px] font-medium text-muted-foreground">1:1</span>
                                 </div>
                                 <p className="text-[11px] text-muted-foreground leading-snug">
-                                    1080x1080 · formato original y clásico para diseños equilibrados.
+                                    {t('ui.formatSquareDescription', { defaultValue: '1080x1080 · the original classic format for balanced layouts.' })}
                                 </p>
                             </div>
                         </button>
@@ -3178,7 +3210,7 @@ export function CarouselControlsPanel({
                         <div ref={(el) => { stepRefs.current[5] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                             <SectionHeader
                                 icon={ImagePlus}
-                                title={imageSourceMode === 'generate' ? 'Contenido generado por IA' : 'Contenido del usuario'}
+                                title={imageSourceMode === 'generate' ? t('ui.generatedContentTitle') : t('ui.userContentTitle')}
                                 extra={(
                                     <Switch
                                         checked={imageSourceMode === 'generate'}
@@ -3209,7 +3241,7 @@ export function CarouselControlsPanel({
                         </div>
 
                         <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                            <SectionHeader icon={Palette} title="Estilo" />
+                            <SectionHeader icon={Palette} title={t('ui.styleTitle')} />
                             <StyleImageCard
                                 uploadedImages={uploadedImages}
                                 onUpload={handleStyleUpload}
@@ -3229,15 +3261,13 @@ export function CarouselControlsPanel({
                             />
                             <div className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/30 px-3 py-3">
                                 <div className="space-y-1">
-                                    <p className="text-[12px] font-medium leading-none">Aplicar el estilo también a las fuentes</p>
-                                    <p className="text-[11px] leading-snug text-muted-foreground">
-                                        Solo afecta al texto visible del diseño. Si lo activas, el título y el párrafo adoptan mejor el lenguaje del estilo; el párrafo seguirá priorizando claridad y legibilidad.
-                                    </p>
+                                    <p className="text-[12px] font-medium leading-none">{t('ui.styleTypographyTitle')}</p>
+                                    <p className="text-[11px] leading-snug text-muted-foreground">{t('ui.styleTypographyDescription')}</p>
                                 </div>
                                 <Switch
                                     checked={applyStyleToTypography}
                                     onCheckedChange={setApplyStyleToTypography}
-                                    aria-label="Aplicar el estilo también a las fuentes"
+                                    aria-label={t('ui.styleTypographyTitle')}
                                 />
                             </div>
                         </div>
@@ -3257,10 +3287,10 @@ export function CarouselControlsPanel({
                         </div>
 
                         <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-6`}>
-                            <SectionHeader icon={Fingerprint} title="Kit de marca" />
+                            <SectionHeader icon={Fingerprint} title={t('ui.brandKitTitle')} />
 
                             <div className="space-y-3">
-                                <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Logo</p>
+                                <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.logo')}</p>
                                 <BrandingConfigurator
                                     selectedLayout={null}
                                     selectedLogoId={selectedLogoId}
@@ -3277,11 +3307,11 @@ export function CarouselControlsPanel({
                                 />
                                 {(brandLogos.length > 0 || primaryLogo) && (
                                     <div className="flex items-center justify-between gap-2 pt-1">
-                                        <p className="text-sm font-medium">Aplicar logo en todas</p>
+                                        <p className="text-sm font-medium">{t('ui.applyLogoAll')}</p>
                                         <Switch
                                             checked={includeLogoOnSlides}
                                             onCheckedChange={setIncludeLogoOnSlides}
-                                            aria-label="Aplicar logo en todas"
+                                            aria-label={t('ui.applyLogoAll')}
                                         />
                                     </div>
                                 )}
@@ -3289,7 +3319,7 @@ export function CarouselControlsPanel({
 
                             <div className="space-y-3 border-t border-border/60 pt-4">
                                 <div className="flex items-center justify-between gap-2">
-                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Colores</p>
+                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.colors')}</p>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -3297,7 +3327,7 @@ export function CarouselControlsPanel({
                                         className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
                                     >
                                         <RotateCcw className="w-3 h-3" />
-                                        Recargar
+                            {t('ui.reload', { defaultValue: 'Reload' })}
                                     </Button>
                                 </div>
                                 <div className="flex flex-wrap items-end gap-3 pb-1">
@@ -3318,6 +3348,7 @@ export function CarouselControlsPanel({
                                             <RoleColorSwatch
                                                 color={brandColorsByRole.Texto[0]}
                                                 onCommit={(nextColor) => replaceRoleColor('Texto', nextColor, brandColorsByRole.Texto[0])}
+                                                applyLabel={t('ui.applyColor')}
                                                 draggable
                                                 onDragStart={() => setDraggedBrandColor({ role: 'Texto', color: brandColorsByRole.Texto[0] })}
                                                 onDragEnd={() => setDraggedBrandColor(null)}
@@ -3330,10 +3361,10 @@ export function CarouselControlsPanel({
                                                 className="h-8 px-2 text-[10px]"
                                                 onClick={() => replaceRoleColor('Texto', '#111111')}
                                             >
-                                                Añadir
+                                                {t('ui.add')}
                                             </Button>
                                         )}
-                                        <span className="text-[10px] text-muted-foreground">Texto</span>
+                                        <span className="text-[10px] text-muted-foreground">{t('ui.text')}</span>
                                     </div>
 
                                     <div
@@ -3353,6 +3384,7 @@ export function CarouselControlsPanel({
                                             <RoleColorSwatch
                                                 color={brandColorsByRole.Fondo[0]}
                                                 onCommit={(nextColor) => replaceRoleColor('Fondo', nextColor, brandColorsByRole.Fondo[0])}
+                                                applyLabel={t('ui.applyColor')}
                                                 draggable
                                                 onDragStart={() => setDraggedBrandColor({ role: 'Fondo', color: brandColorsByRole.Fondo[0] })}
                                                 onDragEnd={() => setDraggedBrandColor(null)}
@@ -3365,10 +3397,10 @@ export function CarouselControlsPanel({
                                                 className="h-8 px-2 text-[10px]"
                                                 onClick={() => replaceRoleColor('Fondo', '#ffffff')}
                                             >
-                                                Añadir
+                                                {t('ui.add')}
                                             </Button>
                                         )}
-                                        <span className="text-[10px] text-muted-foreground">Fondo</span>
+                                        <span className="text-[10px] text-muted-foreground">{t('ui.background')}</span>
                                     </div>
 
                                     <div
@@ -3400,6 +3432,7 @@ export function CarouselControlsPanel({
                                                     <RoleColorSwatch
                                                         color={accentColor}
                                                         onCommit={(nextColor) => replaceRoleColor('Acento', nextColor, accentColor)}
+                                                        applyLabel={t('ui.applyColor')}
                                                         sizeClass="w-12 h-12 rounded-full"
                                                         draggable
                                                         onDragStart={() => setDraggedBrandColor({ role: 'Acento', color: accentColor })}
@@ -3409,7 +3442,7 @@ export function CarouselControlsPanel({
                                                         type="button"
                                                         className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full border border-border/70 bg-background text-muted-foreground shadow-sm transition-opacity opacity-0 group-hover/accent:opacity-100 group-focus-within/accent:opacity-100 hover:border-destructive/50 hover:text-destructive"
                                                         onClick={() => removeBrandColor(accentColor)}
-                                                        title="Quitar acento"
+                                                        title={t('ui.removeAccent')}
                                                     >
                                                         <X className="h-3 w-3" />
                                                     </button>
@@ -3418,16 +3451,17 @@ export function CarouselControlsPanel({
                                             <AddAccentSwatch
                                                 onAdd={addAccentColor}
                                                 disabled={brandColorsByRole.Acento.length >= 5}
+                                                label={t('ui.addAccent')}
                                             />
                                         </div>
-                                        <span className="w-12 text-center text-[10px] text-muted-foreground">Acentos</span>
+                                        <span className="w-12 text-center text-[10px] text-muted-foreground">{t('ui.accents')}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="space-y-3 border-t border-border/60 pt-4">
                                 <div className="flex items-center justify-between gap-2">
-                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Enlace</p>
+                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.link')}</p>
                                     <Switch
                                         checked={ctaUrlEnabled}
                                         onCheckedChange={(checked) => {
@@ -3447,7 +3481,7 @@ export function CarouselControlsPanel({
                                     />
                                 ) : (
                                     <p className="text-[11px] leading-relaxed text-muted-foreground">
-                                        Activa el enlace si quieres mostrar una URL en la última slide.
+                                        {t('ui.linkDescription')}
                                     </p>
                                 )}
                             </div>
@@ -3458,7 +3492,7 @@ export function CarouselControlsPanel({
                                         {primaryEmail ? (
                                             <div className="space-y-1.5">
                                                 <div className="flex items-center justify-between gap-2">
-                                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Email</p>
+                                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.email')}</p>
                                                     <Switch
                                                         checked={Boolean(getContactFieldValue('contact-email-main'))}
                                                         onCheckedChange={(checked) => setContactFieldChecked('contact-email-main', primaryEmail, checked)}
@@ -3483,7 +3517,7 @@ export function CarouselControlsPanel({
                                             return (
                                                 <div key={fieldId} className="space-y-1.5">
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{`Teléfono ${idx + 1}`}</p>
+                                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.phone', { index: idx + 1 })}</p>
                                                         <Switch
                                                             checked={Boolean(selectedValue)}
                                                             onCheckedChange={(checked) => setContactFieldChecked(fieldId, phone, checked)}
@@ -3509,7 +3543,7 @@ export function CarouselControlsPanel({
                                             return (
                                                 <div key={fieldId} className="space-y-1.5">
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{`Dirección ${idx + 1}`}</p>
+                                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.address', { index: idx + 1 })}</p>
                                                         <Switch
                                                             checked={Boolean(selectedValue)}
                                                             onCheckedChange={(checked) => setContactFieldChecked(fieldId, address, checked)}
@@ -3541,8 +3575,7 @@ export function CarouselControlsPanel({
                 {primaryActionRequiresReanalysis && (
                     <div className="mb-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2">
                         <p className="text-[11px] leading-relaxed text-muted-foreground">
-                            Hay cambios estructurales pendientes. La vista previa actual puede estar basada en un análisis anterior.
-                            Reanaliza antes de generar para reconstruir la narrativa con el prompt, la narrativa y el número de diapositivas actuales.
+                            {t('ui.pendingStructuralChanges')}
                         </p>
                     </div>
                 )}
@@ -3553,28 +3586,28 @@ export function CarouselControlsPanel({
                 >
                     {isAnalyzing ? (
                         <>
-                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            {primaryActionRequiresReanalysis ? 'Reanalizando...' : 'Analizando...'}
+                            <Loader2 className="w-5 h-5 mr-2" />
+                            {primaryActionRequiresReanalysis ? t('ui.reanalyzing') : t('ui.analyzing')}
                         </>
                     ) : isGenerating ? (
                         <>
-                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            Generando {generatedCount}/{totalSlides}...
+                            <Loader2 className="w-5 h-5 mr-2" />
+                            {t('ui.generatingProgress', { current: generatedCount, total: totalSlides })}
                         </>
                     ) : primaryActionRequiresReanalysis ? (
                         <>
                             <RotateCcw className="w-5 h-5 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
-                            REANALIZAR CARRUSEL
+                            {t('ui.reanalyze').toUpperCase()}
                         </>
                     ) : generatedCount > 0 ? (
                         <>
                             <RotateCcw className="w-5 h-5 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
-                            Generar otro carrusel con mismos ajustes
+                            {t('ui.retryCarousel')}
                         </>
                     ) : (
                         <>
                             <Sparkles className="w-5 h-5 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
-                            GENERAR CARRUSEL
+                            {t('ui.generateCarousel').toUpperCase()}
                         </>
                     )}
                 </Button>
@@ -3586,9 +3619,9 @@ export function CarouselControlsPanel({
                             variant="link"
                             size="sm"
                             className="h-7 px-0 text-[11px] text-muted-foreground hover:text-destructive"
-                            title="Detener generación"
+                            title={t('ui.stopGeneration')}
                         >
-                            Detener generación
+                            {t('ui.stopGeneration')}
                         </Button>
                         <motion.span
                             initial={{ opacity: 0 }}
@@ -3596,14 +3629,14 @@ export function CarouselControlsPanel({
                             transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
                             className="text-[10px] uppercase tracking-wider text-muted-foreground"
                         >
-                            Cancelando...
+                            {t('ui.canceling')}
                         </motion.span>
                     </div>
                 )}
 
                 {!brandKit && (
                     <p className="text-xs text-destructive text-center mt-2">
-                        Selecciona un Brand Kit para continuar
+                        {t('errors.selectBrandKit')}
                     </p>
                 )}
             </div>
@@ -3617,9 +3650,9 @@ export function CarouselControlsPanel({
             >
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>¿Hay cambios sin guardar? ¿Desea guardarlos?</DialogTitle>
+                        <DialogTitle>{t('ui.unsavedDialogTitle')}</DialogTitle>
                         <DialogDescription>
-                            Si continúas sin guardar, perderás los cambios de esta sesión.
+                            {t('ui.unsavedDialogDescription')}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="gap-2">
@@ -3628,20 +3661,20 @@ export function CarouselControlsPanel({
                             onClick={handleUnsavedNavigateCancel}
                             disabled={isResolvingUnsavedNavigation}
                         >
-                            Cancelar
+                            {t('ui.cancel')}
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={handleUnsavedNavigateDiscard}
                             disabled={isResolvingUnsavedNavigation}
                         >
-                            Descartar y salir
+                            {t('ui.discardLeave')}
                         </Button>
                         <Button
                             onClick={() => void handleUnsavedNavigateSave()}
                             disabled={isResolvingUnsavedNavigation}
                         >
-                            Guardar y salir
+                            {t('ui.saveLeave')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -3674,10 +3707,10 @@ export function CarouselControlsPanel({
             </Dialog>
             <SessionTitleDialog
                 open={sessionTitleDialogOpen}
-                title="Ponle nombre a la sesión"
-                description="La primera vez que guardes esta sesión puedes dejarle un nombre claro para encontrarla luego."
+                title={t('ui.sessionDialogTitle')}
+                description={t('ui.sessionDialogDescription')}
                 value={sessionTitleDraft}
-                confirmLabel="Guardar sesión"
+                confirmLabel={t('ui.sessionDialogConfirm')}
                 onValueChange={setSessionTitleDraft}
                 onCancel={() => closeSessionTitleDialog(null)}
                 onConfirm={() => closeSessionTitleDialog(buildSessionTitle(sessionTitleDraft))}
@@ -3685,6 +3718,8 @@ export function CarouselControlsPanel({
         </div>
     )
 }
+
+
 
 
 

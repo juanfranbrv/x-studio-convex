@@ -3,6 +3,7 @@
 import { CSSProperties } from 'react'
 import { LayoutTemplate, Route, Wand2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 export type PickerMode = 'motif' | 'skeleton' | 'operator'
 
@@ -76,6 +77,12 @@ const clamp2: CSSProperties = {
     WebkitLineClamp: 2,
     overflow: 'hidden',
 }
+
+const sanitizePreviewText = (value: string): string =>
+    value
+        .replace(/dise\u00C3\u00B1o/g, 'diseño')
+        .replace(/Dise\u00C3\u00B1o/g, 'Diseño')
+        .replace(/tipografico/g, 'tipográfico')
 
 const hashSeed = (value: string): number =>
     value.split('').reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) % 9973, 17)
@@ -320,13 +327,89 @@ export interface CompositionPreviewData {
     sectionLabel: string
 }
 
+function getPreviewLocale(): string {
+    if (typeof window === 'undefined') return 'es-ES'
+    return window.localStorage.getItem('xstudio.locale') || window.document.documentElement.lang || window.navigator.language || 'es-ES'
+}
+
+function getEnglishPreviewText(mode: PickerMode, kind: PreviewKind): { sectionLabel: string; title: string; description: string } {
+    const sectionLabel =
+        mode === 'operator' ? 'Narrative flow' : mode === 'skeleton' ? 'Structure' : 'Visual style'
+    const titleMap: Record<PreviewKind, string> = {
+        'offer-burst': 'Offer Core',
+        'hero-stage': 'Hero Stage',
+        'mosaic-grid': 'Mosaic Grid',
+        'launch-teaser': 'Launch Teaser',
+        'service-blueprint': 'Service Blueprint',
+        'bulletin': 'Bulletin',
+        'event-card': 'Event Card',
+        'checklist-grid': 'Checklist Grid',
+        'before-after': 'Before / After',
+        'commemoration-seal': 'Commemoration Seal',
+        'team-cards': 'Team Cards',
+        'quote-poster': 'Quote Poster',
+        'hiring-spotlight': 'Hiring Spotlight',
+        'confetti-island': 'Confetti Island',
+        'cutaway-layers': 'Cutaway Layers',
+        'data-spotlight': 'Data Spotlight',
+        'step-flow': 'Step Flow',
+        'definition-term': 'Definition Card',
+        'axis-scan': 'Axis Scan',
+        'op-reading-z': 'Z Reading Path',
+        'op-reading-f': 'F Reading Path',
+        'op-reading-s': 'S Reading Path',
+        'op-radial': 'Radial Reading Path',
+        'op-alternating-lr': 'Left-Right Alternation',
+        'op-center-edge': 'Center-Edge Pulse',
+        'generic': mode === 'operator' ? 'Reading Flow' : mode === 'skeleton' ? 'Structure' : 'Visual Style',
+    }
+    const descriptionMap: Record<PreviewKind, string> = {
+        'offer-burst': 'Central emphasis with support blocks to communicate impact.',
+        'hero-stage': 'Main hero element with secondary support blocks.',
+        'mosaic-grid': 'Modular grid layout to organize content.',
+        'launch-teaser': 'Diagonal path to tease and reveal content.',
+        'service-blueprint': 'Connected nodes to explain relationships or flow.',
+        'bulletin': 'Bulletin structure with clear textual hierarchy.',
+        'event-card': 'Card layout with header and highlighted event block.',
+        'checklist-grid': 'Ordered blocks for a checklist or key points.',
+        'before-after': 'Split comparison to show visual contrast.',
+        'commemoration-seal': 'Central seal for milestone or achievement messages.',
+        'team-cards': 'Stacked cards for team members or profiles.',
+        'quote-poster': 'Typographic layout for quotes or statements.',
+        'hiring-spotlight': 'Main spotlight with support blocks to attract talent.',
+        'confetti-island': 'Highlighted center with accent pieces for celebration.',
+        'cutaway-layers': 'Layered cutaways to add depth and context.',
+        'data-spotlight': 'Charts and callouts to highlight key data.',
+        'step-flow': 'Guided reading path for a sequence or process.',
+        'definition-term': 'Term block with an explanation area.',
+        'axis-scan': 'Axis-based reading for rhythm and visual direction.',
+        'op-reading-z': 'Z reading path: top, cross, and lower close.',
+        'op-reading-f': 'F reading path: vertical anchor and horizontal cuts.',
+        'op-reading-s': 'S reading path: curved and progressive movement.',
+        'op-radial': 'Radial reading from the center out to support blocks.',
+        'op-alternating-lr': 'Alternating left-right reading for rhythm.',
+        'op-center-edge': 'Center-to-edge pulse for visual expansion.',
+        'generic': mode === 'operator'
+            ? 'Visual approach to guide the reading path.'
+            : mode === 'skeleton'
+                ? 'Visual structure to organize the design.'
+                : 'Visual style to define the gesture of the design.',
+    }
+    return { sectionLabel, title: titleMap[kind], description: descriptionMap[kind] }
+}
+
 export function getCompositionPreviewData(item: VisualItem, mode: PickerMode): CompositionPreviewData {
     const kind = pickKind(item, mode)
     const variant = hashSeed(`${item.slug || item.name}-${item._id}`) % 6
-    const title = getNombreEs(mode, item, kind)
-    const description = getDescripcionEs(mode, kind) || getMeta(mode).emptyDescription
-    const sectionLabel = getMeta(mode).label
-    return { kind, variant, title, description, sectionLabel }
+    const locale = getPreviewLocale()
+    const isEnglish = locale.toLowerCase().startsWith('en')
+    const englishPreview = getEnglishPreviewText(mode, kind)
+    const title = sanitizePreviewText(isEnglish ? englishPreview.title : getNombreEs(mode, item, kind))
+    const description = isEnglish
+        ? englishPreview.description
+        : (getDescripcionEs(mode, kind) || getMeta(mode).emptyDescription)
+    const sectionLabel = sanitizePreviewText(isEnglish ? englishPreview.sectionLabel : getMeta(mode).label)
+    return { kind, variant, title, description: sanitizePreviewText(description), sectionLabel }
 }
 
 function PreviewThumbnail({ kind, variant }: { kind: PreviewKind; variant: number }) {
@@ -621,13 +704,39 @@ export function CompositionPreviewThumbnail({
 }
 
 function CompositionVisualPicker({ items, selectedId, onSelect, mode }: BaseVisualPickerProps) {
+    const { i18n } = useTranslation()
+    const isEnglish = String(i18n.language || '').toLowerCase().startsWith('en')
     const meta = getMeta(mode)
     const MetaIcon = meta.Icon
+    const localizedMeta = {
+        ...meta,
+        label: isEnglish
+            ? mode === 'skeleton'
+                ? 'Structure'
+                : mode === 'operator'
+                    ? 'Narrative flow'
+                    : 'Visual style'
+            : meta.label,
+        autoDescription: isEnglish
+            ? mode === 'skeleton'
+                ? 'The system decides how to distribute the content for your idea.'
+                : mode === 'operator'
+                    ? 'The system decides how to guide reading and attention.'
+                    : 'The system defines the visual look that best fits your idea.'
+            : meta.autoDescription,
+        emptyDescription: isEnglish
+            ? mode === 'operator'
+                ? 'Visual guide for the reading path.'
+                : mode === 'skeleton'
+                    ? 'Base visual distribution of the design.'
+                    : 'Dominant visual look of the design.'
+            : meta.emptyDescription,
+    }
 
     return (
         <div className="space-y-2">
             <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
-                {meta.label}
+                {sanitizePreviewText(localizedMeta.label)}
             </p>
             <div className="grid grid-cols-2 gap-2">
                 <button
@@ -643,9 +752,9 @@ function CompositionVisualPicker({ items, selectedId, onSelect, mode }: BaseVisu
                     <div className="h-[56px] rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                         <MetaIcon className="w-7 h-7" />
                     </div>
-                    <p className="text-[11px] font-semibold leading-tight mt-1.5">{meta.autoLabel}</p>
+                    <p className="text-[11px] font-semibold leading-tight mt-1.5">{sanitizePreviewText(meta.autoLabel)}</p>
                     <p className="text-[10px] text-muted-foreground leading-tight mt-1" style={clamp2}>
-                        {meta.autoDescription}
+                        {sanitizePreviewText(localizedMeta.autoDescription)}
                     </p>
                 </button>
 
@@ -655,6 +764,8 @@ function CompositionVisualPicker({ items, selectedId, onSelect, mode }: BaseVisu
                     const variant = hashSeed(`${item.slug || item.name}-${item._id}`) % 3
                     const descripcionEs = getDescripcionEs(mode, kind)
                     const nombreEs = getNombreEs(mode, item, kind)
+                    const name = sanitizePreviewText(isEnglish ? (item.name || nombreEs) : nombreEs)
+                    const description = sanitizePreviewText(isEnglish ? (item.description || descripcionEs) : descripcionEs)
 
                     return (
                         <button
@@ -667,14 +778,14 @@ function CompositionVisualPicker({ items, selectedId, onSelect, mode }: BaseVisu
                                     ? 'border-primary/35 bg-primary/10'
                                     : 'border-border hover:border-primary/25 hover:bg-primary/5'
                             )}
-                            title={`${nombreEs}. ${descripcionEs}`}
+                            title={`${name}. ${description}`}
                         >
                             <div className="h-[56px] rounded-lg bg-primary/10 px-1.5 py-1 text-primary">
                                 <PreviewThumbnail kind={kind} variant={variant} />
                             </div>
-                            <p className="text-[11px] font-semibold leading-tight mt-1.5">{nombreEs}</p>
+                            <p className="text-[11px] font-semibold leading-tight mt-1.5">{name}</p>
                             <p className="text-[10px] text-muted-foreground leading-tight mt-1" style={clamp2}>
-                                {descripcionEs || meta.emptyDescription}
+                                {description || sanitizePreviewText(localizedMeta.emptyDescription)}
                             </p>
                         </button>
                     )

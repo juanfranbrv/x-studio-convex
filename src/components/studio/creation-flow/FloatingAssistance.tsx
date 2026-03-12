@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import { useEffect, useState, useRef } from 'react';
 import { useUI } from '@/contexts/UIContext';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface FloatingAssistanceProps {
     title?: string;
@@ -27,6 +28,7 @@ export function FloatingAssistance({
     side = 'left',
     anchorRef
 }: FloatingAssistanceProps) {
+    const { t } = useTranslation('common');
     const { setAssistanceEnabled } = useUI();
     const { toast } = useToast();
     const [mounted, setMounted] = useState(false);
@@ -88,8 +90,8 @@ export function FloatingAssistance({
     const handleCloseAssistance = () => {
         setAssistanceEnabled(false);
         toast({
-            title: 'Ayudas desactivadas',
-            description: 'Puedes volver a activarlas desde Ajustes.',
+            title: t('floatingAssistance.disabledTitle', { defaultValue: 'Help hidden' }),
+            description: t('floatingAssistance.disabledDescription', { defaultValue: 'You can enable it again from Settings.' }),
         });
         onClose?.();
     };
@@ -162,8 +164,8 @@ export function FloatingAssistance({
                     <button
                         onClick={handleCloseAssistance}
                         className="shrink-0 text-muted-foreground/50 hover:text-foreground transition-colors -mt-1 -mr-1 p-1"
-                        aria-label="Cerrar ayuda y desactivar asistencias"
-                        title="Cerrar ayuda"
+                        aria-label={t('floatingAssistance.closeAria', { defaultValue: 'Close help and disable assistance' })}
+                        title={t('floatingAssistance.closeTitle', { defaultValue: 'Close help' })}
                     >
                         <X className="w-3.5 h-3.5" />
                     </button>

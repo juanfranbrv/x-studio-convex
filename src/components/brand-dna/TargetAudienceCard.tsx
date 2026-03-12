@@ -2,20 +2,23 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Crosshair, Target } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface TargetAudienceCardProps {
     audience?: string[];
 }
 
 export function TargetAudienceCard({ audience = [] }: TargetAudienceCardProps) {
+    const { t } = useTranslation('brandKit');
+
     if (audience.length === 0) return null;
 
     return (
-        <Card className="glass-panel border-0 overflow-hidden">
-            <CardHeader className="pb-2 border-b border-border/50 bg-muted/5">
-                <CardTitle className="flex items-center gap-2 text-base text-foreground font-semibold">
-                    <Target className="w-5 h-5 text-primary" />
-                    Público Objetivo
+        <Card className="glass-panel overflow-hidden border-0">
+            <CardHeader className="border-b border-border/50 bg-muted/5 pb-2">
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+                    <Target className="h-5 w-5 text-primary" />
+                    {t('audience.title', { defaultValue: 'Target audience' })}
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
@@ -24,17 +27,17 @@ export function TargetAudienceCard({ audience = [] }: TargetAudienceCardProps) {
                         {audience.map((profile, i) => (
                             <div
                                 key={i}
-                                className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg text-sm font-medium text-foreground hover:bg-primary/10 transition-colors"
+                                className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-primary/10"
                             >
-                                <Users className="w-4 h-4 text-primary" />
+                                <Users className="h-4 w-4 text-primary" />
                                 {profile}
                             </div>
                         ))}
                     </div>
 
-                    <p className="text-xs text-muted-foreground italic flex items-start gap-1.5 px-1">
-                        <Crosshair className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                        Estos perfiles han sido identificados por IA analizando el lenguaje, oferta y posicionamiento de la marca en su sitio web.
+                    <p className="flex items-start gap-1.5 px-1 text-xs italic text-muted-foreground">
+                        <Crosshair className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        {t('audience.helper', { defaultValue: 'These profiles were identified by AI after analyzing the brand language, offer, and positioning on the website.' })}
                     </p>
                 </div>
             </CardContent>

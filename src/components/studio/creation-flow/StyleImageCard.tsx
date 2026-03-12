@@ -1,11 +1,13 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Image as ImageIcon, Loader2, Palette, Upload, X } from 'lucide-react'
+import { Check, Image as ImageIcon, Palette, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import type { ReferenceImageRole } from '@/lib/creation-flow-types'
+import { useTranslation } from 'react-i18next'
 
 interface StyleImageCardProps {
     uploadedImages: string[]
@@ -50,6 +52,9 @@ export function StyleImageCard({
     isAnalyzing = false,
     error = null,
 }: StyleImageCardProps) {
+    const { t } = useTranslation('common')
+    const tt = (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+        t(key, { defaultValue, ...options })
     const [isDragging, setIsDragging] = useState(false)
     const [isBrandKitModalOpen, setIsBrandKitModalOpen] = useState(false)
     const [isPresetModalOpen, setIsPresetModalOpen] = useState(false)
@@ -73,7 +78,7 @@ export function StyleImageCard({
     const currentStyleIsUpload = Boolean(currentStyleId && uploadedImages.includes(currentStyleId))
     const currentStyleImage = currentStyleId
         ? (currentStyleIsUpload
-            ? { id: currentStyleId, url: currentStyleId, name: 'Estilo subido' }
+            ? { id: currentStyleId, url: currentStyleId, name: tt('styleImage.uploadedStyle', 'Uploaded style') }
             : brandKitMap.get(currentStyleId) || null)
         : null
 
@@ -99,16 +104,16 @@ export function StyleImageCard({
         ? {
             id: currentStyleImage.id,
             url: currentStyleImage.url,
-            sourceLabel: currentStyleIsUpload ? 'Subido' : 'Kit de marca',
-            title: currentStyleImage.name || 'Referencia de estilo',
+            sourceLabel: currentStyleIsUpload ? tt('styleImage.uploadedBadge', 'Uploaded') : tt('styleImage.brandKitBadge', 'Brand Kit'),
+            title: currentStyleImage.name || tt('styleImage.referenceTitle', 'Style reference'),
             removable: true,
         }
             : selectedPreset
             ? {
                 id: selectedPreset._id,
                 url: selectedPreset.image_url,
-                sourceLabel: 'Predefinido',
-                title: selectedPreset.name || 'Estilo predefinido',
+                sourceLabel: tt('styleImage.presetBadge', 'Preset'),
+                title: selectedPreset.name || tt('styleImage.presetTitle', 'Preset style'),
                 removable: false,
             }
             : null
@@ -185,7 +190,7 @@ export function StyleImageCard({
                             onClick={() => inputRef.current?.click()}
                         >
                             <Upload className="w-3 h-3 shrink-0" />
-                            <span className="truncate">Subir estilo</span>
+                            <span className="truncate">{tt('styleImage.upload', 'Upload style')}</span>
                         </Button>
                         <Button
                             type="button"
@@ -195,7 +200,7 @@ export function StyleImageCard({
                             onClick={() => setIsBrandKitModalOpen(true)}
                         >
                             <Palette className="w-3 h-3 shrink-0" />
-                            <span className="truncate">Desde Kit de marca</span>
+                            <span className="truncate">{tt('styleImage.fromBrandKit', 'From Brand Kit')}</span>
                         </Button>
                         <Button
                             type="button"
@@ -204,7 +209,7 @@ export function StyleImageCard({
                             className="h-7 px-1.5 text-[10px] gap-1 min-w-0"
                             onClick={() => setIsPresetModalOpen(true)}
                         >
-                            <span className="truncate">Estilo predefinido</span>
+                            <span className="truncate">{tt('styleImage.presetButton', 'Preset style')}</span>
                         </Button>
                     </div>
 
@@ -226,7 +231,7 @@ export function StyleImageCard({
                             }
                         }}
                     >
-                        Limpiar
+                        {tt('styleImage.clear', 'Clear')}
                     </Button>
                 </div>
             </div>
@@ -246,13 +251,13 @@ export function StyleImageCard({
                             {canRenderImageUrl(visualStylePreview.url) ? (
                                 <img
                                     src={visualStylePreview.url}
-                                    alt={visualStylePreview.title || 'Vista de estilo'}
+                                    alt={visualStylePreview.title || tt('styleImage.previewAlt', 'Style preview')}
                                     className="w-full aspect-[2/3] rounded-md object-cover"
                                     onError={() => markImageAsFailed(visualStylePreview.url)}
                                 />
                             ) : (
                                 <div className="w-full aspect-[2/3] rounded-md bg-muted/50 text-[11px] text-muted-foreground flex items-center justify-center">
-                                    Sin imagen
+                                    {tt('styleImage.noImage', 'No image')}
                                 </div>
                             )}
                         </div>
@@ -261,7 +266,7 @@ export function StyleImageCard({
                                 {visualStylePreview.sourceLabel}
                             </span>
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                Referencia de estilo activa para la próxima generación.
+                                {tt('styleImage.activeHint', 'Active style reference for the next generation.')}
                             </p>
                         </div>
                     </div>
@@ -271,7 +276,7 @@ export function StyleImageCard({
                             type="button"
                             onClick={() => removeStyleId(visualStylePreview.id)}
                             className="absolute top-2 right-2 w-5 h-5 rounded-full bg-black/55 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                            aria-label="Eliminar imagen de estilo"
+                            aria-label={tt('styleImage.removeAria', 'Remove style image')}
                         >
                             <X className="w-3 h-3" />
                         </button>
@@ -294,18 +299,18 @@ export function StyleImageCard({
                         {isDragging ? <Upload className="w-4 h-4 text-primary" /> : <ImageIcon className="w-4 h-4 text-muted-foreground" />}
                     </div>
                     <p className="text-xs font-medium">
-                        {isDragging ? 'Suelta tu imagen de estilo' : 'Arrastra 1 imagen de estilo o haz clic'}
+                        {isDragging ? tt('styleImage.dropHere', 'Drop your style image') : tt('styleImage.dragOrClick', 'Drag one style image here or click')}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                        Solo una imagen de estilo. Si eliges otra, reemplaza a la anterior.
+                        {tt('styleImage.singleHint', 'Only one style image. If you choose another, it replaces the current one.')}
                     </p>
                 </div>
             )}
 
             {isAnalyzing && (
                 <div className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                    <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                    Analizando estilo...
+                    <Loader2 className="w-3 h-3 text-primary" />
+                    {tt('styleImage.analyzing', 'Analyzing style...')}
                 </div>
             )}
             {error && (
@@ -315,9 +320,9 @@ export function StyleImageCard({
             <Dialog open={isBrandKitModalOpen} onOpenChange={setIsBrandKitModalOpen}>
                 <DialogContent className="!w-[64vw] !max-w-[64vw] sm:!max-w-[64vw] h-[min(88vh,860px)] p-0 overflow-hidden flex flex-col">
                     <DialogHeader className="px-6 pt-6 pb-3">
-                        <DialogTitle>Seleccionar estilo desde Kit de marca</DialogTitle>
+                        <DialogTitle>{tt('styleImage.selectFromBrandKitTitle', 'Select style from Brand Kit')}</DialogTitle>
                         <DialogDescription>
-                            Solo puedes elegir una imagen de estilo. Si seleccionas otra, sustituye la actual.
+                            {tt('styleImage.selectFromBrandKitDescription', 'You can only choose one style image. If you select another one, it replaces the current one.')}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -341,7 +346,7 @@ export function StyleImageCard({
                                                     : 'border-border hover:border-primary/40'
                                             )}
                                         >
-                                            <img src={image.url} alt={image.name || 'Imagen de Kit de marca'} className="w-full h-full object-cover" />
+                                            <img src={image.url} alt={image.name || tt('styleImage.brandKitImageAlt', 'Brand Kit image')} className="w-full h-full object-cover" />
                                             {isSelected && (
                                                 <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
                                                     <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
@@ -355,7 +360,7 @@ export function StyleImageCard({
                             </div>
                         ) : (
                             <div className="rounded-xl border border-dashed border-border mt-1 p-6 text-center text-sm text-muted-foreground">
-                                Este Kit de marca no tiene imagenes aun.
+                                {tt('styleImage.noBrandKitImages', 'This Brand Kit does not have any images yet.')}
                             </div>
                         )}
                     </div>
@@ -366,7 +371,7 @@ export function StyleImageCard({
                             size="sm"
                             onClick={() => setIsBrandKitModalOpen(false)}
                         >
-                            Aceptar
+                            {tt('actions.continue', 'Continue')}
                         </Button>
                     </div>
                 </DialogContent>
@@ -375,9 +380,9 @@ export function StyleImageCard({
             <Dialog open={isPresetModalOpen} onOpenChange={setIsPresetModalOpen}>
                 <DialogContent className="!w-[64vw] !max-w-[64vw] sm:!max-w-[64vw] h-[min(93vh,980px)] p-0 overflow-hidden flex flex-col">
                     <DialogHeader className="px-6 pt-6 pb-3">
-                        <DialogTitle>Seleccionar estilo predefinido</DialogTitle>
+                        <DialogTitle>{tt('styleImage.selectPresetTitle', 'Select preset style')}</DialogTitle>
                         <DialogDescription>
-                            Este estilo usa un analisis ya guardado y se inyecta directamente en el prompt.
+                            {tt('styleImage.selectPresetDescription', 'This style uses a saved analysis and is injected directly into the prompt.')}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -385,7 +390,7 @@ export function StyleImageCard({
                         {stylePresets.length > 0 ? (
                             <div className="space-y-4">
                                 <div className="text-xs text-muted-foreground">
-                                    Mostrando {stylePresets.length} estilos
+                                    {tt('styleImage.showingPresets', 'Showing {{count}} styles', { count: stylePresets.length })}
                                 </div>
                                 <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] gap-3">
                                     {stylePresets.map((preset) => {
@@ -412,13 +417,13 @@ export function StyleImageCard({
                                                     {canRenderImageUrl(preset.image_url) ? (
                                                         <img
                                                             src={preset.image_url}
-                                                            alt={preset.name || 'Estilo predefinido'}
+                                                            alt={preset.name || tt('styleImage.presetTitle', 'Preset style')}
                                                             className="w-full h-full object-cover"
                                                             onError={() => markImageAsFailed(preset.image_url)}
                                                         />
                                                 ) : (
                                                         <div className="w-full h-full bg-muted/50 flex items-center justify-center text-[11px] text-muted-foreground font-medium">
-                                                            Sin imagen
+                                                            {tt('styleImage.noImage', 'No image')}
                                                         </div>
                                                     )}
                                                 </div>
@@ -441,23 +446,23 @@ export function StyleImageCard({
                                             disabled={stylePresetsStatus === 'LoadingFirstPage' || stylePresetsStatus === 'LoadingMore'}
                                         >
                                             {stylePresetsStatus === 'LoadingFirstPage' || stylePresetsStatus === 'LoadingMore'
-                                                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                ? <Loader2 className="w-4 h-4 mr-2" />
                                                 : null}
-                                            Cargar más estilos
+                                            {tt('styleImage.loadMore', 'Load more styles')}
                                         </Button>
                                     </div>
                                 ) : null}
                             </div>
                         ) : (
                             <div className="rounded-xl border border-dashed border-border mt-1 p-6 text-center text-sm text-muted-foreground">
-                                No hay estilos predefinidos activos.
+                                {tt('styleImage.noActivePresets', 'There are no active preset styles.')}
                             </div>
                         )}
                     </div>
 
                     <div className="border-t border-border px-6 py-3 flex justify-end">
                         <Button type="button" size="sm" onClick={() => setIsPresetModalOpen(false)}>
-                            Aceptar
+                            {tt('actions.continue', 'Continue')}
                         </Button>
                     </div>
                 </DialogContent>
@@ -465,3 +470,5 @@ export function StyleImageCard({
         </div>
     )
 }
+
+

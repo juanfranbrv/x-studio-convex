@@ -3,6 +3,7 @@
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface BrandContextCardProps {
     context: string;
@@ -11,12 +12,13 @@ interface BrandContextCardProps {
 }
 
 export function BrandContextCard({ context, onUpdate, minHeightClassName = 'min-h-[120px]' }: BrandContextCardProps) {
+    const { t } = useTranslation('brandKit');
     return (
         <Card className="glass-panel border-0 shadow-none overflow-hidden">
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <FileText className="w-5 h-5 text-primary" />
-                    Visión y Contexto de Marca
+                    {t('context.title', { defaultValue: 'Brand vision and context' })}
                 </CardTitle>
             </CardHeader>
             <div className="px-4 pb-4">
@@ -29,7 +31,7 @@ export function BrandContextCard({ context, onUpdate, minHeightClassName = 'min-
                         'bg-transparent border border-border/70 text-foreground',
                         'focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary'
                     )}
-                    placeholder="Describe la visión y el contexto de tu marca..."
+                    placeholder={t('context.placeholder', { defaultValue: 'Describe your brand vision and context...' })}
                 />
             </div>
         </Card>

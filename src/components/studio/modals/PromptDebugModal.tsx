@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -28,10 +29,10 @@ function sanitizeForDisplay(value: unknown): JsonValue {
     if (typeof value === 'string') {
         if (isDataUrl(value)) {
             const mime = value.slice(5, value.indexOf(';') > -1 ? value.indexOf(';') : 20)
-            return `[DATA_URL oculto (${mime}) - ${value.length} chars]`
+            return `[data URL hidden (${mime}) - ${value.length} chars]`
         }
         if (looksLongBase64(value)) {
-            return `[BASE64 oculto - ${value.length} chars]`
+            return `[base64 hidden - ${value.length} chars]`
         }
         if (value.length > 280 && value.startsWith('http')) {
             return `${value.slice(0, 140)}... (${value.length} chars)`
@@ -81,6 +82,7 @@ export function PromptDebugModal({
     promptData,
     viewOnly = false,
 }: PromptDebugModalProps) {
+    const { t } = useTranslation('common')
     const [copiedPayload, setCopiedPayload] = useState(false)
     const [copiedPrompt, setCopiedPrompt] = useState(false)
     const [activeSlideTab, setActiveSlideTab] = useState('')
@@ -95,9 +97,9 @@ export function PromptDebugModal({
 
     if (!promptData) return null
 
-    const effectiveModel = promptData.model || (typeof payloadObj.model === 'string' ? payloadObj.model : '') || 'No configurado'
-    const providerLabel = !effectiveModel || effectiveModel === 'No configurado'
-        ? 'No configurado'
+    const effectiveModel = promptData.model || (typeof payloadObj.model === 'string' ? payloadObj.model : '') || t('promptDebug.notConfigured', { defaultValue: 'Not configured' })
+    const providerLabel = !effectiveModel || effectiveModel === t('promptDebug.notConfigured', { defaultValue: 'Not configured' })
+        ? t('promptDebug.notConfigured', { defaultValue: 'Not configured' })
         : effectiveModel.startsWith('wisdom/')
             ? 'Wisdom'
             : effectiveModel.startsWith('naga/')
@@ -105,8 +107,8 @@ export function PromptDebugModal({
             : effectiveModel.startsWith('replicate/')
                 ? 'Replicate'
             : effectiveModel.startsWith('google/')
-                ? 'Google Oficial'
-                : 'Proveedor personalizado'
+                ? 'Google Official'
+                : t('promptDebug.customProvider', { defaultValue: 'Custom provider' })
 
     const contextItems = promptData.contextItems || []
     const contextByRole = contextItems.reduce((acc, item) => {
@@ -140,8 +142,8 @@ export function PromptDebugModal({
             const item = entry as Record<string, unknown>
             const rawValue = typeof item.value === 'string' ? item.value : ''
             let valuePreview = rawValue
-            if (isDataUrl(rawValue)) valuePreview = '[DATA_URL oculto]'
-            else if (looksLongBase64(rawValue)) valuePreview = `[BASE64 oculto - ${rawValue.length} chars]`
+            if (isDataUrl(rawValue)) valuePreview = '[data URL hidden]'
+            else if (looksLongBase64(rawValue)) valuePreview = `[base64 hidden - ${rawValue.length} chars]`
             return {
                 id: item.id,
                 type: item.type,
@@ -182,10 +184,10 @@ export function PromptDebugModal({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-primary" />
-                        Debug: payload de generacion
+                        {t('promptDebug.title', { defaultValue: 'Debug: generation payload' })}
                     </DialogTitle>
                     <DialogDescription>
-                        Fuente de verdad: lo que ves sale del payload final que se envia a <code>/api/generate</code>.
+                        {t('promptDebug.descriptionBefore', { defaultValue: 'Source of truth: what you see comes from the final payload sent to ' })}<code>/api/generate</code>{t('promptDebug.descriptionAfter', { defaultValue: '.' })}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -193,12 +195,12 @@ export function PromptDebugModal({
                     <div className="w-[68%] min-w-0 min-h-0 flex flex-col gap-3">
                         <div className="rounded-lg border bg-muted/30 p-3 min-h-0 flex-1 flex flex-col gap-2">
                             <div className="flex items-center justify-between">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Prompt enviado (payload.prompt)</p>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('promptDebug.promptSent', { defaultValue: 'Prompt sent (payload.prompt)' })}</p>
                                 <Button variant="ghost" size="sm" onClick={handleCopyPrompt} className="h-7 px-2" disabled={!payloadPrompt}>
                                     {copiedPrompt ? (
-                                        <><Check className="w-3 h-3 mr-1" />Copiado</>
+                                        <><Check className="w-3 h-3 mr-1" />{t('copyCard.copied')}</>
                                     ) : (
-                                        <><Copy className="w-3 h-3 mr-1" />Copiar prompt</>
+                                        <><Copy className="w-3 h-3 mr-1" />{t('promptDebug.copyPrompt', { defaultValue: 'Copy prompt' })}</>
                                     )}
                                 </Button>
                             </div>
@@ -207,7 +209,7 @@ export function PromptDebugModal({
                                     <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap">
                                         {slideDebug.map((slide) => (
                                             <TabsTrigger key={slide.slideNumber} value={`slide-${slide.slideNumber}`} className="shrink-0">
-                                                Slide {slide.slideNumber}
+                                                {t('preview.slide', { defaultValue: 'Slide' })} {slide.slideNumber}
                                             </TabsTrigger>
                                         ))}
                                     </TabsList>
@@ -225,7 +227,7 @@ export function PromptDebugModal({
                                 </Tabs>
                             ) : (
                                 <pre className="flex-1 overflow-y-auto rounded-lg bg-black/90 p-4 text-[11px] leading-relaxed text-green-400 font-mono whitespace-pre-wrap break-words">
-                                    {payloadPrompt || 'No hay prompt en el payload.'}
+                                    {payloadPrompt || t('promptDebug.noPromptInPayload', { defaultValue: 'There is no prompt in the payload.' })}
                                 </pre>
                             )}
                         </div>
@@ -233,16 +235,16 @@ export function PromptDebugModal({
                         <div className="rounded-lg border bg-muted/30 shrink-0">
                             <details>
                                 <summary className="cursor-pointer list-none p-3 flex items-center justify-between">
-                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Payload legible (sin base64)</p>
-                                    <span className="text-[11px] text-muted-foreground">Desplegar</span>
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('promptDebug.readablePayload', { defaultValue: 'Readable payload (without base64)' })}</p>
+                                    <span className="text-[11px] text-muted-foreground">{t('promptDebug.expand', { defaultValue: 'Expand' })}</span>
                                 </summary>
                                 <div className="px-3 pb-3 flex flex-col gap-2">
                                     <div className="flex items-center justify-end">
                                         <Button variant="ghost" size="sm" onClick={handleCopyPayload} className="h-7 px-2">
                                             {copiedPayload ? (
-                                                <><Check className="w-3 h-3 mr-1" />Copiado</>
+                                                <><Check className="w-3 h-3 mr-1" />{t('copyCard.copied')}</>
                                             ) : (
-                                                <><Copy className="w-3 h-3 mr-1" />Copiar JSON</>
+                                                <><Copy className="w-3 h-3 mr-1" />{t('promptDebug.copyJson', { defaultValue: 'Copy JSON' })}</>
                                             )}
                                         </Button>
                                     </div>
@@ -257,36 +259,36 @@ export function PromptDebugModal({
                     <div className="w-[32%] min-w-0 flex flex-col gap-4 overflow-y-auto">
                         <div className="grid grid-cols-2 gap-3 p-4 bg-muted/50 rounded-lg">
                             <div className="col-span-2 p-3 rounded border bg-background/70">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Modelo objetivo</p>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('promptDebug.targetModel', { defaultValue: 'Target model' })}</p>
                                 <p className="text-sm font-semibold mt-1 break-all">{effectiveModel}</p>
-                                <p className="text-xs text-muted-foreground mt-1">Proveedor: {providerLabel}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{t('promptDebug.provider', { defaultValue: 'Provider' })}: {providerLabel}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Intent</p>
-                                <p className="text-sm font-medium">{promptData.intent || 'No especificado'}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t('promptDebug.intent', { defaultValue: 'Intent' })}</p>
+                                <p className="text-sm font-medium">{promptData.intent || t('promptDebug.notSpecified', { defaultValue: 'Not specified' })}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Diseño</p>
-                                <p className="text-sm font-medium">{promptData.layoutName || promptData.layoutId || 'No especificada'}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t('promptDebug.layout', { defaultValue: 'Layout' })}</p>
+                                <p className="text-sm font-medium">{promptData.layoutName || promptData.layoutId || t('promptDebug.notSpecified', { defaultValue: 'Not specified' })}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Plataforma</p>
-                                <p className="text-sm font-medium">{promptData.platform || 'No especificada'}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t('promptDebug.platform', { defaultValue: 'Platform' })}</p>
+                                <p className="text-sm font-medium">{promptData.platform || t('promptDebug.notSpecified', { defaultValue: 'Not specified' })}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Formato</p>
-                                <p className="text-sm font-medium">{promptData.format || promptData.aspectRatio || 'No especificado'}</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t('promptDebug.format', { defaultValue: 'Format' })}</p>
+                                <p className="text-sm font-medium">{promptData.format || promptData.aspectRatio || t('promptDebug.notSpecified', { defaultValue: 'Not specified' })}</p>
                             </div>
                         </div>
 
                         {slideDebug.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Detalle por slide</p>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('promptDebug.slideDetail', { defaultValue: 'Slide detail' })}</p>
                                 <div className="space-y-2 max-h-[34vh] overflow-y-auto pr-1">
                                     {slideDebug.map((slide) => (
                                         <div key={slide.slideNumber} className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
                                             <div className="flex items-center justify-between">
-                                                <p className="text-xs font-semibold">Slide {slide.slideNumber}</p>
+                                                <p className="text-xs font-semibold">{t('preview.slide', { defaultValue: 'Slide' })} {slide.slideNumber}</p>
                                                 <span className="text-[10px] text-muted-foreground">{slide.mood}</span>
                                             </div>
                                             <pre className="max-h-28 overflow-y-auto rounded-md bg-black/90 p-2 text-[10px] leading-relaxed text-green-400 font-mono whitespace-pre-wrap break-words">
@@ -299,10 +301,10 @@ export function PromptDebugModal({
                         )}
 
                         <div className="space-y-3">
-                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Previews de imagenes enviadas</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('promptDebug.sentImagePreviews', { defaultValue: 'Sent image previews' })}</p>
                             {Object.keys(contextByRole).length === 0 ? (
                                 <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
-                                    No hay imagenes de contexto en este payload.
+                                    {t('promptDebug.noContextImages', { defaultValue: 'There are no context images in this payload.' })}
                                 </div>
                             ) : (
                                 Object.entries(contextByRole).map(([role, items]) => (
@@ -333,13 +335,13 @@ export function PromptDebugModal({
 
                 <DialogFooter className="gap-2">
                     {viewOnly ? (
-                        <Button variant="outline" onClick={onClose}>Cerrar</Button>
+                        <Button variant="outline" onClick={onClose}>{t('actions.close')}</Button>
                     ) : (
                         <>
-                            <Button variant="outline" onClick={onClose}>Cancelar generacion</Button>
+                            <Button variant="outline" onClick={onClose}>{t('promptDebug.cancelGeneration', { defaultValue: 'Cancel generation' })}</Button>
                             <Button onClick={() => onConfirm(undefined)} className="bg-primary">
                                 <Sparkles className="w-4 h-4 mr-2" />
-                                Enviar prompt
+                                {t('promptDebug.sendPrompt', { defaultValue: 'Send prompt' })}
                             </Button>
                         </>
                     )}

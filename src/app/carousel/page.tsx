@@ -1,7 +1,9 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
@@ -42,7 +44,12 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
 import { getCarouselCompositionRecommendation } from '@/lib/carousel-composition-governance'
-import { ArrowUp, Layers3, Loader2, Power, Sparkles, Wand2 } from 'lucide-react'
+import { ArrowUp, GripVertical, Layers3, Power, RotateCcw, SlidersHorizontal, Sparkles, Wand2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import {
+    localizeCarouselCompositionDescription,
+    localizeCarouselCompositionName,
+} from '@/lib/carousel-localization'
 
 const createAuditFlowId = (prefix: string) =>
     `flow_${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
@@ -70,6 +77,7 @@ const getDebugReferenceWeight = (
 }
 
 export default function CarouselPage() {
+    const { t, i18n } = useTranslation('carousel')
     const router = useRouter()
     const { user } = useUser()
     const isAdmin = user?.emailAddresses?.some(
@@ -84,9 +92,27 @@ export default function CarouselPage() {
     const updateCarouselComposition = useMutation(api.carouselAdmin.updateComposition)
     const hasTriggeredCarouselSeedRef = useRef(false)
 
+    const [isGenerating, setIsGenerating] = useState(false)
+    const [isAnalyzing, setIsAnalyzing] = useState(false)
+    const [isMobile, setIsMobile] = useState(false)
+    const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
+    const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
+    const [generatedCount, setGeneratedCount] = useState(0)
+    const [slides, setSlides] = useState<CarouselSlide[]>([])
+    const [slideCorrectionPrompt, setSlideCorrectionPrompt] = useState('')
+    const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('4:5')
+    const [carouselSettings, setCarouselSettings] = useState<CarouselSettings | null>(null)
+    const [previewCompositionState, setPreviewCompositionState] = useState<{
+        structureId: string | null
+        compositionId: string | null
+    }>({
+        structureId: null,
+        compositionId: null
+    })
+
     useEffect(() => {
-        document.title = 'X Carrusel | Motor de Diseño Inteligente'
-    }, [])
+        document.title = t('meta.title', { defaultValue: 'X Carousel | Intelligent Design Engine' })
+    }, [t])
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -107,22 +133,11 @@ export default function CarouselPage() {
         })
     }, [carouselStructures, ensureCarouselDefaults])
 
-    const [isGenerating, setIsGenerating] = useState(false)
-    const [isAnalyzing, setIsAnalyzing] = useState(false)
-    const [isMobile, setIsMobile] = useState(false)
-    const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
-    const [generatedCount, setGeneratedCount] = useState(0)
-    const [slides, setSlides] = useState<CarouselSlide[]>([])
-    const [slideCorrectionPrompt, setSlideCorrectionPrompt] = useState('')
-    const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('4:5')
-    const [carouselSettings, setCarouselSettings] = useState<CarouselSettings | null>(null)
-    const [previewCompositionState, setPreviewCompositionState] = useState<{
-        structureId: string | null
-        compositionId: string | null
-    }>({
-        structureId: null,
-        compositionId: null
-    })
+    useEffect(() => {
+        if (!isMobile) {
+            setMobileControlsOpen(false)
+        }
+    }, [isMobile])
     const compositionsForDebug = useQuery(
         api.carousel.listCompositions,
         (previewCompositionState.structureId || carouselSettings?.structureId)
@@ -154,6 +169,7 @@ export default function CarouselPage() {
     const [caption, setCaption] = useState('')
     const [isCaptionLocked, setIsCaptionLocked] = useState(false)
     const [isCaptionGenerating, setIsCaptionGenerating] = useState(false)
+    const [isCancelingCaption, setIsCancelingCaption] = useState(false)
     const [referenceImages, setReferenceImages] = useState<Array<{ url: string; source: 'upload' | 'brandkit' }>>([])
     const [referencePreviewState, setReferencePreviewState] = useState<{
         uploadedImages: string[]
@@ -214,6 +230,7 @@ export default function CarouselPage() {
     )
     const cancelGenerationRef = useRef(false)
     const cancelAnalyzeRef = useRef(false)
+    const cancelCaptionRef = useRef(false)
     const styleAnalysisCacheRef = useRef<Record<string, string>>({})
     const currentCreationFlowIdRef = useRef<string | undefined>(undefined)
     const getOrCreateCreationFlowId = useCallback(() => {
@@ -261,14 +278,14 @@ export default function CarouselPage() {
         const lower = message.toLowerCase()
         if (lower.includes('reto de 7') || lower.includes('slide por día') || lower.includes('n+2') || lower.includes('requested_slide_count')) {
             if (suggested) {
-                return `Este tipo de carrusel requiere al menos ${suggested} diapositivas (gancho + contenido + CTA). Ajusta el número para continuar.`
+                return t('errors.minimumSlidesDetailed', { count: suggested, defaultValue: 'This carousel type requires at least {{count}} slides (hook + content + CTA). Adjust the number to continue.' })
             }
-            return 'Este tipo de carrusel requiere más diapositivas de las seleccionadas. Ajusta el número para continuar.'
+            return t('errors.minimumSlides', { defaultValue: 'This carousel type requires more slides than the ones selected. Adjust the number to continue.' })
         }
         if (lower.includes('modelo de inteligencia') || lower.includes('modelo de imagen')) {
-            return 'Falta configuración de IA. Revisa el panel de Admin.'
+            return `${t('errors.missingAiConfigTitle')}.`
         }
-        return 'No se pudo completar la acción. Revisa la configuración e inténtalo de nuevo.'
+        return t('errors.generationDescription')
     }
 
     const buildAiImageSuggestions = useCallback((
@@ -398,7 +415,7 @@ export default function CarouselPage() {
             if (cta) options.push({ id: `bk-cta-${idx}`, label: `CTA ${idx + 1}`, value: cta })
         })
         if (activeBrandKit.text_assets?.brand_context) {
-            options.push({ id: 'bk-context', label: 'Contexto', value: activeBrandKit.text_assets.brand_context })
+            options.push({ id: 'bk-context', label: t('ui.contextLabel', { defaultValue: 'Context' }), value: activeBrandKit.text_assets.brand_context })
         }
 
         return options
@@ -435,8 +452,8 @@ export default function CarouselPage() {
         if (!settings.prompt.trim() || !activeBrandKit || !aiConfig?.intelligenceModel) {
             if (!silent) {
                 openErrorModal(
-                    'Falta configuración de IA',
-                    'No hay un modelo de inteligencia configurado en el panel de Admin.'
+                    t('errors.missingAiConfigTitle'),
+                    t('errors.missingAiConfigDescription')
                 )
             }
             return null
@@ -470,7 +487,7 @@ export default function CarouselPage() {
             }
 
             if (!result.success) {
-                throw new Error(result.error || 'Error desconocido')
+                throw new Error(result.error || t('errors.unknown'))
             }
 
             const requestedCount = Math.max(1, Math.min(15, settings.slideCount || 5))
@@ -543,8 +560,8 @@ export default function CarouselPage() {
 
             if (!silent) {
                 toast({
-                    title: 'Guion listo',
-                    description: 'Revisa la vista previa antes de generar.'
+                    title: t('toasts.scriptReadyTitle', { defaultValue: 'Script ready' }),
+                    description: t('toasts.scriptReadyDescription', { defaultValue: 'Review the preview before generating.' })
                 })
             }
 
@@ -556,8 +573,8 @@ export default function CarouselPage() {
             log.error('CAROUSEL', 'Analyze action failed', error)
             if (!silent) {
                 openErrorModal(
-                    'Error al analizar',
-                    error instanceof Error ? error.message : 'No se pudo analizar el carrusel.'
+                    t('errors.analyzeTitle', { defaultValue: 'Analysis error' }),
+                    error instanceof Error ? error.message : t('errors.analyzeDescription', { defaultValue: 'Could not analyze the carousel.' })
                 )
             }
             return null
@@ -574,8 +591,8 @@ export default function CarouselPage() {
         setIsAnalyzing(false)
         setIsCancelingAnalyze(true)
         toast({
-            title: 'Análisis detenido',
-            description: 'Se canceló el análisis del prompt.'
+            title: t('toasts.analysisStoppedTitle', { defaultValue: 'Analysis stopped' }),
+            description: t('toasts.analysisStoppedDescription', { defaultValue: 'Prompt analysis was canceled.' })
         })
         setTimeout(() => setIsCancelingAnalyze(false), 800)
     }, [toast])
@@ -698,8 +715,13 @@ export default function CarouselPage() {
         if (composition) {
             return resolveCarouselCompositionIcon({
                 id: composition.composition_id,
-                name: composition.name,
-                description: composition.description,
+                name: localizeCarouselCompositionName(composition.composition_id, composition.name, i18n.language),
+                description: localizeCarouselCompositionDescription(
+                    composition.composition_id,
+                    composition.description,
+                    composition.layoutPrompt,
+                    i18n.language
+                ),
                 layoutPrompt: composition.layoutPrompt,
                 icon: composition.icon,
                 iconPrompt: composition.iconPrompt,
@@ -712,8 +734,19 @@ export default function CarouselPage() {
     const activeComposition = useMemo(() => {
         const activeCompositionId = previewCompositionState.compositionId || carouselSettings?.compositionId
         if (!activeCompositionId) return null
-        return compositionsForDebug?.find((item) => item.composition_id === activeCompositionId) || null
-    }, [previewCompositionState.compositionId, carouselSettings?.compositionId, compositionsForDebug])
+        const found = compositionsForDebug?.find((item) => item.composition_id === activeCompositionId) || null
+        if (!found) return null
+        return {
+            ...found,
+            name: localizeCarouselCompositionName(found.composition_id, found.name, i18n.language),
+            description: localizeCarouselCompositionDescription(
+                found.composition_id,
+                found.description,
+                found.layoutPrompt,
+                i18n.language
+            ),
+        }
+    }, [previewCompositionState.compositionId, carouselSettings?.compositionId, compositionsForDebug, i18n.language])
 
     const activeCompositionRecommendation = useMemo(() => {
         if (!activeComposition) return null
@@ -739,13 +772,13 @@ export default function CarouselPage() {
             })
 
             toast({
-                title: 'Composición actualizada',
-                description: `${activeComposition.name} se ha actualizado en el catálogo.`
+                title: t('admin.compositionUpdatedTitle', { defaultValue: 'Composition updated' }),
+                description: t('admin.compositionUpdatedDescription', { name: activeComposition.name, defaultValue: '{{name}} has been updated in the catalog.' })
             })
         } catch (error) {
             toast({
-                title: 'No se pudo actualizar la composición',
-                description: error instanceof Error ? error.message : 'Inténtalo de nuevo.',
+                title: t('admin.compositionUpdateErrorTitle', { defaultValue: 'Could not update the composition' }),
+                description: error instanceof Error ? error.message : t('common:errors.tryAgain', { defaultValue: 'Try again.' }),
                 variant: 'destructive'
             })
         }
@@ -761,19 +794,19 @@ export default function CarouselPage() {
 
     const handleAnalyze = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
-            openErrorModal('Error', 'Por favor, introduce un tema para el carrusel.')
+            openErrorModal(t('errors.genericTitle'), t('errors.missingTopic'))
             return
         }
 
         if (!activeBrandKit) {
-            openErrorModal('Error', 'Selecciona un Brand Kit primero.')
+            openErrorModal(t('errors.genericTitle'), t('errors.selectBrandKit'))
             return
         }
 
         if (!aiConfig?.intelligenceModel) {
             openErrorModal(
-                'Falta configuración de IA',
-                'No hay un modelo de inteligencia configurado en el panel de Admin.'
+                t('errors.missingAiConfigTitle'),
+                t('errors.missingAiConfigDescription')
             )
             return
         }
@@ -803,8 +836,8 @@ export default function CarouselPage() {
             setCaption(suggestion.caption || '')
         }
         toast({
-            title: 'Sugerencia aplicada',
-            description: 'Se han actualizado los textos del carrusel.'
+            title: t('toasts.suggestionAppliedTitle', { defaultValue: 'Suggestion applied' }),
+            description: t('toasts.suggestionAppliedDescription', { defaultValue: 'The carousel copy has been updated.' })
         })
     }, [buildAiImageSuggestions, suggestions, isCaptionLocked, toast])
 
@@ -822,8 +855,8 @@ export default function CarouselPage() {
             setCaption(originalAnalysis.caption || '')
         }
         toast({
-            title: 'Cambios revertidos',
-            description: 'Se ha vuelto al contenido original.'
+            title: t('toasts.changesRevertedTitle', { defaultValue: 'Changes reverted' }),
+            description: t('toasts.changesRevertedDescription', { defaultValue: 'The original content has been restored.' })
         })
     }, [buildAiImageSuggestions, originalAnalysis, isCaptionLocked, toast])
 
@@ -861,8 +894,8 @@ export default function CarouselPage() {
         setImagePromptSuggestions(buildAiImageSuggestions(remixedSlides, suggestions.map((suggestion) => suggestion.slides)))
 
         toast({
-            title: 'Slide ensamblada',
-            description: 'El carrusel se ha recompuesto con tu mezcla de variantes.'
+            title: t('toasts.slideRemixedTitle', { defaultValue: 'Slide remixed' }),
+            description: t('toasts.slideRemixedDescription', { defaultValue: 'The carousel has been rebuilt with your mix of variants.' })
         })
     }, [originalAnalysis, scriptSlides, suggestions, slideVariantSelection, buildAiImageSuggestions, toast])
 
@@ -871,12 +904,14 @@ export default function CarouselPage() {
         if (isCaptionLocked) return
         if (!aiConfig?.intelligenceModel) {
             openErrorModal(
-                'Falta configuración de IA',
-                'No hay un modelo de inteligencia configurado en el panel de Admin.'
+                t('errors.missingAiConfigTitle'),
+                t('errors.missingAiConfigDescription')
             )
             return
         }
 
+        cancelCaptionRef.current = false
+        setIsCancelingCaption(false)
         setIsCaptionGenerating(true)
         try {
             const captionAuditFlowId = createAuditFlowId('carousel_caption')
@@ -891,21 +926,37 @@ export default function CarouselPage() {
                 auditFlowId: captionAuditFlowId,
             })
 
+            if (cancelCaptionRef.current) {
+                return
+            }
+
             if (result.success && result.caption) {
                 setCaption(result.caption)
             } else {
-                throw new Error(result.error || 'No se pudo regenerar el caption.')
+                throw new Error(result.error || t('errors.regenerateCaption', { defaultValue: 'Could not regenerate the caption.' }))
             }
         } catch (error) {
+            if (cancelCaptionRef.current) {
+                return
+            }
             log.error('CAROUSEL', 'Caption regeneration failed', error)
             openErrorModal(
-                'Error',
-                error instanceof Error ? error.message : 'No se pudo regenerar el caption.'
+                t('errors.genericTitle', { defaultValue: 'Error' }),
+                error instanceof Error ? error.message : t('errors.regenerateCaption', { defaultValue: 'Could not regenerate the caption.' })
             )
         } finally {
             setIsCaptionGenerating(false)
+            if (cancelCaptionRef.current) {
+                window.setTimeout(() => setIsCancelingCaption(false), 900)
+            }
         }
     }, [activeBrandKit, aiConfig?.intelligenceModel, carouselSettings, isCaptionLocked, toast])
+
+    const handleCancelCaption = useCallback(() => {
+        cancelCaptionRef.current = true
+        setIsCancelingCaption(true)
+        setIsCaptionGenerating(false)
+    }, [])
 
     const buildSlidesFromCurrentState = useCallback((targetCount: number): SlideContent[] | null => {
         if (!Array.isArray(slides) || slides.length === 0) return null
@@ -925,19 +976,19 @@ export default function CarouselPage() {
     const executeGenerate = useCallback(async (settings: CarouselSettings) => {
         cancelGenerationRef.current = false
         if (!settings.prompt.trim()) {
-            openErrorModal('Error', 'Por favor, introduce un tema para el carrusel.')
+            openErrorModal(t('errors.genericTitle'), t('errors.missingTopic'))
             return
         }
 
         if (!activeBrandKit) {
-            openErrorModal('Error', 'Selecciona un Brand Kit primero.')
+            openErrorModal(t('errors.genericTitle'), t('errors.selectBrandKit'))
             return
         }
 
         if (!aiConfig?.imageModel) {
             openErrorModal(
-                'Falta configuración de IA',
-                'No hay un modelo de imagen configurado en el panel de Admin.'
+                t('errors.missingAiConfigTitle'),
+                t('errors.missingAiConfigDescription')
             )
             return
         }
@@ -956,7 +1007,7 @@ export default function CarouselPage() {
                 || buildSlidesFromCurrentState(settings.slideCount)
 
             if (!slidesForGeneration) {
-                throw new Error('No hay slides preparadas para generar. Pulsa "Analizar" primero.')
+                throw new Error(t('errors.noSlidesForGenerate'))
             }
 
             const normalizedSlides = slidesForGeneration.map(s => ({ ...s }))
@@ -1064,7 +1115,7 @@ export default function CarouselPage() {
                     setGeneratedCount(doneCount)
                     setCurrentSlideIndex(slideContent.index)
                 } else {
-                    const errorMessage = result.error || 'Error desconocido'
+                    const errorMessage = result.error || t('errors.unknown')
                     setSlides(prev => prev.map(s => s.index === slideContent.index ? { ...s, status: 'error' as const, error: errorMessage } : s))
                     latestSlidesSnapshot = latestSlidesSnapshot.map(s => s.index === slideContent.index ? { ...s, status: 'error' as const, error: errorMessage } : s)
                 }
@@ -1072,8 +1123,8 @@ export default function CarouselPage() {
 
             if (cancelGenerationRef.current) {
                 toast({
-                    title: 'Generación detenida',
-                    description: 'Se canceló la generación del carrusel.'
+                    title: t('ui.generationStoppedTitle'),
+                    description: t('ui.generationStoppedDescription')
                 })
             } else {
                 if (doneCount > 0) {
@@ -1095,8 +1146,8 @@ export default function CarouselPage() {
             }
             log.error('CAROUSEL', 'Generate action failed', error)
             openErrorModal(
-                'Error al generar',
-                error instanceof Error ? error.message : 'No se pudo generar el carrusel.'
+                t('errors.generationTitle'),
+                error instanceof Error ? error.message : t('errors.generationDescription')
             )
         } finally {
             setIsGenerating(false)
@@ -1113,27 +1164,27 @@ export default function CarouselPage() {
         setSlides(prev => prev.map(s => s.status === 'generating' ? { ...s, status: 'pending' as const } : s))
         setIsCancelingGenerate(true)
         toast({
-            title: 'Generación detenida',
-            description: 'Se canceló la generación del carrusel.'
+            title: t('ui.generationStoppedTitle'),
+            description: t('ui.generationStoppedDescription')
         })
         setTimeout(() => setIsCancelingGenerate(false), 800)
     }, [toast])
 
     const handleGenerate = useCallback(async (settings: CarouselSettings) => {
         if (!settings.prompt.trim()) {
-            openErrorModal('Error', 'Por favor, introduce un tema para el carrusel.')
+            openErrorModal(t('errors.genericTitle'), t('errors.missingTopic'))
             return
         }
 
         if (!activeBrandKit) {
-            openErrorModal('Error', 'Selecciona un Brand Kit primero.')
+            openErrorModal(t('errors.genericTitle'), t('errors.selectBrandKit'))
             return
         }
 
         if (!aiConfig?.imageModel) {
             openErrorModal(
-                'Falta configuración de IA',
-                'No hay un modelo de imagen configurado en el panel de Admin.'
+                t('errors.missingAiConfigTitle'),
+                t('errors.missingAiConfigDescription')
             )
             return
         }
@@ -1151,7 +1202,7 @@ export default function CarouselPage() {
             || buildSlidesFromCurrentState(settingsWithStyle.slideCount)
 
         if (!slidesForPrompt) {
-            openErrorModal('Error', 'No hay slides preparadas para el preview. Pulsa "Analizar" primero.')
+            openErrorModal(t('errors.genericTitle'), t('errors.noSlidesForPreview'))
             return
         }
 
@@ -1218,7 +1269,7 @@ export default function CarouselPage() {
                 includeAuxiliaryLogos: includePrimaryLogo && auxiliaryLogoCount > 0,
                 auxiliaryLogoCount,
                 isSequentialSlide: idx > 0,
-                ctaText: isLastSlide ? (slide.title || 'Más info') : undefined,
+                ctaText: isLastSlide ? (slide.title || t('common:actions.show', { defaultValue: 'Show' })) : undefined,
                 ctaUrl: isLastSlide ? finalUrl : undefined,
                 contactLines: isLastSlide ? settingsWithStyle.finalContactLines : undefined,
                 visualAnalysis: settingsWithStyle?.aiStyleDirectives,
@@ -1244,10 +1295,10 @@ export default function CarouselPage() {
                     type: item.role === 'logo' ? 'aux_logo' : 'image',
                     label:
                         item.role === 'style' || item.role === 'style_content'
-                            ? 'Referencia de estilo'
+                            ? t('common:styleImage.referenceTitle', { defaultValue: 'Style reference' })
                             : item.role === 'logo'
-                                ? `Logo auxiliar ${refIndex + 1} (solo junto al principal)`
-                                : `Referencia ${refIndex + 1}`,
+                                ? t('common:auxLogos.uploadedAlt', { index: refIndex + 1, defaultValue: 'Uploaded auxiliary logo {{index}}' })
+                                : t('ui.contextLabel', { defaultValue: 'Context' }),
                     weight: getDebugReferenceWeight(item.role, hasLayoutConsistencyRef),
                     url: shortUrl
                 })
@@ -1255,7 +1306,7 @@ export default function CarouselPage() {
             if (idx > 0) {
                 references.push({
                     type: 'image',
-                    label: 'Slide 1 Style Reference',
+                    label: t('common:styleImage.referenceTitle', { defaultValue: 'Style reference' }),
                     weight: 0.4,
                     url: '(Generated from Slide 1)'
                 })
@@ -1263,7 +1314,7 @@ export default function CarouselPage() {
             if (includePrimaryLogo && settingsWithStyle.selectedLogoUrl) {
                 references.push({
                     type: 'logo',
-                    label: 'Brand Logo',
+                    label: t('common:visualAssets.mainLogo', { defaultValue: 'Main logo' }),
                     weight: 1.0,
                     url: settingsWithStyle.selectedLogoUrl.length > 50
                         ? settingsWithStyle.selectedLogoUrl.substring(0, 50) + '...'
@@ -1292,10 +1343,10 @@ export default function CarouselPage() {
                 type: item.role === 'logo' ? 'aux_logo' : 'image',
                 label:
                     item.role === 'style' || item.role === 'style_content'
-                        ? 'Referencia de estilo'
+                        ? t('common:styleImage.referenceTitle', { defaultValue: 'Style reference' })
                         : item.role === 'logo'
-                            ? `Logo auxiliar ${idx + 1} (solo junto al principal)`
-                            : `Referencia ${idx + 1}`,
+                            ? t('common:auxLogos.uploadedAlt', { index: idx + 1, defaultValue: 'Uploaded auxiliary logo {{index}}' })
+                            : t('ui.contextLabel', { defaultValue: 'Context' }),
                 url: item.url,
                 source: 'unknown' as const,
                 role: item.role,
@@ -1303,7 +1354,7 @@ export default function CarouselPage() {
             ...(settingsWithStyle.selectedLogoUrl ? [{
                 id: 'carousel-logo',
                 type: 'logo',
-                label: 'Logo',
+                label: t('common:brandDnaPanel.logoBadge', { defaultValue: 'Logo' }),
                 url: settingsWithStyle.selectedLogoUrl,
                 source: 'brandkit' as const,
                 role: 'logo' as const,
@@ -1358,6 +1409,11 @@ export default function CarouselPage() {
         scriptSlides,
         toast
     ])
+
+    const handleRetryLastGenerate = useCallback(async () => {
+        if (!carouselSettings) return
+        await executeGenerate(carouselSettings)
+    }, [carouselSettings, executeGenerate])
 
     const handleRegenerateSlide = useCallback(async (index: number, correctionPrompt?: string) => {
         if (!carouselSettings || !activeBrandKit) return
@@ -1440,18 +1496,18 @@ export default function CarouselPage() {
                 }
                 setSlides(newSlides)
                 toast({
-                    title: 'Slide regenerado',
-                    description: `Slide ${index + 1} actualizado.`
+                    title: t('ui.slideRegeneratedTitle'),
+                    description: t('ui.slideRegeneratedDescription', { index: index + 1 })
                 })
             } else {
-                throw new Error(result.error || 'Error desconocido')
+                throw new Error(result.error || t('errors.unknown'))
             }
 
         } catch (error) {
             log.error('CAROUSEL', 'Slide regeneration failed', error)
             openErrorModal(
-                'Error',
-                error instanceof Error ? error.message : 'No se pudo regenerar el slide.'
+                t('errors.genericTitle'),
+                error instanceof Error ? error.message : t('errors.regenerateSlide')
             )
         } finally {
             setIsRegenerating(false)
@@ -1631,6 +1687,115 @@ export default function CarouselPage() {
         setDebugPromptData(null)
     }, [])
 
+    const controlsPanel = (
+        <CarouselControlsPanel
+            onAnalyze={handleAnalyze}
+            onGenerate={handleGenerate}
+            onPreviewCompositionChange={setPreviewCompositionState}
+            onCancelAnalyze={handleCancelAnalyze}
+            onCancelGenerate={handleCancelGenerate}
+            isCancelingAnalyze={isCancelingAnalyze}
+            isCancelingGenerate={isCancelingGenerate}
+            onAspectRatioChange={setAspectRatio}
+            onReferenceImagesChange={setReferenceImages}
+            onSelectedLogoChange={(_, logoUrl) => setSelectedLogoUrl(logoUrl)}
+            onReset={handleResetCarousel}
+            userId={user?.id}
+            isAnalyzing={isAnalyzing}
+            isGenerating={isGenerating}
+            currentSlideIndex={currentSlideIndex}
+            generatedCount={generatedCount}
+            totalSlides={slides.length || 5}
+            brandKit={activeBrandKit}
+            suggestions={suggestions}
+            onApplySuggestion={applySuggestion}
+            onApplySlideVariant={applySlideVariant}
+            onUndoSuggestion={undoSuggestion}
+            hasOriginalSuggestion={!!originalAnalysis}
+            slideVariantSelection={slideVariantSelection}
+            suggestedImagePrompts={imagePromptSuggestions}
+            analysisHook={analysisHook}
+            analysisStructure={analysisStructure}
+            analysisIntent={analysisIntent}
+            analysisIntentLabel={analysisIntentLabel}
+            isAdmin={isAdmin}
+            slideCountOverride={slideCountOverride}
+            onSlideCountOverrideApplied={() => setSlideCountOverride(null)}
+            analysisReady={Boolean(scriptSlides?.length)}
+            onInvalidatePreview={invalidatePreview}
+            onReferencePreviewStateChange={setReferencePreviewState}
+            previewSlides={slides}
+            previewScriptSlides={scriptSlides}
+            originalScriptSlides={originalAnalysis?.scriptSlides || scriptSlides}
+            originalAnalysis={originalAnalysis}
+            previewCaption={caption}
+            previewCurrentIndex={currentSlideIndex}
+            previewSessionHistory={sessionHistory}
+            onRestorePreviewState={handleRestorePreviewFromPreset}
+            getAuditFlowId={getOrCreateCreationFlowId}
+        />
+    )
+
+    const mobileDrawerClosedX = 'calc(100% - 1.75rem)'
+
+    const mobileControlsDrawer = isMobile ? (
+        <>
+            <motion.button
+                type="button"
+                aria-label={t('ui.closeWorkPanel')}
+                onClick={() => setMobileControlsOpen(false)}
+                initial={false}
+                animate={{ opacity: mobileControlsOpen ? 1 : 0, pointerEvents: mobileControlsOpen ? 'auto' : 'none' }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-40 bg-black/18 backdrop-blur-[1px]"
+            />
+
+            <motion.aside
+                initial={false}
+                animate={{ x: mobileControlsOpen ? 0 : mobileDrawerClosedX }}
+                transition={{ type: 'spring', stiffness: 360, damping: 34, mass: 0.9 }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.12}
+                dragMomentum={false}
+                onDragEnd={(_, info) => {
+                    if (info.offset.x < -48 || info.velocity.x < -320) {
+                        setMobileControlsOpen(true)
+                        return
+                    }
+                    if (info.offset.x > 48 || info.velocity.x > 320) {
+                        setMobileControlsOpen(false)
+                    }
+                }}
+                className="fixed top-3 bottom-3 right-0 z-50 flex w-[min(94vw,30rem)] max-w-[30rem] touch-pan-y flex-row"
+            >
+                <div className="flex w-7 items-center justify-center">
+                    <div className="pointer-events-auto flex h-32 w-7 flex-col items-center justify-center gap-2 rounded-l-2xl border border-r-0 border-border/70 bg-background/92 text-muted-foreground shadow-[0_10px_30px_-18px_rgba(15,23,42,0.55)] backdrop-blur-xl">
+                        <GripVertical className="h-4 w-4 opacity-60" />
+                        <SlidersHorizontal className="h-4 w-4 opacity-80" />
+                        <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/80">
+                            {t('ui.adjustments')}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="min-w-0 flex-1 overflow-hidden rounded-l-[1.5rem] border border-border/70 bg-background/96 shadow-[0_20px_55px_-28px_rgba(15,23,42,0.6)] backdrop-blur-2xl">
+                    <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+                        <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground">{t('ui.workPanelTitle')}</p>
+                            <p className="text-xs text-muted-foreground">
+                                {t('ui.workPanelDescription')}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="h-[calc(100%-4.5rem)] overflow-y-auto pb-6">
+                        {controlsPanel}
+                    </div>
+                </div>
+            </motion.aside>
+        </>
+    ) : null
+
     if (brandKitsLoading && !activeBrandKit) {
         return (
             <DashboardLayout
@@ -1639,12 +1804,12 @@ export default function CarouselPage() {
                 onBrandChange={setActiveBrandKit}
                 onBrandDelete={deleteBrandKitById}
                 onNewBrandKit={handleNewBrandKit}
-                isFixed={true}
+                isFixed={!isMobile}
             >
                 <div className="flex h-full items-center justify-center">
                     <div className="flex items-center gap-3 text-muted-foreground">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <span className="text-lg font-medium">Cargando Carrusel...</span>
+                        <Loader2 className="h-8 w-8 text-primary" />
+                        <span className="text-lg font-medium">{t('ui.loading')}</span>
                     </div>
                 </div>
             </DashboardLayout>
@@ -1658,15 +1823,27 @@ export default function CarouselPage() {
             onBrandChange={setActiveBrandKit}
             onBrandDelete={deleteBrandKitById}
             onNewBrandKit={handleNewBrandKit}
+            isFixed={!isMobile}
         >
-            <div className="flex-1 flex flex-col overflow-hidden relative">
+            <div className={cn(
+                'flex-1 relative',
+                isMobile ? 'flex flex-col overflow-y-auto' : 'flex flex-col overflow-hidden'
+            )}>
                 <div className={cn(
-                    "flex-1 flex flex-col overflow-hidden min-h-0 lg:flex-row",
-                    panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
+                    'flex-1 min-h-0',
+                    isMobile
+                        ? 'flex flex-col gap-3 p-3'
+                        : cn(
+                            'flex flex-col overflow-hidden lg:flex-row',
+                            panelPosition === 'right' ? 'lg:flex-row' : 'lg:flex-row-reverse'
+                        )
                 )}>
                 {/* LEFT COLUMN (Main Canvas) */}
-                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar">
-                    {isAdmin && activeComposition && activeCompositionRecommendation && (
+                <div className={cn(
+                    'flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar',
+                    isMobile && 'rounded-[1.25rem] border border-border/50 bg-background/40'
+                )}>
+                    {!isMobile && isAdmin && activeComposition && activeCompositionRecommendation && (
                         <div className="shrink-0 px-4 pt-4 md:px-6">
                             <div className="rounded-2xl border border-border/70 bg-background/90 shadow-sm backdrop-blur-sm">
                                 <button
@@ -1677,10 +1854,12 @@ export default function CarouselPage() {
                                     <div className="min-w-0 flex flex-1 flex-wrap items-center gap-2">
                                         <Badge variant="outline" className="gap-1">
                                             <Sparkles className="h-3 w-3" />
-                                            Admin composición
+                                            {t('admin.badge', { defaultValue: 'Admin composition' })}
                                         </Badge>
                                         <Badge variant={activeComposition.isActive ? 'default' : 'destructive'}>
-                                            {activeComposition.isActive ? 'Activa' : 'Inactiva'}
+                                            {activeComposition.isActive
+                                                ? t('admin.active', { defaultValue: 'Active' })
+                                                : t('admin.inactive', { defaultValue: 'Inactive' })}
                                         </Badge>
                                         <span className="truncate text-sm font-medium">{activeComposition.name}</span>
                                         <span className="truncate text-xs font-mono text-muted-foreground">
@@ -1688,11 +1867,11 @@ export default function CarouselPage() {
                                         </span>
                                         {isAdminCompositionOpen && (
                                             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                                <span>Ahora:</span>
+                                                <span>{t('admin.now', { defaultValue: 'Now:' })}</span>
                                                 <Badge variant="secondary">{activeComposition.mode}</Badge>
                                                 <Badge variant="outline">{activeComposition.scope}</Badge>
                                                 <span className="text-muted-foreground/70">→</span>
-                                                <span>Propuesta:</span>
+                                                <span>{t('admin.proposal', { defaultValue: 'Proposal:' })}</span>
                                                 <Badge
                                                     variant={activeCompositionRecommendation.shouldChangeMode ? 'default' : 'secondary'}
                                                 >
@@ -1704,13 +1883,15 @@ export default function CarouselPage() {
                                                     {activeCompositionRecommendation.suggestedScope}
                                                 </Badge>
                                                 {!activeCompositionRecommendation.shouldChangeAnything && (
-                                                    <span>Sin cambio sugerido.</span>
+                                                    <span>{t('admin.noSuggestedChange', { defaultValue: 'No suggested change.' })}</span>
                                                 )}
                                             </div>
                                         )}
                                     </div>
                                     <span className="shrink-0 text-xs text-muted-foreground">
-                                        {isAdminCompositionOpen ? 'Ocultar' : 'Mostrar'}
+                                        {isAdminCompositionOpen
+                                            ? t('common:actions.hide', { defaultValue: 'Hide' })
+                                            : t('common:actions.show', { defaultValue: 'Show' })}
                                     </span>
                                 </button>
 
@@ -1720,10 +1901,10 @@ export default function CarouselPage() {
                                         <div className="space-y-3">
                                             <div className="rounded-xl border border-border bg-muted/20 p-3">
                                                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                                                    Estado actual
+                                                    {t('admin.currentState', { defaultValue: 'Current state' })}
                                                 </p>
                                                 <p className="mt-2 text-sm text-muted-foreground">
-                                                    Esta composición está guardada ahora mismo como
+                                                    {t('admin.savedAs', { defaultValue: 'This composition is currently saved as' })}
                                                     {' '}
                                                     <span className="font-medium text-foreground">{activeComposition.mode}</span>
                                                     {' + '}
@@ -1731,17 +1912,16 @@ export default function CarouselPage() {
                                                     .
                                                 </p>
                                                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                                                    `basic` entra en autoselección. `advanced` solo aparece al trabajar en modo avanzado.
-                                                    `global` puede reutilizarse en cualquier narrativa. `narrative` solo dentro de su narrativa.
+                                                    {t('admin.modeScopeDescription', { defaultValue: '`basic` enters auto-selection. `advanced` only appears when you work in advanced mode. `global` can be reused in any narrative. `narrative` only works inside its narrative.' })}
                                                 </p>
                                             </div>
 
                                             <div className="rounded-xl border border-border bg-muted/20 p-3">
                                                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                                                    Propuesta automática
+                                                    {t('admin.automaticProposal', { defaultValue: 'Automatic proposal' })}
                                                 </p>
                                                 <p className="mt-2 text-sm text-muted-foreground">
-                                                    La heurística propone dejarla como
+                                                    {t('admin.heuristicProposal', { defaultValue: 'The heuristic suggests leaving it as' })}
                                                     {' '}
                                                     <span className="font-medium text-foreground">{activeCompositionRecommendation.suggestedMode}</span>
                                                     {' + '}
@@ -1766,10 +1946,10 @@ export default function CarouselPage() {
                                         <div className="space-y-3">
                                             <div className="rounded-xl border border-border bg-muted/20 p-3">
                                                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                                                    Cambios manuales
+                                                    {t('admin.manualChanges', { defaultValue: 'Manual changes' })}
                                                 </p>
                                                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                                                    Estos botones cambian directamente el estado guardado de la composición activa.
+                                                    {t('admin.manualChangesDescription', { defaultValue: 'These buttons directly change the saved state of the active composition.' })}
                                                 </p>
                                                 <div className="mt-3 flex flex-wrap gap-2">
                                                     <Button
@@ -1777,14 +1957,14 @@ export default function CarouselPage() {
                                                         variant={activeComposition.mode === 'basic' ? 'default' : 'outline'}
                                                         onClick={() => void handleAdminCompositionPatch({ mode: 'basic' })}
                                                     >
-                                                        Básico
+                                                        {t('admin.basic', { defaultValue: 'Basic' })}
                                                     </Button>
                                                     <Button
                                                         size="sm"
                                                         variant={activeComposition.mode === 'advanced' ? 'default' : 'outline'}
                                                         onClick={() => void handleAdminCompositionPatch({ mode: 'advanced' })}
                                                     >
-                                                        Avanzado
+                                                        {t('admin.advanced', { defaultValue: 'Advanced' })}
                                                     </Button>
                                                     <Button
                                                         size="sm"
@@ -1799,7 +1979,7 @@ export default function CarouselPage() {
                                                         variant={activeComposition.scope === 'narrative' ? 'secondary' : 'outline'}
                                                         onClick={() => void handleAdminCompositionPatch({ scope: 'narrative' })}
                                                     >
-                                                        Narrativa actual
+                                                        {t('admin.currentNarrative', { defaultValue: 'Current narrative' })}
                                                     </Button>
                                                     <Button
                                                         size="sm"
@@ -1807,17 +1987,19 @@ export default function CarouselPage() {
                                                         onClick={() => void handleAdminCompositionPatch({ isActive: !activeComposition.isActive })}
                                                     >
                                                         <Power className="mr-1 h-4 w-4" />
-                                                        {activeComposition.isActive ? 'Desactivar' : 'Activar'}
+                                                        {activeComposition.isActive
+                                                            ? t('admin.deactivate', { defaultValue: 'Deactivate' })
+                                                            : t('admin.activate', { defaultValue: 'Activate' })}
                                                     </Button>
                                                 </div>
                                             </div>
 
                                             <div className="rounded-xl border border-border bg-muted/20 p-3">
                                                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                                                    Atajo automático
+                                                    {t('admin.automaticShortcut', { defaultValue: 'Automatic shortcut' })}
                                                 </p>
                                                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                                                    Este botón aplica exactamente la propuesta automática sobre la composición activa.
+                                                    {t('admin.automaticShortcutDescription', { defaultValue: 'This button applies the automatic proposal exactly on the active composition.' })}
                                                 </p>
                                                 <Button
                                                     size="sm"
@@ -1827,8 +2009,8 @@ export default function CarouselPage() {
                                                 >
                                                     <Wand2 className="mr-1 h-4 w-4" />
                                                     {activeCompositionRecommendation.shouldChangeAnything
-                                                        ? 'Aplicar sugerencia automática'
-                                                        : 'La composición ya coincide con la sugerencia'}
+                                                        ? t('admin.applyAutomaticSuggestion', { defaultValue: 'Apply automatic suggestion' })
+                                                        : t('admin.alreadyMatchesSuggestion', { defaultValue: 'The composition already matches the suggestion' })}
                                                 </Button>
                                             </div>
                                         </div>
@@ -1852,7 +2034,9 @@ export default function CarouselPage() {
                         caption={caption}
                         onCaptionChange={setCaption}
                         onRegenerateCaption={handleRegenerateCaption}
+                        onCancelCaptionGeneration={handleCancelCaption}
                         isCaptionGenerating={isCaptionGenerating}
+                        isCancelingCaption={isCancelingCaption}
                         isCaptionLocked={isCaptionLocked}
                         onToggleCaptionLock={() => setIsCaptionLocked(!isCaptionLocked)}
                         referenceImages={previewReferenceImages}
@@ -1881,22 +2065,53 @@ export default function CarouselPage() {
                             />
                         </div>
                     )}
-                    <div className="studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-background/50 backdrop-blur-md min-h-[80px]">
-                        <div className="flex-1 p-3 md:p-4 flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
-                            <Textarea
-                                placeholder={currentSlide?.imageUrl ? "Describe los cambios para editar la diapositiva..." : "Configura tu carrusel en el panel derecho..."}
-                                value={slideCorrectionPrompt}
-                                onChange={(e) => setSlideCorrectionPrompt(e.target.value)}
-                                disabled={!currentSlide?.imageUrl || (isRegenerating && regeneratingIndex === currentSlideIndex)}
-                                className="w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all"
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault()
-                                        handleApplySlideCorrection()
+                    <div className={cn(
+                        'studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-background/50 backdrop-blur-md min-h-[80px]',
+                        isMobile ? 'mt-3 rounded-[1.25rem] border border-border/50' : ''
+                    )}>
+                        <div className={cn(
+                            'flex-1 flex flex-col gap-2 sm:flex-row sm:items-end',
+                            isMobile ? 'p-3' : 'p-3 md:p-4'
+                        )}>
+                            <div className="relative w-full">
+                                <Textarea
+                                    placeholder={
+                                        currentSlide?.imageUrl
+                                            ? t('carousel:ui.editSlidePlaceholder', { defaultValue: 'Describe the changes to edit the slide...' })
+                                            : t('carousel:ui.setupCarouselPlaceholder', { defaultValue: 'Set up your carousel in the side panel...' })
                                     }
-                                }}
-                            />
-                            {currentSlide?.imageUrl && (
+                                    value={slideCorrectionPrompt}
+                                    onChange={(e) => setSlideCorrectionPrompt(e.target.value)}
+                                    disabled={!currentSlide?.imageUrl || (isRegenerating && regeneratingIndex === currentSlideIndex)}
+                                    className={cn(
+                                        'w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all',
+                                        isMobile && currentSlide?.imageUrl ? 'pr-14' : ''
+                                    )}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault()
+                                            handleApplySlideCorrection()
+                                        }
+                                    }}
+                                />
+                                {isMobile && currentSlide?.imageUrl ? (
+                                    <Button
+                                        onClick={handleApplySlideCorrection}
+                                        disabled={isGenerating || (isRegenerating && regeneratingIndex === currentSlideIndex) || !slideCorrectionPrompt.trim()}
+                                        size="icon"
+                                        className="absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2 rounded-xl bg-primary text-primary-foreground shadow-md transition-all hover:bg-primary/90 disabled:opacity-45"
+                                        aria-label={t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
+                                        title={t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
+                                    >
+                                        {isRegenerating && regeneratingIndex === currentSlideIndex ? (
+                                            <Loader2 className="h-3.5 w-3.5" />
+                                        ) : (
+                                            <ArrowUp className="h-3.5 w-3.5" />
+                                        )}
+                                    </Button>
+                                ) : null}
+                            </div>
+                            {currentSlide?.imageUrl && !isMobile && (
                                 <Button
                                     onClick={handleApplySlideCorrection}
                                     disabled={isGenerating || (isRegenerating && regeneratingIndex === currentSlideIndex) || !slideCorrectionPrompt.trim()}
@@ -1904,30 +2119,73 @@ export default function CarouselPage() {
                                 >
                                     {isRegenerating && regeneratingIndex === currentSlideIndex ? (
                                         <>
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            Corrigiendo...
+                                            <Loader2 className="w-4 h-4 mr-2" />
+                                            {t('carousel:ui.correcting', { defaultValue: 'Correcting...' })}
                                         </>
                                     ) : (
                                         <>
                                             <ArrowUp className="w-4 h-4 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-translate-y-0.5" />
-                                            Realizar corrección
+                                            {t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
                                         </>
                                     )}
                                 </Button>
                             )}
                         </div>
+                        {slides.some(slide => Boolean(slide.imageUrl)) ? (
+                            <div className={cn(
+                                'flex flex-col gap-2',
+                                isMobile ? 'px-3 pb-3' : 'px-3 pb-3 md:px-4 md:pb-4'
+                            )}>
+                                <Button
+                                    onClick={() => void handleRetryLastGenerate()}
+                                    disabled={isGenerating || isAnalyzing || !carouselSettings}
+                                    className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25"
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-5 w-5" />
+                                            {t('carousel:ui.generating', { defaultValue: 'Generating...' })}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RotateCcw className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
+                                            {t('carousel:ui.retryCarousel', { defaultValue: 'Generate another carousel with the same settings' })}
+                                        </>
+                                    )}
+                                </Button>
+                                {isGenerating && (
+                                    <div className="flex items-center justify-between">
+                                        <Button
+                                            onClick={handleCancelGenerate}
+                                            variant="link"
+                                            size="sm"
+                                            className="h-7 px-0 text-[11px] text-muted-foreground hover:text-destructive"
+                                            title={t('carousel:ui.stopGeneration', { defaultValue: 'Stop generation' })}
+                                        >
+                                            {t('carousel:ui.stopGeneration', { defaultValue: 'Stop generation' })}
+                                        </Button>
+                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                                            {isCancelingGenerate
+                                                ? t('carousel:ui.canceling', { defaultValue: 'Canceling...' })
+                                                : ''}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        ) : null}
                     </div>
                 </div>
 
                 <FeedbackButton
-                    show={slides.some(slide => Boolean(slide.imageUrl))}
+                    show={slides.some(slide => Boolean(slide.imageUrl)) && !(isMobile && (mobileControlsOpen || Boolean(slideCorrectionPrompt.trim())))}
                     brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
                     intent={analysisIntent || undefined}
                     layout={carouselSettings?.compositionId}
+                    compact={isMobile}
                     className={cn(
                         "z-50 transition-all duration-300",
                         isMobile
-                            ? "fixed bottom-24 right-4"
+                            ? "fixed bottom-28 right-3"
                             : cn(
                                 "absolute top-[42%] -translate-y-1/2",
                                 panelPosition === 'right' ? "right-[28%]" : "left-[28%]"
@@ -1936,52 +2194,8 @@ export default function CarouselPage() {
                 />
 
                 {/* RIGHT COLUMN - Controls Panel */}
-                <CarouselControlsPanel
-                    onAnalyze={handleAnalyze}
-                    onGenerate={handleGenerate}
-                    onPreviewCompositionChange={setPreviewCompositionState}
-                    onCancelAnalyze={handleCancelAnalyze}
-                    onCancelGenerate={handleCancelGenerate}
-                    isCancelingAnalyze={isCancelingAnalyze}
-                    isCancelingGenerate={isCancelingGenerate}
-                    onAspectRatioChange={setAspectRatio}
-                    onReferenceImagesChange={setReferenceImages}
-                    onSelectedLogoChange={(_, logoUrl) => setSelectedLogoUrl(logoUrl)}
-                    onReset={handleResetCarousel}
-                    userId={user?.id}
-                    isAnalyzing={isAnalyzing}
-                    isGenerating={isGenerating}
-                    currentSlideIndex={currentSlideIndex}
-                    generatedCount={generatedCount}
-                    totalSlides={slides.length || 5}
-                    brandKit={activeBrandKit}
-                    suggestions={suggestions}
-                    onApplySuggestion={applySuggestion}
-                    onApplySlideVariant={applySlideVariant}
-                    onUndoSuggestion={undoSuggestion}
-                    hasOriginalSuggestion={!!originalAnalysis}
-                    slideVariantSelection={slideVariantSelection}
-                    suggestedImagePrompts={imagePromptSuggestions}
-                    analysisHook={analysisHook}
-                    analysisStructure={analysisStructure}
-                    analysisIntent={analysisIntent}
-                    analysisIntentLabel={analysisIntentLabel}
-                    isAdmin={isAdmin}
-                    slideCountOverride={slideCountOverride}
-                    onSlideCountOverrideApplied={() => setSlideCountOverride(null)}
-                    analysisReady={Boolean(scriptSlides?.length)}
-                    onInvalidatePreview={invalidatePreview}
-                    onReferencePreviewStateChange={setReferencePreviewState}
-                    previewSlides={slides}
-                    previewScriptSlides={scriptSlides}
-                    originalScriptSlides={originalAnalysis?.scriptSlides || scriptSlides}
-                    originalAnalysis={originalAnalysis}
-                    previewCaption={caption}
-                    previewCurrentIndex={currentSlideIndex}
-                    previewSessionHistory={sessionHistory}
-                    onRestorePreviewState={handleRestorePreviewFromPreset}
-                    getAuditFlowId={getOrCreateCreationFlowId}
-                />
+                {!isMobile ? controlsPanel : null}
+                {mobileControlsDrawer}
                 </div>
             </div>
 
@@ -2011,11 +2225,11 @@ export default function CarouselPage() {
                                     setErrorModal(prev => ({ ...prev, open: false }))
                                 }}
                             >
-                                Ajustar a {errorModal.suggestedSlideCount} diapositivas
+                                {t('errors.adjustToSlides', { count: errorModal.suggestedSlideCount, defaultValue: 'Adjust to {{count}} slides' })}
                             </Button>
                         ) : null}
                         <Button onClick={() => setErrorModal(prev => ({ ...prev, open: false }))}>
-                            Entendido
+                            {t('common:actions.gotIt', { defaultValue: 'Got it' })}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -2023,4 +2237,6 @@ export default function CarouselPage() {
         </DashboardLayout>
     )
 }
+
+
 

@@ -9,6 +9,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTranslation } from 'react-i18next';
 
 interface ApiTraceEntry {
     action: string;
@@ -51,6 +52,7 @@ const AI_CHAIN: ChainStep[] = [
 ];
 
 export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAuditProps) {
+    const { t } = useTranslation('brandKit');
     if (!isVisible) return null;
 
     const renderChain = (title: string, icon: any, steps: ChainStep[]) => {
@@ -135,7 +137,7 @@ export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAu
                         </div>
                     ))
                 ) : (
-                    <span className="text-xs text-muted-foreground/70">Sin datos</span>
+                    <span className="text-xs text-muted-foreground/70">{t('technicalAudit.noData', { defaultValue: 'No data' })}</span>
                 )}
             </div>
         </div>
@@ -157,25 +159,25 @@ export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAu
                     <div>
                         <CardTitle className="flex items-center gap-2 text-base text-foreground font-bold uppercase">
                             <Bug className="w-5 h-5 text-primary" />
-                            Arquitectura de Extraccion
+                            {t('technicalAudit.title', { defaultValue: 'Extraction architecture' })}
                         </CardTitle>
                         <p className="text-[11px] text-muted-foreground mt-0.5 ml-7">
-                            Monitor de trazabilidad del pipeline
+                            {t('technicalAudit.subtitle', { defaultValue: 'Pipeline trace monitor' })}
                         </p>
                     </div>
 
                     <div className="flex gap-4 items-center bg-muted/30 px-3 py-1.5 rounded-full border border-border/50">
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Exito</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase">{t('technicalAudit.success', { defaultValue: 'Success' })}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Fallo</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase">{t('technicalAudit.fail', { defaultValue: 'Failure' })}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase">Omitido</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase">{t('technicalAudit.skipped', { defaultValue: 'Skipped' })}</span>
                         </div>
                     </div>
                 </div>
@@ -184,15 +186,15 @@ export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAu
                 <div className="grid grid-cols-1 gap-8 relative">
                     <div className="absolute left-[19px] top-4 bottom-4 w-px bg-border/60 -z-10 border-l border-dashed border-zinc-300 dark:border-zinc-700" />
 
-                    {renderChain("Secuencia de captura visual", <Camera className="w-3.5 h-3.5" />, CAPTURE_CHAIN)}
-                    {renderChain("Secuencia de procesamiento de codigo", <Globe className="w-3.5 h-3.5" />, CONTENT_CHAIN)}
-                    {renderChain("Secuencia de inteligencia", <Cpu className="w-3.5 h-3.5" />, AI_CHAIN)}
+                    {renderChain(t('technicalAudit.visualCaptureSequence', { defaultValue: 'Visual capture sequence' }), <Camera className="w-3.5 h-3.5" />, CAPTURE_CHAIN)}
+                    {renderChain(t('technicalAudit.codeProcessingSequence', { defaultValue: 'Code processing sequence' }), <Globe className="w-3.5 h-3.5" />, CONTENT_CHAIN)}
+                    {renderChain(t('technicalAudit.intelligenceSequence', { defaultValue: 'Intelligence sequence' }), <Cpu className="w-3.5 h-3.5" />, AI_CHAIN)}
                 </div>
 
                 <div className="rounded-2xl border border-border/70 bg-background/50 p-4 space-y-4">
                     <div className="flex items-center gap-2">
                         <Palette className="w-4 h-4 text-primary" />
-                        <p className="text-sm font-semibold">Depuracion de consenso de paleta</p>
+                        <p className="text-sm font-semibold">{t('technicalAudit.paletteConsensusTitle', { defaultValue: 'Palette consensus debug' })}</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -205,7 +207,7 @@ export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAu
                     </div>
 
                     <div className="space-y-2">
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Pesos de consenso</p>
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{t('technicalAudit.consensusWeights', { defaultValue: 'Consensus weights' })}</p>
                         <div className="flex flex-wrap gap-2">
                             {Object.keys(weights).length > 0 ? (
                                 Object.entries(weights).map(([key, value]) => (
@@ -214,7 +216,7 @@ export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAu
                                     </span>
                                 ))
                             ) : (
-                                <span className="text-xs text-muted-foreground/70">Sin datos</span>
+                                <span className="text-xs text-muted-foreground/70">{t('technicalAudit.noData', { defaultValue: 'No data' })}</span>
                             )}
                         </div>
                     </div>

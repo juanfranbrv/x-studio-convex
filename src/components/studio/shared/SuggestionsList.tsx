@@ -1,6 +1,7 @@
 'use client'
 
 import { RotateCcw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
@@ -22,6 +23,7 @@ export function SuggestionsList({
   onUndo,
   hasOriginalState,
 }: SuggestionsListProps) {
+  const { t } = useTranslation('common')
   if (!suggestions || suggestions.length === 0) return null
 
   return (
@@ -29,7 +31,7 @@ export function SuggestionsList({
       <div className="mt-2 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-500">
         <div className="flex items-center justify-between px-1">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80">
-            Opciones alternativas
+            {t('suggestions.alternatives')}
           </p>
           {hasOriginalState ? (
             <Button
@@ -39,7 +41,7 @@ export function SuggestionsList({
               className="h-5 px-1.5 text-[9px] text-muted-foreground hover:text-primary gap-1 opacity-60 hover:opacity-100 transition-opacity"
             >
               <RotateCcw className="w-2.5 h-2.5" />
-              VOLVER AL ORIGINAL
+              {t('suggestions.backToOriginal').toUpperCase()}
             </Button>
           ) : (
             <span />

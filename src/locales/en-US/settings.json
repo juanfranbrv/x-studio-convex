@@ -1,0 +1,34 @@
+{
+  "headerTitle": "Settings",
+  "headerDescription": "Customize your experience in X Studio",
+  "interface": {
+    "title": "Interface (X Studio)",
+    "description": "Control the guidance you see while creating",
+    "panelTitle": "Controls panel",
+    "panelDescription": "Place the panel on the right or left",
+    "right": "Right",
+    "left": "Left",
+    "guidedTitle": "Guided assistance",
+    "guidedDescription": "Show contextual help step by step"
+  },
+  "colors": {
+    "title": "Interface colors",
+    "description": "Customize system colors just for your session",
+    "presets": "Quick presets",
+    "primary": "Primary color",
+    "secondary": "Secondary color"
+  },
+  "appearance": {
+    "title": "Appearance",
+    "description": "Choose a light or dark theme",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "session": {
+    "title": "Session",
+    "description": "Manage your active session",
+    "logoutTitle": "Sign out",
+    "logoutDescription": "Sign out on all your devices"
+  }
+}

@@ -1,11 +1,12 @@
-'use client'
+﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels'
 import { CompositionEditor } from '@/components/admin/CompositionEditor'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Wand2, Loader2 } from 'lucide-react'
+import { FileText, Wand2 } from 'lucide-react'
 import type { LegacyComposition } from '@/lib/legacy-compositions'
 import { Button } from '@/components/ui/button'
 import { batchAssignIconsAction } from '@/lib/admin-compositions-actions'
@@ -69,7 +70,7 @@ export function CompositionsLayout({
                             onClick={handleBatchAssign}
                             disabled={isBatchPending}
                         >
-                            {isBatchPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+                            {isBatchPending ? <Loader2 className="h-3.5 w-3.5" /> : <Wand2 className="h-3.5 w-3.5" />}
                             Asignar Iconos IA
                         </Button>
                     </div>
@@ -156,3 +157,5 @@ export function CompositionsLayout({
         </PanelGroup>
     )
 }
+
+

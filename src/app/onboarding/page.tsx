@@ -1,8 +1,9 @@
-'use client'
+﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bot, Loader2 } from 'lucide-react'
+import { Bot } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { useBrandKit } from '@/contexts/BrandKitContext'
@@ -141,7 +142,7 @@ export default function OnboardingPage() {
               Te estamos llevando al flujo correcto según tu última sesión.
             </p>
             <div className="mt-8 flex items-center justify-center gap-3 text-primary">
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-5 w-5" />
               <span className="text-sm font-medium">Redirigiendo...</span>
             </div>
           </div>
@@ -150,3 +151,5 @@ export default function OnboardingPage() {
     </I18nProvider>
   )
 }
+
+

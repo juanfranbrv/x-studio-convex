@@ -36,6 +36,11 @@ function extractErrorMessage(error: unknown): string {
     return 'Failed to generate image'
 }
 
+function normalizeBrandDNA(input: unknown): Partial<BrandDNA> | null {
+    if (!input || typeof input !== 'object') return null
+    return input as Partial<BrandDNA>
+}
+
 export async function POST(request: NextRequest) {
     try {
         // Verify authentication
@@ -85,12 +90,12 @@ export async function POST(request: NextRequest) {
         // Parse request body
         // Parse request body
         const body = await request.json()
-        const { prompt, headline, cta, platform, brandDNA, context, model: incomingModel, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt, auditFlowId } = body as {
+        const { prompt, headline, cta, platform, brandDNA: rawBrandDNA, context, model: incomingModel, layoutReference, aspectRatio, selectedColors, promptAlreadyBuilt, auditFlowId } = body as {
             prompt: string
             headline?: string
             cta?: string
             platform?: 'instagram' | 'tiktok' | 'youtube' | 'linkedin'
-            brandDNA: BrandDNA
+            brandDNA?: BrandDNA | null
             context?: ImageGenerationOptions['context']
             model?: string
             layoutReference?: string
@@ -99,6 +104,7 @@ export async function POST(request: NextRequest) {
             promptAlreadyBuilt?: boolean
             auditFlowId?: string
         }
+        const brandDNA = normalizeBrandDNA(rawBrandDNA)
         let model = incomingModel
 
         // Robust Server-Side Fallback: If model is missing, fetch from DB
@@ -134,9 +140,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
         }
 
+        if (!brandDNA) {
+            log.warn('API', 'Image generation requested without valid brandDNA payload')
+        }
+
         // Generate image with brand context
         const imageUrl = await generateContentImageUnified(
-            { name: brandDNA.brand_name || 'Brand', brand_dna: brandDNA },
+            { name: brandDNA?.brand_name || 'Brand', brand_dna: (brandDNA || {}) as BrandDNA },
             prompt,
             {
                 headline,

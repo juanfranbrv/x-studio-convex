@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { BrandDNA, TextAssets } from '@/lib/brand-types'
 import { Button } from '@/components/ui/button'
@@ -7,12 +8,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { ArrowLeft, ArrowRight, CheckCircle2, Globe, Palette, Upload, Image as ImageIcon, ShieldAlert, X, Loader2, Plus, Pipette, Quote, Sparkles, Type, MessageCircle, Megaphone, MousePointerClick, Trash2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, Globe, Palette, Upload, Image as ImageIcon, ShieldAlert, X, Plus, Pipette, Quote, Sparkles, Type, MessageCircle, Megaphone, MousePointerClick, Trash2 } from 'lucide-react'
 import { HexColorPicker } from 'react-colorful'
 import { ContactSocialCard } from './ContactSocialCard'
 import { TypographySection } from './TypographySection'
 import { ImageGallery } from './VisualAssetComponents'
 import { BrandContextCard } from './BrandContextCard'
+import { useTranslation } from 'react-i18next'
 
 type WizardStepId =
   | 'intro'
@@ -41,6 +43,7 @@ interface BrandKitAssistantWizardProps {
   onUpdateBrandName: (value: string) => void
   onUpdateUrl: (value: string) => void
   onAnalyzeUrl: (urlOverride?: string) => Promise<void> | void
+  onStopAnalyzeUrl?: () => void
   onPreviewUrl: (url: string) => Promise<{
     success: boolean
     url: string
@@ -85,22 +88,6 @@ interface BrandKitAssistantWizardProps {
 const STEPS: WizardStepId[] = ['intro', 'name', 'url', 'post-analysis', 'logos', 'colors', 'brand-context', 'contact', 'typography', 'slogan', 'values', 'visual-styles', 'tone', 'marketing-hooks', 'ctas', 'image-gallery', 'done']
 const FLOW_STEPS: WizardStepId[] = ['name', 'url', 'post-analysis', 'logos', 'colors', 'brand-context', 'contact', 'typography', 'slogan', 'values', 'visual-styles', 'tone', 'marketing-hooks', 'ctas', 'image-gallery', 'done']
 const ASSISTANT_STEP_KEY = 'brand-kit-assistant-step'
-const ANALYZING_MESSAGES = [
-  'Conectando con tu web...',
-  'Abriendo la página en modo análisis...',
-  'Leyendo estructura y estilos principales...',
-  'Detectando logo y variaciones de marca...',
-  'Extrayendo paleta de color dominante...',
-  'Identificando colores de apoyo y contraste...',
-  'Revisando tipografías visibles del sitio...',
-  'Analizando jerarquía visual y bloques clave...',
-  'Extrayendo textos útiles para tu marca...',
-  'Buscando imágenes y recursos destacados...',
-  'Unificando resultados de la web...',
-  'Preparando una base de kit para ti...',
-  'Aplicando validaciones finales...',
-]
-
 function normalizeUrl(raw: string): string | null {
   const value = raw.trim()
   if (!value) return null
@@ -178,6 +165,7 @@ function RoleColorSwatch({
   onDragEnd?: (event: React.DragEvent<HTMLButtonElement>) => void
   sizeClass?: string
 }) {
+  const { t } = useTranslation('brandKit')
   const initial = normalizeHexColor(color)
   const [draft, setDraft] = useState(initial)
   const [open, setOpen] = useState(false)
@@ -219,7 +207,7 @@ function RoleColorSwatch({
             setOpen(false)
           }}
         >
-          Aplicar color
+          {t('wizard.applyColor', { defaultValue: 'Apply color' })}
         </Button>
         {onEyedropper && (
           <Button
@@ -230,7 +218,7 @@ function RoleColorSwatch({
             onClick={() => onEyedropper()}
           >
             <Pipette className="w-3.5 h-3.5" />
-            Tomar muestra
+            {t('palette.pickSample', { defaultValue: 'Pick sample' })}
           </Button>
         )}
       </PopoverContent>
@@ -245,6 +233,7 @@ function AddAccentSwatch({
   disabled?: boolean
   onAdd: (nextColor: string) => void
 }) {
+  const { t } = useTranslation('brandKit')
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState('#4f46e5')
 
@@ -259,7 +248,7 @@ function AddAccentSwatch({
             'hover:text-primary hover:border-primary/60 transition-colors',
             disabled && 'opacity-40 cursor-not-allowed'
           )}
-          title="Añadir acento"
+          title={t('wizard.addAccent', { defaultValue: 'Add accent' })}
         >
           <Plus className="w-5 h-5" />
         </button>
@@ -284,7 +273,7 @@ function AddAccentSwatch({
             setOpen(false)
           }}
         >
-          Añadir acento
+            {t('wizard.addAccent', { defaultValue: 'Add accent' })}
         </Button>
       </PopoverContent>
     </Popover>
@@ -299,6 +288,7 @@ export function BrandKitAssistantWizard({
   onUpdateBrandName,
   onUpdateUrl,
   onAnalyzeUrl,
+  onStopAnalyzeUrl,
   onPreviewUrl,
   onUploadLogos,
   onToggleLogo,
@@ -333,6 +323,22 @@ export function BrandKitAssistantWizard({
   minimumCompletionToFinish = 70,
   onFinish,
 }: BrandKitAssistantWizardProps) {
+  const { t } = useTranslation('brandKit')
+  const analyzingMessages = useMemo(() => ([
+    t('wizard.analyzingMessages.connecting', { defaultValue: 'Connecting to your website...' }),
+    t('wizard.analyzingMessages.opening', { defaultValue: 'Opening the page in analysis mode...' }),
+    t('wizard.analyzingMessages.reading', { defaultValue: 'Reading structure and main styles...' }),
+    t('wizard.analyzingMessages.logos', { defaultValue: 'Detecting logos and brand variations...' }),
+    t('wizard.analyzingMessages.palette', { defaultValue: 'Extracting the dominant color palette...' }),
+    t('wizard.analyzingMessages.support', { defaultValue: 'Identifying support and contrast colors...' }),
+    t('wizard.analyzingMessages.typography', { defaultValue: 'Reviewing visible typography...' }),
+    t('wizard.analyzingMessages.hierarchy', { defaultValue: 'Analyzing visual hierarchy and key blocks...' }),
+    t('wizard.analyzingMessages.copy', { defaultValue: 'Extracting useful brand copy...' }),
+    t('wizard.analyzingMessages.images', { defaultValue: 'Looking for featured images and assets...' }),
+    t('wizard.analyzingMessages.merging', { defaultValue: 'Merging website findings...' }),
+    t('wizard.analyzingMessages.preparing', { defaultValue: 'Preparing a base kit for you...' }),
+    t('wizard.analyzingMessages.validating', { defaultValue: 'Running final validations...' }),
+  ]), [t])
   const [stepIndex, setStepIndex] = useState(getInitialAssistantStep)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewLoading, setPreviewLoading] = useState(false)
@@ -341,6 +347,7 @@ export function BrandKitAssistantWizard({
   const [analyzingProgress, setAnalyzingProgress] = useState(12)
   const [previewData, setPreviewData] = useState<{ url: string; title?: string; screenshotUrl?: string } | null>(null)
   const [previewError, setPreviewError] = useState('')
+  const cancelPreviewAnalysisRef = useRef(false)
   const [isDraggingLogos, setIsDraggingLogos] = useState(false)
   const [draggedColorSource, setDraggedColorSource] = useState<{ role: 'Texto' | 'Fondo' | 'Acento'; index: number } | null>(null)
   const [pendingRoleAdd, setPendingRoleAdd] = useState<{ role: 'Texto' | 'Fondo' | 'Acento'; color: string; previousLength: number } | null>(null)
@@ -352,7 +359,7 @@ export function BrandKitAssistantWizard({
     ? 0
     : Math.round(((Math.max(flowStepIndex, 0) + 1) / FLOW_STEPS.length) * 100)
   const headerStepLabel = step === 'intro'
-    ? 'Introducción'
+              ? t('wizard.introLabel', { defaultValue: 'Introduction' })
     : `Paso ${flowStepIndex + 1} de ${FLOW_STEPS.length}`
   const currentUrl = brand.url || ''
   const isManualPlaceholderUrl = currentUrl.trim().toLowerCase().startsWith('manual-')
@@ -427,7 +434,7 @@ export function BrandKitAssistantWizard({
     if (!previewAnalyzing) return
 
     const messageTimer = setInterval(() => {
-      setAnalyzingMessageIndex((prev) => Math.min(prev + 1, ANALYZING_MESSAGES.length - 1))
+      setAnalyzingMessageIndex((prev) => Math.min(prev + 1, analyzingMessages.length - 1))
     }, 1700)
 
     const progressTimer = setInterval(() => {
@@ -469,7 +476,7 @@ export function BrandKitAssistantWizard({
     try {
       const result = await onPreviewUrl(normalizedUrl)
       if (!result.success) {
-        setPreviewError(result.error || 'No pudimos cargar una vista previa de esta web.')
+      setPreviewError(result.error || t('wizard.previewError', { defaultValue: 'We could not load a preview of this website.' }))
         return
       }
       setPreviewData({
@@ -478,7 +485,7 @@ export function BrandKitAssistantWizard({
         screenshotUrl: result.screenshotUrl,
       })
     } catch {
-      setPreviewError('No pudimos cargar una vista previa de esta web.')
+      setPreviewError(t('wizard.previewError', { defaultValue: 'We could not load a preview of this website.' }))
     } finally {
       setPreviewLoading(false)
     }
@@ -502,6 +509,7 @@ export function BrandKitAssistantWizard({
 
   const confirmAnalyze = async () => {
     if (!previewData?.url) return
+    cancelPreviewAnalysisRef.current = false
     setPreviewAnalyzing(true)
     setAnalyzingMessageIndex(0)
     setAnalyzingProgress(14)
@@ -517,13 +525,27 @@ export function BrandKitAssistantWizard({
 
     try {
       await onAnalyzeUrl(previewData.url)
+      if (cancelPreviewAnalysisRef.current) {
+        return
+      }
       setAnalyzingProgress(100)
       setPreviewOpen(false)
     } catch (error: any) {
-      setPreviewError(error?.message || 'No se pudo analizar la web. Revisa la URL e inténtalo de nuevo.')
+      if (cancelPreviewAnalysisRef.current) {
+        return
+      }
+      setPreviewError(error?.message || t('wizard.errors.analyzeUrl', { defaultValue: 'We could not analyze the website. Check the URL and try again.' }))
     } finally {
       setPreviewAnalyzing(false)
     }
+  }
+
+  const stopPreviewAnalysis = () => {
+    cancelPreviewAnalysisRef.current = true
+    onStopAnalyzeUrl?.()
+    setPreviewAnalyzing(false)
+    setPreviewOpen(false)
+    setPreviewError('')
   }
 
   const handleLogoFiles = async (files: FileList | File[]) => {
@@ -604,7 +626,7 @@ export function BrandKitAssistantWizard({
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50 shrink-0">
             <div className="flex items-start justify-between gap-3">
               <DialogTitle className="min-w-0 text-xl md:text-2xl truncate">
-                Asistente de Kit de Marca
+            {t('wizard.title', { defaultValue: 'Brand Kit Assistant' })}
               </DialogTitle>
               <div className="flex items-start gap-2 shrink-0">
                 <div className="text-sm text-muted-foreground font-medium whitespace-nowrap pt-1">
@@ -617,7 +639,7 @@ export function BrandKitAssistantWizard({
                     size="sm"
                     className="h-8 w-8 p-0 -mt-1"
                     onClick={closeWizard}
-                    aria-label="Cerrar asistente"
+            aria-label={t('common:actions.close', { defaultValue: 'Close assistant' })}
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -635,7 +657,7 @@ export function BrandKitAssistantWizard({
             </div>
             <div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">Completitud real del kit</p>
+                <p className="text-xs text-muted-foreground">{t('wizard.realCompletion', { defaultValue: 'Real kit completion' })}</p>
                 <p
                   className={cn(
                     'text-xs font-semibold',
@@ -655,7 +677,7 @@ export function BrandKitAssistantWizard({
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Este porcentaje sube con lo que completas manualmente y también con datos autocompletados al analizar la URL.
+                {t('wizard.completionHint', { defaultValue: 'This percentage grows with what you complete manually and with any auto-filled data extracted from the URL analysis.' })}
               </p>
             </div>
 
@@ -666,22 +688,22 @@ export function BrandKitAssistantWizard({
                   <div className="space-y-3">
                     {forceMode ? (
                       <>
-                        <p className="font-semibold text-2xl leading-tight">Tu kit de marca es necesario</p>
+                        <p className="font-semibold text-2xl leading-tight">{t('wizard.requiredTitle', { defaultValue: 'Your brand kit is required' })}</p>
                         <p className="text-lg text-muted-foreground leading-relaxed">
-                          Sin un kit por encima del 70% no se desbloquean Imagen ni el resto de modulos.
+                  {t('wizard.minCompletionGate', { defaultValue: 'Image and the rest of the modules stay locked until your kit is above 70%.' })}
                         </p>
                         <p className="text-base text-muted-foreground">
-                          Completa este asistente y sigues directo al editor.
+                  {t('wizard.completeAndContinue', { defaultValue: 'Finish this assistant and you go straight to the editor.' })}
                         </p>
                       </>
                     ) : (
                       <>
-                        <p className="font-semibold text-2xl leading-tight">Vamos a crear un nuevo kit de marca</p>
+                        <p className="font-semibold text-2xl leading-tight">{t('wizard.createNewTitle', { defaultValue: 'Let’s create a new brand kit' })}</p>
                         <p className="text-lg text-muted-foreground leading-relaxed">
-                          Te guiaremos paso a paso para tenerlo listo rapidamente.
+                          {t('wizard.createNewDescription', { defaultValue: 'We will guide you step by step so it is ready quickly.' })}
                         </p>
                         <p className="text-base text-muted-foreground">
-                          Puedes cerrar este asistente cuando quieras.
+                  {t('wizard.closeAnytime', { defaultValue: 'You can close this assistant whenever you want.' })}
                         </p>
                       </>
                     )}
@@ -692,11 +714,11 @@ export function BrandKitAssistantWizard({
 
             {step === 'name' && (
               <section className="space-y-4">
-                <p className="text-base text-muted-foreground">Escribe el nombre de tu marca.</p>
+                <p className="text-base text-muted-foreground">{t('wizard.brandNameIntro', { defaultValue: 'Write the name of your brand.' })}</p>
                 <Input
                   value={brand.brand_name || ''}
                   onChange={(e) => onUpdateBrandName(e.target.value)}
-                  placeholder="Ej: Mi Marca"
+                    placeholder={t('wizard.brandNamePlaceholder', { defaultValue: 'e.g. My Brand' })}
                   className="h-12 text-base"
                 />
               </section>
@@ -707,16 +729,16 @@ export function BrandKitAssistantWizard({
                 <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-primary" />
-                    <p className="text-sm font-medium text-foreground">Paso opcional: analiza tu web</p>
+                    <p className="text-sm font-medium text-foreground">{t('wizard.optionalAnalyzeTitle', { defaultValue: 'Optional step: analyze your website' })}</p>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Si pones tu web, intentaremos extraer logos, colores, tipografias y textos automaticamente.
+                    {t('wizard.optionalAnalyzeDescription', { defaultValue: 'If you enter your website, we will try to extract logos, colors, typography, and copy automatically.' })}
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Direccion de tu pagina web
+                  {t('wizard.websiteLabel', { defaultValue: 'Your website address' })}
                   </label>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Input
@@ -726,26 +748,26 @@ export function BrandKitAssistantWizard({
                       className="h-11 text-base"
                     />
                     <Button variant="outline" disabled={!canAnalyze} onClick={handleAnalyzeClick} className="h-11 text-base">
-                      Analizar URL
+                    {t('wizard.analyzeUrl', { defaultValue: 'Analyze URL' })}
                     </Button>
                   </div>
                 </div>
 
                 {invalidUrl && (
                   <p className="text-xs text-destructive">
-                    Revisa la URL. Ejemplo válido: `https://tuweb.com`.
+                    {t('wizard.invalidUrl', { defaultValue: 'Check the URL. Valid example: `https://yoursite.com`.' })}
                   </p>
                 )}
 
                 {hasUrlValue && canAnalyze && (
                   <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                    Formato de URL correcto. Puedes pulsar <span className="font-medium">Analizar URL</span> o <span className="font-medium">Siguiente</span> para empezar el análisis.
+                    {t('wizard.validUrlHint.before')} <span className="font-medium">{t('wizard.analyzeUrl', { defaultValue: 'Analyze URL' })}</span> {t('wizard.validUrlHint.middle')} <span className="font-medium">{t('wizard.next', { defaultValue: 'Next' })}</span> {t('wizard.validUrlHint.after')}
                   </p>
                 )}
 
                 <div className="rounded-lg border border-dashed border-border/70 p-3">
                   <p className="text-xs text-muted-foreground">
-                    Si ahora no tienes web, puedes continuar con <span className="font-medium text-foreground">Siguiente</span> y completar el kit manualmente.
+                    {t('wizard.noWebsiteHint.before')} <span className="font-medium text-foreground">{t('wizard.next', { defaultValue: 'Next' })}</span> {t('wizard.noWebsiteHint.after')}
                   </p>
                 </div>
 
@@ -757,12 +779,12 @@ export function BrandKitAssistantWizard({
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-6 h-6 text-primary mt-1" />
                   <div className="space-y-3">
-                    <p className="font-semibold text-xl leading-tight">Hemos preparado una base de tu kit con la web</p>
+                    <p className="font-semibold text-xl leading-tight">{t('wizard.basePreparedTitle', { defaultValue: 'We prepared a base version of your kit from the website' })}</p>
                     <p className="text-base text-muted-foreground">
-                      En los siguientes pasos verás logos, colores, textos y otros datos detectados automáticamente.
+                      {t('wizard.basePreparedDescriptionA', { defaultValue: 'In the next steps you will see logos, colors, copy, and other data detected automatically.' })}
                     </p>
                     <p className="text-base text-muted-foreground">
-                      Tu papel ahora es revisarlo: puedes dejarlo como está, corregirlo o añadir lo que falte.
+                {t('wizard.reviewRole', { defaultValue: 'Your role now is to review it: keep it as is, correct it, or add whatever is missing.' })}
                     </p>
                   </div>
                 </div>
@@ -773,7 +795,7 @@ export function BrandKitAssistantWizard({
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
                   <ImageIcon className="w-5 h-5 text-primary mt-0.5" />
-                  <p className="text-base text-muted-foreground">Revisa los logos detectados o sube los tuyos.</p>
+                  <p className="text-base text-muted-foreground">{t('wizard.reviewLogos', { defaultValue: 'Review the detected logos or upload your own.' })}</p>
                 </div>
                 <div
                   role="button"
@@ -808,7 +830,7 @@ export function BrandKitAssistantWizard({
                       <Upload className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">Arrastra logos aquí o haz clic para subir</p>
+                      <p className="text-sm font-medium text-foreground">{t('wizard.logosDropzone', { defaultValue: 'Drag logos here or click to upload' })}</p>
                       <p className="text-xs text-muted-foreground">{currentLogos.length} / 6 logos</p>
                     </div>
                   </div>
@@ -833,7 +855,7 @@ export function BrandKitAssistantWizard({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-1">
                   {currentLogos.length === 0 && (
                     <div className="col-span-full text-sm text-muted-foreground border border-dashed border-border rounded-lg p-3">
-                      No hay logos aún. Puedes subir uno o varios.
+                      {t('wizard.noLogosYet', { defaultValue: 'There are no logos yet. You can upload one or several.' })}
                     </div>
                   )}
                   {currentLogos.map((logo, index) => (
@@ -841,7 +863,7 @@ export function BrandKitAssistantWizard({
                       <div className="h-20 transparency-grid bg-muted/20">
                         <img
                           src={logo.url}
-                          alt={`Logo ${index + 1}`}
+                          alt={t('visualAssets.mainLogo', { defaultValue: 'Main logo' })}
                           className="w-full h-full object-contain p-2 drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
                         />
                       </div>
@@ -852,7 +874,7 @@ export function BrandKitAssistantWizard({
                           variant="ghost"
                           className="h-7 w-7 p-0"
                           onClick={() => onRemoveLogo(index)}
-                          aria-label="Eliminar logo"
+                          aria-label={t('wizard.removeLogo', { defaultValue: 'Remove logo' })}
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -867,7 +889,7 @@ export function BrandKitAssistantWizard({
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
                   <Palette className="w-5 h-5 text-primary mt-0.5" />
-                  <p className="text-base text-muted-foreground">Ajusta tu paleta. Texto, Fondo y hasta 5 acentos.</p>
+                <p className="text-base text-muted-foreground">{t('wizard.paletteIntro', { defaultValue: 'Adjust your palette. Text, Background, and up to 5 accents.' })}</p>
                 </div>
 
                 <div className="grid grid-cols-[auto_auto_auto] items-start gap-x-2 gap-y-3">
@@ -902,7 +924,7 @@ export function BrandKitAssistantWizard({
                       }}
                       onDragEnd={() => setDraggedColorSource(null)}
                     />
-                    <span className="text-xs text-muted-foreground">Texto</span>
+                    <span className="text-xs text-muted-foreground">{t('wizard.textRole', { defaultValue: 'Text' })}</span>
                   </div>
 
                   <div
@@ -936,7 +958,7 @@ export function BrandKitAssistantWizard({
                       }}
                       onDragEnd={() => setDraggedColorSource(null)}
                     />
-                    <span className="text-xs text-muted-foreground">Fondo</span>
+                    <span className="text-xs text-muted-foreground">{t('wizard.backgroundRole', { defaultValue: 'Background' })}</span>
                   </div>
 
                   <div className="flex flex-col items-center gap-1.5 min-w-0 rounded-xl p-1.5">
@@ -971,7 +993,7 @@ export function BrandKitAssistantWizard({
                             type="button"
                             className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-background border border-border/70 text-muted-foreground hover:text-destructive hover:border-destructive/50 inline-flex items-center justify-center shadow-sm opacity-0 group-hover/accent:opacity-100 group-focus-within/accent:opacity-100 transition-opacity"
                             onClick={() => onRemoveColor(accent.index)}
-                            title="Quitar acento"
+                          title={t('wizard.removeAccent', { defaultValue: 'Remove accent' })}
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -989,22 +1011,22 @@ export function BrandKitAssistantWizard({
                         />
                       )}
                     </div>
-                    <span className="text-xs text-muted-foreground">Acentos</span>
+                        <span className="text-xs text-muted-foreground">{t('wizard.accentsLabel', { defaultValue: 'Accents' })}</span>
                   </div>
                 </div>
                 <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
-                  <p className="text-sm font-medium text-foreground">Como se usan estos roles</p>
+                  <p className="text-sm font-medium text-foreground">{t('wizard.colorRolesUsageTitle', { defaultValue: 'How these roles are used' })}</p>
                   <p className="text-xs text-muted-foreground">
-                    El color de <span className="font-medium text-foreground">Texto</span> se usara para titulares y textos en las imagenes generadas.
+                  {t('wizard.textColorHint.before', { defaultValue: 'The' })} <span className="font-medium text-foreground">{t('wizard.textRole', { defaultValue: 'Text' })}</span> {t('wizard.textColorHint.after', { defaultValue: 'color will be used for headlines and text inside generated images.' })}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    El color de <span className="font-medium text-foreground">Fondo</span> sera el tono base predominante en las imagenes generadas.
+                  {t('wizard.backgroundColorHint.before', { defaultValue: 'The' })} <span className="font-medium text-foreground">{t('wizard.backgroundRole', { defaultValue: 'Background' })}</span> {t('wizard.backgroundColorHint.after', { defaultValue: 'color will be the main base tone in generated images.' })}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Los <span className="font-medium text-foreground">Acentos</span> se usaran para resaltar elementos destacados.
+                  {t('wizard.accentHint.before', { defaultValue: 'Accent colors will be used to highlight key elements.' })}
                   </p>
                   <p className="text-xs text-muted-foreground pt-1">
-                    Arrastra un color sobre otro para intercambiar su rol (Texto, Fondo o Acento).
+                  {t('wizard.swapColorRoles', { defaultValue: 'Drag one color onto another to swap its role (Text, Background, or Accent).' })}
                   </p>
                 </div>
               </section>
@@ -1013,7 +1035,7 @@ export function BrandKitAssistantWizard({
             {step === 'contact' && (
               <section className="space-y-4">
                 <p className="text-base text-muted-foreground">
-                  Completa tus datos de contacto: email, teléfonos, direcciones y redes sociales.
+                {t('wizard.contactIntro', { defaultValue: 'Complete your contact details: email, phones, addresses, and social profiles.' })}
                 </p>
                 <ContactSocialCard
                   socialLinks={brand.social_links || []}
@@ -1028,7 +1050,7 @@ export function BrandKitAssistantWizard({
             {step === 'brand-context' && (
               <section className="space-y-4">
                 <p className="text-base text-muted-foreground">
-                  Explica en pocas lineas que hace tu marca, para quien y con que enfoque.
+                  {t('wizard.brandContextIntro', { defaultValue: 'Explain in a few lines what your brand does, who it serves, and what approach it follows.' })}
                 </p>
                 <BrandContextCard
                   context={brand.business_overview || brand.text_assets?.brand_context || ''}
@@ -1041,9 +1063,9 @@ export function BrandKitAssistantWizard({
             {step === 'typography' && (
               <section className="space-y-4">
                 <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
-                  <p className="text-sm font-medium text-foreground">No te preocupes si no conoces Google Fonts.</p>
+                  <p className="text-sm font-medium text-foreground">{t('wizard.typographyNoKnowledge', { defaultValue: "Don't worry if you do not know Google Fonts." })}</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Elige una fuente para titulares y otra para párrafos. Puedes probar y cambiar en cualquier momento.
+                {t('wizard.typographyIntro', { defaultValue: 'Choose one font for headlines and another for paragraphs. You can test and change them at any time.' })}
                   </p>
                 </div>
                 <TypographySection
@@ -1062,12 +1084,12 @@ export function BrandKitAssistantWizard({
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
                   <Quote className="w-5 h-5 text-primary mt-0.5" />
-                  <p className="text-base text-muted-foreground">Define tu eslogan principal.</p>
+                <p className="text-base text-muted-foreground">{t('wizard.sloganIntro', { defaultValue: 'Define your main tagline.' })}</p>
                 </div>
                 <Input
                   value={brand.tagline || ''}
                   onChange={(event) => onUpdateTagline(event.target.value)}
-                  placeholder="Ej: Tu marca, tu estilo"
+                  placeholder={t('wizard.sloganPlaceholder', { defaultValue: 'e.g. Your brand, your style' })}
                   className="h-11 text-base"
                 />
               </section>
@@ -1077,7 +1099,7 @@ export function BrandKitAssistantWizard({
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
                   <Sparkles className="w-5 h-5 text-primary mt-0.5" />
-                  <p className="text-base text-muted-foreground">Añade los valores clave de tu marca.</p>
+                  <p className="text-base text-muted-foreground">{t('wizard.valuesDescription', { defaultValue: 'Add the key values of your brand.' })}</p>
                 </div>
                 <div className="space-y-2">
                   {(brand.brand_values || []).map((value, index) => (
@@ -1085,7 +1107,7 @@ export function BrandKitAssistantWizard({
                       <Input
                         value={value}
                         onChange={(event) => onUpdateValue(index, event.target.value)}
-                        placeholder="Valor de marca"
+                    placeholder={t('wizard.valuePlaceholder', { defaultValue: 'Brand value' })}
                         className="h-10 text-sm"
                       />
                       <Button type="button" variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={() => onRemoveValue(index)}>
@@ -1095,7 +1117,7 @@ export function BrandKitAssistantWizard({
                   ))}
                   <Button type="button" variant="outline" size="sm" className="h-9 text-sm" onClick={onAddValue}>
                     <Plus className="w-4 h-4 mr-1" />
-                    Añadir valor
+                  {t('wizard.addValue', { defaultValue: 'Add value' })}
                   </Button>
                 </div>
               </section>
@@ -1105,7 +1127,7 @@ export function BrandKitAssistantWizard({
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
                   <Type className="w-5 h-5 text-primary mt-0.5" />
-                  <p className="text-base text-muted-foreground">Define estilos visuales para tus piezas.</p>
+                  <p className="text-base text-muted-foreground">{t('wizard.visualStylesDescription', { defaultValue: 'Define visual styles for your pieces.' })}</p>
                 </div>
                 <div className="space-y-2">
                   {(brand.visual_aesthetic || []).map((style, index) => (
@@ -1113,7 +1135,7 @@ export function BrandKitAssistantWizard({
                       <Input
                         value={style}
                         onChange={(event) => onUpdateAesthetic(index, event.target.value)}
-                        placeholder="Ej: Minimalista, editorial, premium..."
+                        placeholder={t('wizard.visualStylePlaceholder', { defaultValue: 'e.g. Minimalist, editorial, premium...' })}
                         className="h-10 text-sm"
                       />
                       <Button type="button" variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={() => onRemoveAesthetic(index)}>
@@ -1123,7 +1145,7 @@ export function BrandKitAssistantWizard({
                   ))}
                   <Button type="button" variant="outline" size="sm" className="h-9 text-sm" onClick={onAddAesthetic}>
                     <Plus className="w-4 h-4 mr-1" />
-                    Añadir estilo
+                  {t('wizard.addStyle', { defaultValue: 'Add style' })}
                   </Button>
                 </div>
               </section>
@@ -1133,7 +1155,7 @@ export function BrandKitAssistantWizard({
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
                   <MessageCircle className="w-5 h-5 text-primary mt-0.5" />
-                  <p className="text-base text-muted-foreground">Selecciona el tono de voz de tu marca.</p>
+                  <p className="text-base text-muted-foreground">{t('wizard.toneDescription', { defaultValue: 'Choose the tone of voice of your brand.' })}</p>
                 </div>
                 <div className="space-y-2">
                   {(brand.tone_of_voice || []).map((tone, index) => (
@@ -1141,7 +1163,7 @@ export function BrandKitAssistantWizard({
                       <Input
                         value={tone}
                         onChange={(event) => onUpdateTone(index, event.target.value)}
-                        placeholder="Ej: Cercano, profesional, directo..."
+                        placeholder={t('wizard.tonePlaceholder', { defaultValue: 'e.g. Close, professional, direct...' })}
                         className="h-10 text-sm"
                       />
                       <Button type="button" variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={() => onRemoveTone(index)}>
@@ -1151,7 +1173,7 @@ export function BrandKitAssistantWizard({
                   ))}
                   <Button type="button" variant="outline" size="sm" className="h-9 text-sm" onClick={onAddTone}>
                     <Plus className="w-4 h-4 mr-1" />
-                    Añadir tono
+                  {t('wizard.addTone', { defaultValue: 'Add tone' })}
                   </Button>
                 </div>
               </section>
@@ -1161,7 +1183,7 @@ export function BrandKitAssistantWizard({
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
                   <Megaphone className="w-5 h-5 text-primary mt-0.5" />
-                  <p className="text-base text-muted-foreground">Define titulares de marketing para campañas.</p>
+                  <p className="text-base text-muted-foreground">{t('wizard.marketingHooksDescription', { defaultValue: 'Define marketing headlines for campaigns.' })}</p>
                 </div>
                 <div className="space-y-2">
                   {textAssets.marketing_hooks.map((hook, index) => (
@@ -1194,10 +1216,10 @@ export function BrandKitAssistantWizard({
                     variant="outline"
                     size="sm"
                     className="h-9 text-sm"
-                    onClick={() => onChangeTextAssets({ ...textAssets, marketing_hooks: [...textAssets.marketing_hooks, 'Nuevo titular'] })}
+                    onClick={() => onChangeTextAssets({ ...textAssets, marketing_hooks: [...textAssets.marketing_hooks, t('wizard.newHook', { defaultValue: 'New headline' })] })}
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Añadir titular
+                  {t('wizard.addHook', { defaultValue: 'Add hook' })}
                   </Button>
                 </div>
               </section>
@@ -1207,10 +1229,10 @@ export function BrandKitAssistantWizard({
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
                   <MousePointerClick className="w-5 h-5 text-primary mt-0.5" />
-                  <p className="text-base text-muted-foreground">Añade llamadas a la acción (CTAs).</p>
+                  <p className="text-base text-muted-foreground">{t('wizard.ctasDescription', { defaultValue: 'Add calls to action (CTAs).' })}</p>
                 </div>
                 <p className="text-base text-muted-foreground">
-                  Estas frases se usarán en botones y cierres de piezas.
+                  {t('wizard.ctasUsageHint', { defaultValue: 'These lines will be used in buttons and closing phrases.' })}
                 </p>
                 <div className="space-y-2">
                   {textAssets.ctas.map((cta, index) => (
@@ -1222,7 +1244,7 @@ export function BrandKitAssistantWizard({
                           nextCtas[index] = event.target.value
                           onChangeTextAssets({ ...textAssets, ctas: nextCtas })
                         }}
-                        placeholder="Ej: Reservar ahora"
+                        placeholder={t('wizard.ctaPlaceholder', { defaultValue: 'e.g. Book now' })}
                         className="h-10 text-sm"
                       />
                       <Button
@@ -1244,10 +1266,10 @@ export function BrandKitAssistantWizard({
                     variant="outline"
                     size="sm"
                     className="h-9 text-sm"
-                    onClick={() => onChangeTextAssets({ ...textAssets, ctas: [...textAssets.ctas, 'Nuevo CTA'] })}
+                    onClick={() => onChangeTextAssets({ ...textAssets, ctas: [...textAssets.ctas, t('wizard.newCta', { defaultValue: 'New CTA' })] })}
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Añadir CTA
+                  {t('wizard.addCta', { defaultValue: 'Add CTA' })}
                   </Button>
                 </div>
               </section>
@@ -1256,7 +1278,7 @@ export function BrandKitAssistantWizard({
             {step === 'image-gallery' && (
               <section className="space-y-4">
                 <p className="text-base text-muted-foreground">
-                  Revisa las imágenes detectadas y sube las que quieras conservar en tu kit.
+                {t('wizard.imagesReview', { defaultValue: 'Review the detected images and upload any you want to keep in your kit.' })}
                 </p>
                 <ImageGallery
                   images={brand.images || []}
@@ -1273,22 +1295,30 @@ export function BrandKitAssistantWizard({
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-primary mt-0.5" />
                   <div className="space-y-1">
-                    <p className="font-medium text-base">Base del kit lista</p>
-                    <p className="text-base text-muted-foreground">Ya puedes seguir afinando en el editor.</p>
+                  <p className="font-medium text-base">{t('wizard.baseReady', { defaultValue: 'Kit base ready' })}</p>
+                    <p className="text-base text-muted-foreground">{t('wizard.readyEditorDescription', { defaultValue: 'You can keep refining everything in the editor now.' })}</p>
                   </div>
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Resumen: {brand.brand_name?.trim() ? 'nombre definido,' : 'nombre pendiente,'}{' '}
-                  {normalizeUrl(brand.url || '') ? 'URL válida,' : 'sin URL,'}{' '}
-                  {(currentLogos.length || 0) > 0 ? `${currentLogos.length} logos,` : 'sin logos,'}{' '}
-                  {(brand.colors?.length || 0)} colores,{' '}
-                  {(brand.fonts?.length || 0)} tipografías,{' '}
-                  {(brand.images?.length || 0)} imágenes.
+                    {normalizeUrl(brand.url || '')
+                      ? t('wizard.summary.validUrl', { defaultValue: 'valid URL,' })
+                      : t('wizard.summary.noUrl', { defaultValue: 'no URL,' })}{' '}
+                    {(currentLogos.length || 0) > 0
+                      ? t('wizard.summary.logos', { count: currentLogos.length, defaultValue: '{{count}} logos,' })
+                      : t('wizard.summary.noLogos', { defaultValue: 'no logos,' })}{' '}
+                    {t('wizard.summary.colors', { count: brand.colors?.length || 0, defaultValue: '{{count}} colors,' })}{' '}
+                    {t('wizard.summary.fonts', { count: brand.fonts?.length || 0, defaultValue: '{{count}} fonts,' })}{' '}
+                    {t('wizard.summary.images', { count: brand.images?.length || 0, defaultValue: '{{count}} images.' })}
                 </div>
                 {!canFinishWizard && (
                   <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
                     <p className="text-sm text-amber-700 dark:text-amber-300">
-                      Te falta {completionMissing}% para llegar al {minimumCompletionToFinish}% minimo y desbloquear Imagen.
+                      {t('wizard.missingCompletionGate', {
+                        defaultValue: 'You still need {{missing}}% to reach the minimum {{minimum}}% and unlock Image.',
+                        missing: completionMissing,
+                        minimum: minimumCompletionToFinish,
+                      })}
                     </p>
                   </div>
                 )}
@@ -1301,7 +1331,7 @@ export function BrandKitAssistantWizard({
               <div className="flex items-center gap-2">
               <Button variant="outline" onClick={goBack} disabled={stepIndex === 0} className="h-11 text-base">
                 <ArrowLeft className="w-4 h-4 mr-1" />
-                Anterior
+                {t('wizard.previous', { defaultValue: 'Previous' })}
               </Button>
               </div>
               <div className="flex items-center justify-end gap-2 flex-wrap">
@@ -1311,12 +1341,16 @@ export function BrandKitAssistantWizard({
                     className="h-11 text-base"
                     disabled={previewLoading || previewAnalyzing}
                   >
-                    {step === 'url' && hasUrlValue ? 'Analizar y seguir' : 'Siguiente'}
+              {step === 'url' && hasUrlValue
+                ? t('wizard.analyzeAndContinue', { defaultValue: 'Analyze and continue' })
+                : t('wizard.next', { defaultValue: 'Next' })}
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 ) : (
                   <Button onClick={completeWizard} className="h-11 text-base" disabled={!canFinishWizard}>
-                    {canFinishWizard ? 'Ir al editor' : `Te falta ${completionMissing}%`}
+                    {canFinishWizard
+                      ? t('wizard.goToEditor', { defaultValue: 'Go to editor' })
+                      : t('wizard.pendingCompletion', { defaultValue: '{{missing}}% left', missing: completionMissing })}
                   </Button>
                 )}
               </div>
@@ -1342,7 +1376,7 @@ export function BrandKitAssistantWizard({
           className="w-[min(96vw,980px)] max-w-[980px]"
         >
           <DialogHeader>
-            <DialogTitle>Confirma tu web</DialogTitle>
+          <DialogTitle>{t('wizard.confirmWebsiteTitle', { defaultValue: 'Confirm your website' })}</DialogTitle>
             <DialogDescription>
               {previewData?.url || currentUrl}
             </DialogDescription>
@@ -1351,16 +1385,16 @@ export function BrandKitAssistantWizard({
           <div className="space-y-3">
             {previewLoading && (
               <div className="rounded-lg border border-border p-6 flex items-center justify-center gap-2 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Preparando vista previa...
+                <Loader2 className="h-4 w-4" />
+                {t('wizard.preparingPreview', { defaultValue: 'Preparing preview...' })}
               </div>
             )}
 
             {previewAnalyzing && (
               <div className="rounded-lg border border-border p-6 space-y-4 bg-muted/20">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Estamos analizando tu web. Esto puede tardar unos segundos.
+                  <Loader2 className="h-4 w-4" />
+              {t('wizard.analyzingWebsite', { defaultValue: 'We are analyzing your website. This may take a few seconds.' })}
                 </div>
                 <div className="space-y-2">
                   <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -1370,7 +1404,7 @@ export function BrandKitAssistantWizard({
                     />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {ANALYZING_MESSAGES[analyzingMessageIndex]}
+              {analyzingMessages[analyzingMessageIndex]}
                   </p>
                 </div>
               </div>
@@ -1380,7 +1414,7 @@ export function BrandKitAssistantWizard({
               <div className="rounded-lg border border-border overflow-hidden bg-muted/20 flex items-center justify-center p-2">
                 <img
                   src={previewData.screenshotUrl}
-                  alt="Vista previa de la web"
+                    alt={t('wizard.websitePreviewAlt', { defaultValue: 'Website preview' })}
                   className="w-full max-h-[520px] object-contain rounded-md"
                 />
               </div>
@@ -1388,13 +1422,13 @@ export function BrandKitAssistantWizard({
 
             {!previewLoading && !previewData?.screenshotUrl && (
               <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-                No pudimos mostrar la captura ahora, pero puedes confirmar si la URL es correcta.
+                  {t('wizard.previewUnavailable', { defaultValue: 'We could not show the screenshot right now, but you can still confirm whether the URL is correct.' })}
               </div>
             )}
 
             {!previewLoading && previewData?.title && (
               <p className="text-sm text-muted-foreground">
-                Titulo detectado: <span className="text-foreground font-medium">{previewData.title}</span>
+                  {t('wizard.detectedTitle', { defaultValue: 'Detected title:' })} <span className="text-foreground font-medium">{previewData.title}</span>
               </p>
             )}
 
@@ -1405,10 +1439,21 @@ export function BrandKitAssistantWizard({
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviewOpen(false)} disabled={previewLoading || previewAnalyzing}>
-              No, corregir URL
+            {t('wizard.fixUrl', { defaultValue: 'No, fix URL' })}
             </Button>
+            {previewAnalyzing ? (
+              <Button
+                variant="link"
+                onClick={stopPreviewAnalysis}
+                className="h-10 px-0 text-sm text-muted-foreground hover:text-destructive"
+              >
+                {t('wizard.stopAnalysis', { defaultValue: 'Stop' })}
+              </Button>
+            ) : null}
             <Button onClick={confirmAnalyze} disabled={previewLoading || previewAnalyzing || !previewData?.url}>
-              {previewAnalyzing ? 'Analizando...' : 'Sí, esta es mi web'}
+            {previewAnalyzing
+              ? t('wizard.analyzing', { defaultValue: 'Analyzing...' })
+              : t('wizard.confirmWebsite', { defaultValue: 'Yes, this is my website' })}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1416,3 +1461,5 @@ export function BrandKitAssistantWizard({
     </Dialog>
   )
 }
+
+

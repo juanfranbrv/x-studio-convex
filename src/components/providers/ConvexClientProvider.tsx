@@ -1,8 +1,7 @@
 "use client";
 
-import { ClerkProvider, useAuth } from "@clerk/nextjs";
-import { ConvexReactClient } from "convex/react";
-import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { ClerkProvider } from "@clerk/nextjs";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { ReactNode } from "react";
 import { authConfig } from "@/lib/auth-config";
 
@@ -25,9 +24,9 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
             signUpFallbackRedirectUrl={authConfig.onboardingPath}
             afterSignOutUrl={authConfig.afterSignOutPath}
         >
-            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+            <ConvexProvider client={convex}>
                 {children}
-            </ConvexProviderWithClerk>
+            </ConvexProvider>
         </ClerkProvider>
     );
 }

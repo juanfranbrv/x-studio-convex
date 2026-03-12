@@ -139,6 +139,7 @@ function StyleReferenceCorner({
     url: string
     onRemove?: () => void
 }) {
+    const { t } = useTranslation('common')
     const containerRef = useRef<HTMLDivElement>(null)
     const [boxSize, setBoxSize] = useState({ w: 0, h: 0 })
     const [naturalSize, setNaturalSize] = useState({ w: 1, h: 1 })
@@ -177,7 +178,7 @@ function StyleReferenceCorner({
             >
                 <img
                     src={url}
-                    alt="Referencia de estilo"
+                    alt={t('common:styleImage.referenceTitle', { defaultValue: 'Style reference' })}
                     className="w-full h-full object-contain object-left-bottom origin-bottom-left -rotate-[10deg] drop-shadow-[0_12px_22px_rgba(0,0,0,0.24)]"
                     onLoad={(e) => {
                         const target = e.currentTarget
@@ -284,6 +285,8 @@ export function CanvasPanel({
     isAdmin = false,
 }: CanvasPanelProps) {
     const { t } = useTranslation()
+    const tt = (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+        t(key, { defaultValue, ...options })
     const { activeBrandKit } = useBrandKit()
     const { panelPosition, assistanceEnabled } = useUI()
     const [zoom, setZoom] = useState(100)
@@ -351,6 +354,7 @@ export function CanvasPanel({
     }
 
     const getAutoZoomBoost = (height: number) => {
+        if (isMobile) return 1
         if (height <= 760) return 1.25
         if (height <= 900) return 1.2
         if (height <= 1080) return 1.14
@@ -396,7 +400,9 @@ export function CanvasPanel({
     const [generatedCopy, setGeneratedCopy] = useState<string | null>(null)
     const [generatedHashtags, setGeneratedHashtags] = useState<string[]>([])
     const [isGeneratingCopy, setIsGeneratingCopy] = useState(false)
+    const [isCancelingCopy, setIsCancelingCopy] = useState(false)
     const [isCopyLocked, setIsCopyLocked] = useState(false) // New state for locking copy
+    const cancelCopyGenerationRef = useRef(false)
 
     // Build brand kit text options for the dropdown
     const brandKitTexts = useMemo(() => {
@@ -405,12 +411,22 @@ export function CanvasPanel({
 
         // Tagline
         if (activeBrandKit.tagline) {
-            options.push({ id: 'bk-tagline', label: 'Tagline', value: activeBrandKit.tagline, type: 'tagline' })
+            options.push({
+                id: 'bk-tagline',
+                label: tt('common:brandDnaPanel.tagline', 'Tagline'),
+                value: activeBrandKit.tagline,
+                type: 'tagline'
+            })
         }
         // Marketing Hooks
         if (activeBrandKit.text_assets?.marketing_hooks) {
             activeBrandKit.text_assets.marketing_hooks.forEach((hook, idx) => {
-                options.push({ id: `bk-hook-${idx}`, label: `Hook ${idx + 1}`, value: hook, type: 'hook' })
+                options.push({
+                    id: `bk-hook-${idx}`,
+                    label: tt('common:textAssets.hookLabel', 'Hook {{index}}', { index: idx + 1 }),
+                    value: hook,
+                    type: 'hook'
+                })
             })
         }
         return options
@@ -436,6 +452,8 @@ export function CanvasPanel({
     }
 
     const calcMaxZoom = () => {
+        if (isMobile) return 100
+
         const [w, h] = aspectRatio.split(':').map(Number);
         const ratio = w / h;
         const footerOffset = getFooterOffset();
@@ -475,6 +493,14 @@ export function CanvasPanel({
         if (zoom !== autoZoom) setZoom(autoZoom)
     }, [hasManualZoom, isMobile, viewportHeight, zoom])
 
+    useEffect(() => {
+        if (!isMobile) return
+        setHasManualZoom(false)
+        if (zoom !== 100) {
+            setZoom(100)
+        }
+    }, [isMobile, currentImage, aspectRatio])
+
     // Handle Generation Reveal Effect - simplified, no longer wraps generation
 
     // Handle Generation Reveal Effect
@@ -501,6 +527,8 @@ export function CanvasPanel({
         // Respect Lock
         if (isCopyLocked) return
 
+        cancelCopyGenerationRef.current = false
+        setIsCancelingCopy(false)
         setIsGeneratingCopy(true)
         try {
             const result = await generateSocialPost({
@@ -511,6 +539,10 @@ export function CanvasPanel({
                 model: creationState.selectedIntelligenceModel
             })
 
+            if (cancelCopyGenerationRef.current) {
+                return
+            }
+
             if (result.success && result.data) {
                 setGeneratedCopy(result.data.copy)
                 setGeneratedHashtags(result.data.hashtags)
@@ -518,10 +550,22 @@ export function CanvasPanel({
                 onCaptionChange?.(result.data.copy)
             }
         } catch (error) {
+            if (cancelCopyGenerationRef.current) {
+                return
+            }
             console.error('Failed to generate copy:', error)
         } finally {
             setIsGeneratingCopy(false)
+            if (cancelCopyGenerationRef.current) {
+                window.setTimeout(() => setIsCancelingCopy(false), 900)
+            }
         }
+    }
+
+    const handleCancelGenerateCopy = () => {
+        cancelCopyGenerationRef.current = true
+        setIsCancelingCopy(true)
+        setIsGeneratingCopy(false)
     }
 
     // Trigger Copy Generation when image changes
@@ -714,30 +758,30 @@ export function CanvasPanel({
                 <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4 border border-border/60 bg-background/85 backdrop-blur-sm">
                     {/* Zoom Controls */}
                     <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
-                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut} title="Zoom out">
+                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut} title={tt('common:preview.zoomOut', 'Zoom out')}>
                             <ZoomOut className="w-4 h-4" />
                         </Button>
                         <button
                             type="button"
                             className="text-xs font-mono w-10 text-center cursor-pointer"
                             onClick={handleResetZoom}
-                            title="Reset zoom"
-                            aria-label="Restablecer zoom"
+                            title={tt('common:preview.resetZoom', 'Reset zoom')}
+                            aria-label={tt('common:preview.resetZoomAria', 'Reset zoom')}
                         >
                             {effectiveZoom}%
                         </button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomIn} title="Zoom in">
+                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomIn} title={tt('common:preview.zoomIn', 'Zoom in')}>
                             <ZoomIn className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 ml-1" onClick={handleMaximizeZoom} title="Ajustar al alto (Maximizar)">
+                        <Button variant="ghost" size="icon" className="h-10 w-10 ml-1" onClick={handleMaximizeZoom} title={tt('common:preview.fitHeight', 'Fit to height')}>
                             <Maximize2 className="w-4 h-4" />
                         </Button>
                     </div>
 
-                    <Button variant="ghost" size="icon" onClick={handleDownload} className="h-10 w-10" title="Descargar imagen">
+                    <Button variant="ghost" size="icon" onClick={handleDownload} className="h-10 w-10" title={tt('common:preview.downloadImage', 'Download image')}>
                         <ImageDown className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleDownloadBundle} className="h-10 w-10" title="Descargar ZIP (imagen + copy)">
+                    <Button variant="ghost" size="icon" onClick={handleDownloadBundle} className="h-10 w-10" title={tt('common:preview.downloadBundle', 'Download ZIP')}>
                         <SquareArrowDown className="w-4 h-4" />
                     </Button>
                 </div>
@@ -834,8 +878,8 @@ export function CanvasPanel({
                                 creationState.currentStep >= 2 &&
                                 !!creationState.selectedIntent
                             }
-                            title="Vista previa"
-                            description="Puedes añadir, editar o quitar textos. Haz clic en cada capa para ajustarla."
+                            title={tt('common:preview.title', 'Preview')}
+                            description={tt('common:preview.description', 'You can add, edit, or remove text. Click each layer to adjust it.')}
                             side={panelPosition === 'right' ? 'left' : 'right'}
                             anchorRef={containerRef}
                             className="w-[240px] opacity-95"
@@ -873,7 +917,7 @@ export function CanvasPanel({
                                             size="icon"
                                             onClick={onOpenPromptDebug}
                                             className="h-9 w-9 rounded-full bg-background/80 backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
-                                            title="Ver prompt enviado"
+                                            title={tt('common:preview.viewPrompt', 'View prompt')}
                                         >
                                             <Bug className="w-4 h-4" />
                                         </Button>
@@ -894,7 +938,7 @@ export function CanvasPanel({
                                     >
                                         <img
                                             src={currentImage}
-                                            alt="Generated design"
+                                            alt={tt('common:preview.currentImage', 'Current image')}
                                             className="w-full h-full object-contain"
                                         />
                                     </motion.div>
@@ -915,7 +959,9 @@ export function CanvasPanel({
                                 <div className="w-16 h-16 rounded-2xl bg-background/80 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm border border-border/50">
                                     <span className="text-3xl opacity-70">🎨</span>
                                 </div>
-                                <p className="text-sm font-medium text-muted-foreground/70">{t('canvas.noImage')}</p>
+                                <p className="text-sm font-medium text-muted-foreground/70">
+                                    {tt('common:preview.generateFirstToEdit', 'Generate an image first to edit it...')}
+                                </p>
                                 <div className="mt-4 px-3 py-1 rounded-full bg-muted/50 text-xs uppercase tracking-wide font-mono text-muted-foreground/70 border border-border/30">
                                     {aspectRatio}
                                 </div>
@@ -1091,7 +1137,7 @@ export function CanvasPanel({
                                     <div className="absolute top-1 left-4 z-20 group">
                                         <img
                                             src={selectedLogoUrl}
-                                            alt="Logo"
+                                            alt={tt('common:brandDnaPanel.logoAlt', 'Logo')}
                                             className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
                                             style={{ width: 'var(--canvas-logo-size)', height: 'var(--canvas-logo-size)' }}
                                         />
@@ -1152,6 +1198,8 @@ export function CanvasPanel({
                             hashtags={generatedHashtags}
                             isLoading={isGeneratingCopy}
                             onRegenerate={handleGenerateCopy}
+                            onCancel={handleCancelGenerateCopy}
+                            isCanceling={isCancelingCopy}
                             isLocked={isCopyLocked}
                             onToggleLock={() => setIsCopyLocked(!isCopyLocked)}
                             onCopyChange={(val) => onCaptionChange?.(val)}
@@ -1262,7 +1310,7 @@ export function CanvasPanel({
                                                         "w-full h-full",
                                                         draggedElement.type === 'logo' ? "object-contain p-1" : "object-cover"
                                                     )}
-                                                    alt="Preview"
+                                                    alt={tt('common:preview.title', 'Preview')}
                                                 />
                                             </div>
                                         )}
@@ -1329,7 +1377,7 @@ export function CanvasPanel({
                                     }
                                 }}
                                 disabled={!currentImage}
-                                placeholder={currentImage ? "Describe los cambios que quieres..." : "Genera una imagen primero para poder editarla..."}
+                                placeholder={currentImage ? tt('image:ui.editPlaceholder', 'Describe the changes to edit the image...') : tt('common:preview.generateFirstToEdit', 'Generate an image first to edit it...')}
                                 className="flex-1 min-h-[50px] max-h-[120px] py-3 bg-transparent border-0 focus-visible:ring-0 resize-none shadow-none text-base placeholder:text-muted-foreground/60 leading-relaxed scrollbar-hide disabled:opacity-50 disabled:cursor-not-allowed"
                             />
 
@@ -1340,7 +1388,7 @@ export function CanvasPanel({
                                 onClick={onUnifiedAction}
                                 isGenerating={isGenerating}
 
-                                label={currentImage && editPrompt.trim() ? "EDITAR IMAGEN" : "Generar"}
+                                label={currentImage && editPrompt.trim() ? tt('common:actions.edit', 'Edit').toUpperCase() : tt('image:ui.generate', 'Generate')}
                                 isDisabled={!canGenerate && !editPrompt.trim()}
                                 className="h-14 px-8 rounded-xl font-bold shadow-lg hover:shadow-primary/25 bg-primary text-primary-foreground border-0 shrink-0 transition-transform transition-shadow duration-200 hover:scale-[1.02] active:scale-[0.98]"
                             />

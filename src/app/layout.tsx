@@ -2,6 +2,7 @@
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { DynamicThemeProvider } from "@/components/providers/DynamicThemeProvider";
+import { I18nProvider } from "@/components/providers/I18nProvider";
 import { BrandKitProvider } from "@/contexts/BrandKitContext";
 import { UIProvider } from "@/contexts/UIContext";
 import { Toaster } from "@/components/ui/toaster";
@@ -43,21 +44,23 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
-            <DynamicThemeProvider>
-              <BrandKitProvider>
-                <UIProvider>
-                  {/* Main container with floating elements support */}
-                  <div className="relative flex min-h-screen flex-col">
-                    {/* Decorative glow in top-left corner */}
-                    <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 bg-primary/10 blur-[100px] rounded-full" />
-                    <main className="flex-1">
-                      {children}
-                    </main>
-                  </div>
-                  <Toaster />
-                </UIProvider>
-              </BrandKitProvider>
-            </DynamicThemeProvider>
+            <I18nProvider>
+              <DynamicThemeProvider>
+                <BrandKitProvider>
+                  <UIProvider>
+                    {/* Main container with floating elements support */}
+                    <div className="relative flex min-h-dvh flex-col">
+                      {/* Decorative glow in top-left corner */}
+                      <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/10 blur-[100px]" />
+                      <main className="flex-1">
+                        {children}
+                      </main>
+                    </div>
+                    <Toaster />
+                  </UIProvider>
+                </BrandKitProvider>
+              </DynamicThemeProvider>
+            </I18nProvider>
           </ThemeProvider>
         </ConvexClientProvider>
       </body>

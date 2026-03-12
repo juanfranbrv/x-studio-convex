@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState, useEffect, useRef } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import { useTheme } from 'next-themes'
@@ -8,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
-import { Loader2, Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink, Trash2, MessageSquare, Shapes, Banknote, Save, ChevronRight, ChevronDown, Download, Palette } from 'lucide-react'
+import { Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink, Trash2, MessageSquare, Shapes, Banknote, Save, ChevronRight, ChevronDown, Download, Palette } from 'lucide-react'
 import { CreditsBadge } from '@/components/layout/CreditsBadge'
 import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/admin-compositions-actions'
 import { Button } from '@/components/ui/button'
@@ -41,6 +42,7 @@ import { Fragment } from 'react'
 
 import { CompositionsSummaryTable } from '@/components/admin/CompositionsSummaryTable'
 import { StylePresetsManager } from '@/components/admin/StylePresetsManager'
+import { BillingAdminPanel } from '@/components/admin/BillingAdminPanel'
 
 const IMAGE_MODEL_OPTIONS = [
     { value: 'wisdom/gemini-3-pro-image-preview', label: 'Wisdom · Gemini 3 Pro Image Preview' },
@@ -75,7 +77,7 @@ const PROVIDER_COST_LINKS: Record<string, string> = {
 }
 
 const ADMIN_TAB_STORAGE_KEY = 'x-studio-admin-active-tab'
-const ADMIN_TABS = ['requests', 'users', 'transactions', 'settings', 'models', 'styles', 'economics', 'links', 'feedback', 'compositions'] as const
+const ADMIN_TABS = ['requests', 'users', 'transactions', 'settings', 'models', 'styles', 'economics', 'billing', 'links', 'feedback', 'compositions'] as const
 type AdminTab = (typeof ADMIN_TABS)[number]
 const DEFAULT_ADMIN_TAB: AdminTab = 'requests'
 const ADMIN_EMAILS = ['juanfranbrv@gmail.com']
@@ -231,7 +233,7 @@ export default function AdminPage() {
     }, [modelCosts])
 
     useEffect(() => {
-        if (!userEmail || hasSyncedCatalogRef.current || syncingCatalog) return
+        if (!hasAdminAccess || !userEmail || hasSyncedCatalogRef.current || syncingCatalog) return
 
         const intelligenceModels = Array.from(new Set(INTELLIGENCE_MODEL_OPTIONS.map((option) => option.value)))
         const imageModels = Array.from(new Set(IMAGE_MODEL_OPTIONS.map((option) => option.value)))
@@ -248,7 +250,7 @@ export default function AdminPage() {
                 toast({ title: 'Error sincronizando catálogo económico', description: error.message, variant: 'destructive' })
             })
             .finally(() => setSyncingCatalog(false))
-    }, [userEmail, syncModelCatalog, syncingCatalog, toast])
+    }, [hasAdminAccess, userEmail, syncModelCatalog, syncingCatalog, toast])
 
     useEffect(() => {
         const saved = window.localStorage.getItem(ADMIN_TAB_STORAGE_KEY)
@@ -333,7 +335,7 @@ export default function AdminPage() {
     if (!isLoaded) {
         return (
             <div className="flex items-center justify-center h-screen">
-                <Loader2 className="w-8 h-8 animate-spin" />
+                <Loader2 className="w-8 h-8" />
             </div>
         )
     }
@@ -681,6 +683,9 @@ export default function AdminPage() {
                         <TabsTrigger value="economics" className="gap-2">
                             <Banknote className="h-4 w-4" /> Economía
                         </TabsTrigger>
+                        <TabsTrigger value="billing" className="gap-2">
+                            <Coins className="h-4 w-4" /> Billing
+                        </TabsTrigger>
                         <TabsTrigger value="links" className="gap-2">
                             <ExternalLink className="h-4 w-4" /> Enlaces
                         </TabsTrigger>
@@ -733,7 +738,7 @@ export default function AdminPage() {
                                                                     admin_email: userEmail,
                                                                     request_id: request._id
                                                                 })
-                                                                toast({ title: 'âœ… Acceso aprobado', description: `${request.email} ahora puede acceder` })
+                                                                toast({ title: 'Acceso aprobado', description: `${request.email} ahora puede acceder` })
                                                             } catch (e: any) {
                                                                 toast({ title: 'Error', description: e.message, variant: 'destructive' })
                                                             }
@@ -1194,7 +1199,7 @@ export default function AdminPage() {
                                                                 title="Activar modelo"
                                                             >
                                                                 {activatingModelId === String(row._id)
-                                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                                                    ? <Loader2 className="h-4 w-4" />
                                                                     : <Check className="h-4 w-4" />}
                                                             </Button>
                                                             <Button
@@ -1315,7 +1320,7 @@ export default function AdminPage() {
                                                                 title="Activar modelo"
                                                             >
                                                                 {activatingModelId === String(row._id)
-                                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                                                    ? <Loader2 className="h-4 w-4" />
                                                                     : <Check className="h-4 w-4" />}
                                                             </Button>
                                                             <Button
@@ -1366,7 +1371,7 @@ export default function AdminPage() {
                                             aria-label="Descargar logs en CSV"
                                             title="Descargar CSV"
                                         >
-                                            {exportingEconomicCsv ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                                            {exportingEconomicCsv ? <Loader2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
                                         </Button>
                                         <Button
                                             type="button"
@@ -1378,7 +1383,7 @@ export default function AdminPage() {
                                             title="Borrar logs"
                                             className="text-destructive hover:text-destructive"
                                         >
-                                            {clearingEconomicLogs ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                            {clearingEconomicLogs ? <Loader2 className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
                                         </Button>
                                         <Button
                                             type="button"
@@ -1400,7 +1405,7 @@ export default function AdminPage() {
                                             aria-label="Refrescar log de auditoría económica"
                                             title="Refrescar datos"
                                         >
-                                            <RefreshCw className={`h-4 w-4 ${refreshingEconomicLog ? 'animate-spin' : ''}`} />
+                                            {refreshingEconomicLog ? <Loader2 className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
                                         </Button>
                                     </div>
                                 </div>
@@ -1493,7 +1498,7 @@ export default function AdminPage() {
                                         Edita los campos y guarda todos los cambios de una vez.
                                     </p>
                                     <Button onClick={handleSaveModelSettings} disabled={!isModelSettingsDirty || savingModelSettings}>
-                                        {savingModelSettings ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                                        {savingModelSettings ? <Loader2 className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                                         Guardar cambios
                                     </Button>
                                 </div>
@@ -1635,6 +1640,11 @@ export default function AdminPage() {
                                 <StylePresetsManager adminEmail={userEmail} />
                             </CardContent>
                         </Card>
+                    </TabsContent>
+
+                    {/* Links Tab */}
+                    <TabsContent value="billing">
+                        <BillingAdminPanel adminEmail={userEmail} />
                     </TabsContent>
 
                     {/* Links Tab */}
@@ -1787,7 +1797,7 @@ export default function AdminPage() {
                             <CardContent className="p-0">
                                 {loadingCompositions ? (
                                     <div className="h-64 flex items-center justify-center">
-                                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                        <Loader2 className="h-8 w-8 text-muted-foreground" />
                                     </div>
                                 ) : (
                                     <CompositionsSummaryTable initialData={compositionsSummary} />
@@ -1850,7 +1860,7 @@ export default function AdminPage() {
                             Cancelar
                         </Button>
                         <Button onClick={handleAdjustCredits} disabled={!creditAmount || isProcessing}>
-                            {isProcessing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            {isProcessing ? <Loader2 className="h-4 w-4 mr-2" /> : null}
                             Aplicar
                         </Button>
                     </DialogFooter>
@@ -1859,4 +1869,6 @@ export default function AdminPage() {
         </div>
     )
 }
+
+
 

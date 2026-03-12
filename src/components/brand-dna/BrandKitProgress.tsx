@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo } from 'react'
 import { CheckCircle2, AlertCircle, Sparkles } from 'lucide-react'
@@ -11,6 +11,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useTranslation } from 'react-i18next'
 
 interface BrandKitProgressProps {
     brandKit: BrandDNA | null
@@ -20,6 +21,7 @@ interface BrandKitProgressProps {
 }
 
 export function BrandKitProgress({ brandKit, showDetails = true, compact = false, className }: BrandKitProgressProps) {
+    const { t } = useTranslation('brandKit')
     const completeness = useMemo(() => calculateBrandKitCompleteness(brandKit), [brandKit])
     const message = useMemo(() => getCompletenessMessage(completeness.percentage), [completeness.percentage])
 
@@ -70,7 +72,7 @@ export function BrandKitProgress({ brandKit, showDetails = true, compact = false
                     ) : (
                         <Sparkles className="w-5 h-5 text-primary" />
                     )}
-                    <span className="font-medium text-sm">Completitud del Kit de Marca</span>
+                    <span className="font-medium text-sm">{t('progress.title', { defaultValue: 'Brand Kit completeness' })}</span>
                 </div>
                 <span className={cn("text-lg font-bold", message.color)}>
                     {completeness.percentage}%
@@ -100,7 +102,7 @@ export function BrandKitProgress({ brandKit, showDetails = true, compact = false
                 <div className="mt-3 pt-3 border-t border-border/50">
                     <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
-                        Para mejorar:
+                        {t('progress.improve', { defaultValue: 'To improve:' })}
                     </p>
                     <ul className="space-y-1">
                         {completeness.tips.map((tip, i) => (
@@ -116,7 +118,7 @@ export function BrandKitProgress({ brandKit, showDetails = true, compact = false
             {/* Complete celebration */}
             {completeness.isComplete && (
                 <p className="text-xs text-muted-foreground mt-2">
-                    Tu Kit de Marca está listo para generar contenido de alta calidad.
+                    {t('progress.complete', { defaultValue: 'Your Brand Kit is ready to generate high-quality content.' })}
                 </p>
             )}
         </div>

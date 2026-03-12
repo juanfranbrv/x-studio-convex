@@ -1,8 +1,10 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState } from 'react'
 import { Copy, RefreshCw, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useTranslation } from 'react-i18next'
 
 interface CaptionCardProps {
     caption: string
@@ -17,6 +19,7 @@ export function CaptionCard({
     onRegenerate,
     isRegenerating = false,
 }: CaptionCardProps) {
+    const { t } = useTranslation('common')
     const [copied, setCopied] = useState(false)
 
     const handleCopy = async () => {
@@ -29,7 +32,7 @@ export function CaptionCard({
         <div className="rounded-xl border border-border/60 bg-card/70 p-4">
             <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Caption para redes
+                    {t('captionCard.title', { defaultValue: 'Social caption' })}
                 </p>
                 <div className="flex items-center gap-1">
                     {onRegenerate && (
@@ -39,9 +42,9 @@ export function CaptionCard({
                             className="h-7 w-7 rounded-lg"
                             onClick={onRegenerate}
                             disabled={isRegenerating}
-                            title="Regenerar caption"
+                            title={t('copyCard.regenerate', { defaultValue: 'Regenerate' })}
                         >
-                            <RefreshCw className={`w-3.5 h-3.5 ${isRegenerating ? 'animate-spin' : ''}`} />
+                            {isRegenerating ? <Loader2 className="h-3.5 w-3.5" /> : <RefreshCw className="h-3.5 w-3.5" />}
                         </Button>
                     )}
                     <Button
@@ -49,7 +52,7 @@ export function CaptionCard({
                         size="icon"
                         className="h-7 w-7 rounded-lg"
                         onClick={handleCopy}
-                        title="Copiar"
+                        title={t('copyCard.copy', { defaultValue: 'Copy' })}
                     >
                         {copied ? (
                             <Check className="w-3.5 h-3.5 text-green-500" />
@@ -61,10 +64,10 @@ export function CaptionCard({
             </div>
             <textarea
                 id="caption-card-input"
-                aria-label="Caption generado para redes"
+                aria-label={t('captionCard.aria', { defaultValue: 'Generated social caption' })}
                 value={caption}
                 onChange={(e) => onChange(e.target.value)}
-                placeholder="El caption aparecerá aquí después de generar..."
+                placeholder={t('captionCard.placeholder', { defaultValue: 'The caption will appear here after generating...' })}
                 className="w-full min-h-[80px] text-sm p-3 rounded-lg border border-border/60 bg-background/70 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors placeholder:text-muted-foreground/70"
                 rows={3}
             />

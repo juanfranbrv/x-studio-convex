@@ -1,13 +1,15 @@
-'use client'
+﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { Loader2 } from '@/components/ui/spinner'
+import { useEffect, useState } from 'react'
 import { useMutation } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
 import { useUser } from '@clerk/nextjs'
-import { useToast } from '@/hooks/use-toast'
-import { MessageSquare, X, Send, Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Check, MessageSquare, Send, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { api } from '../../../convex/_generated/api'
 import { Id } from '../../../convex/_generated/dataModel'
+import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
 interface FeedbackButtonProps {
     show: boolean
@@ -16,15 +18,25 @@ interface FeedbackButtonProps {
     intent?: string
     layout?: string
     className?: string
+    compact?: boolean
 }
 
 const REACTIONS = [
-    { id: 'negative', emoji: '😞', label: 'Malo' },
-    { id: 'neutral', emoji: '😐', label: 'Normal' },
-    { id: 'positive', emoji: '😊', label: 'Bueno' },
+    { id: 'negative', emoji: '😞', labelKey: 'bad', defaultLabel: 'Bad' },
+    { id: 'neutral', emoji: '😐', labelKey: 'neutral', defaultLabel: 'Neutral' },
+    { id: 'positive', emoji: '😊', labelKey: 'good', defaultLabel: 'Good' },
 ] as const
 
-export function FeedbackButton({ show, generationId, brandId, intent, layout, className }: FeedbackButtonProps) {
+export function FeedbackButton({
+    show,
+    generationId,
+    brandId,
+    intent,
+    layout,
+    className,
+    compact = false,
+}: FeedbackButtonProps) {
+    const { t } = useTranslation('common')
     const { user } = useUser()
     const { toast } = useToast()
     const submitFeedback = useMutation(api.feedback.submitFeedback)
@@ -36,14 +48,12 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
     const [isVisible, setIsVisible] = useState(false)
     const [hasSubmitted, setHasSubmitted] = useState(false)
 
-    // Fade in after delay when show becomes true
     useEffect(() => {
         if (show && !hasSubmitted) {
             const timer = setTimeout(() => setIsVisible(true), 2000)
             return () => clearTimeout(timer)
-        } else {
-            setIsVisible(false)
         }
+        setIsVisible(false)
     }, [show, hasSubmitted])
 
     const handleSubmit = async (rating?: string) => {
@@ -66,8 +76,8 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
             })
 
             toast({
-                title: '¡Gracias!',
-                description: 'Tu feedback nos ayuda a mejorar.',
+                title: t('feedback.thanksTitle', { defaultValue: 'Thanks' }),
+                description: t('feedback.thanksDescription', { defaultValue: 'Your feedback helps us improve.' }),
             })
 
             setIsOpen(false)
@@ -77,8 +87,8 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
         } catch (error) {
             console.error('Error submitting feedback:', error)
             toast({
-                title: 'Error',
-                description: 'No se pudo enviar el feedback.',
+                title: t('feedback.errorTitle', { defaultValue: 'Error' }),
+                description: t('feedback.errorDescription', { defaultValue: 'We could not send your feedback.' }),
                 variant: 'destructive',
             })
         } finally {
@@ -87,15 +97,14 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
     }
 
     const handleEmojiClick = (ratingId: string) => {
-        // If same emoji clicked and open, submit immediately
         if (selectedRating === ratingId && isOpen) {
             handleSubmit(ratingId)
-        } else {
-            setSelectedRating(ratingId)
-            // If no comment field needed, submit after a short delay
-            if (!isOpen) {
-                setIsOpen(true)
-            }
+            return
+        }
+
+        setSelectedRating(ratingId)
+        if (!isOpen) {
+            setIsOpen(true)
         }
     }
 
@@ -103,45 +112,45 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
 
     return (
         <>
-            {/* Floating trigger button - centered near image */}
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
                     className={cn(
-                        // Default positioning (can be overridden by className)
-                        !className?.includes('absolute') && !className?.includes('fixed') && "fixed bottom-24 left-1/2 -translate-x-1/2",
-                        "z-50 px-4 py-2.5 rounded-full",
-                        "bg-card/90 backdrop-blur-xl border border-primary/20",
-                        "flex items-center gap-2",
-                        "opacity-90 hover:opacity-100",
-                        "hover:border-primary/40",
-                        "hover:scale-105 active:scale-95",
-                        "transition-all duration-300 ease-out",
-                        "shadow-lg hover:shadow-xl",
-                        "group",
-                        "animate-in fade-in zoom-in slide-in-from-bottom-4 duration-700",
+                        !className?.includes('absolute') && !className?.includes('fixed') && 'fixed bottom-24 left-1/2 -translate-x-1/2',
+                        compact ? 'z-50 rounded-full px-3 py-2' : 'z-50 rounded-full px-4 py-2.5',
+                        'flex items-center gap-2 border border-primary/20 bg-card/90 backdrop-blur-xl',
+                        compact ? 'opacity-75 hover:opacity-95' : 'opacity-90 hover:opacity-100',
+                        'shadow-lg transition-all duration-300 ease-out hover:scale-105 hover:border-primary/40 hover:shadow-xl active:scale-95',
+                        'group animate-in fade-in zoom-in slide-in-from-bottom-4 duration-700',
                         className
                     )}
-                    title="Enviar feedback"
+                    title={t('feedback.openTitle', { defaultValue: 'Send feedback' })}
                 >
-                    <MessageSquare className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-medium text-foreground/80 group-hover:text-foreground">¿Qué te pareció?</span>
+                    <MessageSquare className="h-4 w-4 text-primary transition-transform group-hover:scale-110" />
+                    <span
+                        className={cn(
+                            compact ? 'text-xs font-medium' : 'text-sm font-medium',
+                            'text-foreground/80 group-hover:text-foreground'
+                        )}
+                    >
+                        {compact
+                            ? t('feedback.compactLabel', { defaultValue: 'Feedback' })
+                            : t('feedback.title', { defaultValue: 'What did you think?' })}
+                    </span>
                 </button>
             )}
 
-            {/* Feedback modal - centered */}
             {isOpen && (
-                <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className={cn(
-                        "w-80 p-5 rounded-2xl",
-                        "studio-tone-panel border border-border/70 bg-card/95",
-                        "shadow-2xl backdrop-blur-xl",
-                        "space-y-4"
-                    )}>
-                        {/* Header */}
+                <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div
+                        className={cn(
+                            'w-80 space-y-4 rounded-2xl border border-border/70 bg-card/95 p-5 shadow-2xl backdrop-blur-xl',
+                            'studio-tone-panel'
+                        )}
+                    >
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-semibold text-foreground">
-                                ¿Qué te pareció?
+                                {t('feedback.title', { defaultValue: 'What did you think?' })}
                             </h3>
                             <button
                                 onClick={() => {
@@ -149,103 +158,84 @@ export function FeedbackButton({ show, generationId, brandId, intent, layout, cl
                                     setSelectedRating(null)
                                     setComment('')
                                 }}
-                                className="p-1 rounded-full hover:bg-muted/50 transition-colors"
+                                className="rounded-full p-1 transition-colors hover:bg-muted/50"
                             >
-                                <X className="w-4 h-4 text-muted-foreground" />
+                                <X className="h-4 w-4 text-muted-foreground" />
                             </button>
                         </div>
 
-                        {/* Emoji reactions */}
                         <div className="flex justify-center gap-4">
                             {REACTIONS.map((reaction) => (
                                 <button
                                     key={reaction.id}
                                     onClick={() => handleEmojiClick(reaction.id)}
                                     className={cn(
-                                        "flex flex-col items-center gap-1.5 p-3 rounded-xl",
-                                        "transition-all duration-200",
-                                        "hover:scale-110 active:scale-95",
+                                        'flex flex-col items-center gap-1.5 rounded-xl p-3 transition-all duration-200 hover:scale-110 active:scale-95',
                                         selectedRating === reaction.id
-                                            ? "bg-primary/20 ring-2 ring-primary shadow-lg scale-110"
-                                            : "hover:bg-muted/30"
+                                            ? 'scale-110 bg-primary/20 ring-2 ring-primary shadow-lg'
+                                            : 'hover:bg-muted/30'
                                     )}
                                 >
                                     <span className="text-3xl">{reaction.emoji}</span>
-                                    <span className={cn(
-                                        "text-xs font-medium",
-                                        selectedRating === reaction.id
-                                            ? "text-primary"
-                                            : "text-muted-foreground"
-                                    )}>
-                                        {reaction.label}
+                                    <span
+                                        className={cn(
+                                            'text-xs font-medium',
+                                            selectedRating === reaction.id ? 'text-primary' : 'text-muted-foreground'
+                                        )}
+                                    >
+                                        {t(`feedback.reactions.${reaction.labelKey}`, { defaultValue: reaction.defaultLabel })}
                                     </span>
                                 </button>
                             ))}
                         </div>
 
-                        {/* Optional comment */}
                         {selectedRating && (
                             <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
                                 <textarea
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
-                                    placeholder="Cuéntanos más (opcional)..."
+                                    placeholder={t('feedback.commentPlaceholder', { defaultValue: 'Tell us more (optional)...' })}
                                     className={cn(
-                                        "w-full h-20 px-3 py-2 text-sm rounded-xl",
-                                        "bg-muted/40 border border-border/60",
-                                        "placeholder:text-muted-foreground/50",
-                                        "focus:outline-none focus:ring-2 focus:ring-primary/50",
-                                        "resize-none transition-all"
+                                        'h-20 w-full resize-none rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-sm transition-all',
+                                        'placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50'
                                     )}
                                 />
                                 <button
                                     onClick={() => handleSubmit()}
                                     disabled={isSubmitting}
                                     className={cn(
-                                        "w-full py-2.5 rounded-xl",
-                                        "bg-primary text-primary-foreground",
-                                        "font-medium text-sm",
-                                        "flex items-center justify-center gap-2",
-                                        "hover:bg-primary/90 active:scale-[0.98]",
-                                        "transition-all duration-200",
-                                        "disabled:opacity-50 disabled:cursor-not-allowed"
+                                        'flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-all duration-200',
+                                        'hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50'
                                     )}
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                                            Enviando...
+                                            <Loader2 className="h-4 w-4 text-primary-foreground" />
+                                            {t('feedback.sending', { defaultValue: 'Sending...' })}
                                         </>
                                     ) : (
                                         <>
-                                            <Send className="w-4 h-4" />
-                                            Enviar feedback
+                                            <Send className="h-4 w-4" />
+                                            {t('feedback.send', { defaultValue: 'Send feedback' })}
                                         </>
                                     )}
                                 </button>
                             </div>
                         )}
 
-                        {/* Hint if no rating selected */}
                         {!selectedRating && (
-                            <p className="text-xs text-center text-muted-foreground/70">
-                                Pulsa un emoji para valorar rápidamente
+                            <p className="text-center text-xs text-muted-foreground/70">
+                                {t('feedback.quickHint', { defaultValue: 'Tap an emoji to rate quickly' })}
                             </p>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* Success checkmark (centered) */}
             {hasSubmitted && (
-                <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in fade-in zoom-in duration-500">
-                    <div className={cn(
-                        "w-12 h-12 rounded-full",
-                        "bg-primary/20 border border-primary/35",
-                        "flex items-center justify-center",
-                        "shadow-lg"
-                    )}>
-                        <Check className="w-6 h-6 text-primary" />
+                <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 animate-in fade-in zoom-in duration-500">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-primary/35 bg-primary/20 shadow-lg">
+                        <Check className="h-6 w-6 text-primary" />
                     </div>
                 </div>
             )}

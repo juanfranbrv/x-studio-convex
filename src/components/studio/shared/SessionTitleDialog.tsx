@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { useTranslation } from 'react-i18next'
 
 type SessionTitleDialogProps = {
   open: boolean
@@ -18,11 +19,13 @@ export function SessionTitleDialog({
   title,
   description,
   value,
-  confirmLabel = 'Guardar sesión',
+  confirmLabel,
   onValueChange,
   onCancel,
   onConfirm,
 }: SessionTitleDialogProps) {
+  const { t } = useTranslation('common')
+
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onCancel() }}>
       <DialogContent className="max-w-md">
@@ -35,7 +38,7 @@ export function SessionTitleDialog({
             autoFocus
             value={value}
             maxLength={80}
-            placeholder="Ej. Campaña primavera"
+            placeholder={t('sessionDialog.placeholder', { defaultValue: 'e.g. Spring campaign' })}
             onChange={(event) => onValueChange(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
@@ -45,15 +48,15 @@ export function SessionTitleDialog({
             }}
           />
           <p className="text-xs text-muted-foreground">
-            Lo podrás identificar mejor en el historial y luego seguirá guardándose con este nombre.
+            {t('sessionDialog.helper', { defaultValue: 'You will recognize it more easily in history, and it will keep saving under this name.' })}
           </p>
         </div>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onCancel}>
-            Cancelar
+            {t('actions.cancel', { defaultValue: 'Cancel' })}
           </Button>
           <Button onClick={onConfirm} disabled={!value.trim()}>
-            {confirmLabel}
+            {confirmLabel || t('sessionDialog.confirm', { defaultValue: 'Save session' })}
           </Button>
         </DialogFooter>
       </DialogContent>

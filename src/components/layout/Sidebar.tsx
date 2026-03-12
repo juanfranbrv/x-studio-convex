@@ -1,10 +1,12 @@
-'use client'
+﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useUser, useClerk } from '@clerk/nextjs'
-import { Bot, Home, Image, GalleryHorizontal, Play, Settings, FileSpreadsheet, LogOut, User, Loader2, PanelsTopLeft } from 'lucide-react'
+import { useClerk, useUser } from '@clerk/nextjs'
+import { useTranslation } from 'react-i18next'
+import { Bot, CreditCard, FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, PanelsTopLeft, Play, Settings, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
     DropdownMenu,
@@ -19,27 +21,29 @@ interface SidebarProps {
     className?: string
 }
 
-const navItems = [
-    { icon: Home, label: 'Inicio', href: '/' },
-    { icon: FileSpreadsheet, label: 'Kit de Marca', href: '/brand-kit' },
-    { icon: Image, label: 'Imagen', href: '/image' },
-    { icon: PanelsTopLeft, label: 'Estudio', href: '/studio' },
-    { icon: GalleryHorizontal, label: 'Carrusel', href: '/carousel' },
-    { icon: Play, label: 'Video', href: '/video' },
-]
-
 export function Sidebar({ className }: SidebarProps) {
+    const { t } = useTranslation(['common', 'billing'])
     const pathname = usePathname()
     const { user } = useUser()
     const { signOut } = useClerk()
     const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+    const navItems = [
+        { icon: Home, label: t('nav.home'), href: '/' },
+        { icon: FileSpreadsheet, label: t('nav.brandKit'), href: '/brand-kit' },
+        { icon: Image, label: t('nav.image'), href: '/image' },
+        { icon: PanelsTopLeft, label: t('nav.studioWorkspace'), href: '/studio' },
+        { icon: GalleryHorizontal, label: t('nav.carousel'), href: '/carousel' },
+        { icon: Play, label: t('nav.video'), href: '/video' },
+        { icon: CreditCard, label: t('billing:nav.billing'), href: '/billing' },
+    ]
 
     const handleLogout = async () => {
         setIsLoggingOut(true)
         try {
             await signOut({ redirectUrl: '/' })
         } catch (error) {
-            console.error('Error al cerrar sesión:', error)
+            console.error('Error closing session:', error)
             setIsLoggingOut(false)
         }
     }
@@ -47,73 +51,60 @@ export function Sidebar({ className }: SidebarProps) {
     return (
         <aside
             className={cn(
-                'h-screen transition-colors duration-300 ease-in-out border-r border-border/60 bg-background/95 backdrop-blur-sm flex flex-col shrink-0 w-[90px]',
+                'flex h-screen w-[90px] shrink-0 flex-col border-r border-border/60 bg-background/95 backdrop-blur-sm transition-colors duration-300 ease-in-out',
                 className
             )}
         >
-            {/* 1. Header / Logo */}
-            <div className="p-4 flex flex-col items-center gap-2 border-b border-border/60">
+            <div className="flex flex-col items-center gap-2 border-b border-border/60 p-4">
                 <Bot className="h-8 w-8 text-primary" />
             </div>
 
-            {/* 2. Main Navigation */}
-            <nav className="flex-1 px-2 py-4 flex flex-col gap-3 overflow-y-auto scrollbar-none">
+            <nav className="scrollbar-none flex flex-1 flex-col gap-3 overflow-y-auto px-2 py-4">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href
                     return (
                         <Link
-                            key={item.label}
+                            key={item.href}
                             href={item.href}
                             className={cn(
-                                'flex flex-col items-center justify-center p-2 rounded-xl transition-colors duration-200 group gap-1.5',
+                                'group flex flex-col items-center justify-center gap-1.5 rounded-xl p-2 transition-colors duration-200',
                                 isActive
                                     ? 'bg-primary text-primary-foreground shadow-lg'
-                                    : 'hover:bg-accent/60 text-muted-foreground hover:text-foreground'
+                                    : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
                             )}
                         >
-                            <item.icon className={cn(
-                                'h-6 w-6 shrink-0',
-                                isActive ? 'text-primary-foreground' : 'text-primary'
-                            )} />
-                            <span className="text-xs font-medium leading-tight text-center">
-                                {item.label}
-                            </span>
+                            <item.icon className={cn('h-6 w-6 shrink-0', isActive ? 'text-primary-foreground' : 'text-primary')} />
+                            <span className="text-center text-xs font-medium leading-tight">{item.label}</span>
                         </Link>
                     )
                 })}
             </nav>
 
-            {/* 3. Bottom Section (Settings + Profile) */}
-            <div className="p-2 border-t border-border/60 flex flex-col gap-3 items-center pb-6">
-                {/* Settings */}
+            <div className="flex flex-col items-center gap-3 border-t border-border/60 p-2 pb-6">
                 <Link
                     href="/settings"
                     className={cn(
-                        'flex flex-col items-center justify-center p-2 rounded-xl transition-colors duration-200 group gap-1.5 w-full',
+                        'group flex w-full flex-col items-center justify-center gap-1.5 rounded-xl p-2 transition-colors duration-200',
                         pathname === '/settings'
                             ? 'bg-primary text-primary-foreground shadow-lg'
-                            : 'hover:bg-accent/60 text-muted-foreground hover:text-foreground'
+                            : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
                     )}
                 >
-                    <Settings className={cn(
-                        'h-6 w-6 shrink-0',
-                        pathname === '/settings' ? 'text-primary-foreground' : 'text-primary'
-                    )} />
-                    <span className="text-xs font-medium">Ajustes</span>
+                    <Settings className={cn('h-6 w-6 shrink-0', pathname === '/settings' ? 'text-primary-foreground' : 'text-primary')} />
+                    <span className="text-xs font-medium">{t('nav.settings')}</span>
                 </Link>
 
-                {/* User Profile - Avatar with Dropdown */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button className="h-10 w-10 shrink-0 rounded-full border-2 border-brand-secondary overflow-hidden shadow-sm bg-muted cursor-pointer hover:ring-2 hover:ring-primary/50 transition-colors transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        <button className="h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded-full border-2 border-brand-secondary bg-muted shadow-sm transition-colors transition-shadow duration-200 hover:ring-2 hover:ring-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/50">
                             {user?.imageUrl ? (
                                 <img
                                     src={user.imageUrl}
-                                    alt={user.firstName || 'User'}
-                                    className="w-full h-full object-cover"
+                                    alt={user.firstName || t('labels.user')}
+                                    className="h-full w-full object-cover"
                                 />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm font-bold">
+                                <div className="flex h-full w-full items-center justify-center text-sm font-bold text-muted-foreground">
                                     {user?.firstName?.[0] || 'U'}
                                 </div>
                             )}
@@ -122,36 +113,32 @@ export function Sidebar({ className }: SidebarProps) {
                     <DropdownMenuContent side="right" align="end" className="w-56">
                         <DropdownMenuLabel className="font-normal">
                             <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">
-                                    {user?.fullName || user?.firstName || 'Usuario'}
-                                </p>
-                                <p className="text-xs leading-none text-muted-foreground">
-                                    {user?.primaryEmailAddress?.emailAddress || ''}
-                                </p>
+                                <p className="text-sm font-medium leading-none">{user?.fullName || user?.firstName || t('labels.user')}</p>
+                                <p className="text-xs leading-none text-muted-foreground">{user?.primaryEmailAddress?.emailAddress || ''}</p>
                             </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
                             <Link href="/settings" className="cursor-pointer">
                                 <User className="mr-2 h-4 w-4" />
-                                <span>Mi cuenta</span>
+                                <span>{t('labels.myAccount')}</span>
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                             onClick={handleLogout}
                             disabled={isLoggingOut}
-                            className="text-destructive focus:text-destructive cursor-pointer"
+                            className="cursor-pointer text-destructive focus:text-destructive"
                         >
                             {isLoggingOut ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    <span>Cerrando...</span>
+                                    <Loader2 className="mr-2 h-4 w-4" />
+                                    <span>{t('actions.loggingOut')}</span>
                                 </>
                             ) : (
                                 <>
                                     <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Cerrar sesión</span>
+                                    <span>{t('actions.logout')}</span>
                                 </>
                             )}
                         </DropdownMenuItem>
@@ -161,3 +148,5 @@ export function Sidebar({ className }: SidebarProps) {
         </aside>
     )
 }
+
+

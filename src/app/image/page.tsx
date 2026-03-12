@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
@@ -19,7 +20,7 @@ import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
 import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import { SOCIAL_FORMATS, ALL_IMAGE_LAYOUTS, LAYOUTS_BY_INTENT, type DebugPromptData, type DebugContextItem } from '@/lib/creation-flow-types'
-import { ArrowUp, Loader2, Plus, RotateCcw, Sparkles } from 'lucide-react'
+import { ArrowUp, GripVertical, Plus, RotateCcw, SlidersHorizontal, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 import { buildEditPrompt } from '@/lib/prompts/image-edit'
@@ -33,6 +34,8 @@ import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialo
 import { Id } from '../../../convex/_generated/dataModel'
 import type { BrandDNA } from '@/lib/brand-types'
 import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/admin-compositions-actions'
+import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
@@ -99,6 +102,7 @@ export interface ContextElement {
 
 
 export default function ImagePage() {
+    const { t } = useTranslation('image')
     const router = useRouter()
     const { user } = useUser()
     const { activeBrandKit, brandKits, loading, setActiveBrandKit, updateActiveBrandKit, deleteBrandKitById } = useBrandKit()
@@ -112,11 +116,16 @@ export default function ImagePage() {
     const [promptValue, setPromptValue] = useState('')
     const [editPrompt, setEditPrompt] = useState('')
     const [isMobile, setIsMobile] = useState(false)
+    const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
     const [isMagicParsing, setIsMagicParsing] = useState(false)
+    const [isCancelingAnalyze, setIsCancelingAnalyze] = useState(false)
+    const [isCancelingGenerate, setIsCancelingGenerate] = useState(false)
     const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
     const [auditFlowId, setAuditFlowId] = useState<string | null>(null)
     const auditFlowIdRef = useRef<string | null>(null)
     const smartAnalyzeInFlightRef = useRef(false)
+    const cancelAnalyzeRef = useRef(false)
+    const generationAbortControllerRef = useRef<AbortController | null>(null)
 
     // Layout Overrides for Icons
     const [layoutOverrides, setLayoutOverrides] = useState<CompositionSummary[]>([])
@@ -238,15 +247,15 @@ export default function ImagePage() {
     const confirmDiscardUnsavedChanges = useCallback(async (action: string) => {
         if (!hasUnsavedChanges) return true
         const decision = await openSessionDecisionModal({
-            title: 'Hay cambios sin guardar',
-            description: `Si continúas para ${action}, perderás los cambios actuales de esta sesión. ¿Qué prefieres hacer?`,
+            title: t('unsaved.title'),
+            description: t('unsaved.description', { action }),
             buttons: [
-                { id: 'cancel', label: 'Seguir aquí', variant: 'outline' },
-                { id: 'discard', label: 'Descartar cambios', variant: 'destructive' },
+                { id: 'cancel', label: t('unsaved.stay'), variant: 'outline' },
+                { id: 'discard', label: t('unsaved.discard'), variant: 'destructive' },
             ],
         })
         return decision === 'discard'
-    }, [hasUnsavedChanges, openSessionDecisionModal])
+    }, [hasUnsavedChanges, openSessionDecisionModal, t])
 
     const createWorkSession = useMutation(api.work_sessions.createSession)
     const upsertWorkSession = useMutation(api.work_sessions.upsertActiveSession)
@@ -313,7 +322,7 @@ export default function ImagePage() {
 
     const buildSessionTitle = useCallback((value?: string | null) => {
         const cleaned = (value || '').replace(/\s+/g, ' ').trim()
-        if (!cleaned) return 'Sesion nueva'
+        if (!cleaned) return t('sessions.newSessionTitle', { defaultValue: 'New session' })
         if (cleaned.length <= 48) return cleaned
         return `${cleaned.slice(0, 48)}...`
     }, [])
@@ -425,8 +434,8 @@ export default function ImagePage() {
             })
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'No se pudo persistir la imagen de sesion' }))
-                throw new Error(errorData.error || 'No se pudo persistir la imagen de sesion')
+                const errorData = await response.json().catch(() => ({ error: t('sessions.persistImageError', { defaultValue: 'Could not persist the session image' }) }))
+                throw new Error(errorData.error || t('sessions.persistImageError', { defaultValue: 'Could not persist the session image' }))
             }
 
             const data = await response.json() as {
@@ -549,7 +558,7 @@ export default function ImagePage() {
     ) => {
         if (!user?.id || !scopedBrandId) return null
         if (createSessionInFlightRef.current) return null
-        if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges('crear una sesión nueva')) return null
+        if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges(t('sessions.actions.createNew', { defaultValue: 'create a new session' }))) return null
         createSessionInFlightRef.current = true
         setIsCreatingSession(true)
 
@@ -561,8 +570,8 @@ export default function ImagePage() {
             if (!options?.persist) {
                 if (!silent) {
                     toast({
-                        title: "Sesion nueva",
-                        description: "Se ha preparado un borrador nuevo. La sesion se creara al analizar el prompt.",
+                        title: t('sessions.newTitle'),
+                        description: t('sessions.newDraftDescription'),
                     })
                 }
                 return null
@@ -589,8 +598,8 @@ export default function ImagePage() {
 
             if (!silent) {
                 toast({
-                    title: "Sesion nueva",
-                    description: "Se ha iniciado una nueva sesion de trabajo para este kit de marca.",
+                    title: t('sessions.newTitle'),
+                    description: t('sessions.newStartedDescription'),
                 })
             }
             return newId
@@ -598,14 +607,14 @@ export default function ImagePage() {
             createSessionInFlightRef.current = false
             setIsCreatingSession(false)
         }
-    }, [user?.id, scopedBrandId, normalizePromptForSession, resetImageDraft, createWorkSession, toast, buildSessionTitle, confirmDiscardUnsavedChanges, buildWorkspaceSnapshot, buildWorkspaceChangeSignature])
+    }, [user?.id, scopedBrandId, normalizePromptForSession, resetImageDraft, createWorkSession, toast, buildSessionTitle, confirmDiscardUnsavedChanges, buildWorkspaceSnapshot, buildWorkspaceChangeSignature, t])
 
     const handleLoadSession = useCallback(async (
         sessionId: string,
         options?: { skipUnsavedConfirm?: boolean }
     ) => {
         if (!sessionId || !user?.id) return false
-        if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges('cambiar de sesión')) return false
+        if (!options?.skipUnsavedConfirm && !await confirmDiscardUnsavedChanges(t('sessions.actions.switchSession', { defaultValue: 'switch sessions' }))) return false
         const activated = await activateWorkSession({
             user_id: user.id,
             session_id: sessionId as Id<'work_sessions'>,
@@ -624,11 +633,11 @@ export default function ImagePage() {
     const handleDeleteCurrentSession = useCallback(async () => {
         if (!user?.id || !currentSessionId) return
         const decision = await openSessionDecisionModal({
-            title: 'Borrar esta sesión',
-            description: 'Eliminarás esta sesión del módulo de imagen. El historial guardado de esta sesión dejará de estar disponible.',
+            title: t('sessions.deleteTitle'),
+            description: t('sessions.deleteDescription'),
             buttons: [
-                { id: 'cancel', label: 'Cancelar', variant: 'outline' },
-                { id: 'delete', label: 'Borrar sesión', variant: 'destructive' },
+                { id: 'cancel', label: t('common:actions.cancel'), variant: 'outline' },
+                { id: 'delete', label: t('sessions.deleteConfirm'), variant: 'destructive' },
             ],
         })
         if (decision !== 'delete') return
@@ -645,19 +654,19 @@ export default function ImagePage() {
         }
 
         toast({
-            title: 'Sesion eliminada',
-            description: 'La sesion se ha borrado correctamente.',
+            title: t('sessions.deletedTitle'),
+            description: t('sessions.deletedDescription'),
         })
-    }, [user?.id, currentSessionId, openSessionDecisionModal, deleteWorkSession, handleLoadSession, createNewImageSession, toast])
+    }, [user?.id, currentSessionId, openSessionDecisionModal, deleteWorkSession, handleLoadSession, createNewImageSession, toast, t])
 
     const handleClearAllSessions = useCallback(async () => {
         if (!user?.id || !scopedBrandId) return
         const decision = await openSessionDecisionModal({
-            title: 'Borrar todas las sesiones',
-            description: 'Se eliminará todo el historial de sesiones del módulo de imagen para este kit de marca. Esta acción no se puede deshacer.',
+            title: t('sessions.clearTitle'),
+            description: t('sessions.clearDescription'),
             buttons: [
-                { id: 'cancel', label: 'Cancelar', variant: 'outline' },
-                { id: 'clear', label: 'Borrar todo', variant: 'destructive' },
+                { id: 'cancel', label: t('common:actions.cancel'), variant: 'outline' },
+                { id: 'clear', label: t('sessions.clearConfirm'), variant: 'destructive' },
             ],
         })
         if (decision !== 'clear') return
@@ -670,10 +679,10 @@ export default function ImagePage() {
 
         await createNewImageSession('', true, { skipUnsavedConfirm: true })
         toast({
-            title: 'Sesiones borradas',
-            description: 'Se han eliminado todas las sesiones de este kit.',
+            title: t('sessions.clearedTitle'),
+            description: t('sessions.clearedDescription'),
         })
-    }, [user?.id, scopedBrandId, openSessionDecisionModal, clearWorkSessions, createNewImageSession, toast])
+    }, [user?.id, scopedBrandId, openSessionDecisionModal, clearWorkSessions, createNewImageSession, toast, t])
 
     // Hydrate one session per scope (user + module + brand kit).
     useEffect(() => {
@@ -765,7 +774,7 @@ export default function ImagePage() {
                 module: 'image',
                 brand_id: scopedBrandId,
                 session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
-                title: options?.titleOverride ?? buildSessionTitle(snapshot.promptValue || 'Sesion de imagen'),
+                title: options?.titleOverride ?? buildSessionTitle(snapshot.promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' })),
                 title_customized: options?.titleCustomized,
                 root_prompt: normalizePromptForSession(snapshot.rootPrompt || snapshot.promptValue) || undefined,
                 snapshot,
@@ -782,7 +791,7 @@ export default function ImagePage() {
             }
         } catch (error) {
             if (!isSilent) {
-                setSessionSaveError(error instanceof Error ? error.message : 'No se pudo guardar')
+                setSessionSaveError(error instanceof Error ? error.message : t('sessions.saveError', { defaultValue: 'Could not save' }))
             }
             throw error
         } finally {
@@ -810,7 +819,7 @@ export default function ImagePage() {
             user_id: user.id,
             module: 'image',
             brand_id: scopedBrandId,
-            title: buildSessionTitle(promptValue || 'Sesion de imagen'),
+            title: buildSessionTitle(promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' })),
             title_customized: false,
             root_prompt: normalizedPrompt || undefined,
             snapshot: draftSnapshot,
@@ -829,7 +838,7 @@ export default function ImagePage() {
         if (!user?.id || !scopedBrandId || isHydratingSession) return
         try {
             if (activeSessionMeta?.title_customized !== true) {
-                const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || promptValue || 'Sesion de imagen')
+                const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' }))
                 const selectedTitle = await openSessionTitleDialog(suggestedTitle)
                 if (!selectedTitle) return
                 await persistImageWorkspaceSnapshot({
@@ -852,7 +861,7 @@ export default function ImagePage() {
     }, [user?.id, scopedBrandId, isHydratingSession, activeSessionMeta, buildSessionTitle, openSessionTitleDialog, persistImageWorkspaceSnapshot, promptValue])
     const handleRenameCurrentSession = useCallback(async () => {
         if (!user?.id || !scopedBrandId || isHydratingSession || !currentSessionId) return
-        const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || promptValue || 'Sesion de imagen')
+        const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' }))
         const selectedTitle = await openSessionTitleDialog(suggestedTitle)
         if (!selectedTitle) return
         try {
@@ -1050,12 +1059,14 @@ export default function ImagePage() {
     const executeGenerationRequest = async (
         requestPayload: Record<string, unknown>,
         errorTitle: string,
-        errorFallback: string
+        errorFallback: string,
+        signal?: AbortSignal
     ) => {
         const response = await fetch('/api/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestPayload),
+            signal,
         })
 
         if (response.ok) {
@@ -1189,7 +1200,9 @@ export default function ImagePage() {
                 addDebugItem({
                     id: `debug-upload-${idx}`,
                     type: contextTypeFromRole(role),
-                    label: role === 'logo' ? `Logo auxiliar ${idx + 1}` : `Upload ${idx + 1}`,
+                    label: role === 'logo'
+                        ? t('common:auxLogos.uploadedAlt', { index: idx + 1, defaultValue: 'Uploaded auxiliary logo {{index}}' })
+                        : t('image:preview.contextLabel', { index: idx + 1, defaultValue: 'Context {{index}}' }),
                     url: imgUrl,
                     source: 'upload',
                     role: role as DebugContextItem['role'],
@@ -1202,7 +1215,9 @@ export default function ImagePage() {
                         id: `flow-upload-${idx}`,
                         type: contextTypeFromRole(role),
                         value: imgUrl,
-                        label: role === 'logo' ? `Logo auxiliar ${idx + 1}` : `Referencia ${idx + 1}`
+                        label: role === 'logo'
+                            ? t('common:auxLogos.uploadedAlt', { index: idx + 1, defaultValue: 'Uploaded auxiliary logo {{index}}' })
+                            : t('image:preview.contextLabel', { index: idx + 1, defaultValue: 'Context {{index}}' })
                     })
                 }
             })
@@ -1216,7 +1231,9 @@ export default function ImagePage() {
                 addDebugItem({
                     id: `debug-brandkit-${idx}`,
                     type: contextTypeFromRole(role),
-                    label: role === 'logo' ? `Logo auxiliar BrandKit ${idx + 1}` : `BrandKit ${idx + 1}`,
+                    label: role === 'logo'
+                        ? t('common:auxLogos.brandKitAssetAlt', { defaultValue: 'Brand Kit auxiliary asset' })
+                        : t('common:contentImage.brandKitImageAlt', { defaultValue: 'Brand Kit image' }),
                     url: imgUrl,
                     source: 'brandkit',
                     role: role as DebugContextItem['role'],
@@ -1229,7 +1246,9 @@ export default function ImagePage() {
                         id: `flow-brandkit-${idx}`,
                         type: contextTypeFromRole(role),
                         value: imgUrl,
-                        label: role === 'logo' ? `Logo auxiliar BrandKit ${idx + 1}` : `Imagen BrandKit ${idx + 1}`
+                        label: role === 'logo'
+                            ? t('common:auxLogos.brandKitAssetAlt', { defaultValue: 'Brand Kit auxiliary asset' })
+                            : t('common:contentImage.brandKitImageAlt', { defaultValue: 'Brand Kit image' })
                     })
                 }
             })
@@ -1251,13 +1270,13 @@ export default function ImagePage() {
                         id: 'flow-logo',
                         type: 'logo',
                         value: logoUrl,
-                        label: 'Logo'
+                        label: t('common:brandDnaPanel.logoBadge', { defaultValue: 'Logo' })
                     })
                 }
                 addDebugItem({
                     id: 'debug-primary-logo',
                     type: 'logo',
-                    label: 'Logo principal',
+                    label: t('common:visualAssets.mainLogo', { defaultValue: 'Main logo' }),
                     url: logoUrl,
                     source: 'system',
                     role: 'primary_logo',
@@ -1272,13 +1291,13 @@ export default function ImagePage() {
                     id: 'edit-reference',
                     type: 'image',
                     value: creationFlow.state.generatedImage,
-                    label: 'Imagen actual'
+                    label: t('preview.currentImage', { defaultValue: 'Current image' })
                 })
             }
             addDebugItem({
                 id: 'debug-generated-reference',
                 type: 'image',
-                label: 'Imagen actual',
+                label: t('preview.currentImage', { defaultValue: 'Current image' }),
                 url: creationFlow.state.generatedImage,
                 source: 'generated',
                 role: 'generated',
@@ -1340,25 +1359,48 @@ export default function ImagePage() {
         router.push('/brand-kit?action=new')
     }
 
+    const isAbortError = useCallback((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return true
+        if (error instanceof Error && error.name === 'AbortError') return true
+        return false
+    }, [])
+
+    const beginGenerationRequest = useCallback(() => {
+        generationAbortControllerRef.current?.abort()
+        const controller = new AbortController()
+        generationAbortControllerRef.current = controller
+        cancelAnalyzeRef.current = false
+        setIsCancelingGenerate(false)
+        return controller
+    }, [])
+
+    const clearGenerationController = useCallback((controller?: AbortController | null) => {
+        if (controller && generationAbortControllerRef.current === controller) {
+            generationAbortControllerRef.current = null
+        }
+    }, [])
+
     // Smart analyze prompt
     const handleSmartAnalyze = async (autoModel?: string) => {
         if (!promptValue.trim()) return null
         if (smartAnalyzeInFlightRef.current) return null
 
         smartAnalyzeInFlightRef.current = true
+        cancelAnalyzeRef.current = false
         setIsMagicParsing(true)
+        setIsCancelingAnalyze(false)
         setHighlightedFields(new Set())
 
         try {
             const normalizedPrompt = normalizePromptForSession(promptValue)
             if (normalizedPrompt && sessionRootPrompt && normalizedPrompt !== sessionRootPrompt) {
                 const decision = await openSessionDecisionModal({
-                    title: 'Este prompt parece una idea nueva',
-                    description: 'Puedes abrir una sesión nueva para mantener este trabajo separado, o seguir dentro de la sesión actual actualizando su idea principal.',
+                    title: t('sessions.newIdeaTitle', { defaultValue: 'This prompt looks like a new idea' }),
+                    description: t('sessions.newIdeaDescription', { defaultValue: 'You can open a new session to keep this work separate, or stay in the current session and update its main idea.' }),
                     buttons: [
-                        { id: 'cancel', label: 'Cancelar', variant: 'outline' },
-                        { id: 'keep', label: 'Seguir en esta sesión', variant: 'default' },
-                        { id: 'new', label: 'Crear sesión nueva', variant: 'default' },
+                        { id: 'cancel', label: t('common:actions.cancel', { defaultValue: 'Cancel' }), variant: 'outline' },
+                        { id: 'keep', label: t('sessions.keepCurrent', { defaultValue: 'Stay in this session' }), variant: 'default' },
+                        { id: 'new', label: t('sessions.createNew', { defaultValue: 'Create new session' }), variant: 'default' },
                     ],
                 })
                 if (decision === 'cancel' || decision === null) {
@@ -1378,8 +1420,8 @@ export default function ImagePage() {
             const modelToUse = autoModel || aiConfig?.intelligenceModel
             if (!modelToUse) {
                 toast({
-                    title: "Falta configuracion de IA",
-                    description: "No hay un modelo de inteligencia configurado en el panel de Admin.",
+                    title: t('errors.missingAiConfigTitle'),
+                    description: t('errors.missingAiConfigDescription'),
                     variant: "destructive"
                 })
                 return null
@@ -1421,10 +1463,14 @@ export default function ImagePage() {
                 auditFlowId: nextFlowId
             })
 
+            if (cancelAnalyzeRef.current) {
+                return null
+            }
+
             if (result.error) {
                 toast({
-                    title: "Error analyzing prompt",
-                    description: "Could not parse intent. Please fill manually.",
+                    title: t('errors.analyzePromptTitle'),
+                    description: t('errors.analyzePromptDescription'),
                     variant: "destructive"
                 })
                 return null
@@ -1437,8 +1483,8 @@ export default function ImagePage() {
             if (result.detectedIntent) {
                 creationFlow.selectIntent(result.detectedIntent as IntentCategory)
                 toast({
-                    title: "✨ Intención detectada",
-                    description: `Detectamos que quieres crear: ${result.detectedIntent}`,
+                    title: t('analysis.intentDetectedTitle'),
+                    description: t('analysis.intentDetectedDescription', { intent: result.detectedIntent }),
                 })
             }
 
@@ -1472,7 +1518,7 @@ export default function ImagePage() {
                 aiAssets.push({
                     id: `ai-${Date.now()}-${aiAssets.length}`,
                     type: type || 'custom',
-                    label: label.trim() || 'Texto',
+                    label: label.trim() || t('common:textLayerEditor.freeTextLabel', { defaultValue: 'Text' }),
                     value: cleanValue
                 })
             }
@@ -1480,7 +1526,7 @@ export default function ImagePage() {
             if (Array.isArray(result.imageTexts)) {
                 result.imageTexts.forEach((item) => {
                     if (!item || typeof item !== 'object') return
-                    const label = typeof item.label === 'string' ? item.label : 'Texto'
+                    const label = typeof item.label === 'string' ? item.label : t('common:textLayerEditor.freeTextLabel', { defaultValue: 'Text' })
                     const value = typeof item.value === 'string' ? item.value : ''
                     const type = item.type === 'tagline' || item.type === 'hook' ? item.type : 'custom'
                     addAsset(label, value, type)
@@ -1538,18 +1584,48 @@ export default function ImagePage() {
             return result
 
         } catch (error) {
+            if (cancelAnalyzeRef.current) {
+                return null
+            }
             console.error(error)
             toast({
-                title: "Error",
-                description: "Something went wrong with the magic analysis.",
+                title: t('errors.magicAnalyzeTitle'),
+                description: t('errors.magicAnalyzeDescription'),
                 variant: "destructive"
             })
             return null
         } finally {
             setIsMagicParsing(false)
             smartAnalyzeInFlightRef.current = false
+            if (cancelAnalyzeRef.current) {
+                setIsCancelingAnalyze(false)
+            }
         }
     }
+
+    const handleCancelAnalyze = useCallback(() => {
+        cancelAnalyzeRef.current = true
+        smartAnalyzeInFlightRef.current = false
+        setIsMagicParsing(false)
+        setIsCancelingAnalyze(true)
+        toast({
+            title: t('ui.analysisStoppedTitle', { defaultValue: 'Analysis stopped' }),
+            description: t('ui.analysisStoppedDescription', { defaultValue: 'Prompt analysis was canceled.' }),
+        })
+        window.setTimeout(() => setIsCancelingAnalyze(false), 900)
+    }, [t, toast])
+
+    const handleCancelGenerate = useCallback(() => {
+        generationAbortControllerRef.current?.abort()
+        generationAbortControllerRef.current = null
+        setIsGenerating(false)
+        setIsCancelingGenerate(true)
+        toast({
+            title: t('ui.generationStoppedTitle', { defaultValue: 'Generation stopped' }),
+            description: t('ui.generationStoppedDescription', { defaultValue: 'Image generation was canceled.' }),
+        })
+        window.setTimeout(() => setIsCancelingGenerate(false), 900)
+    }, [t, toast])
 
     const handleGenerate = async (data: {
         platform?: string
@@ -1564,14 +1640,15 @@ export default function ImagePage() {
         if (!activeBrandKit) return
         if (creationFlow.state.isAnalyzing) {
             toast({
-                title: "Analizando referencia",
-                description: "Espera a que termine el análisis antes de generar.",
+                title: t('toasts.analyzingReferenceTitle', { defaultValue: 'Analyzing reference' }),
+                description: t('toasts.analyzingReferenceDescription', { defaultValue: 'Wait for the analysis to finish before generating.' }),
                 variant: "destructive",
             })
             return
         }
 
         setIsGenerating(true)
+        const controller = beginGenerationRequest()
         try {
             const effectiveFlowId = data.auditFlowId || auditFlowId || `flow_${Date.now()}`
             if (!auditFlowId) setAuditFlowId(effectiveFlowId)
@@ -1626,14 +1703,15 @@ export default function ImagePage() {
 
             setLastGenerationRequest({
                 payload: requestPayloadForApi,
-                errorTitle: "Error de generación",
-                errorFallback: "Error al generar la imagen"
+                errorTitle: t('errors.generationTitle', { defaultValue: 'Generation error' }),
+                errorFallback: t('errors.generationDescription', { defaultValue: 'Error generating image' })
             })
 
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestPayloadForApi),
+                signal: controller.signal,
             })
 
             if (response.ok) {
@@ -1648,26 +1726,30 @@ export default function ImagePage() {
                     created_at: new Date().toISOString(),
                     prompt_used: typeof requestPayloadForApi.prompt === 'string' ? requestPayloadForApi.prompt : '',
                     request_payload: { ...requestPayloadForApi },
-                    error_title: "Error de generación",
-                    error_fallback: "Error al generar la imagen"
+                    error_title: t('errors.generationTitle', { defaultValue: 'Generation error' }),
+                    error_fallback: t('errors.generationDescription', { defaultValue: 'Error generating image' })
                 }, ...prev].slice(0, 80))
             } else {
-                const errorData = await response.json().catch(() => ({ error: 'Error al generar la imagen' }))
+                const errorData = await response.json().catch(() => ({ error: t('errors.generationDescription', { defaultValue: 'Error generating image' }) }))
                 toast({
-                    title: "Error de generación",
-                    description: errorData.error || 'Error al generar la imagen',
+                    title: t('errors.generationTitle', { defaultValue: 'Generation error' }),
+                    description: errorData.error || t('errors.generationDescription', { defaultValue: 'Error generating image' }),
                     variant: "destructive",
                 })
             }
         } catch (error: any) {
+            if (isAbortError(error) || controller.signal.aborted) {
+                return
+            }
             console.error('Generation failed:', error)
             toast({
-                title: "Error de generación",
-                description: error.message || 'No se pudo generar la imagen.',
+                title: t('errors.generationTitle', { defaultValue: 'Generation error' }),
+                description: error.message || t('errors.generationFailed', { defaultValue: 'Could not generate the image.' }),
                 variant: "destructive",
             })
         } finally {
             setIsGenerating(false)
+            clearGenerationController(controller)
         }
     }
 
@@ -1675,6 +1757,7 @@ export default function ImagePage() {
         if (!activeBrandKit || !creationFlow.state.generatedImage) return
 
         setIsGenerating(true)
+        const controller = beginGenerationRequest()
         try {
             const effectiveFlowId = auditFlowId || `flow_${Date.now()}`
             if (!auditFlowId) setAuditFlowId(effectiveFlowId)
@@ -1682,7 +1765,7 @@ export default function ImagePage() {
                 id: 'edit-reference',
                 type: 'image' as const,
                 value: creationFlow.state.generatedImage,
-                label: 'Imagen a editar'
+                label: t('preview.imageToEdit', { defaultValue: 'Image to edit' })
             }]
 
             const fullPrompt = buildEditPrompt(editPrompt)
@@ -1716,7 +1799,7 @@ export default function ImagePage() {
                 contextItems: editContext.map((item, idx) => ({
                     id: `edit-context-${idx}`,
                     type: item.type,
-                    label: item.label || `Contexto ${idx + 1}`,
+                    label: item.label || t('preview.contextLabel', { index: idx + 1, defaultValue: 'Context {{index}}' }),
                     url: item.value,
                     source: item.id === 'edit-reference' ? 'generated' : 'unknown',
                     role: item.id === 'edit-reference' ? 'generated' : 'unknown',
@@ -1755,14 +1838,15 @@ export default function ImagePage() {
             }
             setLastGenerationRequest({
                 payload: requestPayload,
-                errorTitle: "Error de edición",
-                errorFallback: "Error al editar la imagen"
+                errorTitle: t('errors.editTitle', { defaultValue: 'Editing error' }),
+                errorFallback: t('errors.editDescription', { defaultValue: 'Error editing image' })
             })
 
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestPayload),
+                signal: controller.signal,
             })
 
             if (response.ok) {
@@ -1777,26 +1861,30 @@ export default function ImagePage() {
                     created_at: new Date().toISOString(),
                     prompt_used: typeof requestPayload.prompt === 'string' ? requestPayload.prompt : '',
                     request_payload: { ...requestPayload },
-                    error_title: "Error de edición",
-                    error_fallback: "Error al editar la imagen"
+                    error_title: t('errors.editTitle', { defaultValue: 'Editing error' }),
+                    error_fallback: t('errors.editDescription', { defaultValue: 'Error editing image' })
                 }, ...prev].slice(0, 80))
             } else {
-                const errorData = await response.json().catch(() => ({ error: 'Error al editar la imagen' }))
+                const errorData = await response.json().catch(() => ({ error: t('errors.editDescription', { defaultValue: 'Error editing image' }) }))
                 toast({
-                    title: "Error de edición",
-                    description: errorData.error || 'Error al editar la imagen',
+                    title: t('errors.editTitle', { defaultValue: 'Editing error' }),
+                    description: errorData.error || t('errors.editDescription', { defaultValue: 'Error editing image' }),
                     variant: "destructive",
                 })
             }
         } catch (error: any) {
+            if (isAbortError(error) || controller.signal.aborted) {
+                return
+            }
             console.error('Edit failed:', error)
             toast({
-                title: "Error de edición",
-                description: error.message || 'No se pudo editar la imagen.',
+                title: t('errors.editTitle', { defaultValue: 'Editing error' }),
+                description: error.message || t('errors.editFailed', { defaultValue: 'Could not edit the image.' }),
                 variant: "destructive",
             })
         } finally {
             setIsGenerating(false)
+            clearGenerationController(controller)
         }
     }
 
@@ -1897,6 +1985,7 @@ export default function ImagePage() {
             }
 
             setIsGenerating(true)
+            const controller = beginGenerationRequest()
             try {
                 setLastGenerationRequest({
                     payload: retryPayload,
@@ -1906,18 +1995,23 @@ export default function ImagePage() {
                 await executeGenerationRequest(
                     retryPayload,
                     pendingRetryRequest.errorTitle,
-                    pendingRetryRequest.errorFallback
+                    pendingRetryRequest.errorFallback,
+                    controller.signal
                 )
             } catch (error: any) {
+                if (isAbortError(error) || controller.signal.aborted) {
+                    return
+                }
                 console.error('Retry confirm failed:', error)
                 toast({
-                    title: "Error al reintentar",
-                    description: error?.message || 'No se pudo volver a tirar.',
+                    title: t('errors.retryTitle'),
+            description: error?.message || t('errors.retryFailed', { defaultValue: 'Could not generate again.' }),
                     variant: "destructive",
                 })
             } finally {
                 setIsGenerating(false)
                 setPendingRetryRequest(null)
+                clearGenerationController(controller)
             }
             return
         }
@@ -1946,8 +2040,8 @@ export default function ImagePage() {
     const handleOpenPromptDebug = () => {
         if (!debugPromptData?.finalPrompt) {
             toast({
-                title: "Sin prompt disponible",
-                description: "Genera o edita una imagen primero para ver el prompt enviado.",
+                title: t('errors.debugPromptTitle'),
+                description: t('errors.debugPromptDescription'),
                 variant: "destructive"
             })
             return
@@ -1968,8 +2062,8 @@ export default function ImagePage() {
         const currentIntent = creationFlow.state.selectedIntent
         if (!currentIntent) {
             toast({
-                title: "Falta intent",
-                description: "Primero analiza el prompt para detectar la intención.",
+                title: t('errors.missingIntentTitle'),
+                description: t('errors.missingIntentDescription'),
                 variant: "destructive",
             })
             return
@@ -1977,8 +2071,8 @@ export default function ImagePage() {
 
         if (compositionMode === 'advanced' && !creationFlow.state.selectedLayout) {
             toast({
-                title: "Selecciona un diseño",
-                description: "En modo avanzado debes elegir un diseño manualmente.",
+                title: t('errors.selectLayoutTitle'),
+                description: t('errors.selectLayoutDescription'),
                 variant: "destructive",
             })
             return
@@ -1990,8 +2084,8 @@ export default function ImagePage() {
             const basicLayoutId = getNextBasicLayoutId(currentIntent)
             if (!basicLayoutId) {
                 toast({
-                    title: "Sin diseños disponibles",
-                    description: "No se encontraron diseños para el intent detectado.",
+                    title: t('errors.noLayoutsTitle'),
+                    description: t('errors.noLayoutsDescription'),
                     variant: "destructive",
                 })
                 return
@@ -2013,8 +2107,8 @@ export default function ImagePage() {
             const currentIntent = creationFlow.state.selectedIntent
             if (!currentIntent) {
                 toast({
-                    title: "Falta intent",
-                    description: "Primero analiza el prompt para detectar la intención.",
+                    title: t('errors.missingIntentTitle'),
+                    description: t('errors.missingIntentDescription'),
                     variant: "destructive",
                 })
                 return
@@ -2026,8 +2120,8 @@ export default function ImagePage() {
             const nextLayoutId = getNextBasicLayoutId(currentIntent, previousLayoutId || null)
             if (!nextLayoutId) {
                 toast({
-                    title: "Sin diseños disponibles",
-                    description: "No se encontraron diseños para el intent detectado.",
+                    title: t('errors.noLayoutsTitle'),
+                    description: t('errors.noLayoutsDescription'),
                     variant: "destructive",
                 })
                 return
@@ -2045,16 +2139,16 @@ export default function ImagePage() {
 
         if (!lastGenerationRequest) {
             toast({
-                title: "Sin prompt previo",
-                description: "Genera o refina una imagen primero para volver a tirar.",
+                title: t('errors.noPreviousPromptTitle'),
+                description: t('errors.noPreviousPromptDescription'),
                 variant: "destructive",
             })
             return
         }
         if (creationFlow.state.isAnalyzing) {
             toast({
-                title: "Analizando referencia",
-                description: "Espera a que termine el análisis antes de generar.",
+                title: t('errors.analyzingReferenceTitle'),
+                description: t('errors.analyzingReferenceDescription'),
                 variant: "destructive",
             })
             return
@@ -2070,8 +2164,8 @@ export default function ImagePage() {
         } catch (error: any) {
             console.error('Retry request failed:', error)
             toast({
-                title: "Error al reintentar",
-                description: error?.message || "No se pudo generar otra imagen con los mismos ajustes.",
+                title: t('errors.retryTitle'),
+                description: error?.message || t('errors.retryDescription'),
                 variant: "destructive",
             })
         } finally {
@@ -2101,11 +2195,347 @@ export default function ImagePage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <span className="ml-3 text-lg font-medium">Cargando Imagen...</span>
+                <Loader2 className="w-8 h-8 text-primary" />
+                <span className="ml-3 text-lg font-medium">{t('ui.loading')}</span>
             </div>
         )
     }
+
+    const previewPane = (
+        <>
+            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar">
+                <div className="flex flex-1 min-h-[340px] flex-col overflow-x-hidden md:min-h-[500px]">
+                    <CanvasPanel
+                        currentImage={creationFlow.state.generatedImage}
+                        generations={[]}
+                        onSelectGeneration={() => { }}
+                        selectedContext={selectedContext}
+                        onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
+                        onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
+                        draggedElement={null}
+                        isGenerating={isGenerating}
+                        aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio || "4:5"}
+                        creationState={creationFlow.state}
+                        editPrompt=""
+                        onEditPromptChange={() => { }}
+                        canGenerate={Boolean(canGenerate)}
+                        onUnifiedAction={handleUnifiedAction}
+                        onCaptionChange={creationFlow.setCaption}
+                        onHeadlineChange={creationFlow.setHeadline}
+                        onCtaChange={creationFlow.setCta}
+                        onCtaUrlChange={creationFlow.setCtaUrl}
+                        onCustomTextChange={creationFlow.setCustomText}
+                        onAddTextAsset={(asset) => creationFlow.addTextAsset(asset)}
+                        onRemoveTextAsset={creationFlow.removeTextAsset}
+                        onUpdateTextAsset={creationFlow.updateTextAsset}
+                        hidePromptArea={true}
+                        onSelectLogo={creationFlow.selectLogo}
+                        onClearUploadedImage={creationFlow.clearImage}
+                        onRemoveReferenceImage={handleRemoveReferenceFromPreview}
+                        onDisableAiPromptReference={handleDisableAiPromptReference}
+                        onOpenPromptDebug={handleOpenPromptDebug}
+                        showPromptDebugTrigger={Boolean(isAdmin && creationFlow.state.generatedImage && debugPromptData?.finalPrompt)}
+                        layoutIconOverrides={layoutIconOverrides}
+                        isAdmin={Boolean(isAdmin)}
+                    />
+                </div>
+
+                <div className="flex-shrink-0 p-3 pt-0 md:p-4 md:pt-0">
+                    <ThumbnailHistory
+                        generations={displayGenerations}
+                        currentImageUrl={creationFlow.state.generatedImage}
+                        onSelectGeneration={(gen) => {
+                            creationFlow.setGeneratedImage(gen.original_image_url || gen.image_url)
+                            if (gen.request_payload) {
+                                setLastGenerationRequest({
+                                    payload: { ...gen.request_payload },
+                                    errorTitle: gen.error_title || t('errors.generationTitle', { defaultValue: 'Generation error' }),
+                                    errorFallback: gen.error_fallback || t('errors.generationDescription', { defaultValue: 'Error generating image' })
+                                })
+                            } else if (gen.prompt_used) {
+                                setLastGenerationRequest(prev => ({
+                                    payload: {
+                                        ...(prev?.payload || {}),
+                                        prompt: gen.prompt_used
+                                    },
+                                    errorTitle: prev?.errorTitle || t('errors.generationTitle', { defaultValue: 'Generation error' }),
+                                    errorFallback: prev?.errorFallback || t('errors.generationDescription', { defaultValue: 'Error generating image' })
+                                }))
+                            }
+                        }}
+                    />
+                </div>
+            </div>
+
+            <FeedbackButton
+                show={Boolean(creationFlow.state.generatedImage) && !(isMobile && (mobileControlsOpen || Boolean(editPrompt.trim())))}
+                brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
+                intent={creationFlow.state.selectedIntent || undefined}
+                layout={creationFlow.selectedLayoutMeta?.id}
+                compact={isMobile}
+                className={cn(
+                    "z-50 transition-all duration-300",
+                    isMobile
+                        ? "fixed bottom-28 right-3"
+                        : cn(
+                            "absolute top-[42%] -translate-y-1/2",
+                            panelPosition === 'right' ? "right-[28%]" : "left-[28%]"
+                        )
+                )}
+            />
+        </>
+    )
+
+    const controlsPane = (
+        <ControlsPanel
+            creationFlow={creationFlow}
+            highlightedFields={highlightedFields}
+            promptValue={promptValue}
+            onPromptChange={(val) => {
+                setPromptValue(val)
+                creationFlow.setRawMessage(val)
+            }}
+            isMagicParsing={isMagicParsing}
+            isGenerating={isGenerating}
+            canGenerate={Boolean(canGenerate)}
+            onUnifiedAction={handleUnifiedAction}
+            onAnalyze={() => handleSmartAnalyze()}
+            onCancelAnalyze={handleCancelAnalyze}
+            isAdmin={isAdmin}
+            adminEmail={user?.emailAddresses?.[0]?.emailAddress}
+            compositionMode={compositionMode}
+            onCompositionModeChange={setCompositionMode}
+            layoutOverrides={layoutOverrides}
+            sessions={(workSessions || []).map((session) => ({
+                id: String(session._id),
+                title: buildSessionTitle(session.title || t('sessions.untitled', { defaultValue: 'Untitled session' })),
+                updatedAt: session.updated_at,
+                active: session.active,
+            }))}
+            selectedSessionId={selectedSessionToLoad}
+            onSelectSession={(id) => {
+                setSelectedSessionToLoad(id)
+                if (id && id !== currentSessionId) {
+                    void handleLoadSession(id).then((loaded) => {
+                        if (!loaded) {
+                            setSelectedSessionToLoad(currentSessionId || '')
+                        }
+                    })
+                }
+            }}
+            onCreateSession={() => void createNewImageSession()}
+            onRenameSession={() => void handleRenameCurrentSession()}
+            isCreatingSession={isCreatingSession}
+            onDeleteSession={() => void handleDeleteCurrentSession()}
+            onClearSessions={() => void handleClearAllSessions()}
+            onSaveSessionNow={() => void handleSaveSessionNow()}
+            isSavingSession={isSavingSession}
+            sessionSavedAt={sessionSavedAt}
+            sessionSaveError={sessionSaveError}
+            hasUnsavedChanges={hasUnsavedChanges}
+            isCancelingAnalyze={isCancelingAnalyze}
+        />
+    )
+
+    const actionBar = (
+        <div className={cn(
+            "studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-background/50 backdrop-blur-md min-h-[80px]",
+            isMobile
+                ? "gap-3 p-3"
+                : cn(
+                    "lg:flex-row",
+                    panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
+                )
+        )}>
+            <div className={cn(
+                "flex-1 flex flex-col items-stretch gap-2",
+                isMobile ? "" : "p-3 md:p-4 sm:flex-row sm:items-end"
+            )}>
+                <div className="relative w-full">
+                    <Textarea
+                        placeholder={
+                            creationFlow.state.generatedImage
+                                ? t('image:ui.editPlaceholder', { defaultValue: 'Describe the changes to edit the image...' })
+                                : t('image:ui.setupPlaceholder', { defaultValue: 'Set up your image in the top panel...' })
+                        }
+                        value={editPrompt}
+                        onChange={(e) => setEditPrompt(e.target.value)}
+                        disabled={!creationFlow.state.generatedImage}
+                        className={cn(
+                            "w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all",
+                            isMobile && creationFlow.state.generatedImage ? "pr-14" : ""
+                        )}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                if (creationFlow.state.generatedImage && editPrompt.trim()) {
+                                    handleEditImage(editPrompt)
+                                }
+                            }
+                        }}
+                    />
+                    {isMobile && creationFlow.state.generatedImage ? (
+                        <Button
+                            onClick={() => handleEditImage(editPrompt)}
+                            disabled={isGenerating || !editPrompt.trim()}
+                            size="icon"
+                            className="absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2 rounded-xl bg-primary text-primary-foreground shadow-md transition-all hover:bg-primary/90 disabled:opacity-45"
+                            aria-label={t('image:ui.applyCorrection', { defaultValue: 'Apply correction' })}
+                            title={t('image:ui.applyCorrection', { defaultValue: 'Apply correction' })}
+                        >
+                            <ArrowUp className="h-3.5 w-3.5" />
+                        </Button>
+                    ) : null}
+                </div>
+                {creationFlow.state.generatedImage && !isMobile && (
+                    <Button
+                        onClick={() => handleEditImage(editPrompt)}
+                        disabled={isGenerating || !editPrompt.trim()}
+                        className="group feedback-action h-[44px] w-full rounded-xl bg-primary px-4 font-semibold whitespace-nowrap text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25 sm:w-auto"
+                    >
+                        <ArrowUp className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-translate-y-0.5" />
+                        {t('image:ui.applyCorrection', { defaultValue: 'Apply correction' })}
+                    </Button>
+                )}
+            </div>
+
+            <div className={cn(
+                "flex flex-col justify-end",
+                isMobile
+                    ? ""
+                    : cn(
+                        "w-full lg:w-[27%] p-3 md:p-4 border-t lg:border-t-0",
+                        panelPosition === 'right' ? "lg:border-l border-border/40" : "lg:border-r border-border/40"
+                    )
+            )}>
+                {creationFlow.state.generatedImage ? (
+                    <div className="space-y-2">
+                        <Button
+                            onClick={handleRetryLastPrompt}
+                            disabled={isGenerating || !lastGenerationRequest || creationFlow.state.isAnalyzing}
+                            className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25"
+                        >
+                            {isGenerating ? (
+                                <>
+                                    <Loader2 className="mr-2 h-5 w-5" />
+                                    {t('image:ui.generating', { defaultValue: 'Generating...' })}
+                                </>
+                            ) : (
+                                <>
+                                    <RotateCcw className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
+                                    {t('image:ui.retrySameSettings', { defaultValue: 'Generate another with the same settings' })}
+                                </>
+                            )}
+                        </Button>
+                        {isGenerating ? (
+                            <button
+                                type="button"
+                                onClick={handleCancelGenerate}
+                                className="w-full text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                {isCancelingGenerate
+                                    ? t('image:ui.canceling', { defaultValue: 'Canceling...' })
+                                    : t('image:ui.stop', { defaultValue: 'Stop' })}
+                            </button>
+                        ) : null}
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        <Button
+                            onClick={handleUnifiedAction}
+                            disabled={isGenerating || !canGenerate}
+                            className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25"
+                        >
+                            {isGenerating ? (
+                                <>
+                                    <Loader2 className="mr-2 h-5 w-5" />
+                                    {t('image:ui.generating', { defaultValue: 'Generating...' })}
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                                    {t('image:ui.generate', { defaultValue: 'Generate Image' })}
+                                </>
+                            )}
+                        </Button>
+                        {isGenerating ? (
+                            <button
+                                type="button"
+                                onClick={handleCancelGenerate}
+                                className="w-full text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                {isCancelingGenerate
+                                    ? t('image:ui.canceling', { defaultValue: 'Canceling...' })
+                                    : t('image:ui.stop', { defaultValue: 'Stop' })}
+                            </button>
+                        ) : null}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+
+    const mobileDrawerClosedX = 'calc(100% - 1.75rem)'
+
+    const mobileControlsDrawer = isMobile ? (
+        <>
+            <motion.button
+                type="button"
+                aria-label={t('ui.closeWorkPanel')}
+                onClick={() => setMobileControlsOpen(false)}
+                initial={false}
+                animate={{ opacity: mobileControlsOpen ? 1 : 0, pointerEvents: mobileControlsOpen ? 'auto' : 'none' }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-40 bg-black/18 backdrop-blur-[1px]"
+            />
+
+            <motion.aside
+                initial={false}
+                animate={{ x: mobileControlsOpen ? 0 : mobileDrawerClosedX }}
+                transition={{ type: 'spring', stiffness: 360, damping: 34, mass: 0.9 }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.12}
+                dragMomentum={false}
+                onDragEnd={(_, info) => {
+                    if (info.offset.x < -48 || info.velocity.x < -320) {
+                        setMobileControlsOpen(true)
+                        return
+                    }
+                    if (info.offset.x > 48 || info.velocity.x > 320) {
+                        setMobileControlsOpen(false)
+                        return
+                    }
+                    setMobileControlsOpen((prev) => prev)
+                }}
+                className="fixed top-3 bottom-3 right-0 z-50 flex w-[min(94vw,30rem)] max-w-[30rem] touch-pan-y flex-row"
+            >
+                <div className="flex w-7 items-center justify-center">
+                    <div className="pointer-events-auto flex h-32 w-7 flex-col items-center justify-center gap-2 rounded-l-2xl border border-r-0 border-border/70 bg-background/92 text-muted-foreground shadow-[0_10px_30px_-18px_rgba(15,23,42,0.55)] backdrop-blur-xl">
+                        <GripVertical className="h-4 w-4 opacity-60" />
+                        <SlidersHorizontal className="h-4 w-4 opacity-80" />
+                        <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/80">
+                            {t('ui.adjustments')}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="min-w-0 flex-1 overflow-hidden rounded-l-[1.5rem] border border-border/70 bg-background/96 shadow-[0_20px_55px_-28px_rgba(15,23,42,0.6)] backdrop-blur-2xl">
+                    <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+                        <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground">{t('ui.workPanelTitle')}</p>
+                            <p className="text-xs text-muted-foreground">
+                                {t('ui.workPanelDescription')}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="h-[calc(100%-4.5rem)] overflow-y-auto pb-6">
+                        {controlsPane}
+                    </div>
+                </div>
+            </motion.aside>
+        </>
+    ) : null
 
     return (
         <DashboardLayout
@@ -2114,226 +2544,41 @@ export default function ImagePage() {
             onBrandChange={setActiveBrandKit}
             onBrandDelete={deleteBrandKitById}
             onNewBrandKit={handleNewBrandKit}
-            isFixed={true}
+            isFixed={!isMobile}
         >
             {activeBrandKit ? (
-                <div className="flex-1 flex flex-col overflow-hidden relative">
-                    {/* TOP AREA: 2 Columns */}
+                <div className={cn(
+                    "flex-1 relative",
+                    isMobile ? "flex flex-col overflow-y-auto" : "flex flex-col overflow-hidden"
+                )}>
                     <div className={cn(
-                        "flex-1 flex flex-col overflow-hidden min-h-0 lg:flex-row",
-                        panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
+                        "flex min-h-0 flex-1",
+                        isMobile
+                            ? "flex-col gap-3 p-3"
+                            : cn(
+                                "flex-col overflow-hidden lg:flex-row",
+                                panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
+                            )
                     )}>
-                        {/* LEFT COLUMN (Main Canvas) */}
-                        <div className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar">
-                            {/* Canvas Preview */}
-                            <div className="flex-1 min-h-[340px] md:min-h-[500px] flex flex-col overflow-x-hidden">
-                                <CanvasPanel
-                                    currentImage={creationFlow.state.generatedImage}
-                                    generations={[]}
-                                    onSelectGeneration={() => { }}
-                                    selectedContext={selectedContext}
-                                    onRemoveContext={(id) => setSelectedContext(prev => prev.filter(c => c.id !== id))}
-                                    onAddContext={(element) => setSelectedContext(prev => [...prev, element])}
-                                    draggedElement={null}
-                                    isGenerating={isGenerating}
-                                    aspectRatio={SOCIAL_FORMATS.find(f => f.id === creationFlow.state.selectedFormat)?.aspectRatio || "4:5"}
-                                    creationState={creationFlow.state}
-                                    editPrompt=""
-                                    onEditPromptChange={() => { }}
-                                    canGenerate={Boolean(canGenerate)}
-                                    onUnifiedAction={handleUnifiedAction}
-                                    onCaptionChange={creationFlow.setCaption}
-                                    onHeadlineChange={creationFlow.setHeadline}
-                                    onCtaChange={creationFlow.setCta}
-                                    onCtaUrlChange={creationFlow.setCtaUrl}
-                                    onCustomTextChange={creationFlow.setCustomText}
-                                    onAddTextAsset={(asset) => creationFlow.addTextAsset(asset)}
-                                    onRemoveTextAsset={creationFlow.removeTextAsset}
-                                    onUpdateTextAsset={creationFlow.updateTextAsset}
-                                    hidePromptArea={true}
-                                    onSelectLogo={creationFlow.selectLogo}
-                                    onClearUploadedImage={creationFlow.clearImage}
-                                    onRemoveReferenceImage={handleRemoveReferenceFromPreview}
-                                    onDisableAiPromptReference={handleDisableAiPromptReference}
-                                    onOpenPromptDebug={handleOpenPromptDebug}
-                                    showPromptDebugTrigger={Boolean(isAdmin && creationFlow.state.generatedImage && debugPromptData?.finalPrompt)}
-                                    layoutIconOverrides={layoutIconOverrides}
-                                    isAdmin={Boolean(isAdmin)}
-                                />
-                            </div>
-
-                            {/* Thumbnail History (Moved below Canvas) */}
-                            <div className="flex-shrink-0 p-3 md:p-4 pt-0">
-                                <ThumbnailHistory
-                                    generations={displayGenerations}
-                                    currentImageUrl={creationFlow.state.generatedImage}
-                                    onSelectGeneration={(gen) => {
-                                        creationFlow.setGeneratedImage(gen.original_image_url || gen.image_url)
-                                        if (gen.request_payload) {
-                                            setLastGenerationRequest({
-                                                payload: { ...gen.request_payload },
-                                                errorTitle: gen.error_title || "Error de generación",
-                                                errorFallback: gen.error_fallback || "Error al generar la imagen"
-                                            })
-                                        } else if (gen.prompt_used) {
-                                            setLastGenerationRequest(prev => ({
-                                                payload: {
-                                                    ...(prev?.payload || {}),
-                                                    prompt: gen.prompt_used
-                                                },
-                                                errorTitle: prev?.errorTitle || "Error de generación",
-                                                errorFallback: prev?.errorFallback || "Error al generar la imagen"
-                                            }))
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Feedback Button - Floating to the right of the canvas area */}
-                        <FeedbackButton
-                            show={Boolean(creationFlow.state.generatedImage)}
-                            brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
-                            intent={creationFlow.state.selectedIntent || undefined}
-                            layout={creationFlow.selectedLayoutMeta?.id}
-                              className={cn(
-                                  "z-50 transition-all duration-300",
-                                  isMobile
-                                      ? "fixed bottom-24 right-4"
-                                      : cn(
-                                          "absolute top-[42%] -translate-y-1/2",
-                                          panelPosition === 'right' ? "right-[28%]" : "left-[28%]"
-                                      )
-                              )}
-                          />
-
-                        {/* RIGHT COLUMN - Controls Panel */}
-                        <ControlsPanel
-                            creationFlow={creationFlow}
-                            highlightedFields={highlightedFields}
-                            promptValue={promptValue}
-                            onPromptChange={(val) => {
-                                setPromptValue(val)
-                                creationFlow.setRawMessage(val)
-                            }}
-                            isMagicParsing={isMagicParsing}
-                            isGenerating={isGenerating}
-                            canGenerate={Boolean(canGenerate)}
-                            onUnifiedAction={handleUnifiedAction}
-                            onAnalyze={() => handleSmartAnalyze()}
-                            isAdmin={isAdmin}
-                            adminEmail={user?.emailAddresses?.[0]?.emailAddress}
-                            compositionMode={compositionMode}
-                            onCompositionModeChange={setCompositionMode}
-                            layoutOverrides={layoutOverrides}
-                            sessions={(workSessions || []).map((session) => ({
-                                id: String(session._id),
-                                title: buildSessionTitle(session.title || 'Sesion sin titulo'),
-                                updatedAt: session.updated_at,
-                                active: session.active,
-                            }))}
-                            selectedSessionId={selectedSessionToLoad}
-                            onSelectSession={(id) => {
-                                setSelectedSessionToLoad(id)
-                                if (id && id !== currentSessionId) {
-                                    void handleLoadSession(id).then((loaded) => {
-                                        if (!loaded) {
-                                            setSelectedSessionToLoad(currentSessionId || '')
-                                        }
-                                    })
-                                }
-                            }}
-                            onCreateSession={() => void createNewImageSession()}
-                            onRenameSession={() => void handleRenameCurrentSession()}
-                            isCreatingSession={isCreatingSession}
-                            onDeleteSession={() => void handleDeleteCurrentSession()}
-                            onClearSessions={() => void handleClearAllSessions()}
-                            onSaveSessionNow={() => void handleSaveSessionNow()}
-                            isSavingSession={isSavingSession}
-                            sessionSavedAt={sessionSavedAt}
-                            sessionSaveError={sessionSaveError}
-                            hasUnsavedChanges={hasUnsavedChanges}
-                        />
+                        {isMobile ? (
+                            <>
+                                <div className="order-1 flex min-h-0 flex-col overflow-hidden">
+                                    {previewPane}
+                                </div>
+                                <div className="order-2 shrink-0 rounded-[1.25rem] border border-border/50">
+                                    {actionBar}
+                                </div>
+                                {mobileControlsDrawer}
+                            </>
+                        ) : (
+                            <>
+                                {previewPane}
+                                {controlsPane}
+                            </>
+                        )}
                     </div>
 
-                    {/* BOTTOM BAR: Local Edits & Generate */}
-                    <div className={cn(
-                        "studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-background/50 backdrop-blur-md min-h-[80px] lg:flex-row",
-                        panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
-                    )}>
-                        {/* Left: Text Area (Matches Canvas width) */}
-                        <div className="flex-1 p-3 md:p-4 flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
-                            <Textarea
-                                placeholder={creationFlow.state.generatedImage ? "Describe los cambios para editar la imagen..." : "Configura tu imagen en el panel derecho..."}
-                                value={editPrompt}
-                                onChange={(e) => setEditPrompt(e.target.value)}
-                                disabled={!creationFlow.state.generatedImage}
-                                className="w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all"
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault()
-                                        if (creationFlow.state.generatedImage && editPrompt.trim()) {
-                                            handleEditImage(editPrompt)
-                                        }
-                                    }
-                                }}
-                            />
-                            {creationFlow.state.generatedImage && (
-                                <Button
-                                    onClick={() => handleEditImage(editPrompt)}
-                                    disabled={isGenerating || !editPrompt.trim()}
-                                    className="group feedback-action h-[44px] rounded-xl w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold px-4 whitespace-nowrap"
-                                >
-                                    <ArrowUp className="w-4 h-4 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-translate-y-0.5" />
-                                    Realizar corrección
-                                </Button>
-                            )}
-                        </div>
-
-                        {/* Right: Generate Button (Matches ControlsPanel width) */}
-                        <div className={cn(
-                            "w-full lg:w-[27%] p-3 md:p-4 flex flex-col justify-end border-t lg:border-t-0",
-                            panelPosition === 'right' ? "lg:border-l border-border/40" : "lg:border-r border-border/40"
-                        )}>
-                            {creationFlow.state.generatedImage ? (
-                                <Button
-                                    onClick={handleRetryLastPrompt}
-                                    disabled={isGenerating || !lastGenerationRequest || creationFlow.state.isAnalyzing}
-                                    className="group feedback-action w-full h-[44px] rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                            Generando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <RotateCcw className="w-4 h-4 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
-                                            Generar otra con mismos ajustes
-                                        </>
-                                    )}
-                                </Button>
-                            ) : (
-                                <Button
-                                    onClick={handleUnifiedAction}
-                                    disabled={isGenerating || !canGenerate}
-                                    className="group feedback-action w-full h-[44px] rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold"
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                            Generando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Sparkles className="w-5 h-5 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
-                                            Generar Imagen
-                                        </>
-                                    )}
-                                </Button>
-                            )}
-                        </div>
-                    </div>
+                    {!isMobile ? actionBar : null}
                 </div>
             ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
@@ -2341,10 +2586,9 @@ export default function ImagePage() {
                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                             <Plus className="w-8 h-8 text-muted-foreground" />
                         </div>
-                        <h2 className="text-2xl font-semibold">Selecciona un Brand Kit</h2>
+                        <h2 className="text-2xl font-semibold">{t('ui.selectBrandKitTitle')}</h2>
                         <p className="text-muted-foreground">
-                            Para empezar a diseñar en el panel de Imagen, necesitas seleccionar un Brand Kit.
-                            Si aún no tienes uno, créalo en la sección &quot;Brand Kit&quot;.
+                            {t('ui.selectBrandKitDescription')}
                         </p>
                     </div>
                 </div>
@@ -2363,9 +2607,9 @@ export default function ImagePage() {
             <Dialog open={unsavedNavModalOpen} onOpenChange={(open) => { if (!open) handleUnsavedNavigateCancel() }}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>¿Hay cambios sin guardar? ¿Desea guardarlos?</DialogTitle>
+                        <DialogTitle>{t('unsaved.navigateTitle')}</DialogTitle>
                         <DialogDescription>
-                            Si continúas sin guardar, perderás los cambios de esta sesión.
+                            {t('unsaved.navigateDescription')}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="gap-2">
@@ -2374,20 +2618,20 @@ export default function ImagePage() {
                             onClick={handleUnsavedNavigateCancel}
                             disabled={isResolvingUnsavedNavigation}
                         >
-                            Cancelar
+                            {t('common:actions.cancel')}
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={handleUnsavedNavigateDiscard}
                             disabled={isResolvingUnsavedNavigation}
                         >
-                            Descartar y salir
+                            {t('unsaved.discardLeave')}
                         </Button>
                         <Button
                             onClick={() => void handleUnsavedNavigateSave()}
                             disabled={isResolvingUnsavedNavigation}
                         >
-                            Guardar y salir
+                            {t('unsaved.saveLeave')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -2420,10 +2664,10 @@ export default function ImagePage() {
             </Dialog>
             <SessionTitleDialog
                 open={sessionTitleDialogOpen}
-                title="Ponle nombre a la sesión"
-                description="La primera vez que guardes esta sesión puedes dejarle un nombre claro para encontrarla luego."
+                title={t('ui.sessionDialogTitle')}
+                description={t('ui.sessionDialogDescription')}
                 value={sessionTitleDraft}
-                confirmLabel="Guardar sesión"
+                confirmLabel={t('ui.sessionDialogConfirm')}
                 onValueChange={setSessionTitleDraft}
                 onCancel={() => closeSessionTitleDialog(null)}
                 onConfirm={() => closeSessionTitleDialog(buildSessionTitle(sessionTitleDraft))}
@@ -2431,4 +2675,6 @@ export default function ImagePage() {
         </DashboardLayout >
     )
 }
+
+
 

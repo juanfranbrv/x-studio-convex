@@ -50,6 +50,71 @@ export default defineSchema({
     .index("by_type", ["type"])
     .index("by_created", ["created_at"]),
 
+  billing_packs: defineTable({
+    slug: v.string(),
+    credits: v.number(),
+    price_cents: v.number(),
+    currency: v.string(),
+    sort_order: v.number(),
+    active: v.boolean(),
+    featured: v.optional(v.boolean()),
+    stripe_product_id: v.optional(v.string()),
+    stripe_price_id: v.optional(v.string()),
+    created_at: v.string(),
+    updated_at: v.string(),
+  }).index("by_slug", ["slug"])
+    .index("by_active_sort", ["active", "sort_order"]),
+
+  billing_customers: defineTable({
+    user_id: v.id("users"),
+    clerk_id: v.string(),
+    email: v.string(),
+    stripe_customer_id: v.string(),
+    full_name: v.optional(v.string()),
+    created_at: v.string(),
+    updated_at: v.string(),
+  }).index("by_user", ["user_id"])
+    .index("by_clerk_id", ["clerk_id"])
+    .index("by_stripe_customer_id", ["stripe_customer_id"]),
+
+  billing_purchases: defineTable({
+    user_id: v.id("users"),
+    pack_slug: v.string(),
+    credits: v.number(),
+    amount_cents: v.number(),
+    currency: v.string(),
+    status: v.string(), // "pending" | "completed" | "failed" | "refunded" | "expired"
+    stripe_customer_id: v.optional(v.string()),
+    stripe_checkout_session_id: v.optional(v.string()),
+    stripe_payment_intent_id: v.optional(v.string()),
+    stripe_charge_id: v.optional(v.string()),
+    stripe_invoice_id: v.optional(v.string()),
+    receipt_url: v.optional(v.string()),
+    invoice_url: v.optional(v.string()),
+    invoice_pdf_url: v.optional(v.string()),
+    metadata: v.optional(v.any()),
+    created_at: v.string(),
+    updated_at: v.string(),
+  }).index("by_user_created", ["user_id", "created_at"])
+    .index("by_status_created", ["status", "created_at"])
+    .index("by_checkout_session", ["stripe_checkout_session_id"])
+    .index("by_payment_intent", ["stripe_payment_intent_id"])
+    .index("by_charge", ["stripe_charge_id"]),
+
+  billing_events: defineTable({
+    stripe_event_id: v.string(),
+    type: v.string(),
+    status: v.string(), // "received" | "processed" | "ignored" | "failed"
+    stripe_object_id: v.optional(v.string()),
+    related_purchase_id: v.optional(v.id("billing_purchases")),
+    payload: v.optional(v.any()),
+    error_message: v.optional(v.string()),
+    created_at: v.string(),
+    processed_at: v.optional(v.string()),
+  }).index("by_stripe_event_id", ["stripe_event_id"])
+    .index("by_created", ["created_at"])
+    .index("by_status", ["status"]),
+
   // Session image assets: keep original file for publishing and lightweight preview for UI/session history.
   session_images: defineTable({
     user_id: v.string(),

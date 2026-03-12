@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import type { ReferenceImageRole, VisionAnalysis } from '@/lib/creation-flow-types'
+import { useTranslation } from 'react-i18next'
 
 type ImageSourceMode = 'upload' | 'brandkit' | 'generate'
 
@@ -51,6 +52,9 @@ export function ContentImageCard({
     suggestedImagePrompts = [],
     error = null,
 }: ContentImageCardProps) {
+    const { t } = useTranslation('common')
+    const tt = (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+        t(key, { defaultValue, ...options })
     const [isDragging, setIsDragging] = useState(false)
     const [isBrandKitModalOpen, setIsBrandKitModalOpen] = useState(false)
     const [activeSuggestionIdx, setActiveSuggestionIdx] = useState(0)
@@ -141,16 +145,16 @@ export function ContentImageCard({
             <div className="grid grid-cols-3 gap-2">
                 {contentUploadedImages.map((url, index) => (
                     <div key={url} className="relative rounded-xl overflow-hidden border border-border/60 bg-background aspect-square group">
-                        <img src={url} alt={`Contenido propio ${index + 1}`} className="w-full h-full object-cover" />
+                        <img src={url} alt={tt('contentImage.ownImageAlt', 'Own content image {{index}}', { index: index + 1 })} className="w-full h-full object-cover" />
                         <span className="absolute top-1 left-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-sky-500/85 text-white">
-                            Contenido
+                            {tt('contentImage.contentBadge', 'Content')}
                         </span>
                         {onRemoveUploadedImage && (
                             <button
                                 type="button"
                                 onClick={() => onRemoveUploadedImage(url)}
                                 className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                aria-label="Eliminar imagen de contenido"
+                                aria-label={tt('contentImage.removeUploadedAria', 'Remove content image')}
                             >
                                 <X className="w-3 h-3" />
                             </button>
@@ -163,11 +167,11 @@ export function ContentImageCard({
                         type="button"
                         onClick={() => onToggleBrandKitImage?.(image.id)}
                         className="relative rounded-xl overflow-hidden border border-border/60 bg-background aspect-square group"
-                        title="Quitar del contenido"
+                        title={tt('contentImage.removeFromContentTitle', 'Remove from content')}
                     >
-                        <img src={image.url} alt={image.name || 'Imagen del kit de marca'} className="w-full h-full object-cover" />
+                        <img src={image.url} alt={image.name || tt('contentImage.brandKitImageAlt', 'Brand Kit image')} className="w-full h-full object-cover" />
                         <span className="absolute top-1 left-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-emerald-500/85 text-white">
-                            Kit de marca
+                            {tt('contentImage.brandKitBadge', 'Brand Kit')}
                         </span>
                         <span className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity inline-flex">
                             <X className="w-3 h-3" />
@@ -196,14 +200,14 @@ export function ContentImageCard({
                                             : 'border-border bg-background text-muted-foreground hover:text-foreground'
                                     )}
                                 >
-                                    Propuesta {index + 1}
+                                    {tt('contentImage.suggestion', 'Suggestion {{index}}', { index: index + 1 })}
                                 </button>
                             ))}
                         </div>
                     ) : (
                         <div className="rounded-xl border border-dashed border-border bg-background px-3 py-2.5">
                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Pulsa Analizar para generar propuestas de contenido visual con IA.
+                                {tt('contentImage.analyzeHint', 'Press Analyze to generate visual content suggestions with AI.')}
                             </p>
                         </div>
                     )}
@@ -221,12 +225,12 @@ export function ContentImageCard({
                             }
                             setMode('generate')
                         }}
-                        placeholder="Describe el contenido visual que quieres que genere la IA..."
+                        placeholder={tt('contentImage.aiPlaceholder', 'Describe the visual content you want AI to generate...')}
                         className="min-h-[96px] text-xs resize-none"
                     />
                     <p className="text-[10px] text-muted-foreground inline-flex items-center gap-1.5">
                         <Sparkles className="w-3 h-3 text-primary" />
-                        La IA construirá el contenido principal de la imagen.
+                        {tt('contentImage.aiHelper', 'AI will build the main visual content of the image.')}
                     </p>
                 </div>
             ) : (
@@ -241,7 +245,7 @@ export function ContentImageCard({
                             disabled={!canAddMoreManual}
                         >
                             <Upload className="w-3 h-3" />
-                            Subir contenido
+                            {tt('contentImage.upload', 'Upload content')}
                         </Button>
                         <Button
                             type="button"
@@ -251,7 +255,7 @@ export function ContentImageCard({
                             onClick={() => setIsBrandKitModalOpen(true)}
                         >
                             <Palette className="w-3 h-3" />
-                            Desde Kit de marca
+                            {tt('contentImage.fromBrandKit', 'From Brand Kit')}
                         </Button>
                             {(contentUploadedImages.length > 0 || contentBrandKitImageIds.length > 0) && (
                                 <Button
@@ -264,7 +268,7 @@ export function ContentImageCard({
                                         contentBrandKitImageIds.forEach((id) => onToggleBrandKitImage?.(id))
                                     }}
                                 >
-                                    Limpiar
+                                    {tt('contentImage.clear', 'Clear')}
                             </Button>
                         )}
                     </div>
@@ -297,16 +301,18 @@ export function ContentImageCard({
                                 {isDragging ? <Upload className="w-4 h-4 text-primary" /> : <ImageIcon className="w-4 h-4 text-muted-foreground" />}
                             </div>
                             <p className="text-xs font-medium">
-                                {isDragging ? 'Suelta aquí tus imágenes de contenido' : 'Arrastra imágenes de contenido o haz clic'}
+                                {isDragging
+                                    ? tt('contentImage.dropHere', 'Drop your content images here')
+                                    : tt('contentImage.dragOrClick', 'Drag content images here or click')}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
-                                Máximo {MAX_CONTENT_IMAGES} imágenes combinando subida + Kit de marca.
+                                {tt('contentImage.maxImages', 'Up to {{count}} images combining uploads and Brand Kit.', { count: MAX_CONTENT_IMAGES })}
                             </p>
                         </div>
                     )}
 
                     <p className="text-[10px] text-muted-foreground">
-                        Modo manual activo: la IA no generará contenido visual principal.
+                        {tt('contentImage.manualModeHint', 'Manual mode is active: AI will not generate the main visual content.')}
                     </p>
                 </div>
             )}
@@ -318,9 +324,9 @@ export function ContentImageCard({
             <Dialog open={isBrandKitModalOpen} onOpenChange={setIsBrandKitModalOpen}>
                 <DialogContent className="!w-[64vw] !max-w-[64vw] sm:!max-w-[64vw] h-[min(88vh,860px)] p-0 overflow-hidden flex flex-col">
                     <DialogHeader className="px-6 pt-6 pb-3">
-                        <DialogTitle>Seleccionar contenido desde Kit de marca</DialogTitle>
+                        <DialogTitle>{tt('contentImage.selectFromBrandKitTitle', 'Select content from Brand Kit')}</DialogTitle>
                         <DialogDescription>
-                            Elige las imágenes que quieras usar como contenido principal en la generación.
+                            {tt('contentImage.selectFromBrandKitDescription', 'Choose the images you want to use as the main content in the generation.')}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -355,7 +361,7 @@ export function ContentImageCard({
                                                         : 'border-border opacity-50 cursor-not-allowed'
                                             )}
                                         >
-                                            <img src={image.url} alt={image.name || 'Imagen de Kit de marca'} className="w-full h-full object-cover" />
+                                            <img src={image.url} alt={image.name || tt('contentImage.brandKitImageAlt', 'Brand Kit image')} className="w-full h-full object-cover" />
                                             {isSelected && (
                                                 <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
                                                     <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
@@ -369,7 +375,7 @@ export function ContentImageCard({
                             </div>
                         ) : (
                             <div className="rounded-xl border border-dashed border-border mt-1 p-6 text-center text-sm text-muted-foreground">
-                                Este Kit de marca no tiene imágenes aún.
+                                {tt('contentImage.noBrandKitImages', 'This Brand Kit does not have any images yet.')}
                             </div>
                         )}
                     </div>
@@ -380,7 +386,7 @@ export function ContentImageCard({
                             size="sm"
                             onClick={() => setIsBrandKitModalOpen(false)}
                         >
-                            Aceptar
+                            {tt('actions.continue', 'Continue')}
                         </Button>
                     </div>
                 </DialogContent>

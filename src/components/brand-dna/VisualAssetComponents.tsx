@@ -1,21 +1,15 @@
-'use client';
+﻿'use client'
+
+import { Loader2 } from '@/components/ui/spinner'
+;
 
 import { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 
-import {
-    Monitor,
-    Building2,
-    Sparkles,
-    Image,
-    Maximize2,
-    Trash2,
-    Upload,
-    Loader2,
-    Check
-} from 'lucide-react';
+import { Monitor, Building2, Sparkles, Image, Maximize2, Trash2, Upload, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // --- Interfaces ---
 interface LogoCardProps {
@@ -47,6 +41,7 @@ interface ImageGalleryProps {
 // --- Components ---
 
 export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, onReorder, isUploading }: LogoCardProps) {
+    const { t } = useTranslation('brandKit');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const suppressNextClickRef = useRef(false);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -67,7 +62,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, on
                 <CardTitle className="flex items-center gap-2 text-base text-foreground justify-between">
                     <div className="flex items-center gap-2">
                         <Building2 className="w-5 h-5 text-primary" />
-                        Logo de marca
+                        {t('visualAssets.logoTitle', { defaultValue: 'Brand logo' })}
                     </div>
                     <span className="text-xs font-normal text-muted-foreground">
                         {effectiveLogos.length}/6
@@ -81,7 +76,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, on
                         onClick={handleUploadClick}
                     >
                         <Building2 className="w-8 h-8 mb-2" />
-                        <p className="text-xs">Subir logos (Max 6)</p>
+                        <p className="text-xs">{t('visualAssets.uploadLogos', { defaultValue: 'Upload logos (max 6)' })}</p>
                         <input
                             type="file"
                             className="hidden"
@@ -183,7 +178,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, on
                                     }}
                                 />
                                 {isUploading ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <Loader2 className="w-5 h-5" />
                                 ) : (
                                     <Upload className="w-5 h-5" />
                                 )}
@@ -197,12 +192,13 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, on
 }
 
 export function FaviconCard({ faviconUrl }: FaviconCardProps) {
+    const { t } = useTranslation('brandKit');
     return (
         <Card className="h-full glass-panel border-0 shadow-none">
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <Sparkles className="w-5 h-5 text-primary" />
-                    Favicon
+                    {t('visualAssets.faviconTitle', { defaultValue: 'Favicon' })}
                 </CardTitle>
             </CardHeader>
             <CardContent className="flex items-center justify-center p-4 min-h-[140px] transparency-grid border-t border-border">
@@ -215,7 +211,7 @@ export function FaviconCard({ faviconUrl }: FaviconCardProps) {
                 ) : (
                     <div className="text-center text-muted-foreground opacity-50">
                         <Sparkles className="w-8 h-8 mb-1" />
-                        <p className="text-[10px]">Sin favicon</p>
+                        <p className="text-[10px]">{t('visualAssets.noFavicon', { defaultValue: 'No favicon' })}</p>
                     </div>
                 )}
             </CardContent>
@@ -224,12 +220,13 @@ export function FaviconCard({ faviconUrl }: FaviconCardProps) {
 }
 
 export function ScreenshotCard({ screenshotUrl }: ScreenshotCardProps) {
+    const { t } = useTranslation('brandKit');
     return (
         <Card className="h-full overflow-hidden glass-panel border-0 shadow-none flex flex-col">
             <CardHeader className="pb-3 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <Monitor className="w-5 h-5 text-primary" />
-                    Captura Web
+                    {t('visualAssets.screenshotTitle', { defaultValue: 'Website screenshot' })}
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-0 overflow-hidden bg-muted/30 flex-1 relative min-h-[300px]">
@@ -244,7 +241,7 @@ export function ScreenshotCard({ screenshotUrl }: ScreenshotCardProps) {
                 ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center text-[var(--text-secondary)]">
                         <Monitor className="w-12 h-12 opacity-20 mb-2" />
-                        <p className="text-sm italic">No hay captura disponible</p>
+                        <p className="text-sm italic">{t('visualAssets.noScreenshot', { defaultValue: 'No screenshot available' })}</p>
                     </div>
                 )}
             </CardContent>
@@ -259,6 +256,7 @@ export function ImageGallery({
     onRemoveImage,
     onOpenLightbox
 }: ImageGalleryProps) {
+    const { t } = useTranslation('brandKit');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleDrop = (e: React.DragEvent) => {
@@ -288,7 +286,7 @@ export function ImageGallery({
             <CardHeader className="pb-3 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <Image className="w-5 h-5 text-primary" />
-                    Galería de imágenes
+                    {t('visualAssets.analyzedGallery', { defaultValue: 'Analyzed image gallery' })}
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -347,11 +345,11 @@ export function ImageGallery({
                                 }}
                             />
                             {isUploading ? (
-                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                <Loader2 className="w-8 h-8 text-primary" />
                             ) : (
                                 <>
                                     <Upload className="w-8 h-8" />
-                                    <span className="text-xs font-medium">Subir imágenes</span>
+                                    <span className="text-xs font-medium">{t('visualAssets.uploadImages', { defaultValue: 'Upload images' })}</span>
                                 </>
                             )}
                         </div>
@@ -361,7 +359,7 @@ export function ImageGallery({
                     <div className="text-center py-12">
                         <Image className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-20" />
                         <p className="text-sm text-muted-foreground italic opacity-60">
-                            No se encontraron imágenes adicionales en el sitio.
+                            {t('visualAssets.noExtraImages', { defaultValue: 'No additional images were found on the site.' })}
                         </p>
                     </div>
                 )}
@@ -369,3 +367,5 @@ export function ImageGallery({
         </Card>
     );
 }
+
+

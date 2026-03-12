@@ -1,10 +1,11 @@
-'use client'
+﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { ReactNode } from 'react'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { useQuery } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
-import { Loader2, ShieldX, Clock } from 'lucide-react'
+import { ShieldX, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -32,7 +33,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+                    <Loader2 className="w-8 h-8 text-primary mx-auto mb-4" />
                     <p className="text-muted-foreground">Verificando acceso...</p>
                 </div>
             </div>
@@ -46,7 +47,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         }
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <Loader2 className="w-8 h-8 text-primary" />
             </div>
         )
     }
@@ -120,3 +121,5 @@ function AccessDeniedScreen({ status, email, onSignOut }: { status: string; emai
         </div>
     )
 }
+
+

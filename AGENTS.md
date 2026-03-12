@@ -51,14 +51,31 @@ Antes de tomar cualquier acción o responder:
 
 
 ### 5. Comandos de Servidor
--   **NO arranques servidores** (`npm run dev`, `supabase start`) automáticamente a menos que sea estrictamente necesario para un test efímero o te lo pidan.
+-   **Permitido arrancar servidores** (`npm run dev`, `npm run dev:quiet`, `npm run dev:mobile` o equivalentes) cuando sea necesario para validación técnica, revisión responsive, pruebas E2E o depuración autónoma.
+-   **Prioridad**: si una tarea requiere comprobar funcionamiento real, el agente debe intentar levantar el entorno por su cuenta antes de pedir intervención manual.
+-   **Evita procesos innecesarios**: no dejar servidores colgados si ya no hacen falta y no arrancar más de un entorno simultáneo sin motivo.
 
 ### 6. Verificación en Navegador (REGLA DE ORO)
-⚠️ **TOLERANCIA CERO**: **NUNCA, BAJO NINGUNA CIRCUNSTANCIA**, utilices el navegador (`browser_subagent`) para comprobaciones visuales, pruebas de UI o validación de flujos finales por tu cuenta.
-- **Pide a Juanfran que lo pruebe**: Él tiene el entorno en marcha. Tu trabajo termina cuando el código está listo.
-- **PROHIBIDO** arrancar el subagente de navegador para "ver si funciona".
-- **CONSECUENCIA**: Ignorar esta regla es una falta grave a la confianza de Juanfran.
-- **Excepción**: **ÚNICAMENTE** si Juanfran te lo pide de forma explícita y directa para un debug técnico imposible de otra forma.
+⚠️ **MODO AUTÓNOMO PERMITIDO**: el agente **SÍ PUEDE** utilizar navegador automatizado para comprobaciones visuales, revisión responsive, validación de flujos finales y toma de decisiones de UI de bajo riesgo.
+- **Herramientas preferidas**:
+  - `playwright` para recorridos funcionales, interacción y validación responsive.
+  - `chrome-devtools` para inspección técnica de DOM, red, consola, estilos computados y estados internos.
+- **Objetivo**: si Juanfran pide "revísalo", "haz que vaya", "pruébalo tú", "deja mobile bien", o cualquier petición equivalente, el agente debe intentar resolver el ciclo completo sin depender de revisión manual constante.
+- **Autonomía autorizada**:
+  - abrir la app,
+  - recorrer rutas,
+  - cambiar viewport,
+  - interactuar con formularios,
+  - detectar errores visuales/funcionales,
+  - corregir,
+  - volver a validar.
+- **Solo pedir confirmación previa** para:
+  - rediseños grandes,
+  - cambios de arquitectura,
+  - modificaciones en zonas protegidas por `DONT_TOUCH.md`,
+  - decisiones de producto ambiguas donde haya más de una dirección válida.
+- **Si el agente puede verificarlo por su cuenta, debe hacerlo**. La revisión manual de Juanfran pasa a ser una capa final, no un requisito para cada iteración pequeña.
+- **Si una validación visual no puede hacerse de forma fiable**, el agente debe explicar exactamente qué faltó para automatizarla.
 
 ### 7. Rediseños y UI
 -   **PROHIBIDO realizar rediseños completos** de una página o componente sin consulta previa y autorización explícita de Juanfran.
@@ -92,7 +109,10 @@ Cuando Juanfran diga **"deploy"**, se considera **autorización explícita** par
 10.  **Informar al finalizar**: commit creado, merge realizado, resultado de push/deploy, estado de verificación en Vercel y rama final activa.
 
 ### 9. Workflow de Verificación y Commits
-- **Verificación obligatoria**: Al implementar cualquier cambio, **SIEMPRE** pide a Juanfran que lo compruebe.
+- **Verificación autónoma primero**: Al implementar cambios, el agente debe intentar comprobarlos por su cuenta con herramientas locales, navegador automatizado, logs, tests y validaciones técnicas antes de pedir revisión humana.
+- **Verificación manual de Juanfran**:
+  - obligatoria antes de commit cuando el cambio sea sensible, visualmente subjetivo, o afecte a experiencia principal de usuario;
+  - opcional para iteraciones pequeñas, ajustes técnicos o correcciones claramente verificables por automatización.
 - **Ciclo de Commit**: Solo cuando Juanfran confirme que el cambio funciona correctamente y es de su agrado, propondrás el commit de los cambios.
 - **NUNCA** propongas o realices un commit sin que el usuario haya validado el funcionamiento de la nueva implementación.
 
@@ -140,10 +160,10 @@ Cuando Juanfran diga **"deploy"**, se considera **autorización explícita** par
     - Verificación técnica de estados de la UI (ej. ¿está este botón realmente habilitado?).
 - **REGLA DE CONEXIÓN**: Siempre verifica que el puerto `9222` está abierto antes de intentar conectar.
 - **ÉTICA DE USO (Cruce con Regla 6)**:
-    - Úsalo **EXCLUSIVAMENTE** para diagnóstico técnico y resolución de bloqueos.
-    - **NUNCA** lo uses para "ver si ha quedado bonito" (eso es tarea de Juanfran).
-    - Reporta hallazgos técnicos (logs de error, variables CSS) para fundamentar tus cambios.
-- **Proactividad**: Si detectas un bug visual reportado por el usuario, ofrece usar el MCP para "inspeccionar las tripas" antes de proponer cambios a ciegas.
+    - Úsalo para diagnóstico técnico, validación visual y resolución autónoma de bloqueos cuando haga falta.
+    - Si Playwright no basta para explicar un fallo visual, usa DevTools para inspeccionar las tripas antes de parchear a ciegas.
+    - Reporta hallazgos técnicos (logs de error, variables CSS, requests fallidas) para fundamentar tus cambios.
+- **Proactividad**: Si una tarea de responsive, mobile o QA visual puede resolverse más rápido con navegador y DevTools, hazlo sin esperar permiso adicional.
 
 ### 14. Estandarización de Modelos AI
 - **Texto**: Cuando necesites un modelo de texto, **USA SIEMPRE** el mismo que se utiliza en el resto del proyecto.

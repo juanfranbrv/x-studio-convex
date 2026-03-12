@@ -1,0 +1,143 @@
+{
+  "common": {
+    "backHome": "Back home",
+    "trustCenter": "Trust center",
+    "lastUpdated": "Last updated",
+    "relatedTitle": "More information",
+    "onThisPage": "On this page",
+    "contactTitle": "Contact",
+    "contactDescription": "If you need support, a legal request, or a product conversation, use the support channel linked to your account or reply to the beta-access email."
+  },
+  "privacy": {
+    "eyebrow": "Privacy",
+    "title": "How we handle your data in Adstudio",
+    "intro": "This page explains what information we use, why we need it, and how we protect your account, prompts, and generated results inside the platform.",
+    "updatedAt": "March 11, 2026",
+    "sections": {
+      "controller": {
+        "label": "01",
+        "title": "Who manages the information",
+        "body": "Adstudio acts as the controller for data related to running the service. This includes account management, authentication, support, and the technical infrastructure required to operate the product."
+      },
+      "data": {
+        "label": "02",
+        "title": "What data we use",
+        "body": "We process account data such as email and technical identifiers, usage data such as sessions, preferences, or credits, and the content required to deliver the service, including prompts, visual references, configurations, and generated results."
+      },
+      "purpose": {
+        "label": "03",
+        "title": "Why it is used",
+        "body": "We use this data to authenticate users, generate visual content, maintain work history, prevent abuse, improve product quality, and provide support when an error occurs or help is requested."
+      },
+      "sharing": {
+        "label": "04",
+        "title": "Vendors and transfers",
+        "body": "Some operations depend on technology vendors for authentication, storage, model execution, or operational analytics. We only share the minimum information required for those systems to work and under appropriate processing agreements."
+      },
+      "retention": {
+        "label": "05",
+        "title": "How long it is kept",
+        "body": "We keep data while your account remains active, while it is necessary to deliver the service, or for the period required by legal obligations, security needs, or fraud prevention."
+      },
+      "rights": {
+        "label": "06",
+        "title": "Your rights",
+        "body": "You may request access, rectification, deletion, restriction, or objection where applicable under the relevant regulations. You may also request more information about processing or retention through the support channel."
+      }
+    }
+  },
+  "terms": {
+    "eyebrow": "Terms",
+    "title": "Rules for using the service",
+    "intro": "These terms define what you can expect from Adstudio and what we expect from anyone using the platform to generate, review, and export content.",
+    "updatedAt": "March 11, 2026",
+    "sections": {
+      "service": {
+        "label": "01",
+        "title": "Purpose of the service",
+        "body": "Adstudio provides an environment for AI-assisted visual creation, brand-kit management, and work sessions linked to an authenticated account."
+      },
+      "account": {
+        "label": "02",
+        "title": "Account and access",
+        "body": "Access depends on a valid account and the operational status assigned to that account. You are responsible for keeping your credentials confidential and for the activity performed through your session."
+      },
+      "acceptableUse": {
+        "label": "03",
+        "title": "Permitted use",
+        "body": "You may not use the platform for unlawful, abusive, fraudulent, or rights-infringing activities. Attempts to degrade the service's security, performance, or availability are also prohibited."
+      },
+      "content": {
+        "label": "04",
+        "title": "User content",
+        "body": "You retain ownership of the content you provide. You authorize us only to process it to the extent required to run the product, store your work history, and improve the technical reliability of the system."
+      },
+      "availability": {
+        "label": "05",
+        "title": "Availability and changes",
+        "body": "The service may evolve, enter maintenance, or experience temporary interruptions. We may adjust features, limits, or flows if that improves security, quality, or the operational viability of the product."
+      },
+      "liability": {
+        "label": "06",
+        "title": "Liability",
+        "body": "Adstudio is provided as is, within a continuous-improvement environment. We do not guarantee specific outcomes and are not responsible for misuse of generated materials outside the reasonable context of the service."
+      }
+    }
+  },
+  "cookies": {
+    "eyebrow": "Cookies",
+    "title": "Cookies and local storage use",
+    "intro": "Adstudio uses technical storage mechanisms to keep your session alive, remember preferences, and preserve certain work states without forcing you to reconfigure the application on every visit.",
+    "updatedAt": "March 11, 2026",
+    "sections": {
+      "essential": {
+        "label": "01",
+        "title": "Essential cookies",
+        "body": "These are necessary to sign in, preserve authentication state, protect forms, and maintain the basic security of the service. Without them, the application cannot work properly."
+      },
+      "preferences": {
+        "label": "02",
+        "title": "Preferences and local storage",
+        "body": "Besides cookies, we use browser local storage to remember language, visual preferences, or small interface states that improve continuity between sessions."
+      },
+      "analytics": {
+        "label": "03",
+        "title": "Operational measurement",
+        "body": "We may use minimal technical signals to understand stability, errors, or performance. The goal is to improve the experience and detect failures, not to build invasive behavioral profiles."
+      },
+      "management": {
+        "label": "04",
+        "title": "How to manage them",
+        "body": "You can clear cookies or local storage from your browser settings. Keep in mind that doing so may sign you out, reset preferences, or remove temporary work states stored on your device."
+      }
+    }
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Who we are and how to reach us",
+    "intro": "Adstudio is built around turning brand identity into a creative operating system: less friction, more consistency, and a more useful relationship between human judgment and automation.",
+    "updatedAt": "March 11, 2026",
+    "sections": {
+      "about": {
+        "label": "01",
+        "title": "What we are building",
+        "body": "We are designing a suite where Image, Carousel, Video, and Brand Kit behave like parts of one visual brain. The point is not to generate for the sake of generating, but to help brands and teams produce with their own criteria."
+      },
+      "approach": {
+        "label": "02",
+        "title": "How we work",
+        "body": "We prioritize visual consistency, iteration speed, and real control over the output. That means combining automation with human supervision, keeping prompts traceable, and treating the brand system as a shared source of truth."
+      },
+      "support": {
+        "label": "03",
+        "title": "Support channels",
+        "body": "For incidents, feedback, or account help, use the in-app feedback flow, the email linked to your beta access, or the official channel you received when your account was activated. That gives us context and traceability."
+      },
+      "partnerships": {
+        "label": "04",
+        "title": "Partnerships and legal",
+        "body": "If you need to discuss privacy, enterprise use, integrations, or specific agreements, use the same official support channel and include the context of your request so it can be routed properly."
+      }
+    }
+  }
+}

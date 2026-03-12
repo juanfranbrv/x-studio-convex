@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Search, X, Layout, Check } from 'lucide-react'
@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { useTranslation } from 'react-i18next'
 
 export interface Template {
     id: string
@@ -47,6 +48,7 @@ export function TemplateSelectorModal({
     onSelect,
     selectedTemplateId
 }: TemplateSelectorModalProps) {
+    const { t } = useTranslation('common')
     const [search, setSearch] = useState('')
     const [selectedCategory, setSelectedCategory] = useState('All')
 
@@ -65,9 +67,9 @@ export function TemplateSelectorModal({
                             <Layout className="w-5 h-5" />
                         </div>
                         <div>
-                            <DialogTitle className="text-xl font-heading">Biblioteca de Plantillas</DialogTitle>
+                            <DialogTitle className="text-xl font-heading">{t('templateModal.title', { defaultValue: 'Template library' })}</DialogTitle>
                             <DialogDescription>
-                                Elige una estructura visual para tu próxima generación.
+                                {t('templateModal.description', { defaultValue: 'Choose a visual structure for your next generation.' })}
                             </DialogDescription>
                         </div>
                     </div>
@@ -79,7 +81,7 @@ export function TemplateSelectorModal({
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
-                                placeholder="Buscar estilos, categorías..."
+                                placeholder={t('templateModal.searchPlaceholder', { defaultValue: 'Search styles, categories...' })}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="pl-10 bg-muted/30 border-border/50 rounded-xl"

@@ -1,0 +1,42 @@
+{
+  "maintenanceToastTitle": "Modulo en construccion",
+  "maintenanceToastBody": "El modulo de video aun no esta operativo. Estamos terminandolo.",
+  "missingPromptTitle": "Error",
+  "missingPromptBody": "Por favor, introduce un prompt para generar el video.",
+  "starting": "Iniciando generacion...",
+  "processing": "Procesando con Veo 3.1...",
+  "temporarilyUnavailable": "Modulo de video temporalmente no operativo.",
+  "generationError": "No se pudo generar el video.",
+  "controls": {
+    "maintenanceBanner": "Modulo en construccion: temporalmente no operativo",
+    "referenceImage": "Imagen de referencia (opcional)",
+    "startEndFrames": "Frames de inicio y fin",
+    "clickOrDrop": "Haz clic o suelta una imagen aqui",
+    "imageFormats": "JPG, JPEG o PNG de hasta 10 MB",
+    "startFrame": "Marco de inicio",
+    "endFrame": "Marco final",
+    "startEndMode": "Modo de marco de inicio-fin",
+    "prompt": "Prompt",
+    "promptPlaceholder": "Por favor, describe el contenido del video",
+    "preset": "Preset",
+    "promptImprove": "Mejora de prompt",
+    "aspectRatio": "Proporciones de aspecto de salida",
+    "quality": "Calidad",
+    "duration": "Duracion",
+    "underConstruction": "En construccion",
+    "generate": "Generar"
+  },
+  "canvas": {
+    "shareTitle": "Video generado con Veo 3.1",
+    "bannerTitle": "Modulo de video en construccion",
+    "bannerBody": "La generacion de video esta temporalmente desactivada y aun no es operativa.",
+    "emptyTitleMaintenance": "Modulo temporalmente desactivado",
+    "emptyBodyMaintenance": "Estamos trabajando en esta funcionalidad. Volvera a estar operativa pronto.",
+    "emptyTitleReady": "Tu video aparecera aqui",
+    "emptyBodyReady": "Describe tu video y pulsa \"Generar\" para crear contenido con IA",
+    "generating": "Generando video con Veo 3.1...",
+    "longWait": "Esto puede tardar unos minutos",
+    "download": "Descargar",
+    "share": "Compartir"
+  }
+}

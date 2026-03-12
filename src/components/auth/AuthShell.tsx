@@ -1,33 +1,10 @@
+'use client'
+
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Bot, FileImage, FolderKanban, House, LayoutPanelTop, PanelsTopLeft } from 'lucide-react'
 
 type AuthMode = 'sign-in' | 'sign-up'
-
-const authCopy: Record<
-  AuthMode,
-  {
-    eyebrow: string
-    title: string
-    description: string
-    heroTitle: string
-    heroBody: string
-  }
-> = {
-  'sign-in': {
-    eyebrow: 'Acceso privado',
-    title: 'Entra en tu estudio de marca',
-    description: 'Recupera tu contexto y vuelve al punto exacto en el que lo dejaste.',
-    heroTitle: 'La interfaz real, no una promesa',
-    heroBody: 'Brand kit, lienzo, historial y paneles vivos dentro de la misma vista de trabajo.',
-  },
-  'sign-up': {
-    eyebrow: 'Acceso anticipado',
-    title: 'Entra en tu estudio de marca',
-    description: 'Empieza con Google y aterriza directamente en tu espacio de trabajo.',
-    heroTitle: 'La interfaz real, no una promesa',
-    heroBody: 'Brand kit, lienzo, historial y paneles vivos dentro de la misma vista de trabajo.',
-  },
-}
 
 function AppPreview() {
   return (
@@ -92,7 +69,6 @@ function AppPreview() {
                         <PanelsTopLeft className="h-5 w-5" strokeWidth={1.8} />
                       </div>
                     </div>
-
                     <div className="flex min-h-[17rem] items-end justify-center gap-6">
                       <div className="mb-2 h-20 w-28 rounded-[1.2rem] bg-[#c98544]/80 blur-[1px]" />
                       <div className="relative h-56 w-20 rounded-[1.4rem] bg-[linear-gradient(180deg,#2e261f,#0f0e0d)] shadow-[0_28px_36px_-24px_rgba(0,0,0,0.9)]">
@@ -105,7 +81,6 @@ function AppPreview() {
                       </div>
                       <div className="h-16 w-24 rounded-[999px] bg-[#a9774f]/80 shadow-[0_20px_24px_-18px_rgba(0,0,0,0.45)]" />
                     </div>
-
                     <div className="mt-5 flex items-center gap-3">
                       <div className="h-12 flex-1 rounded-[999px] bg-[linear-gradient(180deg,rgba(73,79,52,0.95),rgba(104,110,72,0.95))] shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]" />
                       <div className="h-10 w-10 rounded-full bg-white/26" />
@@ -194,7 +169,8 @@ export function AuthShell({
   mode: AuthMode
   children: ReactNode
 }) {
-  const copy = authCopy[mode]
+  const { t } = useTranslation('auth')
+  const isSignIn = mode === 'sign-in'
 
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-mesh text-foreground">
@@ -212,18 +188,18 @@ export function AuthShell({
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/80">x-studio</p>
-                  <p className="text-sm font-medium text-foreground/72">Acceso al sistema creativo</p>
+                  <p className="text-sm font-medium text-foreground/72">{t('shell.systemAccess')}</p>
                 </div>
               </div>
 
               <div className="max-w-xl space-y-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary/80">
-                  {copy.eyebrow}
+                  {isSignIn ? t('shell.privateAccess') : t('shell.earlyAccess')}
                 </p>
-                <h1 className="max-w-lg text-5xl font-heading font-bold leading-[0.94] tracking-tight text-balance text-foreground">
-                  {copy.heroTitle}
+                <h1 className="max-w-lg text-balance font-heading text-5xl font-bold leading-[0.94] tracking-tight text-foreground">
+                  {t('shell.heroTitle')}
                 </h1>
-                <p className="max-w-md text-base leading-7 text-muted-foreground">{copy.heroBody}</p>
+                <p className="max-w-md text-base leading-7 text-muted-foreground">{t('shell.heroBody')}</p>
               </div>
 
               <AppPreview />
@@ -234,13 +210,15 @@ export function AuthShell({
             <div className="relative w-full max-w-[30rem]">
               <div className="mb-8 space-y-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary/80">
-                  {copy.eyebrow}
+                  {isSignIn ? t('shell.privateAccess') : t('shell.earlyAccess')}
                 </p>
                 <div className="space-y-2">
-                  <h2 className="max-w-sm text-3xl font-heading font-bold tracking-tight text-foreground">
-                    {copy.title}
+                  <h2 className="max-w-sm font-heading text-3xl font-bold tracking-tight text-foreground">
+                    {t('shell.title')}
                   </h2>
-                  <p className="max-w-md text-sm leading-6 text-muted-foreground">{copy.description}</p>
+                  <p className="max-w-md text-sm leading-6 text-muted-foreground">
+                    {isSignIn ? t('shell.signInDescription') : t('shell.signUpDescription')}
+                  </p>
                 </div>
               </div>
 

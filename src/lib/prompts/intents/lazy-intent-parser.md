@@ -134,7 +134,7 @@ RULES
 17. SUGGESTIONS STRATEGY:
     - Generate EXACTLY 5 distinct suggestions in the suggestions array.
     - Each suggestion MUST reflect Brand Kit elements: slogan/tagline when relevant, values, tone of voice, and any text assets provided.
-    - El trÃ­o debe ser dinÃ¡mico, adaptado a intent + audiencia + voz de marca.
+    - El trío debe ser dinámico, adaptado a intent + audiencia + voz de marca.
     - Typical pattern (when appropriate): one more emotional/inspirational and one more direct/practical.
     - If another pair is better for the case (e.g., analytical vs conversational), use it.
     - FULL CONTENT RULE: Each suggestion MUST provide modifications for headline, caption and cta.

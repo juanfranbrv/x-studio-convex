@@ -1,12 +1,16 @@
-'use client';
+﻿'use client'
+
+import { Loader2 } from '@/components/ui/spinner'
+;
 
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Type, Search, Plus, Trash2, Info, Loader2, Check, Pencil } from 'lucide-react';
+import { Type, Search, Plus, Trash2, Info, Check, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 const FONT_FEELINGS: Array<{ id: string; families: string[] }> = [
   { id: 'business', families: ['Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Work Sans', 'Noto Sans'] },
@@ -73,6 +77,7 @@ export function TypographySection({
   guidedMode = false,
   onSelectFontForRole,
 }: TypographySectionProps) {
+  const { t } = useTranslation('brandKit');
   const [fontSearch, setFontSearch] = useState('');
   const [allFonts, setAllFonts] = useState<string[]>([]);
   const [loadingFonts, setLoadingFonts] = useState(false);
@@ -181,25 +186,27 @@ export function TypographySection({
       {guidedMode && (
         <div className="rounded-lg border border-border/60 bg-background/60 p-3 space-y-2">
           <p className="text-xs font-medium text-foreground">
-            {roleToChoose === 'heading' ? 'Elige tipografia para Titulares' : 'Elige tipografia para Parrafos'}
+            {roleToChoose === 'heading'
+              ? t('typography.chooseHeadings', { defaultValue: 'Choose typography for headings' })
+              : t('typography.chooseBody', { defaultValue: 'Choose typography for paragraphs' })}
           </p>
           {editingRole && (
             <Button type="button" size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditingRole(null)}>
-              Cancelar cambio
+              {t('typography.cancelChange', { defaultValue: 'Cancel change' })}
             </Button>
           )}
         </div>
       )}
 
       <div className="rounded-lg border border-border/60 bg-background/60 p-3">
-        <p className="text-xs font-medium text-foreground">Explora fuentes con vista previa</p>
-        <p className="text-xs text-muted-foreground mt-1">No necesitas saber nombres. Mira ejemplos y anade la que te guste.</p>
+        <p className="text-xs font-medium text-foreground">{t('typography.exploreTitle', { defaultValue: 'Browse fonts with live preview' })}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t('typography.exploreDescription', { defaultValue: 'You do not need to know font names. Browse examples and pick the one you like.' })}</p>
       </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] w-4 h-4" />
         <Input
-          placeholder="Filtrar fuentes (opcional)..."
+          placeholder={t('typography.filterPlaceholder', { defaultValue: 'Filter fonts (optional)...' })}
           className="pl-10 h-9 bg-transparent border-border text-sm focus-visible:ring-primary"
           value={fontSearch}
           onFocus={() => fetchGoogleFonts()}
@@ -207,7 +214,7 @@ export function TypographySection({
         />
         {loadingFonts && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
+            <Loader2 className="w-4 h-4 text-[var(--accent)]" />
           </div>
         )}
       </div>
@@ -238,7 +245,7 @@ export function TypographySection({
                 <div className="flex flex-col">
                   <span className="text-xs text-[var(--text-secondary)]">{font}</span>
                   <span className="text-lg leading-tight" style={{ fontFamily: font }}>
-                    Tu marca, tu estilo visual
+                    {t('typography.sampleLine', { defaultValue: 'Your brand, your visual style' })}
                   </span>
                 </div>
                 {guidedMode && currentRoleFamily === font ? (
@@ -249,8 +256,8 @@ export function TypographySection({
               </button>
             ))}
             {visibleCount < filteredFonts.length && (
-              <Button type="button" variant="outline" className="w-full h-8 text-xs mt-1" onClick={() => setVisibleCount((prev) => prev + 24)}>
-                Cargar mas fuentes
+              <Button type="button" variant="outline" className="mt-1 h-10 w-full text-sm" onClick={() => setVisibleCount((prev) => prev + 24)}>
+                {t('typography.loadMore', { defaultValue: 'Load more fonts' })}
               </Button>
             )}
           </div>
@@ -258,13 +265,13 @@ export function TypographySection({
       )}
 
       {fontSearch && visibleFonts.length === 0 && !loadingFonts && (
-        <div className="text-center py-4 text-[var(--text-secondary)] text-xs italic">No se encontraron fuentes para "{fontSearch}"</div>
+        <div className="text-center py-4 text-[var(--text-secondary)] text-xs italic">{t('typography.noResults', { defaultValue: 'No fonts found for "{{query}}"', query: fontSearch })}</div>
       )}
 
       {!fontSearch && visibleFonts.length > 0 && (
         <div className="flex items-center gap-2 justify-center py-2 text-[var(--text-secondary)]">
           <Info className="w-3.5 h-3.5 opacity-50" />
-          <span className="text-[10px]">Mostrando fuentes populares con vista previa</span>
+          <span className="text-[10px]">{t('typography.showingPopular', { defaultValue: 'Showing popular fonts with preview' })}</span>
         </div>
       )}
     </div>
@@ -275,7 +282,7 @@ export function TypographySection({
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base text-foreground">
           <Type className="w-5 h-5 text-primary" />
-          Tipografia
+          {t('typography.title', { defaultValue: 'Typography' })}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -309,7 +316,11 @@ export function TypographySection({
                             : 'bg-muted/50 text-muted-foreground border-border'
                       )}
                     >
-                      {fontObj.role === 'heading' ? 'Titulares' : fontObj.role === 'body' ? 'Parrafos' : 'Sin asignar'}
+                      {fontObj.role === 'heading'
+                        ? t('typography.roleHeadings', { defaultValue: 'Headings' })
+                        : fontObj.role === 'body'
+                          ? t('typography.roleBody', { defaultValue: 'Body' })
+                          : t('typography.roleUnassigned', { defaultValue: 'Unassigned' })}
                     </span>
                   </div>
                   {guidedMode && (fontObj.role === 'heading' || fontObj.role === 'body') ? (
@@ -327,7 +338,7 @@ export function TypographySection({
                       }}
                     >
                       <Pencil className="w-3.5 h-3.5 mr-1" />
-                      Cambiar
+                      {t('typography.change', { defaultValue: 'Change' })}
                     </Button>
                   ) : (
                     <button
@@ -349,7 +360,9 @@ export function TypographySection({
                       className={cn('leading-tight transition-all', fontObj.role === 'heading' ? 'text-2xl md:text-3xl font-bold' : 'text-lg md:text-xl')}
                       style={{ fontFamily: fontObj.family }}
                     >
-                      {tagline || (fontObj.role === 'heading' ? 'Un titular impactante' : 'El texto de parrafo fluye con naturalidad.')}
+                      {tagline || (fontObj.role === 'heading'
+                        ? t('typography.headingSample', { defaultValue: 'A strong headline' })
+                        : t('typography.bodySample', { defaultValue: 'Body text flows naturally.' }))}
                     </p>
                   </div>
                   <span className="text-2xl opacity-10" style={{ fontFamily: fontObj.family }}>
@@ -367,3 +380,5 @@ export function TypographySection({
     </Card>
   );
 }
+
+

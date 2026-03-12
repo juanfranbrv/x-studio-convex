@@ -237,7 +237,7 @@ export function BrandDNAPanel({
                 id: `image-${idx}`,
                 type: 'image',
                 value: image.url,
-                label: `Imagen ${idx + 1}`
+                label: t('brandDnaPanel.imageLabel', { index: idx + 1, defaultValue: 'Image {{index}}' })
             })
         }
 
@@ -276,7 +276,7 @@ export function BrandDNAPanel({
                 id: `logo-${idx}`,
                 type: 'logo',
                 value: logo.url,
-                label: `Logo ${idx + 1}`
+                label: t('brandDnaPanel.logoBadge', { defaultValue: 'Logo' })
             })
         }
 
@@ -358,7 +358,7 @@ export function BrandDNAPanel({
         const currentImagesCount = data.images?.length || 0
 
         if (currentImagesCount + files.length > 20) {
-            alert('Puedes tener hasta 20 imágenes en tu biblioteca de marca.')
+            alert(t('brandDnaPanel.maxImagesAlert', { defaultValue: 'You can have up to 20 images in your brand library.' }))
             return
         }
 
@@ -542,7 +542,7 @@ export function BrandDNAPanel({
                     <img
                         src={viewerImage}
                         className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
-                        alt="Preview"
+                        alt={t('preview.title', { defaultValue: 'Preview' })}
                     />
                 </div>
             )}
@@ -561,7 +561,7 @@ export function BrandDNAPanel({
                             isOpen={openSections.colors}
                             extra={isSaving && (
                                 <Badge variant="outline" className="animate-pulse bg-primary/10 text-[8px] py-0 px-1 h-3.5 text-primary border-primary/20">
-                                    SINC
+                                    {t('brandDnaPanel.syncBadge', { defaultValue: 'SYNC' })}
                                 </Badge>
                             )}
                         />
@@ -593,7 +593,7 @@ export function BrandDNAPanel({
                     <div className="space-y-1">
                         <SectionHeader
                             icon={Image}
-                            title="Logos de Marca"
+                            title={t('brandDnaPanel.brandLogos', { defaultValue: 'Brand logos' })}
                             count={logos.length}
                             maxCount={6}
                             isOpen={openSections.logos}
@@ -608,7 +608,7 @@ export function BrandDNAPanel({
                             }
                         />
                         <CollapsibleContent>
-                            <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5 mb-1">Logos</p>
+                            <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5 mb-1">{t('brandDnaPanel.logoList', { defaultValue: 'Logos' })}</p>
                             <div className="grid grid-cols-3 gap-1.5 p-1">
                                 {logos.map((logo, idx) => (
                                     <div
@@ -618,7 +618,7 @@ export function BrandDNAPanel({
                                             id: `logo-${idx}`,
                                             type: 'logo',
                                             value: logo.url,
-                                            label: `Logo ${idx + 1}`
+                                            label: t('brandDnaPanel.logoBadge', { defaultValue: 'Logo' })
                                         })}
                                         onDragEnd={handleDragEnd}
                                         onClick={() => handleToggleLogoSelection(idx)}
@@ -633,13 +633,13 @@ export function BrandDNAPanel({
                                             "absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 text-[8px] h-4 px-1 pointer-events-none",
                                             isDark ? "bg-white/90 text-black" : "bg-black/90 text-white"
                                         )}>
-                                            Logo
+                                            {t('brandDnaPanel.logoBadge', { defaultValue: 'Logo' })}
                                         </Badge>
                                         <img
                                             src={logo.url}
                                             draggable={false}
                                             className="max-h-full max-w-full object-contain transition-transform group-hover:scale-110 pointer-events-none select-none"
-                                            alt={`Logo ${idx}`}
+                                            alt={t('brandDnaPanel.logoAlt', { defaultValue: 'Logo' })}
                                         />
                                         {selectedContext.some(c => c.id === `logo-${idx}`) && (
                                             <div className={cn(
@@ -686,7 +686,7 @@ export function BrandDNAPanel({
                     <div className="space-y-1">
                         <SectionHeader
                             icon={Image}
-                            title="Imágenes"
+                            title={t('brandDnaPanel.images', { defaultValue: 'Images' })}
                             count={selectedCount}
                             maxCount={totalCount}
                             isOpen={openSections.images}
@@ -704,9 +704,9 @@ export function BrandDNAPanel({
                             <Tabs defaultValue="selected" className="w-full">
                                 <TabsList className="bg-muted/50 h-6 p-0.5 w-full">
                                     <TabsTrigger value="selected" className="text-[9px] px-2 h-5 uppercase font-bold tracking-tight flex-1">
-                                        Usadas <Badge className="ml-1 h-3 min-w-[12px] px-0.5 text-[7px] flex items-center justify-center bg-primary/20 text-primary border-none">{selectedCount}</Badge>
+                                        {t('brandDnaPanel.used', { defaultValue: 'Used' })} <Badge className="ml-1 h-3 min-w-[12px] px-0.5 text-[7px] flex items-center justify-center bg-primary/20 text-primary border-none">{selectedCount}</Badge>
                                     </TabsTrigger>
-                                    <TabsTrigger value="library" className="text-[9px] px-2 h-5 uppercase font-bold tracking-tight flex-1">Biblioteca</TabsTrigger>
+                                    <TabsTrigger value="library" className="text-[9px] px-2 h-5 uppercase font-bold tracking-tight flex-1">{t('brandDnaPanel.library', { defaultValue: 'Library' })}</TabsTrigger>
                                 </TabsList>
 
                                 <TabsContent value="selected" className="mt-1">
@@ -724,7 +724,7 @@ export function BrandDNAPanel({
                                                         id: elementId,
                                                         type: 'image',
                                                         value: img.url,
-                                                        label: `Imagen ${originalIdx + 1}`
+                                                        label: t('brandDnaPanel.imageLabel', { index: originalIdx + 1, defaultValue: 'Image {{index}}' })
                                                     })}
                                                     onDragEnd={handleDragEnd}
                                                     onClick={() => {
@@ -745,7 +745,7 @@ export function BrandDNAPanel({
                                                         src={img.url}
                                                         draggable={false}
                                                         className="w-full h-full object-cover pointer-events-none select-none"
-                                                        alt={`Asset ${originalIdx}`}
+                                                        alt={t('brandDnaPanel.imageLabel', { index: originalIdx + 1, defaultValue: 'Image {{index}}' })}
                                                     />
                                                     {isSelected && (
                                                         <div className={cn(
@@ -774,7 +774,7 @@ export function BrandDNAPanel({
                                         })}
                                         {selectedImages.length === 0 && (
                                             <div className="col-span-3 py-6 text-center border border-dashed border-muted/50 rounded-lg">
-                                                <p className="text-[9px] text-muted-foreground opacity-50">Nada seleccionado</p>
+                                                <p className="text-[9px] text-muted-foreground opacity-50">{t('brandDnaPanel.nothingSelected', { defaultValue: 'Nothing selected' })}</p>
                                             </div>
                                         )}
                                     </div>
@@ -783,7 +783,7 @@ export function BrandDNAPanel({
                                             onClick={handleDeselectAll}
                                             className="w-full mt-1.5 text-[8px] text-muted-foreground hover:text-primary font-bold uppercase tracking-wider transition-colors"
                                         >
-                                            Limpiar Selección
+                                            {t('brandDnaPanel.clearSelection', { defaultValue: 'Clear selection' })}
                                         </button>
                                     )}
                                 </TabsContent>
@@ -802,7 +802,7 @@ export function BrandDNAPanel({
                                                         id: elementId,
                                                         type: 'image',
                                                         value: img.url,
-                                                        label: `Imagen ${idx + 1}`
+                                                        label: t('brandDnaPanel.imageLabel', { index: idx + 1, defaultValue: 'Image {{index}}' })
                                                     })}
                                                     onDragEnd={handleDragEnd}
                                                     onClick={() => {
@@ -870,11 +870,11 @@ export function BrandDNAPanel({
                     <div className="space-y-1">
                         <SectionHeader
                             icon={Type}
-                            title="Tipografía"
+                            title={t('brandDnaPanel.typography', { defaultValue: 'Typography' })}
                             isOpen={openSections.typography}
                             extra={
                                 <Link href="/brand-kit" className="text-[9px] text-primary hover:underline flex items-center gap-1 font-medium bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
-                                    Editar en Kit
+                                    {t('brandingConfigurator.editInKit', { defaultValue: 'Edit in Kit' })}
                                 </Link>
                             }
                         />
@@ -883,8 +883,8 @@ export function BrandDNAPanel({
                                 {/* Headlines */}
                                 <div className="space-y-1">
                                     <div className="flex items-center justify-between px-0.5">
-                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50">Titulares</p>
-                                        {headingFonts.length === 0 && <span className="text-[8px] text-muted-foreground/30 italic">No asignado</span>}
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50">{t('brandingConfigurator.headings', { defaultValue: 'Headings' })}</p>
+                                        {headingFonts.length === 0 && <span className="text-[8px] text-muted-foreground/30 italic">{t('brandDnaPanel.unassigned', { defaultValue: 'Unassigned' })}</span>}
                                     </div>
                                     <div className="flex flex-wrap gap-1.5">
                                         {headingFonts.map((font, idx) => (
@@ -900,8 +900,8 @@ export function BrandDNAPanel({
                                 {/* Body / Paragraphs */}
                                 <div className="space-y-1">
                                     <div className="flex items-center justify-between px-0.5">
-                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50">Párrafos</p>
-                                        {bodyFonts.length === 0 && <span className="text-[8px] text-muted-foreground/30 italic">No asignado</span>}
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50">{t('brandingConfigurator.paragraphs', { defaultValue: 'Paragraphs' })}</p>
+                                        {bodyFonts.length === 0 && <span className="text-[8px] text-muted-foreground/30 italic">{t('brandDnaPanel.unassigned', { defaultValue: 'Unassigned' })}</span>}
                                     </div>
                                     <div className="flex flex-wrap gap-1.5">
                                         {bodyFonts.map((font, idx) => (
@@ -917,7 +917,7 @@ export function BrandDNAPanel({
                                 {/* Other unassigned fonts if any (legacy or just not assigned roles) */}
                                 {unassignedFonts.length > 0 && (
                                     <div className="space-y-1 pt-1 border-t border-border/20">
-                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Otras fuentes</p>
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">{t('brandDnaPanel.otherFonts', { defaultValue: 'Other fonts' })}</p>
                                         <div className="flex flex-wrap gap-1.5">
                                             {unassignedFonts.map((font, idx) => {
                                                 const family = typeof font === 'string' ? font : font.family
@@ -934,7 +934,7 @@ export function BrandDNAPanel({
                                 )}
 
                                 {fonts.length === 0 && (
-                                    <p className="text-[9px] text-muted-foreground/50 italic p-1 text-center">Sin tipografías detectadas</p>
+                                    <p className="text-[9px] text-muted-foreground/50 italic p-1 text-center">{t('brandDnaPanel.noFontsDetected', { defaultValue: 'No fonts detected' })}</p>
                                 )}
                             </div>
                         </CollapsibleContent>
@@ -948,7 +948,7 @@ export function BrandDNAPanel({
                     <div className="space-y-1">
                         <SectionHeader
                             icon={FileText}
-                            title="Textos de Marca"
+                            title={t('preview.brandTexts', { defaultValue: 'Brand Kit texts' })}
                             isOpen={openSections.textAssets}
                         />
                         <CollapsibleContent>
@@ -956,7 +956,7 @@ export function BrandDNAPanel({
                                 {/* Tagline */}
                                 {tagline && (
                                     <div className="space-y-0.5">
-                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Tagline</p>
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">{t('brandDnaPanel.tagline', { defaultValue: 'Tagline' })}</p>
                                         <DraggableChip
                                             {...chipProps('tagline', 'text', tagline, tagline)}
                                         />
@@ -966,7 +966,7 @@ export function BrandDNAPanel({
                                 {/* Brand Values */}
                                 {brand_values.length > 0 && (
                                     <div className="space-y-0.5">
-                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Valores</p>
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">{t('brandDnaPanel.values', { defaultValue: 'Values' })}</p>
                                         <div className="flex flex-wrap gap-1">
                                             {brand_values.map((val, idx) => (
                                                 <DraggableChip
@@ -981,7 +981,7 @@ export function BrandDNAPanel({
                                 {/* Tone of Voice */}
                                 {tone_of_voice.length > 0 && (
                                     <div className="space-y-0.5">
-                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Tono de Voz</p>
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">{t('brandDnaPanel.tone', { defaultValue: 'Tone of voice' })}</p>
                                         <div className="flex flex-wrap gap-1">
                                             {tone_of_voice.map((tone, idx) => (
                                                 <DraggableChip
@@ -995,7 +995,7 @@ export function BrandDNAPanel({
 
                                 {/* Visual Aesthetic */}
                                 <div className="space-y-2">
-                                    <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">Estética Visual</p>
+                                    <p className="text-[8px] uppercase font-bold text-muted-foreground/50 px-0.5">{t('brandDnaPanel.visualAesthetic', { defaultValue: 'Visual aesthetic' })}</p>
 
                                     {/* Add New Style */}
                                     <div className="flex gap-1.5">
@@ -1003,7 +1003,7 @@ export function BrandDNAPanel({
                                             value={newAesthetic}
                                             onChange={(e) => setNewAesthetic(e.target.value)}
                                             onKeyDown={handleKeyPressAesthetic}
-                                            placeholder="Añadir estilo visual..."
+                                            placeholder={t('brandDnaPanel.addVisualStyle', { defaultValue: 'Add visual style...' })}
                                             className="h-7 text-xs bg-muted/20 border-border/50"
                                         />
                                         <Button
@@ -1053,7 +1053,7 @@ export function BrandDNAPanel({
                                 </div>
 
                                 {!tagline && brand_values.length === 0 && tone_of_voice.length === 0 && visual_aesthetic.length === 0 && (
-                                    <p className="text-[9px] text-muted-foreground/50 italic p-1">Sin textos de marca</p>
+                                    <p className="text-[9px] text-muted-foreground/50 italic p-1">{t('preview.noBrandTexts', { defaultValue: 'No texts available' })}</p>
                                 )}
                             </div>
                         </CollapsibleContent>
@@ -1067,7 +1067,7 @@ export function BrandDNAPanel({
                     <div className="space-y-1">
                         <SectionHeader
                             icon={Link2}
-                            title="Enlaces y Contacto"
+                            title={t('brandDnaPanel.linksAndContact', { defaultValue: 'Links and contact' })}
                             isOpen={openSections.links}
                         />
                         <CollapsibleContent>
@@ -1083,14 +1083,14 @@ export function BrandDNAPanel({
                                 {/* Social Links */}
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between px-0.5">
-                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50">Redes Sociales</p>
+                                        <p className="text-[8px] uppercase font-bold text-muted-foreground/50">{t('brandDnaPanel.socialNetworks', { defaultValue: 'Social networks' })}</p>
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             className="h-5 text-[10px] text-muted-foreground hover:text-primary px-1"
                                             onClick={handleAddSocialLink}
                                         >
-                                            <Plus className="w-3 h-3 mr-1" /> Añadir red
+                                            <Plus className="w-3 h-3 mr-1" /> {t('brandDnaPanel.addSocial', { defaultValue: 'Add social' })}
                                         </Button>
                                     </div>
 
@@ -1102,7 +1102,7 @@ export function BrandDNAPanel({
                                                         <Input
                                                             value={link.username || ''}
                                                             onChange={(e) => handleUpdateSocialLink(idx, 'username', e.target.value)}
-                                                            placeholder="@usuario"
+                                                            placeholder={t('brandDnaPanel.socialUsernamePlaceholder', { defaultValue: '@username' })}
                                                             className="h-7 text-xs bg-background/50 border-border/50"
                                                         />
                                                         <Input
@@ -1125,9 +1125,9 @@ export function BrandDNAPanel({
                                         </div>
                                     ) : (
                                         <div className="text-center py-4 border border-dashed border-border/50 rounded-lg">
-                                            <p className="text-[10px] text-muted-foreground/60 mb-2">No has añadido redes sociales</p>
+                                            <p className="text-[10px] text-muted-foreground/60 mb-2">{t('brandDnaPanel.noSocials', { defaultValue: 'You have not added social profiles yet' })}</p>
                                             <Button variant="outline" size="sm" onClick={handleAddSocialLink} className="h-7 text-xs">
-                                                <Plus className="w-3 h-3 mr-1" /> Añadir primera red
+                                                <Plus className="w-3 h-3 mr-1" /> {t('brandDnaPanel.addFirstSocial', { defaultValue: 'Add first social' })}
                                             </Button>
                                         </div>
                                     )}
@@ -1173,7 +1173,7 @@ export function BrandDNAPanel({
                                 )}
 
                                 {!url && social_links.length === 0 && emails.length === 0 && phones.length === 0 && addresses.length === 0 && (
-                                    <p className="text-[9px] text-muted-foreground/50 italic p-1">Sin enlaces ni contacto</p>
+                                    <p className="text-[9px] text-muted-foreground/50 italic p-1">{t('brandDnaPanel.noLinksOrContact', { defaultValue: 'No links or contact details' })}</p>
                                 )}
                             </div>
                         </CollapsibleContent>
@@ -1185,7 +1185,7 @@ export function BrandDNAPanel({
             <div className="p-3 pt-2 border-t-2 border-border bg-muted/20">
                 <div className="h-[50px] flex items-center gap-2 overflow-hidden px-1">
                     {logo_url ? (
-                        <img src={logo_url} alt="Logo" className="w-8 h-8 object-contain opacity-60" />
+                        <img src={logo_url} alt={t('brandDnaPanel.logoAlt', { defaultValue: 'Logo' })} className="w-8 h-8 object-contain opacity-60" />
                     ) : (
                         <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-[10px]">
                             🖼️

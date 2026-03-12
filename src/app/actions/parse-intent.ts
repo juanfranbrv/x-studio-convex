@@ -714,7 +714,7 @@ async function buildImagePromptSuggestions(
         es: 'en una situación real y concreta',
         en: 'in a real and specific situation',
         ca: 'en una situació real i concreta',
-        pt: 'numa situação real e concreta',
+        pt: 'numa situa\u00E7\u00E3o real e concreta',
         fr: 'dans une situation réelle et concrète',
         de: 'in einer realen und konkreten Situation',
         it: 'in una situazione reale e concreta',
@@ -798,8 +798,8 @@ function extractJson(text: string): string {
 
 function normalizeSmartQuotes(raw: string): string {
     return raw
-        .replace(/[â€œâ€]/g, '"')
-        .replace(/[â€˜â€™]/g, "'")
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'")
         .replace(/\u00A0/g, ' ')
 }
 

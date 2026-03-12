@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { TextAsset } from '@/lib/creation-flow-types'
+import { useTranslation } from 'react-i18next'
 
 export interface BrandKitTextOption {
     id: string
@@ -53,6 +54,7 @@ export function TextLayersEditor({
     onAddTextAsset,
     onUpdateTextAsset
 }: TextLayersEditorProps) {
+    const { t } = useTranslation('common')
     const visibleTextAssets = textAssets.filter(asset => asset.type !== 'cta' && asset.type !== 'url')
     const headlineRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -95,7 +97,7 @@ export function TextLayersEditor({
                         onChange={(e) => onHeadlineChange(e.target.value)}
                         className="w-full bg-transparent border-none text-center font-black text-foreground placeholder:text-muted-foreground/20 focus:ring-0 resize-none overflow-visible min-h-[1.2em] leading-tight drop-shadow-sm pb-1"
                         style={{ fontSize: 'var(--tl-head)', lineHeight: 'var(--tl-line-head)' }}
-                        placeholder="ESCRIBE TU TITULAR"
+                        placeholder={t('textLayerEditor.headlinePlaceholder', { defaultValue: 'WRITE YOUR HEADLINE' })}
                         rows={1}
                         onInput={(e) => {
                             const target = e.target as HTMLTextAreaElement;
@@ -130,7 +132,10 @@ export function TextLayersEditor({
                                 onChange={(e) => onCustomTextChange(key, e.target.value)}
                                 className="w-full bg-transparent border-none text-center font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.1em] leading-tight transition-all drop-shadow-sm py-0"
                                 style={{ fontSize: 'var(--tl-body)', lineHeight: 'var(--tl-line-body)' }}
-                                placeholder={`PROMPT PARA ${key.replace(/_/g, ' ').toUpperCase()}...`}
+                                placeholder={t('textLayerEditor.customPlaceholder', {
+                                    defaultValue: 'PROMPT FOR {{label}}...',
+                                    label: key.replace(/_/g, ' ').toUpperCase()
+                                })}
                                 rows={1}
                                 onInput={(e) => {
                                     const target = e.target as HTMLTextAreaElement;
@@ -167,7 +172,10 @@ export function TextLayersEditor({
                                     onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
                                     className="w-full bg-transparent border-none text-center font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.1em] leading-tight transition-all drop-shadow-sm py-0"
                                     style={{ fontSize: 'var(--tl-body)', lineHeight: 'var(--tl-line-body)' }}
-                                    placeholder={`Valor para ${asset.label}...`}
+                                    placeholder={t('textLayerEditor.assetPlaceholder', {
+                                        defaultValue: 'Value for {{label}}...',
+                                        label: asset.label
+                                    })}
                                     rows={1}
                                     onInput={(e) => {
                                         const target = e.target as HTMLTextAreaElement;
@@ -213,12 +221,12 @@ export function TextLayersEditor({
                                 }}
                             >
                                 <Fingerprint style={{ width: 'var(--tl-brand-icon)', height: 'var(--tl-brand-icon)' }} className="text-primary" />
-                                Textos de Marca
+                                {t('preview.brandTexts', { defaultValue: 'Brand Kit texts' })}
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="center" className="w-72 max-h-80 overflow-y-auto">
                             <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                                Selecciona un texto del Kit de Marca
+                                {t('preview.selectBrandText', { defaultValue: 'Select a Brand Kit text' })}
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
 
@@ -227,13 +235,13 @@ export function TextLayersEditor({
                                 onClick={() => onAddTextAsset?.({
                                     id: `text-${Date.now()}`,
                                     type: 'custom',
-                                    label: 'Texto',
+                                    label: t('textLayerEditor.freeTextLabel', { defaultValue: 'Text' }),
                                     value: ''
                                 })}
                                 className="text-xs gap-2"
                             >
                                 <Plus className="w-3.5 h-3.5 text-muted-foreground" />
-                                <span className="text-muted-foreground">Añadir texto libre...</span>
+                                <span className="text-muted-foreground">{t('textLayerEditor.addFreeText', { defaultValue: 'Add free text...' })}</span>
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />
@@ -257,7 +265,7 @@ export function TextLayersEditor({
                                 ))
                             ) : (
                                 <DropdownMenuItem disabled className="text-xs text-muted-foreground italic">
-                                    Sin textos guardados en el Kit
+                                    {t('preview.noBrandTexts', { defaultValue: 'No texts available' })}
                                 </DropdownMenuItem>
                             )}
                         </DropdownMenuContent>
@@ -322,12 +330,12 @@ export function TextLayersEditor({
                                 value={ctaUrl || ''}
                                 onChange={(e) => onCtaUrlChange?.(e.target.value)}
                                 className="bg-transparent text-[14px] text-primary font-semibold border-none focus:ring-0 focus:outline-none text-center font-mono placeholder:text-muted-foreground/60"
-                                placeholder="bauset.es/..."
+                                placeholder={t('textLayerEditor.urlPlaceholder', { defaultValue: 'yourbrand.com/...' })}
                                 style={{ width: `${Math.max(10, (ctaUrl?.length || 12))}ch`, fontSize: 'var(--tl-url)' }}
                             />
                             {ctaUrl && (
                                 <button
-                                    aria-label="Clear URL"
+                                    aria-label={t('textLayerEditor.clearUrl', { defaultValue: 'Clear URL' })}
                                     onClick={() => onCtaUrlChange?.('')}
                                     className="rounded-full bg-destructive/70 text-destructive-foreground shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
                                     style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}

@@ -1,11 +1,15 @@
-﻿'use client';
+﻿'use client'
+
+import { Loader2 } from '@/components/ui/spinner'
+;
 
 import { useRef, KeyboardEvent } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
-import { Loader2, Monitor, Building2, Sparkles, Image, Maximize2, Trash2, Upload, Info } from 'lucide-react';
+import { Monitor, Building2, Sparkles, Image, Maximize2, Trash2, Upload, Info } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface VisualAssetsProps {
     screenshotUrl?: string;
@@ -30,6 +34,7 @@ export function VisualAssets({
     onOpenLightbox,
     onToggleSelection
 }: VisualAssetsProps) {
+    const { t } = useTranslation('brandKit');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleDrop = (e: React.DragEvent) => {
@@ -60,10 +65,10 @@ export function VisualAssets({
                     <CardHeader className="pb-2">
                         <CardTitle className="flex items-center gap-2 text-base text-foreground">
                             <Monitor className="w-5 h-5 text-[var(--accent)]" />
-                            Captura Web
+                            {t('visualAssets.webScreenshotTitle', { defaultValue: 'Website screenshot' })}
                         </CardTitle>
                         <CardDescription className="text-xs text-muted-foreground mt-1">
-                            Vista previa del sitio
+                            {t('visualAssets.webScreenshotDescription', { defaultValue: 'Website preview' })}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0 overflow-hidden bg-muted/30">
@@ -78,7 +83,7 @@ export function VisualAssets({
                         ) : (
                             <div className="flex flex-col items-center justify-center p-8 text-center text-[var(--text-secondary)] min-h-[200px]">
                                 <Monitor className="w-10 h-10 opacity-20 mb-1" />
-                                <p className="text-xs italic">No hay captura disponible</p>
+                                <p className="text-xs italic">{t('visualAssets.noScreenshot', { defaultValue: 'No screenshot available' })}</p>
                             </div>
                         )}
                     </CardContent>
@@ -93,7 +98,7 @@ export function VisualAssets({
                         <CardHeader className="pb-2">
                             <CardTitle className="flex items-center gap-2 text-base text-foreground">
                                 <Building2 className="w-5 h-5 text-primary" />
-                                Logo principal
+                                {t('visualAssets.mainLogo', { defaultValue: 'Main logo' })}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex items-center justify-center p-4 min-h-[140px] transparency-grid border-border">
@@ -106,7 +111,7 @@ export function VisualAssets({
                             ) : (
                                 <div className="text-center text-muted-foreground opacity-50">
                                     <Building2 className="w-8 h-8 mb-1" />
-                                    <p className="text-[10px]">Sin logo</p>
+                                    <p className="text-[10px]">{t('visualAssets.noLogo', { defaultValue: 'No logo' })}</p>
                                 </div>
                             )}
                         </CardContent>
@@ -117,7 +122,7 @@ export function VisualAssets({
                         <CardHeader className="pb-2">
                             <CardTitle className="flex items-center gap-2 text-base text-foreground">
                                 <Sparkles className="w-5 h-5 text-primary" />
-                                Favicon
+                                {t('visualAssets.faviconTitle', { defaultValue: 'Favicon' })}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex items-center justify-center p-4 min-h-[140px] transparency-grid border-border">
@@ -130,7 +135,7 @@ export function VisualAssets({
                             ) : (
                                 <div className="text-center text-muted-foreground opacity-50">
                                     <Sparkles className="w-8 h-8 mb-1" />
-                                    <p className="text-[10px]">Sin favicon</p>
+                                    <p className="text-[10px]">{t('visualAssets.noFavicon', { defaultValue: 'No favicon' })}</p>
                                 </div>
                             )}
                         </CardContent>
@@ -142,10 +147,10 @@ export function VisualAssets({
                     <CardHeader className="pb-2">
                         <CardTitle className="flex items-center gap-2 text-base text-foreground">
                             <Image className="w-5 h-5 text-[var(--accent)]" />
-                            Galería de Imágenes Analizadas
+                            {t('visualAssets.analyzedGallery', { defaultValue: 'Analyzed image gallery' })}
                         </CardTitle>
                         <CardDescription className="text-xs text-muted-foreground mt-1">
-                            Recursos visuales extraídos
+                            {t('visualAssets.extractedAssets', { defaultValue: 'Extracted visual assets' })}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-4 bg-muted/30">
@@ -161,7 +166,7 @@ export function VisualAssets({
                                     onKeyDown={(event) => handleKeyActivate(event, () => onOpenLightbox(item.url))}
                                     role="button"
                                     tabIndex={0}
-                                    aria-label={`Abrir imagen ${idx + 1} en visor`}
+                                    aria-label={t('visualAssets.openInLightbox', { index: idx + 1, defaultValue: 'Open image {{index}} in viewer' })}
                                 >
                                     <img
                                         src={item.url}
@@ -220,7 +225,7 @@ export function VisualAssets({
                                     onKeyDown={(event) => handleKeyActivate(event, () => fileInputRef.current?.click())}
                                     role="button"
                                     tabIndex={0}
-                                    aria-label="Subir nueva imagen al kit"
+                                    aria-label={t('visualAssets.uploadNewImage', { defaultValue: 'Upload new image to the kit' })}
                                 >
                                     <input
                                         type="file"
@@ -232,11 +237,11 @@ export function VisualAssets({
                                         }}
                                     />
                                     {isUploading ? (
-                                        <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+                                        <Loader2 className="w-6 h-6 text-muted-foreground" />
                                     ) : (
                                         <>
                                             <Upload className="w-5 h-5 text-[var(--text-secondary)]" />
-                                            <span className="text-[10px] font-medium text-[var(--text-secondary)]">Subir</span>
+                                            <span className="text-[10px] font-medium text-[var(--text-secondary)]">{t('visualAssets.upload', { defaultValue: 'Upload' })}</span>
                                         </>
                                     )}
                                 </div>
@@ -260,3 +265,5 @@ export function VisualAssets({
         </div>
     );
 }
+
+

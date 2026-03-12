@@ -1,9 +1,11 @@
-'use client'
+﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import React, { useState, useEffect, useRef } from 'react'
-import { Sparkles, Wand2, Loader2, ArrowUp } from 'lucide-react'
+import { ArrowUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { IntentCategory } from '@/lib/creation-flow-types'
+import { useTranslation } from 'react-i18next'
 
 interface LazyPromptInputProps {
     intent: IntentCategory | null
@@ -20,46 +22,43 @@ export function LazyPromptInput({
     onAnalyze,
     isAnalyzing = false
 }: LazyPromptInputProps) {
+    const { t } = useTranslation('common')
     const [isFocused, setIsFocused] = useState(false)
-    const [placeholder, setPlaceholder] = useState("Describe lo que quieres crear...")
+    const [placeholder, setPlaceholder] = useState(t('lazyPrompt.default', { defaultValue: 'Describe what you want to create...' }))
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
     useEffect(() => {
         if (!intent) {
-            setPlaceholder("Describe tu visión creativa... ✨")
+            setPlaceholder(t('lazyPrompt.creativeVision', { defaultValue: 'Describe your creative vision... ✨' }))
             return
         }
 
-        // Dynamic placeholders based on intent
         switch (intent) {
             case 'oferta':
-                setPlaceholder("Ej: Oferta de verano 50% en zapatillas running...")
+                setPlaceholder(t('lazyPrompt.offer', { defaultValue: 'Ex: Summer sale, 50% off on running shoes...' }))
                 break
             case 'evento':
-                setPlaceholder("Ej: Webinar sobre IA este Jueves a las 19h...")
+                setPlaceholder(t('lazyPrompt.event', { defaultValue: 'Ex: AI webinar this Thursday at 7pm...' }))
                 break
             case 'cita':
-                setPlaceholder("Ej: La creatividad es la inteligencia divirtiéndose...")
+                setPlaceholder(t('lazyPrompt.quote', { defaultValue: 'Ex: Creativity is intelligence having fun...' }))
                 break
             case 'comunicado':
-                setPlaceholder("Ej: Aviso importante: Nuestras oficinas cerrarán...")
+                setPlaceholder(t('lazyPrompt.announcement', { defaultValue: 'Ex: Important notice: our offices will close...' }))
                 break
             case 'reto':
-                setPlaceholder("Ej: ¿Puedes encontrar las 3 diferencias?...")
+                setPlaceholder(t('lazyPrompt.challenge', { defaultValue: 'Ex: Can you find the 3 differences?...' }))
                 break
             default:
-                setPlaceholder("Describe tu idea y la IA rellenará los campos...")
+                setPlaceholder(t('lazyPrompt.aiFill', { defaultValue: 'Describe your idea and AI will fill the fields...' }))
         }
-    }, [intent])
+    }, [intent, t])
 
-    // Auto-resize textarea
     useEffect(() => {
         const textarea = textareaRef.current
         if (textarea) {
-            // Reset height to auto to get the correct scrollHeight
             textarea.style.height = 'auto'
-            // Set height to scrollHeight (content height)
-            const newHeight = Math.max(72, Math.min(textarea.scrollHeight, 192)) // min 4.5rem (72px), max 12rem (192px)
+            const newHeight = Math.max(72, Math.min(textarea.scrollHeight, 192))
             textarea.style.height = `${newHeight}px`
         }
     }, [rawMessage])
@@ -67,22 +66,16 @@ export function LazyPromptInput({
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault()
-            onAnalyze()
+            void onAnalyze()
         }
     }
 
     return (
-        <div className="w-full max-w-2xl mx-auto mb-6">
-            {/* Floating Capsule Container */}
+        <div className="mx-auto mb-6 w-full max-w-2xl">
             <div className={cn(
-                "glass-panel rounded-3xl p-3 pl-5 flex items-start gap-3 transition-all duration-300",
-                isFocused
-                    ? "shadow-aero-glow ring-2 ring-primary/30"
-                    : "shadow-aero hover:shadow-aero-lg"
+                'glass-panel flex items-start gap-3 rounded-3xl p-3 pl-5 transition-all duration-300',
+                isFocused ? 'ring-2 ring-primary/30 shadow-aero-glow' : 'shadow-aero hover:shadow-aero-lg'
             )}>
-
-
-                {/* Text Input - Textarea with auto-grow */}
                 <textarea
                     ref={textareaRef}
                     value={rawMessage}
@@ -93,41 +86,35 @@ export function LazyPromptInput({
                     placeholder={placeholder}
                     disabled={isAnalyzing}
                     rows={4}
-                    className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/60 text-sm font-medium min-w-0 resize-none scrollbar-hide overflow-hidden"
-                    style={{
-                        minHeight: '4.5rem',
-                        maxHeight: '12rem'
-                    }}
+                    className="min-w-0 flex-1 resize-none overflow-hidden border-none bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/60 scrollbar-hide"
+                    style={{ minHeight: '4.5rem', maxHeight: '12rem' }}
                 />
 
-                {/* Generate Button */}
                 <button
-                    onClick={() => onAnalyze()}
+                    onClick={() => void onAnalyze()}
                     disabled={isAnalyzing || !rawMessage.trim()}
                     className={cn(
-                        "bg-primary text-primary-foreground p-3 rounded-full transition-all flex items-center justify-center group shrink-0 mt-1",
-                        rawMessage.trim() && !isAnalyzing
-                            ? "opacity-100 shadow-aero-glow hover:scale-110 active:scale-95"
-                            : "opacity-50 cursor-not-allowed"
+                        'group mt-1 flex shrink-0 items-center justify-center rounded-full bg-primary p-3 text-primary-foreground transition-all',
+                        rawMessage.trim() && !isAnalyzing ? 'opacity-100 shadow-aero-glow hover:scale-110 active:scale-95' : 'cursor-not-allowed opacity-50'
                     )}
                 >
                     {isAnalyzing ? (
-                        <Loader2 className="h-5 w-5 text-primary-foreground animate-spin" />
+                        <Loader2 className="h-5 w-5 text-primary-foreground" />
                     ) : (
-                        <ArrowUp className="h-5 w-5 text-primary-foreground group-hover:scale-110 transition-transform" />
+                        <ArrowUp className="h-5 w-5 text-primary-foreground transition-transform group-hover:scale-110" />
                     )}
-                    <span className="sr-only">Generar</span>
+                    <span className="sr-only">{t('lazyPrompt.generateAria', { defaultValue: 'Generate' })}</span>
                 </button>
             </div>
 
-            {/* Micro-text hint */}
             <p className={cn(
-                "text-[10px] text-center mt-3 text-muted-foreground/60 font-medium tracking-wider uppercase transition-opacity duration-300",
-                isFocused ? "opacity-100" : "opacity-0"
+                'mt-3 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 transition-opacity duration-300',
+                isFocused ? 'opacity-100' : 'opacity-0'
             )}>
-                Presiona <kbd className="bg-white/40 dark:bg-white/10 px-1.5 py-0.5 rounded text-[9px]">Enter</kbd> para generar con IA
+                {t('lazyPrompt.enterHintBefore', { defaultValue: 'Press' })} <kbd className="rounded bg-white/40 px-1.5 py-0.5 text-[9px] dark:bg-white/10">Enter</kbd> {t('lazyPrompt.enterHintAfter', { defaultValue: 'to generate with AI' })}
             </p>
         </div>
     )
 }
+
 

@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import { useCreationFlow } from '@/hooks/useCreationFlow'
 import { LayoutSelector } from './creation-flow/LayoutSelector'
 import { SocialFormatSelector } from './creation-flow/SocialFormatSelector'
@@ -8,7 +9,7 @@ import { ContentImageCard } from './creation-flow/ContentImageCard'
 import { StyleImageCard } from './creation-flow/StyleImageCard'
 import { AuxiliaryLogosCard } from './creation-flow/AuxiliaryLogosCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Layers, ImagePlus, Wand2, Loader2, Fingerprint, RotateCcw, History, Plus, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { Palette, Layout, Layers, ImagePlus, Wand2, Fingerprint, RotateCcw, History, Plus, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -21,6 +22,7 @@ import { api } from '../../../convex/_generated/api'
 import { useToast } from '@/hooks/use-toast'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useUI } from '@/contexts/UIContext'
+import { useTranslation } from 'react-i18next'
 import { useStylePresetImages } from '@/hooks/useStylePresetImages'
 import {
     IntentCategory,
@@ -51,14 +53,6 @@ import type { CompositionSummary } from '@/lib/admin-compositions-actions'
 
 const RESET_USES4_FLAG = 'admin_layout_ratings_reset_uses4_done_v1'
 
-const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = {
-    1: { title: "Tu Idea", description: "Escribe tu idea y pulsa el boton para crear la publicación" },
-    2: { title: "Diseño", description: "Elige una plantilla por intent detectado o fuerza manualmente otro intent." },
-    3: { title: "Formato", description: "Selecciona las dimensiones según la red social." },
-    4: { title: "Imagen", description: "Sube una referencia o usa una del Kit de marca." },
-    6: { title: "Marca", description: "Elige la variante del logo y ajusta la paleta cromática." }
-}
-
 type BrandColorRole = 'Texto' | 'Fondo' | 'Acento'
 type DraggedBrandColor = { role: BrandColorRole; color: string } | null
 
@@ -72,6 +66,7 @@ function normalizeHexColor(color: string): string {
 function RoleColorSwatch({
     color,
     onCommit,
+    applyLabel,
     draggable = false,
     onDragStart,
     onDragEnd,
@@ -79,6 +74,7 @@ function RoleColorSwatch({
 }: {
     color: string
     onCommit: (nextColor: string) => void
+    applyLabel: string
     draggable?: boolean
     onDragStart?: (event: React.DragEvent<HTMLButtonElement>) => void
     onDragEnd?: (event: React.DragEvent<HTMLButtonElement>) => void
@@ -125,7 +121,7 @@ function RoleColorSwatch({
                         setOpen(false)
                     }}
                 >
-                    Aplicar color
+                    {applyLabel}
                 </Button>
             </PopoverContent>
         </Popover>
@@ -135,9 +131,11 @@ function RoleColorSwatch({
 function AddAccentSwatch({
     disabled,
     onAdd,
+    label,
 }: {
     disabled?: boolean
     onAdd: (nextColor: string) => void
+    label: string
 }) {
     const [open, setOpen] = useState(false)
     const [draft, setDraft] = useState('#4f46e5')
@@ -152,7 +150,7 @@ function AddAccentSwatch({
                         "hover:text-primary hover:border-primary/60 transition-colors",
                         disabled && "opacity-40 cursor-not-allowed"
                     )}
-                    title="Añadir acento"
+                    title={label}
                 >
                     <Plus className="w-5 h-5" />
                 </button>
@@ -177,7 +175,7 @@ function AddAccentSwatch({
                         setOpen(false)
                     }}
                 >
-                    Añadir acento
+                    {label}
                 </Button>
             </PopoverContent>
         </Popover>
@@ -196,6 +194,7 @@ interface ControlsPanelProps {
     canGenerate: boolean
     onUnifiedAction: () => void
     onAnalyze: () => Promise<any>
+    onCancelAnalyze?: () => void
     isAdmin?: boolean
     adminEmail?: string
     compositionMode?: 'basic' | 'advanced'
@@ -219,6 +218,7 @@ interface ControlsPanelProps {
     sessionSavedAt?: string | null
     sessionSaveError?: string | null
     hasUnsavedChanges?: boolean
+    isCancelingAnalyze?: boolean
 }
 
 export function ControlsPanel({
@@ -233,6 +233,7 @@ export function ControlsPanel({
     canGenerate,
     onUnifiedAction,
     onAnalyze,
+    onCancelAnalyze,
     isAdmin = false,
     adminEmail,
     compositionMode,
@@ -251,12 +252,22 @@ export function ControlsPanel({
     sessionSavedAt = null,
     sessionSaveError = null,
     hasUnsavedChanges = false,
+    isCancelingAnalyze = false,
 }: ControlsPanelProps) {
+    const { t, i18n } = useTranslation('image')
     const { toast } = useToast()
     const { panelPosition, assistanceEnabled } = useUI()
+    const [isMobile, setIsMobile] = useState(false)
     const [showLabCatalog, setShowLabCatalog] = useState(compositionMode === 'advanced')
     const [layoutIntentOverride, setLayoutIntentOverride] = useState<'auto' | IntentCategory>('auto')
     const [draggedBrandColor, setDraggedBrandColor] = useState<DraggedBrandColor>(null)
+    const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = {
+        1: { title: t('ui.ideaTitle'), description: t('ui.ideaDescription') },
+        2: { title: t('ui.designTitle'), description: t('ui.designDescription') },
+        3: { title: t('ui.formatTitle'), description: t('ui.formatDescription') },
+        4: { title: t('ui.imageTitle'), description: t('ui.imageDescription') },
+        6: { title: t('ui.brandTitle'), description: t('ui.brandDescription') }
+    }
     const upsertLayoutVote = useMutation(api.layoutRatings.upsertLayoutVote)
     const migrateLegacyRatings = useMutation(api.layoutRatings.migrateLegacyRatings)
     const resetLayoutRatings = useMutation(api.layoutRatings.resetLayoutRatings)
@@ -272,6 +283,13 @@ export function ControlsPanel({
     const step3Ref = useRef<HTMLDivElement>(null)
     const step4Ref = useRef<HTMLDivElement>(null)
     const step6Ref = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const updateViewport = () => setIsMobile(window.innerWidth < 768)
+        updateViewport()
+        window.addEventListener('resize', updateViewport)
+        return () => window.removeEventListener('resize', updateViewport)
+    }, [])
 
     const {
         state,
@@ -350,7 +368,11 @@ export function ControlsPanel({
     const brandKitImages = (activeBrandKit?.images || []).reduce((acc: Array<{ id: string; url: string; name?: string }>, img, idx) => {
         const imageUrl = typeof img === 'string' ? img : img.url
         if (imageUrl && !acc.find(i => i.url === imageUrl)) {
-            acc.push({ id: imageUrl, url: imageUrl, name: `Imagen ${idx + 1}` })
+            acc.push({
+                id: imageUrl,
+                url: imageUrl,
+                name: t('ui.brandKitImageLabel', { defaultValue: 'Image {{index}}', index: idx + 1 })
+            })
         }
         return acc
     }, [])
@@ -407,8 +429,12 @@ export function ControlsPanel({
                     clearLegacyLayoutRatingStorage()
                     markLayoutRatingsMigrationAsDone()
                     toast({
-                        title: 'Ratings migrados a Convex',
-                        description: 'Se importaron votos y marcas previas de diseños.',
+                        title: t('ui.layoutVotesImportedTitle', {
+                            defaultValue: 'Ratings migrated to Convex',
+                        }),
+                        description: t('ui.layoutVotesImportedDescription', {
+                            defaultValue: 'Previous layout votes and marks were imported.',
+                        }),
                     })
                 }
             } catch (error) {
@@ -438,8 +464,13 @@ export function ControlsPanel({
                     window.localStorage.setItem(RESET_USES4_FLAG, '1')
                     if (result?.updated > 0) {
                         toast({
-                            title: 'Ratings corregidos',
-                            description: `Se pusieron a 0 ${result.updated} diseños con 4 usos.`,
+                            title: t('ui.layoutRatingsResetTitle', {
+                                defaultValue: 'Ratings corrected',
+                            }),
+                            description: t('ui.layoutRatingsResetDescription', {
+                                defaultValue: '{{count}} layouts with 4 uses were reset to 0.',
+                                count: result.updated,
+                            }),
                         })
                     }
                 }
@@ -603,8 +634,10 @@ export function ControlsPanel({
         if (!isAdmin || !adminEmail || !state.selectedLayout || !currentGenerationKey) return
         if (hasVotedCurrentGeneration) {
             toast({
-                title: 'Ya votada',
-                description: 'Esta generación ya tiene voto para este diseño.',
+                title: t('ui.voteAlreadyRecordedTitle', { defaultValue: 'Already rated' }),
+                description: t('ui.voteAlreadyRecordedCurrentDescription', {
+                    defaultValue: 'This generation already has a vote for this layout.',
+                }),
             })
             return
         }
@@ -617,19 +650,28 @@ export function ControlsPanel({
             })
             if (nextStats.alreadyVoted) {
                 toast({
-                    title: 'Ya votada',
-                    description: 'Esta generación ya tenía voto registrado.',
+                    title: t('ui.voteAlreadyRecordedTitle', { defaultValue: 'Already rated' }),
+                    description: t('ui.voteAlreadyRecordedDescription', {
+                        defaultValue: 'This generation already had a registered vote.',
+                    }),
                 })
                 return
             }
             toast({
-                title: 'Voto registrado',
-                description: `${score}/5 · media ${nextStats.average.toFixed(2)} · usos ${nextStats.uses}`,
+                title: t('ui.voteRegisteredTitle', { defaultValue: 'Vote saved' }),
+                description: t('ui.voteRegisteredDescription', {
+                    defaultValue: '{{score}}/5 · avg {{average}} · uses {{uses}}',
+                    score,
+                    average: nextStats.average.toFixed(2),
+                    uses: nextStats.uses,
+                }),
             })
         } catch (error: any) {
             toast({
-                title: 'Error al guardar voto',
-                description: error?.message || 'No se pudo registrar la votación.',
+                title: t('ui.voteSaveErrorTitle', { defaultValue: 'Error saving vote' }),
+                description: error?.message || t('ui.voteSaveErrorDescription', {
+                    defaultValue: 'The vote could not be recorded.',
+                }),
                 variant: 'destructive',
             })
         }
@@ -642,29 +684,31 @@ export function ControlsPanel({
                 <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader
                         icon={History}
-                        title="Historial"
+                        title={t('ui.history')}
                         className="mb-2"
                         extra={
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
                                     {isSavingSession ? (
                                         <>
-                                            <Loader2 className="w-3 h-3 animate-spin" />
-                                            Guardando...
+                                            <Loader2 className="w-3 h-3" />
+                                            {t('ui.saving')}
                                         </>
                                     ) : sessionSaveError ? (
                                         <>
                                             <AlertCircle className="w-3 h-3" />
-                                            Error
+                                            {t('ui.errorShort')}
                                         </>
                                     ) : hasUnsavedChanges ? (
-                                        'Hay cambios por guardar'
+                                        t('ui.unsavedChanges')
                                     ) : sessionSavedAt ? (
                                         <>
                                             <CheckCircle2 className="w-3 h-3" />
-                                            {`Guardado ${new Date(sessionSavedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
+                                            {t('ui.savedAt', {
+                                                time: new Date(sessionSavedAt).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })
+                                            })}
                                         </>
-                                    ) : 'Sin cambios'}
+                                    ) : t('ui.noChanges')}
                                 </span>
                                 <Button
                                     variant="ghost"
@@ -672,10 +716,10 @@ export function ControlsPanel({
                                     className="h-7 w-7"
                                     onClick={onSaveSessionNow}
                                     disabled={isSavingSession || !hasUnsavedChanges}
-                                    title="Guardar historial ahora"
+                                    title={t('ui.saveHistoryNow')}
                                 >
                                     {isSavingSession ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        <Loader2 className="w-3.5 h-3.5" />
                                     ) : (
                                         <Save
                                             className={cn(
@@ -699,10 +743,10 @@ export function ControlsPanel({
                                 if (value) onSelectSession?.(value)
                             }}
                         >
-                            {effectiveSessionId ? null : <option value="">Sin sesiones</option>}
+                            {effectiveSessionId ? null : <option value="">{t('ui.noSessions')}</option>}
                             {sessions.map((session) => (
                                 <option key={session.id} value={session.id}>
-                                    {session.title} {session.active ? '(Activa)' : ''} - {new Date(session.updatedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                    {session.title} {session.active ? `(${t('ui.activeSession')})` : ''} - {new Date(session.updatedAt).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })}
                                 </option>
                             ))}
                         </select>
@@ -716,7 +760,7 @@ export function ControlsPanel({
                             disabled={isCreatingSession}
                         >
                             <Plus className="w-3 h-3" />
-                            Nueva
+                            {t('ui.newSession')}
                         </Button>
                         <Button
                             variant="outline"
@@ -725,7 +769,7 @@ export function ControlsPanel({
                             onClick={onRenameSession}
                             disabled={!effectiveSessionId}
                         >
-                            Renombrar sesión
+                            {t('ui.renameSession')}
                         </Button>
                         <Button
                             variant="outline"
@@ -734,7 +778,7 @@ export function ControlsPanel({
                             onClick={onDeleteSession}
                             disabled={!effectiveSessionId}
                         >
-                            Borrar sesión
+                            {t('ui.deleteSession')}
                         </Button>
                         <Button
                             variant="outline"
@@ -742,7 +786,7 @@ export function ControlsPanel({
                             className="h-7 px-2 text-[10px]"
                             onClick={onClearSessions}
                         >
-                            Borrar historial
+                            {t('ui.deleteHistory')}
                         </Button>
                     </div>
                 </div>
@@ -754,14 +798,17 @@ export function ControlsPanel({
                     )}
                     <SectionHeader
                         icon={Wand2}
-                        title="¿Qué quieres crear?"
+                        title={t('ui.whatToCreate')}
                     />
                     <div className="relative">
                         <Textarea
                             value={promptValue}
                             onChange={(e) => onPromptChange(e.target.value)}
-                            placeholder="Ej: En mi sector se usa mucho la palabra 'lead' pero los clientes no saben qué es. Quiero un post que sea como un diccionario explicando qué significa exactamente."
-                            className="min-h-[100px] text-sm resize-none bg-background border border-border focus:ring-1 focus:ring-primary focus:border-primary pb-12 pr-2 transition-all"
+                            placeholder={t('ui.ideaPlaceholder')}
+                            className={cn(
+                                'min-h-[100px] text-sm resize-none bg-background border border-border focus:ring-1 focus:ring-primary focus:border-primary transition-all',
+                                isMobile ? 'pb-3 pr-2' : 'pb-12 pr-2'
+                            )}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault()
@@ -771,15 +818,40 @@ export function ControlsPanel({
                                 }
                             }}
                         />
-                        <div className="absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2">
-                            {isMagicParsing && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        <div className={cn(
+                            isMobile
+                                ? 'mt-3 flex items-center justify-end gap-2'
+                                : 'absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2'
+                        )}>
+                            {isMagicParsing && <Loader2 className="w-4 h-4 text-primary" />}
+                            {isMagicParsing && onCancelAnalyze ? (
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={onCancelAnalyze}
+                                    className={cn(
+                                        'h-8 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground',
+                                        isMobile ? 'w-auto' : ''
+                                    )}
+                                >
+                                    {t('ui.stop')}
+                                </Button>
+                            ) : null}
+                            {isCancelingAnalyze ? (
+                                <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                                    {t('ui.canceling')}
+                                </span>
+                            ) : null}
                             <Button
                                 size="sm"
                                 onClick={onAnalyze}
                                 disabled={isMagicParsing || !promptValue.trim()}
-                                className="group feedback-action ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
+                                className={cn(
+                                    'group feedback-action h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap',
+                                    isMobile ? 'w-full justify-center' : 'ml-auto'
+                                )}
                             >
-                                Analizar
+                                {t('ui.analyze')}
                             </Button>
                         </div>
                     </div>
@@ -791,15 +863,15 @@ export function ControlsPanel({
                         onApply={(index) => {
                             creationFlow.applySuggestion(index)
                             toast({
-                                title: "Sugerencia aplicada",
-                                description: "Se han actualizado los textos.",
+                                title: t('ui.suggestionAppliedTitle'),
+                                description: t('ui.suggestionAppliedDescription'),
                             })
                         }}
                         onUndo={() => {
                             creationFlow.undoSuggestion()
                             toast({
-                                title: "Cambios revertidos",
-                                description: "Se ha vuelto al contenido original.",
+                                title: t('ui.changesRevertedTitle'),
+                                description: t('ui.changesRevertedDescription'),
                             })
                         }}
                     />
@@ -819,16 +891,16 @@ export function ControlsPanel({
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 2 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[2]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step2Ref} />
                                 <SectionHeader
                                     icon={Layout}
-                                    title="Diseño"
+                                    title={t('ui.designTitle')}
                                     extra={
                                         <div className="flex items-center gap-2">
                                             <span className={cn('text-[10px] font-medium', showLabCatalog ? 'text-primary' : 'text-muted-foreground')}>
-                                                Modo avanzado
+                                                {t('ui.designAdvancedAria')}
                                             </span>
                                             <Switch
                                                 checked={showLabCatalog}
                                                 onCheckedChange={setShowLabCatalog}
-                                                aria-label="Activar modo avanzado de diseño"
+                                                aria-label={t('ui.designAdvancedAria')}
                                             />
                                         </div>
                                     }
@@ -842,11 +914,14 @@ export function ControlsPanel({
                                                     onValueChange={(value) => setLayoutIntentOverride(value as 'auto' | IntentCategory)}
                                                 >
                                                     <SelectTrigger className="h-8 text-xs">
-                                                        <SelectValue placeholder="Selecciona intent" />
+                                                        <SelectValue placeholder={t('ui.selectIntent')} />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="auto">
-                                                            {`Auto (detectado: ${selectedIntentMeta?.name || state.selectedIntent})`}
+                                                            {t('ui.autoDetectedIntent', {
+                                                                defaultValue: 'Auto (detected: {{intent}})',
+                                                                intent: selectedIntentMeta?.name || state.selectedIntent,
+                                                            })}
                                                         </SelectItem>
                                                         {INTENT_CATALOG.map((intent) => (
                                                             <SelectItem key={intent.id} value={intent.id}>
@@ -868,7 +943,7 @@ export function ControlsPanel({
                                     ) : (
                                         <div className="rounded-xl border border-border/70 bg-muted/25 px-3 py-2">
                                             <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                                Modo básico activo: el diseño se selecciona automáticamente según lo que escribas. Activa el modo avanzado si quieres más control.
+                                                {t('ui.basicModeDescription')}
                                             </p>
                                         </div>
                                     )}
@@ -879,7 +954,7 @@ export function ControlsPanel({
                         {/* STEP 3: FORMAT */}
                         <div ref={step3Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 3 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[3]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step3Ref} />
-                                <SectionHeader icon={Layers} title="Formato" />
+                                <SectionHeader icon={Layers} title={t('ui.formatTitle')} />
                                 <SocialFormatSelector
                                     selectedPlatform={state.selectedPlatform}
                                     selectedFormat={state.selectedFormat}
@@ -888,7 +963,7 @@ export function ControlsPanel({
                                 />
                                 {!state.selectedFormat && (
                                     <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
-                                        Selecciona la plataforma y un formato para continuar.
+                                        {t('ui.selectPlatformDescription')}
                                     </p>
                                 )}
                         </div>
@@ -898,7 +973,7 @@ export function ControlsPanel({
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 4 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[4]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step4Ref} />
                                 <SectionHeader
                                     icon={ImagePlus}
-                                    title={state.imageSourceMode === 'generate' ? 'Contenido generado por IA' : 'Contenido del usuario'}
+                                    title={state.imageSourceMode === 'generate' ? t('ui.generatedContentTitle') : t('ui.userContentTitle')}
                                     extra={(
                                         <Switch
                                             checked={state.imageSourceMode === 'generate'}
@@ -930,7 +1005,7 @@ export function ControlsPanel({
 
                         {/* STEP 4B: STYLE */}
                         <div className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
-                                <SectionHeader icon={Palette} title="Estilo" />
+                                <SectionHeader icon={Palette} title={t('ui.styleTitle', { defaultValue: 'Estilo' })} />
                                 <StyleImageCard
                                     uploadedImages={state.uploadedImages}
                                     onUpload={uploadImage}
@@ -951,7 +1026,7 @@ export function ControlsPanel({
                                         }
                                         setStylePreset({
                                             id: preset.id,
-                                            name: preset.name || 'Estilo',
+                                            name: preset.name || t('ui.styleFallbackName', { defaultValue: 'Style' }),
                                         })
                                     }}
                                     isAnalyzing={state.isAnalyzing || false}
@@ -960,15 +1035,15 @@ export function ControlsPanel({
                                 <div className="mt-4 rounded-xl border border-border/70 bg-background/65 px-3 py-3">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="space-y-1">
-                                            <p className="text-[12px] font-medium leading-none">Aplicar el estilo también a las fuentes</p>
+                                            <p className="text-[12px] font-medium leading-none">{t('ui.styleTypographyTitle')}</p>
                                             <p className="text-[11px] leading-relaxed text-muted-foreground">
-                                                Si lo activas, el título y el párrafo heredan mejor el lenguaje visual del estilo. El párrafo seguirá siendo claro y legible.
+                                                {t('ui.styleTypographyDescription')}
                                             </p>
                                         </div>
                                         <Switch
                                             checked={Boolean(state.applyStyleToTypography)}
                                             onCheckedChange={setApplyStyleToTypography}
-                                            aria-label="Aplicar el estilo también a las fuentes"
+                                            aria-label={t('ui.styleTypographyAria')}
                                         />
                                     </div>
                                 </div>
@@ -993,10 +1068,10 @@ export function ControlsPanel({
                         {/* STEP 6: KIT DE MARCA */}
                         <div ref={step6Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-6`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep >= 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
-                                <SectionHeader icon={Fingerprint} title="Kit de marca" />
+                                <SectionHeader icon={Fingerprint} title={t('ui.brandKitSection')} />
 
                                 <div className="space-y-3">
-                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Logo</p>
+                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.logo')}</p>
                                     <BrandingConfigurator
                                         selectedLayout={selectedLayoutMeta || null}
                                         selectedLogoId={state.selectedLogoId}
@@ -1011,21 +1086,21 @@ export function ControlsPanel({
 
                                 <div className="space-y-3 border-t border-border/60 pt-4">
                                     <div className="flex items-center justify-between gap-2">
-                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Colores</p>
+                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.colors')}</p>
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => {
                                                 refreshBrandColorsFromKit()
                                                 toast({
-                                                    title: 'Colores recargados',
-                                                    description: 'Se volvieron a importar los colores del Kit de marca.',
+                                                    title: t('ui.colorsReloadedTitle'),
+                                                    description: t('ui.colorsReloadedDescription'),
                                                 })
                                             }}
                                             className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
                                         >
                                             <RotateCcw className="w-3 h-3" />
-                                            Recargar
+                                            {t('ui.reload')}
                                         </Button>
                                     </div>
 
@@ -1051,6 +1126,7 @@ export function ControlsPanel({
                                                 <RoleColorSwatch
                                                     color={brandColorsByRole.Texto[0]}
                                                     onCommit={(nextColor) => replaceRoleColor('Texto', nextColor, brandColorsByRole.Texto[0])}
+                                                    applyLabel={t('ui.applyColor')}
                                                     draggable
                                                     onDragStart={() => setDraggedBrandColor({ role: 'Texto', color: brandColorsByRole.Texto[0] })}
                                                     onDragEnd={() => setDraggedBrandColor(null)}
@@ -1063,10 +1139,10 @@ export function ControlsPanel({
                                                     className="h-8 px-2 text-[10px]"
                                                     onClick={() => replaceRoleColor('Texto', '#111111')}
                                                 >
-                                                    Añadir
+                                                    {t('ui.add')}
                                                 </Button>
                                             )}
-                                            <span className="text-[10px] text-muted-foreground">Texto</span>
+                                            <span className="text-[10px] text-muted-foreground">{t('ui.text')}</span>
                                         </div>
 
                                         <div
@@ -1090,6 +1166,7 @@ export function ControlsPanel({
                                                 <RoleColorSwatch
                                                     color={brandColorsByRole.Fondo[0]}
                                                     onCommit={(nextColor) => replaceRoleColor('Fondo', nextColor, brandColorsByRole.Fondo[0])}
+                                                    applyLabel={t('ui.applyColor')}
                                                     draggable
                                                     onDragStart={() => setDraggedBrandColor({ role: 'Fondo', color: brandColorsByRole.Fondo[0] })}
                                                     onDragEnd={() => setDraggedBrandColor(null)}
@@ -1102,10 +1179,10 @@ export function ControlsPanel({
                                                     className="h-8 px-2 text-[10px]"
                                                     onClick={() => replaceRoleColor('Fondo', '#ffffff')}
                                                 >
-                                                    Añadir
+                                                    {t('ui.add')}
                                                 </Button>
                                             )}
-                                            <span className="text-[10px] text-muted-foreground">Fondo</span>
+                                            <span className="text-[10px] text-muted-foreground">{t('ui.background')}</span>
                                         </div>
 
                                         <div
@@ -1141,6 +1218,7 @@ export function ControlsPanel({
                                                         <RoleColorSwatch
                                                             color={accentColor}
                                                             onCommit={(nextColor) => replaceRoleColor('Acento', nextColor, accentColor)}
+                                                            applyLabel={t('ui.applyColor')}
                                                             sizeClass="w-12 h-12 rounded-full"
                                                             draggable
                                                             onDragStart={() => setDraggedBrandColor({ role: 'Acento', color: accentColor })}
@@ -1150,7 +1228,7 @@ export function ControlsPanel({
                                                             type="button"
                                                             className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-background border border-border/70 text-muted-foreground hover:text-destructive hover:border-destructive/50 inline-flex items-center justify-center shadow-sm opacity-0 group-hover/accent:opacity-100 group-focus-within/accent:opacity-100 transition-opacity"
                                                             onClick={() => removeBrandColor(accentColor)}
-                                                            title="Quitar acento"
+                                                            title={t('ui.removeAccent')}
                                                         >
                                                             <X className="w-3 h-3" />
                                                         </button>
@@ -1159,16 +1237,17 @@ export function ControlsPanel({
                                                 <AddAccentSwatch
                                                     onAdd={addAccentColor}
                                                     disabled={brandColorsByRole.Acento.length >= 5}
+                                                    label={t('ui.addAccent')}
                                                 />
                                             </div>
-                                            <span className="text-[10px] text-muted-foreground w-12 text-center">Acentos</span>
+                                            <span className="text-[10px] text-muted-foreground w-12 text-center">{t('ui.accents')}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-3 border-t border-border/60 pt-4">
                                     <div className="flex items-center justify-between gap-2">
-                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Enlace</p>
+                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.link')}</p>
                                         <Switch
                                             checked={state.ctaUrlEnabled}
                                             onCheckedChange={(checked) => {
@@ -1186,7 +1265,7 @@ export function ControlsPanel({
                                         />
                                     ) : (
                                         <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                            Activa el enlace si quieres mostrar una URL en la publicación.
+                                            {t('ui.linkDescription')}
                                         </p>
                                     )}
                                 </div>
@@ -1197,7 +1276,7 @@ export function ControlsPanel({
                                             {primaryEmail ? (
                                                 <div className="space-y-1.5">
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Email</p>
+                                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.email')}</p>
                                                         <Switch
                                                             checked={Boolean(getContactAssetById('contact-email-main'))}
                                                             onCheckedChange={(checked) => {
@@ -1205,7 +1284,7 @@ export function ControlsPanel({
                                                                     toggleContactAsset({
                                                                         id: 'contact-email-main',
                                                                         type: 'custom',
-                                                                        label: 'Email',
+                                                                        label: t('ui.email'),
                                                                         value: primaryEmail,
                                                                     })
                                                                 } else {
@@ -1233,7 +1312,7 @@ export function ControlsPanel({
                                                 return (
                                                     <div key={assetId} className="space-y-1.5">
                                                         <div className="flex items-center justify-between gap-2">
-                                                            <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Teléfono {idx + 1}</p>
+                                                            <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.phone', { index: idx + 1 })}</p>
                                                             <Switch
                                                                 checked={Boolean(selectedPhoneAsset)}
                                                                 onCheckedChange={(checked) => {
@@ -1241,7 +1320,7 @@ export function ControlsPanel({
                                                                         toggleContactAsset({
                                                                             id: assetId,
                                                                             type: 'custom',
-                                                                            label: `Teléfono ${idx + 1}`,
+                                                                            label: t('ui.phone', { index: idx + 1 }),
                                                                             value: phone,
                                                                         })
                                                                     } else {
@@ -1270,7 +1349,7 @@ export function ControlsPanel({
                                                 return (
                                                     <div key={assetId} className="space-y-1.5">
                                                         <div className="flex items-center justify-between gap-2">
-                                                            <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">Dirección {idx + 1}</p>
+                                                            <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.address', { index: idx + 1 })}</p>
                                                             <Switch
                                                                 checked={Boolean(selectedAddressAsset)}
                                                                 onCheckedChange={(checked) => {
@@ -1278,7 +1357,7 @@ export function ControlsPanel({
                                                                         toggleContactAsset({
                                                                             id: assetId,
                                                                             type: 'custom',
-                                                                            label: `Dirección ${idx + 1}`,
+                                                                            label: t('ui.address', { index: idx + 1 }),
                                                                             value: address,
                                                                         })
                                                                     } else {
@@ -1311,3 +1390,5 @@ export function ControlsPanel({
         </div>
     )
 }
+
+

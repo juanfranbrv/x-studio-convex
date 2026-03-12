@@ -5,7 +5,7 @@ import { Sparkles, Wand2, Eraser } from 'lucide-react'
 import { IntentRequiredField } from '@/lib/creation-flow-types'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface KeyDetailsSectionProps {
     intentRequiredFields: IntentRequiredField[]
@@ -20,13 +20,13 @@ export function KeyDetailsSection({
     onCustomTextChange,
     onGenerateCustomFieldCopy
 }: KeyDetailsSectionProps) {
+    const { t } = useTranslation('common')
     const [showOptionalFields, setShowOptionalFields] = useState(false)
 
     if (intentRequiredFields.length === 0 && Object.keys(customTexts).length === 0) {
         return null
     }
 
-    // Filter fields to render (exclude those mapped to global layout fields like headline/cta)
     const fieldsToRender = intentRequiredFields.filter(f => !f.mapsTo)
     const adHocFields = Object.entries(customTexts).filter(([id]) => !intentRequiredFields.find(f => f.id === id))
 
@@ -35,45 +35,47 @@ export function KeyDetailsSection({
     }
 
     return (
-        <div className="space-y-3 bg-primary/5 p-3 rounded-lg border border-primary/10 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="animate-in slide-in-from-top-2 space-y-3 rounded-lg border border-primary/10 bg-primary/5 p-3 fade-in duration-300">
             <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3" />
-                    Detalles Clave
+                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary">
+                    <Sparkles className="h-3 w-3" />
+                    {t('keyDetails.title', { defaultValue: 'Key details' })}
                 </label>
 
                 {fieldsToRender.some(f => f.optional) && (
                     <button
                         onClick={() => setShowOptionalFields(!showOptionalFields)}
-                        className="text-[10px] font-bold text-primary/60 hover:text-primary transition-colors uppercase tracking-widest flex items-center gap-1"
+                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary/60 transition-colors hover:text-primary"
                     >
-                        {showOptionalFields ? '- Menos detalles' : '+ Más detalles'}
+                        {showOptionalFields
+                            ? t('keyDetails.lessDetails', { defaultValue: '- Fewer details' })
+                            : t('keyDetails.moreDetails', { defaultValue: '+ More details' })}
                     </button>
                 )}
             </div>
 
-            <div className="space-y-4 mt-2">
+            <div className="mt-2 space-y-4">
                 {fieldsToRender.map((field) => {
                     const value = customTexts[field.id] || ''
                     const isOptionalEmpty = field.optional && !value
                     if (isOptionalEmpty && !showOptionalFields) return null
 
                     return (
-                        <div key={field.id} className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div key={field.id} className="animate-in slide-in-from-top-1 space-y-1.5 fade-in duration-200">
                             <div className="flex items-center justify-between">
-                                <label className="text-[11px] font-semibold text-foreground/80 flex items-center gap-1.5">
+                                <label className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/80">
                                     {field.label}
                                     {field.required && <span className="text-red-500">*</span>}
-                                    {field.optional && <span className="text-[9px] text-muted-foreground/60 font-normal ml-auto">(opcional)</span>}
+                                    {field.optional && <span className="ml-auto text-[9px] font-normal text-muted-foreground/60">{t('keyDetails.optional', { defaultValue: '(optional)' })}</span>}
                                 </label>
 
                                 {onGenerateCustomFieldCopy && (
                                     <button
                                         onClick={() => onGenerateCustomFieldCopy(field.id)}
-                                        className="p-1 rounded-md text-primary hover:bg-primary/10 transition-colors"
-                                        title={`Regenerar ${field.label}`}
+                                        className="rounded-md p-1 text-primary transition-colors hover:bg-primary/10"
+                                        title={t('keyDetails.regenerateField', { field: field.label, defaultValue: 'Regenerate {{field}}' })}
                                     >
-                                        <Wand2 className="w-3 h-3" />
+                                        <Wand2 className="h-3 w-3" />
                                     </button>
                                 )}
                             </div>
@@ -82,46 +84,45 @@ export function KeyDetailsSection({
                                     value={value}
                                     onChange={(e) => onCustomTextChange(field.id, e.target.value)}
                                     placeholder={field.placeholder}
-                                    className="w-full h-20 bg-background border-border/50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
+                                    className="h-20 w-full resize-none rounded-lg border border-border/50 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
                                 />
                             ) : (
                                 <Input
                                     value={value}
                                     onChange={(e) => onCustomTextChange(field.id, e.target.value)}
                                     placeholder={field.placeholder}
-                                    className="bg-background border-border/50 h-9"
+                                    className="h-9 border-border/50 bg-background"
                                 />
                             )}
                         </div>
                     )
                 })}
 
-                {/* Ad-hoc fields (from AI grep) */}
                 {adHocFields.map(([id, value]) => (
-                    <div key={id} className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div key={id} className="animate-in slide-in-from-top-1 space-y-1.5 fade-in duration-200">
                         <div className="flex items-center justify-between">
-                            <label className="text-[11px] font-semibold text-primary/80 flex items-center gap-1.5">
-                                <Sparkles className="w-3 h-3" />
+                            <label className="flex items-center gap-1.5 text-[11px] font-semibold text-primary/80">
+                                <Sparkles className="h-3 w-3" />
                                 {id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                             </label>
                             <button
                                 onClick={() => onCustomTextChange(id, '')}
-                                className="p-1 text-muted-foreground hover:text-red-500"
+                                className="text-muted-foreground hover:text-red-500"
                             >
-                                <Eraser className="w-3 h-3" />
+                                <Eraser className="h-3 w-3" />
                             </button>
                         </div>
                         {(String(value).length > 50 || String(value).includes('\n')) ? (
                             <Textarea
                                 value={value as string}
                                 onChange={(e) => onCustomTextChange(id, e.target.value)}
-                                className="bg-primary/5 border-primary/10 min-h-[80px] text-sm py-2 italic scrollbar-hide"
+                                className="min-h-[80px] border-primary/10 bg-primary/5 py-2 text-sm italic scrollbar-hide"
                             />
                         ) : (
                             <Input
                                 value={value as string}
                                 onChange={(e) => onCustomTextChange(id, e.target.value)}
-                                className="bg-primary/5 border-primary/10 h-9 italic"
+                                className="h-9 border-primary/10 bg-primary/5 italic"
                             />
                         )}
                     </div>

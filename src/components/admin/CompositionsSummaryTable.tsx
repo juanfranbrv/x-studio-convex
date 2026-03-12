@@ -1,5 +1,6 @@
-'use client'
+﻿'use client'
 
+import { Loader2 } from '@/components/ui/spinner'
 import React, { useState, useMemo, useTransition } from 'react'
 import {
     Table,
@@ -12,16 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import {
-    Search,
-    Shapes,
-    ChevronUp,
-    ChevronDown,
-    Filter,
-    Loader2,
-    Eye,
-    Info
-} from 'lucide-react'
+import { Search, Shapes, ChevronUp, ChevronDown, Filter, Eye, Info } from 'lucide-react'
 import {
     Tooltip,
     TooltipContent,
@@ -265,7 +257,7 @@ export function CompositionsSummaryTable({ initialData }: CompositionsSummaryTab
                                 <TableCell className="text-center">
                                     <div className="flex justify-center items-center">
                                         {updatingId === comp.id ? (
-                                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                            <Loader2 className="h-4 w-4 text-muted-foreground" />
                                         ) : (
                                             <Switch
                                                 checked={comp.isBasic}
@@ -295,3 +287,5 @@ export function CompositionsSummaryTable({ initialData }: CompositionsSummaryTab
         </div>
     )
 }
+
+
