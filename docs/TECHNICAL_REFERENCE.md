@@ -79,6 +79,16 @@ Nota operativa:
 
 - En esta sesion no se ha encontrado `DONT_TOUCH.md` en la raiz del proyecto. Antes de tocar componentes marcados como estables conviene restaurar ese inventario o confirmar manualmente que zonas no deben modificarse.
 
+### Drawer movil compartido de Image y Carousel
+
+- El panel lateral movil de `image` y `carousel` debe mantenerse en un componente compartido para no duplicar gestos ni animaciones.
+- Archivo base: `src/components/studio/shared/MobileWorkPanelDrawer.tsx`
+- Reglas:
+  - apertura y cierre por toque sobre el tirador, no solo por drag
+  - drag horizontal reservado al tirador y la cabecera para no competir con el scroll interno
+  - boton de cierre visible dentro de la cabecera
+  - transicion rapida y organica, respetando `prefers-reduced-motion`
+
 ## Arquitectura de internacionalizacion
 
 ### Stack actual
@@ -278,3 +288,25 @@ These values are editable from Admin and must remain the single source of truth 
 - Shared helpers live in `scripts/chrome-debug-common.ps1`.
 - The launcher queries `http://127.0.0.1:9222/json/version` to confirm the debugging endpoint is alive.
 - The stop script only targets Chrome processes started with the debug port or the isolated profile, so the normal user browser session is not killed.
+
+## Migracion de dominio a Postlaboratory
+
+### Estado objetivo
+
+- Dominio principal de producto: `postlaboratory.com`
+- Dominio legado a redirigir: `adstudio.click`
+- Dominio frontend de Clerk en produccion: `clerk.postlaboratory.com`
+
+### Regla operativa
+
+1. `NEXT_PUBLIC_APP_URL` debe apuntar siempre a `https://postlaboratory.com` en produccion.
+2. `CLERK_ISSUER_URL` debe apuntar siempre a `https://clerk.postlaboratory.com`.
+3. La `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` de produccion debe corresponder al frontend API `clerk.postlaboratory.com`.
+4. Cualquier dominio legado (`adstudio.click`, `adstudio.com` y variantes `www`) debe redirigir de forma permanente al dominio principal.
+
+### DNS minimo de Clerk
+
+- `clerk.postlaboratory.com` -> `frontend-api.clerk.services`
+- `accounts.postlaboratory.com` -> `accounts.clerk.services`
+
+Si Clerk exige verificacion completa del dominio para correo o cuenta hospedada, pueden ser necesarios tambien `clkmail` y los registros DKIM asociados.

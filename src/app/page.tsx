@@ -10,6 +10,7 @@ import { ArrowRight, Bot, CheckCircle, Clock, Layers, Mail, Palette, Zap } from 
 import { api } from '@/../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { brand } from '@/lib/brand'
 import { cn } from '@/lib/utils'
 
 export default function HomePage() {
@@ -103,7 +104,7 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
             <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
               <Bot className="h-8 w-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)]" />
             </div>
-            <span className="font-heading text-xl font-bold tracking-tight opacity-90">Adstudio</span>
+            <span className="font-heading text-xl font-bold tracking-tight opacity-90">{brand.name}</span>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
@@ -235,7 +236,7 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
         <div className="glass-card mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 border-white/5 p-6 sm:p-8 md:flex-row">
           <div className="flex items-center gap-3">
             <Bot className="h-6 w-6 text-primary" />
-            <span className="text-lg font-bold tracking-tight">Adstudio</span>
+            <span className="text-lg font-bold tracking-tight">{brand.name}</span>
           </div>
           <p className="text-center text-sm font-medium text-muted-foreground/60 md:text-left">
             {t('footer.copyright')}

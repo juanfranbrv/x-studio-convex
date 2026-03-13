@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { brand } from "@/lib/brand";
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
 
@@ -10,7 +11,7 @@ export function getStripe() {
   return new Stripe(stripeSecretKey, {
     apiVersion: "2026-02-25.clover",
     appInfo: {
-      name: "Adstudio",
+      name: brand.name,
       version: "0.1.0",
     },
   });

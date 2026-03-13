@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bot, FileImage, FolderKanban, House, LayoutPanelTop, PanelsTopLeft } from 'lucide-react'
+import { brand } from '@/lib/brand'
 
 type AuthMode = 'sign-in' | 'sign-up'
 
@@ -42,7 +43,7 @@ function AppPreview() {
           <div className="grid grid-rows-[64px_1fr]">
             <header className="flex items-center justify-between border-b border-slate-200/80 bg-white/75 px-5">
               <div className="flex items-center gap-3">
-                <div className="text-2xl font-semibold tracking-tight text-[#0f4aa3]">Adstudio</div>
+                <div className="text-2xl font-semibold tracking-tight text-[#0f4aa3]">{brand.name}</div>
                 <div className="hidden items-center gap-2 rounded-full border border-slate-200/80 bg-white/88 px-3 py-1.5 md:flex">
                   <div className="h-6 w-6 rounded-full bg-[linear-gradient(135deg,#647a35,#d8a64d)]" />
                   <div className="h-2.5 w-20 rounded-full bg-slate-300/80" />

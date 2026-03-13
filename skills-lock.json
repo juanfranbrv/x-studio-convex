@@ -21,6 +21,11 @@
       "sourceType": "github",
       "computedHash": "e6bbaf76bff75470f12d4583a3ef2f4081372a7167d84a6a7399649a1d0d5e24"
     },
+    "chrome-devtools": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "85d9c4ef94e00ddfc937d50aab72a307e80b98bc7e6744ec6e239ef68819c2d7"
+    },
     "clarify": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",

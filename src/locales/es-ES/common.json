@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Adstudio"
+    "name": "Postlaboratory"
   },
   "nav": {
     "home": "Inicio",
@@ -67,7 +67,7 @@
     "en-US": "Inglés"
   },
   "header": {
-    "homeAria": "Ir al inicio de Adstudio"
+    "homeAria": "Ir al inicio de Postlaboratory"
   },
   "suggestions": {
     "alternatives": "Opciones alternativas",

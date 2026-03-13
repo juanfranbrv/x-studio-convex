@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { brand } from "./src/lib/brand";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -18,10 +19,10 @@ const nextConfig: NextConfig = {
         has: [
           {
             type: 'host',
-            value: 'adstudio.com',
+            value: brand.legacyDomains.adstudioClick,
           },
         ],
-        destination: 'https://adstudio.click/:path*',
+        destination: `${brand.appUrl}/:path*`,
         permanent: true,
       },
       {
@@ -29,10 +30,32 @@ const nextConfig: NextConfig = {
         has: [
           {
             type: 'host',
-            value: 'www.adstudio.com',
+            value: brand.legacyDomains.wwwAdstudioClick,
           },
         ],
-        destination: 'https://adstudio.click/:path*',
+        destination: `${brand.appUrl}/:path*`,
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: brand.legacyDomains.adstudioCom,
+          },
+        ],
+        destination: `${brand.appUrl}/:path*`,
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: brand.legacyDomains.wwwAdstudioCom,
+          },
+        ],
+        destination: `${brand.appUrl}/:path*`,
         permanent: true,
       },
       {

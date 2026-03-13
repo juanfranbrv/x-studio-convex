@@ -1,7 +1,7 @@
 ﻿export default function Head() {
     return (
         <>
-            <title>Adstudio Carrusel | Motor de Diseno Inteligente</title>
+            <title>Postlaboratory Carrusel | Motor de Diseno Inteligente</title>
         </>
     )
 }

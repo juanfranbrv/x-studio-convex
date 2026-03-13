@@ -3,6 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/../convex/_generated/api";
 import type { Doc } from "@/../convex/_generated/dataModel";
 import { BILLING_PACKS, getBillingPackDefinition } from "@/lib/billing";
+import { brand } from "@/lib/brand";
 import { getStripe } from "@/lib/stripe";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.trim();
@@ -97,7 +98,7 @@ export async function ensureStripePriceForPack(packSlug: string) {
   const fallback = getBillingPackDefinition(pack.slug);
   const product = await stripe.products.create({
     name: fallback?.slug === "trail-10" ? "Trail Pack" : fallback?.slug === "studio-30" ? "Studio Pack" : "Orbit Pack",
-    description: `${pack.credits} credits for Adstudio`,
+    description: `${pack.credits} credits for ${brand.name}`,
     metadata: {
       pack_slug: pack.slug,
       credits: String(pack.credits),

@@ -10,14 +10,14 @@
   },
   "privacy": {
     "eyebrow": "Privacidad",
-    "title": "Cómo tratamos tus datos en Adstudio",
+    "title": "Cómo tratamos tus datos en Postlaboratory",
     "intro": "Explicamos qué información utilizamos, por qué la necesitamos y cómo protegemos el uso de tu cuenta, tus prompts y los resultados que generas dentro de la plataforma.",
     "updatedAt": "11 de marzo de 2026",
     "sections": {
       "controller": {
         "label": "01",
         "title": "Quién gestiona la información",
-        "body": "Adstudio actúa como responsable del tratamiento de los datos vinculados al funcionamiento del servicio. Esto incluye la gestión de cuentas, la autenticación, el soporte y la infraestructura técnica necesaria para operar la aplicación."
+        "body": "Postlaboratory actúa como responsable del tratamiento de los datos vinculados al funcionamiento del servicio. Esto incluye la gestión de cuentas, la autenticación, el soporte y la infraestructura técnica necesaria para operar la aplicación."
       },
       "data": {
         "label": "02",
@@ -49,13 +49,13 @@
   "terms": {
     "eyebrow": "Términos",
     "title": "Reglas de uso del servicio",
-    "intro": "Estos términos definen qué puedes esperar de Adstudio y qué esperamos de quien utiliza la plataforma para generar, revisar y exportar contenido.",
+    "intro": "Estos términos definen qué puedes esperar de Postlaboratory y qué esperamos de quien utiliza la plataforma para generar, revisar y exportar contenido.",
     "updatedAt": "11 de marzo de 2026",
     "sections": {
       "service": {
         "label": "01",
         "title": "Objeto del servicio",
-        "body": "Adstudio ofrece un entorno para crear contenido visual asistido por inteligencia artificial, gestionar kits de marca y mantener sesiones de trabajo asociadas a una cuenta autenticada."
+        "body": "Postlaboratory ofrece un entorno para crear contenido visual asistido por inteligencia artificial, gestionar kits de marca y mantener sesiones de trabajo asociadas a una cuenta autenticada."
       },
       "account": {
         "label": "02",
@@ -80,14 +80,14 @@
       "liability": {
         "label": "06",
         "title": "Responsabilidad",
-        "body": "Adstudio se ofrece tal cual, dentro de un entorno de mejora continua. No garantizamos resultados específicos ni asumimos responsabilidad por un uso incorrecto de los materiales generados fuera del contexto razonable del servicio."
+        "body": "Postlaboratory se ofrece tal cual, dentro de un entorno de mejora continua. No garantizamos resultados específicos ni asumimos responsabilidad por un uso incorrecto de los materiales generados fuera del contexto razonable del servicio."
       }
     }
   },
   "cookies": {
     "eyebrow": "Cookies",
     "title": "Uso de cookies y almacenamiento local",
-    "intro": "Adstudio utiliza mecanismos técnicos de almacenamiento para mantener la sesión, recordar preferencias y conservar ciertos estados de trabajo sin obligarte a reconfigurar la aplicación cada vez.",
+    "intro": "Postlaboratory utiliza mecanismos técnicos de almacenamiento para mantener la sesión, recordar preferencias y conservar ciertos estados de trabajo sin obligarte a reconfigurar la aplicación cada vez.",
     "updatedAt": "11 de marzo de 2026",
     "sections": {
       "essential": {
@@ -115,7 +115,7 @@
   "contact": {
     "eyebrow": "Contacto",
     "title": "Quiénes somos y cómo hablar con nosotros",
-    "intro": "Adstudio es un producto centrado en convertir la identidad de marca en un sistema operativo creativo: menos fricción, más consistencia y una relación más útil entre criterio humano y automatización.",
+    "intro": "Postlaboratory es un producto centrado en convertir la identidad de marca en un sistema operativo creativo: menos fricción, más consistencia y una relación más útil entre criterio humano y automatización.",
     "updatedAt": "11 de marzo de 2026",
     "sections": {
       "about": {

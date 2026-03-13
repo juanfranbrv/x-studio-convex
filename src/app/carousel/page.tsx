@@ -3,7 +3,6 @@
 import { Loader2 } from '@/components/ui/spinner'
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useToast } from '@/hooks/use-toast'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
@@ -44,8 +43,9 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
 import { getCarouselCompositionRecommendation } from '@/lib/carousel-composition-governance'
-import { ArrowUp, GripVertical, Layers3, Power, RotateCcw, SlidersHorizontal, Sparkles, Wand2 } from 'lucide-react'
+import { ArrowUp, Layers3, Power, RotateCcw, Sparkles, Wand2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { MobileWorkPanelDrawer } from '@/components/studio/shared/MobileWorkPanelDrawer'
 import {
     localizeCarouselCompositionDescription,
     localizeCarouselCompositionName,
@@ -1736,64 +1736,17 @@ export default function CarouselPage() {
         />
     )
 
-    const mobileDrawerClosedX = 'calc(100% - 1.75rem)'
-
     const mobileControlsDrawer = isMobile ? (
-        <>
-            <motion.button
-                type="button"
-                aria-label={t('ui.closeWorkPanel')}
-                onClick={() => setMobileControlsOpen(false)}
-                initial={false}
-                animate={{ opacity: mobileControlsOpen ? 1 : 0, pointerEvents: mobileControlsOpen ? 'auto' : 'none' }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-40 bg-black/18 backdrop-blur-[1px]"
-            />
-
-            <motion.aside
-                initial={false}
-                animate={{ x: mobileControlsOpen ? 0 : mobileDrawerClosedX }}
-                transition={{ type: 'spring', stiffness: 360, damping: 34, mass: 0.9 }}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.12}
-                dragMomentum={false}
-                onDragEnd={(_, info) => {
-                    if (info.offset.x < -48 || info.velocity.x < -320) {
-                        setMobileControlsOpen(true)
-                        return
-                    }
-                    if (info.offset.x > 48 || info.velocity.x > 320) {
-                        setMobileControlsOpen(false)
-                    }
-                }}
-                className="fixed top-3 bottom-3 right-0 z-50 flex w-[min(94vw,30rem)] max-w-[30rem] touch-pan-y flex-row"
-            >
-                <div className="flex w-7 items-center justify-center">
-                    <div className="pointer-events-auto flex h-32 w-7 flex-col items-center justify-center gap-2 rounded-l-2xl border border-r-0 border-border/70 bg-background/92 text-muted-foreground shadow-[0_10px_30px_-18px_rgba(15,23,42,0.55)] backdrop-blur-xl">
-                        <GripVertical className="h-4 w-4 opacity-60" />
-                        <SlidersHorizontal className="h-4 w-4 opacity-80" />
-                        <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-semibold uppercase tracking-[0.22em] text-foreground/80">
-                            {t('ui.adjustments')}
-                        </span>
-                    </div>
-                </div>
-
-                <div className="min-w-0 flex-1 overflow-hidden rounded-l-[1.5rem] border border-border/70 bg-background/96 shadow-[0_20px_55px_-28px_rgba(15,23,42,0.6)] backdrop-blur-2xl">
-                    <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-                        <div className="min-w-0">
-                            <p className="text-sm font-semibold text-foreground">{t('ui.workPanelTitle')}</p>
-                            <p className="text-xs text-muted-foreground">
-                                {t('ui.workPanelDescription')}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="h-[calc(100%-4.5rem)] overflow-y-auto pb-6">
-                        {controlsPanel}
-                    </div>
-                </div>
-            </motion.aside>
-        </>
+        <MobileWorkPanelDrawer
+            open={mobileControlsOpen}
+            onOpenChange={setMobileControlsOpen}
+            title={t('ui.workPanelTitle')}
+            description={t('ui.workPanelDescription')}
+            handleLabel={t('ui.adjustments')}
+            closeLabel={t('ui.closeWorkPanel')}
+        >
+            {controlsPanel}
+        </MobileWorkPanelDrawer>
     ) : null
 
     if (brandKitsLoading && !activeBrandKit) {

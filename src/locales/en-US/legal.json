@@ -10,14 +10,14 @@
   },
   "privacy": {
     "eyebrow": "Privacy",
-    "title": "How we handle your data in Adstudio",
+    "title": "How we handle your data in Postlaboratory",
     "intro": "This page explains what information we use, why we need it, and how we protect your account, prompts, and generated results inside the platform.",
     "updatedAt": "March 11, 2026",
     "sections": {
       "controller": {
         "label": "01",
         "title": "Who manages the information",
-        "body": "Adstudio acts as the controller for data related to running the service. This includes account management, authentication, support, and the technical infrastructure required to operate the product."
+        "body": "Postlaboratory acts as the controller for data related to running the service. This includes account management, authentication, support, and the technical infrastructure required to operate the product."
       },
       "data": {
         "label": "02",
@@ -49,13 +49,13 @@
   "terms": {
     "eyebrow": "Terms",
     "title": "Rules for using the service",
-    "intro": "These terms define what you can expect from Adstudio and what we expect from anyone using the platform to generate, review, and export content.",
+    "intro": "These terms define what you can expect from Postlaboratory and what we expect from anyone using the platform to generate, review, and export content.",
     "updatedAt": "March 11, 2026",
     "sections": {
       "service": {
         "label": "01",
         "title": "Purpose of the service",
-        "body": "Adstudio provides an environment for AI-assisted visual creation, brand-kit management, and work sessions linked to an authenticated account."
+        "body": "Postlaboratory provides an environment for AI-assisted visual creation, brand-kit management, and work sessions linked to an authenticated account."
       },
       "account": {
         "label": "02",
@@ -80,14 +80,14 @@
       "liability": {
         "label": "06",
         "title": "Liability",
-        "body": "Adstudio is provided as is, within a continuous-improvement environment. We do not guarantee specific outcomes and are not responsible for misuse of generated materials outside the reasonable context of the service."
+        "body": "Postlaboratory is provided as is, within a continuous-improvement environment. We do not guarantee specific outcomes and are not responsible for misuse of generated materials outside the reasonable context of the service."
       }
     }
   },
   "cookies": {
     "eyebrow": "Cookies",
     "title": "Cookies and local storage use",
-    "intro": "Adstudio uses technical storage mechanisms to keep your session alive, remember preferences, and preserve certain work states without forcing you to reconfigure the application on every visit.",
+    "intro": "Postlaboratory uses technical storage mechanisms to keep your session alive, remember preferences, and preserve certain work states without forcing you to reconfigure the application on every visit.",
     "updatedAt": "March 11, 2026",
     "sections": {
       "essential": {
@@ -115,7 +115,7 @@
   "contact": {
     "eyebrow": "Contact",
     "title": "Who we are and how to reach us",
-    "intro": "Adstudio is built around turning brand identity into a creative operating system: less friction, more consistency, and a more useful relationship between human judgment and automation.",
+    "intro": "Postlaboratory is built around turning brand identity into a creative operating system: less friction, more consistency, and a more useful relationship between human judgment and automation.",
     "updatedAt": "March 11, 2026",
     "sections": {
       "about": {

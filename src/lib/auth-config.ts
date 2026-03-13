@@ -1,4 +1,6 @@
-const PROD_DOMAIN = "adstudio.click";
+import { brand } from "@/lib/brand";
+
+const PROD_DOMAIN = brand.domain;
 
 function normalizeBaseUrl(input?: string | null): string {
   const raw = (input || "").trim();
