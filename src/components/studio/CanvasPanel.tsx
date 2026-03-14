@@ -556,7 +556,7 @@ export function CanvasPanel({
                 return
             }
 
-            if (result.success && result.data) {
+            if (result.success && 'data' in result) {
                 if (currentCopy || currentHashtags.length > 0) {
                     setPreviousCopyVersion({
                         copy: currentCopy,

@@ -1847,7 +1847,7 @@ export function CarouselControlsPanel({
     const handleSlideCountChange = (delta: number) => {
         const newCount = Math.max(0, Math.min(15, slideCount + delta))
         setSlideCount(newCount)
-        setCurrentStep((prev) => Math.max(prev, 2))
+        setCurrentStep((prev) => (prev < 2 ? 2 : prev))
         if (prompt.trim()) {
             markStructuralReanalysisNeeded()
         }
@@ -2163,9 +2163,9 @@ export function CarouselControlsPanel({
         setSlideCount(newCount)
         if (prompt.trim()) {
             setNeedsReanalysis(true)
-            setCurrentStep((prev) => Math.max(prev, 2))
+            setCurrentStep((prev) => (prev < 2 ? 2 : prev))
         } else {
-            setCurrentStep((prev) => Math.max(prev, 2))
+            setCurrentStep((prev) => (prev < 2 ? 2 : prev))
         }
         onSlideCountOverrideApplied?.()
     }, [
@@ -2834,7 +2834,7 @@ export function CarouselControlsPanel({
                                 const nextPrompt = e.target.value
                                 setPrompt(nextPrompt)
                                 markStructuralReanalysisNeeded()
-                                setCurrentStep((prev) => Math.max(prev, 2))
+                                setCurrentStep((prev) => (prev < 2 ? 2 : prev))
                             }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {

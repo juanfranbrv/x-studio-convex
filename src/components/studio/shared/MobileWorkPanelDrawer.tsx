@@ -20,6 +20,9 @@ type MobileWorkPanelDrawerProps = {
 const CLOSED_OFFSET = '100%'
 const DRAG_DISTANCE = 24
 const DRAG_VELOCITY = 140
+const EASE_OUT = [0.22, 1, 0.36, 1] as const
+const PANEL_OPEN_EASE = [0.16, 1, 0.3, 1] as const
+const PANEL_CLOSE_EASE = [0.32, 0.72, 0, 1] as const
 
 export function MobileWorkPanelDrawer({
     open,
@@ -41,7 +44,7 @@ export function MobileWorkPanelDrawer({
         : {
               type: 'tween' as const,
               duration: open ? 0.17 : 0.13,
-              ease: open ? [0.16, 1, 0.3, 1] : [0.32, 0.72, 0, 1],
+              ease: open ? PANEL_OPEN_EASE : PANEL_CLOSE_EASE,
           }
 
     return (
@@ -55,7 +58,7 @@ export function MobileWorkPanelDrawer({
                     opacity: open ? 1 : 0,
                     pointerEvents: open ? 'auto' : 'none',
                 }}
-                transition={prefersReducedMotion ? { duration: 0.06 } : { duration: 0.12, ease: [0.22, 1, 0.36, 1] }}
+                transition={prefersReducedMotion ? { duration: 0.06 } : { duration: 0.12, ease: EASE_OUT }}
                 className="fixed inset-0 z-40 bg-black/12 backdrop-blur-[1px]"
             />
 
@@ -93,23 +96,22 @@ export function MobileWorkPanelDrawer({
                 }
                 transition={
                     open
-                        ? { duration: 0.1, ease: [0.22, 1, 0.36, 1] }
+                        ? { duration: 0.1, ease: EASE_OUT }
                         : prefersReducedMotion
                             ? { duration: 0.12 }
                             : {
                                   opacity: { duration: 0.14 },
-                                  scale: { duration: 0.14 },
                                   filter: {
                                       duration: 1.6,
                                       repeat: Infinity,
                                       repeatDelay: 2.4,
-                                      ease: [0.22, 1, 0.36, 1],
+                                      ease: EASE_OUT,
                                   },
                                   scale: {
                                       duration: 1.6,
                                       repeat: Infinity,
                                       repeatDelay: 2.4,
-                                      ease: [0.22, 1, 0.36, 1],
+                                      ease: EASE_OUT,
                                   },
                               }
                 }
