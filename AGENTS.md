@@ -76,6 +76,10 @@ Antes de tomar cualquier acción o responder:
   - decisiones de producto ambiguas donde haya más de una dirección válida.
 - **Si el agente puede verificarlo por su cuenta, debe hacerlo**. La revisión manual de Juanfran pasa a ser una capa final, no un requisito para cada iteración pequeña.
 - **Si una validación visual no puede hacerse de forma fiable**, el agente debe explicar exactamente qué faltó para automatizarla.
+- **Norma operativa obligatoria para validación visual**:
+  - Antes de validar UI en navegador, arrancar el navegador de debug aislado del proyecto con `npm run chrome:debug`, `npm run chrome:debug:studio` o `npm run dev:debug-browser`.
+  - No depender de una sesión personal de Chrome ya abierta, porque bloquea Playwright y hace menos fiable la validación visual automatizada.
+  - Si el navegador aislado no está disponible, el agente debe intentar levantarlo por su cuenta antes de pedir revisión manual.
 
 ### 7. Rediseños y UI
 -   **PROHIBIDO realizar rediseños completos** de una página o componente sin consulta previa y autorización explícita de Juanfran.

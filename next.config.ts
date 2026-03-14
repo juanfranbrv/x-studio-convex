@@ -1,9 +1,31 @@
 import type { NextConfig } from "next";
 import { brand } from "./src/lib/brand";
 
+function resolveAllowedDevOrigins(): string[] | undefined {
+  if (process.env.NODE_ENV !== "development") return undefined;
+
+  const origins = new Set<string>([
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+  ]);
+
+  const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, "");
+  if (configuredAppUrl) origins.add(configuredAppUrl);
+
+  const extraOrigins = (process.env.NEXT_ALLOWED_DEV_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+
+  for (const origin of extraOrigins) origins.add(origin);
+
+  return Array.from(origins);
+}
+
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+  allowedDevOrigins: resolveAllowedDevOrigins(),
   logging: {
     incomingRequests: false,
   },

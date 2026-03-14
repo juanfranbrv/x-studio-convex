@@ -55,7 +55,25 @@ REGLAS DE COPYWRITING:
 5. IDIOMA: Todo el contenido debe estar en ${languageName}.
 `
 
-export const buildSocialManagerPrompt = (brand: BrandDNA, topic?: string, languageOverride?: string) => {
+const VARIATION_RULES = (previousCopy?: string, variationKey?: string) => {
+  if (!previousCopy && !variationKey) return ''
+
+  return `
+REGLAS DE VARIACION:
+- Genera una variante NUEVA y claramente distinta si esta peticion es una regeneracion.
+- Mantén la idea central, la marca y el idioma, pero cambia enfoque, estructura, gancho y cierre.
+- No reutilices la misma frase de apertura, la misma CTA ni el mismo ritmo del copy anterior.
+${previousCopy ? `COPY ANTERIOR A SUPERAR:\n"""${previousCopy}"""` : ''}
+${variationKey ? `ID UNICO DE VARIACION: ${variationKey}` : ''}
+`
+}
+
+export const buildSocialManagerPrompt = (
+  brand: BrandDNA,
+  topic?: string,
+  languageOverride?: string,
+  options?: { previousCopy?: string; variationKey?: string }
+) => {
   const preferredLanguage = languageOverride || brand.preferred_language || 'es'
   const languageName = LANGUAGE_NAMES[preferredLanguage] || preferredLanguage.toUpperCase()
 
@@ -70,7 +88,8 @@ export const buildSocialManagerPrompt = (brand: BrandDNA, topic?: string, langua
     LANGUAGE_REQUERIMENT(languageName),
     TASK_INSTRUCTIONS,
     OUTPUT_REQUIREMENTS,
-    COPYWRITING_RULES(languageName)
+    COPYWRITING_RULES(languageName),
+    VARIATION_RULES(options?.previousCopy, options?.variationKey)
   ]
 
   return sections.filter(Boolean).join('\n')

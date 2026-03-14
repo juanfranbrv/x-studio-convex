@@ -5,6 +5,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useToast } from '@/hooks/use-toast'
+import { useDisablePullToRefresh } from '@/hooks/useDisablePullToRefresh'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { useUser } from '@clerk/nextjs'
 import { useUI } from '@/contexts/UIContext'
@@ -95,6 +96,7 @@ export default function CarouselPage() {
     const [isGenerating, setIsGenerating] = useState(false)
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
+    useDisablePullToRefresh(isMobile)
     const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
     const [generatedCount, setGeneratedCount] = useState(0)
@@ -214,6 +216,7 @@ export default function CarouselPage() {
     } | null>(null)
     const [isCancelingAnalyze, setIsCancelingAnalyze] = useState(false)
     const [isCancelingGenerate, setIsCancelingGenerate] = useState(false)
+    const [requiresReanalysis, setRequiresReanalysis] = useState(false)
     const [errorModal, setErrorModal] = useState<{
         open: boolean
         title: string
@@ -1722,6 +1725,7 @@ export default function CarouselPage() {
             slideCountOverride={slideCountOverride}
             onSlideCountOverrideApplied={() => setSlideCountOverride(null)}
             analysisReady={Boolean(scriptSlides?.length)}
+            onReanalysisStateChange={setRequiresReanalysis}
             onInvalidatePreview={invalidatePreview}
             onReferencePreviewStateChange={setReferencePreviewState}
             previewSlides={slides}
@@ -1748,6 +1752,139 @@ export default function CarouselPage() {
             {controlsPanel}
         </MobileWorkPanelDrawer>
     ) : null
+
+    const actionBar = (
+        <div className={cn(
+            'studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-background/50 backdrop-blur-md min-h-[80px]',
+            isMobile
+                ? 'gap-3 p-3'
+                : cn(
+                    'lg:flex-row',
+                    panelPosition === 'right' ? 'lg:flex-row' : 'lg:flex-row-reverse'
+                )
+        )}>
+            <div className={cn(
+                'flex-1 flex flex-col items-stretch gap-2',
+                isMobile ? '' : 'p-3 md:p-4 sm:flex-row sm:items-end'
+            )}>
+                <div className="relative w-full">
+                    <Textarea
+                        placeholder={
+                            currentSlide?.imageUrl
+                                ? t('carousel:ui.editSlidePlaceholder', { defaultValue: 'Describe the changes to edit the slide...' })
+                                : t('carousel:ui.setupCarouselPlaceholder', { defaultValue: 'Set up your carousel in the side panel...' })
+                        }
+                        value={slideCorrectionPrompt}
+                        onChange={(e) => setSlideCorrectionPrompt(e.target.value)}
+                        disabled={!currentSlide?.imageUrl || (isRegenerating && regeneratingIndex === currentSlideIndex)}
+                        className={cn(
+                            'w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all',
+                            currentSlide?.imageUrl ? 'pr-14' : ''
+                        )}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                handleApplySlideCorrection()
+                            }
+                        }}
+                    />
+                    {currentSlide?.imageUrl ? (
+                        <Button
+                            onClick={handleApplySlideCorrection}
+                            disabled={isGenerating || (isRegenerating && regeneratingIndex === currentSlideIndex) || !slideCorrectionPrompt.trim()}
+                            size="icon"
+                            className="absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2 rounded-xl bg-primary text-primary-foreground shadow-md transition-all hover:bg-primary/90 disabled:opacity-45"
+                            aria-label={t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
+                            title={t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
+                        >
+                            {isRegenerating && regeneratingIndex === currentSlideIndex ? (
+                                <Loader2 className="h-3.5 w-3.5" />
+                            ) : (
+                                <ArrowUp className="h-3.5 w-3.5" />
+                            )}
+                        </Button>
+                    ) : null}
+                </div>
+            </div>
+
+            <div className={cn(
+                'flex flex-col justify-end gap-2',
+                isMobile
+                    ? ''
+                    : cn(
+                        'w-full lg:w-[27%] p-3 md:p-4 border-t lg:border-t-0',
+                        panelPosition === 'right' ? 'lg:border-l border-border/40' : 'lg:border-r border-border/40'
+                    )
+            )}>
+                {slides.some(slide => Boolean(slide.imageUrl)) ? (
+                    <div className="space-y-2">
+                        <Button
+                            onClick={() => void handleRetryLastGenerate()}
+                            disabled={isGenerating || isAnalyzing || !carouselSettings || requiresReanalysis}
+                            className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25 disabled:cursor-not-allowed"
+                        >
+                            {isGenerating ? (
+                                <>
+                                    <Loader2 className="mr-2 h-5 w-5" />
+                                    {t('carousel:ui.generating', { defaultValue: 'Generating...' })}
+                                </>
+                            ) : (
+                                <>
+                                    <RotateCcw className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
+                                    {t('carousel:ui.retryCarousel', { defaultValue: 'Generate another carousel with the same settings' })}
+                                </>
+                            )}
+                        </Button>
+                        {isGenerating ? (
+                            <button
+                                type="button"
+                                onClick={handleCancelGenerate}
+                                className="w-full text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                {isCancelingGenerate
+                                    ? t('carousel:ui.canceling', { defaultValue: 'Canceling...' })
+                                    : t('carousel:ui.stopGeneration', { defaultValue: 'Stop generation' })}
+                            </button>
+                        ) : null}
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        <Button
+                            onClick={() => {
+                                if (!carouselSettings) return
+                                void handleGenerate(carouselSettings)
+                            }}
+                            disabled={isGenerating || isAnalyzing || !carouselSettings || requiresReanalysis}
+                            className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25 disabled:cursor-not-allowed"
+                        >
+                            {isGenerating ? (
+                                <>
+                                    <Loader2 className="mr-2 h-5 w-5" />
+                                    {t('carousel:ui.generating', { defaultValue: 'Generating...' })}
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                                    {t('carousel:ui.generateCarousel', { defaultValue: 'Generate carousel' })}
+                                </>
+                            )}
+                        </Button>
+                        {isGenerating ? (
+                            <button
+                                type="button"
+                                onClick={handleCancelGenerate}
+                                className="w-full text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                {isCancelingGenerate
+                                    ? t('carousel:ui.canceling', { defaultValue: 'Canceling...' })
+                                    : t('carousel:ui.stopGeneration', { defaultValue: 'Stop generation' })}
+                            </button>
+                        ) : null}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
 
     if (brandKitsLoading && !activeBrandKit) {
         return (
@@ -1781,7 +1918,7 @@ export default function CarouselPage() {
             <div className={cn(
                 'flex-1 relative',
                 isMobile ? 'flex flex-col overflow-y-auto' : 'flex flex-col overflow-hidden'
-            )}>
+            )} style={isMobile ? { overscrollBehaviorY: 'none' } : undefined}>
                 <div className={cn(
                     'flex-1 min-h-0',
                     isMobile
@@ -2018,115 +2155,11 @@ export default function CarouselPage() {
                             />
                         </div>
                     )}
-                    <div className={cn(
-                        'studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-background/50 backdrop-blur-md min-h-[80px]',
-                        isMobile ? 'mt-3 rounded-[1.25rem] border border-border/50' : ''
-                    )}>
-                        <div className={cn(
-                            'flex-1 flex flex-col gap-2 sm:flex-row sm:items-end',
-                            isMobile ? 'p-3' : 'p-3 md:p-4'
-                        )}>
-                            <div className="relative w-full">
-                                <Textarea
-                                    placeholder={
-                                        currentSlide?.imageUrl
-                                            ? t('carousel:ui.editSlidePlaceholder', { defaultValue: 'Describe the changes to edit the slide...' })
-                                            : t('carousel:ui.setupCarouselPlaceholder', { defaultValue: 'Set up your carousel in the side panel...' })
-                                    }
-                                    value={slideCorrectionPrompt}
-                                    onChange={(e) => setSlideCorrectionPrompt(e.target.value)}
-                                    disabled={!currentSlide?.imageUrl || (isRegenerating && regeneratingIndex === currentSlideIndex)}
-                                    className={cn(
-                                        'w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all',
-                                        isMobile && currentSlide?.imageUrl ? 'pr-14' : ''
-                                    )}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                            e.preventDefault()
-                                            handleApplySlideCorrection()
-                                        }
-                                    }}
-                                />
-                                {isMobile && currentSlide?.imageUrl ? (
-                                    <Button
-                                        onClick={handleApplySlideCorrection}
-                                        disabled={isGenerating || (isRegenerating && regeneratingIndex === currentSlideIndex) || !slideCorrectionPrompt.trim()}
-                                        size="icon"
-                                        className="absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2 rounded-xl bg-primary text-primary-foreground shadow-md transition-all hover:bg-primary/90 disabled:opacity-45"
-                                        aria-label={t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
-                                        title={t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
-                                    >
-                                        {isRegenerating && regeneratingIndex === currentSlideIndex ? (
-                                            <Loader2 className="h-3.5 w-3.5" />
-                                        ) : (
-                                            <ArrowUp className="h-3.5 w-3.5" />
-                                        )}
-                                    </Button>
-                                ) : null}
-                            </div>
-                            {currentSlide?.imageUrl && !isMobile && (
-                                <Button
-                                    onClick={handleApplySlideCorrection}
-                                    disabled={isGenerating || (isRegenerating && regeneratingIndex === currentSlideIndex) || !slideCorrectionPrompt.trim()}
-                                    className="group feedback-action h-[44px] rounded-xl w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold px-4 whitespace-nowrap"
-                                >
-                                    {isRegenerating && regeneratingIndex === currentSlideIndex ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 mr-2" />
-                                            {t('carousel:ui.correcting', { defaultValue: 'Correcting...' })}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <ArrowUp className="w-4 h-4 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-translate-y-0.5" />
-                                            {t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
-                                        </>
-                                    )}
-                                </Button>
-                            )}
+                    {isMobile ? (
+                        <div className="mt-3 shrink-0 rounded-[1.25rem] border border-border/50">
+                            {actionBar}
                         </div>
-                        {slides.some(slide => Boolean(slide.imageUrl)) ? (
-                            <div className={cn(
-                                'flex flex-col gap-2',
-                                isMobile ? 'px-3 pb-3' : 'px-3 pb-3 md:px-4 md:pb-4'
-                            )}>
-                                <Button
-                                    onClick={() => void handleRetryLastGenerate()}
-                                    disabled={isGenerating || isAnalyzing || !carouselSettings}
-                                    className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25"
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-5 w-5" />
-                                            {t('carousel:ui.generating', { defaultValue: 'Generating...' })}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <RotateCcw className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
-                                            {t('carousel:ui.retryCarousel', { defaultValue: 'Generate another carousel with the same settings' })}
-                                        </>
-                                    )}
-                                </Button>
-                                {isGenerating && (
-                                    <div className="flex items-center justify-between">
-                                        <Button
-                                            onClick={handleCancelGenerate}
-                                            variant="link"
-                                            size="sm"
-                                            className="h-7 px-0 text-[11px] text-muted-foreground hover:text-destructive"
-                                            title={t('carousel:ui.stopGeneration', { defaultValue: 'Stop generation' })}
-                                        >
-                                            {t('carousel:ui.stopGeneration', { defaultValue: 'Stop generation' })}
-                                        </Button>
-                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                                            {isCancelingGenerate
-                                                ? t('carousel:ui.canceling', { defaultValue: 'Canceling...' })
-                                                : ''}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        ) : null}
-                    </div>
+                    ) : null}
                 </div>
 
                 <FeedbackButton
@@ -2150,6 +2183,8 @@ export default function CarouselPage() {
                 {!isMobile ? controlsPanel : null}
                 {mobileControlsDrawer}
                 </div>
+
+                {!isMobile ? actionBar : null}
             </div>
 
             <PromptDebugModal

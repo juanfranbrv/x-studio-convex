@@ -378,7 +378,7 @@ export function StyleImageCard({
             </Dialog>
 
             <Dialog open={isPresetModalOpen} onOpenChange={setIsPresetModalOpen}>
-                <DialogContent className="!w-[64vw] !max-w-[64vw] sm:!max-w-[64vw] h-[min(93vh,980px)] p-0 overflow-hidden flex flex-col">
+                <DialogContent className="h-[min(84vh,920px)] w-[min(94vw,1240px)] !max-w-[min(94vw,1240px)] p-0 overflow-hidden flex flex-col">
                     <DialogHeader className="px-6 pt-6 pb-3">
                         <DialogTitle>{tt('styleImage.selectPresetTitle', 'Select preset style')}</DialogTitle>
                         <DialogDescription>
@@ -392,7 +392,7 @@ export function StyleImageCard({
                                 <div className="text-xs text-muted-foreground">
                                     {tt('styleImage.showingPresets', 'Showing {{count}} styles', { count: stylePresets.length })}
                                 </div>
-                                <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] gap-3">
+                                <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(118px,1fr))] gap-3 sm:[grid-template-columns:repeat(auto-fill,minmax(124px,1fr))]">
                                     {stylePresets.map((preset) => {
                                         const isSelected = selectedStylePresetId === preset._id
                                         return (

@@ -221,6 +221,11 @@ export async function POST(request: NextRequest) {
             status = 503
             userMessage = 'El servicio está temporalmente saturado. Por favor, inténtalo de nuevo en unos segundos.'
             errorType = 'WISDOM_BUSY'
+        } else if (errorMessage.toLowerCase().includes('timeout') ||
+            errorMessage.toLowerCase().includes('timed out')) {
+            status = 504
+            userMessage = 'La generacion tardo demasiado y se cancelo. Intentalo de nuevo o cambia de modelo.'
+            errorType = 'PROVIDER_TIMEOUT'
         } else if (errorMessage.toLowerCase().includes('rate limit') ||
             errorMessage.toLowerCase().includes('quota')) {
             status = 429

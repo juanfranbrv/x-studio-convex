@@ -718,18 +718,16 @@ export function ControlsPanel({
                                     disabled={isSavingSession || !hasUnsavedChanges}
                                     title={t('ui.saveHistoryNow')}
                                 >
-                                    {isSavingSession ? (
-                                        <Loader2 className="w-3.5 h-3.5" />
-                                    ) : (
-                                        <Save
-                                            className={cn(
-                                                "w-3.5 h-3.5 transition-colors",
-                                                hasUnsavedChanges
+                                    <Save
+                                        className={cn(
+                                            "w-3.5 h-3.5 transition-colors",
+                                            isSavingSession
+                                                ? "text-muted-foreground/40"
+                                                : hasUnsavedChanges
                                                     ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.45)]"
                                                     : "text-muted-foreground/55"
-                                            )}
-                                        />
-                                    )}
+                                        )}
+                                    />
                                 </Button>
                             </div>
                         }
@@ -823,7 +821,6 @@ export function ControlsPanel({
                                 ? 'mt-3 flex items-center justify-end gap-2'
                                 : 'absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2'
                         )}>
-                            {isMagicParsing && <Loader2 className="w-4 h-4 text-primary" />}
                             {isMagicParsing && onCancelAnalyze ? (
                                 <Button
                                     size="sm"
@@ -851,7 +848,14 @@ export function ControlsPanel({
                                     isMobile ? 'w-full justify-center' : 'ml-auto'
                                 )}
                             >
-                                {t('ui.analyze')}
+                                {isMagicParsing ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-3.5 w-3.5" />
+                                        {t('ui.analyzing', { defaultValue: 'Analizando' })}
+                                    </>
+                                ) : (
+                                    t('ui.analyze')
+                                )}
                             </Button>
                         </div>
                     </div>

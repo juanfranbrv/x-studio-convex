@@ -1,10 +1,8 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { motion, useDragControls, useReducedMotion } from 'framer-motion'
-import { GripVertical, SlidersHorizontal, X } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type MobileWorkPanelDrawerProps = {
@@ -19,9 +17,9 @@ type MobileWorkPanelDrawerProps = {
     contentClassName?: string
 }
 
-const CLOSED_OFFSET = 'calc(100% - 3rem)'
-const DRAG_DISTANCE = 56
-const DRAG_VELOCITY = 420
+const CLOSED_OFFSET = '100%'
+const DRAG_DISTANCE = 24
+const DRAG_VELOCITY = 140
 
 export function MobileWorkPanelDrawer({
     open,
@@ -36,10 +34,15 @@ export function MobileWorkPanelDrawer({
 }: MobileWorkPanelDrawerProps) {
     const prefersReducedMotion = useReducedMotion()
     const dragControls = useDragControls()
+    const suppressToggleRef = useRef(false)
 
-    const transition = prefersReducedMotion
-        ? { duration: 0.12 }
-        : { type: 'spring' as const, stiffness: 420, damping: 38, mass: 0.78 }
+    const panelTransition = prefersReducedMotion
+        ? { duration: 0.06 }
+        : {
+              type: 'tween' as const,
+              duration: open ? 0.17 : 0.13,
+              ease: open ? [0.16, 1, 0.3, 1] : [0.32, 0.72, 0, 1],
+          }
 
     return (
         <>
@@ -52,82 +55,126 @@ export function MobileWorkPanelDrawer({
                     opacity: open ? 1 : 0,
                     pointerEvents: open ? 'auto' : 'none',
                 }}
-                transition={prefersReducedMotion ? { duration: 0.1 } : { duration: 0.18 }}
-                className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1.5px]"
+                transition={prefersReducedMotion ? { duration: 0.06 } : { duration: 0.12, ease: [0.22, 1, 0.36, 1] }}
+                className="fixed inset-0 z-40 bg-black/12 backdrop-blur-[1px]"
             />
+
+            <motion.button
+                type="button"
+                aria-label={open ? closeLabel : handleLabel}
+                onClick={() => {
+                    if (suppressToggleRef.current) {
+                        suppressToggleRef.current = false
+                        return
+                    }
+                    onOpenChange(!open)
+                }}
+                onPointerDown={(event) => {
+                    suppressToggleRef.current = false
+                    dragControls.start(event)
+                }}
+                initial={false}
+                animate={
+                    open
+                        ? { opacity: 1, x: 0, scale: 1, pointerEvents: 'auto' }
+                        : prefersReducedMotion
+                            ? { opacity: 1, x: 0, scale: 1, pointerEvents: 'auto' }
+                            : {
+                                  opacity: 1,
+                                  x: 0,
+                                  scale: [1, 1.02, 1],
+                                  filter: [
+                                      'brightness(1)',
+                                      'brightness(1.08)',
+                                      'brightness(1)',
+                                  ],
+                                  pointerEvents: 'auto',
+                              }
+                }
+                transition={
+                    open
+                        ? { duration: 0.1, ease: [0.22, 1, 0.36, 1] }
+                        : prefersReducedMotion
+                            ? { duration: 0.12 }
+                            : {
+                                  opacity: { duration: 0.14 },
+                                  scale: { duration: 0.14 },
+                                  filter: {
+                                      duration: 1.6,
+                                      repeat: Infinity,
+                                      repeatDelay: 2.4,
+                                      ease: [0.22, 1, 0.36, 1],
+                                  },
+                                  scale: {
+                                      duration: 1.6,
+                                      repeat: Infinity,
+                                      repeatDelay: 2.4,
+                                      ease: [0.22, 1, 0.36, 1],
+                                  },
+                              }
+                }
+                className={cn(
+                    'fixed right-0 top-1/2 z-[70] flex -translate-y-1/2 items-center justify-center overflow-hidden rounded-l-[1.35rem] border border-r-0 border-primary/30',
+                    'bg-primary text-primary-foreground shadow-lg shadow-primary/25 backdrop-blur-2xl',
+                    'transition-[transform,filter,background-color] hover:brightness-[1.04]',
+                    'h-[4.8rem] w-12'
+                )}
+                style={{ touchAction: 'pan-y' }}
+            >
+                <div className="relative flex items-center justify-center">
+                    {open ? (
+                        <PanelLeftOpen className="h-6 w-6" />
+                    ) : (
+                        <PanelLeftClose className="h-6 w-6" />
+                    )}
+                </div>
+            </motion.button>
 
             <motion.aside
                 initial={false}
                 animate={{ x: open ? 0 : CLOSED_OFFSET }}
-                transition={transition}
+                transition={panelTransition}
                 drag="x"
                 dragControls={dragControls}
                 dragListener={false}
                 dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.08}
+                dragElastic={0.02}
                 dragMomentum={false}
+                onDragStart={() => {
+                    suppressToggleRef.current = true
+                }}
                 onDragEnd={(_, info) => {
                     if (info.offset.x <= -DRAG_DISTANCE || info.velocity.x <= -DRAG_VELOCITY) {
                         onOpenChange(true)
+                        suppressToggleRef.current = false
                         return
                     }
 
                     if (info.offset.x >= DRAG_DISTANCE || info.velocity.x >= DRAG_VELOCITY) {
                         onOpenChange(false)
+                        suppressToggleRef.current = false
+                        return
                     }
+
+                    suppressToggleRef.current = false
                 }}
                 className={cn(
-                    'fixed inset-y-3 right-0 z-50 flex w-[min(92vw,30rem)] max-w-[30rem] touch-pan-y flex-row',
+                    'fixed inset-y-3 right-0 z-[60] w-[calc(100vw-0.5rem)] max-w-none touch-pan-y',
                     className
                 )}
+                style={{ willChange: 'transform' }}
             >
-                <button
-                    type="button"
-                    aria-expanded={open}
-                    aria-label={open ? closeLabel : handleLabel}
-                    onClick={() => onOpenChange(!open)}
-                    onPointerDown={(event) => dragControls.start(event)}
-                    className={cn(
-                        'pointer-events-auto flex w-12 shrink-0 items-center justify-center rounded-l-[1.35rem] border border-r-0 border-border/70',
-                        'bg-background/94 text-muted-foreground shadow-[0_14px_36px_-22px_rgba(15,23,42,0.58)] backdrop-blur-xl transition-all duration-200',
-                        open ? 'text-foreground/90' : 'hover:text-foreground'
-                    )}
-                    style={{ touchAction: 'pan-y' }}
-                >
-                    <div className="flex h-36 w-full flex-col items-center justify-center gap-2">
-                        <GripVertical className="h-4 w-4 opacity-60" />
-                        <SlidersHorizontal className="h-4 w-4 opacity-80" />
-                        <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-semibold uppercase tracking-[0.22em]">
-                            {handleLabel}
-                        </span>
-                    </div>
-                </button>
-
-                <div className="min-w-0 flex-1 overflow-hidden rounded-l-[1.5rem] border border-border/70 bg-background/96 shadow-[0_20px_55px_-28px_rgba(15,23,42,0.6)] backdrop-blur-2xl">
+                <div className="min-w-0 h-full overflow-hidden rounded-l-[1.5rem] rounded-r-none border border-border/70 bg-background/95 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.6)] backdrop-blur-2xl">
                     <div
-                        className="flex items-start justify-between gap-3 border-b border-border/60 px-4 py-3"
+                        className={cn('h-full overflow-y-auto pb-6', contentClassName)}
                         onPointerDown={(event) => dragControls.start(event)}
                         style={{ touchAction: 'pan-y' }}
                     >
-                        <div className="min-w-0">
-                            <p className="text-sm font-semibold text-foreground">{title}</p>
-                            <p className="text-xs text-muted-foreground">{description}</p>
+                        <div className="sr-only">
+                            <p>{title}</p>
+                            <p>{description}</p>
+                            <p>{closeLabel}</p>
                         </div>
-
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onClick={() => onOpenChange(false)}
-                            className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground transition-all hover:text-foreground"
-                            aria-label={closeLabel}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-
-                    <div className={cn('h-[calc(100%-4.5rem)] overflow-y-auto pb-6', contentClassName)}>
                         {children}
                     </div>
                 </div>

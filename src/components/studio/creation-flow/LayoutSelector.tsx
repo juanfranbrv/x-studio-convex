@@ -200,7 +200,7 @@ export function LayoutSelector({
                                 'text-[9px] block text-center leading-tight opacity-90',
                                 isSelected ? 'text-primary/75' : 'text-muted-foreground/80'
                             )}>
-                                {layout.promptInstruction || description}
+                                {description}
                             </span>
                         </div>
                     </motion.button>

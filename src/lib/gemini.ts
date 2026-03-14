@@ -143,6 +143,7 @@ const REPLICATE_MODEL_NANO_BANANA_2 = 'google/nano-banana-2'
 const REPLICATE_MODEL_NANO_BANANA_PRO = 'google/nano-banana-pro'
 const REPLICATE_TEXT_MODEL_GEMINI_3_FLASH = 'google/gemini-3-flash'
 const ATLAS_BASE_URL = 'https://api.atlascloud.ai'
+const IMAGE_PROVIDER_TIMEOUT_MS = 90_000
 const ATLAS_IMAGE_ENDPOINTS = [
     '/api/v1/model/generateImage',
     '/v1/model/generateImage',
@@ -441,14 +442,14 @@ async function generateWisdomOpenAIImage(prompt: string, model: string, aspectRa
         // Wisdom Gate OpenAI-compatible endpoint
         const endpoint = `${WISDOM_BASE_URL}/v1/images/generations`
 
-        const response = await fetch(endpoint, {
+        const response = await fetchWithTimeout(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${wisdomApiKey}`
             },
             body: JSON.stringify(requestBody)
-        })
+        }, IMAGE_PROVIDER_TIMEOUT_MS, `Wisdom OpenAI image request (${model})`)
 
         if (!response.ok) {
             const errorText = await response.text()
@@ -508,7 +509,7 @@ async function generateNagaImage(
         log.warn('IMAGE', `Naga prompt trimmed (${normalizedResolvedModel}) ${prompt.length} -> ${promptForNaga.length} chars`)
     }
 
-    const response = await fetch(`${NAGA_BASE_URL}/images/generations`, {
+    const response = await fetchWithTimeout(`${NAGA_BASE_URL}/images/generations`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -521,7 +522,7 @@ async function generateNagaImage(
             size: getNagaImageSize(resolvedModel, aspectRatio),
             response_format: 'url'
         })
-    })
+    }, IMAGE_PROVIDER_TIMEOUT_MS, `Naga image request (${resolvedModel})`)
 
     if (!response.ok) {
         const errorText = await response.text()
@@ -1083,6 +1084,30 @@ async function resolveImageUrlToDataUrl(url: string): Promise<string> {
     throw lastError instanceof Error ? lastError : new Error('No se pudo resolver la URL de imagen')
 }
 
+async function fetchWithTimeout(
+    input: string,
+    init: RequestInit,
+    timeoutMs: number,
+    label: string
+): Promise<Response> {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+    try {
+        return await fetch(input, {
+            ...init,
+            signal: controller.signal,
+        })
+    } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error(`${label} timeout after ${timeoutMs}ms`)
+        }
+        throw error
+    } finally {
+        clearTimeout(timeoutId)
+    }
+}
+
 export interface TextGenerationOptions {
     temperature?: number
     topP?: number
@@ -1260,7 +1285,7 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
             try {
                 log.info('IMAGE', `[${attempt + 1}/${maxRetries + 1}] Attempting Wisdom Gate API call`)
 
-                const response = await fetch(`${WISDOM_BASE_URL}/v1beta/models/${model}:generateContent`, {
+                const response = await fetchWithTimeout(`${WISDOM_BASE_URL}/v1beta/models/${model}:generateContent`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1278,7 +1303,7 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
                             }
                         }
                     })
-                })
+                }, IMAGE_PROVIDER_TIMEOUT_MS, `Wisdom native image request (${model})`)
 
                 if (!response.ok) {
                     const errorText = await response.text()
@@ -1551,15 +1576,9 @@ export async function generateTextUnified(
     const parts: any[] = [{ text: `${systemPrompt}\n\nSOLICITUD DEL USUARIO:\n${prompt}` }]
 
     if (images && images.length > 0) {
-        images.forEach(img => {
-            // Handle base64
-            const base64Data = img.includes('base64,') ? img.split('base64,')[1] : img
-            parts.push({
-                inlineData: {
-                    data: base64Data,
-                    mimeType: 'image/png'
-                }
-            })
+        const imageParts = await Promise.all(images.map((img) => urlToPart(img)))
+        imageParts.forEach((part) => {
+            if (part) parts.push(part)
         })
     }
 

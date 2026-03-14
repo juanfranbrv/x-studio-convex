@@ -14,10 +14,11 @@
     "chrome:debug:studio": "powershell -ExecutionPolicy Bypass -File ./scripts/start-chrome-debug.ps1 -Url http://127.0.0.1:3000/studio",
     "chrome:debug:kill": "powershell -ExecutionPolicy Bypass -File ./scripts/stop-chrome-debug.ps1",
     "dev:debug-browser": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-debug-browser.ps1 -Route /studio",
+    "playwright:auth:save": "node ./scripts/save-playwright-storage-state.mjs",
     "dev:mobile": "node scripts/dev-mobile.js",
     "dev:quiet": "concurrently \"powershell -ExecutionPolicy Bypass -Command \\\"npx convex dev 2>&1 | node scripts/dev-log-filter.js convex\\\"\" \"powershell -ExecutionPolicy Bypass -Command \\\"$env:NEXT_DISABLE_TURBOPACK=1; next dev 2>&1 | node scripts/dev-log-filter.js next\\\"\"",
-    "dev:lan": "concurrently \"npx convex dev\" \"powershell -ExecutionPolicy Bypass -Command \\\"$env:NEXT_DISABLE_TURBOPACK=1; next dev --hostname 0.0.0.0 --port 3000\\\"\"",
-    "dev:lan:quiet": "concurrently \"powershell -ExecutionPolicy Bypass -Command \\\"npx convex dev 2>&1 | node scripts/dev-log-filter.js convex\\\"\" \"powershell -ExecutionPolicy Bypass -Command \\\"$env:NEXT_DISABLE_TURBOPACK=1; next dev --hostname 0.0.0.0 --port 3000 2>&1 | node scripts/dev-log-filter.js next\\\"\""
+    "dev:lan": "node scripts/dev-lan.js",
+    "dev:lan:quiet": "node scripts/dev-lan.js --quiet"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.1",

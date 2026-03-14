@@ -7,6 +7,17 @@ import type { LucideProps } from 'lucide-react'
 const ICON_NAME_ALIASES: Record<string, keyof typeof LucideIcons> = {
     Grid2X2: 'Grid2x2',
     Grid3X3: 'Grid3x3',
+    help_center: 'CircleHelp',
+    garage_home: 'House',
+    rotate_right: 'RotateCw',
+    alt_route: 'Route',
+    layers: 'Layers',
+    flare: 'Sparkles',
+    crop_square: 'Square',
+    contrast: 'CircleHelp',
+    dark_mode: 'Moon',
+    flight: 'Plane',
+    collections: 'Images',
 }
 
 function resolveLucideIconName(iconName: string): keyof typeof LucideIcons | null {
@@ -28,7 +39,7 @@ export function getLucideLayoutIcon(iconName: string) {
     if (!resolved) return null
 
     const Icon = LucideIcons[resolved]
-    return typeof Icon === 'function' ? (Icon as ComponentType<LucideProps>) : null
+    return Icon ? (Icon as ComponentType<LucideProps>) : null
 }
 
 export function renderLucideLayoutIcon(

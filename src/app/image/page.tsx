@@ -18,6 +18,7 @@ import { PromptCard } from '@/components/studio/PromptCard'
 import { CaptionCard } from '@/components/studio/CaptionCard'
 import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
 import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow'
+import { useDisablePullToRefresh } from '@/hooks/useDisablePullToRefresh'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import { SOCIAL_FORMATS, ALL_IMAGE_LAYOUTS, LAYOUTS_BY_INTENT, type DebugPromptData, type DebugContextItem } from '@/lib/creation-flow-types'
 import { ArrowUp, Plus, RotateCcw, Sparkles } from 'lucide-react'
@@ -116,6 +117,7 @@ export default function ImagePage() {
     const [promptValue, setPromptValue] = useState('')
     const [editPrompt, setEditPrompt] = useState('')
     const [isMobile, setIsMobile] = useState(false)
+    useDisablePullToRefresh(isMobile)
     const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
     const [isMagicParsing, setIsMagicParsing] = useState(false)
     const [isCancelingAnalyze, setIsCancelingAnalyze] = useState(false)
@@ -2237,6 +2239,7 @@ export default function ImagePage() {
                         showPromptDebugTrigger={Boolean(isAdmin && creationFlow.state.generatedImage && debugPromptData?.finalPrompt)}
                         layoutIconOverrides={layoutIconOverrides}
                         isAdmin={Boolean(isAdmin)}
+                        sessionName={buildSessionTitle(activeSessionMeta?.title || selectedSessionToLoad || t('sessions.newSessionTitle', { defaultValue: 'New session' }))}
                     />
                 </div>
 
@@ -2363,7 +2366,7 @@ export default function ImagePage() {
                         disabled={!creationFlow.state.generatedImage}
                         className={cn(
                             "w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all",
-                            isMobile && creationFlow.state.generatedImage ? "pr-14" : ""
+                            creationFlow.state.generatedImage ? "pr-14" : ""
                         )}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
@@ -2374,7 +2377,7 @@ export default function ImagePage() {
                             }
                         }}
                     />
-                    {isMobile && creationFlow.state.generatedImage ? (
+                    {creationFlow.state.generatedImage ? (
                         <Button
                             onClick={() => handleEditImage(editPrompt)}
                             disabled={isGenerating || !editPrompt.trim()}
@@ -2387,16 +2390,6 @@ export default function ImagePage() {
                         </Button>
                     ) : null}
                 </div>
-                {creationFlow.state.generatedImage && !isMobile && (
-                    <Button
-                        onClick={() => handleEditImage(editPrompt)}
-                        disabled={isGenerating || !editPrompt.trim()}
-                        className="group feedback-action h-[44px] w-full rounded-xl bg-primary px-4 font-semibold whitespace-nowrap text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25 sm:w-auto"
-                    >
-                        <ArrowUp className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-translate-y-0.5" />
-                        {t('image:ui.applyCorrection', { defaultValue: 'Apply correction' })}
-                    </Button>
-                )}
             </div>
 
             <div className={cn(
@@ -2409,11 +2402,14 @@ export default function ImagePage() {
                     )
             )}>
                 {creationFlow.state.generatedImage ? (
-                    <div className="space-y-2">
+                    <div className="relative">
                         <Button
                             onClick={handleRetryLastPrompt}
                             disabled={isGenerating || !lastGenerationRequest || creationFlow.state.isAnalyzing}
-                            className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25"
+                            className={cn(
+                                'group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25',
+                                isGenerating && 'pr-28'
+                            )}
                         >
                             {isGenerating ? (
                                 <>
@@ -2431,7 +2427,7 @@ export default function ImagePage() {
                             <button
                                 type="button"
                                 onClick={handleCancelGenerate}
-                                className="w-full text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-foreground transition-colors hover:text-primary-foreground"
                             >
                                 {isCancelingGenerate
                                     ? t('image:ui.canceling', { defaultValue: 'Canceling...' })
@@ -2440,11 +2436,14 @@ export default function ImagePage() {
                         ) : null}
                     </div>
                 ) : (
-                    <div className="space-y-2">
+                    <div className="relative">
                         <Button
                             onClick={handleUnifiedAction}
                             disabled={isGenerating || !canGenerate}
-                            className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25"
+                            className={cn(
+                                'group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25',
+                                isGenerating && 'pr-28'
+                            )}
                         >
                             {isGenerating ? (
                                 <>
@@ -2462,7 +2461,7 @@ export default function ImagePage() {
                             <button
                                 type="button"
                                 onClick={handleCancelGenerate}
-                                className="w-full text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-foreground transition-colors hover:text-primary-foreground"
                             >
                                 {isCancelingGenerate
                                     ? t('image:ui.canceling', { defaultValue: 'Canceling...' })
@@ -2501,7 +2500,7 @@ export default function ImagePage() {
                 <div className={cn(
                     "flex-1 relative",
                     isMobile ? "flex flex-col overflow-y-auto" : "flex flex-col overflow-hidden"
-                )}>
+                )} style={isMobile ? { overscrollBehaviorY: 'none' } : undefined}>
                     <div className={cn(
                         "flex min-h-0 flex-1",
                         isMobile

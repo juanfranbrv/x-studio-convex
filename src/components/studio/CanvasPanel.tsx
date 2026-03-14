@@ -135,9 +135,11 @@ function renderLayoutIcon(svgIcon: string) {
 function StyleReferenceCorner({
     url,
     onRemove,
+    isMobile = false,
 }: {
     url: string
     onRemove?: () => void
+    isMobile?: boolean
 }) {
     const { t } = useTranslation('common')
     const containerRef = useRef<HTMLDivElement>(null)
@@ -198,7 +200,10 @@ function StyleReferenceCorner({
                             e.stopPropagation()
                             onRemove()
                         }}
-                        className="absolute top-1 right-1 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg z-50 pointer-events-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                        className={cn(
+                            'absolute top-1 right-1 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg z-50 pointer-events-auto transition-opacity hover:bg-destructive hover:text-destructive-foreground',
+                            isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 hover:opacity-100'
+                        )}
                         style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                     >
                         <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
@@ -248,6 +253,7 @@ export interface CanvasPanelProps {
     showPromptDebugTrigger?: boolean
     layoutIconOverrides?: Record<string, string>
     isAdmin?: boolean
+    sessionName?: string | null
 }
 
 export function CanvasPanel({
@@ -283,6 +289,7 @@ export function CanvasPanel({
     showPromptDebugTrigger = false,
     layoutIconOverrides = {},
     isAdmin = false,
+    sessionName = null,
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const tt = (key: string, defaultValue: string, options?: Record<string, unknown>) =>
@@ -399,6 +406,7 @@ export function CanvasPanel({
     // Copy Generation State
     const [generatedCopy, setGeneratedCopy] = useState<string | null>(null)
     const [generatedHashtags, setGeneratedHashtags] = useState<string[]>([])
+    const [previousCopyVersion, setPreviousCopyVersion] = useState<{ copy: string; hashtags: string[] } | null>(null)
     const [isGeneratingCopy, setIsGeneratingCopy] = useState(false)
     const [isCancelingCopy, setIsCancelingCopy] = useState(false)
     const [isCopyLocked, setIsCopyLocked] = useState(false) // New state for locking copy
@@ -527,6 +535,9 @@ export function CanvasPanel({
         // Respect Lock
         if (isCopyLocked) return
 
+        const currentCopy = (creationState.caption || generatedCopy || '').trim()
+        const currentHashtags = [...generatedHashtags]
+
         cancelCopyGenerationRef.current = false
         setIsCancelingCopy(false)
         setIsGeneratingCopy(true)
@@ -536,7 +547,9 @@ export function CanvasPanel({
                 imageBase64: currentImage,
                 topic: creationState.rawMessage || undefined,
                 userPrompt: creationState.rawMessage || undefined,
-                model: creationState.selectedIntelligenceModel
+                model: creationState.selectedIntelligenceModel,
+                previousCopy: currentCopy || undefined,
+                variationKey: Date.now().toString(36)
             })
 
             if (cancelCopyGenerationRef.current) {
@@ -544,6 +557,12 @@ export function CanvasPanel({
             }
 
             if (result.success && result.data) {
+                if (currentCopy || currentHashtags.length > 0) {
+                    setPreviousCopyVersion({
+                        copy: currentCopy,
+                        hashtags: currentHashtags
+                    })
+                }
                 setGeneratedCopy(result.data.copy)
                 setGeneratedHashtags(result.data.hashtags)
                 // Also update global state to ensure UI updates if creationState.caption is being used
@@ -568,6 +587,47 @@ export function CanvasPanel({
         setIsGeneratingCopy(false)
     }
 
+    const handleRestorePreviousCopy = () => {
+        if (!previousCopyVersion) return
+
+        const currentCopy = (creationState.caption || generatedCopy || '').trim()
+        const currentHashtags = [...generatedHashtags]
+
+        setGeneratedCopy(previousCopyVersion.copy)
+        setGeneratedHashtags(previousCopyVersion.hashtags)
+        onCaptionChange?.(previousCopyVersion.copy)
+        setPreviousCopyVersion(
+            currentCopy || currentHashtags.length > 0
+                ? { copy: currentCopy, hashtags: currentHashtags }
+                : null
+        )
+    }
+
+    const sanitizeDownloadSegment = (value: string, fallback: string) => {
+        const normalized = value
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '')
+
+        return normalized || fallback
+    }
+
+    const createUniqueDownloadId = () => {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+            return crypto.randomUUID().split('-')[0]
+        }
+
+        return Date.now().toString(36)
+    }
+
+    const buildDownloadBaseName = () => {
+        const safeBrandName = sanitizeDownloadSegment(activeBrandKit?.brand_name || '', 'x-image-generation')
+        const safeSessionName = sanitizeDownloadSegment(sessionName || '', 'sesion')
+        const uniqueId = createUniqueDownloadId()
+
+        return `${safeBrandName}-${safeSessionName}-${uniqueId}`
+    }
+
     // Trigger Copy Generation when image changes
     useEffect(() => {
         // Only auto-generate copy if we don't have one from the unified flow
@@ -577,16 +637,15 @@ export function CanvasPanel({
             // Clear copy when image is removed (e.g. on reset)
             setGeneratedCopy(null)
             setGeneratedHashtags([])
+            setPreviousCopyVersion(null)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentImage])
 
     const handleDownload = async () => {
         if (!currentImage) return
-        const timestamp = Date.now()
 
         try {
-            let imageBlob: Blob
             let imageResponse = await fetch(currentImage)
 
             if (!imageResponse.ok) {
@@ -601,7 +660,7 @@ export function CanvasPanel({
                 imageResponse = proxyResponse
             }
 
-            imageBlob = await imageResponse.blob()
+            const imageBlob = await imageResponse.blob()
             const imageUrl = URL.createObjectURL(imageBlob)
             const mime = (imageBlob.type || 'image/png').toLowerCase()
             const extension = mime.includes('jpeg') || mime.includes('jpg')
@@ -613,7 +672,7 @@ export function CanvasPanel({
                         : 'png'
             const link = document.createElement('a')
             link.href = imageUrl
-            link.download = `x-image-generation-${timestamp}.${extension}`
+            link.download = `${buildDownloadBaseName()}.${extension}`
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)
@@ -649,7 +708,7 @@ export function CanvasPanel({
         const zipUrl = URL.createObjectURL(zipBlob)
         const zipLink = document.createElement('a')
         zipLink.href = zipUrl
-        zipLink.download = `x-image-generation-${timestamp}.zip`
+        zipLink.download = `${buildDownloadBaseName()}.zip`
         document.body.appendChild(zipLink)
         zipLink.click()
         document.body.removeChild(zipLink)
@@ -923,6 +982,30 @@ export function CanvasPanel({
                                         </Button>
                                     </div>
                                 )}
+                                {isMobile && (
+                                    <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={handleDownload}
+                                            className="h-9 w-9 rounded-full border border-border bg-background/82 shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
+                                            title={tt('common:preview.downloadImage', 'Download image')}
+                                        >
+                                            <ImageDown className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={handleDownloadBundle}
+                                            className="h-9 w-9 rounded-full border border-border bg-background/82 shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
+                                            title={tt('common:preview.downloadBundle', 'Download ZIP')}
+                                        >
+                                            <SquareArrowDown className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                )}
                                 <div className="w-full h-full flex items-center justify-center text-center">
                                     <motion.div
                                         key={currentImage}
@@ -1041,7 +1124,10 @@ export function CanvasPanel({
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() => onRemoveReferenceImage(item.url)}
-                                                                className="absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                className={cn(
+                                                                    'absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground',
+                                                                    isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                                )}
                                                                 style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                                             >
                                                                 <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
@@ -1067,6 +1153,7 @@ export function CanvasPanel({
                                             <StyleReferenceCorner
                                                 url={mainStyle.url}
                                                 onRemove={onRemoveReferenceImage ? () => onRemoveReferenceImage(mainStyle.url) : undefined}
+                                                isMobile={isMobile}
                                             />
                                         )
                                     }
@@ -1089,7 +1176,10 @@ export function CanvasPanel({
                                                                     variant="ghost"
                                                                     size="icon"
                                                                     onClick={onDisableAiPromptReference}
-                                                                    className="absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                    className={cn(
+                                                                        'absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground',
+                                                                        isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                                    )}
                                                                     style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                                                 >
                                                                     <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
@@ -1113,7 +1203,10 @@ export function CanvasPanel({
                                                                     variant="ghost"
                                                                     size="icon"
                                                                     onClick={() => onRemoveReferenceImage(item.url)}
-                                                                    className="absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground"
+                                                                    className={cn(
+                                                                        'absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground',
+                                                                        isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                                    )}
                                                                     style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                                                 >
                                                                     <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
@@ -1146,7 +1239,10 @@ export function CanvasPanel({
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => onSelectLogo(null)}
-                                                className="absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-30 hover:bg-destructive hover:text-destructive-foreground"
+                                                className={cn(
+                                                    'absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-30 hover:bg-destructive hover:text-destructive-foreground',
+                                                    isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                )}
                                                 style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                                             >
                                                 <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
@@ -1198,6 +1294,8 @@ export function CanvasPanel({
                             hashtags={generatedHashtags}
                             isLoading={isGeneratingCopy}
                             onRegenerate={handleGenerateCopy}
+                            onRestorePrevious={handleRestorePreviousCopy}
+                            hasPreviousVersion={Boolean(previousCopyVersion)}
                             onCancel={handleCancelGenerateCopy}
                             isCanceling={isCancelingCopy}
                             isLocked={isCopyLocked}

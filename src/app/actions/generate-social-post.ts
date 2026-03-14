@@ -2,8 +2,8 @@
 
 import { BrandDNA } from '@/lib/brand-types'
 import { generateTextUnified } from '@/lib/gemini'
-import { buildSocialManagerPrompt } from '@/lib/prompts/actions/social-manager'
 import { detectLanguageWithApi } from '@/lib/language-detection'
+import { buildSocialManagerPrompt } from '@/lib/prompts/actions/social-manager'
 
 const FALLBACK_TAGS: Record<string, string[]> = {
     es: ['marketing', 'negocios', 'marca', 'socialmedia', 'contenido', 'diseno'],
@@ -85,14 +85,63 @@ const ensureHashtags = (hashtags: string[], sourceText: string, brandName?: stri
     return merged.slice(0, 12)
 }
 
+const normalizeCopyText = (value: string) =>
+    value
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim()
+
+const parseGeneratedSocialPost = (
+    text: string,
+    topic: string | undefined,
+    brandName: string | undefined,
+    detectedLanguage: string
+) => {
+    try {
+        let cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim()
+        const match = cleanedText.match(/\{[\s\S]*\}/)
+        if (match) {
+            cleanedText = match[0]
+        }
+
+        const json = JSON.parse(cleanedText)
+        const normalized = normalizeHashtags(json.hashtags)
+        const fallbackSource = `${json.copy || json.caption || ''} ${topic || ''}`.trim()
+        const hashtags = ensureHashtags(normalized, fallbackSource, brandName, detectedLanguage)
+
+        return {
+            success: true as const,
+            data: {
+                copy: json.copy || json.caption || text,
+                hashtags
+            }
+        }
+    } catch (error) {
+        console.error('Failed to parse response as JSON. Returning raw text.', error, text)
+        if (text && !text.includes('Error') && !text.includes('Invalid')) {
+            return {
+                success: true as const,
+                data: {
+                    copy: text,
+                    hashtags: ensureHashtags([], `${text} ${topic || ''}`, brandName, detectedLanguage)
+                }
+            }
+        }
+
+        return { success: false as const, error: 'Formato de respuesta invalido de la IA' }
+    }
+}
+
 export async function generateSocialPost(params: {
     brand: BrandDNA
     imageBase64?: string
     topic?: string
     userPrompt?: string
     model?: string
+    previousCopy?: string
+    variationKey?: string
 }) {
-    const { brand, imageBase64, topic, userPrompt, model } = params
+    const { brand, imageBase64, topic, userPrompt, model, previousCopy, variationKey } = params
 
     console.log('--- generateSocialPost call ---')
     console.log('Brand:', brand.brand_name)
@@ -100,60 +149,48 @@ export async function generateSocialPost(params: {
     console.log('Start generation...')
 
     try {
-        // 1. Construct Prompt
         const detectedLanguage = await detectLanguageWithApi(userPrompt || topic || '', 'es')
-        const prompt = buildSocialManagerPrompt(brand, topic, detectedLanguage)
-
-        // 2. Prepare Images
         const images = imageBase64 ? [imageBase64] : []
+        const normalizedPreviousCopy = normalizeCopyText(previousCopy || '')
+        const totalAttempts = normalizedPreviousCopy ? 3 : 1
+        let lastResult:
+            | { success: true; data: { copy: string; hashtags: string[] } }
+            | { success: false; error: string }
+            | null = null
 
-        // 3. Generate using Unified function (handles Google vs Wisdom)
-        const text = await generateTextUnified(
-            { name: brand.brand_name || 'Brand', brand_dna: brand },
-            prompt,
-            model,
-            images
-        )
+        for (let attempt = 0; attempt < totalAttempts; attempt += 1) {
+            const prompt = buildSocialManagerPrompt(brand, topic, detectedLanguage, {
+                previousCopy,
+                variationKey: `${variationKey || Date.now().toString(36)}-${attempt + 1}`
+            })
 
-        console.log('AI Response:', text)
+            const text = await generateTextUnified(
+                { name: brand.brand_name || 'Brand', brand_dna: brand },
+                prompt,
+                model,
+                images
+            )
 
-        try {
-            // Clean markdown tokens if present (```json ... ```)
-            // Enhanced cleaning to handle potential leading/trailing non-json chars
-            let cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim()
-            const match = cleanedText.match(/\{[\s\S]*\}/)
-            if (match) {
-                cleanedText = match[0]
+            console.log('AI Response:', text)
+
+            const parsed = parseGeneratedSocialPost(text, topic, brand.brand_name, detectedLanguage)
+            lastResult = parsed
+
+            if (!parsed.success) {
+                return parsed
             }
 
-            const json = JSON.parse(cleanedText)
-            const normalizedHashtags = normalizeHashtags(json.hashtags)
-            const fallbackSource = `${json.copy || json.caption || ''} ${topic || ''}`.trim()
-            const ensuredHashtags = ensureHashtags(normalizedHashtags, fallbackSource, brand.brand_name, detectedLanguage)
-            return {
-                success: true,
-                data: {
-                    copy: json.copy || json.caption || text, // Fallback keys
-                    hashtags: ensuredHashtags
-                }
+            if (!normalizedPreviousCopy || normalizeCopyText(parsed.data.copy) !== normalizedPreviousCopy) {
+                return parsed
             }
-        } catch (e) {
-            console.error('Failed to parse response as JSON. Returning raw text.', e, text)
-            // Fallback: return raw text if it's not a server error message
-            if (text && !text.includes('Error') && !text.includes('Invalid')) {
-                return {
-                    success: true,
-                    data: {
-                        copy: text,
-                        hashtags: ensureHashtags([], `${text} ${topic || ''}`, brand.brand_name, detectedLanguage)
-                    }
-                }
-            }
-            return { success: false, error: 'Formato de respuesta inválido de la IA' }
+
+            console.warn('Generated copy matched previous version, retrying...')
         }
 
-    } catch (error: any) {
+        return lastResult || { success: false, error: 'No se pudo generar un nuevo copy' }
+    } catch (error: unknown) {
         console.error('Error generating social post:', error)
-        return { success: false, error: error.message || 'Error al generar el post' }
+        const message = error instanceof Error ? error.message : 'Error al generar el post'
+        return { success: false, error: message }
     }
 }

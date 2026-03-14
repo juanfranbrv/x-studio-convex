@@ -322,7 +322,7 @@ export function ContentImageCard({
             )}
 
             <Dialog open={isBrandKitModalOpen} onOpenChange={setIsBrandKitModalOpen}>
-                <DialogContent className="!w-[64vw] !max-w-[64vw] sm:!max-w-[64vw] h-[min(88vh,860px)] p-0 overflow-hidden flex flex-col">
+                <DialogContent className="h-[min(88vh,860px)] w-[min(92vw,1120px)] !max-w-[min(92vw,1120px)] p-0 overflow-hidden flex flex-col">
                     <DialogHeader className="px-6 pt-6 pb-3">
                         <DialogTitle>{tt('contentImage.selectFromBrandKitTitle', 'Select content from Brand Kit')}</DialogTitle>
                         <DialogDescription>
@@ -332,7 +332,7 @@ export function ContentImageCard({
 
                     <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
                         {brandKitImages.length > 0 ? (
-                            <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(132px,1fr))] gap-3">
+                            <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(88px,1fr))] gap-3 sm:[grid-template-columns:repeat(auto-fill,minmax(96px,1fr))]">
                                 {brandKitImages.map((image) => {
                                 const isSelected = contentBrandKitImageIds.includes(image.id)
                                 const canSelect = canAddMoreManual || isSelected

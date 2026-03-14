@@ -79,6 +79,7 @@
     "placeholder": "Your generated copy will appear here...",
     "regenerating": "Generating...",
     "regenerate": "Regenerate",
+    "restorePrevious": "Back to previous",
     "unlockTitle": "Unlock copy",
     "lockTitle": "Freeze copy to keep it when generating a new image",
     "locked": "Frozen",

@@ -57,6 +57,7 @@ export function TextLayersEditor({
     const { t } = useTranslation('common')
     const visibleTextAssets = textAssets.filter(asset => asset.type !== 'cta' && asset.type !== 'url')
     const headlineRef = useRef<HTMLTextAreaElement | null>(null)
+    const touchVisibleActionClass = 'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100'
 
     const resizeHeadline = useCallback(() => {
         const el = headlineRef.current
@@ -111,7 +112,10 @@ export function TextLayersEditor({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDeleteLayer('headline', 'headline')}
-                            className="absolute right-4 top-0 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                            className={cn(
+                                'absolute right-4 top-0 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground',
+                                touchVisibleActionClass
+                            )}
                             style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                         >
                             <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
@@ -153,7 +157,10 @@ export function TextLayersEditor({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer(key, 'custom')}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                                className={cn(
+                                    'absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground',
+                                    touchVisibleActionClass
+                                )}
                                 style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                             >
                                 <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
@@ -193,7 +200,10 @@ export function TextLayersEditor({
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => onDeleteLayer(asset.id, 'asset')}
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                                    className={cn(
+                                        'absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground',
+                                        touchVisibleActionClass
+                                    )}
                                     style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                 >
                                     <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
@@ -303,7 +313,10 @@ export function TextLayersEditor({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer('cta', 'cta')}
-                                className="ml-1 rounded-full bg-destructive/70 text-destructive-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                                className={cn(
+                                    'ml-1 rounded-full bg-destructive/70 text-destructive-foreground shadow-md transition-opacity hover:bg-destructive hover:text-destructive-foreground',
+                                    touchVisibleActionClass
+                                )}
                                 style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                             >
                                 <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
@@ -337,7 +350,10 @@ export function TextLayersEditor({
                                 <button
                                     aria-label={t('textLayerEditor.clearUrl', { defaultValue: 'Clear URL' })}
                                     onClick={() => onCtaUrlChange?.('')}
-                                    className="rounded-full bg-destructive/70 text-destructive-foreground shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+                                    className={cn(
+                                        'rounded-full bg-destructive/70 text-destructive-foreground shadow-md flex items-center justify-center transition-opacity hover:bg-destructive hover:text-destructive-foreground',
+                                        touchVisibleActionClass
+                                    )}
                                     style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                                 >
                                     <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />

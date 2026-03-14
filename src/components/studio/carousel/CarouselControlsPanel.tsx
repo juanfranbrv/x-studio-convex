@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Minus, Sparkles, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { Plus, Minus, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import type { CarouselSuggestion, CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
@@ -302,6 +302,7 @@ interface CarouselControlsPanelProps {
     slideVariantSelection?: string[]
     suggestedImagePrompts?: string[]
     analysisReady?: boolean
+    onReanalysisStateChange?: (requiresReanalysis: boolean) => void
     onInvalidatePreview?: () => void
     onReferencePreviewStateChange?: (state: {
         uploadedImages: string[]
@@ -479,6 +480,7 @@ export function CarouselControlsPanel({
     slideVariantSelection = [],
     suggestedImagePrompts = [],
     analysisReady = false,
+    onReanalysisStateChange,
     onInvalidatePreview,
     onReferencePreviewStateChange,
     previewSlides = [],
@@ -690,7 +692,8 @@ export function CarouselControlsPanel({
     const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1)
     const [needsReanalysis, setNeedsReanalysis] = useState(false)
     const [lastAnalyzedSignature, setLastAnalyzedSignature] = useState('')
-    const showAllSteps = analysisReady || generatedCount > 0
+    const hasStructuralAnalysis = Boolean(lastAnalyzedSignature)
+    const showAllSteps = analysisReady || generatedCount > 0 || hasStructuralAnalysis
     const stepRefs = useRef<Array<HTMLDivElement | null>>([])
     const shouldReduceMotion = useReducedMotion()
     const selectedImageCount = uploadedImages.length + selectedBrandKitImageIds.length
@@ -720,6 +723,24 @@ export function CarouselControlsPanel({
         if (!currentId) return null
         return (workSessions || []).find((session) => String(session._id) === currentId) || null
     }, [currentSessionId, workSessions])
+    const getDefaultSelectedColorsFromBrandKit = useCallback((): SelectedColor[] => {
+        if (!Array.isArray(brandKit?.colors) || brandKit.colors.length === 0) return []
+
+        return brandKit.colors
+            .map((colorEntry) => {
+                const rawRole = ((colorEntry.role as string) || 'Acento').trim().toUpperCase()
+                let role: 'Texto' | 'Fondo' | 'Acento' = 'Acento'
+                if (rawRole.includes('TEXT')) role = 'Texto'
+                else if (rawRole.includes('FOND')) role = 'Fondo'
+                else if (rawRole.includes('ACENT')) role = 'Acento'
+
+                return {
+                    color: (colorEntry.color || (typeof colorEntry === 'string' ? colorEntry : '')).toLowerCase(),
+                    role
+                }
+            })
+            .filter((entry) => entry.color)
+    }, [brandKit])
     const buildEmptyWorkspaceSnapshot = useCallback((defaultStructureId: string): CarouselWorkspaceSnapshot => {
         const defaultCompositionId = pickCompositionId(
             compositions,
@@ -747,7 +768,7 @@ export function CarouselControlsPanel({
             selectedStylePresetId: null,
             selectedStylePresetName: null,
             selectedLogoId: null,
-            selectedColors: [],
+            selectedColors: getDefaultSelectedColorsFromBrandKit(),
             selectedBrandKitImageIds: [],
             referenceImageRoles: {},
             uploadedImages: [],
@@ -770,7 +791,7 @@ export function CarouselControlsPanel({
                 sessionHistory: [],
             }
         }
-    }, [compositions])
+    }, [compositions, getDefaultSelectedColorsFromBrandKit])
     const resetWorkspace = useCallback(() => {
         setPrompt('')
         setSlideCount(0)
@@ -789,7 +810,7 @@ export function CarouselControlsPanel({
         setCompositionId(defaultCompositionId)
         setBasicSelectedCompositionId(null)
         setSelectedLogoId(null)
-        setSelectedColors([])
+        setSelectedColors(getDefaultSelectedColorsFromBrandKit())
         setSelectedBrandKitImageIds([])
         setReferenceImageRoles({})
         setUploadedImages([])
@@ -808,7 +829,7 @@ export function CarouselControlsPanel({
         setLastAnalyzedSignature('')
         setCurrentStep(1)
         onReset?.()
-    }, [analysisStructure?.id, structures, compositions, onReset])
+    }, [analysisStructure?.id, structures, compositions, getDefaultSelectedColorsFromBrandKit, onReset])
 
     const resetCarouselDraft = useCallback(() => {
         resetWorkspace()
@@ -1211,6 +1232,16 @@ export function CarouselControlsPanel({
             setCtaUrl(snapshot.ctaUrl || '')
             setSelectedContactFields(snapshot.selectedContactFields || {})
             const savedPreview = snapshot.previewState
+            const restoredStructuralSignature = JSON.stringify({
+                prompt: snapshot.prompt || '',
+                slideCount: Math.max(0, Math.min(15, snapshot.slideCount || 0)),
+                structureId: snapshot.structureId || 'problema-solucion',
+            })
+            const hasRestoredAnalysis =
+                (Array.isArray(savedPreview?.scriptSlides) && savedPreview.scriptSlides.length > 0)
+                || (Array.isArray(savedPreview?.slides) && savedPreview.slides.length > 0)
+                || Boolean(snapshot.analysisHook || snapshot.analysisStructure?.id || snapshot.analysisIntent)
+
             if (savedPreview && onRestorePreviewState) {
                 onRestorePreviewState({
                     slides: Array.isArray(savedPreview.slides) ? savedPreview.slides : [],
@@ -1229,7 +1260,7 @@ export function CarouselControlsPanel({
             }
             setCurrentStep(Array.isArray(snapshot.suggestions) && snapshot.suggestions.length > 0 ? 7 : 6)
             setNeedsReanalysis(false)
-            setLastAnalyzedSignature('')
+            setLastAnalyzedSignature(hasRestoredAnalysis ? restoredStructuralSignature : '')
         } finally {
             window.setTimeout(() => setIsHydratingSession(false), 0)
         }
@@ -1816,29 +1847,14 @@ export function CarouselControlsPanel({
     const handleSlideCountChange = (delta: number) => {
         const newCount = Math.max(0, Math.min(15, slideCount + delta))
         setSlideCount(newCount)
-        setCurrentStep(2)
+        setCurrentStep((prev) => Math.max(prev, 2))
         if (prompt.trim()) {
             markStructuralReanalysisNeeded()
-        } else {
-            setCurrentStep(2)
         }
     }
 
     const refreshBrandColorsFromKit = () => {
-        const fallback = (brandKit?.colors || [])
-            .filter((c) => c.color)
-            .map((c) => {
-                const rawRole = ((c.role as string) || 'Acento').trim().toUpperCase()
-                let role: 'Texto' | 'Fondo' | 'Acento' = 'Acento'
-                if (rawRole.includes('TEXT')) role = 'Texto'
-                else if (rawRole.includes('FOND')) role = 'Fondo'
-                else if (rawRole.includes('ACENT')) role = 'Acento'
-                return {
-                    color: c.color.toLowerCase(),
-                    role
-                }
-            })
-        setSelectedColors(fallback)
+        setSelectedColors(getDefaultSelectedColorsFromBrandKit())
     }
 
     const handleSelectLogo = (logoId: string | null) => {
@@ -1934,8 +1950,10 @@ export function CarouselControlsPanel({
         const currentBrandId = brandKit?.id || (brandKit as any)?._id
         if (!brandKit || !currentBrandId) return
 
+        const shouldInitializeColors = currentBrandId !== lastInitBrandId || selectedColors.length === 0
+        if (!shouldInitializeColors) return
+
         // Only run if the Brand Kit ID has changed
-        if (currentBrandId === lastInitBrandId) return
         // Avoid overwriting state while a persisted session for this scope is being restored.
         if (activeWorkSession?.snapshot && !hasHydratedSession) return
 
@@ -1956,22 +1974,8 @@ export function CarouselControlsPanel({
         styleAnalysisCacheRef.current = {}
         lastAutoStyleRef.current = null
 
-        if (brandKit.colors && brandKit.colors.length > 0) {
-            const defaultColors: SelectedColor[] = brandKit.colors
-                .map(c => {
-                    const rawRole = ((c.role as string) || 'Acento').trim().toUpperCase()
-                    let role: 'Texto' | 'Fondo' | 'Acento' = 'Acento'
-                    if (rawRole.includes('TEXT')) role = 'Texto'
-                    else if (rawRole.includes('FOND')) role = 'Fondo'
-                    else if (rawRole.includes('ACENT')) role = 'Acento'
-
-                    return {
-                        color: (c.color || (typeof c === 'string' ? c : '')).toLowerCase(),
-                        role
-                    }
-                })
-                .filter(c => c.color)
-
+        const defaultColors = getDefaultSelectedColorsFromBrandKit()
+        if (defaultColors.length > 0) {
             console.log(`[CarouselControlsPanel] Setting ${defaultColors.length} default colors`)
             setSelectedColors(defaultColors)
         } else {
@@ -1989,7 +1993,7 @@ export function CarouselControlsPanel({
         setSelectedContactFields({})
 
         setLastInitBrandId(currentBrandId)
-    }, [brandKit, lastInitBrandId, activeWorkSession, hasHydratedSession, primaryLogoIndex])
+    }, [brandKit, lastInitBrandId, activeWorkSession, hasHydratedSession, primaryLogoIndex, selectedColors.length, getDefaultSelectedColorsFromBrandKit])
 
     useEffect(() => {
         if (!onReferenceImagesChange) return
@@ -2159,9 +2163,9 @@ export function CarouselControlsPanel({
         setSlideCount(newCount)
         if (prompt.trim()) {
             setNeedsReanalysis(true)
-            setCurrentStep(2)
+            setCurrentStep((prev) => Math.max(prev, 2))
         } else {
-            setCurrentStep(2)
+            setCurrentStep((prev) => Math.max(prev, 2))
         }
         onSlideCountOverrideApplied?.()
     }, [
@@ -2668,16 +2672,12 @@ export function CarouselControlsPanel({
         setLastAnalyzedSignature(buildStructuralSignature())
     }
 
-    const hasStructuralAnalysis = Boolean(lastAnalyzedSignature)
-    const primaryActionRequiresReanalysis = needsReanalysis && hasStructuralAnalysis
-    const primaryActionDisabled = primaryActionRequiresReanalysis ? !canAnalyze : !canGenerate
-    const handlePrimaryAction = () => {
-        if (primaryActionRequiresReanalysis) {
-            void handleAnalyze()
-            return
-        }
-        handleGenerate()
-    }
+    const canRequireReanalysis = hasStructuralAnalysis || analysisReady || generatedCount > 0 || currentStep >= 6
+    const primaryActionRequiresReanalysis = needsReanalysis && canRequireReanalysis
+
+    useEffect(() => {
+        onReanalysisStateChange?.(primaryActionRequiresReanalysis)
+    }, [primaryActionRequiresReanalysis, onReanalysisStateChange])
 
     return (
         <div className={STUDIO_CONTROLS_SHELL_CLASS}>
@@ -2721,18 +2721,16 @@ export function CarouselControlsPanel({
                                     disabled={!userId || !scopedBrandId || isHydratingSession || isSavingSession || !hasUnsavedChanges}
                                     title={t('ui.saveSessionNow')}
                                 >
-                                    {isSavingSession ? (
-                                        <Loader2 className="h-3.5 w-3.5" />
-                                    ) : (
-                                        <Save
-                                            className={cn(
-                                                "h-3.5 w-3.5 transition-colors",
-                                                hasUnsavedChanges
+                                    <Save
+                                        className={cn(
+                                            "h-3.5 w-3.5 transition-colors",
+                                            isSavingSession
+                                                ? "text-muted-foreground/40"
+                                                : hasUnsavedChanges
                                                     ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.45)]"
                                                     : "text-muted-foreground/55"
-                                            )}
-                                        />
-                                    )}
+                                        )}
+                                    />
                                 </Button>
                             </div>
                         }
@@ -2836,7 +2834,7 @@ export function CarouselControlsPanel({
                                 const nextPrompt = e.target.value
                                 setPrompt(nextPrompt)
                                 markStructuralReanalysisNeeded()
-                                setCurrentStep(2)
+                                setCurrentStep((prev) => Math.max(prev, 2))
                             }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -2850,7 +2848,6 @@ export function CarouselControlsPanel({
                         />
                         <div className="absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2">
                             <div className="flex items-center gap-2">
-                                {isAnalyzing && <Loader2 className="w-4 h-4 text-primary" />}
                                 {isAnalyzing && onCancelAnalyze && (
                                     <div className="flex items-center gap-2">
                                         <Button
@@ -2879,7 +2876,16 @@ export function CarouselControlsPanel({
                                 disabled={!canAnalyze}
                                 className="group feedback-action ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
                             >
-                                {primaryActionRequiresReanalysis ? t('ui.reanalyze') : t('ui.analyze')}
+                                {isAnalyzing ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-3.5 w-3.5" />
+                                        {primaryActionRequiresReanalysis
+                                            ? t('ui.reanalyzing')
+                                            : t('ui.analyzing')}
+                                    </>
+                                ) : (
+                                    primaryActionRequiresReanalysis ? t('ui.reanalyze') : t('ui.analyze')
+                                )}
                             </Button>
                         </div>
                     </div>
@@ -3568,77 +3574,16 @@ export function CarouselControlsPanel({
                         </div>
                     </>
                 )}
-            </div>
-
-            {/* Generate */}
-            <div className="border-t border-border/40 p-3 md:p-4">
-                {primaryActionRequiresReanalysis && (
-                    <div className="mb-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2">
-                        <p className="text-[11px] leading-relaxed text-muted-foreground">
-                            {t('ui.pendingStructuralChanges')}
-                        </p>
+                {primaryActionRequiresReanalysis ? (
+                    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
+                        <div className="flex items-start gap-2">
+                            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
+                            <p className="text-[11px] leading-relaxed text-muted-foreground">
+                                {t('ui.pendingStructuralChanges')}
+                            </p>
+                        </div>
                     </div>
-                )}
-                <Button
-                    onClick={handlePrimaryAction}
-                    disabled={primaryActionDisabled}
-                    className="group feedback-action w-full h-[44px] rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all font-semibold disabled:pointer-events-auto disabled:cursor-not-allowed"
-                >
-                    {isAnalyzing ? (
-                        <>
-                            <Loader2 className="w-5 h-5 mr-2" />
-                            {primaryActionRequiresReanalysis ? t('ui.reanalyzing') : t('ui.analyzing')}
-                        </>
-                    ) : isGenerating ? (
-                        <>
-                            <Loader2 className="w-5 h-5 mr-2" />
-                            {t('ui.generatingProgress', { current: generatedCount, total: totalSlides })}
-                        </>
-                    ) : primaryActionRequiresReanalysis ? (
-                        <>
-                            <RotateCcw className="w-5 h-5 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
-                            {t('ui.reanalyze').toUpperCase()}
-                        </>
-                    ) : generatedCount > 0 ? (
-                        <>
-                            <RotateCcw className="w-5 h-5 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
-                            {t('ui.retryCarousel')}
-                        </>
-                    ) : (
-                        <>
-                            <Sparkles className="w-5 h-5 mr-2 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
-                            {t('ui.generateCarousel').toUpperCase()}
-                        </>
-                    )}
-                </Button>
-
-                {isGenerating && onCancelGenerate && (
-                    <div className="mt-2 flex items-center justify-between">
-                        <Button
-                            onClick={onCancelGenerate}
-                            variant="link"
-                            size="sm"
-                            className="h-7 px-0 text-[11px] text-muted-foreground hover:text-destructive"
-                            title={t('ui.stopGeneration')}
-                        >
-                            {t('ui.stopGeneration')}
-                        </Button>
-                        <motion.span
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: isCancelingGenerate ? 1 : 0 }}
-                            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
-                            className="text-[10px] uppercase tracking-wider text-muted-foreground"
-                        >
-                            {t('ui.canceling')}
-                        </motion.span>
-                    </div>
-                )}
-
-                {!brandKit && (
-                    <p className="text-xs text-destructive text-center mt-2">
-                        {t('errors.selectBrandKit')}
-                    </p>
-                )}
+                ) : null}
             </div>
             <Dialog
                 open={unsavedNavModalOpen}

@@ -7,7 +7,7 @@ import { Loader2 } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Copy, RefreshCw, Lock, Unlock, Check } from 'lucide-react'
+import { Copy, RefreshCw, Lock, Unlock, Check, Undo2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useTranslation } from 'react-i18next'
@@ -18,12 +18,14 @@ interface GeneratedCopyCardProps {
     onCopy?: (text: string) => void
     onCopyChange?: (text: string) => void
     onRegenerate?: () => void
+    onRestorePrevious?: () => void
     onCancel?: () => void
     className?: string
     isLoading?: boolean
     isCanceling?: boolean
     isLocked?: boolean
     onToggleLock?: () => void
+    hasPreviousVersion?: boolean
 }
 
 export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
@@ -31,6 +33,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
     hashtags = [],
     onCopy,
     onRegenerate,
+    onRestorePrevious,
     onCancel,
     className,
     isLoading = false,
@@ -38,6 +41,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
     isLocked = false,
     onToggleLock,
     onCopyChange,
+    hasPreviousVersion = false,
 }) => {
     const { t } = useTranslation('common')
     const { activeBrandKit: brand } = useBrandKit()
@@ -134,6 +138,18 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                         {isLoading ? <Loader2 className="mr-1.5 h-3 w-3" /> : <RefreshCw className="mr-1.5 h-3 w-3" />}
                         {isLoading ? t('copyCard.regenerating') : t('copyCard.regenerate')}
                     </Button>
+                    {hasPreviousVersion && onRestorePrevious ? (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={onRestorePrevious}
+                            disabled={isLoading}
+                            className="h-7 text-xs text-muted-foreground hover:text-primary"
+                        >
+                            <Undo2 className="mr-1.5 h-3 w-3" />
+                            {t('copyCard.restorePrevious', { defaultValue: 'Volver al anterior' })}
+                        </Button>
+                    ) : null}
                     {isLoading && onCancel ? (
                         <Button
                             variant="link"

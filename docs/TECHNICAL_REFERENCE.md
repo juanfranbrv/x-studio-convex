@@ -89,6 +89,12 @@ Nota operativa:
   - boton de cierre visible dentro de la cabecera
   - transicion rapida y organica, respetando `prefers-reduced-motion`
 
+### Desarrollo LAN en la misma red
+
+- Para probar desde movil u otros dispositivos en la misma red hay que usar `npm run dev:lan` o `npm run dev:lan:quiet`.
+- Ese flujo detecta una IP privada util, expone Next en `0.0.0.0:3000`, inyecta `NEXT_PUBLIC_APP_URL` con la URL LAN correcta para esa sesion y rellena `allowedDevOrigins`.
+- Evitar fijar manualmente una IP LAN en `.env.local`; la IP puede cambiar entre redes y romper Clerk o los redirects de desarrollo.
+
 ## Arquitectura de internacionalizacion
 
 ### Stack actual
@@ -282,12 +288,49 @@ These values are editable from Admin and must remain the single source of truth 
 2. Before using Chrome DevTools MCP, verify `127.0.0.1:9222` is reachable.
 3. If the port is not reachable, relaunch Chrome through `scripts/start-chrome-debug.ps1`.
 4. If DevTools still cannot attach, continue with Playwright and browser console instead of blocking the task.
+5. For visual QA in this project, prefer this isolated debug browser by default; Playwright and DevTools should target it before any personal Chrome session.
+6. On Windows, Codex should have a `chrome-devtools` MCP server configured in `C:\Users\Usuario\.codex\config.toml` using `chrome-devtools-mcp@latest` with `--browser-url=http://127.0.0.1:9222` so the agent can attach to the shared debug browser profile instead of launching an unrelated session.
 
 ### Implementation notes
 
 - Shared helpers live in `scripts/chrome-debug-common.ps1`.
 - The launcher queries `http://127.0.0.1:9222/json/version` to confirm the debugging endpoint is alive.
 - The stop script only targets Chrome processes started with the debug port or the isolated profile, so the normal user browser session is not killed.
+
+## Playwright auth state local
+
+### Goal
+
+- Reuse the authenticated local session for Playwright without automating Google login on every run.
+- Keep QA stable by capturing auth from the isolated debug Chrome already attached to the app.
+
+### Commands
+
+- `npm run playwright:auth:save`: connects to the debug browser on `127.0.0.1:9222` and stores the current session in `playwright/.auth/user.json`.
+
+### Rules
+
+1. The source session must come from the isolated debug browser, not from a personal Chrome profile.
+2. Run the capture only after confirming the debug browser is already authenticated in the app.
+3. `playwright.config.ts` should use `playwright/.auth/user.json` automatically when the file exists.
+4. If the auth file does not exist or expires, Playwright must still be able to run public-route checks without failing config bootstrap.
+5. In this project with Clerk dev keys, `storageState` alone may not fully rehydrate an authenticated session in a fresh Playwright browser. For authenticated E2E against local development, prefer attaching Playwright to the shared debug browser on `127.0.0.1:9222`.
+
+### Practical note
+
+- The spec `tests/image-debug-auth.spec.ts` is designed to run against the shared debug browser session.
+- Use `RUN_REAL_IMAGE_GENERATION=1` only when you explicitly want to spend time/credits on a real generation attempt.
+
+## Image provider timeout guard
+
+### Goal
+
+- Prevent `/api/generate` from hanging forever when the upstream image provider stops responding.
+
+### Rules
+
+1. Direct image-provider HTTP calls should run with a bounded timeout in the provider layer.
+2. When an upstream timeout happens, the API should answer with a handled error instead of leaving the client waiting indefinitely.
 
 ## Migracion de dominio a Postlaboratory
 
@@ -310,3 +353,20 @@ These values are editable from Admin and must remain the single source of truth 
 - `accounts.postlaboratory.com` -> `accounts.clerk.services`
 
 Si Clerk exige verificacion completa del dominio para correo o cuenta hospedada, pueden ser necesarios tambien `clkmail` y los registros DKIM asociados.
+
+## Drawer mobile y capas de modal
+
+- El drawer mobile compartido del panel de trabajo usa capas altas (`z-[60]` y `z-[70]`) para mantenerse interactivo sobre la vista previa.
+- La oreja del drawer mobile debe permanecer anclada en el mismo sitio tanto cerrada como abierta para que el gesto de abrir/cerrar tenga continuidad espacial. No debe reservar ancho de layout: va superpuesta por fuera del borde del panel.
+- La oreja debe apoyarse en tokens semanticos del tema (`primary`, `primary-foreground`, `border`, `ring`) para reflejar automaticamente la personalizacion definida en `/settings`, sin colores hardcodeados.
+- La cabecera interna del drawer en mobile debe ser minima y no gastar altura en textos explicativos si la interaccion ya es evidente por la oreja persistente, el gesto y el boton de cierre.
+- Los `Dialog` base deben renderizarse por encima de ese drawer (`overlay z-[120]`, `content z-[130]`) para que modales de Brand Kit, estilos u otros flujos no queden ocultos detras del panel.
+- En mobile no se debe depender solo de `hover` para acciones de borrar o quitar elementos dentro de la vista previa; esos controles deben seguir siendo visibles o claramente tocables con el dedo.
+- Las acciones clave de resultado en mobile, como descargar imagen o ZIP, deben vivir en el canvas o en un overlay propio, no solo en el rail lateral de escritorio.
+
+## Bloqueo de pull-to-refresh en modulos creativos
+
+- En `image` y `carousel` se desactiva el gesto nativo de pull-to-refresh del navegador cuando el layout esta en mobile.
+- La regla se aplica con un hook compartido (`useDisablePullToRefresh`) que actua sobre `html` y `body`, y se refuerza en el contenedor raiz del modulo con `overscrollBehaviorY: 'none'`.
+- En dispositivos donde `overscroll-behavior` no basta, el hook tambien intercepta `touchmove` descendente con listeners no pasivos cuando no existe ningun ancestro scrolleable que pueda seguir subiendo. Eso evita que el navegador interprete el gesto como refresh de pagina.
+- El objetivo es evitar refresh accidentales al hacer tope arriba durante el trabajo en canvas o paneles con sesion no guardada.
