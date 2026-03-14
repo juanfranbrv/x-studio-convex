@@ -2241,26 +2241,16 @@ export default function ImagePage() {
                         isAdmin={Boolean(isAdmin)}
                         sessionName={buildSessionTitle(activeSessionMeta?.title || selectedSessionToLoad || t('sessions.newSessionTitle', { defaultValue: 'New session' }))}
                     />
-                    <FeedbackButton
-                        show={Boolean(creationFlow.state.generatedImage) && !(isMobile && (mobileControlsOpen || Boolean(editPrompt.trim())))}
-                        brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
-                        intent={creationFlow.state.selectedIntent || undefined}
-                        layout={creationFlow.selectedLayoutMeta?.id}
-                        variant={isMobile ? 'default' : 'tab'}
-                        compact={isMobile}
-                        tabSide={panelPosition === 'right' ? 'right' : 'left'}
-                        className={cn(
-                            "transition-all duration-300",
-                            isMobile
-                                ? "absolute bottom-3 right-3 z-40"
-                                : cn(
-                                    "absolute top-1/2 -translate-y-1/2 z-40",
-                                    panelPosition === 'right'
-                                        ? "right-0 translate-x-full"
-                                        : "left-0 -translate-x-full"
-                                )
-                        )}
-                    />
+                    {!isMobile && (
+                        <FeedbackButton
+                            show={Boolean(creationFlow.state.generatedImage)}
+                            brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
+                            intent={creationFlow.state.selectedIntent || undefined}
+                            layout={creationFlow.selectedLayoutMeta?.id}
+                            variant="tab"
+                            tabSide={panelPosition === 'right' ? 'right' : 'left'}
+                        />
+                    )}
                 </div>
 
                 <div className="flex-shrink-0 p-3 pt-0 md:p-4 md:pt-0">

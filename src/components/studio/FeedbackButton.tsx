@@ -29,6 +29,38 @@ const REACTIONS = [
     { id: 'positive', emoji: '😊', labelKey: 'good', defaultLabel: 'Good' },
 ] as const
 
+function useCanvasEdgePosition(tabSide: 'right' | 'left') {
+    const [style, setStyle] = useState<React.CSSProperties>({})
+
+    useEffect(() => {
+        function update() {
+            const canvas = document.querySelector('.canvas-panel')
+            if (!canvas) return
+            const rect = canvas.getBoundingClientRect()
+            const top = rect.top + 16
+            if (tabSide === 'right') {
+                setStyle({ position: 'fixed', top, left: rect.right })
+            } else {
+                setStyle({ position: 'fixed', top, right: window.innerWidth - rect.left })
+            }
+        }
+
+        requestAnimationFrame(update)
+        window.addEventListener('resize', update)
+        window.addEventListener('scroll', update, true)
+        const ro = new ResizeObserver(update)
+        const canvas = document.querySelector('.canvas-panel')
+        if (canvas) ro.observe(canvas)
+        return () => {
+            window.removeEventListener('resize', update)
+            window.removeEventListener('scroll', update, true)
+            ro.disconnect()
+        }
+    }, [tabSide])
+
+    return style
+}
+
 export function FeedbackButton({
     show,
     generationId,
@@ -51,6 +83,8 @@ export function FeedbackButton({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isVisible, setIsVisible] = useState(false)
     const [hasSubmitted, setHasSubmitted] = useState(false)
+
+    const tabStyle = useCanvasEdgePosition(tabSide)
 
     useEffect(() => {
         if (show && !hasSubmitted) {
@@ -119,16 +153,16 @@ export function FeedbackButton({
             {!isOpen && variant === 'tab' && (
                 <button
                     onClick={() => setIsOpen(true)}
+                    style={tabStyle}
                     className={cn(
                         'z-50 flex flex-col items-center gap-1.5 px-2.5 py-3',
                         'border border-border/50 bg-card/90 backdrop-blur-xl',
                         tabSide === 'right'
-                            ? 'border-r-0 rounded-l-xl rounded-r-none shadow-[-2px_2px_10px_rgba(0,0,0,0.08)]'
-                            : 'border-l-0 rounded-r-xl rounded-l-none shadow-[2px_2px_10px_rgba(0,0,0,0.08)]',
+                            ? 'border-l-0 rounded-r-xl rounded-l-none shadow-[3px_3px_12px_rgba(0,0,0,0.18),0_1px_4px_rgba(0,0,0,0.1)]'
+                            : 'border-r-0 rounded-l-xl rounded-r-none shadow-[-3px_3px_12px_rgba(0,0,0,0.18),0_1px_4px_rgba(0,0,0,0.1)]',
                         'opacity-80 hover:opacity-100 hover:bg-card',
                         'transition-all duration-300 ease-out active:scale-95',
                         'group animate-in fade-in duration-700',
-                        className
                     )}
                     title={t('feedback.openTitle', { defaultValue: 'Send feedback' })}
                 >

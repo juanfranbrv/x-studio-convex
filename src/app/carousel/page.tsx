@@ -2164,26 +2164,16 @@ export default function CarouselPage() {
                             compositionGhostIcon={compositionGhostIcon || undefined}
                             isAdmin={Boolean(isAdmin)}
                         />
-                        <FeedbackButton
-                            show={slides.some(slide => Boolean(slide.imageUrl)) && !(isMobile && (mobileControlsOpen || Boolean(slideCorrectionPrompt.trim())))}
-                            brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
-                            intent={analysisIntent || undefined}
-                            layout={carouselSettings?.compositionId}
-                            variant={isMobile ? 'default' : 'tab'}
-                            compact={isMobile}
-                            tabSide={panelPosition === 'right' ? 'right' : 'left'}
-                            className={cn(
-                                "transition-all duration-300",
-                                isMobile
-                                    ? "absolute bottom-3 right-3 z-40"
-                                    : cn(
-                                        "absolute top-1/2 -translate-y-1/2 z-40",
-                                        panelPosition === 'right'
-                                            ? "right-0 translate-x-full"
-                                            : "left-0 -translate-x-full"
-                                    )
-                            )}
-                        />
+                        {!isMobile && (
+                            <FeedbackButton
+                                show={slides.some(slide => Boolean(slide.imageUrl))}
+                                brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
+                                intent={analysisIntent || undefined}
+                                layout={carouselSettings?.compositionId}
+                                variant="tab"
+                                tabSide={panelPosition === 'right' ? 'right' : 'left'}
+                            />
+                        )}
                     </div>
 
                     {mappedSessionGenerations.length > 0 && (

@@ -781,7 +781,7 @@ export function CanvasPanel({
 
                 {/* Left: Canvas info */}
                 {isAdmin ? (
-                    <div className="pointer-events-auto flex items-center gap-2 pt-1">
+                    <div className="hidden md:flex pointer-events-auto items-center gap-2 pt-1">
                         <div className="flex flex-col items-start gap-0.5 leading-tight text-foreground/90 drop-shadow-sm">
                             <span className="text-[12px] font-medium">
                                 {aspectRatio}
