@@ -47,8 +47,8 @@ export function CreditsBadge() {
 
     if (!isLoaded || isCreating) {
         return (
-            <Badge variant="secondary" className="gap-1.5">
-                <Loader2 className="h-3 w-3" />
+            <Badge variant="secondary" className="gap-2 px-3 py-1.5">
+                <Loader2 className="h-5 w-5" />
             </Badge>
         )
     }
@@ -57,9 +57,9 @@ export function CreditsBadge() {
         return (
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Badge variant="secondary" className="cursor-help gap-1.5">
-                        <Coins className="h-3 w-3" />
-                        <span className="font-mono text-xs">--</span>
+                    <Badge variant="secondary" className="cursor-help gap-2 px-3 py-1.5">
+                        <Coins className="h-5 w-5" />
+                        <span className="font-mono text-base">--</span>
                     </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -75,9 +75,9 @@ export function CreditsBadge() {
         return (
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Badge variant="secondary" className="cursor-help gap-1.5">
-                        <Clock className="h-3 w-3" />
-                        <span className="text-xs">{t('credits.waitlist')}</span>
+                    <Badge variant="secondary" className="cursor-help gap-2 px-3 py-1.5">
+                        <Clock className="h-5 w-5" />
+                        <span className="text-base">{t('credits.waitlist')}</span>
                     </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -89,8 +89,8 @@ export function CreditsBadge() {
 
     if (status === 'suspended') {
         return (
-            <Badge variant="destructive" className="gap-1.5">
-                <span className="text-xs">{t('credits.suspended')}</span>
+            <Badge variant="destructive" className="gap-2 px-3 py-1.5">
+                <span className="text-base">{t('credits.suspended')}</span>
             </Badge>
         )
     }
@@ -100,11 +100,11 @@ export function CreditsBadge() {
             <TooltipTrigger asChild>
                 <Badge
                     variant={isLow ? 'destructive' : 'default'}
-                    className={`cursor-help gap-1.5 ${!isLow ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
+                    className={`cursor-help gap-2 px-3 py-1.5 ${!isLow ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
                 >
-                    {isLow ? <AlertTriangle className="h-3 w-3" /> : null}
-                    <Coins className="h-3 w-3" />
-                    <span className="font-mono text-xs">{credits}</span>
+                    {isLow ? <AlertTriangle className="h-5 w-5" /> : null}
+                    <Coins className="h-5 w-5" />
+                    <span className="font-mono text-base">{credits}</span>
                 </Badge>
             </TooltipTrigger>
             <TooltipContent>
