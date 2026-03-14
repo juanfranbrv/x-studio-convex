@@ -86,7 +86,7 @@ export function MobileWorkPanelDrawer({
                 animate={{ opacity: 1, x: 0, scale: 1, pointerEvents: 'auto' }}
                 transition={{ duration: 0.1, ease: EASE_OUT }}
                 className={cn(
-                    'fixed right-0 top-1/2 z-[70] flex -translate-y-1/2 items-center justify-center overflow-hidden rounded-l-[1.35rem] border border-r-0 border-primary/30',
+                    'fixed right-0 top-1/2 z-[70] flex -translate-y-1/2 items-center justify-center overflow-hidden rounded-l-[1.35rem]',
                     'bg-primary/60 text-primary-foreground shadow-[-3px_3px_12px_rgba(0,0,0,0.18),0_1px_4px_rgba(0,0,0,0.1)]',
                     'transition-[transform,filter,background-color] hover:brightness-[1.04]',
                     'h-[4.8rem] w-12'
