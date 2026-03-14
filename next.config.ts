@@ -17,7 +17,11 @@ function resolveAllowedDevOrigins(): string[] | undefined {
     .map((origin) => origin.trim().replace(/\/+$/, ""))
     .filter(Boolean);
 
-  for (const origin of extraOrigins) origins.add(origin);
+  for (const origin of extraOrigins) {
+    origins.add(origin);
+    // Next.js 16 Turbopack may match on bare hostname only
+    try { origins.add(new URL(origin).hostname); } catch {}
+  }
 
   return Array.from(origins);
 }

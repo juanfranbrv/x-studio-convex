@@ -41,7 +41,7 @@ Antes de tomar cualquier acción o responder:
 ### 4. Reglas de Git y Deployment (SEGURIDAD)
 -   **NUNCA hacer `git push` sin preguntar**:
     1.  Haz commits locales (`git commit`).
-    2.  Pregunta: "¿Hago push a develop/main?".
+    2.  Pregunta: "¿Hago push a sprint-final/main?".
     3.  Espera confirmación explícita (Vercel cuesta dinero y tiempo).
 -   **Verificación de Deployment**:
     -   Tras un push autorizado, **SIEMPRE** verifica el estado en Vercel.
@@ -87,10 +87,10 @@ Antes de tomar cualquier acción o responder:
 
 ### 8. Comando "Sincroniza"
 Cuando Juanfran diga **"sincroniza"**, ejecuta automáticamente:
-1.  `git add -A && git commit` (commitea cambios en develop)
-2.  `git checkout main && git merge develop` (merge a main)
+1.  `git add -A && git commit` (commitea cambios en sprint-final)
+2.  `git checkout main && git merge sprint-final` (merge a main)
 3.  `git push origin main` (push de main)
-4.  `git checkout develop` (volver a develop para seguir trabajando)
+4.  `git checkout sprint-final` (volver a sprint-final para seguir trabajando)
 5.  **Informar al finalizar**: Indica detalladamente qué has hecho, el estado actual del proyecto (si hay errores de build, etc.) y confirma en qué rama te encuentras.
 
 ### 8.1 Comando "deploy"

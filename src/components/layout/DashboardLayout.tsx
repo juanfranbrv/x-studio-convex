@@ -114,7 +114,7 @@ export function DashboardLayout({
 
     return (
         <ProtectedRoute>
-            <div className="flex min-h-dvh bg-mesh text-foreground overflow-hidden md:h-dvh">
+            <div className="fixed inset-0 flex bg-mesh text-foreground overflow-hidden md:relative md:inset-auto md:h-dvh">
                 {/* Lateral Navigation (Desktop Only) */}
                 <Sidebar className="hidden md:flex" />
 

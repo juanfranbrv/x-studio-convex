@@ -21,6 +21,11 @@
       "sourceType": "github",
       "computedHash": "e6bbaf76bff75470f12d4583a3ef2f4081372a7167d84a6a7399649a1d0d5e24"
     },
+    "chrome-cdp": {
+      "source": "pasky/chrome-cdp-skill",
+      "sourceType": "github",
+      "computedHash": "c4715a4080ab472d7cddc7ec62f2e6a8c899a32ec0cbdcd3f7e9bb7a9cb3dcc6"
+    },
     "chrome-devtools": {
       "source": "github/awesome-copilot",
       "sourceType": "github",

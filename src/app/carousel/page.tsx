@@ -1750,6 +1750,29 @@ export default function CarouselPage() {
             closeLabel={t('ui.closeWorkPanel')}
         >
             {controlsPanel}
+            <div className="sticky bottom-0 border-t border-border/40 bg-background/95 p-3 backdrop-blur-md">
+                <Button
+                    onClick={() => {
+                        if (!carouselSettings) return
+                        setMobileControlsOpen(false)
+                        void handleGenerate(carouselSettings)
+                    }}
+                    disabled={isGenerating || isAnalyzing || !carouselSettings || requiresReanalysis}
+                    className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25 disabled:cursor-not-allowed"
+                >
+                    {isGenerating ? (
+                        <>
+                            <Loader2 className="mr-2 h-5 w-5" />
+                            {t('carousel:ui.generating', { defaultValue: 'Generating...' })}
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                            {t('carousel:ui.generateCarousel', { defaultValue: 'Generate carousel' })}
+                        </>
+                    )}
+                </Button>
+            </div>
         </MobileWorkPanelDrawer>
     ) : null
 
@@ -1807,14 +1830,12 @@ export default function CarouselPage() {
                 </div>
             </div>
 
-            <div className={cn(
+            {!isMobile ? <div className={cn(
                 'flex flex-col justify-end gap-2',
-                isMobile
-                    ? ''
-                    : cn(
-                        'w-full lg:w-[27%] p-3 md:p-4 border-t lg:border-t-0',
-                        panelPosition === 'right' ? 'lg:border-l border-border/40' : 'lg:border-r border-border/40'
-                    )
+                cn(
+                    'w-full lg:w-[27%] p-3 md:p-4 border-t lg:border-t-0',
+                    panelPosition === 'right' ? 'lg:border-l border-border/40' : 'lg:border-r border-border/40'
+                )
             )}>
                 {slides.some(slide => Boolean(slide.imageUrl)) ? (
                     <div className="space-y-2">
@@ -1882,7 +1903,7 @@ export default function CarouselPage() {
                         ) : null}
                     </div>
                 )}
-            </div>
+            </div> : null}
         </div>
     )
 
@@ -1916,23 +1937,20 @@ export default function CarouselPage() {
             isFixed={!isMobile}
         >
             <div className={cn(
-                'flex-1 relative',
+                'flex-1 relative min-h-0',
                 isMobile ? 'flex flex-col overflow-y-auto' : 'flex flex-col overflow-hidden'
             )} style={isMobile ? { overscrollBehaviorY: 'none' } : undefined}>
                 <div className={cn(
                     'flex-1 min-h-0',
                     isMobile
-                        ? 'flex flex-col gap-3 p-3'
+                        ? 'flex flex-col gap-3 px-2 py-3'
                         : cn(
                             'flex flex-col overflow-hidden lg:flex-row',
                             panelPosition === 'right' ? 'lg:flex-row' : 'lg:flex-row-reverse'
                         )
                 )}>
                 {/* LEFT COLUMN (Main Canvas) */}
-                <div className={cn(
-                    'flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar',
-                    isMobile && 'rounded-[1.25rem] border border-border/50 bg-background/40'
-                )}>
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar">
                     {!isMobile && isAdmin && activeComposition && activeCompositionRecommendation && (
                         <div className="shrink-0 px-4 pt-4 md:px-6">
                             <div className="rounded-2xl border border-border/70 bg-background/90 shadow-sm backdrop-blur-sm">
@@ -2110,41 +2128,63 @@ export default function CarouselPage() {
                             </div>
                         </div>
                     )}
-                    <CarouselCanvasPanel
-                        slides={slides}
-                        scriptSlides={scriptSlides}
-                        currentIndex={currentSlideIndex}
-                        onSelectSlide={setCurrentSlideIndex}
-                        onRegenerateSlide={handleRegenerateSlide}
-                        onUpdateSlideScript={handleUpdateSlideScript}
-                        isGenerating={isGenerating}
-                        isRegenerating={isRegenerating}
-                        regeneratingIndex={regeneratingIndex}
-                        aspectRatio={aspectRatio}
-                        caption={caption}
-                        onCaptionChange={setCaption}
-                        onRegenerateCaption={handleRegenerateCaption}
-                        onCancelCaptionGeneration={handleCancelCaption}
-                        isCaptionGenerating={isCaptionGenerating}
-                        isCancelingCaption={isCancelingCaption}
-                        isCaptionLocked={isCaptionLocked}
-                        onToggleCaptionLock={() => setIsCaptionLocked(!isCaptionLocked)}
-                        referenceImages={previewReferenceImages}
-                        referenceImageRoles={previewReferenceImageRoles}
-                        referenceImageMode={referencePreviewState.imageSourceMode}
-                        brandKitTexts={brandKitTexts}
-                        brandName={activeBrandKit?.brand_name}
-                        hook={analysisHook}
-                        selectedLogoUrl={selectedLogoUrl}
-                        showPrimaryLogoOnCurrentSlide={shouldApplyPrimaryLogoToSlide(
-                            selectedLogoUrl,
-                            carouselSettings?.includeLogoOnSlides,
-                            currentSlideIndex,
-                            Math.max(slides.length, 1)
-                        )}
-                        compositionGhostIcon={compositionGhostIcon || undefined}
-                        isAdmin={Boolean(isAdmin)}
-                    />
+                    <div className="relative">
+                        <CarouselCanvasPanel
+                            slides={slides}
+                            scriptSlides={scriptSlides}
+                            currentIndex={currentSlideIndex}
+                            onSelectSlide={setCurrentSlideIndex}
+                            onRegenerateSlide={handleRegenerateSlide}
+                            onUpdateSlideScript={handleUpdateSlideScript}
+                            isGenerating={isGenerating}
+                            isRegenerating={isRegenerating}
+                            regeneratingIndex={regeneratingIndex}
+                            aspectRatio={aspectRatio}
+                            caption={caption}
+                            onCaptionChange={setCaption}
+                            onRegenerateCaption={handleRegenerateCaption}
+                            onCancelCaptionGeneration={handleCancelCaption}
+                            isCaptionGenerating={isCaptionGenerating}
+                            isCancelingCaption={isCancelingCaption}
+                            isCaptionLocked={isCaptionLocked}
+                            onToggleCaptionLock={() => setIsCaptionLocked(!isCaptionLocked)}
+                            referenceImages={previewReferenceImages}
+                            referenceImageRoles={previewReferenceImageRoles}
+                            referenceImageMode={referencePreviewState.imageSourceMode}
+                            brandKitTexts={brandKitTexts}
+                            brandName={activeBrandKit?.brand_name}
+                            hook={analysisHook}
+                            selectedLogoUrl={selectedLogoUrl}
+                            showPrimaryLogoOnCurrentSlide={shouldApplyPrimaryLogoToSlide(
+                                selectedLogoUrl,
+                                carouselSettings?.includeLogoOnSlides,
+                                currentSlideIndex,
+                                Math.max(slides.length, 1)
+                            )}
+                            compositionGhostIcon={compositionGhostIcon || undefined}
+                            isAdmin={Boolean(isAdmin)}
+                        />
+                        <FeedbackButton
+                            show={slides.some(slide => Boolean(slide.imageUrl)) && !(isMobile && (mobileControlsOpen || Boolean(slideCorrectionPrompt.trim())))}
+                            brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
+                            intent={analysisIntent || undefined}
+                            layout={carouselSettings?.compositionId}
+                            variant={isMobile ? 'default' : 'tab'}
+                            compact={isMobile}
+                            tabSide={panelPosition === 'right' ? 'right' : 'left'}
+                            className={cn(
+                                "transition-all duration-300",
+                                isMobile
+                                    ? "absolute bottom-3 right-3 z-40"
+                                    : cn(
+                                        "absolute top-1/2 -translate-y-1/2 z-40",
+                                        panelPosition === 'right'
+                                            ? "right-0 translate-x-full"
+                                            : "left-0 -translate-x-full"
+                                    )
+                            )}
+                        />
+                    </div>
 
                     {mappedSessionGenerations.length > 0 && (
                         <div className="flex-shrink-0 p-3 md:p-4 pt-0">
@@ -2155,29 +2195,12 @@ export default function CarouselPage() {
                             />
                         </div>
                     )}
-                    {isMobile ? (
+                    {isMobile && slides.some(slide => Boolean(slide.imageUrl)) ? (
                         <div className="mt-3 shrink-0 rounded-[1.25rem] border border-border/50">
                             {actionBar}
                         </div>
                     ) : null}
                 </div>
-
-                <FeedbackButton
-                    show={slides.some(slide => Boolean(slide.imageUrl)) && !(isMobile && (mobileControlsOpen || Boolean(slideCorrectionPrompt.trim())))}
-                    brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
-                    intent={analysisIntent || undefined}
-                    layout={carouselSettings?.compositionId}
-                    compact={isMobile}
-                    className={cn(
-                        "z-50 transition-all duration-300",
-                        isMobile
-                            ? "fixed bottom-28 right-3"
-                            : cn(
-                                "absolute top-[42%] -translate-y-1/2",
-                                panelPosition === 'right' ? "right-[28%]" : "left-[28%]"
-                            )
-                    )}
-                />
 
                 {/* RIGHT COLUMN - Controls Panel */}
                 {!isMobile ? controlsPanel : null}

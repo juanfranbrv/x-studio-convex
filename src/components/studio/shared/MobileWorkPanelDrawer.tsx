@@ -1,6 +1,7 @@
 'use client'
 
-import { useRef, type ReactNode } from 'react'
+import { useRef, useState, useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, useDragControls, useReducedMotion } from 'framer-motion'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -38,6 +39,11 @@ export function MobileWorkPanelDrawer({
     const prefersReducedMotion = useReducedMotion()
     const dragControls = useDragControls()
     const suppressToggleRef = useRef(false)
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const panelTransition = prefersReducedMotion
         ? { duration: 0.06 }
@@ -47,7 +53,7 @@ export function MobileWorkPanelDrawer({
               ease: open ? PANEL_OPEN_EASE : PANEL_CLOSE_EASE,
           }
 
-    return (
+    const drawerContent = (
         <>
             <motion.button
                 type="button"
@@ -59,7 +65,7 @@ export function MobileWorkPanelDrawer({
                     pointerEvents: open ? 'auto' : 'none',
                 }}
                 transition={prefersReducedMotion ? { duration: 0.06 } : { duration: 0.12, ease: EASE_OUT }}
-                className="fixed inset-0 z-40 bg-black/12 backdrop-blur-[1px]"
+                className="fixed inset-0 z-40 bg-black/20"
             />
 
             <motion.button
@@ -77,44 +83,8 @@ export function MobileWorkPanelDrawer({
                     dragControls.start(event)
                 }}
                 initial={false}
-                animate={
-                    open
-                        ? { opacity: 1, x: 0, scale: 1, pointerEvents: 'auto' }
-                        : prefersReducedMotion
-                            ? { opacity: 1, x: 0, scale: 1, pointerEvents: 'auto' }
-                            : {
-                                  opacity: 1,
-                                  x: 0,
-                                  scale: [1, 1.02, 1],
-                                  filter: [
-                                      'brightness(1)',
-                                      'brightness(1.08)',
-                                      'brightness(1)',
-                                  ],
-                                  pointerEvents: 'auto',
-                              }
-                }
-                transition={
-                    open
-                        ? { duration: 0.1, ease: EASE_OUT }
-                        : prefersReducedMotion
-                            ? { duration: 0.12 }
-                            : {
-                                  opacity: { duration: 0.14 },
-                                  filter: {
-                                      duration: 1.6,
-                                      repeat: Infinity,
-                                      repeatDelay: 2.4,
-                                      ease: EASE_OUT,
-                                  },
-                                  scale: {
-                                      duration: 1.6,
-                                      repeat: Infinity,
-                                      repeatDelay: 2.4,
-                                      ease: EASE_OUT,
-                                  },
-                              }
-                }
+                animate={{ opacity: 1, x: 0, scale: 1, pointerEvents: 'auto' }}
+                transition={{ duration: 0.1, ease: EASE_OUT }}
                 className={cn(
                     'fixed right-0 top-1/2 z-[70] flex -translate-y-1/2 items-center justify-center overflow-hidden rounded-l-[1.35rem] border border-r-0 border-primary/30',
                     'bg-primary text-primary-foreground shadow-lg shadow-primary/25 backdrop-blur-2xl',
@@ -164,11 +134,11 @@ export function MobileWorkPanelDrawer({
                     'fixed inset-y-3 right-0 z-[60] w-[calc(100vw-0.5rem)] max-w-none touch-pan-y',
                     className
                 )}
-                style={{ willChange: 'transform' }}
+                style={{ willChange: open ? 'transform' : 'auto' }}
             >
                 <div className="min-w-0 h-full overflow-hidden rounded-l-[1.5rem] rounded-r-none border border-border/70 bg-background/95 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.6)] backdrop-blur-2xl">
                     <div
-                        className={cn('h-full overflow-y-auto pb-6', contentClassName)}
+                        className={cn('h-full overflow-y-auto', contentClassName)}
                         onPointerDown={(event) => dragControls.start(event)}
                         style={{ touchAction: 'pan-y' }}
                     >
@@ -183,4 +153,8 @@ export function MobileWorkPanelDrawer({
             </motion.aside>
         </>
     )
+
+    if (!mounted) return null
+
+    return createPortal(drawerContent, document.body)
 }

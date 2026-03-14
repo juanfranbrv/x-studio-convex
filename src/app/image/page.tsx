@@ -2205,8 +2205,8 @@ export default function ImagePage() {
 
     const previewPane = (
         <>
-            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar">
-                <div className="flex flex-1 min-h-[340px] flex-col overflow-x-hidden md:min-h-[500px]">
+            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar">
+                <div className="relative flex flex-1 min-h-[340px] flex-col md:min-h-[500px]">
                     <CanvasPanel
                         currentImage={creationFlow.state.generatedImage}
                         generations={[]}
@@ -2241,6 +2241,26 @@ export default function ImagePage() {
                         isAdmin={Boolean(isAdmin)}
                         sessionName={buildSessionTitle(activeSessionMeta?.title || selectedSessionToLoad || t('sessions.newSessionTitle', { defaultValue: 'New session' }))}
                     />
+                    <FeedbackButton
+                        show={Boolean(creationFlow.state.generatedImage) && !(isMobile && (mobileControlsOpen || Boolean(editPrompt.trim())))}
+                        brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
+                        intent={creationFlow.state.selectedIntent || undefined}
+                        layout={creationFlow.selectedLayoutMeta?.id}
+                        variant={isMobile ? 'default' : 'tab'}
+                        compact={isMobile}
+                        tabSide={panelPosition === 'right' ? 'right' : 'left'}
+                        className={cn(
+                            "transition-all duration-300",
+                            isMobile
+                                ? "absolute bottom-3 right-3 z-40"
+                                : cn(
+                                    "absolute top-1/2 -translate-y-1/2 z-40",
+                                    panelPosition === 'right'
+                                        ? "right-0 translate-x-full"
+                                        : "left-0 -translate-x-full"
+                                )
+                        )}
+                    />
                 </div>
 
                 <div className="flex-shrink-0 p-3 pt-0 md:p-4 md:pt-0">
@@ -2269,23 +2289,6 @@ export default function ImagePage() {
                     />
                 </div>
             </div>
-
-            <FeedbackButton
-                show={Boolean(creationFlow.state.generatedImage) && !(isMobile && (mobileControlsOpen || Boolean(editPrompt.trim())))}
-                brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
-                intent={creationFlow.state.selectedIntent || undefined}
-                layout={creationFlow.selectedLayoutMeta?.id}
-                compact={isMobile}
-                className={cn(
-                    "z-50 transition-all duration-300",
-                    isMobile
-                        ? "fixed bottom-28 right-3"
-                        : cn(
-                            "absolute top-[42%] -translate-y-1/2",
-                            panelPosition === 'right' ? "right-[28%]" : "left-[28%]"
-                        )
-                )}
-            />
         </>
     )
 
@@ -2392,14 +2395,12 @@ export default function ImagePage() {
                 </div>
             </div>
 
-            <div className={cn(
+            {!isMobile ? <div className={cn(
                 "flex flex-col justify-end",
-                isMobile
-                    ? ""
-                    : cn(
-                        "w-full lg:w-[27%] p-3 md:p-4 border-t lg:border-t-0",
-                        panelPosition === 'right' ? "lg:border-l border-border/40" : "lg:border-r border-border/40"
-                    )
+                cn(
+                    "w-full lg:w-[27%] p-3 md:p-4 border-t lg:border-t-0",
+                    panelPosition === 'right' ? "lg:border-l border-border/40" : "lg:border-r border-border/40"
+                )
             )}>
                 {creationFlow.state.generatedImage ? (
                     <div className="relative">
@@ -2470,7 +2471,7 @@ export default function ImagePage() {
                         ) : null}
                     </div>
                 )}
-            </div>
+            </div> : null}
         </div>
     )
 
@@ -2484,6 +2485,28 @@ export default function ImagePage() {
             closeLabel={t('ui.closeWorkPanel')}
         >
             {controlsPane}
+            <div className="sticky bottom-0 border-t border-border/40 bg-background/95 p-3 backdrop-blur-md">
+                <Button
+                    onClick={() => {
+                        setMobileControlsOpen(false)
+                        handleUnifiedAction()
+                    }}
+                    disabled={isGenerating || !canGenerate}
+                    className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25"
+                >
+                    {isGenerating ? (
+                        <>
+                            <Loader2 className="mr-2 h-5 w-5" />
+                            {t('image:ui.generating', { defaultValue: 'Generating...' })}
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                            {t('image:ui.generate', { defaultValue: 'Generate Image' })}
+                        </>
+                    )}
+                </Button>
+            </div>
         </MobileWorkPanelDrawer>
     ) : null
 
@@ -2498,13 +2521,13 @@ export default function ImagePage() {
         >
             {activeBrandKit ? (
                 <div className={cn(
-                    "flex-1 relative",
+                    "flex-1 relative min-h-0",
                     isMobile ? "flex flex-col overflow-y-auto" : "flex flex-col overflow-hidden"
                 )} style={isMobile ? { overscrollBehaviorY: 'none' } : undefined}>
                     <div className={cn(
                         "flex min-h-0 flex-1",
                         isMobile
-                            ? "flex-col gap-3 p-3"
+                            ? "flex-col gap-3 px-2 py-3"
                             : cn(
                                 "flex-col overflow-hidden lg:flex-row",
                                 panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
@@ -2515,9 +2538,11 @@ export default function ImagePage() {
                                 <div className="order-1 flex min-h-0 flex-col overflow-hidden">
                                     {previewPane}
                                 </div>
-                                <div className="order-2 shrink-0 rounded-[1.25rem] border border-border/50">
-                                    {actionBar}
-                                </div>
+                                {creationFlow.state.generatedImage ? (
+                                    <div className="order-2 shrink-0 rounded-[1.25rem] border border-border/50">
+                                        {actionBar}
+                                    </div>
+                                ) : null}
                                 {mobileControlsDrawer}
                             </>
                         ) : (

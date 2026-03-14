@@ -19,6 +19,8 @@ interface FeedbackButtonProps {
     layout?: string
     className?: string
     compact?: boolean
+    variant?: 'default' | 'tab'
+    tabSide?: 'right' | 'left'
 }
 
 const REACTIONS = [
@@ -35,6 +37,8 @@ export function FeedbackButton({
     layout,
     className,
     compact = false,
+    variant = 'default',
+    tabSide = 'right',
 }: FeedbackButtonProps) {
     const { t } = useTranslation('common')
     const { user } = useUser()
@@ -112,7 +116,30 @@ export function FeedbackButton({
 
     return (
         <>
-            {!isOpen && (
+            {!isOpen && variant === 'tab' && (
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className={cn(
+                        'z-50 flex flex-col items-center gap-1.5 px-2.5 py-3',
+                        'border border-border/50 bg-card/90 backdrop-blur-xl',
+                        tabSide === 'right'
+                            ? 'border-r-0 rounded-l-xl rounded-r-none shadow-[-2px_2px_10px_rgba(0,0,0,0.08)]'
+                            : 'border-l-0 rounded-r-xl rounded-l-none shadow-[2px_2px_10px_rgba(0,0,0,0.08)]',
+                        'opacity-80 hover:opacity-100 hover:bg-card',
+                        'transition-all duration-300 ease-out active:scale-95',
+                        'group animate-in fade-in duration-700',
+                        className
+                    )}
+                    title={t('feedback.openTitle', { defaultValue: 'Send feedback' })}
+                >
+                    <MessageSquare className="h-3.5 w-3.5 text-primary transition-transform group-hover:scale-110" />
+                    <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-medium text-foreground/60 group-hover:text-foreground/90 tracking-wide">
+                        {t('feedback.compactLabel', { defaultValue: 'Feedback' })}
+                    </span>
+                </button>
+            )}
+
+            {!isOpen && variant !== 'tab' && (
                 <button
                     onClick={() => setIsOpen(true)}
                     className={cn(
