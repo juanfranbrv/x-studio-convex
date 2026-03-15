@@ -261,6 +261,7 @@ export function ControlsPanel({
     const [showLabCatalog, setShowLabCatalog] = useState(compositionMode === 'advanced')
     const [layoutIntentOverride, setLayoutIntentOverride] = useState<'auto' | IntentCategory>('auto')
     const [draggedBrandColor, setDraggedBrandColor] = useState<DraggedBrandColor>(null)
+    const [isInspiring, setIsInspiring] = useState(false)
     const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = {
         1: { title: t('ui.ideaTitle'), description: t('ui.ideaDescription') },
         2: { title: t('ui.designTitle'), description: t('ui.designDescription') },
@@ -364,6 +365,27 @@ export function ControlsPanel({
     }, [activeBrandKit, state.selectedBrandColors.length, toggleBrandColor])
 
 
+
+    const handleInspire = async () => {
+        const brandKitId = (activeBrandKit?.id || (activeBrandKit as any)?._id) as string | undefined
+        if (!brandKitId || isInspiring) return
+        setIsInspiring(true)
+        try {
+            const res = await fetch('/api/generate-user-prompt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ module: 'image', brandKitId }),
+            })
+            const data = await res.json()
+            if (data.success && data.text) {
+                onPromptChange(data.text)
+            }
+        } catch (err) {
+            console.error('Failed to generate prompt inspiration:', err)
+        } finally {
+            setIsInspiring(false)
+        }
+    }
 
     const brandKitImages = (activeBrandKit?.images || []).reduce((acc: Array<{ id: string; url: string; name?: string }>, img, idx) => {
         const imageUrl = typeof img === 'string' ? img : img.url
@@ -816,6 +838,21 @@ export function ControlsPanel({
                                 }
                             }}
                         />
+                        {!promptValue.trim() && activeBrandKit && (
+                            <button
+                                type="button"
+                                onClick={handleInspire}
+                                disabled={isInspiring}
+                                className="absolute right-3 top-3 z-10 text-primary/70 hover:text-primary transition-colors disabled:opacity-50"
+                                title="Generate a prompt idea for me"
+                            >
+                                {isInspiring ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Wand2 className="w-4 h-4" />
+                                )}
+                            </button>
+                        )}
                         <div className={cn(
                             isMobile
                                 ? 'mt-3 flex items-center justify-end gap-2'
