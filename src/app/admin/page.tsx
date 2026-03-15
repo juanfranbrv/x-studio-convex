@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
-import { Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink, Trash2, MessageSquare, Shapes, Banknote, Save, ChevronRight, ChevronDown, Download, Palette } from 'lucide-react'
+import { Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink, Trash2, MessageSquare, Shapes, Banknote, Save, ChevronRight, ChevronDown, Download, Palette, Wand2 } from 'lucide-react'
 import { CreditsBadge } from '@/components/layout/CreditsBadge'
 import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/admin-compositions-actions'
 import { Button } from '@/components/ui/button'
@@ -77,7 +77,7 @@ const PROVIDER_COST_LINKS: Record<string, string> = {
 }
 
 const ADMIN_TAB_STORAGE_KEY = 'x-studio-admin-active-tab'
-const ADMIN_TABS = ['requests', 'users', 'transactions', 'settings', 'models', 'styles', 'economics', 'billing', 'links', 'feedback', 'compositions'] as const
+const ADMIN_TABS = ['requests', 'users', 'transactions', 'settings', 'models', 'styles', 'economics', 'billing', 'links', 'feedback', 'compositions', 'prompts'] as const
 type AdminTab = (typeof ADMIN_TABS)[number]
 const DEFAULT_ADMIN_TAB: AdminTab = 'requests'
 const ADMIN_EMAILS = ['juanfranbrv@gmail.com']
@@ -139,6 +139,9 @@ export default function AdminPage() {
     const deleteModelCost = useMutation(api.economic.deleteModelCost)
     const syncModelCatalog = useMutation(api.economic.syncModelCatalog)
     const clearEconomicEvents = useMutation(api.economic.clearEconomicEvents)
+    const systemPrompts = useQuery(api.systemPrompts.listAll)
+    const upsertSystemPrompt = useMutation(api.systemPrompts.upsert)
+    const removeSystemPrompt = useMutation(api.systemPrompts.remove)
 
     // Local state
     const [adjustDialogOpen, setAdjustDialogOpen] = useState(false)
@@ -180,6 +183,9 @@ export default function AdminPage() {
     }, [])
 
     const [isProcessing, setIsProcessing] = useState(false)
+    const [editingPromptKey, setEditingPromptKey] = useState<string | null>(null)
+    const [promptDraft, setPromptDraft] = useState('')
+    const [isSeedingPrompts, setIsSeedingPrompts] = useState(false)
 
     // Settings state
     const [editingSettings, setEditingSettings] = useState<Record<string, number | string>>({})
@@ -262,6 +268,15 @@ export default function AdminPage() {
     useEffect(() => {
         window.localStorage.setItem(ADMIN_TAB_STORAGE_KEY, activeTab)
     }, [activeTab])
+
+    const handleSeedPrompts = async () => {
+        setIsSeedingPrompts(true)
+        try {
+            await fetch('/api/admin/seed-prompts', { method: 'POST' })
+        } finally {
+            setIsSeedingPrompts(false)
+        }
+    }
 
     const handleRefreshEconomicLog = () => {
         setRefreshingEconomicLog(true)
@@ -699,6 +714,10 @@ export default function AdminPage() {
                         </TabsTrigger>
                         <TabsTrigger value="compositions" className="gap-2">
                             <Shapes className="h-4 w-4" /> Diseños
+                        </TabsTrigger>
+                        <TabsTrigger value="prompts" className="gap-2">
+                            <Wand2 className="w-4 h-4" />
+                            Prompts
                         </TabsTrigger>
                     </TabsList>
 
@@ -1804,6 +1823,96 @@ export default function AdminPage() {
                                 )}
                             </CardContent>
                         </Card>
+                    </TabsContent>
+
+                    <TabsContent value="prompts" className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-lg font-semibold">System Prompts</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {'Edit the AI prompts used throughout the app. Variables use {{variable}} syntax.'}
+                                </p>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleSeedPrompts}
+                                disabled={isSeedingPrompts}
+                            >
+                                {isSeedingPrompts ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                                Seed defaults
+                            </Button>
+                        </div>
+
+                        {!systemPrompts || systemPrompts.length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground">
+                                <p>No prompts yet.</p>
+                                <p className="text-sm mt-1">Click &quot;Seed defaults&quot; to add the default prompts.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {systemPrompts.map((prompt) => (
+                                    <div key={String(prompt._id)} className="rounded-xl border border-border p-4 space-y-3">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div>
+                                                <div className="font-medium">{prompt.name}</div>
+                                                <div className="text-xs text-muted-foreground font-mono">{prompt.key}</div>
+                                                {prompt.description && (
+                                                    <div className="text-sm text-muted-foreground mt-1">{prompt.description}</div>
+                                                )}
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setEditingPromptKey(prompt.key)
+                                                    setPromptDraft(prompt.body)
+                                                }}
+                                            >
+                                                Edit
+                                            </Button>
+                                        </div>
+
+                                        {editingPromptKey === prompt.key ? (
+                                            <div className="space-y-2">
+                                                <textarea
+                                                    className="w-full min-h-[200px] text-sm p-3 rounded-lg border border-border bg-background/70 font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                    value={promptDraft}
+                                                    onChange={(e) => setPromptDraft(e.target.value)}
+                                                />
+                                                <div className="flex gap-2 justify-end">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setEditingPromptKey(null)}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={async () => {
+                                                            await upsertSystemPrompt({
+                                                                key: prompt.key,
+                                                                name: prompt.name,
+                                                                body: promptDraft,
+                                                                description: prompt.description,
+                                                            })
+                                                            setEditingPromptKey(null)
+                                                        }}
+                                                    >
+                                                        Save
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <pre className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 overflow-auto max-h-[120px] whitespace-pre-wrap">
+                                                {prompt.body}
+                                            </pre>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </TabsContent>
                 </Tabs>
             </div>
