@@ -3,7 +3,7 @@
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { applyThemeColors, DEFAULT_THEME_COLORS, writeThemeColors } from '@/lib/theme-colors'
+import { applyThemeColors, DEFAULT_THEME_COLORS, ThemeColors, writeThemeColors } from '@/lib/theme-colors'
 import { Layout, Moon, Palette, Sparkles, Sun } from 'lucide-react'
 
 type Props = {
@@ -19,6 +19,8 @@ type Props = {
     setPrimaryColor: (value: string) => void
     setSecondaryColor: (value: string) => void
     userId: string | null
+    adminThemeDefaults?: ThemeColors
+    resolveHex: (value: string | undefined) => string
 }
 
 const presetColors = [
@@ -42,6 +44,8 @@ export function SettingsManagementSection({
     setPrimaryColor,
     setSecondaryColor,
     userId,
+    adminThemeDefaults,
+    resolveHex,
 }: Props) {
     const saveThemeColors = (nextPrimary: string, nextSecondary: string) => {
         const payload = { primary: nextPrimary, secondary: nextSecondary }
@@ -50,9 +54,12 @@ export function SettingsManagementSection({
     }
 
     const resetThemeColors = () => {
-        setPrimaryColor(DEFAULT_THEME_COLORS.primary)
-        setSecondaryColor(DEFAULT_THEME_COLORS.secondary)
-        saveThemeColors(DEFAULT_THEME_COLORS.primary, DEFAULT_THEME_COLORS.secondary)
+        const defaults = adminThemeDefaults ?? DEFAULT_THEME_COLORS
+        const primary = resolveHex(defaults.primary)
+        const secondary = resolveHex(defaults.secondary)
+        setPrimaryColor(primary)
+        setSecondaryColor(secondary)
+        saveThemeColors(primary, secondary)
     }
 
     return (

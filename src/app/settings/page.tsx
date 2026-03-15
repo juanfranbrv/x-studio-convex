@@ -143,6 +143,8 @@ export default function SettingsPage() {
                         setPrimaryColor={setPrimaryColor}
                         setSecondaryColor={setSecondaryColor}
                         userId={userId}
+                        adminThemeDefaults={themeDefaults ?? undefined}
+                        resolveHex={resolveHex}
                     />
                 </div>
 
