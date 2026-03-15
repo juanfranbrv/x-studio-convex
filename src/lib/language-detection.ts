@@ -384,6 +384,9 @@ export async function detectLanguageWithApi(
 
     if (!normalizedText) return safeFallback
 
+    // Skip external API for very short texts — local heuristic is sufficient
+    if (normalizedText.length < 15) return detectLanguage(normalizedText) || safeFallback
+
     const cached = getCachedLanguage(normalizedText, safeFallback)
     if (cached) return cached
 

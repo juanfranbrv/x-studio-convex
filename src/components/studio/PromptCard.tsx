@@ -103,7 +103,7 @@ export function PromptCard({
                     )}
                 </Button>
             </div>
-            {!hasGeneratedImage && !value.trim() && onInspire && (
+            {!hasGeneratedImage && onInspire && (
                 <div className="flex justify-end">
                     <button
                         type="button"

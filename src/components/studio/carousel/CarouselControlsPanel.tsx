@@ -2869,7 +2869,7 @@ export function CarouselControlsPanel({
                             className="min-h-[100px] text-sm resize-none bg-background border border-border focus:ring-1 focus:ring-primary focus:border-primary pb-12 pr-2 transition-all"
                         />
                         <div className="absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2">
-                            {!prompt.trim() && brandKit && (
+                            {brandKit && (
                                 <button
                                     type="button"
                                     onClick={handleInspire}

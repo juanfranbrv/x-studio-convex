@@ -838,7 +838,7 @@ export function ControlsPanel({
                                 }
                             }}
                         />
-                        {isMobile && !promptValue.trim() && activeBrandKit && (
+                        {isMobile && activeBrandKit && (
                             <button
                                 type="button"
                                 onClick={handleInspire}
@@ -858,7 +858,7 @@ export function ControlsPanel({
                                 ? 'mt-2 flex items-center justify-end gap-2'
                                 : 'absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2'
                         )}>
-                            {!promptValue.trim() && activeBrandKit && !isMobile && (
+                            {activeBrandKit && !isMobile && (
                                 <button
                                     type="button"
                                     onClick={handleInspire}
