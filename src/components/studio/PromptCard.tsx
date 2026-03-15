@@ -2,7 +2,7 @@
 
 import { Loader2 } from '@/components/ui/spinner'
 import { useState } from 'react'
-import { Sparkles, Send } from 'lucide-react'
+import { Sparkles, Send, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
 
@@ -16,6 +16,8 @@ interface PromptCardProps {
     canGenerate?: boolean
     hasGeneratedImage?: boolean
     placeholder?: string
+    onInspire?: () => void
+    isInspiring?: boolean
 }
 
 export function PromptCard({
@@ -28,6 +30,8 @@ export function PromptCard({
     canGenerate = false,
     hasGeneratedImage = false,
     placeholder,
+    onInspire,
+    isInspiring = false,
 }: PromptCardProps) {
     const { t } = useTranslation('common')
     const isLoading = isAnalyzing || isGenerating
@@ -81,6 +85,21 @@ export function PromptCard({
                             title={t('promptCard.analyzeWithAi', { defaultValue: 'Analyze with AI' })}
                         >
                             <Sparkles className="w-4 h-4" />
+                        </button>
+                    )}
+                    {!hasGeneratedImage && !value.trim() && onInspire && (
+                        <button
+                            type="button"
+                            onClick={onInspire}
+                            disabled={isInspiring || isLoading}
+                            className="absolute right-3 top-3 text-primary/70 hover:text-primary transition-colors disabled:opacity-50"
+                            title="Generate a prompt idea for me"
+                        >
+                            {isInspiring ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Wand2 className="w-4 h-4" />
+                            )}
                         </button>
                     )}
                 </div>

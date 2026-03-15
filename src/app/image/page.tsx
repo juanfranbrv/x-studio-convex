@@ -120,6 +120,7 @@ export default function ImagePage() {
     useDisablePullToRefresh(isMobile)
     const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
     const [isMagicParsing, setIsMagicParsing] = useState(false)
+    const [isInspiring, setIsInspiring] = useState(false)
     const [isCancelingAnalyze, setIsCancelingAnalyze] = useState(false)
     const [isCancelingGenerate, setIsCancelingGenerate] = useState(false)
     const [highlightedFields, setHighlightedFields] = useState<Set<string>>(new Set())
@@ -1382,6 +1383,29 @@ export default function ImagePage() {
         }
     }, [])
 
+    // Inspire: generate a prompt idea for the user
+    const handleInspire = async () => {
+        const brandId = activeBrandKit?.id as string | undefined
+        if (!brandId || isInspiring) return
+        setIsInspiring(true)
+        try {
+            const res = await fetch('/api/generate-user-prompt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ module: 'image', brandKitId: brandId }),
+            })
+            const data = await res.json()
+            if (data.success && data.text) {
+                setPromptValue(data.text)
+                creationFlow.setRawMessage(data.text)
+            }
+        } catch (err) {
+            console.error('Failed to generate prompt inspiration:', err)
+        } finally {
+            setIsInspiring(false)
+        }
+    }
+
     // Smart analyze prompt
     const handleSmartAnalyze = async (autoModel?: string) => {
         if (!promptValue.trim()) return null
@@ -2533,6 +2557,23 @@ export default function ImagePage() {
                                         {actionBar}
                                     </div>
                                 ) : null}
+                                <div className="order-3 shrink-0">
+                                    <PromptCard
+                                        value={promptValue}
+                                        onChange={(val) => {
+                                            setPromptValue(val)
+                                            creationFlow.setRawMessage(val)
+                                        }}
+                                        onAnalyze={() => handleSmartAnalyze()}
+                                        onGenerate={handleUnifiedAction}
+                                        isAnalyzing={isMagicParsing}
+                                        isGenerating={isGenerating}
+                                        canGenerate={Boolean(canGenerate)}
+                                        hasGeneratedImage={Boolean(creationFlow.state.generatedImage)}
+                                        onInspire={handleInspire}
+                                        isInspiring={isInspiring}
+                                    />
+                                </div>
                                 {mobileControlsDrawer}
                             </>
                         ) : (
