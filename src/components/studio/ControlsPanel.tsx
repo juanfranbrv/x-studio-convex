@@ -820,8 +820,7 @@ export function ControlsPanel({
                         icon={Wand2}
                         title={t('ui.whatToCreate')}
                     />
-                    <div className="space-y-1">
-                        <div className="relative">
+                    <div className="relative">
                         <Textarea
                             value={promptValue}
                             onChange={(e) => onPromptChange(e.target.value)}
@@ -844,6 +843,24 @@ export function ControlsPanel({
                                 ? 'mt-3 flex items-center justify-end gap-2'
                                 : 'absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2'
                         )}>
+                            {!promptValue.trim() && activeBrandKit && (
+                                <button
+                                    type="button"
+                                    onClick={handleInspire}
+                                    disabled={isInspiring}
+                                    className={cn(
+                                        'flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50',
+                                        isMobile ? '' : 'mr-auto'
+                                    )}
+                                >
+                                    {isInspiring ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                        <Wand2 className="w-3.5 h-3.5" />
+                                    )}
+                                    Generar idea para mí
+                                </button>
+                            )}
                             {isMagicParsing && onCancelAnalyze ? (
                                 <Button
                                     size="sm"
@@ -881,24 +898,6 @@ export function ControlsPanel({
                                 )}
                             </Button>
                         </div>
-                        </div>
-                        {!promptValue.trim() && activeBrandKit && (
-                            <div className="flex justify-end">
-                                <button
-                                    type="button"
-                                    onClick={handleInspire}
-                                    disabled={isInspiring}
-                                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-muted-foreground hover:text-primary hover:bg-primary/8 transition-colors disabled:opacity-50"
-                                >
-                                    {isInspiring ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    ) : (
-                                        <Wand2 className="w-3.5 h-3.5" />
-                                    )}
-                                    Generar idea para mí
-                                </button>
-                            </div>
-                        )}
                     </div>
 
                     {/* Suggestions List */}
