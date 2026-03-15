@@ -2557,23 +2557,6 @@ export default function ImagePage() {
                                         {actionBar}
                                     </div>
                                 ) : null}
-                                <div className="order-3 shrink-0">
-                                    <PromptCard
-                                        value={promptValue}
-                                        onChange={(val) => {
-                                            setPromptValue(val)
-                                            creationFlow.setRawMessage(val)
-                                        }}
-                                        onAnalyze={() => handleSmartAnalyze()}
-                                        onGenerate={handleUnifiedAction}
-                                        isAnalyzing={isMagicParsing}
-                                        isGenerating={isGenerating}
-                                        canGenerate={Boolean(canGenerate)}
-                                        hasGeneratedImage={Boolean(creationFlow.state.generatedImage)}
-                                        onInspire={handleInspire}
-                                        isInspiring={isInspiring}
-                                    />
-                                </div>
                                 {mobileControlsDrawer}
                             </>
                         ) : (

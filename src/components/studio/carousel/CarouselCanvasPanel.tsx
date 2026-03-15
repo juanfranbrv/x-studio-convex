@@ -877,7 +877,7 @@ export function CarouselCanvasPanel({
             <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between p-4 z-40 pointer-events-none">
                 {/* Left: Metadata */}
                 {isAdmin ? (
-                    <div className="pointer-events-auto flex items-center gap-2 pt-1">
+                    <div className="pointer-events-auto hidden md:flex items-center gap-2 pt-1">
                         <div className="flex flex-col items-start gap-0.5 leading-tight text-foreground/90 drop-shadow-sm">
                             <span className="text-[12px] font-medium">
                                 {slides.length > 0 ? `${currentIndex + 1} / ${slides.length}` : '---'}

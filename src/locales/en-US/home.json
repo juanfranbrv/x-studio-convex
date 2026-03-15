@@ -9,41 +9,116 @@
   "landing": {
     "privateBeta": "Private beta",
     "login": "Log in",
-    "heroTitleLine1": "Your creative director",
-    "heroTitleHighlight": "with brand intelligence",
-    "heroBody": "Generate marketing assets that respect your DNA without friction. Total visual consistency powered by an intelligent engine.",
+    "heroTitle": "Your brand. Every pixel. In seconds.",
+    "heroBody": "Post laboratory analyzes your brand identity and generates professional visual content aligned with your visual DNA, automatically. No designers. No hours of editing. Without ever losing consistency.",
+    "heroCTA": "Get started free",
+    "heroSecondaryCTA": "Watch a live demo",
     "accessConfirmed": "Access confirmed",
     "accessReady": "Your account is ready to start creating high-impact assets.",
     "enterStudio": "Enter the studio",
-    "joinBeta": "Join the private beta",
+    "joinBeta": "Early access",
     "joinBetaBody": "Exclusive, limited access for creators and brands.",
     "onList": "You're on the list",
     "onListBody": "We'll let you know as soon as your access is enabled.",
-    "requestInvite": "Request invite",
+    "requestInvite": "Request access",
     "alreadyHaveAccount": "I already have an account, take me to the studio.",
     "requestError": "Error sending request",
-    "registrationCompleted": "Registration completed"
+    "registrationCompleted": "Registration completed",
+    "trustedBy": "Brands and creative teams that already trust Post laboratory"
   },
-  "features": {
-    "brandDNA": {
-      "title": "Brand DNA",
-      "description": "Define your identity once and let AI apply it to every pixel."
+  "tabs": {
+    "label": "Everything your team needs to create content that converts",
+    "brandKit": {
+      "tab": "Brand DNA",
+      "title": "Paste your URL. In 30 seconds we know your brand better than your agency.",
+      "description": "Our analysis engine crawls your website with an invisible browser, extracts your logos, color palettes, fonts, photography style and tone of voice, and converts them into a brand kit ready to generate. No endless forms or style guides to upload manually. Just paste your URL and go.",
+      "link": "Discover how brand analysis works"
     },
-    "multiBrand": {
-      "title": "Multi-Brand",
-      "description": "Manage different visual worlds with total consistency from one place."
+    "generateImages": {
+      "tab": "Image Generation",
+      "title": "Write what you imagine. Get what your brand needs.",
+      "description": "Describe your piece in natural language and Post laboratory generates professional marketing images with 729+ layout compositions and 20+ content templates. From product launches to team content and tutorials. Every image respects your palette, typography and photography style.",
+      "link": "See available content templates"
     },
-    "visualIteration": {
-      "title": "Visual Iteration",
-      "description": "Semantic and spatial editing. Talk to AI as if it were your senior designer."
+    "carousels": {
+      "tab": "Instant Carousels",
+      "title": "One click. Five slides. A complete brand story ready to publish.",
+      "description": "Post laboratory generates social media carousels with AI-recommended composition, visual consistency across slides and auto-generated captions. You can refine each slide independently without breaking the whole. What used to take two hours in Canva is now a matter of seconds.",
+      "link": "Create your first carousel"
+    },
+    "editSemantic": {
+      "tab": "Semantic Editing",
+      "title": "\"Move the logo to the right.\" Done. No Photoshop. No frustration.",
+      "description": "Edit your images in natural language as if talking to a designer. \"Warmer background\", \"make it more minimalist\", \"increase contrast\". Post laboratory interprets your instructions and applies changes while preserving brand consistency. No need to know what an adjustment layer is.",
+      "link": "See semantic editing examples"
+    },
+    "multiFormat": {
+      "tab": "Multi-Format",
+      "title": "One design, every format. From Instagram to LinkedIn without redoing anything.",
+      "description": "Generate a piece and Post laboratory automatically adapts it to square, vertical, horizontal and Story formats. All formats optimized for Instagram, TikTok, LinkedIn, YouTube, Facebook and X with a single click. Your team publishes across all channels without duplicating work.",
+      "link": "See available formats by platform"
     }
   },
+  "showcase": {
+    "sectionTitle": "Designed for brands that can't afford to look generic",
+    "sectionSubtitle": "Every feature in Post laboratory exists to solve a real problem for marketing teams that need speed without losing identity.",
+    "brandDNA": {
+      "title": "Your Brand Kit builds itself. Instead of sitting forgotten in a PDF.",
+      "description": "Most companies have brand guidelines that nobody checks before publishing. Post laboratory eliminates that problem at its root. Our analysis engine with headless browser, computer vision and DOM analysis extracts your identity directly from your website: logos in every format, exact color palettes, typographic hierarchy and visual style. The result is a living Brand Kit that applies automatically to every piece you generate.",
+      "link": "Analyze my brand now"
+    },
+    "multiAsset": {
+      "title": "Agencies: switch clients in one click, not in half an hour of setup.",
+      "description": "Managing the visual identity of multiple clients in the same tool has always been chaos. Post laboratory lets you create unlimited brand kits and switch between them instantly, without cross-contamination. Each client has their colors, logos, typography and photography style perfectly compartmentalized. For freelancers and agencies, it's the difference between billing more clients or burning out trying with Canva.",
+      "link": "See how multi-brand management works"
+    },
+    "smartEditing": {
+      "title": "Seasonal themes that keep your brand recognizable on Black Friday, Christmas and summer.",
+      "description": "Seasonal content is usually when brands lose consistency. Post laboratory includes predefined seasonal themes, artistic styles and custom style inputs that let you adapt the visual tone of your pieces to each moment of the year without abandoning your identity. Activate the Black Friday theme and your images adopt the urgency and aesthetics of the event without your logo or corporate colors disappearing into the noise.",
+      "link": "See available styles and themes"
+    },
+    "teamScale": {
+      "title": "The context you drag changes what you generate. And that changes everything.",
+      "description": "Post laboratory includes a context system that lets you influence generation by dragging elements directly onto the canvas: your brand colors, logos in different versions, fonts, reference images and text blocks. The more context you provide, the more precise and aligned with your vision the resulting image is. It's not crossing-your-fingers prompts. It's a workflow designed so marketing professionals have real control over the output.",
+      "link": "Explore the context system"
+    }
+  },
+  "stats": {
+    "stat1": { "value": "729+", "label": "unique layout compositions for every content type" },
+    "stat2": { "value": "30s", "label": "is all it takes for brand analysis to know your identity" },
+    "stat3": { "value": "20+", "label": "content templates from launches to team content" },
+    "stat4": { "value": "6", "label": "platforms covered with automatic format adaptation" }
+  },
+  "proof": {
+    "title": "Numbers that explain why marketing teams choose Post laboratory",
+    "subtitle": "Speed, scale and brand consistency. The three problems we solve, measured."
+  },
+  "cta": {
+    "title": "Your next post could be ready before you finish reading this.",
+    "subtitle": "Paste your URL, generate your first content and understand in less than five minutes why marketing teams that discover Post laboratory don't go back to Canva.",
+    "primaryButton": "Get started free",
+    "secondaryButton": "Watch a live demo"
+  },
   "footer": {
-    "copyright": "© 2024 Post laboratory. Powered by Creative AI.",
+    "copyright": "© 2025 Post laboratory. All rights reserved.",
+    "tagline": "Your brand. Every day. In every format.",
     "privacy": "Privacy",
     "terms": "Terms",
     "cookies": "Cookies",
-    "contact": "About us",
-    "pricing": "Pricing"
+    "contact": "Contact",
+    "pricing": "Plans and pricing",
+    "product": "Product",
+    "features": "Features",
+    "integrations": "Integrations",
+    "changelog": "Changelog",
+    "company": "Company",
+    "about": "About us",
+    "blog": "Blog",
+    "careers": "Careers",
+    "resources": "Resources",
+    "docs": "Documentation",
+    "help": "Help center",
+    "community": "Community",
+    "legal": "Legal"
   }
 }

@@ -1072,7 +1072,7 @@ export function CanvasPanel({
                                     const contentImages = allImages.filter((item) => item.role === 'content' || item.role === 'style_content')
                                     const styleImages = allImages.filter((item) => item.role === 'style' || item.role === 'style_content')
                                     const auxLogos = allImages.filter((item) => item.role === 'logo')
-                                    const hasAiPromptReference = creationState.imageSourceMode === 'generate' && Boolean(currentImage)
+                                    const hasAiPromptReference = creationState.imageSourceMode === 'generate' && (!isMobile || Boolean(currentImage))
                                     const contentPreviewImages = contentImages.slice(0, 6)
 
                                     const renderStrip = (
