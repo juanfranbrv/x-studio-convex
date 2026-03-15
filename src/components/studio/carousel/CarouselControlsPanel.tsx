@@ -2881,7 +2881,7 @@ export function CarouselControlsPanel({
                                     ) : (
                                         <Wand2 className="w-3.5 h-3.5" />
                                     )}
-                                    Generar idea para mí
+                                    {t('inspireMe')}
                                 </button>
                             )}
                             <div className="flex items-center gap-2">

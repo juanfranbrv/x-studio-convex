@@ -182,5 +182,6 @@
     "modeScopeDescription": "`basic` entra en autoselección. `advanced` solo aparece al trabajar en modo avanzado. `global` puede reutilizarse en cualquier narrativa. `narrative` solo dentro de su narrativa.",
     "automaticProposal": "Propuesta automática",
     "heuristicProposal": "La heurística propone dejarla como"
-  }
+  },
+  "inspireMe": "Generar idea para mí"
 }

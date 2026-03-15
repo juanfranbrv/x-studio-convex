@@ -850,7 +850,7 @@ export function ControlsPanel({
                                 ) : (
                                     <Wand2 className="w-3.5 h-3.5" />
                                 )}
-                                Generar idea para mí
+                                {t('inspireMe')}
                             </button>
                         )}
                         <div className={cn(
@@ -870,7 +870,7 @@ export function ControlsPanel({
                                     ) : (
                                         <Wand2 className="w-3.5 h-3.5" />
                                     )}
-                                    Generar idea para mí
+                                    {t('inspireMe')}
                                 </button>
                             )}
                             {isMagicParsing && onCancelAnalyze ? (

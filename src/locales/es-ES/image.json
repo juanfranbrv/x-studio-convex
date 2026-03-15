@@ -175,5 +175,6 @@
   "toasts": {
     "analyzingReferenceTitle": "Analizando referencia",
     "analyzingReferenceDescription": "Espera a que termine el análisis antes de generar."
-  }
+  },
+  "inspireMe": "Generar idea para mí"
 }
