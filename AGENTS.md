@@ -180,6 +180,15 @@ Cuando Juanfran diga **"deploy"**, se considera **autorización explícita** par
 - Esto incluye toda la cadena: selección de referencia, análisis, inyección en prompt final, contexto enviado al generador, prioridades del prompt y reglas de fallback.
 - El análisis interno (ej. bloques de estilo `PRIORITY 5`) se usa para construir prompt y debug técnico, pero **NO debe mostrarse como contenido editable en el frontend** salvo petición explícita.
 - La misma lógica debe aplicar a referencias subidas y a referencias elegidas desde Brand Kit.
+### 17. Comando "misión autónoma"
+Cuando Juanfran añada **"misión autónoma"** a cualquier petición, se activa el siguiente protocolo sin excepciones:
+
+1. **Sin pausas**: Ejecuta la tarea de principio a fin sin pedir confirmación en ningún paso intermedio.
+2. **Verificación visual obligatoria**: Al terminar la implementación, arrancar el entorno local (`npm run dev` o `npm run dev:mobile`) y el navegador de debug aislado (`npm run chrome:debug`), y comprobar visualmente que la tarea está resuelta.
+3. **Iterar hasta certeza**: Si la comprobación visual revela que algo no funciona o no es correcto, corregir, volver a verificar y repetir el ciclo hasta tener certeza de que está solucionado.
+4. **Solo detenerse al final**: Una vez que el agente tiene certeza visual de que la tarea está completa y correcta, informar a Juanfran con el resultado final, el estado del navegador y lo que se hizo.
+5. **Excepciones únicas**: Solo interrumpir el ciclo autónomo si se encuentra una decisión de producto ambigua con más de una dirección válida, una modificación en zona protegida por `DONT_TOUCH.md`, o un rediseño completo no autorizado (regla 7).
+
 ### 16. Regla Anti-Mojibake (UTF-8 estricto)
 - Antes de cerrar una tarea con cambios de texto UI, ejecutar: `rg -n -P "\\u00C3|\\u00C2|\\uFFFD" src`.
 - Si hay coincidencias, no finalizar hasta corregirlas.

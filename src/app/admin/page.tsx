@@ -189,6 +189,11 @@ export default function AdminPage() {
 
     // Settings state
     const [editingSettings, setEditingSettings] = useState<Record<string, number | string>>({})
+
+    // Admin default theme state
+    const [adminPrimaryColor, setAdminPrimaryColor] = useState('#6366f1')
+    const [adminSecondaryColor, setAdminSecondaryColor] = useState('#ec4899')
+    const [savingTheme, setSavingTheme] = useState(false)
     const economicModelSuggestions = Array.from(
         new Set([
             ...INTELLIGENCE_MODEL_OPTIONS.map((option) => option.value),
@@ -211,6 +216,39 @@ export default function AdminPage() {
                 settingsMap[s.key] = s.value
             })
             setEditingSettings(settingsMap)
+
+            // Initialize admin theme color pickers
+            const hslToHex = (raw: string): string | null => {
+                const trimmed = raw.replace(/^hsl\(/, '').replace(/\)$/, '').trim()
+                const parts = trimmed.split(/[\s,]+/)
+                if (parts.length < 3) return null
+                const h = parseFloat(parts[0]) / 360
+                const s = parseFloat(parts[1]) / 100
+                const l = parseFloat(parts[2]) / 100
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+                const p = 2 * l - q
+                const toC = (t: number) => {
+                    if (t < 0) t += 1
+                    if (t > 1) t -= 1
+                    if (t < 1 / 6) return p + (q - p) * 6 * t
+                    if (t < 1 / 2) return q
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+                    return p
+                }
+                const r = Math.round(toC(h + 1 / 3) * 255)
+                const g = Math.round(toC(h) * 255)
+                const b = Math.round(toC(h - 1 / 3) * 255)
+                return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+            }
+            const resolveHex = (val: string) => {
+                if (!val) return '#6366f1'
+                if (val.startsWith('#') && /^#[0-9A-Fa-f]{6}$/.test(val)) return val
+                return hslToHex(val) || '#6366f1'
+            }
+            const primary = settings.find(s => s.key === 'theme_primary')?.value as string | undefined
+            const secondary = settings.find(s => s.key === 'theme_secondary')?.value as string | undefined
+            if (primary) setAdminPrimaryColor(resolveHex(primary))
+            if (secondary) setAdminSecondaryColor(resolveHex(secondary))
         }
     }, [settings])
 
@@ -429,6 +467,21 @@ export default function AdminPage() {
             toast({ title: 'Configuración guardada' })
         } catch (error: any) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' })
+        }
+    }
+
+    const handleSaveAdminTheme = async () => {
+        setSavingTheme(true)
+        try {
+            await Promise.all([
+                updateSetting({ key: 'theme_primary', value: adminPrimaryColor }),
+                updateSetting({ key: 'theme_secondary', value: adminSecondaryColor }),
+            ])
+            toast({ title: 'Tema por defecto guardado', description: 'Los nuevos usuarios verán estos colores.' })
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' })
+        } finally {
+            setSavingTheme(false)
         }
     }
 
@@ -992,7 +1045,63 @@ export default function AdminPage() {
                     </TabsContent>
 
                     {/* Settings Tab */}
-                    <TabsContent value="settings">
+                    <TabsContent value="settings" className="space-y-4">
+                        {/* Default Theme Card */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Palette className="h-5 w-5" />
+                                    Tema por defecto
+                                </CardTitle>
+                                <CardDescription>Colores que verán los usuarios nuevos. El ajuste individual del usuario siempre prevalece.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="rounded-xl border border-border/70 bg-muted/20 p-4">
+                                        <Label className="text-sm font-medium">Color primario</Label>
+                                        <div className="mt-3 flex items-center gap-3">
+                                            <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-border/70">
+                                                <input
+                                                    type="color"
+                                                    value={adminPrimaryColor}
+                                                    onChange={(e) => setAdminPrimaryColor(e.target.value)}
+                                                    className="absolute -left-1/2 -top-1/2 h-[200%] w-[200%] cursor-pointer border-none p-0"
+                                                />
+                                            </div>
+                                            <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                                                {adminPrimaryColor}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="rounded-xl border border-border/70 bg-muted/20 p-4">
+                                        <Label className="text-sm font-medium">Color secundario</Label>
+                                        <div className="mt-3 flex items-center gap-3">
+                                            <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-border/70">
+                                                <input
+                                                    type="color"
+                                                    value={adminSecondaryColor}
+                                                    onChange={(e) => setAdminSecondaryColor(e.target.value)}
+                                                    className="absolute -left-1/2 -top-1/2 h-[200%] w-[200%] cursor-pointer border-none p-0"
+                                                />
+                                            </div>
+                                            <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                                                {adminSecondaryColor}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div
+                                        className="h-8 w-8 rounded-full border border-border/70"
+                                        style={{ background: `linear-gradient(135deg, ${adminPrimaryColor}, ${adminSecondaryColor})` }}
+                                    />
+                                    <Button onClick={handleSaveAdminTheme} disabled={savingTheme} size="sm">
+                                        {savingTheme ? 'Guardando...' : 'Guardar tema por defecto'}
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+
                         <Card>
                             <CardHeader>
                                 <CardTitle>Configuración del Sistema</CardTitle>
