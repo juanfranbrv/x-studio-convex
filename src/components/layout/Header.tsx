@@ -85,12 +85,12 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                         <Link
                             href="/"
                             aria-label={t('header.homeAria')}
-                            className="flex items-center justify-center md:hidden"
+                            className="flex items-center gap-2"
                         >
-                            <AppLogo className="h-7 w-24" />
-                        </Link>
-                        <Link href="/" aria-label={t('header.homeAria')} className="hidden md:flex items-center">
-                            <AppLogo className="h-8 w-36" />
+                            <AppLogo className="h-7 w-7 shrink-0" />
+                            <span className="font-heading text-lg font-semibold text-primary leading-none">
+                                {t('app.name')}
+                            </span>
                         </Link>
                     </div>
 
