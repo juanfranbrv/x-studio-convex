@@ -62,7 +62,7 @@ export function PromptCard({
     }
 
     return (
-        <div className="rounded-xl border border-border/60 bg-card/70 p-4">
+        <div className="rounded-xl border border-border/60 bg-card/70 p-4 space-y-2">
             <div className="flex gap-3">
                 <div className="flex-1 relative">
                     <textarea
@@ -87,21 +87,6 @@ export function PromptCard({
                             <Sparkles className="w-4 h-4" />
                         </button>
                     )}
-                    {!hasGeneratedImage && !value.trim() && onInspire && (
-                        <button
-                            type="button"
-                            onClick={onInspire}
-                            disabled={isInspiring || isLoading}
-                            className="absolute right-3 top-3 text-primary/70 hover:text-primary transition-colors disabled:opacity-50"
-                            title="Generate a prompt idea for me"
-                        >
-                            {isInspiring ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Wand2 className="w-4 h-4" />
-                            )}
-                        </button>
-                    )}
                 </div>
                 <Button
                     onClick={handleSubmit}
@@ -118,6 +103,23 @@ export function PromptCard({
                     )}
                 </Button>
             </div>
+            {!hasGeneratedImage && !value.trim() && onInspire && (
+                <div className="flex justify-end">
+                    <button
+                        type="button"
+                        onClick={onInspire}
+                        disabled={isInspiring || isLoading}
+                        className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-muted-foreground hover:text-primary hover:bg-primary/8 transition-colors disabled:opacity-50"
+                    >
+                        {isInspiring ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                            <Wand2 className="w-3.5 h-3.5" />
+                        )}
+                        {t('promptCard.inspireMe', { defaultValue: 'Generar idea para mí' })}
+                    </button>
+                </div>
+            )}
         </div>
     )
 }
