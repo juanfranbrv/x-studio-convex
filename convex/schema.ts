@@ -11,6 +11,16 @@ export default defineSchema({
     updated_by: v.optional(v.string()), // admin email
   }).index("by_key", ["key"]),
 
+  // System prompts: configurable prompt templates for AI generations
+  system_prompts: defineTable({
+    key: v.string(),           // e.g. "generate_user_prompt_image", "generate_user_prompt_carousel"
+    name: v.string(),          // Human-readable name shown in admin
+    body: v.string(),          // Prompt template with {{variable}} placeholders
+    description: v.optional(v.string()),
+    updated_at: v.string(),
+    updated_by: v.optional(v.string()),
+  }).index("by_key", ["key"]),
+
   // Beta access requests (waitlist)
   beta_requests: defineTable({
     email: v.string(),
