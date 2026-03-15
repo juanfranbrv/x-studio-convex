@@ -27,6 +27,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { BrandKitSummary, BrandDNA } from '@/lib/brand-types'
+import { AppLogo } from '@/components/ui/AppLogo'
 
 interface HeaderProps {
     brands?: BrandKitSummary[]
@@ -84,11 +85,13 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                         <Link
                             href="/"
                             aria-label={t('header.homeAria')}
-                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-card/80 shadow-sm transition-colors hover:bg-accent/50 md:hidden"
+                            className="flex items-center justify-center md:hidden"
                         >
-                            <img src="/favicon.svg" alt={t('app.name')} className="h-5 w-5 object-contain" />
+                            <AppLogo className="h-7 w-24" />
                         </Link>
-                        <h1 className="hidden font-heading text-2xl font-semibold text-primary md:block">{t('app.name')}</h1>
+                        <Link href="/" aria-label={t('header.homeAria')} className="hidden md:flex items-center">
+                            <AppLogo className="h-8 w-36" />
+                        </Link>
                     </div>
 
                     {brands.length > 0 ? (
