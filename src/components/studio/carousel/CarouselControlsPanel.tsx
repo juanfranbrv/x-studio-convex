@@ -2877,7 +2877,7 @@ export function CarouselControlsPanel({
                                     className="mr-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
                                 >
                                     {isInspiring ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        <Loader2 className="w-3.5 h-3.5" />
                                     ) : (
                                         <Wand2 className="w-3.5 h-3.5" />
                                     )}

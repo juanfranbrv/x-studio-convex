@@ -854,7 +854,7 @@ export function ControlsPanel({
                                     )}
                                 >
                                     {isInspiring ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        <Loader2 className="w-3.5 h-3.5" />
                                     ) : (
                                         <Wand2 className="w-3.5 h-3.5" />
                                     )}

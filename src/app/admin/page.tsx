@@ -1839,7 +1839,7 @@ export default function AdminPage() {
                                 onClick={handleSeedPrompts}
                                 disabled={isSeedingPrompts}
                             >
-                                {isSeedingPrompts ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                                {isSeedingPrompts ? <Loader2 className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
                                 Seed defaults
                             </Button>
                         </div>
