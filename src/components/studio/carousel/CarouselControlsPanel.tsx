@@ -615,6 +615,7 @@ export function CarouselControlsPanel({
         return decision === 'discard'
     }, [hasUnsavedChanges, openSessionDecisionModal])
     const [prompt, setPrompt] = useState('')
+    const [isInspiring, setIsInspiring] = useState(false)
     const [slideCount, setSlideCount] = useState(0)
     const [aspectRatio, setAspectRatio] = useState<'1:1' | '4:5' | '3:4'>('4:5')
     const [style, setStyle] = useState('minimal')
@@ -2653,6 +2654,27 @@ export function CarouselControlsPanel({
         onGenerate(settings)
     }
 
+    const handleInspire = async () => {
+        const brandKitId = (brandKit?.id || (brandKit as any)?._id) as string | undefined
+        if (!brandKitId || isInspiring) return
+        setIsInspiring(true)
+        try {
+            const res = await fetch('/api/generate-user-prompt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ module: 'carousel', brandKitId }),
+            })
+            const data = await res.json()
+            if (data.success && data.text) {
+                setPrompt(data.text)
+            }
+        } catch (err) {
+            console.error('Failed to generate carousel prompt inspiration:', err)
+        } finally {
+            setIsInspiring(false)
+        }
+    }
+
     const handleAnalyze = async () => {
         if (!prompt.trim() || slideCount < 1) return
         if (generatedCount > 0) {
@@ -2846,6 +2868,21 @@ export function CarouselControlsPanel({
                             }}
                             className="min-h-[100px] text-sm resize-none bg-background border border-border focus:ring-1 focus:ring-primary focus:border-primary pb-12 pr-2 transition-all"
                         />
+                        {!prompt.trim() && brandKit && (
+                            <button
+                                type="button"
+                                onClick={handleInspire}
+                                disabled={isInspiring}
+                                className="absolute right-3 top-3 z-10 text-primary/70 hover:text-primary transition-colors disabled:opacity-50"
+                                title="Generate a prompt idea for me"
+                            >
+                                {isInspiring ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Wand2 className="w-4 h-4" />
+                                )}
+                            </button>
+                        )}
                         <div className="absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2">
                             <div className="flex items-center gap-2">
                                 {isAnalyzing && onCancelAnalyze && (
