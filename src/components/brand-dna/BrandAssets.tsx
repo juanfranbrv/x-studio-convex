@@ -4,15 +4,33 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ARTISTIC_STYLE_CATALOG, ARTISTIC_STYLE_GROUPS } from '@/lib/creation-flow-types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
 
-import { Trash2, Plus, Sparkles, Type, MessageCircle, Quote } from 'lucide-react';
+import { Trash2, Plus, Sparkles, Type, MessageCircle, Quote, Languages } from 'lucide-react';
+
+const LANGUAGE_OPTIONS = [
+    { value: 'es', label: '🇪🇸 Español' },
+    { value: 'en', label: '🇬🇧 English' },
+    { value: 'fr', label: '🇫🇷 Français' },
+    { value: 'de', label: '🇩🇪 Deutsch' },
+    { value: 'pt', label: '🇵🇹 Português' },
+    { value: 'it', label: '🇮🇹 Italiano' },
+    { value: 'ca', label: 'Català' },
+];
 
 interface BrandAssetsProps {
     tagline: string;
     values: string[];
     aesthetic: string[];
     tone: string[];
+    preferredLanguage?: string;
     onUpdateTagline: (val: string) => void;
     onUpdateValue: (index: number, val: string) => void;
     onAddValue: () => void;
@@ -23,6 +41,7 @@ interface BrandAssetsProps {
     onUpdateTone: (index: number, val: string) => void;
     onAddTone: () => void;
     onRemoveTone: (index: number) => void;
+    onUpdateLanguage?: (val: string) => void;
 }
 
 export function BrandAssets({
@@ -30,6 +49,7 @@ export function BrandAssets({
     values,
     aesthetic,
     tone,
+    preferredLanguage,
     onUpdateTagline,
     onUpdateValue,
     onAddValue,
@@ -40,6 +60,7 @@ export function BrandAssets({
     onUpdateTone,
     onAddTone,
     onRemoveTone,
+    onUpdateLanguage,
 }: BrandAssetsProps) {
     const { t } = useTranslation('brandKit');
     const [openSuggestionIndex, setOpenSuggestionIndex] = useState<number | null>(null);
@@ -106,6 +127,35 @@ export function BrandAssets({
                             className="h-10 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
                             placeholder={t('assets.taglinePlaceholder', { defaultValue: 'Write the brand tagline' })}
                         />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="md:col-span-2 glass-panel border-0 shadow-none">
+                <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+                        <Languages className="w-5 h-5 text-primary" />
+                        {t('assets.preferredLanguageTitle', { defaultValue: 'Preferred language' })}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">{t('assets.preferredLanguageDescription', { defaultValue: 'Language used for AI-generated content for this brand.' })}</p>
+                </CardHeader>
+                <CardContent>
+                    <div className="py-1">
+                        <Select
+                            value={preferredLanguage || 'es'}
+                            onValueChange={(val) => onUpdateLanguage?.(val)}
+                        >
+                            <SelectTrigger className="h-10 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus:ring-0 focus:border-primary shadow-none w-full max-w-xs">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {LANGUAGE_OPTIONS.map((opt) => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </CardContent>
             </Card>

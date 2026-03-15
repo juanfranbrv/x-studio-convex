@@ -562,6 +562,10 @@ export function BrandDNABoard({
         updateData(prev => ({ ...prev, tagline: val }));
     };
 
+    const handleUpdatePreferredLanguage = (val: string) => {
+        updateData(prev => ({ ...prev, preferred_language: val }));
+    };
+
     const handleUpdateBrandValue = (index: number, val: string) => {
         updateData(prev => ({
             ...prev,
@@ -1194,6 +1198,7 @@ export function BrandDNABoard({
                                 values={data.brand_values || []}
                                 aesthetic={data.visual_aesthetic || []}
                                 tone={data.tone_of_voice || []}
+                                preferredLanguage={data.preferred_language}
                                 onUpdateTagline={handleUpdateTagline}
                                 onUpdateValue={handleUpdateBrandValue}
                                 onAddValue={handleAddBrandValue}
@@ -1204,6 +1209,7 @@ export function BrandDNABoard({
                                 onUpdateTone={handleUpdateTone}
                                 onAddTone={handleAddTone}
                                 onRemoveTone={handleRemoveTone}
+                                onUpdateLanguage={handleUpdatePreferredLanguage}
                             />
 
                             <TextAssetsSection
