@@ -26,6 +26,7 @@ import type * as referrals from "../referrals.js";
 import type * as sessionImages from "../sessionImages.js";
 import type * as settings from "../settings.js";
 import type * as stylePresets from "../stylePresets.js";
+import type * as systemPrompts from "../systemPrompts.js";
 import type * as users from "../users.js";
 import type * as work_sessions from "../work_sessions.js";
 
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   sessionImages: typeof sessionImages;
   settings: typeof settings;
   stylePresets: typeof stylePresets;
+  systemPrompts: typeof systemPrompts;
   users: typeof users;
   work_sessions: typeof work_sessions;
 }>;
