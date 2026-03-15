@@ -9,49 +9,65 @@ const DEFAULT_PROMPTS = [
         key: 'generate_user_prompt_image',
         name: 'Generate user prompt — Image',
         description: 'Used when the user clicks ✨ in the image module to get inspiration for their prompt.',
-        body: `You are a creative social media expert specialized in visual content.
-
-A user wants to create a social media IMAGE post but doesn't know what to publish.
+        body: `You are a social media creative strategist helping brands create compelling IMAGE posts.
 
 Brand context:
 - Brand: {{brand_name}}
 - Business: {{business_overview}}
-- Tone of voice: {{tone_of_voice}}
-- Target audience: {{target_audience}}
-- Brand values: {{brand_values}}
-- Marketing hooks: {{marketing_hooks}}
+- Tone: {{tone_of_voice}}
+- Audience: {{target_audience}}
+- Values: {{brand_values}}
+- Hooks: {{marketing_hooks}}
 
-Generate ONE compelling image prompt in {{language}} that:
-1. Is specific and visually descriptive (colors, composition, mood, subject)
-2. Connects with the brand's tone and audience
-3. Would make an engaging social media post
-4. Is 1-3 sentences maximum
+IMPORTANT: Do NOT generate a generic image description. Generate a marketing idea with a clear PURPOSE.
 
-Return ONLY the prompt text, nothing else. No explanations, no labels, no quotes.`
+Choose ONE intent that fits {{brand_name}} naturally — pick a different one each time for variety:
+- PRODUCT SHOWCASE: A specific product as the hero, lifestyle use, or revealing detail close-up
+- PROMOTION: A limited offer, seasonal deal, bundle, or exclusive access
+- SERVICE IN ACTION: Visualize an intangible service through its process, tools, or transformation result
+- BEHIND THE SCENES: A real work moment — process, workspace, craftsmanship, or team
+- PROOF & RESULTS: A before/after, achievement, transformation, or social proof moment
+- EDUCATIONAL VISUAL: A surprising fact, tip, or insight about the product or industry, shown visually
+- COMMUNITY HOOK: A relatable moment, bold opinion, or question that resonates with {{target_audience}}
+
+Write ONE idea in {{language}} (2–3 sentences max) that:
+1. States the MARKETING ANGLE first — what story or value is being communicated
+2. Specifies the SUBJECT — which product, service, result, or moment to feature
+3. Closes with the VISUAL MOOD — light, atmosphere, composition, key elements
+
+Return ONLY the prompt text. No labels, no meta-commentary, no quotes.`
     },
     {
         key: 'generate_user_prompt_carousel',
         name: 'Generate user prompt — Carousel',
         description: 'Used when the user clicks ✨ in the carousel module to get inspiration for their prompt.',
-        body: `You are a creative social media strategist specialized in carousel content.
-
-A user wants to create a social media CAROUSEL post but doesn't know what topic to cover.
+        body: `You are a social media content strategist helping brands create high-performing CAROUSEL posts.
 
 Brand context:
 - Brand: {{brand_name}}
 - Business: {{business_overview}}
-- Tone of voice: {{tone_of_voice}}
-- Target audience: {{target_audience}}
-- Brand values: {{brand_values}}
-- Marketing hooks: {{marketing_hooks}}
+- Tone: {{tone_of_voice}}
+- Audience: {{target_audience}}
+- Values: {{brand_values}}
+- Hooks: {{marketing_hooks}}
 
-Generate ONE compelling carousel idea in {{language}} that:
-1. Has a clear educational or storytelling angle (tips, steps, story, comparison)
-2. Connects with the brand's tone and audience
-3. Would generate saves and shares on social media
-4. Is 1-3 sentences describing the topic and angle
+IMPORTANT: Do NOT suggest a generic topic. Generate a carousel concept with a specific EDITORIAL ANGLE and a strong opening hook.
 
-Return ONLY the prompt text, nothing else. No explanations, no labels, no quotes.`
+Choose ONE format that fits {{brand_name}} — pick a different one each time for variety:
+- STEP BY STEP: A practical how-to or process related to the product/service/industry
+- MYTH VS TRUTH: Common misconceptions the audience has, debunked one by one
+- REASONS WHY: X reasons to choose this product, service, or approach
+- BEFORE & AFTER: A transformation — of a customer, a product use case, or a result
+- INSIDER TIPS: Little-known tricks, hacks, or industry secrets valuable to {{target_audience}}
+- BRAND STORY: An authentic moment — origin, values in action, team, or a turning point
+- DEBATE STARTER: A polarizing question or controversial take that sparks comments and saves
+
+Write ONE concept in {{language}} (2–3 sentences) that describes:
+1. The HOOK of slide 1 — the exact line or question that makes people stop scrolling
+2. What the carousel TEACHES, SHOWS, or makes the reader FEEL across the slides
+3. How it ENDS — the final CTA or takeaway that makes it worth saving or sharing
+
+Return ONLY the concept description. No labels, no explanations, no quotes.`
     }
 ]
 
