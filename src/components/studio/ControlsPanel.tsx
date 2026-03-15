@@ -838,20 +838,32 @@ export function ControlsPanel({
                                 }
                             }}
                         />
+                        {isMobile && !promptValue.trim() && activeBrandKit && (
+                            <button
+                                type="button"
+                                onClick={handleInspire}
+                                disabled={isInspiring}
+                                className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                            >
+                                {isInspiring ? (
+                                    <Loader2 className="w-3.5 h-3.5" />
+                                ) : (
+                                    <Wand2 className="w-3.5 h-3.5" />
+                                )}
+                                Generar idea para mí
+                            </button>
+                        )}
                         <div className={cn(
                             isMobile
-                                ? 'mt-3 flex items-center justify-end gap-2'
+                                ? 'mt-2 flex items-center justify-end gap-2'
                                 : 'absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2'
                         )}>
-                            {!promptValue.trim() && activeBrandKit && (
+                            {!promptValue.trim() && activeBrandKit && !isMobile && (
                                 <button
                                     type="button"
                                     onClick={handleInspire}
                                     disabled={isInspiring}
-                                    className={cn(
-                                        'flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50',
-                                        isMobile ? '' : 'mr-auto'
-                                    )}
+                                    className="mr-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
                                 >
                                     {isInspiring ? (
                                         <Loader2 className="w-3.5 h-3.5" />
