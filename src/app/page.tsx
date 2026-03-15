@@ -12,6 +12,11 @@ import {
   CheckCircle,
   Clock,
   Mail,
+  Megaphone,
+  Rocket,
+  CalendarCheck,
+  Sparkles,
+  Users,
 } from 'lucide-react'
 import { AppLogo } from '@/components/ui/AppLogo'
 import { api } from '@/../convex/_generated/api'
@@ -21,6 +26,60 @@ import { brand } from '@/lib/brand'
 import { cn } from '@/lib/utils'
 
 const FONT_LANDING = 'Google Sans Flex, sans-serif'
+
+/* ─── Scroll-triggered reveal hook ─── */
+function useScrollReveal<T extends HTMLElement>(threshold = 0.15) {
+  const ref = useRef<T>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setIsVisible(true) },
+      { threshold }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [threshold])
+
+  return { ref, isVisible }
+}
+
+/* ─── Animated counter hook ─── */
+function useCountUp(target: number, suffix: string, duration = 1800) {
+  const [display, setDisplay] = useState(`0${suffix}`)
+  const ref = useRef<HTMLParagraphElement>(null)
+  const hasAnimated = useRef(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated.current) {
+          hasAnimated.current = true
+          const start = performance.now()
+          const animate = (now: number) => {
+            const elapsed = now - start
+            const progress = Math.min(elapsed / duration, 1)
+            // ease-out cubic
+            const eased = 1 - Math.pow(1 - progress, 3)
+            const current = Math.round(eased * target)
+            setDisplay(`${current}${suffix}`)
+            if (progress < 1) requestAnimationFrame(animate)
+          }
+          requestAnimationFrame(animate)
+        }
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [target, suffix, duration])
+
+  return { ref, display }
+}
 
 /* ─── Curved section divider (SVG wave) ─── */
 function SectionCurve({ position, className }: { position: 'top' | 'bottom'; className?: string }) {
@@ -359,8 +418,70 @@ function HeroSection({ hasAccess }: { hasAccess: boolean }) {
             </span>
           ))}
         </div>
+
+        {/* ── Interactive hero showcase (Slack-style pills + image) ── */}
+        <HeroPillsShowcase />
       </div>
     </section>
+  )
+}
+
+/* ─────────────────────── Hero Pills Showcase (Slack style) ─────────────────────── */
+
+const HERO_PILLS = [
+  { key: 'productLaunch', icon: Rocket, image: '/landing/hero-launch.webp' },
+  { key: 'dailyPosts', icon: CalendarCheck, image: '/landing/hero-daily.webp' },
+  { key: 'campaignDesign', icon: Sparkles, image: '/landing/hero-campaign.webp' },
+  { key: 'teamContent', icon: Users, image: '/landing/hero-team.webp' },
+  { key: 'promoOffer', icon: Megaphone, image: '/landing/hero-promo.webp' },
+] as const
+
+function HeroPillsShowcase() {
+  const { t } = useTranslation('home')
+  const [activeIdx, setActiveIdx] = useState(0)
+
+  return (
+    <div className="mt-16 md:mt-24">
+      {/* Image */}
+      <div className="mx-auto max-w-[900px] overflow-hidden rounded-2xl border border-border/40 shadow-xl sm:rounded-3xl">
+        <div className="relative aspect-[16/10]">
+          {HERO_PILLS.map((pill, idx) => (
+            <img
+              key={pill.key}
+              src={pill.image}
+              alt={t(`heroPills.${pill.key}`)}
+              className={cn(
+                'absolute inset-0 h-full w-full object-cover transition-opacity duration-500',
+                idx === activeIdx ? 'opacity-100' : 'opacity-0'
+              )}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Pills */}
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:mt-10">
+        {HERO_PILLS.map((pill, idx) => {
+          const Icon = pill.icon
+          const isActive = idx === activeIdx
+          return (
+            <button
+              key={pill.key}
+              onClick={() => setActiveIdx(idx)}
+              className={cn(
+                'flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 sm:text-base',
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+              )}
+            >
+              {t(`heroPills.${pill.key}`)}
+              <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
@@ -531,58 +652,90 @@ const SHOWCASES = [
 
 function FeatureShowcasesSection() {
   const { t } = useTranslation('home')
+  const headerReveal = useScrollReveal<HTMLDivElement>()
 
   return (
     <section id="features" className="py-20 md:py-28">
       <div className="mx-auto max-w-[90rem] px-6 sm:px-10">
-        <h2 className="mx-auto max-w-3xl text-center text-[clamp(1.75rem,3vw,3rem)] font-bold tracking-tight">
-          {t('showcase.sectionTitle')}
-        </h2>
-        <p className="mx-auto mt-5 max-w-2xl text-center text-[clamp(1.0625rem,1.3vw,1.25rem)] leading-relaxed text-muted-foreground">
-          {t('showcase.sectionSubtitle')}
-        </p>
+        <div
+          ref={headerReveal.ref}
+          className={cn(
+            'transition-all duration-700',
+            headerReveal.isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+          )}
+        >
+          <h2 className="mx-auto max-w-3xl text-center text-[clamp(1.75rem,3vw,3rem)] font-bold tracking-tight">
+            {t('showcase.sectionTitle')}
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-center text-[clamp(1.0625rem,1.3vw,1.25rem)] leading-relaxed text-muted-foreground">
+            {t('showcase.sectionSubtitle')}
+          </p>
+        </div>
 
         <div className="mt-16 space-y-20 md:mt-24 md:space-y-28">
-          {SHOWCASES.map((item, idx) => {
-            const isReversed = idx % 2 !== 0
-            return (
-              <div
-                key={item.key}
-                className={cn(
-                  'grid items-center gap-10 md:grid-cols-2 md:gap-16',
-                  isReversed && 'md:[&>*:first-child]:order-2'
-                )}
-              >
-                {/* Text */}
-                <div>
-                  <h3 className="text-[clamp(1.5rem,2.5vw,2.5rem)] font-bold tracking-tight">
-                    {t(`showcase.${item.key}.title`)}
-                  </h3>
-                  <p className="mt-5 text-[clamp(1.0625rem,1.3vw,1.25rem)] leading-relaxed text-muted-foreground">
-                    {t(`showcase.${item.key}.description`)}
-                  </p>
-                  <Link
-                    href="/image"
-                    className="mt-6 inline-flex items-center gap-1.5 text-base font-semibold text-primary transition-colors hover:text-primary/80"
-                  >
-                    {t(`showcase.${item.key}.link`)} <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-
-                {/* Image */}
-                <div className="overflow-hidden rounded-3xl border border-border/40 shadow-lg">
-                  <img
-                    src={item.image}
-                    alt={t(`showcase.${item.key}.title`)}
-                    className="aspect-[4/3] w-full object-cover"
-                  />
-                </div>
-              </div>
-            )
-          })}
+          {SHOWCASES.map((item, idx) => (
+            <ShowcaseRow key={item.key} item={item} idx={idx} />
+          ))}
         </div>
       </div>
     </section>
+  )
+}
+
+function ShowcaseRow({ item, idx }: { item: typeof SHOWCASES[number]; idx: number }) {
+  const { t } = useTranslation('home')
+  const isReversed = idx % 2 !== 0
+  const textReveal = useScrollReveal<HTMLDivElement>(0.2)
+  const imageReveal = useScrollReveal<HTMLDivElement>(0.15)
+
+  return (
+    <div
+      className={cn(
+        'grid items-center gap-10 md:grid-cols-2 md:gap-16',
+        isReversed && 'md:[&>*:first-child]:order-2'
+      )}
+    >
+      {/* Text — slides in from the side */}
+      <div
+        ref={textReveal.ref}
+        className={cn(
+          'transition-all duration-700',
+          textReveal.isVisible
+            ? 'translate-x-0 opacity-100'
+            : isReversed ? 'translate-x-12 opacity-0' : '-translate-x-12 opacity-0'
+        )}
+      >
+        <h3 className="text-[clamp(1.5rem,2.5vw,2.5rem)] font-bold tracking-tight">
+          {t(`showcase.${item.key}.title`)}
+        </h3>
+        <p className="mt-5 text-[clamp(1.0625rem,1.3vw,1.25rem)] leading-relaxed text-muted-foreground">
+          {t(`showcase.${item.key}.description`)}
+        </p>
+        <Link
+          href="/image"
+          className="mt-6 inline-flex items-center gap-1.5 text-base font-semibold text-primary transition-colors hover:text-primary/80"
+        >
+          {t(`showcase.${item.key}.link`)} <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+
+      {/* Image — slides in from opposite side + subtle parallax scale */}
+      <div
+        ref={imageReveal.ref}
+        className={cn(
+          'overflow-hidden rounded-3xl border border-border/40 shadow-lg transition-all duration-700',
+          imageReveal.isVisible
+            ? 'translate-y-0 scale-100 opacity-100'
+            : 'translate-y-16 scale-95 opacity-0'
+        )}
+      >
+        <img
+          src={item.image}
+          alt={t(`showcase.${item.key}.title`)}
+          className="aspect-[4/3] w-full object-cover transition-transform duration-[1200ms] hover:scale-105"
+        />
+      </div>
+    </div>
   )
 }
 
@@ -590,8 +743,37 @@ function FeatureShowcasesSection() {
 
 const STAT_KEYS = ['stat1', 'stat2', 'stat3', 'stat4'] as const
 
+/* Parsed stat values for counter animation */
+const STAT_TARGETS: Record<string, { value: number; suffix: string }> = {
+  stat1: { value: 729, suffix: '+' },
+  stat2: { value: 30, suffix: 's' },
+  stat3: { value: 20, suffix: '+' },
+  stat4: { value: 6, suffix: '' },
+}
+
+function AnimatedStat({ statKey }: { statKey: string }) {
+  const { t } = useTranslation('home')
+  const target = STAT_TARGETS[statKey]
+  const { ref, display } = useCountUp(target.value, target.suffix)
+
+  return (
+    <div className="text-center">
+      <p
+        ref={ref}
+        className="text-[clamp(2.5rem,5vw,4rem)] font-extrabold tracking-tight text-primary-foreground"
+      >
+        {display}
+      </p>
+      <p className="mt-2 text-sm font-medium leading-snug text-primary-foreground/70 sm:text-base">
+        {t(`stats.${statKey}.label`)}
+      </p>
+    </div>
+  )
+}
+
 function StatsSection() {
   const { t } = useTranslation('home')
+  const headerReveal = useScrollReveal<HTMLDivElement>(0.3)
 
   return (
     <section className="relative">
@@ -599,22 +781,23 @@ function StatsSection() {
       <SectionCurve position="top" className="text-primary" />
       <div className="bg-primary pb-20 pt-8 md:pb-28 md:pt-12">
         <div className="mx-auto max-w-[90rem] px-6 sm:px-10">
-          <h2 className="mb-4 text-center text-[clamp(1.75rem,3vw,2.5rem)] font-bold tracking-tight text-primary-foreground">
-            {t('proof.title')}
-          </h2>
-          <p className="mx-auto mb-14 max-w-xl text-center text-[clamp(1.0625rem,1.3vw,1.25rem)] text-primary-foreground/70">
-            {t('proof.subtitle')}
-          </p>
+          <div
+            ref={headerReveal.ref}
+            className={cn(
+              'transition-all duration-700',
+              headerReveal.isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+            )}
+          >
+            <h2 className="mb-4 text-center text-[clamp(1.75rem,3vw,2.5rem)] font-bold tracking-tight text-primary-foreground">
+              {t('proof.title')}
+            </h2>
+            <p className="mx-auto mb-14 max-w-xl text-center text-[clamp(1.0625rem,1.3vw,1.25rem)] text-primary-foreground/70">
+              {t('proof.subtitle')}
+            </p>
+          </div>
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-12">
             {STAT_KEYS.map((key) => (
-              <div key={key} className="text-center">
-                <p className="text-[clamp(2.5rem,5vw,4rem)] font-extrabold tracking-tight text-primary-foreground">
-                  {t(`stats.${key}.value`)}
-                </p>
-                <p className="mt-2 text-sm font-medium leading-snug text-primary-foreground/70 sm:text-base">
-                  {t(`stats.${key}.label`)}
-                </p>
-              </div>
+              <AnimatedStat key={key} statKey={key} />
             ))}
           </div>
         </div>

@@ -24,7 +24,15 @@
     "alreadyHaveAccount": "Ya tengo cuenta, llevame al estudio.",
     "requestError": "Error al enviar solicitud",
     "registrationCompleted": "Registro completado",
-    "trustedBy": "Marcas y equipos creativos que ya confian en Post laboratory"
+    "trustedBy": "Marcas y equipos creativos que ya confian en Post laboratory",
+    "learnMore": "Saber mas"
+  },
+  "heroPills": {
+    "productLaunch": "Lanza un producto",
+    "dailyPosts": "Publica a diario",
+    "campaignDesign": "Disena una campana",
+    "teamContent": "Presenta tu equipo",
+    "promoOffer": "Anuncia una oferta"
   },
   "tabs": {
     "label": "Todo lo que tu equipo necesita para crear contenido que convierte",

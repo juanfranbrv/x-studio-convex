@@ -24,7 +24,15 @@
     "alreadyHaveAccount": "I already have an account, take me to the studio.",
     "requestError": "Error sending request",
     "registrationCompleted": "Registration completed",
-    "trustedBy": "Brands and creative teams that already trust Post laboratory"
+    "trustedBy": "Brands and creative teams that already trust Post laboratory",
+    "learnMore": "Learn more"
+  },
+  "heroPills": {
+    "productLaunch": "Launch a product",
+    "dailyPosts": "Post every day",
+    "campaignDesign": "Design a campaign",
+    "teamContent": "Showcase your team",
+    "promoOffer": "Announce a deal"
   },
   "tabs": {
     "label": "Everything your team needs to create content that converts",
