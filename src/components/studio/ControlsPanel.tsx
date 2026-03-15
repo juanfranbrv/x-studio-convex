@@ -751,7 +751,7 @@ export function ControlsPanel({
                     </div>
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                         <Button
-                            variant="outline"
+                            variant="default"
                             size="sm"
                             className="h-7 px-2 text-[10px] gap-1"
                             onClick={onCreateSession}

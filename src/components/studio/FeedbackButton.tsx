@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { Loader2 } from '@/components/ui/spinner'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation } from 'convex/react'
 import { useUser } from '@clerk/nextjs'
 import { Check, MessageSquare, Send, X } from 'lucide-react'
@@ -83,8 +83,24 @@ export function FeedbackButton({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isVisible, setIsVisible] = useState(false)
     const [hasSubmitted, setHasSubmitted] = useState(false)
+    const [anchorStyle, setAnchorStyle] = useState<React.CSSProperties>({})
+    const tabRef = useRef<HTMLButtonElement>(null)
 
     const tabStyle = useCanvasEdgePosition(tabSide)
+
+    const handleTabOpen = () => {
+        if (variant === 'tab' && tabRef.current) {
+            const r = tabRef.current.getBoundingClientRect()
+            const maxTop = window.innerHeight - 440
+            const top = Math.max(8, Math.min(r.top, maxTop))
+            if (tabSide === 'right') {
+                setAnchorStyle({ position: 'fixed', top, left: r.right + 8 })
+            } else {
+                setAnchorStyle({ position: 'fixed', top, right: window.innerWidth - r.left + 8 })
+            }
+        }
+        setIsOpen(true)
+    }
 
     useEffect(() => {
         if (show && !hasSubmitted) {
@@ -152,7 +168,8 @@ export function FeedbackButton({
         <>
             {!isOpen && variant === 'tab' && (
                 <button
-                    onClick={() => setIsOpen(true)}
+                    ref={tabRef}
+                    onClick={handleTabOpen}
                     style={tabStyle}
                     className={cn(
                         'z-50 flex flex-col items-center gap-1.5 px-2.5 py-3',
@@ -202,7 +219,13 @@ export function FeedbackButton({
             )}
 
             {isOpen && (
-                <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div
+                    style={variant === 'tab' ? anchorStyle : undefined}
+                    className={cn(
+                        'z-50 animate-in fade-in slide-in-from-bottom-4 duration-300',
+                        variant !== 'tab' && 'fixed bottom-24 left-1/2 -translate-x-1/2'
+                    )}
+                >
                     <div
                         className={cn(
                             'w-80 space-y-4 rounded-2xl border border-border/70 bg-card/95 p-5 shadow-2xl backdrop-blur-xl',
@@ -294,7 +317,13 @@ export function FeedbackButton({
             )}
 
             {hasSubmitted && (
-                <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 animate-in fade-in zoom-in duration-500">
+                <div
+                    style={variant === 'tab' ? anchorStyle : undefined}
+                    className={cn(
+                        'z-50 animate-in fade-in zoom-in duration-500',
+                        variant !== 'tab' && 'fixed bottom-24 left-1/2 -translate-x-1/2'
+                    )}
+                >
                     <div className="flex h-12 w-12 items-center justify-center rounded-full border border-primary/35 bg-primary/20 shadow-lg">
                         <Check className="h-6 w-6 text-primary" />
                     </div>
