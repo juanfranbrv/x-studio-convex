@@ -4,7 +4,7 @@ import { getGoogleTextGenerativeModel } from '@/lib/gemini'
 import { log } from '@/lib/logger'
 import { ConvexHttpClient } from 'convex/browser'
 import { api } from '@/../convex/_generated/api'
-import { Id } from '@/../convex/_generated/datamodel'
+import { Id } from '@/../convex/_generated/dataModel'
 
 const LANGUAGE_NAMES: Record<string, string> = {
     es: 'Spanish',
