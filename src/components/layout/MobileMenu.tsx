@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
-import { Bot, FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, Menu, PanelsTopLeft, Play, Settings } from 'lucide-react'
+import { FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, Menu, PanelsTopLeft, Play, Settings } from 'lucide-react'
+import { AppLogo } from '@/components/ui/AppLogo'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from './LanguageSwitcher'
@@ -45,7 +46,7 @@ export function MobileMenu() {
             <SheetContent side="left" className="w-[80vw] p-0 sm:w-[350px]">
                 <SheetHeader className="border-b border-border bg-muted/20 p-6">
                     <SheetTitle className="flex items-center gap-2">
-                        <Bot className="h-6 w-6 text-primary" />
+                        <AppLogo className="h-6 w-8" />
                         <span>{t('app.name')}</span>
                     </SheetTitle>
                 </SheetHeader>

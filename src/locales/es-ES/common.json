@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Postlaboratory"
+    "name": "Post laboratory"
   },
   "nav": {
     "home": "Inicio",
@@ -67,7 +67,7 @@
     "en-US": "Inglés"
   },
   "header": {
-    "homeAria": "Ir al inicio de Postlaboratory"
+    "homeAria": "Ir al inicio de Post laboratory"
   },
   "suggestions": {
     "alternatives": "Opciones alternativas",

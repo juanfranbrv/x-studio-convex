@@ -1,5 +1,5 @@
 export const brand = {
-  name: "Postlaboratory",
+  name: "Post laboratory",
   domain: "postlaboratory.com",
   appUrl:
     process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, "") ||

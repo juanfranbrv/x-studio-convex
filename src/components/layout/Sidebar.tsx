@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
-import { Bot, FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, PanelsTopLeft, Play, Settings, User } from 'lucide-react'
+import { FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, PanelsTopLeft, Play, Settings, User } from 'lucide-react'
+import { AppLogo } from '@/components/ui/AppLogo'
 import { cn } from '@/lib/utils'
 import {
     DropdownMenu,
@@ -55,7 +56,9 @@ export function Sidebar({ className }: SidebarProps) {
             )}
         >
             <div className="flex flex-col items-center gap-2 border-b border-border/60 p-4">
-                <Bot className="h-8 w-8 text-primary" />
+                <Link href="/" aria-label="Post laboratory">
+                    <AppLogo className="h-11 w-14" />
+                </Link>
             </div>
 
             <nav className="scrollbar-none flex flex-1 flex-col gap-3 overflow-y-auto px-2 py-4">

@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import { LegalPage } from '@/components/legal/LegalPage'
 
 export const metadata: Metadata = {
-    title: 'Terms | Postlaboratory',
-    description: 'Terms of service governing access, acceptable use, and the operating rules of Postlaboratory.',
+    title: 'Terms | Post laboratory',
+    description: 'Terms of service governing access, acceptable use, and the operating rules of Post laboratory.',
 }
 
 export default function TermsPage() {

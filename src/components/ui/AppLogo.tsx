@@ -8,7 +8,7 @@ type Props = {
 }
 
 /**
- * PostLaboratory brand logo — vectorial SVG with currentColor fill.
+ * Post laboratory brand logo — vectorial SVG with currentColor fill.
  * Inherits the active theme primary color automatically.
  */
 export function AppLogo({ className, style }: Props) {
@@ -17,7 +17,7 @@ export function AppLogo({ className, style }: Props) {
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 707 553"
             preserveAspectRatio="xMidYMid meet"
-            aria-label="PostLaboratory"
+            aria-label="Post laboratory"
             role="img"
             className={cn('text-[var(--color-brand-primary)]', className)}
             style={style}

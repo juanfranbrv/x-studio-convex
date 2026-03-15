@@ -82,16 +82,9 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     <MobileMenu />
 
                     <div className="flex shrink-0 items-center gap-2">
-                        <Link
-                            href="/"
-                            aria-label={t('header.homeAria')}
-                            className="flex items-center gap-2"
-                        >
-                            <AppLogo className="h-7 w-7 shrink-0" />
-                            <span className="font-heading text-lg font-semibold text-primary leading-none">
-                                {t('app.name')}
-                            </span>
-                        </Link>
+                        <h1 className="font-heading text-xl font-semibold text-primary leading-none">
+                            {t('app.name')}
+                        </h1>
                     </div>
 
                     {brands.length > 0 ? (

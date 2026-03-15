@@ -7,6 +7,7 @@ import { useAuth, useUser } from '@clerk/nextjs'
 import { useMutation, useQuery } from 'convex/react'
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, Bot, CheckCircle, Clock, Layers, Mail, Palette, Zap } from 'lucide-react'
+import { AppLogo } from '@/components/ui/AppLogo'
 import { api } from '@/../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -102,7 +103,7 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 rounded-[1.75rem] border border-white/10 bg-background/72 px-4 py-4 shadow-[0_18px_50px_-32px_rgba(15,23,42,0.32)] backdrop-blur-xl transition-all duration-300 sm:px-6">
           <div className="group flex items-center gap-4">
             <div className="flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
-              <Bot className="h-8 w-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)]" />
+              <AppLogo className="h-8 w-10" />
             </div>
             <span className="font-heading text-xl font-bold tracking-tight opacity-90">{brand.name}</span>
           </div>
@@ -235,7 +236,7 @@ function BetaLandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
       <footer className="mt-auto px-4 py-10 sm:px-8 sm:py-12">
         <div className="glass-card mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 border-white/5 p-6 sm:p-8 md:flex-row">
           <div className="flex items-center gap-3">
-            <Bot className="h-6 w-6 text-primary" />
+            <AppLogo className="h-6 w-8" />
             <span className="text-lg font-bold tracking-tight">{brand.name}</span>
           </div>
           <p className="text-center text-sm font-medium text-muted-foreground/60 md:text-left">

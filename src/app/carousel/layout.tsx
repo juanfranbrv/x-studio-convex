@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Postlaboratory Carrusel | Motor de Diseno Inteligente",
+  title: "Post laboratory Carrusel | Motor de Diseno Inteligente",
 };
 
 export default function CarouselLayout({

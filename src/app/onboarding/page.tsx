@@ -3,7 +3,7 @@
 import { Loader2 } from '@/components/ui/spinner'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bot } from 'lucide-react'
+import { AppLogo } from '@/components/ui/AppLogo'
 import { useUser } from '@clerk/nextjs'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { useBrandKit } from '@/contexts/BrandKitContext'
@@ -169,7 +169,7 @@ export default function OnboardingPage() {
         <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-3xl items-center justify-center px-4 sm:px-6">
           <div className="glass-card w-full max-w-xl border-white/20 p-6 text-center shadow-2xl backdrop-blur-xl sm:p-10">
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-              <Bot className="h-8 w-8 text-primary" />
+              <AppLogo className="h-8 w-10" />
             </div>
             <h1 className="text-2xl font-heading font-bold tracking-tight sm:text-3xl">Preparando tu Kit de Marca</h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">

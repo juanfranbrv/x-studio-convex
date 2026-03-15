@@ -2,7 +2,8 @@
 
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bot, FileImage, FolderKanban, House, LayoutPanelTop, PanelsTopLeft } from 'lucide-react'
+import { FileImage, FolderKanban, House, LayoutPanelTop, PanelsTopLeft } from 'lucide-react'
+import { AppLogo } from '@/components/ui/AppLogo'
 import { brand } from '@/lib/brand'
 
 type AuthMode = 'sign-in' | 'sign-up'
@@ -16,7 +17,7 @@ function AppPreview() {
           <aside className="flex flex-col justify-between border-r border-slate-200/80 bg-[linear-gradient(180deg,#f4f6fb,#eef2f8)] p-3">
             <div className="space-y-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0f4aa3] text-white shadow-[0_12px_28px_-18px_rgba(15,74,163,0.9)]">
-                <Bot className="h-5 w-5" strokeWidth={1.8} />
+                <AppLogo className="h-5 w-6" />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-3 rounded-[1.1rem] bg-white/92 px-3 py-2 shadow-[0_14px_26px_-18px_rgba(15,23,42,0.35)]">
@@ -185,7 +186,7 @@ export function AuthShell({
             <div className="space-y-8">
               <div className="inline-flex items-center gap-3 rounded-full border border-primary/15 bg-background/72 px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/12 text-primary">
-                  <Bot className="h-4 w-4" strokeWidth={1.8} />
+                  <AppLogo className="h-4 w-5" />
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/80">x-studio</p>
@@ -212,7 +213,7 @@ export function AuthShell({
               <div className="mb-8 space-y-3">
                 <div className="flex items-center gap-3 lg:hidden">
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/12 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-                    <Bot className="h-5 w-5" strokeWidth={1.8} />
+                    <AppLogo className="h-5 w-6" />
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/80">x-studio</p>
