@@ -1,7 +1,26 @@
-﻿# Referencia TÃ©cnica
+# Referencia TÃ©cnica
 
 Documento vivo de referencia tÃ©cnica para Juanfran y cualquier IA que trabaje en `x-studio`.
 
+## Reglas de sistema UI
+
+Existe un documento vivo con reglas reutilizables de coherencia visual para nuevas iteraciones de interfaz:
+
+- [docs/UI_SYSTEM_RULES.md](F:/_PROYECTOS/x-studio/docs/UI_SYSTEM_RULES.md)
+
+Uso recomendado:
+
+1. consultarlo antes de tocar cabeceras de tarjeta, textareas principales, botones o dropdowns
+2. reutilizar sus familias visuales antes de inventar una nueva
+3. documentar ahi cualquier excepcion que se introduzca a nivel de sistema
+
+Decision vigente:
+
+- en desktop, las entradas de texto principales equivalentes deben compartir tamano base
+- el sistema de acciones del panel creativo se organiza en dos alturas visibles principales: M = 42px y L = 46px
+- Analizar pertenece a la misma familia visual que el CTA principal, pero con menor jerarquia
+- los dropdowns deben mantener la misma escala tipografica cerrados y abiertos
+- los estados informativos no deben encapsularse por defecto si se leen mejor como texto limpio
 ## DetecciÃ³n de idioma con Detect Language API
 
 ### PropÃ³sito
@@ -413,3 +432,10 @@ Si Clerk exige verificacion completa del dominio para correo o cuenta hospedada,
 - La regla se aplica con un hook compartido (`useDisablePullToRefresh`) que actua sobre `html` y `body`, y se refuerza en el contenedor raiz del modulo con `overscrollBehaviorY: 'none'`.
 - En dispositivos donde `overscroll-behavior` no basta, el hook tambien intercepta `touchmove` descendente con listeners no pasivos cuando no existe ningun ancestro scrolleable que pueda seguir subiendo. Eso evita que el navegador interprete el gesto como refresh de pagina.
 - El objetivo es evitar refresh accidentales al hacer tope arriba durante el trabajo en canvas o paneles con sesion no guardada.
+
+## Catalogo de formatos por red social
+
+- La fuente de verdad de formatos sociales del modulo de imagen vive en `src/lib/creation-flow-types.ts`, dentro de `SOCIAL_FORMATS`.
+- El catalogo visible se limita a las plataformas `instagram`, `tiktok`, `facebook`, `x`, `youtube` y `linkedin`.
+- `whatsapp` queda fuera del selector y del catalogo activo; no debe reaparecer salvo decision explicita de producto.
+- Solo se muestran formatos con proporcion estandar util para composicion visual. Las medidas especiales sin ratio reutilizable (cabeceras, covers exoticos o casos puntuales sin familia clara) se excluyen del selector para no mezclar formatos operativos con excepciones de soporte.

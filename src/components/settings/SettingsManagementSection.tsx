@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { IconSparkles } from '@/components/ui/icons'
+import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher'
 
 type Props = {
     t: (key: string, options?: Record<string, unknown>) => string
@@ -68,6 +69,22 @@ export function SettingsManagementSection({
                                         {t('interface.left')}
                                     </Button>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-border/40" />
+
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-1">
+                                <Label className="text-sm font-medium text-foreground">
+                                    {t('common:labels.language')}
+                                </Label>
+                                <p className="text-sm leading-6 text-muted-foreground">
+                                    {t('management.notice.personalPrefs')}
+                                </p>
+                            </div>
+                            <div className="rounded-lg border border-border/60 bg-muted/30 p-1">
+                                <LanguageSwitcher compact align="end" />
                             </div>
                         </div>
 

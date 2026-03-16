@@ -9,7 +9,7 @@ import { ContentImageCard } from './creation-flow/ContentImageCard'
 import { StyleImageCard } from './creation-flow/StyleImageCard'
 import { AuxiliaryLogosCard } from './creation-flow/AuxiliaryLogosCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { IconPalette, IconLayout, IconLayers, IconImageAdd, IconWand, IconFingerprint, IconRotate, IconHistory, IconPlus, IconSave, IconCheck, IconAlertCircle, IconClose } from '@/components/ui/icons'
+import { IconPalette, IconLayout, IconDashboardSquare, IconImageAdd, IconWand, IconIdea, IconFingerprint, IconRotate, IconHistory, IconPlus, IconSave, IconCheck, IconAlertCircle, IconClose } from '@/components/ui/icons'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -52,6 +52,15 @@ import {
 import type { CompositionSummary } from '@/lib/admin-compositions-actions'
 
 const RESET_USES4_FLAG = 'admin_layout_ratings_reset_uses4_done_v1'
+const PANEL_SECTION_HEADER_ICON_CLASS = "h-9 w-9 rounded-none border-0 bg-transparent text-foreground/72 shadow-none"
+const PANEL_SECTION_HEADER_TITLE_CLASS = "text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88"
+const PANEL_SECTION_SELECT_TRIGGER_CLASS = "h-11 w-full rounded-2xl border border-input/80 bg-background/90 px-3.5 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+const PANEL_SECTION_SELECT_CONTENT_CLASS = "rounded-2xl border-border/70 p-2 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.34)]"
+const PANEL_SECTION_SELECT_ITEM_CLASS = "min-h-11 rounded-xl px-3 py-2 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium"
+const PANEL_SECTION_LABEL_CLASS = "text-[0.78rem] font-semibold text-foreground/90 uppercase tracking-[0.08em]"
+const PANEL_SECTION_HELPER_CLASS = "text-[0.84rem] text-muted-foreground leading-relaxed"
+const PANEL_TEXT_BUTTON_REVEAL_CLASS = "rounded-xl px-3 py-2 text-[clamp(0.9rem,0.86rem+0.12vw,0.98rem)] text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.28)] disabled:opacity-50"
+const PANEL_SECONDARY_BUTTON_CLASS = "min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal"
 
 type BrandColorRole = 'Texto' | 'Fondo' | 'Acento'
 type DraggedBrandColor = { role: BrandColorRole; color: string } | null
@@ -706,111 +715,152 @@ export function ControlsPanel({
             <div className="thin-scrollbar flex-1 overflow-y-auto pl-4 pr-0 -mr-[2px] pt-4 md:pl-5 md:pr-0 md:pt-5">
                 <div className="space-y-4 pr-4 pb-10 md:pr-5 md:pb-12">
                 {/* SECTION: Sessions */}
-                <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
-                    <SectionHeader
-                        icon={IconHistory}
-                        title={t('ui.history')}
-                        className="mb-2"
-                        extra={
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
-                                    {isSavingSession ? (
-                                        <>
-                                            <Loader2 className="w-3 h-3" />
-                                            {t('ui.saving')}
-                                        </>
-                                    ) : sessionSaveError ? (
-                                        <>
-                                            <IconAlertCircle className="w-3 h-3" />
-                                            {t('ui.errorShort')}
-                                        </>
-                                    ) : hasUnsavedChanges ? (
-                                        t('ui.unsavedChanges')
-                                    ) : sessionSavedAt ? (
-                                        <>
-                                            <IconCheck className="w-3 h-3" />
-                                            {t('ui.savedAt', {
-                                                time: new Date(sessionSavedAt).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })
-                                            })}
-                                        </>
-                                    ) : t('ui.noChanges')}
-                                </span>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7"
-                                    onClick={onSaveSessionNow}
-                                    disabled={isSavingSession || !hasUnsavedChanges}
-                                    title={t('ui.saveHistoryNow')}
-                                >
-                                    <IconSave
-                                        className={cn(
-                                            "w-3.5 h-3.5 transition-colors",
-                                            isSavingSession
-                                                ? "text-muted-foreground/40"
-                                                : hasUnsavedChanges
-                                                    ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.45)]"
-                                                    : "text-muted-foreground/55"
-                                        )}
-                                    />
-                                </Button>
+                <div className="rounded-[1.8rem] border border-border/70 bg-white/92 p-4 shadow-[0_20px_55px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center text-foreground/72">
+                                <IconHistory className="h-[18px] w-[18px]" />
                             </div>
-                        }
-                    />
-                    <div className="space-y-3 pt-1.5">
-                        <select
-                            className="h-10 w-full min-w-0 rounded-xl border border-input/80 bg-background/90 px-3 text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-                            value={effectiveSessionId}
-                            onChange={(event) => {
-                                const value = event.target.value
-                                if (value) onSelectSession?.(value)
+                            <p className="text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88">
+                                {t('ui.history')}
+                            </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                            <span
+                                className={cn(
+                                    "inline-flex min-h-9 items-center text-[0.8rem] font-medium",
+                                    sessionSaveError
+                                        ? "text-destructive"
+                                        : hasUnsavedChanges
+                                            ? "text-foreground/78"
+                                            : "text-muted-foreground"
+                                )}
+                            >
+                                {isSavingSession ? (
+                                    <>
+                                        <Loader2 className="mr-1.5 h-3.5 w-3.5" />
+                                        {t('ui.saving')}
+                                    </>
+                                ) : sessionSaveError ? (
+                                    <>
+                                        <IconAlertCircle className="mr-1.5 h-3.5 w-3.5 text-destructive" />
+                                        {t('ui.errorShort')}
+                                    </>
+                                ) : hasUnsavedChanges ? (
+                                    t('ui.unsavedChanges')
+                                ) : sessionSavedAt ? (
+                                    <>
+                                        <IconCheck className="mr-1.5 h-3.5 w-3.5 text-primary" />
+                                        {t('ui.savedAt', {
+                                            time: new Date(sessionSavedAt).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })
+                                        })}
+                                    </>
+                                ) : t('ui.noChanges')}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 rounded-xl border border-border/70 bg-background/80"
+                                onClick={onSaveSessionNow}
+                                disabled={isSavingSession || !hasUnsavedChanges}
+                                title={t('ui.saveHistoryNow')}
+                            >
+                                <IconSave
+                                    className={cn(
+                                        "h-4 w-4 transition-colors",
+                                        isSavingSession
+                                            ? "text-muted-foreground/40"
+                                            : hasUnsavedChanges
+                                                ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.45)]"
+                                                : "text-muted-foreground/55"
+                                    )}
+                                />
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                        <Select
+                            value={effectiveSessionId || '__none'}
+                            onValueChange={(value) => {
+                                if (value && value !== '__none') onSelectSession?.(value)
                             }}
                         >
-                            {effectiveSessionId ? null : <option value="">{t('ui.noSessions')}</option>}
-                            {sessions.map((session) => (
-                                <option key={session.id} value={session.id}>
-                                    {session.title} {session.active ? `(${t('ui.activeSession')})` : ''} - {new Date(session.updatedAt).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                        <Button
-                            variant="default"
-                            size="sm"
-                            className="h-7 px-2 text-[10px] gap-1"
-                            onClick={onCreateSession}
-                            disabled={isCreatingSession}
-                        >
-                            <IconPlus className="w-3 h-3" />
-                            {t('ui.newSession')}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 text-[10px]"
-                            onClick={onRenameSession}
-                            disabled={!effectiveSessionId}
-                        >
-                            {t('ui.renameSession')}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 text-[10px]"
-                            onClick={onDeleteSession}
-                            disabled={!effectiveSessionId}
-                        >
-                            {t('ui.deleteSession')}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 text-[10px]"
-                            onClick={onClearSessions}
-                        >
-                            {t('ui.deleteHistory')}
-                        </Button>
+                            <SelectTrigger className="h-11 w-full rounded-2xl border border-input/80 bg-background/90 px-3.5 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+                                <SelectValue placeholder={t('ui.noSessions')} />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl border-border/70 p-2 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.34)]">
+                                {sessions.length === 0 ? (
+                                    <SelectItem
+                                        value="__none"
+                                        disabled
+                                        className="min-h-11 rounded-xl px-3 py-2 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium"
+                                    >
+                                        {t('ui.noSessions')}
+                                    </SelectItem>
+                                ) : null}
+                                {sessions.map((session) => (
+                                    <SelectItem
+                                        key={session.id}
+                                        value={session.id}
+                                        className="min-h-11 rounded-xl px-3 py-2 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium"
+                                    >
+                                        <span className="flex min-w-0 items-center gap-2">
+                                            <span className="truncate">
+                                                {session.title}
+                                            </span>
+                                            {session.active ? (
+                                                <span className="rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[0.78rem] font-semibold text-primary">
+                                                    {t('ui.activeSession')}
+                                                </span>
+                                            ) : null}
+                                            <span className="shrink-0 text-[0.82rem] text-muted-foreground">
+                                                {new Date(session.updatedAt).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button
+                                variant="default"
+                                size="sm"
+                                className={PANEL_SECONDARY_BUTTON_CLASS}
+                                onClick={onCreateSession}
+                                disabled={isCreatingSession}
+                            >
+                                <IconPlus className="mr-1.5 h-3.5 w-3.5" />
+                                {t('ui.newSession')}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className={PANEL_SECONDARY_BUTTON_CLASS}
+                                onClick={onRenameSession}
+                                disabled={!effectiveSessionId}
+                            >
+                                {t('ui.renameSession')}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className={PANEL_SECONDARY_BUTTON_CLASS}
+                                onClick={onDeleteSession}
+                                disabled={!effectiveSessionId}
+                            >
+                                {t('ui.deleteSession')}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className={PANEL_SECONDARY_BUTTON_CLASS}
+                                onClick={onClearSessions}
+                            >
+                                {t('ui.deleteAllSessions', { defaultValue: 'Borrar todas las sesiones' })}
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
@@ -820,8 +870,10 @@ export function ControlsPanel({
                         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 animate-shimmer" />
                     )}
                     <SectionHeader
-                        icon={IconWand}
+                        icon={IconIdea}
                         title={t('ui.whatToCreate')}
+                        iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                        titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
                     />
                     <div className="relative">
                         <Textarea
@@ -829,8 +881,8 @@ export function ControlsPanel({
                             onChange={(e) => onPromptChange(e.target.value)}
                             placeholder={t('ui.ideaPlaceholder')}
                             className={cn(
-                                'min-h-[100px] text-sm resize-none bg-background border border-border focus:ring-1 focus:ring-primary focus:border-primary transition-all',
-                                isMobile ? 'pb-3 pr-2' : 'pb-12 pr-2'
+                                'min-h-[132px] rounded-2xl border border-border/70 bg-background/90 px-4 py-3 !text-[14px] leading-[1.45] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-all focus:border-primary/60 focus:ring-2 focus:ring-primary/18 md:!text-[14px]',
+                                isMobile ? 'pb-3 pr-3' : 'pb-14 pr-3'
                             )}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -846,7 +898,7 @@ export function ControlsPanel({
                                 type="button"
                                 onClick={handleInspire}
                                 disabled={isInspiring}
-                                className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                                className={cn("mt-2 inline-flex items-center gap-1.5", PANEL_TEXT_BUTTON_REVEAL_CLASS)}
                             >
                                 {isInspiring ? (
                                     <Loader2 className="w-3.5 h-3.5" />
@@ -866,7 +918,7 @@ export function ControlsPanel({
                                     type="button"
                                     onClick={handleInspire}
                                     disabled={isInspiring}
-                                    className="mr-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                                    className={cn("mr-auto inline-flex items-center gap-1.5", PANEL_TEXT_BUTTON_REVEAL_CLASS)}
                                 >
                                     {isInspiring ? (
                                         <Loader2 className="w-3.5 h-3.5" />
@@ -882,7 +934,7 @@ export function ControlsPanel({
                                     variant="ghost"
                                     onClick={onCancelAnalyze}
                                     className={cn(
-                                        'h-8 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground',
+                                        'min-h-[42px] rounded-[1rem] px-4 text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] font-semibold text-muted-foreground hover:bg-muted/80 hover:text-foreground',
                                         isMobile ? 'w-auto' : ''
                                     )}
                                 >
@@ -890,7 +942,7 @@ export function ControlsPanel({
                                 </Button>
                             ) : null}
                             {isCancelingAnalyze ? (
-                                <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                                <span className="text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] font-medium text-muted-foreground">
                                     {t('ui.canceling')}
                                 </span>
                             ) : null}
@@ -899,7 +951,7 @@ export function ControlsPanel({
                                 onClick={onAnalyze}
                                 disabled={isMagicParsing || !promptValue.trim()}
                                 className={cn(
-                                    'group feedback-action h-9 rounded-full border border-primary/25 bg-primary/10 px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-primary shadow-[0_14px_30px_-24px_hsl(var(--primary)/0.45)] transition-all hover:bg-primary/16 hover:shadow-[0_18px_34px_-22px_hsl(var(--primary)/0.55)] sm:px-4 sm:text-xs whitespace-nowrap',
+                                    'group feedback-action h-[42px] rounded-[1rem] border border-transparent bg-primary/90 px-4 text-[clamp(0.94rem,0.9rem+0.12vw,1rem)] font-semibold text-primary-foreground shadow-[0_16px_34px_-22px_rgba(59,130,246,0.58)] transition-all hover:bg-primary hover:shadow-primary/25 sm:px-5 whitespace-nowrap',
                                     isMobile ? 'w-full justify-center' : 'ml-auto'
                                 )}
                             >
@@ -919,6 +971,7 @@ export function ControlsPanel({
                     <SuggestionsList
                         suggestions={state.suggestions}
                         hasOriginalState={!!state.originalState}
+                        activeSuggestionIndex={state.selectedSuggestionIndex}
                         onApply={(index) => {
                             creationFlow.applySuggestion(index)
                             toast({
@@ -951,9 +1004,11 @@ export function ControlsPanel({
                                 <SectionHeader
                                     icon={IconLayout}
                                     title={t('ui.designTitle')}
+                                    iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                                    titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
                                     extra={
-                                        <div className="flex items-center gap-2">
-                                            <span className={cn('text-[10px] font-medium', showLabCatalog ? 'text-primary' : 'text-muted-foreground')}>
+                                        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/72 px-2.5 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+                                            <span className={cn('text-[clamp(0.88rem,0.84rem+0.1vw,0.94rem)] font-medium', showLabCatalog ? 'text-primary/90' : 'text-muted-foreground')}>
                                                 {t('ui.designAdvancedAria')}
                                             </span>
                                             <Switch
@@ -972,18 +1027,18 @@ export function ControlsPanel({
                                                     value={layoutIntentOverride}
                                                     onValueChange={(value) => setLayoutIntentOverride(value as 'auto' | IntentCategory)}
                                                 >
-                                                    <SelectTrigger className="h-8 text-xs">
+                                                    <SelectTrigger className={PANEL_SECTION_SELECT_TRIGGER_CLASS}>
                                                         <SelectValue placeholder={t('ui.selectIntent')} />
                                                     </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="auto">
+                                                    <SelectContent className={PANEL_SECTION_SELECT_CONTENT_CLASS}>
+                                                        <SelectItem value="auto" className={PANEL_SECTION_SELECT_ITEM_CLASS}>
                                                             {t('ui.autoDetectedIntent', {
                                                                 defaultValue: 'Auto (detected: {{intent}})',
                                                                 intent: selectedIntentMeta?.name || state.selectedIntent,
                                                             })}
                                                         </SelectItem>
                                                         {INTENT_CATALOG.map((intent) => (
-                                                            <SelectItem key={intent.id} value={intent.id}>
+                                                            <SelectItem key={intent.id} value={intent.id} className={PANEL_SECTION_SELECT_ITEM_CLASS}>
                                                                 {intent.name}
                                                             </SelectItem>
                                                         ))}
@@ -1000,8 +1055,8 @@ export function ControlsPanel({
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="rounded-xl border border-border/70 bg-muted/25 px-3 py-2">
-                                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                        <div className="rounded-2xl border border-border/65 bg-background/72 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+                                            <p className="text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] leading-relaxed text-muted-foreground">
                                                 {t('ui.basicModeDescription')}
                                             </p>
                                         </div>
@@ -1013,18 +1068,18 @@ export function ControlsPanel({
                         {/* STEP 3: FORMAT */}
                         <div ref={step3Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 3 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[3]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step3Ref} />
-                                <SectionHeader icon={IconLayers} title={t('ui.formatTitle')} />
+                                <SectionHeader
+                                    icon={IconDashboardSquare}
+                                    title={t('ui.formatTitle')}
+                                    iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                                    titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
+                                />
                                 <SocialFormatSelector
                                     selectedPlatform={state.selectedPlatform}
                                     selectedFormat={state.selectedFormat}
                                     onSelectPlatform={selectPlatform}
                                     onSelectFormat={selectFormat}
                                 />
-                                {!state.selectedFormat && (
-                                    <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
-                                        {t('ui.selectPlatformDescription')}
-                                    </p>
-                                )}
                         </div>
 
                         {/* STEP 4A: CONTENT */}
@@ -1033,6 +1088,8 @@ export function ControlsPanel({
                                 <SectionHeader
                                     icon={IconImageAdd}
                                     title={state.imageSourceMode === 'generate' ? t('ui.generatedContentTitle') : t('ui.userContentTitle')}
+                                    iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                                    titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
                                     extra={(
                                         <Switch
                                             checked={state.imageSourceMode === 'generate'}
@@ -1064,7 +1121,12 @@ export function ControlsPanel({
 
                         {/* STEP 4B: STYLE */}
                         <div className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
-                                <SectionHeader icon={IconPalette} title={t('ui.styleTitle', { defaultValue: 'Estilo' })} />
+                                <SectionHeader
+                                    icon={IconPalette}
+                                    title={t('ui.styleTitle', { defaultValue: 'Estilo' })}
+                                    iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                                    titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
+                                />
                                 <StyleImageCard
                                     uploadedImages={state.uploadedImages}
                                     onUpload={uploadImage}
@@ -1094,8 +1156,8 @@ export function ControlsPanel({
                                 <div className="mt-4 rounded-xl border border-border/70 bg-muted/50 px-3 py-3">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="space-y-1">
-                                            <p className="text-[12px] font-medium leading-none">{t('ui.styleTypographyTitle')}</p>
-                                            <p className="text-[11px] leading-relaxed text-muted-foreground">
+                                            <p className="text-[0.88rem] font-medium leading-none">{t('ui.styleTypographyTitle')}</p>
+                                            <p className={PANEL_SECTION_HELPER_CLASS}>
                                                 {t('ui.styleTypographyDescription')}
                                             </p>
                                         </div>
@@ -1127,10 +1189,15 @@ export function ControlsPanel({
                         {/* STEP 6: KIT DE MARCA */}
                         <div ref={step6Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-6`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep >= 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
-                                <SectionHeader icon={IconFingerprint} title={t('ui.brandKitSection')} />
+                                <SectionHeader
+                                    icon={IconFingerprint}
+                                    title={t('ui.brandKitSection')}
+                                    iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                                    titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
+                                />
 
                                 <div className="space-y-3">
-                                    <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.logo')}</p>
+                                    <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.logo')}</p>
                                     <BrandingConfigurator
                                         selectedLayout={selectedLayoutMeta || null}
                                         selectedLogoId={state.selectedLogoId}
@@ -1145,7 +1212,7 @@ export function ControlsPanel({
 
                                 <div className="space-y-3 border-t border-border/60 pt-4">
                                     <div className="flex items-center justify-between gap-2">
-                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.colors')}</p>
+                                        <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.colors')}</p>
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -1306,7 +1373,7 @@ export function ControlsPanel({
 
                                 <div className="space-y-3 border-t border-border/60 pt-4">
                                     <div className="flex items-center justify-between gap-2">
-                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.link')}</p>
+                                        <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.link')}</p>
                                         <Switch
                                             checked={state.ctaUrlEnabled}
                                             onCheckedChange={(checked) => {
@@ -1320,10 +1387,10 @@ export function ControlsPanel({
                                             value={state.ctaUrl}
                                             onChange={(e) => setCtaUrl(e.target.value)}
                                             placeholder={activeBrandKit?.url?.trim() || 'tuweb.com'}
-                                            className="h-9 text-xs"
+                                            className="h-10 text-[0.88rem]"
                                         />
                                     ) : (
-                                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                        <p className={PANEL_SECTION_HELPER_CLASS}>
                                             {t('ui.linkDescription')}
                                         </p>
                                     )}
@@ -1335,7 +1402,7 @@ export function ControlsPanel({
                                             {primaryEmail ? (
                                                 <div className="space-y-1.5">
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.email')}</p>
+                                                        <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.email')}</p>
                                                         <Switch
                                                             checked={Boolean(getContactAssetById('contact-email-main'))}
                                                             onCheckedChange={(checked) => {
@@ -1357,10 +1424,10 @@ export function ControlsPanel({
                                                             value={getContactAssetById('contact-email-main')?.value || ''}
                                                             onChange={(e) => updateContactAssetValue('contact-email-main', e.target.value)}
                                                             placeholder={primaryEmail}
-                                                            className="h-9 text-xs"
+                                                            className="h-10 text-[0.88rem]"
                                                         />
                                                     ) : (
-                                                        <p className="text-[11px] text-muted-foreground truncate">{primaryEmail}</p>
+                                                        <p className="truncate text-[0.84rem] text-muted-foreground">{primaryEmail}</p>
                                                     )}
                                                 </div>
                                             ) : null}
@@ -1371,7 +1438,7 @@ export function ControlsPanel({
                                                 return (
                                                     <div key={assetId} className="space-y-1.5">
                                                         <div className="flex items-center justify-between gap-2">
-                                                            <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.phone', { index: idx + 1 })}</p>
+                                                            <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.phone', { index: idx + 1 })}</p>
                                                             <Switch
                                                                 checked={Boolean(selectedPhoneAsset)}
                                                                 onCheckedChange={(checked) => {
@@ -1393,10 +1460,10 @@ export function ControlsPanel({
                                                                 value={selectedPhoneAsset.value || ''}
                                                                 onChange={(e) => updateContactAssetValue(assetId, e.target.value)}
                                                                 placeholder={phone}
-                                                                className="h-9 text-xs"
+                                                                className="h-10 text-[0.88rem]"
                                                             />
                                                         ) : (
-                                                            <p className="text-[11px] text-muted-foreground truncate">{phone}</p>
+                                                            <p className="truncate text-[0.84rem] text-muted-foreground">{phone}</p>
                                                         )}
                                                     </div>
                                                 )
@@ -1408,7 +1475,7 @@ export function ControlsPanel({
                                                 return (
                                                     <div key={assetId} className="space-y-1.5">
                                                         <div className="flex items-center justify-between gap-2">
-                                                            <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.address', { index: idx + 1 })}</p>
+                                                            <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.address', { index: idx + 1 })}</p>
                                                             <Switch
                                                                 checked={Boolean(selectedAddressAsset)}
                                                                 onCheckedChange={(checked) => {
@@ -1430,10 +1497,10 @@ export function ControlsPanel({
                                                                 value={selectedAddressAsset.value || ''}
                                                                 onChange={(e) => updateContactAssetValue(assetId, e.target.value)}
                                                                 placeholder={address}
-                                                                className="h-9 text-xs"
+                                                                className="h-10 text-[0.88rem]"
                                                             />
                                                         ) : (
-                                                            <p className="text-[11px] text-muted-foreground break-words">{address}</p>
+                                                            <p className="break-words text-[0.84rem] text-muted-foreground">{address}</p>
                                                         )}
                                                     </div>
                                                 )

@@ -2397,7 +2397,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
     }, [state])
 
     const setSuggestions = useCallback((suggestions: GenerationState['suggestions']) => {
-        setState(prev => ({ ...prev, suggestions }))
+        setState(prev => ({ ...prev, suggestions, selectedSuggestionIndex: null }))
     }, [])
 
     const setImagePromptSuggestions = useCallback((imagePromptSuggestions: string[]) => {
@@ -2496,6 +2496,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             return {
                 ...prev,
                 originalState,
+                selectedSuggestionIndex: suggestionIndex,
                 ...modifications,
                 ...(modifications.ctaUrl ? { ctaUrlEnabled: true } : null),
                 ...invalidateFromStep(prev, 1), // Invalidate image as text changed
@@ -2510,6 +2511,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             return {
                 ...prev,
                 ...prev.originalState,
+                selectedSuggestionIndex: null,
                 originalState: null,
                 ...invalidateFromStep(prev, 1),
                 currentStep: prev.hasGeneratedImage ? 1 : prev.currentStep

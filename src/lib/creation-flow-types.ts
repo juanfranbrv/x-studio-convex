@@ -1116,7 +1116,7 @@ export const BASIC_MODE_LAYOUTS: LayoutOption[] = BASIC_MODE_LAYOUT_IDS
 // SOCIAL MEDIA FORMATS
 // -----------------------------------------------------------------------------
 
-export type SocialPlatform = 'instagram' | 'facebook' | 'linkedin' | 'tiktok' | 'whatsapp' | 'youtube' | 'x'
+export type SocialPlatform = 'instagram' | 'facebook' | 'linkedin' | 'tiktok' | 'youtube' | 'x'
 
 export interface SocialFormat {
     id: string
@@ -1130,27 +1130,11 @@ export interface SocialFormat {
 export const SOCIAL_FORMATS: SocialFormat[] = [
     // Instagram
     {
-        id: 'ig-portrait',
-        platform: 'instagram',
-        name: 'Vertical',
-        aspectRatio: '4:5',
-        description: 'Feed vertical (1080x1350)',
-        icon: 'Instagram'
-    },
-    {
         id: 'ig-square',
         platform: 'instagram',
         name: 'Cuadrado',
         aspectRatio: '1:1',
-        description: 'Post estándar (1080x1080)',
-        icon: 'Instagram'
-    },
-    {
-        id: 'ig-landscape',
-        platform: 'instagram',
-        name: 'Horizontal',
-        aspectRatio: '1.91:1',
-        description: 'Post horizontal (1080x608)',
+        description: 'Feed, carruseles, v?deos y anuncios (1080 x 1080 px)',
         icon: 'Instagram'
     },
     {
@@ -1158,156 +1142,130 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'instagram',
         name: 'Story / Reel',
         aspectRatio: '9:16',
-        description: 'Pantalla completa vertical',
+        description: 'Stories, Reels y anuncios en Stories (1080 x 1920 px)',
         icon: 'Instagram'
+    },
+    {
+        id: 'ig-portrait-feed',
+        platform: 'instagram',
+        name: 'Vertical',
+        aspectRatio: '4:5',
+        description: 'Feed vertical, v?deos y carruseles (1080 x 1350 px)',
+        icon: 'Instagram'
+    },
+    {
+        id: 'ig-mobile-portrait',
+        platform: 'instagram',
+        name: 'Vertical m?vil',
+        aspectRatio: '3:4',
+        description: 'Feed y carruseles, ideal para fotos directas del m?vil (1080 x 1440 px)',
+        icon: 'Instagram'
+    },
+    {
+        id: 'ig-landscape-feed',
+        platform: 'instagram',
+        name: 'Horizontal 1.91',
+        aspectRatio: '1.91:1',
+        description: 'Fotograf?as del feed, carruseles y anuncios (1080 x 566 px)',
+        icon: 'Instagram'
+    },
+    {
+        id: 'ig-landscape-video',
+        platform: 'instagram',
+        name: 'V?deo horizontal',
+        aspectRatio: '16:9',
+        description: 'V?deos horizontales (1920 x 1080 px o 1080 x 608 px)',
+        icon: 'Instagram'
+    },
+    // TikTok
+    {
+        id: 'tt-square',
+        platform: 'tiktok',
+        name: 'Cuadrado',
+        aspectRatio: '1:1',
+        description: 'Im?genes (1080 x 1080 px)',
+        icon: 'Tiktok'
+    },
+    {
+        id: 'tt-vertical',
+        platform: 'tiktok',
+        name: 'Vertical',
+        aspectRatio: '9:16',
+        description: 'Im?genes, v?deos y stories (1080 x 1920 px)',
+        icon: 'Tiktok'
+    },
+    {
+        id: 'tt-horizontal',
+        platform: 'tiktok',
+        name: 'Horizontal',
+        aspectRatio: '16:9',
+        description: 'V?deos (1920 x 1080 px)',
+        icon: 'Tiktok'
     },
     // Facebook
     {
-        id: 'fb-cover',
+        id: 'fb-square',
         platform: 'facebook',
-        name: 'Foto de Portada',
-        aspectRatio: '2.7:1',
-        description: '851 x 315 px',
+        name: 'Cuadrado',
+        aspectRatio: '1:1',
+        description: 'Publicaciones, v?deo y anuncios en feed (1080 x 1080 px)',
         icon: 'Facebook'
     },
     {
-        id: 'fb-feed-v',
+        id: 'fb-story',
         platform: 'facebook',
-        name: 'Feed Vertical',
-        aspectRatio: '4:5',
-        description: '1080 x 1350 px',
-        icon: 'Facebook'
-    },
-    {
-        id: 'fb-feed-h',
-        platform: 'facebook',
-        name: 'Feed Horizontal',
-        aspectRatio: '1.91:1',
-        description: '1200 x 630 px',
-        icon: 'Facebook'
-    },
-    {
-        id: 'fb-stories',
-        platform: 'facebook',
-        name: 'Stories y Reels',
+        name: 'Story / Reel',
         aspectRatio: '9:16',
-        description: '1080 x 1920 px',
+        description: 'Stories, Reels y anuncios verticales (1080 x 1920 px)',
+        icon: 'Facebook'
+    },
+    {
+        id: 'fb-landscape',
+        platform: 'facebook',
+        name: 'Horizontal',
+        aspectRatio: '16:9',
+        description: 'Portadas para escritorio y m?vil (m?nimo 400 x 150 px)',
         icon: 'Facebook'
     },
     {
         id: 'fb-event',
         platform: 'facebook',
-        name: 'Portada de Evento',
-        aspectRatio: '1.91:1',
-        description: '1200 x 628 px',
+        name: 'Portada de evento',
+        aspectRatio: '2:1',
+        description: 'Portada de evento (1200 x 628 px)',
         icon: 'Facebook'
-    },
-    // LinkedIn
-    {
-        id: 'li-bg-personal',
-        platform: 'linkedin',
-        name: 'Fondo Personal',
-        aspectRatio: '4:1',
-        description: '1584 x 396 px',
-        icon: 'Linkedin'
-    },
-    {
-        id: 'li-cover-company',
-        platform: 'linkedin',
-        name: 'Portada Empresa',
-        aspectRatio: '5.9:1',
-        description: '1128 x 191 px',
-        icon: 'Linkedin'
-    },
-    {
-        id: 'li-post-link',
-        platform: 'linkedin',
-        name: 'Post Imagen/Enlace',
-        aspectRatio: '1.91:1',
-        description: '1200 x 627 px',
-        icon: 'Linkedin'
-    },
-    // TikTok
-    {
-        id: 'tt-video',
-        platform: 'tiktok',
-        name: 'Video Vertical',
-        aspectRatio: '9:16',
-        description: '1080 x 1920 px',
-        icon: 'Tiktok'
-    },
-    {
-        id: 'tt-carousel',
-        platform: 'tiktok',
-        name: 'Imagen Carrusel',
-        aspectRatio: '9:16',
-        description: '1080 x 1920 px',
-        icon: 'Tiktok'
-    },
-    {
-        id: 'tt-carousel-sq',
-        platform: 'tiktok',
-        name: 'Carrusel Cuadrado',
-        aspectRatio: '1:1',
-        description: '1080 x 1080 px',
-        icon: 'Tiktok'
-    },
-    // WhatsApp
-    {
-        id: 'wa-status',
-        platform: 'whatsapp',
-        name: 'Estados',
-        aspectRatio: '9:16',
-        description: '1080 x 1920 px',
-        icon: 'MessageCircle'
-    },
-    {
-        id: 'wa-chat-sq',
-        platform: 'whatsapp',
-        name: 'Imagen Chat (Cuadrado)',
-        aspectRatio: '1:1',
-        description: '800 x 800 px',
-        icon: 'MessageCircle'
-    },
-    {
-        id: 'wa-chat-v',
-        platform: 'whatsapp',
-        name: 'Imagen Chat (Vertical)',
-        aspectRatio: '9:16',
-        description: '1080 x 1920 px',
-        icon: 'MessageCircle'
-    },
-    {
-        id: 'wa-catalog',
-        platform: 'whatsapp',
-        name: 'Catálogo Business',
-        aspectRatio: '1:1',
-        description: '500 x 500 px',
-        icon: 'MessageCircle'
     },
     // X (Twitter)
     {
-        id: 'x-header',
+        id: 'x-square',
         platform: 'x',
-        name: 'Foto de Encabezado',
-        aspectRatio: '3:1',
-        description: '1500 x 500 px',
+        name: 'Cuadrado',
+        aspectRatio: '1:1',
+        description: 'Im?genes, v?deos y anuncios (1200 x 1200 px)',
         icon: 'Twitter'
     },
     {
-        id: 'x-post-single',
+        id: 'x-landscape',
         platform: 'x',
-        name: 'Post Imagen Única',
+        name: 'Horizontal',
         aspectRatio: '16:9',
-        description: '1600 x 900 px',
+        description: 'Imagen horizontal, enlace y v?deo (1200 x 675 px)',
         icon: 'Twitter'
     },
     {
-        id: 'x-post-multi',
+        id: 'x-vertical',
         platform: 'x',
-        name: 'Post Varias Imágenes',
-        aspectRatio: '16:9',
-        description: '1200 x 675 px',
+        name: 'Vertical',
+        aspectRatio: '9:16',
+        description: 'V?deo vertical (1080 x 1920 px)',
+        icon: 'Twitter'
+    },
+    {
+        id: 'x-carousel-horizontal',
+        platform: 'x',
+        name: 'Horizontal 1.91',
+        aspectRatio: '1.91:1',
+        description: 'Anuncios, carrusel y X Cards (1200 x 628 px o 800 x 418 px)',
         icon: 'Twitter'
     },
     // YouTube
@@ -1316,24 +1274,57 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'youtube',
         name: 'Shorts',
         aspectRatio: '9:16',
-        description: 'YouTube Shorts (1080x1920)',
+        description: 'Shorts (1080 x 1920 px)',
         icon: 'Youtube'
     },
     {
-        id: 'yt-video',
+        id: 'yt-landscape',
         platform: 'youtube',
-        name: 'Video',
+        name: 'Horizontal',
         aspectRatio: '16:9',
-        description: 'Video Estándar (1920x1080)',
+        description: 'Portada, v?deo largo y miniatura (2048 x 1152 / 1920 x 1080 / 1280 x 720 px)',
         icon: 'Youtube'
     },
+    // LinkedIn
     {
-        id: 'yt-thumb',
-        platform: 'youtube',
-        name: 'Miniatura',
+        id: 'li-square',
+        platform: 'linkedin',
+        name: 'Cuadrado',
+        aspectRatio: '1:1',
+        description: 'Anuncios de una imagen, carrusel y v?deo (1200 x 1200 px)',
+        icon: 'Linkedin'
+    },
+    {
+        id: 'li-post-link',
+        platform: 'linkedin',
+        name: 'Horizontal 1.91',
+        aspectRatio: '1.91:1',
+        description: 'Post con enlace y anuncios horizontales (1200 x 627/628 px)',
+        icon: 'Linkedin'
+    },
+    {
+        id: 'li-cover-personal',
+        platform: 'linkedin',
+        name: 'Cabecera personal',
+        aspectRatio: '4:1',
+        description: 'Cabecera de perfil personal y anuncios de eventos (1584 x 396 px)',
+        icon: 'Linkedin'
+    },
+    {
+        id: 'li-video-landscape',
+        platform: 'linkedin',
+        name: 'V?deo horizontal',
         aspectRatio: '16:9',
-        description: 'Thumbnail (1280x720)',
-        icon: 'Youtube'
+        description: 'Ratio admitido para anuncios de v?deo horizontales',
+        icon: 'Linkedin'
+    },
+    {
+        id: 'li-video-vertical',
+        platform: 'linkedin',
+        name: 'V?deo vertical',
+        aspectRatio: '9:16',
+        description: 'Ratio admitido para anuncios de v?deo verticales',
+        icon: 'Linkedin'
     }
 ]
 
@@ -1373,6 +1364,7 @@ export interface GenerationState {
         subtitle: string
         modifications: Partial<GenerationState> // Recursive Partial of state to apply
     }>
+    selectedSuggestionIndex?: number | null
     imagePromptSuggestions: string[]
     originalState?: Partial<GenerationState> | null // Snapshot of state before applying suggestion
     isAnalyzing: boolean
@@ -1433,6 +1425,7 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     firstReferenceId: null,
     firstReferenceSource: null,
     suggestions: undefined,
+    selectedSuggestionIndex: null,
     imagePromptSuggestions: [],
     originalState: null,
     isAnalyzing: false,

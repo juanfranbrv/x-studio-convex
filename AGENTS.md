@@ -6,6 +6,7 @@
 - Úsalo como contexto técnico de proyecto para integraciones, decisiones compartidas y comportamientos transversales.
 - Cuando se documente una decisión técnica nueva, debe añadirse también ahí.
 
+- Para reglas de coherencia visual, tipografia, botones, dropdowns y jerarquia de UI, consulta tambien docs/UI_SYSTEM_RULES.md antes de introducir controles nuevos o retocar patrones existentes.
 ## 🧠 Instrucciones Críticas de Comportamiento (Persona & Workflow)
 
 ### 1. Razonamiento y Planificación (Core)

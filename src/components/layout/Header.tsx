@@ -7,8 +7,12 @@ import { IconChevronDown, IconPlus, IconSettings, IconDelete } from '@/component
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { CreditsBadge } from './CreditsBadge'
-import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileMenu } from './MobileMenu'
+import {
+    HEADER_DROPDOWN_CONTENT_CLASS,
+    HEADER_DROPDOWN_ITEM_CLASS,
+    HEADER_DROPDOWN_META_CLASS,
+} from './headerDropdownStyles'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -80,7 +84,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     <MobileMenu />
 
                     <div className="flex shrink-0 items-center gap-3">
-                        <h1 className="font-heading text-xl font-semibold leading-none text-foreground md:text-[1.45rem]">
+                        <h1 className="font-heading text-[clamp(1.26rem,1.08rem+0.62vw,1.72rem)] font-semibold leading-none text-foreground">
                             {t('app.name')}
                         </h1>
                     </div>
@@ -88,26 +92,26 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     {brands.length > 0 ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-11 w-[clamp(8.75rem,42vw,12rem)] min-w-0 justify-between gap-2 rounded-2xl border-border/70 bg-[hsl(var(--surface-alt))]/90 px-3 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.28)] transition-all hover:border-primary/20 hover:bg-white md:h-12 md:w-72 md:px-4">
+                                <Button variant="outline" size="sm" className="h-11 w-[clamp(9.5rem,42vw,12.75rem)] min-w-0 justify-between gap-2 rounded-2xl border-border/70 bg-[hsl(var(--surface-alt))]/90 px-3 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.28)] transition-all hover:border-primary/20 hover:bg-white md:h-[3.15rem] md:w-72 md:px-4">
                                     <span className="flex min-w-0 items-center gap-2">
                                         <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-[hsl(var(--surface))] translate-y-[1px]">
                                             {currentBrandFavicon ? (
                                                 <img src={currentBrandFavicon} alt={currentBrandName} className="h-full w-full object-cover" />
                                             ) : (
-                                                <span className="text-xs font-semibold text-muted-foreground">{getBrandInitial(currentBrandName)}</span>
+                                                <span className="text-sm font-semibold text-muted-foreground">{getBrandInitial(currentBrandName)}</span>
                                             )}
                                         </span>
-                                        <span className="block truncate text-left text-sm font-medium leading-tight md:text-[0.95rem]">{currentBrandName}</span>
+                                        <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">{currentBrandName}</span>
                                     </span>
                                     <IconChevronDown className="h-4 w-4 shrink-0" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-[320px] rounded-2xl border-border bg-popover shadow-[0_28px_80px_-42px_rgba(15,23,42,0.42)] md:w-[440px]">
+                            <DropdownMenuContent align="start" className={`w-[320px] ${HEADER_DROPDOWN_CONTENT_CLASS} md:w-[440px]`}>
                                 {brands.map((brand) => (
                                     <DropdownMenuItem
                                         key={brand.id}
                                         onClick={() => onBrandChange?.(brand.id)}
-                                        className={`group min-h-12 gap-3 rounded-xl px-3 py-2 ${brand.id === currentBrand?.id ? 'bg-accent' : ''}`}
+                                        className={`group ${HEADER_DROPDOWN_ITEM_CLASS} ${brand.id === currentBrand?.id ? 'bg-accent' : ''}`}
                                     >
                                         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/60">
                                             {brand.favicon_url ? (
@@ -117,22 +121,24 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                             )}
                                         </div>
                                         <div className="flex min-w-0 flex-1 items-center gap-2">
-                                            <span className="truncate">{brand.brand_name}</span>
-                                            <span className={`whitespace-nowrap rounded-md border px-1.5 py-0.5 text-xs font-semibold ${getCompletenessStyle(brand.completeness)}`}>
+                                            <span className="truncate text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">
+                                                {brand.brand_name}
+                                            </span>
+                                            <span className={`whitespace-nowrap rounded-md border px-1.5 py-0.5 ${HEADER_DROPDOWN_META_CLASS} ${getCompletenessStyle(brand.completeness)}`}>
                                                 {Math.max(0, Math.min(100, Math.round(brand.completeness ?? 0)))}%
                                             </span>
                                         </div>
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-7 w-7 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
+                                            className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
                                             onClick={(e) => handleDeleteClick(brand, e)}
                                         >
                                             <IconDelete className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuItem>
                                 ))}
-                                <DropdownMenuItem className="min-h-12 cursor-pointer rounded-xl px-3 py-2 text-primary" onClick={onNewBrandKit}>
+                                <DropdownMenuItem className={`${HEADER_DROPDOWN_ITEM_CLASS} cursor-pointer text-primary`} onClick={onNewBrandKit}>
                                     + {t('labels.newBrand')}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -140,7 +146,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     ) : null}
 
                     {onNewBrandKit ? (
-                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="hidden h-11 gap-2 rounded-2xl border-border/70 bg-[hsl(var(--surface-alt))]/90 px-4 transition-all hover:border-primary/20 hover:bg-white md:flex md:h-12">
+                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="hidden h-11 gap-2 rounded-2xl border-border/70 bg-[hsl(var(--surface-alt))]/90 px-4 text-[1rem] font-medium transition-all hover:border-primary/20 hover:bg-white md:flex md:h-[3.15rem]">
                             <IconPlus className="h-4 w-4" />
                             {t('actions.newBrandKit')}
                         </Button>
@@ -171,9 +177,6 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                         </Link>
                     ) : null}
 
-                    <div className="hidden md:block">
-                        <LanguageSwitcher />
-                    </div>
                 </div>
             </header>
 

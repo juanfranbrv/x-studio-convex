@@ -102,7 +102,7 @@ export function StudioGenerateBar({
                 onClick={hasGeneratedImage ? onRetry : onGenerate}
                 disabled={isGenerating || !canGenerate}
                 className={cn(
-                    'group feedback-action h-[46px] w-full rounded-[1rem] bg-primary font-semibold text-primary-foreground shadow-[0_18px_40px_-24px_rgba(59,130,246,0.65)] transition-all hover:bg-primary/90 hover:shadow-primary/25',
+                    'group feedback-action h-[46px] w-full rounded-[1rem] bg-primary text-[clamp(0.98rem,0.94rem+0.12vw,1.04rem)] font-semibold text-primary-foreground shadow-[0_18px_40px_-24px_rgba(59,130,246,0.65)] transition-all hover:bg-primary/90 hover:shadow-primary/25',
                     isGenerating && 'pr-28'
                 )}
             >
@@ -127,7 +127,7 @@ export function StudioGenerateBar({
                 <button
                     type="button"
                     onClick={onCancelGenerate}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-foreground transition-colors hover:text-primary-foreground"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-[clamp(0.82rem,0.78rem+0.1vw,0.88rem)] font-semibold text-primary-foreground transition-colors hover:text-primary-foreground"
                 >
                     {isCancelingGenerate ? cancelingLabel : stopLabel}
                 </button>

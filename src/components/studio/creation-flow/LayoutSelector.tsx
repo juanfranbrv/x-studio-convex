@@ -109,12 +109,11 @@ export function LayoutSelector({
  whileTap={{ scale: 0.95 }}
  onClick={() => onSelectLayout(layout.id)}
  className={cn(
-'group relative flex flex-col transition-all duration-300',
-'rounded-xl overflow-hidden text-left h-full',
-'border backdrop-blur-sm',
+ 'group relative flex h-full flex-col overflow-hidden rounded-[1rem] text-left transition-all duration-300',
+ 'border backdrop-blur-sm',
  isSelected
- ?'border-primary/40 bg-primary/5 shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.25)]'
- :'border-slate-200/80 bg-white/60 hover:bg-white/90 hover:border-slate-300/80 hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)]'
+ ?'border-primary/32 bg-primary/[0.07] shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]'
+ :'border-border/55 bg-background/55 hover:border-border/80 hover:bg-background/92 hover:shadow-[0_16px_32px_-28px_rgba(15,23,42,0.2)]'
  )}
  >
  {isAdmin && (
@@ -135,15 +134,15 @@ export function LayoutSelector({
  </span>
  )}
  <div className={cn(
-'w-full flex items-center justify-center transition-colors py-1 px-1 overflow-hidden',
+'w-full overflow-hidden px-1 py-2.5 flex items-center justify-center transition-colors',
  isSelected
- ?'bg-primary/5'
- :'bg-zinc-50/50 group-hover:bg-zinc-50'
+ ?'bg-primary/[0.055]'
+ :'bg-background/40 group-hover:bg-background/78'
  )}>
  {hasInlineSvg ? (
  <div
  className={cn(
-'w-10 h-10 text-primary/70 overflow-hidden flex items-center justify-center',
+'h-11 w-11 overflow-hidden flex items-center justify-center text-primary/72',
 '[&>svg]:w-full [&>svg]:h-full [&>svg]:block',
  opts?.recommended ?'ring-1 ring-primary/20' :''
  )}
@@ -152,15 +151,15 @@ export function LayoutSelector({
  />
  ) : (layout.svgIcon && layout.svgIcon !=='Layout' && !layout.svgIcon.startsWith('<svg')) ? (
  <div className={cn(
-'w-10 h-10 flex items-center justify-center text-primary/70',
+'h-11 w-11 flex items-center justify-center text-primary/72',
  opts?.recommended ?'ring-1 ring-primary/20' :''
  )}>
  {renderLucideLayoutIcon(layout.svgIcon, {
- className:'h-10 w-10 stroke-[1.75]',
+ className:'h-11 w-11 stroke-[1.75]',
  }) ?? (
  <span
  className="material-symbols-outlined leading-none"
- style={{ fontSize:'40px' }}
+ style={{ fontSize:'42px' }}
  >
  {layout.svgIcon}
  </span>
@@ -175,16 +174,16 @@ export function LayoutSelector({
  </div>
 
  <div className={cn(
-'p-1.5 pt-1 border-t transition-colors flex flex-col gap-0.5 flex-1',
+'flex flex-1 flex-col gap-1 border-t px-2 py-2 transition-colors',
  isSelected
- ?'border-primary/20 bg-primary/5'
- :'border-slate-100 bg-white/40'
+ ?'border-primary/18 bg-primary/[0.055]'
+ :'border-border/40 bg-background/72'
  )}>
  <span className={cn(
-'text-[9px] font-semibold block transition-colors duration-200 truncate text-center',
+'block truncate text-center text-[clamp(0.82rem,0.78rem+0.08vw,0.88rem)] font-semibold leading-tight transition-colors duration-200',
  isSelected
- ?'text-primary'
- :'text-slate-500 group-hover:text-slate-700'
+ ?'text-primary/90'
+ :'text-foreground/86 group-hover:text-foreground/92'
  )}>
  {title}
  </span>
@@ -197,8 +196,8 @@ export function LayoutSelector({
  </span>
  )}
  <span className={cn(
-'text-[9px] block text-center leading-tight opacity-90',
- isSelected ?'text-primary/75' :'text-muted-foreground/80'
+'block text-center text-[clamp(0.74rem,0.7rem+0.08vw,0.8rem)] leading-snug opacity-90',
+ isSelected ?'text-primary/72' :'text-muted-foreground/82'
  )}>
  {description}
  </span>

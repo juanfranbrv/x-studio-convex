@@ -186,7 +186,7 @@ export function StyleImageCard({
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-7 px-1.5 text-[10px] gap-1 min-w-0"
+                            className="h-8 px-2.5 text-[0.82rem] gap-1.5 min-w-0"
                             onClick={() => inputRef.current?.click()}
                         >
                             <IconUpload className="w-3 h-3 shrink-0" />
@@ -196,7 +196,7 @@ export function StyleImageCard({
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-7 px-1.5 text-[10px] gap-1 min-w-0"
+                            className="h-8 px-2.5 text-[0.82rem] gap-1.5 min-w-0"
                             onClick={() => setIsBrandKitModalOpen(true)}
                         >
                             <IconPalette className="w-3 h-3 shrink-0" />
@@ -206,7 +206,7 @@ export function StyleImageCard({
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-7 px-1.5 text-[10px] gap-1 min-w-0"
+                            className="h-8 px-2.5 text-[0.82rem] gap-1.5 min-w-0"
                             onClick={() => setIsPresetModalOpen(true)}
                         >
                             <span className="truncate">{tt('styleImage.presetButton', 'Preset style')}</span>
@@ -218,7 +218,7 @@ export function StyleImageCard({
                         size="sm"
                         variant="ghost"
                         className={cn(
-                            'h-7 px-2 text-[10px] shrink-0',
+                            'h-8 px-3 text-[0.82rem] shrink-0',
                             !currentStyleId && !selectedStylePresetId && 'invisible pointer-events-none'
                         )}
                         onClick={() => {
@@ -262,10 +262,10 @@ export function StyleImageCard({
                             )}
                         </div>
                         <div className="min-w-0 flex-1 space-y-2">
-                            <span className="inline-flex rounded-full px-2 py-1 text-[10px] font-semibold bg-violet-500/10 text-violet-700 border border-violet-500/30">
+                            <span className="inline-flex rounded-full px-2 py-1 text-[0.72rem] font-semibold bg-violet-500/10 text-violet-700 border border-violet-500/30">
                                 {visualStylePreview.sourceLabel}
                             </span>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
+                            <p className="text-[0.84rem] text-muted-foreground leading-relaxed">
                                 {tt('styleImage.activeHint', 'Active style reference for the next generation.')}
                             </p>
                         </div>
@@ -298,23 +298,23 @@ export function StyleImageCard({
                     <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center">
                         {isDragging ? <IconUpload className="w-4 h-4 text-primary" /> : <IconImage className="w-4 h-4 text-muted-foreground" />}
                     </div>
-                    <p className="text-xs font-medium">
+                    <p className="text-[0.88rem] font-medium">
                         {isDragging ? tt('styleImage.dropHere', 'Drop your style image') : tt('styleImage.dragOrClick', 'Drag one style image here or click')}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-[0.8rem] text-muted-foreground">
                         {tt('styleImage.singleHint', 'Only one style image. If you choose another, it replaces the current one.')}
                     </p>
                 </div>
             )}
 
             {isAnalyzing && (
-                <div className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <div className="inline-flex items-center gap-1.5 text-[0.8rem] text-muted-foreground">
                     <Loader2 className="w-3 h-3 text-primary" />
                     {tt('styleImage.analyzing', 'Analyzing style...')}
                 </div>
             )}
             {error && (
-                <p className="text-[10px] text-destructive">{error}</p>
+                <p className="text-[0.8rem] text-destructive">{error}</p>
             )}
 
             <Dialog open={isBrandKitModalOpen} onOpenChange={setIsBrandKitModalOpen}>

@@ -155,11 +155,11 @@ export function AuxiliaryLogosCard({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary ring-1 ring-primary/20">
-            <IconFingerprint className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center text-foreground/72">
+            <IconFingerprint className="h-[18px] w-[18px]" />
           </div>
-          <h3 className="text-[11px] font-semibold text-foreground/95 uppercase tracking-[0.12em]">{tt('auxLogos.title', 'Auxiliary logos')}</h3>
+          <h3 className="text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88">{tt('auxLogos.title', 'Auxiliary logos')}</h3>
         </div>
         <Button
           type="button"
@@ -188,7 +188,7 @@ export function AuxiliaryLogosCard({
               type="button"
               size="sm"
               variant="outline"
-              className="h-7 px-2 text-[10px] gap-1"
+              className="h-8 px-3 text-[0.82rem] gap-1.5"
               onClick={() => inputRef.current?.click()}
             >
               <IconUpload className="w-3 h-3" />
@@ -198,7 +198,7 @@ export function AuxiliaryLogosCard({
               type="button"
               size="sm"
               variant="outline"
-              className="h-7 px-2 text-[10px] gap-1"
+              className="h-8 px-3 text-[0.82rem] gap-1.5"
               onClick={() => setIsBrandKitModalOpen(true)}
             >
               <IconFingerprint className="w-3 h-3" />
@@ -209,7 +209,7 @@ export function AuxiliaryLogosCard({
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="h-7 px-2 text-[10px] ml-auto"
+                className="ml-auto h-8 px-3 text-[0.82rem]"
                 onClick={() => {
                   auxUploadedIds.forEach((id) => removeAuxLogo(id))
                   selectedBrandKitAssets.forEach((item) => removeAuxLogo(item.id))
@@ -271,7 +271,7 @@ export function AuxiliaryLogosCard({
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-border/60 bg-muted/25 p-3">
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <p className="text-[0.84rem] text-muted-foreground leading-relaxed">
                 {tt('auxLogos.emptyHint', 'Add one or more auxiliary logos to use them as secondary brand support.')}
               </p>
             </div>
@@ -288,7 +288,7 @@ export function AuxiliaryLogosCard({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-8 text-[11px]"
+                className="h-9 text-[0.84rem]"
                 onClick={() => void refreshBrandKitContent()}
                 disabled={isRefreshingBrandKit}
               >

@@ -50,6 +50,7 @@ import {
     Edit02Icon,
     Refresh01Icon,
     CheckmarkCircle01Icon,
+    CheckmarkCircle02Icon,
     Link01Icon,
     GridViewIcon,
     DocumentCodeIcon,
@@ -133,6 +134,8 @@ import {
     Facebook01Icon,
     NewTwitterIcon,
     ArrowDownRight01Icon,
+    IdeaIcon,
+    DashboardSquare03Icon,
 } from '@hugeicons/core-free-icons'
 import { ComponentProps } from 'react'
 
@@ -191,6 +194,7 @@ export const IconChevronRight = createIcon(ArrowRight05Icon)
 // ─── Status ───
 export const IconSparkles = createIcon(SparklesIcon)
 export const IconCheck = createIcon(CheckmarkCircle01Icon)
+export const IconCheckCircle = createIcon(CheckmarkCircle02Icon)
 export const IconClock = createIcon(Clock01Icon)
 export const IconLoading = createIcon(Loading03Icon)
 export const IconAlertCircle = createIcon(AlertCircleIcon)
@@ -231,6 +235,8 @@ export const IconSquareArrowDown = createIcon(SquareArrowDown01Icon)
 export const IconTextFont = createIcon(TextFontIcon)
 export const IconMouseClick = createIcon(MouseLeftClick01Icon)
 export const IconLightbulb = createIcon(BulbIcon)
+export const IconIdea = createIcon(IdeaIcon)
+export const IconDashboardSquare = createIcon(DashboardSquare03Icon)
 export const IconRoute = createIcon(Route01Icon)
 
 // ─── Media & Social ───

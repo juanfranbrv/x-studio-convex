@@ -1,17 +1,21 @@
 ﻿'use client'
 
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { IconCheck, IconImage, IconPalette, IconSparkles, IconUpload, IconClose } from '@/components/ui/icons'
+import { IconCheck, IconCheckCircle, IconImage, IconPalette, IconSparkles, IconUpload, IconClose } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import type { ReferenceImageRole, VisionAnalysis } from '@/lib/creation-flow-types'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
 type ImageSourceMode = 'upload' | 'brandkit' | 'generate'
 
 const MAX_CONTENT_IMAGES = 8
+const CONTENT_ACTION_BUTTON_CLASS = 'min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal'
+const CONTENT_MODAL_CLASS = 'h-[min(88vh,860px)] w-[min(92vw,1120px)] !max-w-[min(92vw,1120px)] overflow-hidden rounded-[1.9rem] border border-border/70 bg-background/98 p-0 shadow-[0_38px_100px_-56px_rgba(15,23,42,0.42)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.985] data-[state=closed]:zoom-out-[0.985] data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:slide-out-to-bottom-2 duration-200 flex flex-col'
+const CONTENT_REMOVE_BUTTON_CLASS = 'absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-black/70'
 
 interface ContentImageCardProps {
     mode?: ImageSourceMode
@@ -142,18 +146,18 @@ export function ContentImageCard({
         if (!hasManual) return null
 
         return (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2.5">
                 {contentUploadedImages.map((url, index) => (
-                    <div key={url} className="relative rounded-xl overflow-hidden border border-border/60 bg-background aspect-square group">
+                    <div key={url} className="group relative aspect-square overflow-hidden rounded-[1.15rem] border border-border/65 bg-background shadow-[0_18px_38px_-30px_rgba(15,23,42,0.28)]">
                         <img src={url} alt={tt('contentImage.ownImageAlt', 'Own content image {{index}}', { index: index + 1 })} className="w-full h-full object-cover" />
-                        <span className="absolute top-1 left-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-sky-500/85 text-white">
+                        <span className="absolute left-2 top-2 rounded-full border border-sky-500/20 bg-sky-500/90 px-2 py-1 text-[0.7rem] font-semibold text-white shadow-sm">
                             {tt('contentImage.contentBadge', 'Content')}
                         </span>
                         {onRemoveUploadedImage && (
                             <button
                                 type="button"
                                 onClick={() => onRemoveUploadedImage(url)}
-                                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                className={CONTENT_REMOVE_BUTTON_CLASS}
                                 aria-label={tt('contentImage.removeUploadedAria', 'Remove content image')}
                             >
                                 <IconClose className="w-3 h-3" />
@@ -166,14 +170,14 @@ export function ContentImageCard({
                         key={image.id}
                         type="button"
                         onClick={() => onToggleBrandKitImage?.(image.id)}
-                        className="relative rounded-xl overflow-hidden border border-border/60 bg-background aspect-square group"
-                        title={tt('contentImage.removeFromContentTitle', 'Remove from content')}
-                    >
-                        <img src={image.url} alt={image.name || tt('contentImage.brandKitImageAlt', 'Brand Kit image')} className="w-full h-full object-cover" />
-                        <span className="absolute top-1 left-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-emerald-500/85 text-white">
+                            className="group relative aspect-square overflow-hidden rounded-[1.15rem] border border-border/65 bg-background shadow-[0_18px_38px_-30px_rgba(15,23,42,0.28)]"
+                            title={tt('contentImage.removeFromContentTitle', 'Remove from content')}
+                        >
+                            <img src={image.url} alt={image.name || tt('contentImage.brandKitImageAlt', 'Brand Kit image')} className="w-full h-full object-cover" />
+                        <span className="absolute left-2 top-2 rounded-full border border-emerald-500/20 bg-emerald-500/90 px-2 py-1 text-[0.7rem] font-semibold text-white shadow-sm">
                             {tt('contentImage.brandKitBadge', 'Brand Kit')}
                         </span>
-                        <span className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity inline-flex">
+                        <span className={CONTENT_REMOVE_BUTTON_CLASS}>
                             <IconClose className="w-3 h-3" />
                         </span>
                     </button>
@@ -206,7 +210,7 @@ export function ContentImageCard({
                         </div>
                     ) : (
                         <div className="rounded-xl border border-dashed border-border bg-background px-3 py-2.5">
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                            <p className="text-[0.84rem] text-muted-foreground leading-relaxed">
                                 {tt('contentImage.analyzeHint', 'Press Analyze to generate visual content suggestions with AI.')}
                             </p>
                         </div>
@@ -226,51 +230,37 @@ export function ContentImageCard({
                             setMode('generate')
                         }}
                         placeholder={tt('contentImage.aiPlaceholder', 'Describe the visual content you want AI to generate...')}
-                        className="min-h-[96px] text-xs resize-none"
+                        className="min-h-[108px] resize-none rounded-2xl border border-border/70 bg-background/90 px-4 py-3 text-[14px] leading-[1.45] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                     />
-                    <p className="text-[10px] text-muted-foreground inline-flex items-center gap-1.5">
+                    <p className="inline-flex items-center gap-1.5 text-[clamp(0.86rem,0.82rem+0.1vw,0.92rem)] text-muted-foreground">
                         <IconSparkles className="w-3 h-3 text-primary" />
                         {tt('contentImage.aiHelper', 'AI will build the main visual content of the image.')}
                     </p>
                 </div>
             ) : (
                 <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                         <Button
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-7 px-2 text-[10px] gap-1"
+                            className={cn(CONTENT_ACTION_BUTTON_CLASS, 'gap-2')}
                             onClick={() => inputRef.current?.click()}
                             disabled={!canAddMoreManual}
                         >
-                            <IconUpload className="w-3 h-3" />
+                            <IconUpload className="h-3.5 w-3.5" />
                             {tt('contentImage.upload', 'Upload content')}
                         </Button>
                         <Button
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-7 px-2 text-[10px] gap-1"
+                            className={cn(CONTENT_ACTION_BUTTON_CLASS, 'gap-2')}
                             onClick={() => setIsBrandKitModalOpen(true)}
                         >
-                            <IconPalette className="w-3 h-3" />
+                            <IconPalette className="h-3.5 w-3.5" />
                             {tt('contentImage.fromBrandKit', 'From Brand Kit')}
                         </Button>
-                            {(contentUploadedImages.length > 0 || contentBrandKitImageIds.length > 0) && (
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-7 px-2 text-[10px] ml-auto"
-                                    onClick={() => {
-                                        contentUploadedImages.forEach((id) => onRemoveUploadedImage?.(id))
-                                        contentBrandKitImageIds.forEach((id) => onToggleBrandKitImage?.(id))
-                                    }}
-                                >
-                                    {tt('contentImage.clear', 'Clear')}
-                            </Button>
-                        )}
                     </div>
 
                     <input
@@ -291,55 +281,61 @@ export function ContentImageCard({
                             onDrop={handleDrop}
                             onClick={() => inputRef.current?.click()}
                             className={cn(
-                                'rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center gap-2 text-center p-4',
+                                'flex cursor-pointer flex-col items-center justify-center gap-2.5 rounded-[1.4rem] border border-dashed px-5 py-6 text-center transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]',
                                 isDragging
-                                    ? 'border-primary bg-primary/10'
-                                    : 'border-border bg-background hover:border-primary/50 hover:bg-primary/5'
+                                    ? 'border-primary/55 bg-primary/[0.08] shadow-[0_18px_40px_-30px_rgba(120,142,84,0.32)]'
+                                    : 'border-border/80 bg-background/72 hover:border-primary/35 hover:bg-background hover:shadow-[0_16px_38px_-30px_rgba(15,23,42,0.2)]'
                             )}
                         >
-                            <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center">
-                                {isDragging ? <IconUpload className="w-4 h-4 text-primary" /> : <IconImage className="w-4 h-4 text-muted-foreground" />}
+                            <div className={cn(
+                                'flex h-10 w-10 items-center justify-center rounded-[1rem] border transition-colors',
+                                isDragging
+                                    ? 'border-primary/25 bg-primary/[0.1]'
+                                    : 'border-border/70 bg-background'
+                            )}>
+                                {isDragging ? <IconUpload className="h-4.5 w-4.5 text-primary" /> : <IconImage className="h-4.5 w-4.5 text-muted-foreground" />}
                             </div>
-                            <p className="text-xs font-medium">
+                            <p className="text-[clamp(0.96rem,0.92rem+0.1vw,1.02rem)] font-semibold text-foreground/92">
                                 {isDragging
                                     ? tt('contentImage.dropHere', 'Drop your content images here')
                                     : tt('contentImage.dragOrClick', 'Drag content images here or click')}
                             </p>
-                            <p className="text-[10px] text-muted-foreground">
+                            <p className="text-[clamp(0.84rem,0.8rem+0.08vw,0.9rem)] text-muted-foreground">
                                 {tt('contentImage.maxImages', 'Up to {{count}} images combining uploads and Brand Kit.', { count: MAX_CONTENT_IMAGES })}
                             </p>
                         </div>
                     )}
-
-                    <p className="text-[10px] text-muted-foreground">
-                        {tt('contentImage.manualModeHint', 'Manual mode is active: AI will not generate the main visual content.')}
-                    </p>
                 </div>
             )}
 
             {error && (
-                <p className="text-[10px] text-destructive">{error}</p>
+                <p className="text-[0.8rem] text-destructive">{error}</p>
             )}
 
             <Dialog open={isBrandKitModalOpen} onOpenChange={setIsBrandKitModalOpen}>
-                <DialogContent className="h-[min(88vh,860px)] w-[min(92vw,1120px)] !max-w-[min(92vw,1120px)] p-0 overflow-hidden flex flex-col">
-                    <DialogHeader className="px-6 pt-6 pb-3">
-                        <DialogTitle>{tt('contentImage.selectFromBrandKitTitle', 'Select content from Brand Kit')}</DialogTitle>
-                        <DialogDescription>
+                <DialogContent className={CONTENT_MODAL_CLASS}>
+                    <DialogHeader className="px-7 pb-2 pt-7">
+                        <DialogTitle className="text-[clamp(1.08rem,1.02rem+0.14vw,1.18rem)] font-semibold tracking-[-0.01em]">
+                            {tt('contentImage.selectFromBrandKitTitle', 'Select content from Brand Kit')}
+                        </DialogTitle>
+                        <DialogDescription className="text-[0.94rem] leading-relaxed text-muted-foreground">
                             {tt('contentImage.selectFromBrandKitDescription', 'Choose the images you want to use as the main content in the generation.')}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
+                    <div className="flex-1 min-h-0 overflow-y-auto px-7 py-6">
                         {brandKitImages.length > 0 ? (
-                            <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(88px,1fr))] gap-3 sm:[grid-template-columns:repeat(auto-fill,minmax(96px,1fr))]">
-                                {brandKitImages.map((image) => {
+                            <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(120px,1fr))] gap-4 sm:[grid-template-columns:repeat(auto-fill,minmax(132px,1fr))]">
+                                {brandKitImages.map((image, index) => {
                                 const isSelected = contentBrandKitImageIds.includes(image.id)
                                 const canSelect = canAddMoreManual || isSelected
                                 return (
-                                    <button
+                                    <motion.button
                                         key={image.id}
                                         type="button"
+                                        initial={{ opacity: 0, y: 10, scale: 0.985 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        transition={{ duration: 0.18, delay: Math.min(0.012 * (index + 1), 0.14), ease: 'easeOut' }}
                                         onClick={() => {
                                             if (!canSelect) return
                                             if (isSelected) {
@@ -352,38 +348,39 @@ export function ContentImageCard({
                                             onReferenceRoleChange?.(image.id, 'content')
                                             if (!isAiContentMode) setMode('brandkit')
                                         }}
-                                            className={cn(
-                                                'relative w-full rounded-xl overflow-hidden border aspect-square transition-all',
-                                                isSelected
-                                                    ? 'border-primary ring-2 ring-primary/20'
-                                                    : canSelect
-                                                        ? 'border-border hover:border-primary/40'
-                                                        : 'border-border opacity-50 cursor-not-allowed'
-                                            )}
-                                        >
+                                        className={cn(
+                                            'group relative w-full overflow-hidden rounded-[1.15rem] border aspect-square transition-all text-left',
+                                            isSelected
+                                                ? 'border-primary/30 bg-primary/[0.07] shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]'
+                                                : canSelect
+                                                    ? 'border-border/65 bg-background hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-30px_rgba(15,23,42,0.24)]'
+                                                    : 'cursor-not-allowed border-border/50 bg-muted/30 opacity-50'
+                                        )}>
                                             <img src={image.url} alt={image.name || tt('contentImage.brandKitImageAlt', 'Brand Kit image')} className="w-full h-full object-cover" />
                                             {isSelected && (
-                                                <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
-                                                    <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
-                                                        <IconCheck className="w-4 h-4" />
-                                                    </span>
-                                                </div>
+                                                <IconCheckCircle className="absolute right-2.5 top-2.5 h-9 w-9 text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.62)]" />
                                             )}
-                                        </button>
+                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent px-3 pb-2 pt-6">
+                                                <p className="truncate text-[0.82rem] font-medium text-white">
+                                                    {image.name || tt('contentImage.brandKitImageAlt', 'Brand Kit image')}
+                                                </p>
+                                            </div>
+                                        </motion.button>
                                     )
                                 })}
                             </div>
                         ) : (
-                            <div className="rounded-xl border border-dashed border-border mt-1 p-6 text-center text-sm text-muted-foreground">
+                            <div className="mt-1 rounded-[1.15rem] border border-dashed border-border/70 bg-background/72 p-8 text-center text-[0.94rem] text-muted-foreground">
                                 {tt('contentImage.noBrandKitImages', 'This Brand Kit does not have any images yet.')}
                             </div>
                         )}
                     </div>
 
-                    <div className="border-t border-border px-6 py-3 flex justify-end">
+                    <div className="flex justify-end px-7 pb-6 pt-2">
                         <Button
                             type="button"
                             size="sm"
+                            className={CONTENT_ACTION_BUTTON_CLASS}
                             onClick={() => setIsBrandKitModalOpen(false)}
                         >
                             {tt('actions.continue', 'Continue')}

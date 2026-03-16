@@ -2,16 +2,12 @@
 
 import React from'react'
 import { cn } from'@/lib/utils'
-import { SOCIAL_FORMATS, SocialFormat, SocialPlatform } from'@/lib/creation-flow-types'
+import { SOCIAL_FORMATS, SocialPlatform } from'@/lib/creation-flow-types'
 import {
  Instagram,
  Facebook,
  Linkedin,
  Video,
- Maximize,
- Layout,
- MessageCircle,
- Smartphone,
  Youtube,
  Square,
  RectangleHorizontal,
@@ -33,7 +29,6 @@ const PLATFORM_CONFIG: Record<SocialPlatform, { icon: any; label: string; color:
  facebook: { icon: Facebook, label:'Facebook', color:'text-blue-600' },
  tiktok: { icon: Video, label:'TikTok', color:'text-zinc-900' },
  linkedin: { icon: Linkedin, label:'LinkedIn', color:'text-blue-700' },
- whatsapp: { icon: MessageCircle, label:'WhatsApp', color:'text-green-500' },
  x: { icon: Twitter, label:'X (Twitter)', color:'text-slate-900' },
  youtube: { icon: Youtube, label:'YouTube', color:'text-red-600' }
 }
@@ -49,7 +44,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
  const availableFormats = SOCIAL_FORMATS.filter(f => f.platform === effectivePlatform)
 
  return (
- <div className="space-y-6">
+ <div className="space-y-4">
  <div className="flex flex-wrap items-center justify-center gap-2">
  {(Object.entries(PLATFORM_CONFIG) as [SocialPlatform, any][]).map(([id, config]) => {
  const Icon = config.icon
@@ -65,15 +60,15 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
  title={config.label}
  aria-disabled={isLocked}
  className={cn(
-"relative flex items-center justify-center p-3 rounded-full transition-all duration-300",
+"relative flex h-11 w-11 items-center justify-center rounded-[1rem] border transition-all duration-300",
  isSelected
- ?"bg-primary/10 shadow-[0_4px_12px_hsl(var(--primary)/0.2)] scale-110 ring-1 ring-primary/30"
- :"bg-transparent hover:bg-black/5 text-slate-400 hover:text-slate-600",
+ ?"border-primary/30 bg-primary/[0.07] text-primary shadow-[0_18px_34px_-28px_rgba(120,142,84,0.42)]"
+ :"border-border/55 bg-background/55 text-muted-foreground hover:border-border/80 hover:bg-background/88 hover:text-foreground/80",
  isLocked &&"cursor-default"
  )}
  >
  <Icon className={cn(
-"w-5 h-5 transition-colors",
+"h-[18px] w-[18px] transition-colors",
  isSelected
  ?"text-primary transition-all duration-300"
  :"currentColor"
@@ -84,7 +79,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
  </div>
 
  {effectivePlatform && (
- <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+ <div className="grid grid-cols-2 gap-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
  {availableFormats.map((format) => {
  const isSelected = selectedFormat === format.id
 
@@ -101,33 +96,33 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
  whileTap={{ scale: 0.98 }}
  onClick={() => onSelectFormat(format.id)}
  className={cn(
-"group relative flex flex-col items-start p-4 rounded-2xl transition-all duration-300 text-left overflow-hidden",
+"group relative flex flex-col items-start overflow-hidden rounded-[1rem] p-4 text-left transition-all duration-300",
 "border backdrop-blur-md",
  isSelected
- ?"border-primary/50 bg-primary/5 shadow-[0_0_15px_hsl(var(--primary)/0.15)]"
- :"border-slate-200 bg-white/50 hover:bg-white/80 hover:border-slate-300 hover:-translate-y-0.5"
+ ?"border-primary/32 bg-primary/[0.07] shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]"
+ :"border-border/55 bg-background/55 hover:border-border/80 hover:bg-background/92 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-28px_rgba(15,23,42,0.2)]"
  )}
  >
  {/* Glass Reflection Gradient */}
  <div className={cn(
-"absolute inset-0 bg-gradient-to-br from-white/60 to-transparent opacity-0 pointer-events-none transition-opacity duration-300",
- isSelected ?"opacity-40" :"group-hover:opacity-100"
+"absolute inset-0 bg-gradient-to-br from-white/50 to-transparent opacity-0 pointer-events-none transition-opacity duration-300",
+ isSelected ?"opacity-35" :"group-hover:opacity-100"
  )} />
 
  <div className="flex items-center justify-between w-full mb-3 z-10">
  <div className={cn(
-"p-2 rounded-xl transition-colors duration-300",
+"p-2.5 rounded-[0.9rem] transition-colors duration-300",
  isSelected
- ?"bg-primary/10 text-primary"
- :"bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-slate-700"
+ ?"bg-primary/[0.08] text-primary/88"
+ :"bg-background/78 text-muted-foreground group-hover:bg-background group-hover:text-foreground/78"
  )}>
- <FormatIcon className="w-5 h-5" />
+ <FormatIcon className="h-5 w-5" />
  </div>
  <span className={cn(
-"text-[10px] font-bold px-2 py-1 rounded-full border transition-colors",
+"text-[clamp(0.72rem,0.68rem+0.08vw,0.78rem)] font-semibold px-2 py-1 rounded-full border transition-colors",
  isSelected
- ?"border-primary/20 bg-primary/10 text-primary"
- :"border-slate-200 bg-white/50 text-slate-500"
+ ?"border-primary/20 bg-primary/[0.08] text-primary/82"
+ :"border-border/55 bg-background/72 text-muted-foreground"
  )}>
  {format.aspectRatio}
  </span>
@@ -135,18 +130,18 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
 
  <div className="space-y-1 z-10">
  <p className={cn(
-"text-sm font-semibold leading-none transition-colors",
+"text-[clamp(0.95rem,0.91rem+0.1vw,1rem)] font-semibold leading-none transition-colors",
  isSelected
- ?"text-primary"
- :"text-slate-700 group-hover:text-slate-900"
+ ?"text-primary/90"
+ :"text-foreground/88 group-hover:text-foreground"
  )}>
  {format.name}
  </p>
  <p className={cn(
-"text-xs leading-tight transition-colors",
+"text-[clamp(0.8rem,0.76rem+0.08vw,0.86rem)] leading-snug transition-colors",
  isSelected
- ?"text-primary/80"
- :"text-slate-500 group-hover:text-slate-600"
+ ?"text-primary/72"
+ :"text-muted-foreground/82 group-hover:text-muted-foreground"
  )}>
  {format.description}
  </p>
