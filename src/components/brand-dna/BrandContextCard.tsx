@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { FileText } from 'lucide-react';
+import { IconTextFont } from '@/components/ui/icons';
 import { useTranslation } from 'react-i18next';
 
 interface BrandContextCardProps {
@@ -17,7 +17,7 @@ export function BrandContextCard({ context, onUpdate, minHeightClassName = 'min-
         <Card className="bg-white border border-border shadow-sm overflow-hidden">
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                    <FileText className="w-5 h-5 text-primary" />
+                    <IconTextFont className="w-5 h-5 text-primary" />
                     {t('context.title', { defaultValue: 'Brand vision and context' })}
                 </CardTitle>
             </CardHeader>

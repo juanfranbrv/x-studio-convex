@@ -9,7 +9,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { type ContextElement } from "@/app/image/page";
 import { cn } from '@/lib/utils';
 
-import { Palette, Info, RotateCcw, X, Pipette, Check, Plus, Copy } from 'lucide-react';
+import { Info } from 'lucide-react';
+import { IconPalette, IconRotate, IconClose, IconColorPicker, IconCheck, IconPlus, IconCopy } from '@/components/ui/icons';
 import { useTheme } from 'next-themes';
 import { hexToRgb, rgbToLab } from '@/lib/color-utils';
 import { useTranslation } from 'react-i18next';
@@ -144,7 +145,7 @@ export function ColorPalette({
                         <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[var(--accent)]/5 to-transparent rounded-full blur-3xl" />
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
-                                <Palette className="w-5 h-5 text-primary" />
+                                <IconPalette className="w-5 h-5 text-primary" />
                                 {t('palette.title', { defaultValue: 'Color palette' })}
                             </CardTitle>
                             <div className="flex items-center gap-2">
@@ -165,7 +166,7 @@ export function ColorPalette({
                                         onClick={onReset}
                                         className="text-xs h-7 gap-1"
                                     >
-                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <IconRotate className="w-3.5 h-3.5" />
                                         {t('palette.reset', { defaultValue: 'Reset' })}
                                     </Button>
                                 )}
@@ -236,7 +237,7 @@ export function ColorPalette({
                                                                 "text-primary-foreground"
                                                             )}
                                                         >
-                                                            <Check className="w-3 h-3 stroke-[3px]" />
+                                                            <IconCheck className="w-3 h-3 stroke-[3px]" />
                                                         </div>
                                                     )}
 
@@ -248,7 +249,7 @@ export function ColorPalette({
                                                         }}
                                                         className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:scale-110 shadow-lg z-50"
                                                     >
-                                                        <X className="w-2.5 h-2.5" />
+                                                        <IconClose className="w-2.5 h-2.5" />
                                                     </button>
                                                 </div>
                                             </PopoverTrigger>
@@ -295,11 +296,11 @@ export function ColorPalette({
                                                         onClick={() => handleEyedropper(idx)}
                                                         className="flex-1 gap-1 h-8 text-xs font-medium rounded-lg"
                                                     >
-                                                        <Pipette className="w-4 h-4" />
+                                                        <IconColorPicker className="w-4 h-4" />
                                                         {t('palette.capture', { defaultValue: 'Capture' })}
                                                     </Button>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => setColorPickerOpen(null)}>
-                                                        <X className="w-4 h-4" />
+                                                        <IconClose className="w-4 h-4" />
                                                     </Button>
                                                 </div>
                                             </div>
@@ -320,7 +321,7 @@ export function ColorPalette({
                                 onClick={onAddColor}
                                 className="rounded-full border-2 border-dashed border-border hover:border-primary flex items-center justify-center transition-colors group bg-muted/50 cursor-pointer w-20 h-20"
                             >
-                                <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                                <IconPlus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                             </div>
                         )}
                     </div>

@@ -4,7 +4,8 @@ import { Loader2 } from '@/components/ui/spinner'
 ;
 
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Plus, Check, Globe, Building2 } from 'lucide-react';
+import { Globe, Building2 } from 'lucide-react';
+import { IconChevronDown, IconPlus, IconCheck } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { BrandKitSummary } from '@/lib/brand-types';
@@ -80,7 +81,7 @@ export function ProfileSwitcher({
                     )}
                 </div>
 
-                <ChevronDown className={cn(
+                <IconChevronDown className={cn(
                     "w-4 h-4 text-muted-foreground transition-transform duration-200",
                     isOpen && "rotate-180"
                 )} />
@@ -128,7 +129,7 @@ export function ProfileSwitcher({
                                 </div>
 
                                 {profile.id === activeProfileId && (
-                                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                                    <IconCheck className="w-4 h-4 text-primary flex-shrink-0" />
                                 )}
                             </button>
                         ))}
@@ -147,7 +148,7 @@ export function ProfileSwitcher({
                                 setIsOpen(false);
                             }}
                         >
-                            <Plus className="w-4 h-4" />
+                            <IconPlus className="w-4 h-4" />
                             Nuevo Kit de Marca
                         </Button>
                     </div>

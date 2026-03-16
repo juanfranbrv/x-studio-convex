@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { ArrowLeft, ArrowRight, CheckCircle2, Globe, Palette, Upload, Image as ImageIcon, ShieldAlert, X, Plus, Pipette, Quote, Sparkles, Type, MessageCircle, Megaphone, MousePointerClick, Trash2 } from 'lucide-react'
+import { Globe, ShieldAlert, Quote } from 'lucide-react'
+import { IconArrowLeft, IconArrowRight, IconCheck, IconPalette, IconUpload, IconImage, IconClose, IconPlus, IconColorPicker, IconSparkles, IconTextFont, IconMessage, IconMegaphone, IconMouseClick, IconDelete } from '@/components/ui/icons'
 import { HexColorPicker } from 'react-colorful'
 import { ContactSocialCard } from './ContactSocialCard'
 import { TypographySection } from './TypographySection'
@@ -217,7 +218,7 @@ function RoleColorSwatch({
             className="w-full h-8 text-xs gap-1"
             onClick={() => onEyedropper()}
           >
-            <Pipette className="w-3.5 h-3.5" />
+            <IconColorPicker className="w-3.5 h-3.5" />
             {t('palette.pickSample', { defaultValue: 'Pick sample' })}
           </Button>
         )}
@@ -250,7 +251,7 @@ function AddAccentSwatch({
           )}
           title={t('wizard.addAccent', { defaultValue: 'Add accent' })}
         >
-          <Plus className="w-5 h-5" />
+          <IconPlus className="w-5 h-5" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-3 space-y-3 bg-card border border-border/80 shadow-xl z-[140]" align="start">
@@ -641,7 +642,7 @@ export function BrandKitAssistantWizard({
                     onClick={closeWizard}
             aria-label={t('common:actions.close', { defaultValue: 'Close assistant' })}
                   >
-                    <X className="w-4 h-4" />
+                    <IconClose className="w-4 h-4" />
                   </Button>
                 )}
               </div>
@@ -777,7 +778,7 @@ export function BrandKitAssistantWizard({
             {step === 'post-analysis' && (
               <section className="rounded-2xl border border-border/70 bg-muted/25 p-6 md:p-8 space-y-4">
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-primary mt-1" />
+                  <IconCheck className="w-6 h-6 text-primary mt-1" />
                   <div className="space-y-3">
                     <p className="font-semibold text-xl leading-tight">{t('wizard.basePreparedTitle', { defaultValue: 'We prepared a base version of your kit from the website' })}</p>
                     <p className="text-base text-muted-foreground">
@@ -794,7 +795,7 @@ export function BrandKitAssistantWizard({
             {step === 'logos' && (
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <ImageIcon className="w-5 h-5 text-primary mt-0.5" />
+                  <IconImage className="w-5 h-5 text-primary mt-0.5" />
                   <p className="text-base text-muted-foreground">{t('wizard.reviewLogos', { defaultValue: 'Review the detected logos or upload your own.' })}</p>
                 </div>
                 <div
@@ -827,7 +828,7 @@ export function BrandKitAssistantWizard({
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg border border-border bg-background flex items-center justify-center">
-                      <Upload className="w-4 h-4 text-muted-foreground" />
+                      <IconUpload className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">{t('wizard.logosDropzone', { defaultValue: 'Drag logos here or click to upload' })}</p>
@@ -876,7 +877,7 @@ export function BrandKitAssistantWizard({
                           onClick={() => onRemoveLogo(index)}
                           aria-label={t('wizard.removeLogo', { defaultValue: 'Remove logo' })}
                         >
-                          <X className="w-4 h-4" />
+                          <IconClose className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
@@ -888,7 +889,7 @@ export function BrandKitAssistantWizard({
             {step === 'colors' && (
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <Palette className="w-5 h-5 text-primary mt-0.5" />
+                  <IconPalette className="w-5 h-5 text-primary mt-0.5" />
                 <p className="text-base text-muted-foreground">{t('wizard.paletteIntro', { defaultValue: 'Adjust your palette. Text, Background, and up to 5 accents.' })}</p>
                 </div>
 
@@ -995,7 +996,7 @@ export function BrandKitAssistantWizard({
                             onClick={() => onRemoveColor(accent.index)}
                           title={t('wizard.removeAccent', { defaultValue: 'Remove accent' })}
                           >
-                            <X className="w-3 h-3" />
+                            <IconClose className="w-3 h-3" />
                           </button>
                         </div>
                       ))}
@@ -1098,7 +1099,7 @@ export function BrandKitAssistantWizard({
             {step === 'values' && (
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <Sparkles className="w-5 h-5 text-primary mt-0.5" />
+                  <IconSparkles className="w-5 h-5 text-primary mt-0.5" />
                   <p className="text-base text-muted-foreground">{t('wizard.valuesDescription', { defaultValue: 'Add the key values of your brand.' })}</p>
                 </div>
                 <div className="space-y-2">
@@ -1111,12 +1112,12 @@ export function BrandKitAssistantWizard({
                         className="h-10 text-sm"
                       />
                       <Button type="button" variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={() => onRemoveValue(index)}>
-                        <Trash2 className="w-4 h-4" />
+                        <IconDelete className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
                   <Button type="button" variant="outline" size="sm" className="h-9 text-sm" onClick={onAddValue}>
-                    <Plus className="w-4 h-4 mr-1" />
+                    <IconPlus className="w-4 h-4 mr-1" />
                   {t('wizard.addValue', { defaultValue: 'Add value' })}
                   </Button>
                 </div>
@@ -1126,7 +1127,7 @@ export function BrandKitAssistantWizard({
             {step === 'visual-styles' && (
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <Type className="w-5 h-5 text-primary mt-0.5" />
+                  <IconTextFont className="w-5 h-5 text-primary mt-0.5" />
                   <p className="text-base text-muted-foreground">{t('wizard.visualStylesDescription', { defaultValue: 'Define visual styles for your pieces.' })}</p>
                 </div>
                 <div className="space-y-2">
@@ -1139,12 +1140,12 @@ export function BrandKitAssistantWizard({
                         className="h-10 text-sm"
                       />
                       <Button type="button" variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={() => onRemoveAesthetic(index)}>
-                        <Trash2 className="w-4 h-4" />
+                        <IconDelete className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
                   <Button type="button" variant="outline" size="sm" className="h-9 text-sm" onClick={onAddAesthetic}>
-                    <Plus className="w-4 h-4 mr-1" />
+                    <IconPlus className="w-4 h-4 mr-1" />
                   {t('wizard.addStyle', { defaultValue: 'Add style' })}
                   </Button>
                 </div>
@@ -1154,7 +1155,7 @@ export function BrandKitAssistantWizard({
             {step === 'tone' && (
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <MessageCircle className="w-5 h-5 text-primary mt-0.5" />
+                  <IconMessage className="w-5 h-5 text-primary mt-0.5" />
                   <p className="text-base text-muted-foreground">{t('wizard.toneDescription', { defaultValue: 'Choose the tone of voice of your brand.' })}</p>
                 </div>
                 <div className="space-y-2">
@@ -1167,12 +1168,12 @@ export function BrandKitAssistantWizard({
                         className="h-10 text-sm"
                       />
                       <Button type="button" variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={() => onRemoveTone(index)}>
-                        <Trash2 className="w-4 h-4" />
+                        <IconDelete className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
                   <Button type="button" variant="outline" size="sm" className="h-9 text-sm" onClick={onAddTone}>
-                    <Plus className="w-4 h-4 mr-1" />
+                    <IconPlus className="w-4 h-4 mr-1" />
                   {t('wizard.addTone', { defaultValue: 'Add tone' })}
                   </Button>
                 </div>
@@ -1182,7 +1183,7 @@ export function BrandKitAssistantWizard({
             {step === 'marketing-hooks' && (
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <Megaphone className="w-5 h-5 text-primary mt-0.5" />
+                  <IconMegaphone className="w-5 h-5 text-primary mt-0.5" />
                   <p className="text-base text-muted-foreground">{t('wizard.marketingHooksDescription', { defaultValue: 'Define marketing headlines for campaigns.' })}</p>
                 </div>
                 <div className="space-y-2">
@@ -1207,7 +1208,7 @@ export function BrandKitAssistantWizard({
                           onChangeTextAssets({ ...textAssets, marketing_hooks: nextHooks })
                         }}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <IconDelete className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
@@ -1218,7 +1219,7 @@ export function BrandKitAssistantWizard({
                     className="h-9 text-sm"
                     onClick={() => onChangeTextAssets({ ...textAssets, marketing_hooks: [...textAssets.marketing_hooks, t('wizard.newHook', { defaultValue: 'New headline' })] })}
                   >
-                    <Plus className="w-4 h-4 mr-1" />
+                    <IconPlus className="w-4 h-4 mr-1" />
                   {t('wizard.addHook', { defaultValue: 'Add hook' })}
                   </Button>
                 </div>
@@ -1228,7 +1229,7 @@ export function BrandKitAssistantWizard({
             {step === 'ctas' && (
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <MousePointerClick className="w-5 h-5 text-primary mt-0.5" />
+                  <IconMouseClick className="w-5 h-5 text-primary mt-0.5" />
                   <p className="text-base text-muted-foreground">{t('wizard.ctasDescription', { defaultValue: 'Add calls to action (CTAs).' })}</p>
                 </div>
                 <p className="text-base text-muted-foreground">
@@ -1257,7 +1258,7 @@ export function BrandKitAssistantWizard({
                           onChangeTextAssets({ ...textAssets, ctas: nextCtas })
                         }}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <IconDelete className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
@@ -1268,7 +1269,7 @@ export function BrandKitAssistantWizard({
                     className="h-9 text-sm"
                     onClick={() => onChangeTextAssets({ ...textAssets, ctas: [...textAssets.ctas, t('wizard.newCta', { defaultValue: 'New CTA' })] })}
                   >
-                    <Plus className="w-4 h-4 mr-1" />
+                    <IconPlus className="w-4 h-4 mr-1" />
                   {t('wizard.addCta', { defaultValue: 'Add CTA' })}
                   </Button>
                 </div>
@@ -1293,7 +1294,7 @@ export function BrandKitAssistantWizard({
             {step === 'done' && (
               <section className="rounded-xl border border-border/60 bg-muted/20 p-5 space-y-3">
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-primary mt-0.5" />
+                  <IconCheck className="w-5 h-5 text-primary mt-0.5" />
                   <div className="space-y-1">
                   <p className="font-medium text-base">{t('wizard.baseReady', { defaultValue: 'Kit base ready' })}</p>
                     <p className="text-base text-muted-foreground">{t('wizard.readyEditorDescription', { defaultValue: 'You can keep refining everything in the editor now.' })}</p>
@@ -1330,7 +1331,7 @@ export function BrandKitAssistantWizard({
             <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="flex items-center gap-2">
               <Button variant="outline" onClick={goBack} disabled={stepIndex === 0} className="h-11 text-base">
-                <ArrowLeft className="w-4 h-4 mr-1" />
+                <IconArrowLeft className="w-4 h-4 mr-1" />
                 {t('wizard.previous', { defaultValue: 'Previous' })}
               </Button>
               </div>
@@ -1344,7 +1345,7 @@ export function BrandKitAssistantWizard({
               {step === 'url' && hasUrlValue
                 ? t('wizard.analyzeAndContinue', { defaultValue: 'Analyze and continue' })
                 : t('wizard.next', { defaultValue: 'Next' })}
-                    <ArrowRight className="w-4 h-4 ml-1" />
+                    <IconArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 ) : (
                   <Button onClick={completeWizard} className="h-11 text-base" disabled={!canFinishWizard}>

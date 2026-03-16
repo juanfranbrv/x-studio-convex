@@ -26,7 +26,8 @@ import { hexToRgb } from '@/lib/color-utils';
 import { calculateBrandKitCompleteness } from '@/lib/brand-kit-utils';
 import { useTranslation } from 'react-i18next';
 
-import { Save, CheckCircle, RotateCcw, AlertCircle, X, Bug, Globe } from 'lucide-react';
+import { Globe } from 'lucide-react';
+import { IconSave, IconCheck, IconRotate, IconAlertCircle, IconClose, IconBug } from '@/components/ui/icons';
 
 interface BrandDNABoardProps {
     data: BrandDNA;
@@ -1060,12 +1061,12 @@ export function BrandDNABoard({
                             </div>
                         ) : hasUnsavedChanges ? (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                                <Save className="w-4 h-4 mr-2" />
+                                <IconSave className="w-4 h-4 mr-2" />
                                 {t('board.pendingChanges', { defaultValue: 'Pending changes' })}
                             </div>
                         ) : (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                                <CheckCircle className="w-4 h-4 mr-2" />
+                                <IconCheck className="w-4 h-4 mr-2" />
                                 {t('board.synced', { defaultValue: 'Synced' })}
                             </div>
                         )}
@@ -1090,7 +1091,7 @@ export function BrandDNABoard({
         )}
         onClick={() => setShowDebug(!showDebug)}
     >
-        <Bug className="w-4 h-4" />
+        <IconBug className="w-4 h-4" />
         {t('board.audit', { defaultValue: 'Audit' })}
     </Button>
 )}
@@ -1100,7 +1101,7 @@ export function BrandDNABoard({
                         disabled={!hasUnsavedChanges || isSaving}
                         className="gap-2 h-9 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
                     >
-                        {isSaving ? <Loader2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                        {isSaving ? <Loader2 className="w-4 h-4" /> : <IconSave className="w-4 h-4" />}
                         {t('board.saveNow', { defaultValue: 'Save now' })}
                     </Button>
                 </div>
@@ -1244,7 +1245,7 @@ export function BrandDNABoard({
                         <div className="relative max-w-5xl max-h-[90vh] w-full flex items-center justify-center">
                             <img src={lightboxImage} alt="Full size" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
                             <button className="absolute -top-12 right-0 p-2 text-white hover:text-accent transition-colors" onClick={() => setLightboxImage(null)}>
-                                <X className="w-4 h-4" />
+                                <IconClose className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
@@ -1256,7 +1257,7 @@ export function BrandDNABoard({
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-destructive">
-                            <AlertCircle className="w-5 h-5" />
+                            <IconAlertCircle className="w-5 h-5" />
                             {errorModal.title}
                         </DialogTitle>
                         <DialogDescription className="text-muted-foreground">

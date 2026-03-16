@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useMemo } from 'react'
-import { CheckCircle2, AlertCircle, Sparkles } from 'lucide-react'
+import { IconCheck, IconAlertCircle, IconSparkles } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { calculateBrandKitCompleteness, getCompletenessMessage } from '@/lib/brand-kit-utils'
 import type { BrandDNA } from '@/lib/brand-types'
@@ -68,9 +68,9 @@ export function BrandKitProgress({ brandKit, showDetails = true, compact = false
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     {completeness.isComplete ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        <IconCheck className="w-5 h-5 text-green-500" />
                     ) : (
-                        <Sparkles className="w-5 h-5 text-primary" />
+                        <IconSparkles className="w-5 h-5 text-primary" />
                     )}
                     <span className="font-medium text-sm">{t('progress.title', { defaultValue: 'Brand Kit completeness' })}</span>
                 </div>
@@ -101,7 +101,7 @@ export function BrandKitProgress({ brandKit, showDetails = true, compact = false
             {showDetails && completeness.tips.length > 0 && !completeness.isComplete && (
                 <div className="mt-3 pt-3 border-t border-border/50">
                     <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
+                        <IconAlertCircle className="w-3 h-3" />
                         {t('progress.improve', { defaultValue: 'To improve:' })}
                     </p>
                     <ul className="space-y-1">
