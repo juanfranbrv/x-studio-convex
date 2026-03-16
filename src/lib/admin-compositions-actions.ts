@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath, unstable_noStore as noStore } from 'next/cache'
+import { currentUser } from '@clerk/nextjs/server'
 import { getLegacyCompositions, type LegacyComposition } from '@/lib/legacy-compositions'
 import { readBasicLegacyLayouts, readPromotedLegacyLayouts, removeLegacyLayoutFromModes, setLegacyLayoutMode } from '@/lib/legacy-promotions'
 import { deleteCustomLegacyLayout, deleteLegacyLayoutOverride, removeLegacyLayoutFromWarehouse, restoreLegacyLayoutToWarehouse, upsertCustomLegacyLayout, upsertLegacyLayoutOverride } from '@/lib/legacy-warehouse'
@@ -8,6 +9,11 @@ import { generateCompositionIconSvg } from '@/lib/composition-icon'
 import { generateLegacyAutoCompositions, type AutoDensity, type AutoTone } from '@/lib/legacy-composition-auto'
 import type { IntentCategory, LayoutOption } from '@/lib/creation-flow-types'
 import { suggestCompositionIcon } from './ai-composition-icon'
+
+async function getAdminEmail() {
+    const user = await currentUser()
+    return user?.emailAddresses?.[0]?.emailAddress?.toLowerCase() || undefined
+}
 
 function norm(value: FormDataEntryValue | null): string {
     return String(value || '').trim()
@@ -33,6 +39,7 @@ function fromForm(formData: FormData): LayoutOption | null {
 }
 
 export async function saveAction(formData: FormData) {
+    const adminEmail = await getAdminEmail()
     const source = norm(formData.get('source')) === 'custom' ? 'custom' : 'snapshot'
     const modeBasic = formData.get('modeBasic') === 'on'
     const modeAdvanced = formData.get('modeAdvanced') === 'on'
@@ -42,13 +49,13 @@ export async function saveAction(formData: FormData) {
     const originalId = norm(formData.get('originalId'))
     if (source === 'custom') {
         if (originalId && originalId !== layout.id) {
-            await deleteCustomLegacyLayout(originalId)
+            await deleteCustomLegacyLayout(originalId, adminEmail)
             await removeLegacyLayoutFromModes(originalId)
-            await deleteLegacyLayoutOverride(originalId)
+            await deleteLegacyLayoutOverride(originalId, adminEmail)
         }
-        await upsertCustomLegacyLayout(layout)
+        await upsertCustomLegacyLayout(layout, adminEmail)
     } else {
-        await upsertLegacyLayoutOverride(layout)
+        await upsertLegacyLayoutOverride(layout, adminEmail)
     }
 
     const composition: LegacyComposition = {
@@ -63,7 +70,7 @@ export async function saveAction(formData: FormData) {
         source,
     }
 
-    await restoreLegacyLayoutToWarehouse(layout.id)
+    await restoreLegacyLayoutToWarehouse(layout.id, adminEmail)
     await setLegacyLayoutMode(composition, 'basic', modeBasic)
     await setLegacyLayoutMode(composition, 'advanced', modeAdvanced)
 
@@ -74,6 +81,7 @@ export async function saveAction(formData: FormData) {
 }
 
 export async function regenerateIconAction(formData: FormData) {
+    const adminEmail = await getAdminEmail()
     const source = norm(formData.get('source')) === 'custom' ? 'custom' : 'snapshot'
     const layout = fromForm(formData)
     if (!layout) return
@@ -84,13 +92,13 @@ export async function regenerateIconAction(formData: FormData) {
     const originalId = norm(formData.get('originalId'))
     if (source === 'custom') {
         if (originalId && originalId !== updatedLayout.id) {
-            await deleteCustomLegacyLayout(originalId)
+            await deleteCustomLegacyLayout(originalId, adminEmail)
             await removeLegacyLayoutFromModes(originalId)
-            await deleteLegacyLayoutOverride(originalId)
+            await deleteLegacyLayoutOverride(originalId, adminEmail)
         }
-        await upsertCustomLegacyLayout(updatedLayout)
+        await upsertCustomLegacyLayout(updatedLayout, adminEmail)
     } else {
-        await upsertLegacyLayoutOverride(updatedLayout)
+        await upsertLegacyLayoutOverride(updatedLayout, adminEmail)
     }
 
     const composition: LegacyComposition = {
@@ -105,7 +113,7 @@ export async function regenerateIconAction(formData: FormData) {
         source,
     }
 
-    await restoreLegacyLayoutToWarehouse(updatedLayout.id)
+    await restoreLegacyLayoutToWarehouse(updatedLayout.id, adminEmail)
     await setLegacyLayoutMode(composition, 'basic', formData.get('modeBasic') === 'on')
     await setLegacyLayoutMode(composition, 'advanced', formData.get('modeAdvanced') === 'on')
 
@@ -134,14 +142,15 @@ export async function toggleModeAction(formData: FormData) {
 }
 
 export async function deleteAction(formData: FormData) {
+    const adminEmail = await getAdminEmail()
     const layoutId = norm(formData.get('layoutId'))
     const source = norm(formData.get('source')) === 'custom' ? 'custom' : 'snapshot'
     if (!layoutId) return
 
     await removeLegacyLayoutFromModes(layoutId)
-    await deleteLegacyLayoutOverride(layoutId)
-    if (source === 'custom') await deleteCustomLegacyLayout(layoutId)
-    else await removeLegacyLayoutFromWarehouse(layoutId)
+    await deleteLegacyLayoutOverride(layoutId, adminEmail)
+    if (source === 'custom') await deleteCustomLegacyLayout(layoutId, adminEmail)
+    else await removeLegacyLayoutFromWarehouse(layoutId, adminEmail)
 
     revalidatePath('/admin/compositions')
     revalidatePath('/admin/legacy-compositions')
@@ -150,6 +159,7 @@ export async function deleteAction(formData: FormData) {
 }
 
 export async function autoGenerateAction(formData: FormData) {
+    const adminEmail = await getAdminEmail()
     const intentRaw = norm(formData.get('intent'))
     const intent = intentRaw as IntentCategory
 
@@ -190,8 +200,8 @@ export async function autoGenerateAction(formData: FormData) {
 
     for (const item of generated) {
         const layout = item.layout
-        await upsertCustomLegacyLayout(layout)
-        await restoreLegacyLayoutToWarehouse(layout.id)
+        await upsertCustomLegacyLayout(layout, adminEmail)
+        await restoreLegacyLayoutToWarehouse(layout.id, adminEmail)
 
         const modeBasic = modePreset === 'basic' ? true : modePreset === 'advanced' ? false : modePreset === 'both' ? true : item.modeBasic
         const modeAdvanced = modePreset === 'basic' ? false : modePreset === 'advanced' ? true : modePreset === 'both' ? true : item.modeAdvanced
@@ -266,6 +276,7 @@ export async function suggestIconAction(id: string, name: string, description: s
 }
 
 export async function batchAssignIconsAction() {
+    const adminEmail = await getAdminEmail()
     const all = await getLegacyCompositions()
     const results = { count: 0, updated: 0 }
 
@@ -287,9 +298,9 @@ export async function batchAssignIconsAction() {
                 }
 
                 if (comp.source === 'custom') {
-                    await upsertCustomLegacyLayout(layout)
+                    await upsertCustomLegacyLayout(layout, adminEmail)
                 } else {
-                    await upsertLegacyLayoutOverride(layout)
+                    await upsertLegacyLayoutOverride(layout, adminEmail)
                 }
                 results.updated++
             }

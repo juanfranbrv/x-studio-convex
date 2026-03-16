@@ -14,7 +14,7 @@ export const Loader2 = React.forwardRef<SVGSVGElement, SpinnerProps>(function Lo
         <svg
             ref={ref}
             viewBox="0 0 24 24"
-            fill="hsl(228, 97%, 42%)"
+            fill="currentColor"
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden={title ? undefined : true}
             role={title ? 'img' : 'presentation'}

@@ -12,25 +12,25 @@ function AppPreview() {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-white p-4 shadow-lg">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(212,138,52,0.16),transparent_24%),radial-gradient(circle_at_84%_18%,rgba(93,122,57,0.12),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.34),rgba(255,255,255,0))]" />
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-[#f5f7fb] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-[hsl(var(--surface))] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
         <div className="grid min-h-[32rem] grid-cols-[82px_1fr]">
-          <aside className="flex flex-col justify-between border-r border-slate-200/80 bg-[linear-gradient(180deg,#f4f6fb,#eef2f8)] p-3">
+          <aside className="flex flex-col justify-between border-r border-border/80 bg-[linear-gradient(180deg,hsl(var(--surface-alt)),hsl(var(--surface)))] p-3">
             <div className="space-y-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0f4aa3] text-white shadow-[0_12px_28px_-18px_rgba(15,74,163,0.9)]">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_12px_28px_-18px_hsl(var(--primary)/0.55)]">
                 <AppLogo className="h-5 w-6" />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-3 rounded-xl bg-white/92 px-3 py-2 shadow-[0_14px_26px_-18px_rgba(15,23,42,0.35)]">
-                  <IconHome className="h-4 w-4 text-slate-500" strokeWidth={1.9} />
-                  <div className="h-2.5 w-8 rounded-full bg-slate-300/80" />
+                  <IconHome className="h-4 w-4 text-muted-foreground" strokeWidth={1.9} />
+                  <div className="h-2.5 w-8 rounded-full bg-muted-foreground/35" />
                 </div>
-                <div className="flex items-center gap-3 rounded-xl px-3 py-2 text-[#0f4aa3]">
+                <div className="flex items-center gap-3 rounded-xl px-3 py-2 text-primary">
                   <IconFileImage className="h-4 w-4" strokeWidth={1.9} />
-                  <div className="h-2.5 w-8 rounded-full bg-[#0f4aa3]/30" />
+                  <div className="h-2.5 w-8 rounded-full bg-primary/30" />
                 </div>
-                <div className="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-500">
+                <div className="flex items-center gap-3 rounded-xl px-3 py-2 text-muted-foreground">
                   <IconFolderKanban className="h-4 w-4" strokeWidth={1.9} />
-                  <div className="h-2.5 w-8 rounded-full bg-slate-300/70" />
+                  <div className="h-2.5 w-8 rounded-full bg-muted-foreground/30" />
                 </div>
               </div>
             </div>
@@ -42,16 +42,16 @@ function AppPreview() {
           </aside>
 
           <div className="grid grid-rows-[64px_1fr]">
-            <header className="flex items-center justify-between border-b border-slate-200/80 bg-white/75 px-5">
+            <header className="flex items-center justify-between border-b border-border/80 bg-white/75 px-5">
               <div className="flex items-center gap-3">
-                <div className="text-2xl font-semibold tracking-tight text-[#0f4aa3]">{brand.name}</div>
-                <div className="hidden items-center gap-2 rounded-full border border-slate-200/80 bg-white/88 px-3 py-1.5 md:flex">
+                <div className="text-2xl font-semibold tracking-tight text-primary">{brand.name}</div>
+                <div className="hidden items-center gap-2 rounded-full border border-border/80 bg-white/88 px-3 py-1.5 md:flex">
                   <div className="h-6 w-6 rounded-full bg-[linear-gradient(135deg,#647a35,#d8a64d)]" />
-                  <div className="h-2.5 w-20 rounded-full bg-slate-300/80" />
+                  <div className="h-2.5 w-20 rounded-full bg-muted-foreground/35" />
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="rounded-full bg-[#0f4aa3] px-3 py-1.5 text-xs font-semibold text-white">76</div>
+                <div className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">76</div>
                 <div className="h-9 w-9 rounded-2xl bg-white/88" />
               </div>
             </header>
@@ -99,7 +99,7 @@ function AppPreview() {
                     <div className="overflow-hidden rounded-xl border border-slate-200/70 bg-[linear-gradient(180deg,#f3eee7,#d6c7af)] p-2">
                       <div className="h-20 rounded-xl bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(0,0,0,0.06))]" />
                     </div>
-                    <div className="overflow-hidden rounded-xl border-2 border-[#0f4aa3] bg-[linear-gradient(180deg,#efe6d8,#ba7232)] p-2 shadow-[0_16px_30px_-24px_rgba(15,74,163,0.75)]">
+                    <div className="overflow-hidden rounded-xl border-2 border-primary bg-[linear-gradient(180deg,#efe6d8,#ba7232)] p-2 shadow-[0_16px_30px_-24px_hsl(var(--primary)/0.65)]">
                       <div className="h-20 rounded-xl bg-[linear-gradient(180deg,rgba(255,248,235,0.8),rgba(0,0,0,0.12))]" />
                     </div>
                   </div>
@@ -109,8 +109,8 @@ function AppPreview() {
               <div className="space-y-4">
                 <div className="rounded-2xl border border-slate-200/80 bg-white/84 p-4 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)]">
                   <div className="mb-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      <IconLayout className="h-4 w-4 text-[#0f4aa3]" strokeWidth={1.8} />
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      <IconLayout className="h-4 w-4 text-primary" strokeWidth={1.8} />
                       Historial
                     </div>
                     <div className="h-2.5 w-16 rounded-full bg-slate-200" />
@@ -132,22 +132,22 @@ function AppPreview() {
                       <div className="h-2.5 w-[64%] rounded-full bg-slate-200/80" />
                     </div>
                     <div className="mt-4 flex justify-end">
-                      <div className="h-8 w-24 rounded-full bg-[#0f4aa3]/16" />
+                      <div className="h-8 w-24 rounded-full bg-primary/16" />
                     </div>
                   </div>
                   <div className="mt-4 space-y-2">
-                    <div className="h-11 rounded-xl border border-[#0f4aa3]/24 bg-[#0f4aa3]/6" />
-                    <div className="h-11 rounded-xl border border-[#0f4aa3]/18 bg-white" />
-                    <div className="h-11 rounded-xl border border-[#0f4aa3]/18 bg-white" />
+                    <div className="h-11 rounded-xl border border-primary/24 bg-primary/6" />
+                    <div className="h-11 rounded-xl border border-primary/18 bg-white" />
+                    <div className="h-11 rounded-xl border border-primary/18 bg-white" />
                   </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200/80 bg-white/84 p-4 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)]">
                   <div className="mb-3 h-3 w-24 rounded-full bg-slate-300/75" />
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-[#0f4aa3]/24 bg-[#0f4aa3]/6 p-3">
-                      <div className="mb-2 h-8 w-8 rounded-2xl bg-[#0f4aa3]/12" />
-                      <div className="h-2.5 w-16 rounded-full bg-[#0f4aa3]/26" />
+                    <div className="rounded-xl border border-primary/24 bg-primary/6 p-3">
+                      <div className="mb-2 h-8 w-8 rounded-2xl bg-primary/12" />
+                      <div className="h-2.5 w-16 rounded-full bg-primary/26" />
                     </div>
                     <div className="rounded-xl border border-slate-200/80 bg-[#f8fafc] p-3">
                       <div className="mb-2 h-8 w-8 rounded-2xl bg-slate-200/80" />
@@ -178,7 +178,7 @@ export function AuthShell({
     <div className="relative min-h-[100dvh] overflow-x-hidden overflow-y-hidden bg-white text-foreground">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(212,138,52,0.12),transparent_26%),radial-gradient(circle_at_80%_20%,rgba(15,74,163,0.08),transparent_22%),linear-gradient(135deg,hsl(var(--background)/0.97),hsl(var(--muted)/0.82))]" />
       <div className="pointer-events-none absolute -left-12 top-0 h-64 w-64 rounded-full bg-[#d48a34]/10 blur-[110px] sm:-left-20 sm:h-80 sm:w-80 sm:blur-[130px]" />
-      <div className="pointer-events-none absolute bottom-[-7rem] right-[-2rem] h-64 w-64 rounded-full bg-[#0f4aa3]/8 blur-[110px] sm:bottom-[-8rem] sm:right-[-3rem] sm:h-80 sm:w-80 sm:blur-[140px]" />
+      <div className="pointer-events-none absolute bottom-[-7rem] right-[-2rem] h-64 w-64 rounded-full bg-primary/8 blur-[110px] sm:bottom-[-8rem] sm:right-[-3rem] sm:h-80 sm:w-80 sm:blur-[140px]" />
 
       <main className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid w-full gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(21rem,0.92fr)] lg:items-center xl:gap-14">

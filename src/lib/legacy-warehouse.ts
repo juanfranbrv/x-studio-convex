@@ -41,8 +41,16 @@ async function readSetting<T>(key: string): Promise<T | null> {
     }
 }
 
-async function writeSetting<T>(key: string, value: T): Promise<void> {
-    await fetchMutation(api.settings.saveAppSetting, { key, value })
+async function writeSetting<T>(key: string, value: T, adminEmail?: string): Promise<void> {
+    if (!adminEmail) {
+        throw new Error('Admin email required to persist app settings')
+    }
+
+    await fetchMutation(api.settings.saveAppSetting, {
+        admin_email: adminEmail,
+        key,
+        value,
+    })
 }
 
 const normalizeIds = (ids: unknown): string[] => {
@@ -98,11 +106,11 @@ async function writeRemovedLegacyLayoutIds(ids: string[]): Promise<void> {
     await fs.writeFile(REMOVED_IDS_FILE_PATH, JSON.stringify(normalized, null, 2), 'utf8')
 }
 
-export async function removeLegacyLayoutFromWarehouse(layoutId: string): Promise<void> {
+export async function removeLegacyLayoutFromWarehouse(layoutId: string, adminEmail?: string): Promise<void> {
     if (!layoutId) return
     try {
         const current = await readRemovedLegacyLayoutIds()
-        await writeSetting(REMOVED_IDS_KEY, [...current, layoutId])
+        await writeSetting(REMOVED_IDS_KEY, [...current, layoutId], adminEmail)
         return
     } catch {
         const current = await readRemovedLegacyLayoutIds()
@@ -110,11 +118,11 @@ export async function removeLegacyLayoutFromWarehouse(layoutId: string): Promise
     }
 }
 
-export async function restoreLegacyLayoutToWarehouse(layoutId: string): Promise<void> {
+export async function restoreLegacyLayoutToWarehouse(layoutId: string, adminEmail?: string): Promise<void> {
     if (!layoutId) return
     try {
         const current = await readRemovedLegacyLayoutIds()
-        await writeSetting(REMOVED_IDS_KEY, current.filter((id) => id !== layoutId))
+        await writeSetting(REMOVED_IDS_KEY, current.filter((id) => id !== layoutId), adminEmail)
         return
     } catch {
         const current = await readRemovedLegacyLayoutIds()
@@ -142,33 +150,33 @@ export async function readCustomLegacyLayouts(): Promise<LayoutOption[]> {
     }
 }
 
-async function writeCustomLegacyLayouts(layouts: LayoutOption[]): Promise<void> {
+async function writeCustomLegacyLayouts(layouts: LayoutOption[], adminEmail?: string): Promise<void> {
     const normalized = layouts
         .map((item) => normalizeLayout(item))
         .filter((item): item is LayoutOption => Boolean(item))
         .sort((a, b) => a.id.localeCompare(b.id, 'es', { sensitivity: 'base' }))
     try {
-        await writeSetting(CUSTOM_LAYOUTS_KEY, normalized)
+        await writeSetting(CUSTOM_LAYOUTS_KEY, normalized, adminEmail)
     } catch {
         await fs.writeFile(CUSTOM_LAYOUTS_FILE_PATH, JSON.stringify(normalized, null, 2), 'utf8')
     }
 }
 
-export async function upsertCustomLegacyLayout(layout: LayoutOption): Promise<void> {
+export async function upsertCustomLegacyLayout(layout: LayoutOption, adminEmail?: string): Promise<void> {
     const normalized = normalizeLayout(layout)
     if (!normalized) return
     const current = await readCustomLegacyLayouts()
     const next = current.filter((item) => item.id !== normalized.id)
     next.push(normalized)
-    await writeCustomLegacyLayouts(next)
+    await writeCustomLegacyLayouts(next, adminEmail)
 }
 
-export async function deleteCustomLegacyLayout(layoutId: string): Promise<void> {
+export async function deleteCustomLegacyLayout(layoutId: string, adminEmail?: string): Promise<void> {
     const id = String(layoutId || '').trim()
     if (!id) return
     const current = await readCustomLegacyLayouts()
     const next = current.filter((item) => item.id !== id)
-    await writeCustomLegacyLayouts(next)
+    await writeCustomLegacyLayouts(next, adminEmail)
 }
 
 export async function readLegacyLayoutOverrides(): Promise<LayoutOverridesMap> {
@@ -204,7 +212,7 @@ export async function readLegacyLayoutOverrides(): Promise<LayoutOverridesMap> {
     }
 }
 
-async function writeLegacyLayoutOverrides(overrides: LayoutOverridesMap): Promise<void> {
+async function writeLegacyLayoutOverrides(overrides: LayoutOverridesMap, adminEmail?: string): Promise<void> {
     const sortedIds = Object.keys(overrides).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
     const normalized: LayoutOverridesMap = {}
     for (const id of sortedIds) {
@@ -213,47 +221,47 @@ async function writeLegacyLayoutOverrides(overrides: LayoutOverridesMap): Promis
         normalized[id] = value
     }
     try {
-        await writeSetting(OVERRIDES_DELTA_KEY, normalized)
-        await writeSetting(OVERRIDES_DELETED_KEY, [])
+        await writeSetting(OVERRIDES_DELTA_KEY, normalized, adminEmail)
+        await writeSetting(OVERRIDES_DELETED_KEY, [], adminEmail)
     } catch {
         await fs.writeFile(OVERRIDES_FILE_PATH, JSON.stringify(normalized, null, 2), 'utf8')
     }
 }
 
-export async function upsertLegacyLayoutOverride(layout: LayoutOption): Promise<void> {
+export async function upsertLegacyLayoutOverride(layout: LayoutOption, adminEmail?: string): Promise<void> {
     const normalized = normalizeLayout(layout)
     if (!normalized) return
     try {
         const current = await readSetting<LayoutOverridesMap>(OVERRIDES_DELTA_KEY) || {}
         current[normalized.id] = normalized
-        await writeSetting(OVERRIDES_DELTA_KEY, current)
+        await writeSetting(OVERRIDES_DELTA_KEY, current, adminEmail)
         const deleted = normalizeIds(await readSetting<string[]>(OVERRIDES_DELETED_KEY))
         if (deleted.includes(normalized.id)) {
-            await writeSetting(OVERRIDES_DELETED_KEY, deleted.filter((id) => id !== normalized.id))
+            await writeSetting(OVERRIDES_DELETED_KEY, deleted.filter((id) => id !== normalized.id), adminEmail)
         }
     } catch {
         const current = await readLegacyLayoutOverrides()
         current[normalized.id] = normalized
-        await writeLegacyLayoutOverrides(current)
+        await writeLegacyLayoutOverrides(current, adminEmail)
     }
 }
 
-export async function deleteLegacyLayoutOverride(layoutId: string): Promise<void> {
+export async function deleteLegacyLayoutOverride(layoutId: string, adminEmail?: string): Promise<void> {
     const id = String(layoutId || '').trim()
     if (!id) return
     try {
         const current = await readSetting<LayoutOverridesMap>(OVERRIDES_DELTA_KEY) || {}
         delete current[id]
-        await writeSetting(OVERRIDES_DELTA_KEY, current)
+        await writeSetting(OVERRIDES_DELTA_KEY, current, adminEmail)
 
         const deleted = normalizeIds(await readSetting<string[]>(OVERRIDES_DELETED_KEY))
         if (!deleted.includes(id)) {
-            await writeSetting(OVERRIDES_DELETED_KEY, [...deleted, id])
+            await writeSetting(OVERRIDES_DELETED_KEY, [...deleted, id], adminEmail)
         }
     } catch {
         const current = await readLegacyLayoutOverrides()
         delete current[id]
-        await writeLegacyLayoutOverrides(current)
+        await writeLegacyLayoutOverrides(current, adminEmail)
     }
 }
 

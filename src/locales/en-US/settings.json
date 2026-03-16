@@ -8,8 +8,8 @@
     "management": {
       "eyebrow": "Management",
       "title": "Interface and working rhythm",
-      "description": "Control how the studio behaves: panel position, active guidance, theme, and system colours.",
-      "short": "Panel, guidance, theme, and palette"
+      "description": "Control how the studio behaves: panel position and active guidance while you work.",
+      "short": "Panel and guidance"
     },
     "credits": {
       "eyebrow": "Economics",
@@ -35,6 +35,11 @@
     "workspace": {
       "title": "Workspace",
       "description": "Settings that directly affect how the studio moves while you create."
+    },
+    "notice": {
+      "title": "Workspace preferences",
+      "globalTheme": "The application colour theme is now managed globally from Admin to keep the whole product visually consistent.",
+      "personalPrefs": "Here you can only adjust personal workflow preferences such as panel position and guided assistance while creating."
     },
     "colors": {
       "title": "System palette",

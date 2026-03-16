@@ -61,17 +61,21 @@ export function Sidebar({ className }: SidebarProps) {
     return (
         <aside
             className={cn(
-                'flex h-screen w-[90px] shrink-0 flex-col border-r border-border/60 bg-surface transition-colors duration-300 ease-in-out',
+                'flex h-screen w-[104px] shrink-0 flex-col border-r border-border/60 bg-[linear-gradient(180deg,hsl(var(--surface-alt))/0.96,hsl(var(--surface))/0.98)] backdrop-blur-xl transition-colors duration-300 ease-in-out',
                 className
             )}
         >
-            <div className="flex flex-col items-center gap-2 border-b border-border/60 p-4">
-                <Link href="/" aria-label="Post laboratory">
-                    <AppLogo className="h-11 w-14" />
+            <div className="flex flex-col items-center gap-3 border-b border-border/60 px-3 pb-[31px] pt-4">
+                <Link
+                    href="/"
+                    aria-label="Post laboratory"
+                    className="flex h-14 w-14 items-center justify-center rounded-2xl border border-transparent bg-transparent shadow-none transition-transform duration-200 hover:scale-[1.03]"
+                >
+                    <AppLogo className="h-[56px] w-[66px] translate-x-[7px] translate-y-[4px]" />
                 </Link>
             </div>
 
-            <nav className="scrollbar-none flex flex-1 flex-col gap-3 overflow-y-auto px-2 py-4">
+            <nav className="scrollbar-none flex flex-1 flex-col gap-2 overflow-y-auto px-3 pb-5 pt-[31px]">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href
                     return (
@@ -79,36 +83,39 @@ export function Sidebar({ className }: SidebarProps) {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                'group flex flex-col items-center justify-center gap-1.5 rounded-xl p-2 transition-colors duration-200',
+                                'group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 transition-all duration-200',
                                 isActive
-                                    ? 'bg-primary text-primary-foreground shadow-lg'
-                                    : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                                    ? 'border-primary/20 bg-primary/8 text-foreground shadow-[0_18px_40px_-30px_hsl(var(--primary)/0.6)]'
+                                    : 'border-transparent text-muted-foreground hover:border-border/60 hover:bg-white/80 hover:text-foreground'
                             )}
                         >
-                            <item.icon className={cn('h-8 w-8 shrink-0', isActive ? 'text-primary-foreground' : 'text-primary')} />
-                            <span className="text-center text-[13px] font-semibold leading-tight">{item.label}</span>
+                            <item.icon className={cn('h-7 w-7 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary')} />
+                            <span className="text-center text-[12px] font-semibold leading-tight">{item.label}</span>
                         </Link>
                     )
                 })}
             </nav>
 
-            <div className="flex flex-col items-center gap-3 border-t border-border/60 p-2 pb-6">
+            <div
+                className="flex flex-col items-center gap-3 border-t border-border/60 px-3 pb-6 pt-5"
+                style={{ marginTop: '-92px', transform: 'translateY(-19px)' }}
+            >
                 <Link
                     href="/settings"
                     className={cn(
-                        'group flex w-full flex-col items-center justify-center gap-1.5 rounded-xl p-2 transition-colors duration-200',
+                        'group flex w-full flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 transition-all duration-200',
                         pathname === '/settings'
-                            ? 'bg-primary text-primary-foreground shadow-lg'
-                            : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                            ? 'border-primary/20 bg-primary/8 text-foreground shadow-[0_18px_40px_-30px_hsl(var(--primary)/0.6)]'
+                            : 'border-transparent text-muted-foreground hover:border-border/60 hover:bg-white/80 hover:text-foreground'
                     )}
                 >
-                    <IconSettings className={cn('h-8 w-8 shrink-0', pathname === '/settings' ? 'text-primary-foreground' : 'text-primary')} />
-                    <span className="text-[13px] font-semibold">{t('nav.settings')}</span>
+                    <IconSettings className={cn('h-7 w-7 shrink-0', pathname === '/settings' ? 'text-primary' : 'text-muted-foreground group-hover:text-primary')} />
+                    <span className="text-[12px] font-semibold">{t('nav.settings')}</span>
                 </Link>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button className="h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded-full border-2 border-brand-secondary bg-muted shadow-sm transition-colors transition-shadow duration-200 hover:ring-2 hover:ring-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        <button className="h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-full border border-primary/20 bg-white shadow-[0_18px_40px_-28px_rgba(15,23,42,0.35)] transition-colors transition-shadow duration-200 hover:ring-2 hover:ring-primary/25 focus:outline-none focus:ring-2 focus:ring-primary/30">
                             {user?.imageUrl ? (
                                 <img
                                     src={user.imageUrl}

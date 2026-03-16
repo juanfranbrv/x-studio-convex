@@ -75,7 +75,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
     }
 
     return (
-        <Card className={cn('w-full rounded-sm border-muted bg-card/50 backdrop-blur-sm', className)}>
+        <Card className={cn('w-full rounded-[1.6rem] border-muted bg-card/50 backdrop-blur-sm', className)}>
             <CardHeader className="flex flex-row items-center gap-3 space-y-0 p-4 pb-2">
                 <Avatar className="h-8 w-8 border">
                     <AvatarImage

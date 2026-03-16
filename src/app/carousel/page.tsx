@@ -2193,7 +2193,11 @@ export default function CarouselPage() {
                 </div>
 
                 {/* RIGHT COLUMN - Controls Panel */}
-                {!isMobile ? controlsPanel : null}
+                {!isMobile ? (
+                    <div className="flex min-h-0 w-full lg:w-[27%]">
+                        {controlsPanel}
+                    </div>
+                ) : null}
                 {mobileControlsDrawer}
                 </div>
 

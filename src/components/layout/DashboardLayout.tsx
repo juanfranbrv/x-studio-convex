@@ -28,6 +28,7 @@ interface DashboardLayoutProps {
     onNewBrandKit?: () => void
     isFixed?: boolean
     headerAfterBrandActions?: ReactNode
+    contentContainerVariant?: 'card' | 'plain'
 }
 
 export function DashboardLayout({
@@ -38,7 +39,8 @@ export function DashboardLayout({
     onBrandDelete,
     onNewBrandKit,
     isFixed = false,
-    headerAfterBrandActions
+    headerAfterBrandActions,
+    contentContainerVariant = 'card'
 }: DashboardLayoutProps) {
     const router = useRouter()
     const pathname = usePathname()
@@ -114,7 +116,7 @@ export function DashboardLayout({
 
     return (
         <ProtectedRoute>
-            <div className="fixed inset-0 flex bg-mesh text-foreground overflow-hidden md:relative md:inset-auto md:h-dvh">
+            <div className="fixed inset-0 flex overflow-hidden bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_24%),radial-gradient(circle_at_top_right,hsl(var(--accent)/0.07),transparent_18%),linear-gradient(180deg,hsl(var(--surface-alt)),hsl(var(--surface)))] text-foreground md:relative md:inset-auto md:h-dvh">
                 {/* Lateral Navigation (Desktop Only) */}
                 <Sidebar className="hidden md:flex" />
 
@@ -131,11 +133,25 @@ export function DashboardLayout({
                     />
 
                     {/* Scrollable Content Container */}
-                    <div className={cn(
-                        "scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden",
-                        isFixed ? "overflow-hidden" : "overflow-y-auto"
-                    )}>
-                        {children}
+                    <div
+                        className={cn(
+                            "scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden md:px-3 md:pb-3 md:pt-3",
+                            isFixed ? "overflow-hidden" : "overflow-y-auto",
+                            contentContainerVariant === 'plain' && "md:px-0 md:pb-0 md:pt-0"
+                        )}
+                    >
+                        {contentContainerVariant === 'card' ? (
+                            <div
+                                className={cn(
+                                    "rounded-[1.75rem] md:border md:border-border/60 md:bg-white/80 md:shadow-[0_24px_80px_-48px_rgba(15,23,42,0.35)] md:backdrop-blur-xl",
+                                    isFixed ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "min-h-full"
+                                )}
+                            >
+                                {children}
+                            </div>
+                        ) : (
+                            children
+                        )}
                     </div>
                 </div>
             </div>

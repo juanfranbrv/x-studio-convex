@@ -13,6 +13,7 @@
     "chrome:debug": "powershell -ExecutionPolicy Bypass -File ./scripts/start-chrome-debug.ps1",
     "chrome:debug:studio": "powershell -ExecutionPolicy Bypass -File ./scripts/start-chrome-debug.ps1 -Url http://127.0.0.1:3000/studio",
     "chrome:debug:kill": "powershell -ExecutionPolicy Bypass -File ./scripts/stop-chrome-debug.ps1",
+    "chrome:cdp:endpoint": "node ./scripts/resolve-chrome-cdp-endpoint.mjs",
     "dev:debug-browser": "powershell -ExecutionPolicy Bypass -File ./scripts/dev-debug-browser.ps1 -Route /studio",
     "playwright:auth:save": "node ./scripts/save-playwright-storage-state.mjs",
     "dev:mobile": "node scripts/dev-mobile.js",

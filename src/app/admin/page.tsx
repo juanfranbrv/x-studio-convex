@@ -43,6 +43,13 @@ import { Fragment } from 'react'
 import { CompositionsSummaryTable } from '@/components/admin/CompositionsSummaryTable'
 import { StylePresetsManager } from '@/components/admin/StylePresetsManager'
 import { BillingAdminPanel } from '@/components/admin/BillingAdminPanel'
+import {
+    buildThemeColors,
+    DEFAULT_THEME_DRAFT,
+    THEME_PALETTE_FIELDS,
+    type ThemePaletteDraft,
+    type ThemePaletteFieldKey,
+} from '@/lib/theme-colors'
 
 const IMAGE_MODEL_OPTIONS = [
     { value: 'wisdom/gemini-3-pro-image-preview', label: 'Wisdom · Gemini 3 Pro Image Preview' },
@@ -81,6 +88,181 @@ const ADMIN_TABS = ['requests', 'users', 'transactions', 'settings', 'models', '
 type AdminTab = (typeof ADMIN_TABS)[number]
 const DEFAULT_ADMIN_TAB: AdminTab = 'requests'
 const ADMIN_EMAILS = ['juanfranbrv@gmail.com']
+type ThemePreset = ThemePaletteDraft & {
+    id: string
+    name: string
+    description: string
+}
+
+const THEME_PRESETS: ThemePreset[] = [
+    {
+        id: 'postlab-classic',
+        name: 'Postlab Classic',
+        description: 'Azul limpio con acento cálido',
+        primary: '#1f5eff',
+        secondary: '#f59e0b',
+        surface: '#f6f8ff',
+        surfaceAlt: '#ffffff',
+        muted: '#5f6b85',
+        border: '#d7def4',
+        ring: '#1f5eff',
+    },
+    {
+        id: 'olive-editorial',
+        name: 'Olive Editorial',
+        description: 'Marfil, oliva y piedra con tono de revista',
+        primary: '#556b2f',
+        secondary: '#c2a878',
+        surface: '#f5f0e6',
+        surfaceAlt: '#fbf7f1',
+        muted: '#6f665b',
+        border: '#d7cdbd',
+        ring: '#6b7d3c',
+    },
+    {
+        id: 'terracotta-paper',
+        name: 'Terracotta Paper',
+        description: 'Más cálido, más táctil, menos SaaS',
+        primary: '#a4472d',
+        secondary: '#e3a86b',
+        surface: '#f7ede6',
+        surfaceAlt: '#fff8f3',
+        muted: '#7a6257',
+        border: '#ddc1b1',
+        ring: '#a4472d',
+    },
+    {
+        id: 'midnight-editor',
+        name: 'Midnight Editor',
+        description: 'Nocturno profundo con contraste frío',
+        primary: '#7c8cff',
+        secondary: '#37c8ab',
+        surface: '#161a28',
+        surfaceAlt: '#1e2334',
+        muted: '#aab3cf',
+        border: '#303854',
+        ring: '#8ea1ff',
+    },
+    {
+        id: 'acid-notes',
+        name: 'Acid Notes',
+        description: 'Lima eléctrica sobre papel gris claro',
+        primary: '#334155',
+        secondary: '#d9ff3f',
+        surface: '#eef1eb',
+        surfaceAlt: '#f8fbf2',
+        muted: '#5f6a57',
+        border: '#c9d4b8',
+        ring: '#b9ec18',
+    },
+    {
+        id: 'mediterranean-signal',
+        name: 'Mediterranean Signal',
+        description: 'Azul mar con coral y superficies salinas',
+        primary: '#0f4c81',
+        secondary: '#ff7a59',
+        surface: '#eef5fa',
+        surfaceAlt: '#f8fbfd',
+        muted: '#597489',
+        border: '#c9d8e4',
+        ring: '#0f4c81',
+    },
+    {
+        id: 'ink-berry',
+        name: 'Ink Berry',
+        description: 'Tinta oscura con baya intensa y fondo lavanda',
+        primary: '#312e81',
+        secondary: '#e11d48',
+        surface: '#f4f1fb',
+        surfaceAlt: '#fcf8ff',
+        muted: '#655b7d',
+        border: '#d8d0ea',
+        ring: '#4f46e5',
+    },
+    {
+        id: 'sand-night',
+        name: 'Sand Night',
+        description: 'Carbón suave, arena y contraste editorial',
+        primary: '#1f2937',
+        secondary: '#d4a373',
+        surface: '#f2ece5',
+        surfaceAlt: '#fbf8f4',
+        muted: '#72675d',
+        border: '#d8cabd',
+        ring: '#8b5e34',
+    },
+]
+
+const THEME_SETTINGS_HIDDEN_KEYS = new Set([
+    ...THEME_PALETTE_FIELDS.map((field) => field.settingKey),
+    'model_image_generation',
+    'model_intelligence',
+    'provider_google_api_key',
+    'provider_wisdom_api_key',
+    'provider_naga_api_key',
+    'provider_replicate_api_key',
+    'provider_atlas_api_key',
+])
+
+const hslToHex = (raw: string): string | null => {
+    const trimmed = raw.replace(/^hsl\(/, '').replace(/\)$/, '').trim()
+    const parts = trimmed.split(/[\s,]+/)
+    if (parts.length < 3) return null
+    const h = parseFloat(parts[0]) / 360
+    const s = parseFloat(parts[1]) / 100
+    const l = parseFloat(parts[2]) / 100
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+    const p = 2 * l - q
+    const toC = (t: number) => {
+        if (t < 0) t += 1
+        if (t > 1) t -= 1
+        if (t < 1 / 6) return p + (q - p) * 6 * t
+        if (t < 1 / 2) return q
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+        return p
+    }
+    const r = Math.round(toC(h + 1 / 3) * 255)
+    const g = Math.round(toC(h) * 255)
+    const b = Math.round(toC(h - 1 / 3) * 255)
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+}
+
+const resolveHex = (value: string | undefined, fallback: string) => {
+    if (!value) return fallback
+    if (value.startsWith('#') && /^#[0-9A-Fa-f]{6}$/.test(value)) return value
+    return hslToHex(value) || fallback
+}
+
+const createAdminThemeDraft = (settingsMap?: Record<string, number | string>): ThemePaletteDraft => {
+    const primary = typeof settingsMap?.theme_primary === 'string' ? settingsMap.theme_primary : DEFAULT_THEME_DRAFT.primary
+    const secondary = typeof settingsMap?.theme_secondary === 'string' ? settingsMap.theme_secondary : DEFAULT_THEME_DRAFT.secondary
+    const derived = buildThemeColors({ primary, secondary })
+
+    return {
+        primary: resolveHex(primary, DEFAULT_THEME_DRAFT.primary || '#7B61FF'),
+        secondary: resolveHex(secondary, DEFAULT_THEME_DRAFT.secondary || '#00C4CC'),
+        surface: resolveHex(
+            typeof settingsMap?.theme_surface === 'string' ? settingsMap.theme_surface : undefined,
+            hslToHex(derived.surface) || '#F8F7FC'
+        ),
+        surfaceAlt: resolveHex(
+            typeof settingsMap?.theme_surface_alt === 'string' ? settingsMap.theme_surface_alt : undefined,
+            hslToHex(derived.surfaceAlt) || '#FCFBFE'
+        ),
+        muted: resolveHex(
+            typeof settingsMap?.theme_muted === 'string' ? settingsMap.theme_muted : undefined,
+            hslToHex(derived.muted) || '#6F6A82'
+        ),
+        border: resolveHex(
+            typeof settingsMap?.theme_border === 'string' ? settingsMap.theme_border : undefined,
+            hslToHex(derived.border) || '#DED8EA'
+        ),
+        ring: resolveHex(
+            typeof settingsMap?.theme_ring === 'string' ? settingsMap.theme_ring : undefined,
+            resolveHex(primary, DEFAULT_THEME_DRAFT.primary || '#7B61FF')
+        ),
+    }
+}
 
 function isAdminTab(value: string | null): value is AdminTab {
     return !!value && (ADMIN_TABS as readonly string[]).includes(value)
@@ -191,8 +373,7 @@ export default function AdminPage() {
     const [editingSettings, setEditingSettings] = useState<Record<string, number | string>>({})
 
     // Admin default theme state
-    const [adminPrimaryColor, setAdminPrimaryColor] = useState('#6366f1')
-    const [adminSecondaryColor, setAdminSecondaryColor] = useState('#ec4899')
+    const [adminThemePalette, setAdminThemePalette] = useState<ThemePaletteDraft>(DEFAULT_THEME_DRAFT)
     const [savingTheme, setSavingTheme] = useState(false)
     const economicModelSuggestions = Array.from(
         new Set([
@@ -216,39 +397,7 @@ export default function AdminPage() {
                 settingsMap[s.key] = s.value
             })
             setEditingSettings(settingsMap)
-
-            // Initialize admin theme color pickers
-            const hslToHex = (raw: string): string | null => {
-                const trimmed = raw.replace(/^hsl\(/, '').replace(/\)$/, '').trim()
-                const parts = trimmed.split(/[\s,]+/)
-                if (parts.length < 3) return null
-                const h = parseFloat(parts[0]) / 360
-                const s = parseFloat(parts[1]) / 100
-                const l = parseFloat(parts[2]) / 100
-                const q = l < 0.5 ? l * (1 + s) : l + s - l * s
-                const p = 2 * l - q
-                const toC = (t: number) => {
-                    if (t < 0) t += 1
-                    if (t > 1) t -= 1
-                    if (t < 1 / 6) return p + (q - p) * 6 * t
-                    if (t < 1 / 2) return q
-                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
-                    return p
-                }
-                const r = Math.round(toC(h + 1 / 3) * 255)
-                const g = Math.round(toC(h) * 255)
-                const b = Math.round(toC(h - 1 / 3) * 255)
-                return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
-            }
-            const resolveHex = (val: string) => {
-                if (!val) return '#6366f1'
-                if (val.startsWith('#') && /^#[0-9A-Fa-f]{6}$/.test(val)) return val
-                return hslToHex(val) || '#6366f1'
-            }
-            const primary = settings.find(s => s.key === 'theme_primary')?.value as string | undefined
-            const secondary = settings.find(s => s.key === 'theme_secondary')?.value as string | undefined
-            if (primary) setAdminPrimaryColor(resolveHex(primary))
-            if (secondary) setAdminSecondaryColor(resolveHex(secondary))
+            setAdminThemePalette(createAdminThemeDraft(settingsMap))
         }
     }, [settings])
 
@@ -463,7 +612,7 @@ export default function AdminPage() {
 
     const handleSaveSetting = async (key: string, value: number | string) => {
         try {
-            await updateSetting({ key, value })
+            await updateSetting({ admin_email: userEmail, key, value })
             toast({ title: 'Configuración guardada' })
         } catch (error: any) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' })
@@ -473,16 +622,41 @@ export default function AdminPage() {
     const handleSaveAdminTheme = async () => {
         setSavingTheme(true)
         try {
-            await Promise.all([
-                updateSetting({ key: 'theme_primary', value: adminPrimaryColor }),
-                updateSetting({ key: 'theme_secondary', value: adminSecondaryColor }),
-            ])
-            toast({ title: 'Tema por defecto guardado', description: 'Los nuevos usuarios verán estos colores.' })
+            await Promise.all(
+                THEME_PALETTE_FIELDS.map((field) =>
+                    updateSetting({
+                        admin_email: userEmail,
+                        key: field.settingKey,
+                        value: adminThemePalette[field.key] || DEFAULT_THEME_DRAFT[field.key] || '',
+                    })
+                )
+            )
+            toast({ title: 'Paleta global guardada', description: 'Toda la aplicación usará esta paleta completa desde Admin.' })
         } catch (error: any) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' })
         } finally {
             setSavingTheme(false)
         }
+    }
+
+    const handleApplyThemePreset = (preset: ThemePreset) => {
+        const presetSettings: Record<string, string> = {}
+        if (preset.primary) presetSettings.theme_primary = preset.primary
+        if (preset.secondary) presetSettings.theme_secondary = preset.secondary
+        if (preset.surface) presetSettings.theme_surface = preset.surface
+        if (preset.surfaceAlt) presetSettings.theme_surface_alt = preset.surfaceAlt
+        if (preset.muted) presetSettings.theme_muted = preset.muted
+        if (preset.border) presetSettings.theme_border = preset.border
+        if (preset.ring) presetSettings.theme_ring = preset.ring
+
+        setAdminThemePalette(createAdminThemeDraft(presetSettings))
+    }
+
+    const handleThemeFieldChange = (field: ThemePaletteFieldKey, value: string) => {
+        setAdminThemePalette((current) => ({
+            ...current,
+            [field]: value,
+        }))
     }
 
     const handleUpsertCost = async (model: string, kind: 'intelligence' | 'image', costEur: number, comment?: string) => {
@@ -550,7 +724,7 @@ export default function AdminPage() {
                 ...prev,
                 [settingKey]: model,
             }))
-            await updateSetting({ key: settingKey, value: model })
+            await updateSetting({ admin_email: userEmail, key: settingKey, value: model })
             toast({ title: 'Modelo activo actualizado' })
         } catch (error: any) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' })
@@ -635,7 +809,7 @@ export default function AdminPage() {
                 const current = String(editingSettings[key] ?? '')
                 const saved = String(settings?.find((s) => s.key === key)?.value ?? '')
                 if (current !== saved) {
-                    await updateSetting({ key, value: current })
+                    await updateSetting({ admin_email: userEmail, key, value: current })
                 }
             }
             toast({ title: 'Modelos y API keys guardados' })
@@ -1053,51 +1227,100 @@ export default function AdminPage() {
                                     <IconPalette className="h-5 w-5" />
                                     Tema por defecto
                                 </CardTitle>
-                                <CardDescription>Colores que verán los usuarios nuevos. El ajuste individual del usuario siempre prevalece.</CardDescription>
+                                <CardDescription>Paleta global de la aplicación. Los usuarios ya no pueden sobrescribir estos colores desde settings.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="rounded-xl border border-border/70 bg-muted/20 p-4">
-                                        <Label className="text-sm font-medium">Color primario</Label>
-                                        <div className="mt-3 flex items-center gap-3">
-                                            <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-border/70">
-                                                <input
-                                                    type="color"
-                                                    value={adminPrimaryColor}
-                                                    onChange={(e) => setAdminPrimaryColor(e.target.value)}
-                                                    className="absolute -left-1/2 -top-1/2 h-[200%] w-[200%] cursor-pointer border-none p-0"
-                                                />
-                                            </div>
-                                            <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                                                {adminPrimaryColor}
-                                            </span>
-                                        </div>
+                                <div className="space-y-3">
+                                    <div>
+                                        <Label className="text-sm font-medium">Presets propuestos</Label>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            Atajos para arrancar desde combinaciones de color coherentes antes de editar o guardar la paleta global.
+                                        </p>
                                     </div>
-                                    <div className="rounded-xl border border-border/70 bg-muted/20 p-4">
-                                        <Label className="text-sm font-medium">Color secundario</Label>
-                                        <div className="mt-3 flex items-center gap-3">
-                                            <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-border/70">
-                                                <input
-                                                    type="color"
-                                                    value={adminSecondaryColor}
-                                                    onChange={(e) => setAdminSecondaryColor(e.target.value)}
-                                                    className="absolute -left-1/2 -top-1/2 h-[200%] w-[200%] cursor-pointer border-none p-0"
-                                                />
-                                            </div>
-                                            <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                                                {adminSecondaryColor}
-                                            </span>
-                                        </div>
+                                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                        {THEME_PRESETS.map((preset) => (
+                                            <button
+                                                key={preset.id}
+                                                type="button"
+                                                onClick={() => handleApplyThemePreset(preset)}
+                                                className="rounded-xl border border-border/70 bg-muted/20 p-3 text-left transition-colors hover:border-primary/30 hover:bg-accent/30"
+                                            >
+                                                <div className="mb-3 flex items-center gap-2">
+                                                    <span className="h-7 w-7 rounded-full border border-border/60" style={{ backgroundColor: preset.primary }} />
+                                                    <span className="h-7 w-7 rounded-full border border-border/60" style={{ backgroundColor: preset.secondary }} />
+                                                    <span className="h-7 w-7 rounded-full border border-border/60" style={{ backgroundColor: preset.surface }} />
+                                                    <span className="h-7 w-7 rounded-full border border-border/60" style={{ backgroundColor: preset.border }} />
+                                                </div>
+                                                <div className="text-sm font-semibold">{preset.name}</div>
+                                                <div className="mt-1 text-xs text-muted-foreground">{preset.description}</div>
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <div
-                                        className="h-8 w-8 rounded-full border border-border/70"
-                                        style={{ background: `linear-gradient(135deg, ${adminPrimaryColor}, ${adminSecondaryColor})` }}
-                                    />
-                                    <Button onClick={handleSaveAdminTheme} disabled={savingTheme} size="sm">
-                                        {savingTheme ? 'Guardando...' : 'Guardar tema por defecto'}
-                                    </Button>
+                                <div className="space-y-3">
+                                    <div>
+                                        <Label className="text-sm font-medium">Paleta expuesta</Label>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            Estos tokens gobiernan la interfaz global. Puedes retocar cada uno antes de guardar.
+                                        </p>
+                                    </div>
+                                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                                        {THEME_PALETTE_FIELDS.map((field) => (
+                                            <div key={field.key} className="rounded-xl border border-border/70 bg-muted/20 p-4">
+                                                <Label className="text-sm font-medium">{field.label}</Label>
+                                                <div className="mt-3 flex items-center gap-3">
+                                                    <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-border/70">
+                                                        <input
+                                                            type="color"
+                                                            value={adminThemePalette[field.key] || DEFAULT_THEME_DRAFT[field.key] || '#000000'}
+                                                            onChange={(e) => handleThemeFieldChange(field.key, e.target.value)}
+                                                            className="absolute -left-1/2 -top-1/2 h-[200%] w-[200%] cursor-pointer border-none p-0"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <div className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                                                            {adminThemePalette[field.key]}
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {field.settingKey}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <span className="text-sm font-medium">Vista previa rápida</span>
+                                        <span className="h-8 w-8 rounded-full border border-border/70" style={{ backgroundColor: adminThemePalette.primary }} />
+                                        <span className="h-8 w-8 rounded-full border border-border/70" style={{ backgroundColor: adminThemePalette.secondary }} />
+                                        <span className="h-8 w-8 rounded-full border border-border/70" style={{ backgroundColor: adminThemePalette.surface }} />
+                                        <span className="h-8 w-8 rounded-full border border-border/70" style={{ backgroundColor: adminThemePalette.surfaceAlt }} />
+                                        <span className="h-8 w-8 rounded-full border border-border/70" style={{ backgroundColor: adminThemePalette.border }} />
+                                    </div>
+                                    <div className="mt-4 rounded-2xl border border-border/70 p-4" style={{ backgroundColor: adminThemePalette.surface }}>
+                                        <div className="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3" style={{ borderColor: adminThemePalette.border, backgroundColor: adminThemePalette.surfaceAlt }}>
+                                            <div>
+                                                <div className="text-sm font-semibold" style={{ color: adminThemePalette.primary }}>Post laboratory</div>
+                                                <div className="text-xs" style={{ color: adminThemePalette.muted }}>Preview de cómo respiran superficies, bordes y acentos.</div>
+                                            </div>
+                                            <div className="rounded-full px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: adminThemePalette.primary }}>
+                                                CTA
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 rounded-2xl border px-4 py-3 text-sm" style={{ borderColor: adminThemePalette.border, backgroundColor: adminThemePalette.surfaceAlt, color: adminThemePalette.muted }}>
+                                            Esta previsualización usa la paleta completa, no solo primario y secundario.
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 flex items-center gap-3">
+                                        <Button onClick={handleSaveAdminTheme} disabled={savingTheme} size="sm">
+                                            {savingTheme ? 'Guardando...' : 'Guardar paleta global'}
+                                        </Button>
+                                        <span className="text-sm text-muted-foreground">
+                                            Persiste todos los tokens del tema en Convex para toda la app.
+                                        </span>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -1108,7 +1331,7 @@ export default function AdminPage() {
                                 <CardDescription>Valores configurables para créditos</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                {settings?.filter(s => s.key !== 'theme_primary' && s.key !== 'theme_secondary' && s.key !== 'model_image_generation' && s.key !== 'model_intelligence' && s.key !== 'provider_google_api_key' && s.key !== 'provider_wisdom_api_key' && s.key !== 'provider_naga_api_key' && s.key !== 'provider_replicate_api_key' && s.key !== 'provider_atlas_api_key').map((setting) => (
+                                {settings?.filter(s => !THEME_SETTINGS_HIDDEN_KEYS.has(s.key)).map((setting) => (
                                     <div key={setting.key} className="flex items-center justify-between gap-4">
                                         <div className="flex-1">
                                             <Label className="text-base">{setting.key}</Label>

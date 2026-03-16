@@ -2,16 +2,48 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { chromium } from 'playwright';
+import { resolveChromeCdpEndpoint } from './resolve-chrome-cdp-endpoint.mjs';
 
-const browserUrl = process.env.PLAYWRIGHT_CDP_URL || 'http://127.0.0.1:9222';
+const browserUrl = resolveChromeCdpEndpoint();
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000';
 const outputPath = path.resolve(process.cwd(), 'playwright', '.auth', 'user.json');
 
+function getAppPort(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    return url.port || (url.protocol === 'https:' ? '443' : '80');
+  } catch {
+    return null;
+  }
+}
+
+function isLocalAppHost(hostname) {
+  return hostname === '127.0.0.1' || hostname === 'localhost';
+}
+
+function isMatchingLocalAppOrigin(candidateUrl, referenceUrl) {
+  try {
+    const candidate = new URL(candidateUrl);
+    const reference = new URL(referenceUrl);
+    return (
+      isLocalAppHost(candidate.hostname) &&
+      isLocalAppHost(reference.hostname) &&
+      getAppPort(candidate.href) === getAppPort(reference.href)
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function findOrCreateAppPage(context) {
-  const normalizedBaseUrl = new URL(baseUrl).origin;
+  const normalizedBaseUrl = new URL(baseUrl);
   const existingPage = context.pages().find((page) => {
     try {
-      return new URL(page.url()).origin === normalizedBaseUrl;
+      const pageUrl = new URL(page.url());
+      return (
+        pageUrl.origin === normalizedBaseUrl.origin ||
+        isMatchingLocalAppOrigin(page.url(), normalizedBaseUrl.href)
+      );
     } catch {
       return false;
     }
@@ -44,7 +76,8 @@ async function main() {
       Object.entries(localStorage).map(([name, value]) => ({ name, value }))
     );
     const storageState = await context.storageState();
-    const pageOrigin = new URL(page.url()).origin;
+    const pageOriginUrl = new URL(page.url());
+    const pageOrigin = pageOriginUrl.origin;
     const nextOrigins = storageState.origins.filter((origin) => origin.origin !== pageOrigin);
     nextOrigins.push({
       origin: pageOrigin,

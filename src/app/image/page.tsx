@@ -1,6 +1,5 @@
 ﻿'use client'
 
-import { Loader2 } from '@/components/ui/spinner'
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
@@ -12,7 +11,7 @@ import { ControlsPanel } from '@/components/studio/ControlsPanel'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import { Loader2 } from '@/components/ui/spinner'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { PromptCard } from '@/components/studio/PromptCard'
 import { CaptionCard } from '@/components/studio/CaptionCard'
@@ -21,7 +20,7 @@ import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow
 import { useDisablePullToRefresh } from '@/hooks/useDisablePullToRefresh'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import { SOCIAL_FORMATS, ALL_IMAGE_LAYOUTS, LAYOUTS_BY_INTENT, type DebugPromptData, type DebugContextItem } from '@/lib/creation-flow-types'
-import { IconArrowUp, IconPlus, IconRotate, IconSparkles } from '@/components/ui/icons'
+import { IconPlus } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 import { buildEditPrompt } from '@/lib/prompts/image-edit'
@@ -33,6 +32,7 @@ import { hexToHslString } from '@/lib/color-utils'
 import { FeedbackButton } from '@/components/studio/FeedbackButton'
 import { MobileWorkPanelDrawer } from '@/components/studio/shared/MobileWorkPanelDrawer'
 import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialog'
+import { StudioEditPromptBar, StudioGenerateBar } from '@/components/studio/shared/StudioActionBar'
 import { Id } from '../../../convex/_generated/dataModel'
 import type { BrandDNA } from '@/lib/brand-types'
 import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/admin-compositions-actions'
@@ -2227,9 +2227,29 @@ export default function ImagePage() {
         )
     }
 
+    const editPromptBar = (
+        <StudioEditPromptBar
+            editPrompt={editPrompt}
+            onEditPromptChange={setEditPrompt}
+            onApply={() => {
+                handleEditImage(editPrompt)
+                setEditPrompt('')
+            }}
+            isApplying={isGenerating}
+            isEnabled={Boolean(creationFlow.state.generatedImage)}
+            hasGeneratedImage={Boolean(creationFlow.state.generatedImage)}
+            editPlaceholder={
+                creationFlow.state.generatedImage
+                    ? t('image:ui.editPlaceholder', { defaultValue: 'Describe the changes to edit the image...' })
+                    : t('image:ui.setupPlaceholder', { defaultValue: 'Set up your image in the top panel...' })
+            }
+            applyLabel={t('image:ui.applyCorrection', { defaultValue: 'Apply correction' })}
+        />
+    )
+
     const previewPane = (
         <>
-            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto no-scrollbar">
                 <div className="relative flex flex-1 min-h-[340px] flex-col md:min-h-[500px]">
                     <CanvasPanel
                         currentImage={creationFlow.state.generatedImage}
@@ -2276,31 +2296,36 @@ export default function ImagePage() {
                         />
                     )}
                 </div>
+                <div className="flex flex-col gap-2.5">
+                    <div className="min-w-0 flex-shrink-0 px-3 pb-1 md:px-4 md:pb-2">
+                        <ThumbnailHistory
+                            generations={displayGenerations}
+                            currentImageUrl={creationFlow.state.generatedImage}
+                            onSelectGeneration={(gen) => {
+                                creationFlow.setGeneratedImage(gen.original_image_url || gen.image_url)
+                                if (gen.request_payload) {
+                                    setLastGenerationRequest({
+                                        payload: { ...gen.request_payload },
+                                        errorTitle: gen.error_title || t('errors.generationTitle', { defaultValue: 'Generation error' }),
+                                        errorFallback: gen.error_fallback || t('errors.generationDescription', { defaultValue: 'Error generating image' })
+                                    })
+                                } else if (gen.prompt_used) {
+                                    setLastGenerationRequest(prev => ({
+                                        payload: {
+                                            ...(prev?.payload || {}),
+                                            prompt: gen.prompt_used
+                                        },
+                                        errorTitle: prev?.errorTitle || t('errors.generationTitle', { defaultValue: 'Generation error' }),
+                                        errorFallback: prev?.errorFallback || t('errors.generationDescription', { defaultValue: 'Error generating image' })
+                                    }))
+                                }
+                            }}
+                        />
+                    </div>
 
-                <div className="flex-shrink-0 p-3 pt-0 md:p-4 md:pt-0">
-                    <ThumbnailHistory
-                        generations={displayGenerations}
-                        currentImageUrl={creationFlow.state.generatedImage}
-                        onSelectGeneration={(gen) => {
-                            creationFlow.setGeneratedImage(gen.original_image_url || gen.image_url)
-                            if (gen.request_payload) {
-                                setLastGenerationRequest({
-                                    payload: { ...gen.request_payload },
-                                    errorTitle: gen.error_title || t('errors.generationTitle', { defaultValue: 'Generation error' }),
-                                    errorFallback: gen.error_fallback || t('errors.generationDescription', { defaultValue: 'Error generating image' })
-                                })
-                            } else if (gen.prompt_used) {
-                                setLastGenerationRequest(prev => ({
-                                    payload: {
-                                        ...(prev?.payload || {}),
-                                        prompt: gen.prompt_used
-                                    },
-                                    errorTitle: prev?.errorTitle || t('errors.generationTitle', { defaultValue: 'Generation error' }),
-                                    errorFallback: prev?.errorFallback || t('errors.generationDescription', { defaultValue: 'Error generating image' })
-                                }))
-                            }
-                        }}
-                    />
+                    <div className="relative -top-2 px-3 pb-3 md:px-4 md:pb-3">
+                        {editPromptBar}
+                    </div>
                 </div>
             </div>
         </>
@@ -2308,6 +2333,7 @@ export default function ImagePage() {
 
     const controlsPane = (
         <ControlsPanel
+            className="min-h-0 flex-1 !border-0 !bg-transparent"
             creationFlow={creationFlow}
             highlightedFields={highlightedFields}
             promptValue={promptValue}
@@ -2357,136 +2383,21 @@ export default function ImagePage() {
         />
     )
 
-    const actionBar = (
-        <div className={cn(
-            "studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-surface min-h-[80px]",
-            isMobile
-                ? "gap-3 p-3"
-                : cn(
-                    "lg:flex-row",
-                    panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
-                )
-        )}>
-            <div className={cn(
-                "flex-1 flex flex-col items-stretch gap-2",
-                isMobile ? "" : "p-3 md:p-4 sm:flex-row sm:items-end"
-            )}>
-                <div className="relative w-full">
-                    <Textarea
-                        placeholder={
-                            creationFlow.state.generatedImage
-                                ? t('image:ui.editPlaceholder', { defaultValue: 'Describe the changes to edit the image...' })
-                                : t('image:ui.setupPlaceholder', { defaultValue: 'Set up your image in the top panel...' })
-                        }
-                        value={editPrompt}
-                        onChange={(e) => setEditPrompt(e.target.value)}
-                        disabled={!creationFlow.state.generatedImage}
-                        className={cn(
-                            "w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all",
-                            creationFlow.state.generatedImage ? "pr-14" : ""
-                        )}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault()
-                                if (creationFlow.state.generatedImage && editPrompt.trim()) {
-                                    handleEditImage(editPrompt)
-                                }
-                            }
-                        }}
-                    />
-                    {creationFlow.state.generatedImage ? (
-                        <Button
-                            onClick={() => handleEditImage(editPrompt)}
-                            disabled={isGenerating || !editPrompt.trim()}
-                            size="icon"
-                            className="absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2 rounded-xl bg-primary text-primary-foreground shadow-md transition-all hover:bg-primary/90 disabled:opacity-45"
-                            aria-label={t('image:ui.applyCorrection', { defaultValue: 'Apply correction' })}
-                            title={t('image:ui.applyCorrection', { defaultValue: 'Apply correction' })}
-                        >
-                            <IconArrowUp className="h-3.5 w-3.5" />
-                        </Button>
-                    ) : null}
-                </div>
-            </div>
-
-            {!isMobile ? <div className={cn(
-                "flex flex-col justify-end",
-                cn(
-                    "w-full lg:w-[27%] p-3 md:p-4 border-t lg:border-t-0",
-                    panelPosition === 'right' ? "lg:border-l border-border/40" : "lg:border-r border-border/40"
-                )
-            )}>
-                {creationFlow.state.generatedImage ? (
-                    <div className="relative">
-                        <Button
-                            onClick={handleRetryLastPrompt}
-                            disabled={isGenerating || !lastGenerationRequest || creationFlow.state.isAnalyzing}
-                            className={cn(
-                                'group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25',
-                                isGenerating && 'pr-28'
-                            )}
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <Loader2 className="mr-2 h-5 w-5" />
-                                    {t('image:ui.generating', { defaultValue: 'Generating...' })}
-                                </>
-                            ) : (
-                                <>
-                                    <IconRotate className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
-                                    {t('image:ui.retrySameSettings', { defaultValue: 'Generate another with the same settings' })}
-                                </>
-                            )}
-                        </Button>
-                        {isGenerating ? (
-                            <button
-                                type="button"
-                                onClick={handleCancelGenerate}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-foreground transition-colors hover:text-primary-foreground"
-                            >
-                                {isCancelingGenerate
-                                    ? t('image:ui.canceling', { defaultValue: 'Canceling...' })
-                                    : t('image:ui.stop', { defaultValue: 'Stop' })}
-                            </button>
-                        ) : null}
-                    </div>
-                ) : (
-                    <div className="relative">
-                        <Button
-                            onClick={handleUnifiedAction}
-                            disabled={isGenerating || !canGenerate}
-                            className={cn(
-                                'group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25',
-                                isGenerating && 'pr-28'
-                            )}
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <Loader2 className="mr-2 h-5 w-5" />
-                                    {t('image:ui.generating', { defaultValue: 'Generating...' })}
-                                </>
-                            ) : (
-                                <>
-                                    <IconSparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
-                                    {t('image:ui.generate', { defaultValue: 'Generate Image' })}
-                                </>
-                            )}
-                        </Button>
-                        {isGenerating ? (
-                            <button
-                                type="button"
-                                onClick={handleCancelGenerate}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-foreground transition-colors hover:text-primary-foreground"
-                            >
-                                {isCancelingGenerate
-                                    ? t('image:ui.canceling', { defaultValue: 'Canceling...' })
-                                    : t('image:ui.stop', { defaultValue: 'Stop' })}
-                            </button>
-                        ) : null}
-                    </div>
-                )}
-            </div> : null}
-        </div>
+    const generateBar = (
+        <StudioGenerateBar
+            onGenerate={handleUnifiedAction}
+            onRetry={handleRetryLastPrompt}
+            onCancelGenerate={handleCancelGenerate}
+            isGenerating={isGenerating}
+            isCancelingGenerate={isCancelingGenerate}
+            canGenerate={Boolean(canGenerate)}
+            hasGeneratedImage={Boolean(creationFlow.state.generatedImage)}
+            generatingLabel={t('image:ui.generating', { defaultValue: 'Generating...' })}
+            generateLabel={t('image:ui.generate', { defaultValue: 'Generate Image' })}
+            retryLabel={t('image:ui.retrySameSettings', { defaultValue: 'Generate another with the same settings' })}
+            stopLabel={t('image:ui.stop', { defaultValue: 'Stop' })}
+            cancelingLabel={t('image:ui.canceling', { defaultValue: 'Canceling...' })}
+        />
     )
 
     const mobileControlsDrawer = isMobile ? (
@@ -2499,27 +2410,10 @@ export default function ImagePage() {
             closeLabel={t('ui.closeWorkPanel')}
         >
             {controlsPane}
-            <div className="sticky bottom-0 border-t border-border/40 bg-white p-3">
-                <Button
-                    onClick={() => {
-                        setMobileControlsOpen(false)
-                        handleUnifiedAction()
-                    }}
-                    disabled={isGenerating || !canGenerate}
-                    className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25"
-                >
-                    {isGenerating ? (
-                        <>
-                            <Loader2 className="mr-2 h-5 w-5" />
-                            {t('image:ui.generating', { defaultValue: 'Generating...' })}
-                        </>
-                    ) : (
-                        <>
-                            <IconSparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
-                            {t('image:ui.generate', { defaultValue: 'Generate Image' })}
-                        </>
-                    )}
-                </Button>
+            <div className="sticky bottom-0 bg-transparent p-3 pt-2">
+                <div className="rounded-[1.35rem] border border-border/45 bg-background/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.3)] p-2">
+                    {generateBar}
+                </div>
             </div>
         </MobileWorkPanelDrawer>
     ) : null
@@ -2532,50 +2426,58 @@ export default function ImagePage() {
             onBrandDelete={deleteBrandKitById}
             onNewBrandKit={handleNewBrandKit}
             isFixed={!isMobile}
+            contentContainerVariant="plain"
         >
             {activeBrandKit ? (
                 <div className={cn(
-                    "flex-1 relative min-h-0",
+                    "relative flex-1 min-h-0 min-w-0",
                     isMobile ? "flex flex-col overflow-y-auto" : "flex flex-col overflow-hidden"
                 )} style={isMobile ? { overscrollBehaviorY: 'none' } : undefined}>
                     <div className={cn(
-                        "flex min-h-0 flex-1",
+                        "flex min-h-0 min-w-0 flex-1",
                         isMobile
                             ? "flex-col gap-3 px-2 py-3"
                             : cn(
-                                "flex-col overflow-hidden lg:flex-row",
+                                "flex-col gap-4 overflow-hidden px-3 pb-3 pt-4 lg:flex-row",
                                 panelPosition === 'right' ? "lg:flex-row" : "lg:flex-row-reverse"
                             )
-                    )}>
+                        )}>
                         {isMobile ? (
                             <>
                                 <div className="order-1 flex min-h-0 flex-col overflow-hidden">
                                     {previewPane}
                                 </div>
-                                {creationFlow.state.generatedImage ? (
-                                    <div className="order-2 shrink-0 rounded-2xl border border-border/50">
-                                        {actionBar}
+                                <div className="order-2 shrink-0 overflow-hidden rounded-[1.6rem] border border-border/45 bg-background p-3 shadow-[0_20px_60px_-42px_rgba(15,23,42,0.38)]">
+                                    <div className="rounded-[1.35rem] border border-border/45 bg-background/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.3)] p-2">
+                                        {generateBar}
                                     </div>
-                                ) : null}
+                                </div>
                                 {mobileControlsDrawer}
                             </>
                         ) : (
                             <>
-                                {previewPane}
-                                {controlsPane}
+                                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-border/60 bg-white/85 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.38)]">
+                                    {previewPane}
+                                </div>
+                                <div className="flex w-full min-h-0 flex-col lg:w-[27%]">
+                                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-border/60 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.34)]">
+                                        {controlsPane}
+                                        <div className="shrink-0 px-4 py-4">
+                                            {generateBar}
+                                        </div>
+                                    </div>
+                                </div>
                             </>
                         )}
                     </div>
-
-                    {!isMobile ? actionBar : null}
                 </div>
             ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                     <div className="max-w-md space-y-4">
-                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[1.4rem] border border-border/50 bg-[linear-gradient(180deg,white,hsl(var(--surface-alt))/0.92)] shadow-[0_20px_50px_-38px_rgba(15,23,42,0.4)]">
                             <IconPlus className="w-8 h-8 text-muted-foreground" />
                         </div>
-                        <h2 className="text-2xl font-semibold">{t('ui.selectBrandKitTitle')}</h2>
+                        <h2 className="text-2xl font-semibold tracking-tight">{t('ui.selectBrandKitTitle')}</h2>
                         <p className="text-muted-foreground">
                             {t('ui.selectBrandKitDescription')}
                         </p>

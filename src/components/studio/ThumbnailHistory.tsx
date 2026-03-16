@@ -62,16 +62,16 @@ export function ThumbnailHistory({
     }
 
     return (
-        <div className="glass-card p-3">
-            <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+        <div className="rounded-[1.4rem] border border-border/60 bg-[linear-gradient(180deg,hsl(var(--surface-alt))/0.92,white)] p-3 shadow-[0_20px_60px_-44px_rgba(15,23,42,0.42)]">
+            <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                     {t('preview.sessionVariations')}
                 </p>
                 {totalPages > 1 ? (
                     <div className="flex items-center gap-1">
                         <button
                             type="button"
-                            className="inline-flex h-6 w-6 items-center justify-center rounded border border-border/70 text-muted-foreground transition hover:bg-muted disabled:opacity-40"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/80 text-muted-foreground transition hover:border-primary/25 hover:bg-[hsl(var(--surface))] hover:text-foreground disabled:opacity-40"
                             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                             disabled={safePage <= 1}
                             aria-label={t('preview.previousPage')}
@@ -83,7 +83,7 @@ export function ThumbnailHistory({
                         </span>
                         <button
                             type="button"
-                            className="inline-flex h-6 w-6 items-center justify-center rounded border border-border/70 text-muted-foreground transition hover:bg-muted disabled:opacity-40"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/70 bg-background/80 text-muted-foreground transition hover:border-primary/25 hover:bg-[hsl(var(--surface))] hover:text-foreground disabled:opacity-40"
                             onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                             disabled={safePage >= totalPages}
                             aria-label={t('preview.nextPage')}
@@ -93,7 +93,7 @@ export function ThumbnailHistory({
                     </div>
                 ) : null}
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
                 {paginatedGenerations.map((gen) => {
                     const selectedCandidates = [gen.image_url, gen.preview_image_url, gen.original_image_url].filter(Boolean)
                     const isSelected = selectedCandidates.includes(currentImageUrl || '')
@@ -104,12 +104,12 @@ export function ThumbnailHistory({
                         <button
                             key={gen.id}
                             onClick={() => onSelectGeneration(gen)}
-                            className={`relative flex-shrink-0 transition-all duration-150 rounded-lg overflow-hidden ${isSelected
-                                ? 'ring-2 ring-primary scale-105'
-                                : 'opacity-70 hover:opacity-100 hover:scale-102'
+                            className={`relative flex-shrink-0 overflow-hidden rounded-2xl border transition-all duration-200 ${isSelected
+                                ? 'border-primary/40 bg-primary/6 scale-[1.02] shadow-[0_18px_38px_-26px_rgba(59,130,246,0.45)]'
+                                : 'border-border/60 bg-background/75 opacity-80 hover:-translate-y-0.5 hover:border-primary/20 hover:opacity-100'
                                 }`}
                         >
-                            <div className="w-14 h-14 bg-muted">
+                            <div className="h-16 w-16 bg-[hsl(var(--surface))]">
                                 {imageUrl ? (
                                     <img
                                         src={imageUrl}
@@ -122,7 +122,7 @@ export function ThumbnailHistory({
                                 )}
                             </div>
                             {skillLabel ? (
-                                <span className="absolute left-1 right-1 bottom-1 rounded bg-black/75 px-1 py-0.5 text-[8px] font-medium leading-none text-white truncate">
+                                <span className="absolute inset-x-1 bottom-1 truncate rounded-full bg-foreground/82 px-1.5 py-0.5 text-[8px] font-medium leading-none text-background">
                                     {skillLabel}
                                 </span>
                             ) : null}

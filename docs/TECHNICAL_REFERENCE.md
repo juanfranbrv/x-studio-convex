@@ -274,6 +274,7 @@ These values are editable from Admin and must remain the single source of truth 
 
 - Make Chrome DevTools remote debugging reproducible for QA and responsive reviews.
 - Avoid depending on a personal Chrome session or on a random open port.
+- Support Chrome 144+ shared-session debugging, including Chrome 146 with the new remote debugging toggle in `chrome://inspect/#remote-debugging`.
 
 ### Commands
 
@@ -287,14 +288,22 @@ These values are editable from Admin and must remain the single source of truth 
 1. The debug browser must always use the isolated profile `.tmp/chrome-debug`.
 2. Before using Chrome DevTools MCP, verify `127.0.0.1:9222` is reachable.
 3. If the port is not reachable, relaunch Chrome through `scripts/start-chrome-debug.ps1`.
-4. If DevTools still cannot attach, continue with Playwright and browser console instead of blocking the task.
-5. For visual QA in this project, prefer this isolated debug browser by default; Playwright and DevTools should target it before any personal Chrome session.
-6. On Windows, Codex should have a `chrome-devtools` MCP server configured in `C:\Users\Usuario\.codex\config.toml` using `chrome-devtools-mcp@latest` with `--browser-url=http://127.0.0.1:9222` so the agent can attach to the shared debug browser profile instead of launching an unrelated session.
+4. In Chrome 144+, if the user has enabled remote debugging for the real browser session in `chrome://inspect/#remote-debugging`, prefer attaching to that live session instead of forcing an isolated profile.
+5. Do not assume `http://127.0.0.1:9222/json/version` will answer. In Chrome 146 real-session mode, the reliable source of truth can be `DevToolsActivePort` inside the active Chrome user data directory.
+6. When `/json/version` fails but `DevToolsActivePort` exists, derive the WebSocket endpoint from that file and connect directly with `ws://127.0.0.1:<port>/devtools/browser/<id>`.
+7. If DevTools MCP still cannot attach, continue with Playwright over CDP and browser console instead of blocking the task.
+8. For visual QA in this project, prefer the shared authenticated browser session when available; the isolated debug browser remains the fallback for unauthenticated or reproducible flows.
+9. On Windows, Codex should have a `chrome-devtools` MCP server configured in `C:\Users\Usuario\.codex\config.toml` using `chrome-devtools-mcp@latest` with `--auto-connect` for Chrome 144+ shared-session debugging. If that is not sufficient, the fallback is `--wsEndpoint=<resolved endpoint from DevToolsActivePort>`.
 
 ### Implementation notes
 
 - Shared helpers live in `scripts/chrome-debug-common.ps1`.
-- The launcher queries `http://127.0.0.1:9222/json/version` to confirm the debugging endpoint is alive.
+- `scripts/resolve-chrome-cdp-endpoint.mjs` resolves the best available CDP endpoint in this order:
+  1. explicit environment overrides (`PLAYWRIGHT_CDP_WS_ENDPOINT`, `CHROME_CDP_WS_ENDPOINT`, `PLAYWRIGHT_CDP_URL`, `CHROME_CDP_URL`)
+  2. `DevToolsActivePort` from the real Chrome user profile on Windows
+  3. `DevToolsActivePort` from `.tmp/chrome-debug`
+  4. fallback `http://127.0.0.1:9222`
+- The old `/json/version` HTTP probe is still useful for isolated browsers, but it is no longer a hard requirement for shared-session Chrome 146.
 - The stop script only targets Chrome processes started with the debug port or the isolated profile, so the normal user browser session is not killed.
 
 ## Playwright auth state local
@@ -314,11 +323,12 @@ These values are editable from Admin and must remain the single source of truth 
 2. Run the capture only after confirming the debug browser is already authenticated in the app.
 3. `playwright.config.ts` should use `playwright/.auth/user.json` automatically when the file exists.
 4. If the auth file does not exist or expires, Playwright must still be able to run public-route checks without failing config bootstrap.
-5. In this project with Clerk dev keys, `storageState` alone may not fully rehydrate an authenticated session in a fresh Playwright browser. For authenticated E2E against local development, prefer attaching Playwright to the shared debug browser on `127.0.0.1:9222`.
+5. In this project with Clerk dev keys, `storageState` alone may not fully rehydrate an authenticated session in a fresh Playwright browser. For authenticated E2E against local development, prefer attaching Playwright to the shared debug browser session through the endpoint resolved by `scripts/resolve-chrome-cdp-endpoint.mjs`.
 
 ### Practical note
 
 - The spec `tests/image-debug-auth.spec.ts` is designed to run against the shared debug browser session.
+- `npm run chrome:cdp:endpoint` prints the currently resolved CDP endpoint so debugging failures can be diagnosed quickly.
 - Use `RUN_REAL_IMAGE_GENERATION=1` only when you explicitly want to spend time/credits on a real generation attempt.
 
 ## Image provider timeout guard
@@ -346,6 +356,39 @@ These values are editable from Admin and must remain the single source of truth 
 2. `CLERK_ISSUER_URL` debe apuntar siempre a `https://clerk.postlaboratory.com`.
 3. La `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` de produccion debe corresponder al frontend API `clerk.postlaboratory.com`.
 4. Cualquier dominio legado (`adstudio.click`, `adstudio.com` y variantes `www`) debe redirigir de forma permanente al dominio principal.
+
+## Gobernanza del tema visual
+
+### Regla de producto
+
+- El tema de color de la aplicacion es global y solo se configura desde `/admin`.
+- Los usuarios no pueden personalizar colores desde `/settings`.
+
+### Fuente de verdad
+
+- Los valores del tema viven en `app_settings` de Convex.
+- La paleta global actual se compone de:
+  - `theme_primary`
+  - `theme_secondary`
+  - `theme_surface`
+  - `theme_surface_alt`
+  - `theme_muted`
+  - `theme_border`
+  - `theme_ring`
+- El runtime cliente debe leer esos valores globales y aplicarlos como unica referencia activa del tema.
+- Si faltan tokens auxiliares, el runtime debe derivarlos de `theme_primary` y `theme_secondary` para mantener compatibilidad con configuraciones antiguas.
+
+### Regla de implementacion
+
+1. No introducir overrides por usuario en `localStorage` para colores globales.
+2. No reabrir selectores de paleta en `/settings`.
+3. Si en el futuro se amplian tokens visuales, deben seguir colgando del mismo origen global en Admin.
+
+### Presets de Admin
+
+- `/admin` debe ofrecer presets propuestos de tema para acelerar la seleccion de combinaciones coherentes sin obligar a partir de cero.
+- Esos presets no son una segunda fuente de verdad: rellenan la paleta editable de Admin y el guardado posterior persiste los tokens finales en `app_settings`.
+- La UI de Admin debe exponer la paleta completa para que Juanfran pueda retocar cada token antes de guardar.
 
 ### DNS minimo de Clerk
 

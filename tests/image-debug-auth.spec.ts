@@ -1,7 +1,58 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import { test, expect, chromium, type Browser, type Page } from '@playwright/test'
 
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000'
-const cdpUrl = process.env.PLAYWRIGHT_CDP_URL || 'http://127.0.0.1:9222'
+
+function resolveChromeCdpEndpoint() {
+  const explicitEndpoint =
+    process.env.PLAYWRIGHT_CDP_WS_ENDPOINT ||
+    process.env.CHROME_CDP_WS_ENDPOINT ||
+    process.env.PLAYWRIGHT_CDP_URL ||
+    process.env.CHROME_CDP_URL
+
+  if (explicitEndpoint) return explicitEndpoint
+
+  const candidates = [
+    path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'User Data', 'DevToolsActivePort'),
+    path.resolve(process.cwd(), '.tmp', 'chrome-debug', 'DevToolsActivePort'),
+  ]
+
+  for (const candidate of candidates) {
+    if (!candidate || !fs.existsSync(candidate)) continue
+    const [port, browserPath] = fs.readFileSync(candidate, 'utf8').trim().split(/\r?\n/)
+    if (port && browserPath) {
+      return `ws://127.0.0.1:${port}${browserPath}`
+    }
+  }
+
+  return 'http://127.0.0.1:9222'
+}
+
+const cdpUrl = resolveChromeCdpEndpoint()
+
+function isLocalAppHost(hostname: string) {
+  return hostname === '127.0.0.1' || hostname === 'localhost'
+}
+
+function getPort(rawUrl: string) {
+  const url = new URL(rawUrl)
+  return url.port || (url.protocol === 'https:' ? '443' : '80')
+}
+
+function isMatchingLocalApp(candidateUrl: string, referenceUrl: string) {
+  try {
+    const candidate = new URL(candidateUrl)
+    const reference = new URL(referenceUrl)
+    return (
+      isLocalAppHost(candidate.hostname) &&
+      isLocalAppHost(reference.hostname) &&
+      getPort(candidate.href) === getPort(reference.href)
+    )
+  } catch {
+    return false
+  }
+}
 
 async function openDebugPage(route: string): Promise<{ browser: Browser; page: Page }> {
   const browser = await chromium.connectOverCDP(cdpUrl)
@@ -12,11 +63,32 @@ async function openDebugPage(route: string): Promise<{ browser: Browser; page: P
     throw new Error(`No se encontro un contexto compartido en ${cdpUrl}.`)
   }
 
+  const referenceUrl = new URL(baseUrl)
   const page =
-    context.pages().find((candidate) => candidate.url().startsWith(baseUrl)) ||
+    context.pages().find((candidate) => {
+      try {
+        const candidateUrl = new URL(candidate.url())
+        return (
+          candidateUrl.origin === referenceUrl.origin ||
+          isMatchingLocalApp(candidate.url(), referenceUrl.href)
+        )
+      } catch {
+        return false
+      }
+    }) ||
     (await context.newPage())
 
-  await page.goto(new URL(route, `${baseUrl}/`).toString(), { waitUntil: 'domcontentloaded' })
+  const navigationBase = (() => {
+    try {
+      const current = new URL(page.url())
+      if (isMatchingLocalApp(current.href, referenceUrl.href)) {
+        return current.origin
+      }
+    } catch {}
+    return referenceUrl.origin
+  })()
+
+  await page.goto(new URL(route, `${navigationBase}/`).toString(), { waitUntil: 'domcontentloaded' })
   await page.waitForLoadState('networkidle').catch(() => {})
 
   if (page.url().includes('/sign-in')) {

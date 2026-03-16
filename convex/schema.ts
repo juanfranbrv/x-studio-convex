@@ -4,7 +4,7 @@ import { v } from "convex/values";
 export default defineSchema({
   // App-wide configurable settings (editable via admin panel)
   app_settings: defineTable({
-    key: v.string(),           // "beta_initial_credits", "low_credits_threshold", "credits_per_generation", "theme_primary", "theme_secondary"
+    key: v.string(),           // "beta_initial_credits", "low_credits_threshold", "credits_per_generation", "theme_primary", "theme_secondary", "theme_surface", ...
     value: v.any(),            // number | string
     description: v.optional(v.string()),
     updated_at: v.string(),

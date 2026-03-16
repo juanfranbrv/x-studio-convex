@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
 import JSZip from 'jszip'
 import {
@@ -15,7 +14,7 @@ import {
 } from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/image/page'
-import { IconLayout, IconClose, IconImage, IconTextFont, IconLink, IconAtSign, IconMinus, IconPlus, IconSquareArrowDown, IconImageDownload, IconBug, IconSparkles, IconPaintbrush, IconZoomIn, IconZoomOut, IconMaximize } from '@/components/ui/icons'
+import { IconLayout, IconClose, IconImage, IconImageAdd, IconTextFont, IconLink, IconAtSign, IconMinus, IconPlus, IconSquareArrowDown, IconImageDownload, IconBug, IconSparkles, IconPaintbrush, IconZoomIn, IconZoomOut, IconMaximize } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
@@ -775,9 +774,9 @@ export function CanvasPanel({
     }
 
     return (
-        <div className="flex-1 flex flex-col h-full relative isolate overflow-x-hidden">
+        <div className="relative isolate flex h-full flex-1 flex-col overflow-x-hidden">
             {/* Header Overlay */}
-            <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between px-4 pt-1 z-40 pointer-events-none">
+            <div className="absolute left-3 right-3 top-3 z-40 flex h-16 items-start justify-between px-3 pt-1 pointer-events-none md:left-4 md:right-4">
 
                 {/* Left: Canvas info */}
                 {isAdmin ? (
@@ -814,7 +813,7 @@ export function CanvasPanel({
 
                 {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}
                 {/* Zoom Controls & Actions */}
-                <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4 border border-border/60 bg-white backdrop-blur-sm">
+                <div className="absolute right-9 top-4 hidden pointer-events-auto flex-col items-center gap-2 rounded-[1.4rem] border border-border/60 bg-[linear-gradient(180deg,white,hsl(var(--surface-alt))/0.92)] px-2 py-2 text-muted-foreground shadow-[0_16px_40px_-28px_rgba(15,23,42,0.4)] backdrop-blur-sm transition-colors duration-200 hover:text-foreground md:flex">
                     {/* Zoom Controls */}
                     <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
                         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut} title={tt('common:preview.zoomOut', 'Zoom out')}>
@@ -847,8 +846,9 @@ export function CanvasPanel({
             </div>
 
             <div className={cn(
-                "flex-1 relative flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden thin-scrollbar",
-                isMobile ? "pt-5 px-4" : "pt-5 px-6"
+                "canvas-scroll-region",
+                "flex-1 relative flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden thin-scrollbar pr-0 -mr-[2px]",
+                isMobile ? "pl-3 pb-3 pt-16" : "pl-3 pb-3 pt-[2.1rem]"
             )}>
                 {/* Canvas Wrapper - reserves correct space and prevents overflow */}
                 <div
@@ -886,7 +886,7 @@ export function CanvasPanel({
                     <div
                         ref={containerRef}
                         className={cn(
-                            "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot shrink-0 rounded-aero",
+                            "canvas-panel relative flex shrink-0 items-center justify-center overflow-visible rounded-[1.45rem] border border-border/45 bg-[linear-gradient(180deg,white,hsl(var(--surface-alt))/0.96)] bg-dot shadow-[0_24px_70px_-44px_rgba(15,23,42,0.38)] transition-transform duration-300 ease-out",
                             "overflow-visible",
                             wasJustGenerated && "canvas-success-flash"
                         )}
@@ -951,7 +951,7 @@ export function CanvasPanel({
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.8 }}
-                                    className="absolute inset-0 z-50 overflow-hidden rounded-sm shadow-lg ring-1 ring-white/10"
+                                    className="absolute inset-0 z-50 overflow-hidden rounded-[1.35rem] shadow-lg ring-1 ring-white/10"
                                 >
                                     <DigitalStaticLoader />
                                 </motion.div>
@@ -967,7 +967,7 @@ export function CanvasPanel({
 
                         {/* Main Content Area */}
                         {currentImage ? (
-                            <div className="relative w-full h-full overflow-hidden rounded-sm z-20">
+                            <div className="relative z-20 h-full w-full overflow-hidden rounded-[1.3rem] bg-background/60">
                                 {showPromptDebugTrigger && onOpenPromptDebug && (
                                     <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
                                         <Button
@@ -975,7 +975,7 @@ export function CanvasPanel({
                                             variant="ghost"
                                             size="icon"
                                             onClick={onOpenPromptDebug}
-                                            className="h-9 w-9 rounded-full bg-white backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                                            className="h-9 w-9 rounded-full border border-border/70 bg-background/86 shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:scale-[1.03] hover:shadow-md active:scale-[0.98]"
                                             title={tt('common:preview.viewPrompt', 'View prompt')}
                                         >
                                             <IconBug className="w-4 h-4" />
@@ -989,7 +989,7 @@ export function CanvasPanel({
                                             variant="ghost"
                                             size="icon"
                                             onClick={handleDownload}
-                                            className="h-9 w-9 rounded-full border border-border bg-white shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
+                                            className="h-9 w-9 rounded-full border border-border/70 bg-background/86 shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
                                             title={tt('common:preview.downloadImage', 'Download image')}
                                         >
                                             <IconImageDownload className="w-4 h-4" />
@@ -999,7 +999,7 @@ export function CanvasPanel({
                                             variant="ghost"
                                             size="icon"
                                             onClick={handleDownloadBundle}
-                                            className="h-9 w-9 rounded-full border border-border bg-white shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
+                                            className="h-9 w-9 rounded-full border border-border/70 bg-background/86 shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
                                             title={tt('common:preview.downloadBundle', 'Download ZIP')}
                                         >
                                             <IconSquareArrowDown className="w-4 h-4" />
@@ -1038,14 +1038,17 @@ export function CanvasPanel({
                                 />
                             </div>
                         ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-muted/50 hover:bg-white transition-colors">
-                                <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm border border-border/50">
-                                    <span className="text-3xl opacity-70">🎨</span>
+                            <div className="flex h-full w-full flex-col items-center justify-center rounded-[1.25rem] border border-dashed border-border/45 bg-[linear-gradient(180deg,hsl(var(--surface-alt))/0.96,white)] px-6 text-center text-muted-foreground transition-colors">
+                                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[1.35rem] border border-border/50 bg-background/92 shadow-[0_18px_36px_-28px_rgba(15,23,42,0.42)]">
+                                    <IconImageAdd className="h-7 w-7 text-primary/80" />
                                 </div>
-                                <p className="text-sm font-medium text-muted-foreground/70">
+                                <p className="text-sm font-medium text-foreground/80">
                                     {tt('common:preview.generateFirstToEdit', 'Generate an image first to edit it...')}
                                 </p>
-                                <div className="mt-4 px-3 py-1 rounded-full bg-muted/50 text-xs uppercase tracking-wide font-mono text-muted-foreground/70 border border-border/30">
+                                <p className="mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">
+                                    {tt('common:preview.generateFirstHint', 'When the first result appears, this canvas becomes your editing workspace with downloads, prompt debug and quick corrections.')}
+                                </p>
+                                <div className="mt-4 rounded-full border border-border/30 bg-background/80 px-3 py-1 text-xs font-mono uppercase tracking-wide text-muted-foreground/80">
                                     {aspectRatio}
                                 </div>
                             </div>
@@ -1100,7 +1103,7 @@ export function CanvasPanel({
                                             className={cn(
                                                 "object-cover shadow-xl",
                                                                     variant === 'style'
-                                                                        ? "rounded-2xl border-2 border-violet-300/70 ring-4 ring-violet-500/15 bg-background p-1 -rotate-6 group-hover:rotate-0 transition-transform duration-300"
+                                                                        ? "rounded-2xl border-2 border-primary/30 ring-4 ring-primary/10 bg-background p-1 -rotate-6 group-hover:rotate-0 transition-transform duration-300"
                                                                         : "object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.28)]"
                                                                 )}
                                                                 style={variant === 'style'
@@ -1109,7 +1112,7 @@ export function CanvasPanel({
                                                                 }
                                                             />
                                                         {variant === 'style' && (
-                                                            <div className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-violet-600 text-white text-[9px] font-bold flex items-center justify-center shadow-md ring-2 ring-white/70">
+                                                            <div className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-md ring-2 ring-white/70">
                                                                 <IconSparkles className="w-2.5 h-2.5" />
                                                             </div>
                                                         )}
@@ -1288,7 +1291,7 @@ export function CanvasPanel({
 
                 {/* CAPTION CARD - Shows below texts */}
                 {(creationState.caption || isGeneratingCopy || creationState.selectedIntent) && (
-                    <div className="mt-3 w-full max-w-[800px] shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-20">
+                    <div className="mt-2 w-full max-w-[800px] shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-16">
                         <GeneratedCopyCard
                             copy={creationState.caption || generatedCopy}
                             hashtags={generatedHashtags}
@@ -1459,8 +1462,8 @@ export function CanvasPanel({
                         )}
                     >
                         <div className={cn(
-                            "flex items-center gap-2 p-2 pl-4 bg-white backdrop-blur-sm border border-border/60 shadow-2xl rounded-full transition-colors transition-shadow duration-200",
-                            isDraggingOver ? "ring-2 ring-primary ring-offset-2 bg-white" : "hover:bg-white"
+                            "flex items-center gap-2 rounded-full border border-border/60 bg-[linear-gradient(180deg,white,hsl(var(--surface-alt))/0.92)] p-2 pl-4 shadow-[0_22px_48px_-30px_rgba(15,23,42,0.42)] transition-colors transition-shadow duration-200",
+                            isDraggingOver ? "bg-white ring-2 ring-primary ring-offset-2" : "hover:border-primary/20 hover:bg-white"
                         )}>
                             {/* Input */}
                             <Textarea

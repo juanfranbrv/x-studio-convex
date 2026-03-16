@@ -36,8 +36,19 @@ function useCanvasEdgePosition(tabSide: 'right' | 'left') {
         function update() {
             const canvas = document.querySelector('.canvas-panel')
             if (!canvas) return
+            const scrollRegion = document.querySelector('.canvas-scroll-region')
             const rect = canvas.getBoundingClientRect()
-            const top = rect.top + 16
+            const tabHeight = 108
+            const viewportPadding = 12
+            const scrollRect = scrollRegion instanceof HTMLElement
+                ? scrollRegion.getBoundingClientRect()
+                : { top: viewportPadding, bottom: window.innerHeight - viewportPadding }
+            const minVisibleTop = scrollRect.top + viewportPadding
+            const maxVisibleBottom = scrollRect.bottom - viewportPadding
+            const visibleTop = Math.max(rect.top, minVisibleTop)
+            const visibleBottom = Math.min(rect.bottom, maxVisibleBottom)
+            const maxTop = Math.max(minVisibleTop, visibleBottom - tabHeight)
+            const top = Math.max(minVisibleTop, Math.min(visibleTop + 16, maxTop))
             if (tabSide === 'right') {
                 setStyle({ position: 'fixed', top, left: rect.right })
             } else {

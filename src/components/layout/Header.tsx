@@ -26,7 +26,6 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { BrandKitSummary, BrandDNA } from '@/lib/brand-types'
-import { AppLogo } from '@/components/ui/AppLogo'
 
 interface HeaderProps {
     brands?: BrandKitSummary[]
@@ -76,12 +75,12 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
 
     return (
         <>
-            <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-white px-4 md:px-6">
+            <header className="mx-3 mt-3 flex h-[72px] shrink-0 items-center justify-between rounded-[1.5rem] border border-border/60 bg-white/82 px-4 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.38)] backdrop-blur-xl md:px-6">
                 <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
                     <MobileMenu />
 
-                    <div className="flex shrink-0 items-center gap-2">
-                        <h1 className="font-heading text-xl font-semibold text-primary leading-none">
+                    <div className="flex shrink-0 items-center gap-3">
+                        <h1 className="font-heading text-xl font-semibold leading-none text-foreground md:text-[1.45rem]">
                             {t('app.name')}
                         </h1>
                     </div>
@@ -89,28 +88,28 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     {brands.length > 0 ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="w-[clamp(8.5rem,42vw,12rem)] min-w-0 justify-between gap-2 rounded-xl border-border/70 bg-card px-2 transition-colors hover:border-border hover:bg-accent/50 md:w-72 md:px-4">
+                                <Button variant="outline" size="sm" className="h-11 w-[clamp(8.75rem,42vw,12rem)] min-w-0 justify-between gap-2 rounded-2xl border-border/70 bg-[hsl(var(--surface-alt))]/90 px-3 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.28)] transition-all hover:border-primary/20 hover:bg-white md:h-12 md:w-72 md:px-4">
                                     <span className="flex min-w-0 items-center gap-2">
-                                        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
+                                        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-[hsl(var(--surface))] translate-y-[1px]">
                                             {currentBrandFavicon ? (
                                                 <img src={currentBrandFavicon} alt={currentBrandName} className="h-full w-full object-cover" />
                                             ) : (
                                                 <span className="text-xs font-semibold text-muted-foreground">{getBrandInitial(currentBrandName)}</span>
                                             )}
                                         </span>
-                                        <span className="block truncate text-left">{currentBrandName}</span>
+                                        <span className="block truncate text-left text-sm font-medium leading-tight md:text-[0.95rem]">{currentBrandName}</span>
                                     </span>
                                     <IconChevronDown className="h-4 w-4 shrink-0" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-[320px] rounded-xl border-border bg-popover shadow-lg md:w-[440px]">
+                            <DropdownMenuContent align="start" className="w-[320px] rounded-2xl border-border bg-popover shadow-[0_28px_80px_-42px_rgba(15,23,42,0.42)] md:w-[440px]">
                                 {brands.map((brand) => (
                                     <DropdownMenuItem
                                         key={brand.id}
                                         onClick={() => onBrandChange?.(brand.id)}
-                                        className={`group gap-3 ${brand.id === currentBrand?.id ? 'bg-accent' : ''}`}
+                                        className={`group min-h-12 gap-3 rounded-xl px-3 py-2 ${brand.id === currentBrand?.id ? 'bg-accent' : ''}`}
                                     >
-                                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
+                                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/60">
                                             {brand.favicon_url ? (
                                                 <img src={brand.favicon_url} alt={brand.brand_name} className="h-full w-full object-cover" />
                                             ) : (
@@ -133,7 +132,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                         </Button>
                                     </DropdownMenuItem>
                                 ))}
-                                <DropdownMenuItem className="cursor-pointer text-primary" onClick={onNewBrandKit}>
+                                <DropdownMenuItem className="min-h-12 cursor-pointer rounded-xl px-3 py-2 text-primary" onClick={onNewBrandKit}>
                                     + {t('labels.newBrand')}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -141,7 +140,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     ) : null}
 
                     {onNewBrandKit ? (
-                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="hidden gap-2 rounded-xl border-border/70 bg-card transition-colors hover:border-border hover:bg-accent/50 md:flex">
+                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="hidden h-11 gap-2 rounded-2xl border-border/70 bg-[hsl(var(--surface-alt))]/90 px-4 transition-all hover:border-primary/20 hover:bg-white md:flex md:h-12">
                             <IconPlus className="h-4 w-4" />
                             {t('actions.newBrandKit')}
                         </Button>
@@ -154,7 +153,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     ) : null}
                 </div>
 
-                <div className="ml-2 flex shrink-0 items-center gap-1 md:gap-2">
+                <div className="ml-3 flex shrink-0 items-center gap-1 md:gap-2">
                     <Link href="/settings#credits" className="origin-right scale-75 sm:scale-90 md:mr-2 md:scale-100">
                         <CreditsBadge />
                     </Link>
@@ -165,7 +164,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                 variant="ghost"
                                 size="icon"
                                 title={t('labels.adminPanel')}
-                                className="hidden h-9 w-9 rounded-full hover:bg-accent/60 md:flex"
+                                className="hidden h-10 w-10 rounded-2xl hover:bg-primary/8 md:flex"
                             >
                                 <IconSettings className="h-4.5 w-4.5" />
                             </Button>

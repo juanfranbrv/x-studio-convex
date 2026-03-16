@@ -8,8 +8,8 @@
     "management": {
       "eyebrow": "Gestión",
       "title": "Interfaz y ritmo de trabajo",
-      "description": "Decide cómo se comporta el estudio: posición del panel, ayudas activas, tema y color del sistema.",
-      "short": "Panel, ayuda, tema y paleta"
+      "description": "Decide cómo se comporta el estudio: posición del panel y ayudas activas mientras trabajas.",
+      "short": "Panel y ayuda"
     },
     "credits": {
       "eyebrow": "Economía",
@@ -22,7 +22,7 @@
       "historyDescription": "Solo aparecen compras completadas. Nada de intentos abortados ni ruido innecesario.",
       "historyEmptyTitle": "Aún no hay compras cerradas",
       "referralsTitle": "Referidos",
-      "referralsDescription": "Comparte tu enlace y sigue los creditos que te va trayendo cada usuario."
+      "referralsDescription": "Comparte tu enlace y sigue los créditos que te va trayendo cada usuario."
     },
     "profile": {
       "eyebrow": "Cuenta",
@@ -35,6 +35,11 @@
     "workspace": {
       "title": "Espacio de trabajo",
       "description": "Ajustes que influyen directamente en cómo se mueve el estudio mientras creas."
+    },
+    "notice": {
+      "title": "Preferencias del espacio de trabajo",
+      "globalTheme": "El color visual de la aplicación se gestiona globalmente desde Admin para mantener una experiencia coherente en todo el producto.",
+      "personalPrefs": "Aquí solo puedes ajustar preferencias personales de uso, como la posición del panel y la ayuda guiada durante la creación."
     },
     "colors": {
       "title": "Paleta del sistema",
