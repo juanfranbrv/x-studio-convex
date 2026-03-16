@@ -119,7 +119,7 @@ export function FloatingAssistance({
                 className={cn(
                     "fixed z-[9999] w-[min(280px,calc(100vw-24px))] sm:w-[280px] pointer-events-auto",
                     "overflow-visible rounded-xl border border-primary/20",
-                    "bg-background/95 backdrop-blur-xl shadow-2xl",
+                    "bg-white backdrop-blur-xl shadow-2xl",
                     "p-4",
                     className
                 )}

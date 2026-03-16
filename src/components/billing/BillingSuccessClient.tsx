@@ -50,7 +50,7 @@ export function BillingSuccessClient() {
 
   return (
     <div className="flex min-h-[100dvh] items-center justify-center px-6 py-16">
-      <Card className="w-full max-w-xl border-white/50 bg-white/80 shadow-[0_25px_80px_-35px_rgba(15,23,42,0.3)] backdrop-blur">
+      <Card className="w-full max-w-xl border-border bg-white shadow-md">
         <CardHeader>
           <CardTitle className="text-3xl tracking-tight">{t("account.success.title")}</CardTitle>
           <CardDescription>

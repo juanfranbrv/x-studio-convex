@@ -27,16 +27,16 @@ export function PromoMovil({ image, texts, brandColors, aspectRatio, isGhost }: 
             {/* Mobile Device Mockup */}
             <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[60%] h-[70%] z-20">
                 <div className={cn(
-                    "w-full h-full rounded-[2.5rem] border-[6px] relative overflow-hidden shadow-2xl bg-white",
+                    "w-full h-full rounded-2xl border-[6px] relative overflow-hidden shadow-2xl bg-white",
                     isGhost ? "border-zinc-300" : "border-zinc-900"
                 )}>
                     {/* Inner Screen */}
                     <div className="absolute inset-0 flex items-center justify-center p-2">
                         {image ? (
-                            <img src={image} className="w-full h-full object-cover rounded-[1.8rem]" alt="App Preview" />
+                            <img src={image} className="w-full h-full object-cover rounded-2xl" alt="App Preview" />
                         ) : (
                             <div className={cn(
-                                "w-full h-full rounded-[1.8rem] border-2 border-dashed flex flex-col items-center justify-center gap-2",
+                                "w-full h-full rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2",
                                 isGhost ? "bg-zinc-50 border-zinc-200" : "bg-zinc-100 border-zinc-200"
                             )}>
                                 {!isGhost && (

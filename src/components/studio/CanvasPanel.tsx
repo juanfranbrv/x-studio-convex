@@ -814,7 +814,7 @@ export function CanvasPanel({
 
                 {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}
                 {/* Zoom Controls & Actions */}
-                <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4 border border-border/60 bg-background/85 backdrop-blur-sm">
+                <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4 border border-border/60 bg-white backdrop-blur-sm">
                     {/* Zoom Controls */}
                     <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
                         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut} title={tt('common:preview.zoomOut', 'Zoom out')}>
@@ -886,7 +886,7 @@ export function CanvasPanel({
                     <div
                         ref={containerRef}
                         className={cn(
-                            "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot shrink-0 rounded-aero",
+                            "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot shrink-0 rounded-aero",
                             "overflow-visible",
                             wasJustGenerated && "canvas-success-flash"
                         )}
@@ -975,7 +975,7 @@ export function CanvasPanel({
                                             variant="ghost"
                                             size="icon"
                                             onClick={onOpenPromptDebug}
-                                            className="h-9 w-9 rounded-full bg-background/80 backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                                            className="h-9 w-9 rounded-full bg-white backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
                                             title={tt('common:preview.viewPrompt', 'View prompt')}
                                         >
                                             <Bug className="w-4 h-4" />
@@ -989,7 +989,7 @@ export function CanvasPanel({
                                             variant="ghost"
                                             size="icon"
                                             onClick={handleDownload}
-                                            className="h-9 w-9 rounded-full border border-border bg-background/82 shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
+                                            className="h-9 w-9 rounded-full border border-border bg-white shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
                                             title={tt('common:preview.downloadImage', 'Download image')}
                                         >
                                             <ImageDown className="w-4 h-4" />
@@ -999,7 +999,7 @@ export function CanvasPanel({
                                             variant="ghost"
                                             size="icon"
                                             onClick={handleDownloadBundle}
-                                            className="h-9 w-9 rounded-full border border-border bg-background/82 shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
+                                            className="h-9 w-9 rounded-full border border-border bg-white shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
                                             title={tt('common:preview.downloadBundle', 'Download ZIP')}
                                         >
                                             <SquareArrowDown className="w-4 h-4" />
@@ -1038,8 +1038,8 @@ export function CanvasPanel({
                                 />
                             </div>
                         ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
-                                <div className="w-16 h-16 rounded-2xl bg-background/80 shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm border border-border/50">
+                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed border-border/40 rounded-lg bg-muted/50 hover:bg-white transition-colors">
+                                <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-3 backdrop-blur-sm border border-border/50">
                                     <span className="text-3xl opacity-70">🎨</span>
                                 </div>
                                 <p className="text-sm font-medium text-muted-foreground/70">
@@ -1459,8 +1459,8 @@ export function CanvasPanel({
                         )}
                     >
                         <div className={cn(
-                            "flex items-center gap-2 p-2 pl-4 bg-background/85 backdrop-blur-sm border border-border/60 shadow-2xl rounded-[32px] transition-colors transition-shadow duration-200",
-                            isDraggingOver ? "ring-2 ring-primary ring-offset-2 bg-background" : "hover:bg-background/90"
+                            "flex items-center gap-2 p-2 pl-4 bg-white backdrop-blur-sm border border-border/60 shadow-2xl rounded-full transition-colors transition-shadow duration-200",
+                            isDraggingOver ? "ring-2 ring-primary ring-offset-2 bg-white" : "hover:bg-white"
                         )}>
                             {/* Input */}
                             <Textarea

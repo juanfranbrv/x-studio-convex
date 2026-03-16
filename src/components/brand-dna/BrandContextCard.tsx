@@ -14,7 +14,7 @@ interface BrandContextCardProps {
 export function BrandContextCard({ context, onUpdate, minHeightClassName = 'min-h-[120px]' }: BrandContextCardProps) {
     const { t } = useTranslation('brandKit');
     return (
-        <Card className="glass-panel border-0 shadow-none overflow-hidden">
+        <Card className="bg-white border border-border shadow-sm overflow-hidden">
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <FileText className="w-5 h-5 text-primary" />

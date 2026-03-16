@@ -112,7 +112,7 @@ export function BrandAssets({
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="md:col-span-2 glass-panel border-0 shadow-none">
+            <Card className="md:col-span-2 bg-white border border-border shadow-sm">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Quote className="w-5 h-5 text-primary" />
@@ -131,7 +131,7 @@ export function BrandAssets({
                 </CardContent>
             </Card>
 
-            <Card className="md:col-span-2 glass-panel border-0 shadow-none">
+            <Card className="md:col-span-2 bg-white border border-border shadow-sm">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Languages className="w-5 h-5 text-primary" />
@@ -160,7 +160,7 @@ export function BrandAssets({
                 </CardContent>
             </Card>
 
-            <Card className="glass-panel border-0 shadow-none">
+            <Card className="bg-white border border-border shadow-sm">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Sparkles className="w-5 h-5 text-primary" />
@@ -184,7 +184,7 @@ export function BrandAssets({
                 </CardContent>
             </Card>
 
-            <Card className="glass-panel border-0 shadow-none">
+            <Card className="bg-white border border-border shadow-sm">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <Type className="w-5 h-5 text-primary" />
@@ -251,7 +251,7 @@ export function BrandAssets({
                 </CardContent>
             </Card>
 
-            <Card className="glass-panel border-0 shadow-none">
+            <Card className="bg-white border border-border shadow-sm">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
                         <MessageCircle className="w-5 h-5 text-primary" />

@@ -91,7 +91,7 @@ export function PricingPageClient() {
             </div>
           </div>
 
-          <Card className="border-white/40 bg-white/70 shadow-[0_25px_80px_-35px_rgba(15,23,42,0.25)] backdrop-blur">
+          <Card className="border-border bg-white shadow-md">
             <CardHeader>
               <CardTitle className="text-lg">{t("pricing.faqTitle")}</CardTitle>
             </CardHeader>
@@ -113,7 +113,7 @@ export function PricingPageClient() {
             return (
               <Card
                 key={slug}
-                className={`relative overflow-hidden border-white/50 bg-white/75 shadow-[0_18px_60px_-30px_rgba(15,23,42,0.28)] backdrop-blur ${
+                className={`relative overflow-hidden border-border bg-white shadow-md ${
                   pack.featured ? "ring-1 ring-primary/40" : ""
                 }`}
               >
@@ -175,7 +175,7 @@ export function PricingPageClient() {
 
         <div className="grid gap-4 md:grid-cols-3">
           {trustCards.map((item) => (
-            <Card key={item.title} className="border-white/40 bg-white/70 backdrop-blur">
+            <Card key={item.title} className="border-border bg-white">
               <CardContent className="flex gap-4 p-6">
                 <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <item.icon className="h-5 w-5" />

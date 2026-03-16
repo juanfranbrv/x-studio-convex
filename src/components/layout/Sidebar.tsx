@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { Loader2 } from '@/components/ui/spinner'
 import { useState } from 'react'
@@ -6,7 +6,17 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
-import { FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, PanelsTopLeft, Play, Settings, User } from 'lucide-react'
+import {
+    IconHome,
+    IconBrandKit,
+    IconImage,
+    IconStudio,
+    IconCarousel,
+    IconVideo,
+    IconSettings,
+    IconUser,
+    IconLogout,
+} from '@/components/ui/icons'
 import { AppLogo } from '@/components/ui/AppLogo'
 import { cn } from '@/lib/utils'
 import {
@@ -30,12 +40,12 @@ export function Sidebar({ className }: SidebarProps) {
     const [isLoggingOut, setIsLoggingOut] = useState(false)
 
     const navItems = [
-        { icon: Home, label: t('nav.home'), href: '/' },
-        { icon: FileSpreadsheet, label: t('nav.brandKit'), href: '/brand-kit' },
-        { icon: Image, label: t('nav.image'), href: '/image' },
-        { icon: PanelsTopLeft, label: t('nav.studioWorkspace'), href: '/studio' },
-        { icon: GalleryHorizontal, label: t('nav.carousel'), href: '/carousel' },
-        { icon: Play, label: t('nav.video'), href: '/video' },
+        { icon: IconHome, label: t('nav.home'), href: '/' },
+        { icon: IconBrandKit, label: t('nav.brandKit'), href: '/brand-kit' },
+        { icon: IconImage, label: t('nav.image'), href: '/image' },
+        { icon: IconStudio, label: t('nav.studioWorkspace'), href: '/studio' },
+        { icon: IconCarousel, label: t('nav.carousel'), href: '/carousel' },
+        { icon: IconVideo, label: t('nav.video'), href: '/video' },
     ]
 
     const handleLogout = async () => {
@@ -51,7 +61,7 @@ export function Sidebar({ className }: SidebarProps) {
     return (
         <aside
             className={cn(
-                'flex h-screen w-[90px] shrink-0 flex-col border-r border-border/60 bg-background/95 backdrop-blur-sm transition-colors duration-300 ease-in-out',
+                'flex h-screen w-[90px] shrink-0 flex-col border-r border-border/60 bg-surface transition-colors duration-300 ease-in-out',
                 className
             )}
         >
@@ -75,8 +85,8 @@ export function Sidebar({ className }: SidebarProps) {
                                     : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
                             )}
                         >
-                            <item.icon className={cn('h-6 w-6 shrink-0', isActive ? 'text-primary-foreground' : 'text-primary')} />
-                            <span className="text-center text-xs font-medium leading-tight">{item.label}</span>
+                            <item.icon className={cn('h-8 w-8 shrink-0', isActive ? 'text-primary-foreground' : 'text-primary')} />
+                            <span className="text-center text-[13px] font-semibold leading-tight">{item.label}</span>
                         </Link>
                     )
                 })}
@@ -92,8 +102,8 @@ export function Sidebar({ className }: SidebarProps) {
                             : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
                     )}
                 >
-                    <Settings className={cn('h-6 w-6 shrink-0', pathname === '/settings' ? 'text-primary-foreground' : 'text-primary')} />
-                    <span className="text-xs font-medium">{t('nav.settings')}</span>
+                    <IconSettings className={cn('h-8 w-8 shrink-0', pathname === '/settings' ? 'text-primary-foreground' : 'text-primary')} />
+                    <span className="text-[13px] font-semibold">{t('nav.settings')}</span>
                 </Link>
 
                 <DropdownMenu>
@@ -122,7 +132,7 @@ export function Sidebar({ className }: SidebarProps) {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
                             <Link href="/settings" className="cursor-pointer">
-                                <User className="mr-2 h-4 w-4" />
+                                <IconUser className="mr-2 h-4 w-4" />
                                 <span>{t('labels.myAccount')}</span>
                             </Link>
                         </DropdownMenuItem>
@@ -139,7 +149,7 @@ export function Sidebar({ className }: SidebarProps) {
                                 </>
                             ) : (
                                 <>
-                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <IconLogout className="mr-2 h-4 w-4" />
                                     <span>{t('actions.logout')}</span>
                                 </>
                             )}

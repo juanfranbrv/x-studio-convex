@@ -1750,7 +1750,7 @@ export default function CarouselPage() {
             closeLabel={t('ui.closeWorkPanel')}
         >
             {controlsPanel}
-            <div className="sticky bottom-0 border-t border-border/40 bg-background/95 p-3 backdrop-blur-md">
+            <div className="sticky bottom-0 border-t border-border/40 bg-white p-3">
                 <Button
                     onClick={() => {
                         if (!carouselSettings) return
@@ -1778,7 +1778,7 @@ export default function CarouselPage() {
 
     const actionBar = (
         <div className={cn(
-            'studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-background/50 backdrop-blur-md min-h-[80px]',
+            'studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-surface min-h-[80px]',
             isMobile
                 ? 'gap-3 p-3'
                 : cn(
@@ -1953,7 +1953,7 @@ export default function CarouselPage() {
                 <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar">
                     {!isMobile && isAdmin && activeComposition && activeCompositionRecommendation && (
                         <div className="shrink-0 px-4 pt-4 md:px-6">
-                            <div className="rounded-2xl border border-border/70 bg-background/90 shadow-sm backdrop-blur-sm">
+                            <div className="rounded-2xl border border-border/70 bg-white shadow-sm">
                                 <button
                                     type="button"
                                     onClick={() => setIsAdminCompositionOpen((prev) => !prev)}
@@ -2186,7 +2186,7 @@ export default function CarouselPage() {
                         </div>
                     )}
                     {isMobile && slides.some(slide => Boolean(slide.imageUrl)) ? (
-                        <div className="mt-3 shrink-0 rounded-[1.25rem] border border-border/50">
+                        <div className="mt-3 shrink-0 rounded-2xl border border-border/50">
                             {actionBar}
                         </div>
                     ) : null}

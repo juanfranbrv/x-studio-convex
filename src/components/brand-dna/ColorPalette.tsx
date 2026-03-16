@@ -224,7 +224,7 @@ export function ColorPalette({
                                                         draggedColorIndex !== null && draggedColorIndex !== idx && 'ring-2 ring-primary/20',
                                                         selectedColorIds.includes(`color-${idx}`)
                                                             ? "border-primary shadow-md"
-                                                            : "border-white/30 dark:border-white/20 hover:border-primary/50"
+                                                            : "border-white/30 hover:border-primary/50"
                                                     )}
                                                     style={{ backgroundColor: item.color }}
                                                 >
@@ -277,8 +277,8 @@ export function ColorPalette({
                                                                 className={cn(
                                                                     "flex-1 h-7 text-[10px] px-0 rounded-lg transition-all",
                                                                     item.role === role
-                                                                        ? "bg-white dark:bg-zinc-800 shadow-sm text-primary font-bold"
-                                                                        : "hover:bg-white/50 dark:hover:bg-white/5 text-muted-foreground"
+                                                                        ? "bg-white shadow-sm text-primary font-bold"
+                                                                        : "hover:bg-white/50 text-muted-foreground"
                                                                 )}
                                                                 onClick={() => onUpdateRole(idx, role)}
                                                             >

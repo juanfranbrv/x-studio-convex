@@ -104,7 +104,7 @@ export function SmartImageDropzone({
                 {/* Vision Analysis Results */}
                 {visionAnalysis && !isAnalyzing && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
+                        <div className="flex items-center gap-2 text-xs text-green-600$1">
                             <Check className="w-3.5 h-3.5" />
                             <span className="font-medium">{t('smartDropzone.detected', { defaultValue: 'Detected' })}: {visionAnalysis.subjectLabel}</span>
                         </div>

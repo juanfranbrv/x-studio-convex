@@ -1088,7 +1088,7 @@ export function ControlsPanel({
                                     isAnalyzing={state.isAnalyzing || false}
                                     error={state.error}
                                 />
-                                <div className="mt-4 rounded-xl border border-border/70 bg-background/65 px-3 py-3">
+                                <div className="mt-4 rounded-xl border border-border/70 bg-muted/50 px-3 py-3">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="space-y-1">
                                             <p className="text-[12px] font-medium leading-none">{t('ui.styleTypographyTitle')}</p>

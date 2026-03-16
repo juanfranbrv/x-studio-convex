@@ -41,14 +41,14 @@ export function GoogleAuthCard() {
   }
 
   return (
-    <div className="studio-tone-panel glass-card overflow-hidden border border-white/55 bg-white/86 p-6 shadow-[0_30px_80px_-38px_rgba(15,23,42,0.42)] backdrop-blur-2xl sm:p-7">
+    <div className="overflow-hidden border border-border bg-white p-6 shadow-lg rounded-2xl sm:p-7">
       <div className="mb-7 space-y-2">
         <h3 className="font-heading text-3xl font-bold tracking-tight text-foreground">{t('google.cardTitle')}</h3>
         <p className="text-sm leading-6 text-muted-foreground">{t('google.cardDescription')}</p>
       </div>
 
       <Button
-        className="feedback-action h-16 w-full justify-between rounded-[1.55rem] border border-border/70 bg-background/92 px-5 text-base font-semibold text-foreground shadow-[0_22px_44px_-30px_rgba(15,23,42,0.5)] hover:bg-background"
+        className="feedback-action h-16 w-full justify-between rounded-2xl border border-border/70 bg-white px-5 text-base font-semibold text-foreground shadow-[0_22px_44px_-30px_rgba(15,23,42,0.5)] hover:bg-muted/50"
         disabled={isPending || !isLoaded}
         onClick={() => void handleGoogleAuth()}
         type="button"

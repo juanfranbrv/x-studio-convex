@@ -136,7 +136,7 @@ export function MobileWorkPanelDrawer({
                 )}
                 style={{ willChange: open ? 'transform' : 'auto' }}
             >
-                <div className="min-w-0 h-full overflow-hidden rounded-l-[1.5rem] rounded-r-none border border-border/70 bg-background/95 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.6)] backdrop-blur-2xl">
+                <div className="min-w-0 h-full overflow-hidden rounded-l-[1.5rem] rounded-r-none border border-border/70 bg-white shadow-[0_28px_80px_-36px_rgba(15,23,42,0.6)] backdrop-blur-2xl">
                     <div
                         className={cn('h-full overflow-y-auto', contentClassName)}
                         onPointerDown={(event) => dragControls.start(event)}

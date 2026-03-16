@@ -3,8 +3,16 @@
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { applyThemeColors, DEFAULT_THEME_COLORS, ThemeColors, writeThemeColors } from '@/lib/theme-colors'
-import { Layout, Moon, Palette, Sparkles, Sun } from 'lucide-react'
+import { IconCheck, IconPalette, IconSparkles } from '@/components/ui/icons'
+import {
+    applyThemeColors,
+    COLOR_SCHEMES,
+    DEFAULT_THEME_COLORS,
+    deriveSchemeFromColors,
+    type ThemeColors,
+    type SchemeId,
+    writeThemeColors,
+} from '@/lib/theme-colors'
 
 type Props = {
     t: (key: string, options?: Record<string, unknown>) => string
@@ -12,24 +20,14 @@ type Props = {
     setPanelPosition: (value: 'left' | 'right') => void
     assistanceEnabled: boolean
     setAssistanceEnabled: (value: boolean) => void
-    resolvedTheme?: string
-    setTheme: (theme: string) => void
     primaryColor: string
-    secondaryColor: string
+    accentColor: string
     setPrimaryColor: (value: string) => void
-    setSecondaryColor: (value: string) => void
+    setAccentColor: (value: string) => void
     userId: string | null
-    adminThemeDefaults?: ThemeColors
-    resolveHex: (value: string | undefined) => string
+    activeSchemeId: SchemeId | 'custom' | null
+    setActiveSchemeId: (id: SchemeId | 'custom') => void
 }
-
-const presetColors = [
-    { primary: '#22c55e', secondary: '#38bdf8', title: 'Green & Blue' },
-    { primary: '#a855f7', secondary: '#fb923c', title: 'Purple & Orange' },
-    { primary: '#6366f1', secondary: '#ec4899', title: 'Indigo & Pink' },
-    { primary: '#ef4444', secondary: '#f97316', title: 'Red & Amber' },
-    { primary: '#0ea5e9', secondary: '#14b8a6', title: 'Ocean Breeze' },
-]
 
 export function SettingsManagementSection({
     t,
@@ -37,226 +35,203 @@ export function SettingsManagementSection({
     setPanelPosition,
     assistanceEnabled,
     setAssistanceEnabled,
-    resolvedTheme,
-    setTheme,
     primaryColor,
-    secondaryColor,
+    accentColor,
     setPrimaryColor,
-    setSecondaryColor,
+    setAccentColor,
     userId,
-    adminThemeDefaults,
-    resolveHex,
+    activeSchemeId,
+    setActiveSchemeId,
 }: Props) {
-    const saveThemeColors = (nextPrimary: string, nextSecondary: string) => {
-        const payload = { primary: nextPrimary, secondary: nextSecondary }
-        writeThemeColors(userId, payload)
-        applyThemeColors(payload)
+    const applyScheme = (schemeId: SchemeId) => {
+        const scheme = COLOR_SCHEMES[schemeId]
+        setPrimaryColor(scheme.primary)
+        setAccentColor(scheme.accent)
+        setActiveSchemeId(schemeId)
+        writeThemeColors(userId, scheme)
+        applyThemeColors(scheme)
+    }
+
+    const applyCustomColors = (primary: string, accent: string) => {
+        const scheme = deriveSchemeFromColors(primary, accent)
+        setActiveSchemeId('custom')
+        writeThemeColors(userId, scheme)
+        applyThemeColors(scheme)
     }
 
     const resetThemeColors = () => {
-        const defaults = adminThemeDefaults ?? DEFAULT_THEME_COLORS
-        const primary = resolveHex(defaults.primary)
-        const secondary = resolveHex(defaults.secondary)
-        setPrimaryColor(primary)
-        setSecondaryColor(secondary)
-        saveThemeColors(primary, secondary)
+        setPrimaryColor(DEFAULT_THEME_COLORS.primary)
+        setAccentColor(DEFAULT_THEME_COLORS.accent)
+        setActiveSchemeId('violeta-canva')
+        writeThemeColors(userId, DEFAULT_THEME_COLORS)
+        applyThemeColors(DEFAULT_THEME_COLORS)
     }
 
     return (
-        <section className="overflow-hidden rounded-[2rem] border border-border/70 bg-background/85 shadow-sm">
-            <div className="border-b border-border/60 px-6 py-6 md:px-8">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+        <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
+            {/* Section header */}
+            <div className="px-6 py-6 md:px-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/70">
                     {t('sections.management.eyebrow')}
                 </p>
-                <div className="mt-3 flex items-start justify-between gap-4">
-                    <div className="space-y-2">
-                        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                            {t('sections.management.title')}
-                        </h2>
-                        <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                            {t('sections.management.description')}
-                        </p>
-                    </div>
-                    <div className="hidden rounded-full border border-border/70 bg-muted/50 p-3 text-muted-foreground md:flex">
-                        <Layout className="h-5 w-5" />
-                    </div>
-                </div>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+                    {t('sections.management.title')}
+                </h2>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                    {t('sections.management.description')}
+                </p>
             </div>
 
-            <div className="grid gap-8 px-6 py-6 md:px-8 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="grid gap-8 px-6 pb-8 md:px-8 lg:grid-cols-[1.15fr_0.85fr]">
                 <div className="space-y-8">
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                                {t('management.workspace.title')}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">{t('management.workspace.description')}</p>
-                        </div>
+                    {/* Workspace settings */}
+                    <div className="space-y-5">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                            <span className="h-1 w-1 rounded-full bg-primary" />
+                            {t('management.workspace.title')}
+                        </h3>
 
-                        <div className="flex flex-col gap-4">
-                            <div className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-4">
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-foreground">
-                                            {t('interface.panelTitle')}
-                                        </Label>
-                                        <p className="text-sm leading-6 text-muted-foreground">
-                                            {t('interface.panelDescription')}
-                                        </p>
-                                    </div>
-                                    <div className="rounded-full border border-border/70 bg-background p-1">
-                                        <div className="flex items-center gap-1">
-                                            <Button
-                                                variant={panelPosition === 'right' ? 'secondary' : 'ghost'}
-                                                className="rounded-full px-4"
-                                                onClick={() => setPanelPosition('right')}
-                                            >
-                                                {t('interface.right')}
-                                            </Button>
-                                            <Button
-                                                variant={panelPosition === 'left' ? 'secondary' : 'ghost'}
-                                                className="rounded-full px-4"
-                                                onClick={() => setPanelPosition('left')}
-                                            >
-                                                {t('interface.left')}
-                                            </Button>
-                                        </div>
+                        <div className="space-y-4">
+                            {/* Panel position */}
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                    <Label className="text-sm font-medium text-foreground">
+                                        {t('interface.panelTitle')}
+                                    </Label>
+                                    <p className="text-sm leading-6 text-muted-foreground">
+                                        {t('interface.panelDescription')}
+                                    </p>
+                                </div>
+                                <div className="rounded-lg border border-border/60 bg-muted/30 p-1">
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            variant={panelPosition === 'right' ? 'secondary' : 'ghost'}
+                                            className="rounded-md px-4"
+                                            onClick={() => setPanelPosition('right')}
+                                        >
+                                            {t('interface.right')}
+                                        </Button>
+                                        <Button
+                                            variant={panelPosition === 'left' ? 'secondary' : 'ghost'}
+                                            className="rounded-md px-4"
+                                            onClick={() => setPanelPosition('left')}
+                                        >
+                                            {t('interface.left')}
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-4">
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="space-y-1">
-                                        <Label htmlFor="guided-assistance" className="text-sm font-medium text-foreground">
-                                            {t('interface.guidedTitle')}
-                                        </Label>
-                                        <p className="text-sm leading-6 text-muted-foreground">
-                                            {t('interface.guidedDescription')}
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        id="guided-assistance"
-                                        checked={assistanceEnabled}
-                                        onCheckedChange={setAssistanceEnabled}
-                                    />
+                            <div className="border-t border-border/40" />
+
+                            {/* Guided assistance */}
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                    <Label htmlFor="guided-assistance" className="text-sm font-medium text-foreground">
+                                        {t('interface.guidedTitle')}
+                                    </Label>
+                                    <p className="text-sm leading-6 text-muted-foreground">
+                                        {t('interface.guidedDescription')}
+                                    </p>
                                 </div>
+                                <Switch
+                                    id="guided-assistance"
+                                    checked={assistanceEnabled}
+                                    onCheckedChange={setAssistanceEnabled}
+                                />
                             </div>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                                {t('management.colors.title')}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">{t('management.colors.description')}</p>
-                        </div>
+                    {/* Color schemes */}
+                    <div className="space-y-5">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                            <span className="h-1 w-1 rounded-full bg-primary" />
+                            {t('management.colors.title')}
+                        </h3>
 
-                        <div className="flex flex-wrap gap-3">
-                            {presetColors.map((preset) => (
+                        <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+                            {(Object.entries(COLOR_SCHEMES) as [SchemeId, typeof COLOR_SCHEMES[SchemeId]][]).map(([id, scheme]) => (
                                 <button
-                                    key={preset.title}
-                                    onClick={() => {
-                                        setPrimaryColor(preset.primary)
-                                        setSecondaryColor(preset.secondary)
-                                        saveThemeColors(preset.primary, preset.secondary)
-                                    }}
-                                    className="relative h-11 w-11 rounded-full border border-border/70 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                    style={{ background: `linear-gradient(135deg, ${preset.primary}, ${preset.secondary})` }}
-                                    title={preset.title}
+                                    key={id}
+                                    onClick={() => applyScheme(id)}
+                                    className={`group relative flex cursor-pointer flex-col items-center gap-2 rounded-xl p-3 transition-all hover:shadow-md ${
+                                        activeSchemeId === id
+                                            ? 'bg-primary/5 shadow-sm ring-2 ring-primary/30'
+                                            : 'bg-muted/20 hover:bg-muted/40'
+                                    }`}
+                                    title={scheme.name}
                                 >
-                                    <span className="sr-only">{preset.title}</span>
+                                    <div className="relative h-10 w-10 overflow-hidden rounded-full">
+                                        <div
+                                            className="absolute inset-0"
+                                            style={{ background: `linear-gradient(135deg, ${scheme.primary} 50%, ${scheme.accent} 50%)` }}
+                                        />
+                                        {activeSchemeId === id && (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                                <IconCheck className="h-4 w-4 text-white" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-[10px] font-medium text-muted-foreground">{scheme.name}</span>
                                 </button>
                             ))}
-                            <Button variant="outline" className="rounded-full px-4" onClick={resetThemeColors}>
-                                {t('management.colors.reset')}
-                            </Button>
                         </div>
 
+                        {/* Custom color pickers */}
                         <div className="grid gap-4 md:grid-cols-2">
                             <ColorControl
                                 label={t('colors.primary')}
                                 value={primaryColor}
                                 onChange={(hex) => {
                                     setPrimaryColor(hex)
-                                    saveThemeColors(hex, secondaryColor)
+                                    applyCustomColors(hex, accentColor)
                                 }}
                             />
                             <ColorControl
-                                label={t('colors.secondary')}
-                                value={secondaryColor}
+                                label="Accent"
+                                value={accentColor}
                                 onChange={(hex) => {
-                                    setSecondaryColor(hex)
-                                    saveThemeColors(primaryColor, hex)
+                                    setAccentColor(hex)
+                                    applyCustomColors(primaryColor, hex)
                                 }}
                             />
                         </div>
+
+                        <Button variant="outline" className="rounded-lg" onClick={resetThemeColors}>
+                            {t('management.colors.reset')}
+                        </Button>
                     </div>
                 </div>
 
-                <div className="rounded-[1.75rem] border border-border/70 bg-muted/15 p-5">
+                {/* Live preview */}
+                <div className="rounded-2xl bg-muted/20 p-5">
                     <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                        <Sparkles className="h-4 w-4" />
+                        <IconSparkles className="h-4 w-4 text-primary" />
                         {t('management.preview.title')}
                     </div>
                     <div className="mt-5 space-y-5">
-                        <div className="rounded-[1.5rem] border border-border/70 bg-background/80 p-5">
-                            <div className="flex items-center justify-between gap-3">
-                                <div>
-                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                                        {t('appearance.title')}
-                                    </p>
-                                    <p className="mt-2 text-lg font-semibold text-foreground">
-                                        {resolvedTheme === 'dark' ? t('appearance.dark') : t('appearance.light')}
-                                    </p>
-                                </div>
-                                <div className="rounded-full border border-border/70 bg-muted/40 p-3 text-muted-foreground">
-                                    {resolvedTheme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-                                </div>
-                            </div>
-
-                            <div className="mt-4 grid grid-cols-2 gap-3">
-                                <Button
-                                    variant={resolvedTheme === 'light' ? 'secondary' : 'outline'}
-                                    className="justify-start gap-2 rounded-2xl"
-                                    onClick={() => setTheme('light')}
-                                >
-                                    <Sun className="h-4 w-4" />
-                                    {t('appearance.light')}
-                                </Button>
-                                <Button
-                                    variant={resolvedTheme === 'dark' ? 'secondary' : 'outline'}
-                                    className="justify-start gap-2 rounded-2xl"
-                                    onClick={() => setTheme('dark')}
-                                >
-                                    <Moon className="h-4 w-4" />
-                                    {t('appearance.dark')}
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="rounded-[1.5rem] border border-border/70 bg-background/80 p-5">
+                        <div className="rounded-xl bg-white p-5 shadow-sm">
                             <div className="flex items-center gap-3">
                                 <div
-                                    className="h-11 w-11 rounded-2xl border border-border/60"
-                                    style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
+                                    className="h-11 w-11 rounded-xl"
+                                    style={{ background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})` }}
                                 />
                                 <div>
                                     <p className="text-sm font-medium text-foreground">{t('management.preview.palette')}</p>
                                     <p className="text-sm text-muted-foreground">
-                                        {primaryColor.toUpperCase()} · {secondaryColor.toUpperCase()}
+                                        {primaryColor.toUpperCase()} · {accentColor.toUpperCase()}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="mt-4 flex flex-wrap gap-3">
-                                <Button className="rounded-full px-4">{t('management.preview.primaryCta')}</Button>
-                                <Button variant="outline" className="rounded-full px-4">
+                                <Button className="rounded-lg px-4">{t('management.preview.primaryCta')}</Button>
+                                <Button variant="outline" className="rounded-lg px-4">
                                     {t('management.preview.secondaryCta')}
                                 </Button>
-                                <span className="inline-flex items-center rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground">
-                                    <Palette className="mr-2 h-3.5 w-3.5" />
+                                <span className="inline-flex items-center rounded-lg bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                                    <IconPalette className="mr-2 h-3.5 w-3.5" />
                                     {t('management.preview.helper')}
                                 </span>
                             </div>
@@ -278,10 +253,10 @@ function ColorControl({
     onChange: (value: string) => void
 }) {
     return (
-        <div className="rounded-[1.5rem] border border-border/70 bg-muted/20 p-4">
+        <div>
             <Label className="text-sm font-medium text-foreground">{label}</Label>
-            <div className="mt-3 flex items-center gap-3">
-                <div className="relative h-11 w-11 overflow-hidden rounded-2xl border border-border/70">
+            <div className="mt-2 flex items-center gap-3">
+                <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-border/50">
                     <input
                         type="color"
                         value={value}

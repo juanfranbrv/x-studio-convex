@@ -778,7 +778,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-background/70 px-2.5 py-2">
+                    <div className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-white px-2.5 py-2">
                       <span className="text-xs text-muted-foreground">Activo</span>
                       <Switch
                         checked={preset.is_active}

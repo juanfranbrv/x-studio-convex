@@ -73,7 +73,7 @@ export function PromptCard({
                         placeholder={getPlaceholder()}
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
-                        className="w-full min-h-[60px] max-h-[120px] text-sm p-3 pr-10 rounded-xl border border-border/60 bg-background/70 resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors placeholder:text-muted-foreground/70"
+                        className="w-full min-h-[60px] max-h-[120px] text-sm p-3 pr-10 rounded-xl border border-border/60 bg-white resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors placeholder:text-muted-foreground/70"
                         rows={2}
                     />
                     {!hasGeneratedImage && value.trim() && (

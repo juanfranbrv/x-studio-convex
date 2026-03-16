@@ -111,7 +111,7 @@ export function LazyPromptInput({
                 'mt-3 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 transition-opacity duration-300',
                 isFocused ? 'opacity-100' : 'opacity-0'
             )}>
-                {t('lazyPrompt.enterHintBefore', { defaultValue: 'Press' })} <kbd className="rounded bg-white/40 px-1.5 py-0.5 text-[9px] dark:bg-white/10">Enter</kbd> {t('lazyPrompt.enterHintAfter', { defaultValue: 'to generate with AI' })}
+                {t('lazyPrompt.enterHintBefore', { defaultValue: 'Press' })} <kbd className="rounded bg-white/40 px-1.5 py-0.5 text-[9px]$1">Enter</kbd> {t('lazyPrompt.enterHintAfter', { defaultValue: 'to generate with AI' })}
             </p>
         </div>
     )

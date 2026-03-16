@@ -499,7 +499,7 @@ export function BrandDNAPanel({
         icon: any, title: string, count?: number, maxCount?: number, isOpen: boolean, extra?: React.ReactNode
     }) => (
         <div className="flex items-center justify-between w-full px-1 py-1">
-            <CollapsibleTrigger className="flex-1 flex items-center justify-between hover:bg-white/40 dark:hover:bg-white/10 rounded-xl transition-colors group pr-2 py-1">
+            <CollapsibleTrigger className="flex-1 flex items-center justify-between hover:bg-white/40 rounded-xl transition-colors group pr-2 py-1">
                 <div className="flex items-center gap-2 text-foreground">
                     <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-brand-gradient text-white shadow-aero">
                         <Icon className="w-3 h-3" />
@@ -566,7 +566,7 @@ export function BrandDNAPanel({
                             )}
                         />
                         <CollapsibleContent>
-                            <div className="bg-white/40 dark:bg-white/10 rounded-2xl p-3 border border-white/30">
+                            <div className="bg-white/40 rounded-2xl p-3 border border-white/30">
                                 <ColorPalette
                                     colors={colors}
                                     isEdited={hasUnsavedChanges}
@@ -1103,13 +1103,13 @@ export function BrandDNAPanel({
                                                             value={link.username || ''}
                                                             onChange={(e) => handleUpdateSocialLink(idx, 'username', e.target.value)}
                                                             placeholder={t('brandDnaPanel.socialUsernamePlaceholder', { defaultValue: '@username' })}
-                                                            className="h-7 text-xs bg-background/50 border-border/50"
+                                                            className="h-7 text-xs bg-white border-border/50"
                                                         />
                                                         <Input
                                                             value={link.url}
                                                             onChange={(e) => handleUpdateSocialLink(idx, 'url', e.target.value)}
                                                             placeholder="https://..."
-                                                            className="h-7 text-xs bg-background/50 border-border/50"
+                                                            className="h-7 text-xs bg-white border-border/50"
                                                         />
                                                     </div>
                                                     <Button

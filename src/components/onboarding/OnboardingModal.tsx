@@ -54,7 +54,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[520px] p-0 overflow-hidden bg-background/95 backdrop-blur-xl border-white/20">
+            <DialogContent className="sm:max-w-[520px] p-0 overflow-hidden bg-white backdrop-blur-xl border-white/20">
                 {/* Header with gradient */}
                 <div className="relative bg-gradient-to-br from-primary/20 via-primary/10 to-transparent px-6 pt-8 pb-6">
                     <div className="absolute top-4 right-4">

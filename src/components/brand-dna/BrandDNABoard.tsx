@@ -985,7 +985,7 @@ export function BrandDNABoard({
             <div className="rounded-2xl glass-panel transition-all duration-200 mb-6 p-5 md:p-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex-1 space-y-4">
-                        <div className="rounded-xl border border-border/60 bg-background/60 p-3">
+                        <div className="rounded-xl border border-border/60 bg-white p-3">
                             <p className="text-xs font-semibold text-foreground mb-1">{t('board.howToCompleteTitle', { defaultValue: 'How to complete this section' })}</p>
                             <p className="text-xs text-muted-foreground">{t('board.howToCompleteDescription', { defaultValue: 'Step 1: give your kit a name. Step 2 (optional): paste a URL and click Analyze URL to autofill content.' })}</p>
                         </div>

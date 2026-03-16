@@ -2359,7 +2359,7 @@ export default function ImagePage() {
 
     const actionBar = (
         <div className={cn(
-            "studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-background/50 backdrop-blur-md min-h-[80px]",
+            "studio-tone-shell flex-none flex flex-col border-t border-border/40 bg-surface min-h-[80px]",
             isMobile
                 ? "gap-3 p-3"
                 : cn(
@@ -2499,7 +2499,7 @@ export default function ImagePage() {
             closeLabel={t('ui.closeWorkPanel')}
         >
             {controlsPane}
-            <div className="sticky bottom-0 border-t border-border/40 bg-background/95 p-3 backdrop-blur-md">
+            <div className="sticky bottom-0 border-t border-border/40 bg-white p-3">
                 <Button
                     onClick={() => {
                         setMobileControlsOpen(false)
@@ -2553,7 +2553,7 @@ export default function ImagePage() {
                                     {previewPane}
                                 </div>
                                 {creationFlow.state.generatedImage ? (
-                                    <div className="order-2 shrink-0 rounded-[1.25rem] border border-border/50">
+                                    <div className="order-2 shrink-0 rounded-2xl border border-border/50">
                                         {actionBar}
                                     </div>
                                 ) : null}

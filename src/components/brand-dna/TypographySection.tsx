@@ -184,7 +184,7 @@ export function TypographySection({
   const renderExplorer = () => (
     <div className="flex flex-col gap-3 p-4 border-2 border-dashed border-border rounded-xl bg-muted/50 transition-colors focus-within:border-primary/50 focus-within:bg-muted">
       {guidedMode && (
-        <div className="rounded-lg border border-border/60 bg-background/60 p-3 space-y-2">
+        <div className="rounded-lg border border-border/60 bg-white p-3 space-y-2">
           <p className="text-xs font-medium text-foreground">
             {roleToChoose === 'heading'
               ? t('typography.chooseHeadings', { defaultValue: 'Choose typography for headings' })
@@ -198,7 +198,7 @@ export function TypographySection({
         </div>
       )}
 
-      <div className="rounded-lg border border-border/60 bg-background/60 p-3">
+      <div className="rounded-lg border border-border/60 bg-white p-3">
         <p className="text-xs font-medium text-foreground">{t('typography.exploreTitle', { defaultValue: 'Browse fonts with live preview' })}</p>
         <p className="text-xs text-muted-foreground mt-1">{t('typography.exploreDescription', { defaultValue: 'You do not need to know font names. Browse examples and pick the one you like.' })}</p>
       </div>

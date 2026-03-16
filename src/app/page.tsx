@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input'
 import { brand } from '@/lib/brand'
 import { cn } from '@/lib/utils'
 
-const FONT_LANDING = 'Google Sans Flex, sans-serif'
+// Font is now applied globally via CSS --font-sans
 
 /* ─── Scroll-triggered reveal hook ─── */
 function useScrollReveal<T extends HTMLElement>(threshold = 0.15) {
@@ -120,8 +120,8 @@ function PendingAccessScreen({ status, email }: { status: string; email: string 
   const { signOut } = useAuth()
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-8" style={{ fontFamily: FONT_LANDING }}>
-      <div className="glass-card relative z-10 w-full max-w-md border border-border/40 p-8 text-center shadow-2xl">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-8">
+      <div className="bg-white rounded-2xl relative z-10 w-full max-w-md border border-border/40 p-8 text-center shadow-2xl">
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-border/30 bg-muted shadow-inner">
           {status === 'pending' ? (
             <Clock className="h-10 w-10 animate-pulse text-primary" />
@@ -143,7 +143,7 @@ function PendingAccessScreen({ status, email }: { status: string; email: string 
         <Button
           variant="outline"
           onClick={() => signOut({ redirectUrl: '/' })}
-          className="glass h-12 w-full border-white/20 text-base font-medium transition-all duration-300 hover:bg-white/10"
+          className="h-12 w-full border-border text-base font-medium transition-all duration-300 hover:bg-white/10"
         >
           {t('pending.backHome')}
         </Button>
@@ -158,7 +158,7 @@ function LandingPage({ hasAccess = false }: { hasAccess?: boolean }) {
   const { t } = useTranslation('home')
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-x-hidden" style={{ fontFamily: FONT_LANDING }}>
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden">
       {/* ── Nav ── */}
       <LandingNav hasAccess={hasAccess} />
 
@@ -215,7 +215,7 @@ function LandingNav({ hasAccess }: { hasAccess: boolean }) {
         className={cn(
           'mx-auto flex items-center justify-between transition-all duration-300',
           scrolled
-            ? 'max-w-[90rem] rounded-2xl border border-border/40 bg-background/80 px-6 py-3 shadow-lg backdrop-blur-xl'
+            ? 'max-w-[90rem] rounded-2xl border border-border/40 bg-white px-6 py-3 shadow-md'
             : 'max-w-[90rem] px-0 py-0'
         )}
       >
@@ -279,7 +279,7 @@ function LandingNav({ hasAccess }: { hasAccess: boolean }) {
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className={cn(
-          'mt-2 rounded-2xl border border-border/40 bg-background/95 p-6 shadow-xl backdrop-blur-xl md:hidden',
+          'mt-2 rounded-2xl border border-border/40 bg-white p-6 shadow-lg md:hidden',
           !scrolled && 'mx-4'
         )}>
           <div className="flex flex-col gap-4">
@@ -376,7 +376,7 @@ function HeroSection({ hasAccess }: { hasAccess: boolean }) {
                   placeholder="tu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-14 rounded-2xl border-border/60 bg-background/60 pl-12 text-lg backdrop-blur-sm transition-all focus:border-primary focus:ring-primary"
+                  className="h-14 rounded-2xl border-border/60 bg-white pl-12 text-lg transition-all focus:border-primary focus:ring-primary"
                   required
                 />
               </div>

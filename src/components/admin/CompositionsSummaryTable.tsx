@@ -250,7 +250,7 @@ export function CompositionsSummaryTable({ initialData }: CompositionsSummaryTab
                                     </TooltipProvider>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant="secondary" className="bg-blue-500/5 text-blue-600 dark:text-blue-400 border-blue-200/50 capitalize font-medium text-[10px] px-2 py-0">
+                                    <Badge variant="secondary" className="bg-blue-500/5 text-blue-600$1border-blue-200/50 capitalize font-medium text-[10px] px-2 py-0">
                                         {comp.intent}
                                     </Badge>
                                 </TableCell>

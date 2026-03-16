@@ -661,7 +661,7 @@ export function BrandKitAssistantWizard({
                 <p
                   className={cn(
                     'text-xs font-semibold',
-                    canFinishWizard ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                    canFinishWizard ? 'text-emerald-600' : 'text-amber-600'
                   )}
                 >
                   {completionClamped}%
@@ -760,7 +760,7 @@ export function BrandKitAssistantWizard({
                 )}
 
                 {hasUrlValue && canAnalyze && (
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                  <p className="text-xs text-emerald-600">
                     {t('wizard.validUrlHint.before')} <span className="font-medium">{t('wizard.analyzeUrl', { defaultValue: 'Analyze URL' })}</span> {t('wizard.validUrlHint.middle')} <span className="font-medium">{t('wizard.next', { defaultValue: 'Next' })}</span> {t('wizard.validUrlHint.after')}
                   </p>
                 )}
@@ -1313,7 +1313,7 @@ export function BrandKitAssistantWizard({
                 </div>
                 {!canFinishWizard && (
                   <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
-                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                    <p className="text-sm text-amber-700">
                       {t('wizard.missingCompletionGate', {
                         defaultValue: 'You still need {{missing}}% to reach the minimum {{minimum}}% and unlock Image.',
                         missing: completionMissing,

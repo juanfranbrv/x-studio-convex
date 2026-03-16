@@ -3,10 +3,9 @@
 import { ReactNode, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, Plus, Settings, Trash2 } from 'lucide-react'
+import { IconChevronDown, IconPlus, IconSettings, IconDelete } from '@/components/ui/icons'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { CreditsBadge } from './CreditsBadge'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileMenu } from './MobileMenu'
@@ -77,7 +76,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
 
     return (
         <>
-            <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/60 bg-background/95 px-4 backdrop-blur-sm md:px-6">
+            <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-white px-4 md:px-6">
                 <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
                     <MobileMenu />
 
@@ -101,7 +100,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                         </span>
                                         <span className="block truncate text-left">{currentBrandName}</span>
                                     </span>
-                                    <ChevronDown className="h-4 w-4 shrink-0" />
+                                    <IconChevronDown className="h-4 w-4 shrink-0" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" className="w-[320px] rounded-xl border-border bg-popover shadow-lg md:w-[440px]">
@@ -130,7 +129,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                             className="h-7 w-7 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
                                             onClick={(e) => handleDeleteClick(brand, e)}
                                         >
-                                            <Trash2 className="h-4 w-4" />
+                                            <IconDelete className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuItem>
                                 ))}
@@ -143,7 +142,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
 
                     {onNewBrandKit ? (
                         <Button variant="outline" size="sm" onClick={onNewBrandKit} className="hidden gap-2 rounded-xl border-border/70 bg-card transition-colors hover:border-border hover:bg-accent/50 md:flex">
-                            <Plus className="h-4 w-4" />
+                            <IconPlus className="h-4 w-4" />
                             {t('actions.newBrandKit')}
                         </Button>
                     ) : null}
@@ -168,7 +167,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                 title={t('labels.adminPanel')}
                                 className="hidden h-9 w-9 rounded-full hover:bg-accent/60 md:flex"
                             >
-                                <Settings className="h-4.5 w-4.5" />
+                                <IconSettings className="h-4.5 w-4.5" />
                             </Button>
                         </Link>
                     ) : null}
@@ -176,7 +175,6 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     <div className="hidden md:block">
                         <LanguageSwitcher />
                     </div>
-                    <ThemeToggle className="hidden h-9 w-9 rounded-full hover:bg-accent/60 md:inline-flex" />
                 </div>
             </header>
 
@@ -184,7 +182,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-                            <Trash2 className="h-5 w-5" />
+                            <IconDelete className="h-5 w-5" />
                             {t('brand.deleteTitle', { name: (brandToDelete as BrandDNA | BrandKitSummary | null)?.brand_name || '' })}
                         </AlertDialogTitle>
                         <AlertDialogDescription asChild>

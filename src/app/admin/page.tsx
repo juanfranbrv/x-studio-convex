@@ -1985,7 +1985,7 @@ export default function AdminPage() {
                                         {editingPromptKey === prompt.key ? (
                                             <div className="space-y-2">
                                                 <textarea
-                                                    className="w-full min-h-[200px] text-sm p-3 rounded-lg border border-border bg-background/70 font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                    className="w-full min-h-[200px] text-sm p-3 rounded-lg border border-border bg-white font-mono resize-y focus:outline-none focus:ring-2 focus:ring-primary/50"
                                                     value={promptDraft}
                                                     onChange={(e) => setPromptDraft(e.target.value)}
                                                 />

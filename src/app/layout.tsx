@@ -45,7 +45,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen font-sans antialiased overflow-x-hidden",
-          "bg-mesh"
+          "bg-background"
         )}
       >
         <ConvexClientProvider>
@@ -60,7 +60,6 @@ export default function RootLayout({
                 <BrandKitProvider>
                   <UIProvider>
                     <div className="relative flex min-h-dvh flex-col">
-                      <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/10 blur-[100px]" />
                       <Suspense fallback={null}>
                         <ReferralTracker />
                       </Suspense>

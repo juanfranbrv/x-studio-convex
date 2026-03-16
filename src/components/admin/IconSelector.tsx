@@ -73,7 +73,7 @@ export function IconSelector({ onSelect, onClose }: IconSelectorProps) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="flex h-[600px] w-full max-w-2xl flex-col rounded-xl border border-border bg-card shadow-2xl">
                 <header className="flex items-center justify-between border-b border-border p-4">
                     <h2 className="text-lg font-semibold text-foreground">Seleccionar Icono Material</h2>

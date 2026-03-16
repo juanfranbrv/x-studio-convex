@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/../convex/_generated/api";
 import { useEffect, useMemo } from "react";
 import { useUser } from "@clerk/nextjs";
-import { applyThemeColors, DEFAULT_THEME_COLORS, readThemeColors } from "@/lib/theme-colors";
+import { applyThemeColors, DEFAULT_THEME_COLORS, deriveSchemeFromColors, readThemeColors } from "@/lib/theme-colors";
 
 export function DynamicThemeProvider({ children }: { children: React.ReactNode }) {
     const { user } = useUser();
@@ -13,13 +13,13 @@ export function DynamicThemeProvider({ children }: { children: React.ReactNode }
 
     useEffect(() => {
         const stored = readThemeColors(userId);
-        if (stored?.primary && stored?.secondary) {
+        if (stored) {
             applyThemeColors(stored);
             return;
         }
 
         if (theme?.primary && theme?.secondary) {
-            applyThemeColors({ primary: theme.primary, secondary: theme.secondary });
+            applyThemeColors(deriveSchemeFromColors(theme.primary, theme.secondary));
             return;
         }
 
@@ -29,7 +29,7 @@ export function DynamicThemeProvider({ children }: { children: React.ReactNode }
     useEffect(() => {
         const handleRefresh = () => {
             const stored = readThemeColors(userId);
-            if (stored?.primary && stored?.secondary) {
+            if (stored) {
                 applyThemeColors(stored);
             }
         };

@@ -10,7 +10,6 @@ import { AppLogo } from '@/components/ui/AppLogo'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { LanguageSwitcher } from './LanguageSwitcher'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import {
     Sheet,
     SheetContent,
@@ -76,7 +75,7 @@ export function MobileMenu() {
 
                     <div className="border-t border-border bg-muted/10 p-4">
                         {user ? (
-                            <div className="mb-3 flex items-center gap-3 rounded-xl border border-border/60 bg-background/80 px-3 py-2.5">
+                            <div className="mb-3 flex items-center gap-3 rounded-xl border border-border/60 bg-white px-3 py-2.5">
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted">
                                     {user.imageUrl ? (
                                         <img
@@ -103,14 +102,10 @@ export function MobileMenu() {
                             </div>
                         ) : null}
 
-                        <div className="mb-3 grid gap-3 rounded-2xl border border-border/60 bg-background/80 p-3">
+                        <div className="mb-3 grid gap-3 rounded-2xl border border-border/60 bg-white p-3">
                             <div className="flex items-center justify-between gap-3">
                                 <span className="text-sm font-medium text-foreground">{t('labels.language')}</span>
                                 <LanguageSwitcher compact align="end" />
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                                <span className="text-sm font-medium text-foreground">{t('labels.theme')}</span>
-                                <ThemeToggle className="h-9 w-9 rounded-full hover:bg-accent/60" />
                             </div>
                         </div>
 

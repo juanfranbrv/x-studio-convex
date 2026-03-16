@@ -857,7 +857,7 @@ function BrandKitPageContent() {
 
                 {creatingAssistantKit && (
                     <div className="max-w-2xl mx-auto py-20 text-center">
-                        <div className="glass-panel rounded-3xl p-10 space-y-4">
+                        <div className="bg-white border border-border shadow-sm rounded-3xl p-10 space-y-4">
                             <Loader2 className="w-8 h-8 text-primary mx-auto" />
                             <h2 className="text-2xl font-bold">{t('loading.preparingTitle')}</h2>
                             <p className="text-muted-foreground">
@@ -875,7 +875,7 @@ function BrandKitPageContent() {
                         exit={{ opacity: 0, y: -20 }}
                         className="max-w-3xl mx-auto text-center py-12"
                     >
-                        <div className="glass-panel p-10 mb-8 rounded-3xl relative overflow-hidden">
+                        <div className="bg-white border border-border shadow-sm p-10 mb-8 rounded-3xl relative overflow-hidden">
                             {/* Decorative elements */}
                             <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl -z-10" />
                             <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-accent/10 to-transparent rounded-full blur-3xl -z-10" />
@@ -908,7 +908,7 @@ function BrandKitPageContent() {
                             {/* URL Input */}
                             <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
                                 <div className={cn(
-                                    "flex items-center gap-3 bg-background/80 backdrop-blur-sm rounded-2xl border-2 p-2 shadow-lg transition-all focus-within:shadow-xl hover:shadow-lg group",
+                                    "flex items-center gap-3 bg-white rounded-2xl border-2 p-2 shadow-lg transition-all focus-within:shadow-xl hover:shadow-lg group",
                                     isSocialUrl ? "border-amber-500/50" : "border-border/50 focus-within:border-primary/50"
                                 )}>
                                     <div className="pl-4">
@@ -947,12 +947,12 @@ function BrandKitPageContent() {
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-600 dark:text-amber-400"
+                                        className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-600"
                                     >
                                         <p className="text-sm font-medium mb-2">
                                             {t('hero.socialWarningTitle', { defaultValue: 'Social media URLs cannot be analyzed automatically' })}
                                         </p>
-                                        <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mb-3">
+                                        <p className="text-xs text-amber-600/80 mb-3">
                                             {t('hero.socialWarningDescription', { defaultValue: 'Instagram, Facebook, TikTok and other social URLs do not allow automatic style extraction.' })}
                                         </p>
                                         <Button
@@ -960,7 +960,7 @@ function BrandKitPageContent() {
                                             variant="outline"
                                             size="sm"
                                             onClick={handleManualCreation}
-                                            className="border-amber-500/50 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                                            className="border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
                                         >
                                             <Pencil className="w-4 h-4 mr-2" />
                                             {t('hero.buildManually', { defaultValue: 'Build the Brand Kit manually' })}

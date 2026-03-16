@@ -258,7 +258,7 @@ export function PromptDebugModal({
 
                     <div className="w-[32%] min-w-0 flex flex-col gap-4 overflow-y-auto">
                         <div className="grid grid-cols-2 gap-3 p-4 bg-muted/50 rounded-lg">
-                            <div className="col-span-2 p-3 rounded border bg-background/70">
+                            <div className="col-span-2 p-3 rounded border bg-white">
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('promptDebug.targetModel', { defaultValue: 'Target model' })}</p>
                                 <p className="text-sm font-semibold mt-1 break-all">{effectiveModel}</p>
                                 <p className="text-xs text-muted-foreground mt-1">{t('promptDebug.provider', { defaultValue: 'Provider' })}: {providerLabel}</p>
@@ -317,7 +317,7 @@ export function PromptDebugModal({
                                         </div>
                                         <div className="grid grid-cols-3 gap-2">
                                             {items.map((item, idx) => (
-                                                <div key={`${item.id}-${idx}`} className="aspect-square rounded-md overflow-hidden border bg-background/60">
+                                                <div key={`${item.id}-${idx}`} className="aspect-square rounded-md overflow-hidden border bg-muted/50">
                                                     <img
                                                         src={item.url}
                                                         alt={item.label || roleLabel(role)}

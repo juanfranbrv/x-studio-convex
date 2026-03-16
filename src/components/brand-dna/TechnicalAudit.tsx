@@ -131,7 +131,7 @@ export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAu
             <div className="flex flex-wrap gap-2">
                 {colors.length > 0 ? (
                     colors.map((color, idx) => (
-                        <div key={`${title}-${idx}-${color}`} className="flex items-center gap-1.5 rounded-full border border-border/70 bg-background/70 px-2 py-1">
+                        <div key={`${title}-${idx}-${color}`} className="flex items-center gap-1.5 rounded-full border border-border/70 bg-white px-2 py-1">
                             <span className="h-3 w-3 rounded-full border border-white/40" style={{ backgroundColor: color }} />
                             <span className="font-mono text-[10px] text-foreground/80">{color}</span>
                         </div>
@@ -184,14 +184,14 @@ export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAu
             </CardHeader>
             <CardContent className="p-6 pt-2 space-y-8">
                 <div className="grid grid-cols-1 gap-8 relative">
-                    <div className="absolute left-[19px] top-4 bottom-4 w-px bg-border/60 -z-10 border-l border-dashed border-zinc-300 dark:border-zinc-700" />
+                    <div className="absolute left-[19px] top-4 bottom-4 w-px bg-border/60 -z-10 border-l border-dashed border-zinc-300" />
 
                     {renderChain(t('technicalAudit.visualCaptureSequence', { defaultValue: 'Visual capture sequence' }), <Camera className="w-3.5 h-3.5" />, CAPTURE_CHAIN)}
                     {renderChain(t('technicalAudit.codeProcessingSequence', { defaultValue: 'Code processing sequence' }), <Globe className="w-3.5 h-3.5" />, CONTENT_CHAIN)}
                     {renderChain(t('technicalAudit.intelligenceSequence', { defaultValue: 'Intelligence sequence' }), <Cpu className="w-3.5 h-3.5" />, AI_CHAIN)}
                 </div>
 
-                <div className="rounded-2xl border border-border/70 bg-background/50 p-4 space-y-4">
+                <div className="rounded-2xl border border-border/70 bg-muted/50 p-4 space-y-4">
                     <div className="flex items-center gap-2">
                         <Palette className="w-4 h-4 text-primary" />
                         <p className="text-sm font-semibold">{t('technicalAudit.paletteConsensusTitle', { defaultValue: 'Palette consensus debug' })}</p>

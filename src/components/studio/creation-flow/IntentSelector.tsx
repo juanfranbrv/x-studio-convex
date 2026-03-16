@@ -140,7 +140,7 @@ export function IntentSelector({
 
                             {/* Subcategories */}
                             {isExpanded ? (
-                                <div className="bg-background/50 border-l-2 border-primary/30 ml-4 py-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                <div className="bg-muted/50 border-l-2 border-primary/30 ml-4 py-1 animate-in fade-in slide-in-from-top-1 duration-200">
                                     {intentsInGroup.map(intent => {
                                         const IntentIcon = ICONS[intent.icon] || Package
                                         const isSelected = selectedIntent === intent.id

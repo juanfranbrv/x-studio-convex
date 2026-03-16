@@ -123,7 +123,7 @@ function CustomColorPicker({
                     <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-4 shadow-xl border-border/50 bg-background/95 backdrop-blur-sm z-[100]" align="start" sideOffset={8}>
+            <PopoverContent className="w-64 p-4 shadow-xl border-border/50 bg-white backdrop-blur-sm z-[100]" align="start" sideOffset={8}>
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('brandingConfigurator.customColor', { defaultValue: 'Custom color' })}</p>
@@ -477,7 +477,7 @@ export function BrandingConfigurator({
                                     onClick={() => onSelectLogo(logoId)}
                                     className={cn(
                                         "relative w-12 h-12 rounded-lg border-2 overflow-hidden transition-all",
-                                        "bg-white dark:bg-black/20",
+                                        "bg-white$1",
                                         isSelected
                                             ? "border-primary ring-2 ring-primary/30"
                                             : "border-border hover:border-primary/50"
@@ -540,7 +540,7 @@ export function BrandingConfigurator({
                                     }}
                                     className={cn(
                                         "relative aspect-square rounded-full border-2 transition-all shadow-sm flex items-center justify-center group/swatch cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
-                                        "border-white/30 dark:border-white/20 hover:border-primary/50 hover:scale-105"
+                                        "border-white/30$1hover:border-primary/50 hover:scale-105"
                                     )}
                                     style={{
                                         backgroundColor: color,
@@ -612,7 +612,7 @@ export function BrandingConfigurator({
                                         <Badge
                                             key={idx}
                                             variant="outline"
-                                            className="text-[10px] font-medium bg-background/50 border-border/50 py-1 flex items-center gap-1.5"
+                                            className="text-[10px] font-medium bg-muted/50 border-border/50 py-1 flex items-center gap-1.5"
                                             style={{ fontFamily: `"${font.family}", sans-serif` }}
                                         >
                                             <span className="opacity-60 text-[8px] font-normal border-r border-border/50 pr-1.5">Aa</span>
@@ -640,7 +640,7 @@ export function BrandingConfigurator({
                                         <Badge
                                             key={idx}
                                             variant="outline"
-                                            className="text-[10px] font-medium bg-background/50 border-border/50 py-1 flex items-center gap-1.5"
+                                            className="text-[10px] font-medium bg-muted/50 border-border/50 py-1 flex items-center gap-1.5"
                                             style={{ fontFamily: `"${font.family}", sans-serif` }}
                                         >
                                             <span className="opacity-60 text-[8px] font-normal border-r border-border/50 pr-1.5">Aa</span>
@@ -668,7 +668,7 @@ export function BrandingConfigurator({
                                         <Badge
                                             key={idx}
                                             variant="outline"
-                                            className="text-[10px] font-medium bg-background/50 border-border/50 py-1 flex items-center gap-1.5"
+                                            className="text-[10px] font-medium bg-muted/50 border-border/50 py-1 flex items-center gap-1.5"
                                             style={{ fontFamily: `"${font.family}", sans-serif` }}
                                         >
                                             <span className="opacity-60 text-[8px] font-normal border-r border-border/50 pr-1.5">Aa</span>

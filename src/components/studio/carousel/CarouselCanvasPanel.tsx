@@ -912,7 +912,7 @@ export function CarouselCanvasPanel({
                 )}
 
                 {/* Right: Actions */}
-                <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4 border border-border/60 bg-background/85 backdrop-blur-sm">
+                <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4 border border-border/60 bg-white backdrop-blur-sm">
                     <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
                         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut}>
                             <ZoomOut className="w-4 h-4" />
@@ -1008,7 +1008,7 @@ export function CarouselCanvasPanel({
                     <div
                         ref={containerRef}
                         className={cn(
-                            "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 dark:ring-white/20 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-visible",
+                            "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-visible",
                             wasJustGenerated && "canvas-success-flash"
                         )}
                         style={(() => {
@@ -1063,7 +1063,7 @@ export function CarouselCanvasPanel({
                                     disabled={currentIndex === 0}
                                     className={cn(
                                         "absolute left-3 top-1/2 -translate-y-1/2 z-40 h-10 w-10 rounded-full",
-                                        "bg-background/80 backdrop-blur border border-border shadow-sm"
+                                        "bg-white backdrop-blur border border-border shadow-sm"
                                     )}
                                     aria-label={tt('common:preview.previousSlide', 'Previous slide')}
                                 >
@@ -1076,7 +1076,7 @@ export function CarouselCanvasPanel({
                                     disabled={currentIndex === slides.length - 1}
                                     className={cn(
                                         "absolute right-3 top-1/2 -translate-y-1/2 z-40 h-10 w-10 rounded-full",
-                                        "bg-background/80 backdrop-blur border border-border shadow-sm"
+                                        "bg-white backdrop-blur border border-border shadow-sm"
                                     )}
                                     aria-label={tt('common:preview.nextSlide', 'Next slide')}
                                 >
@@ -1189,7 +1189,7 @@ export function CarouselCanvasPanel({
                                     variant="ghost"
                                     size="icon"
                                     onClick={handleOpenDebug}
-                                    className="h-9 w-9 rounded-full bg-background/80 backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                                    className="h-9 w-9 rounded-full bg-white backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
                                     title={tt('common:preview.promptDebug', 'Prompt debug')}
                                 >
                                     <Bug className="w-4 h-4" />
@@ -1200,7 +1200,7 @@ export function CarouselCanvasPanel({
                         {/* Content */}
                         {!currentSlide ? (
                             <div className="flex flex-col items-center justify-center text-muted-foreground p-12 text-center">
-                                <div className="w-20 h-20 rounded-3xl bg-background/70 border border-border/50 shadow-inner flex items-center justify-center mb-6">
+                                <div className="w-20 h-20 rounded-3xl bg-white border border-border/50 shadow-inner flex items-center justify-center mb-6">
                                     <Images className="w-10 h-10 opacity-20" />
                                 </div>
                                 <h3 className="text-lg font-semibold opacity-80">{tt('common:preview.startCreation', 'Start your creation')}</h3>
@@ -1228,11 +1228,11 @@ export function CarouselCanvasPanel({
                                     className="w-full h-full flex items-center justify-center"
                                 >
                                     {isCurrentSlideRegenerating && (
-                                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-background/42 backdrop-blur-sm">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border/60 bg-background/80 shadow-lg">
+                                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-white/42 backdrop-blur-sm">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border/60 bg-white shadow-lg">
                                                 <Loader2 className="h-6 w-6 text-primary" />
                                             </div>
-                                            <div className="rounded-full border border-border/60 bg-background/85 px-4 py-2 text-sm font-medium shadow-sm">
+                                            <div className="rounded-full border border-border/60 bg-white px-4 py-2 text-sm font-medium shadow-sm">
                                                 {tt('common:preview.regeneratingCurrentSlide', 'Regenerating this slide...')}
                                             </div>
                                         </div>
@@ -1247,7 +1247,7 @@ export function CarouselCanvasPanel({
                         ) : hasScript ? (
                             <div className="w-full h-full flex items-center justify-center p-10">
                                 <div className="w-full max-w-md space-y-3">
-                                    <div className="carousel-script-preview rounded-2xl border border-border/60 bg-background/80 backdrop-blur-sm p-6 text-center shadow-lg space-y-3">
+                                    <div className="carousel-script-preview rounded-2xl border border-border/60 bg-white backdrop-blur-sm p-6 text-center shadow-lg space-y-3">
                                     <p className="uppercase tracking-widest text-muted-foreground" style={{ fontSize: 'var(--cs-label)' }}>
                                         {tt('common:preview.scriptPreview', 'Script preview')}
                                     </p>
@@ -1361,7 +1361,7 @@ export function CarouselCanvasPanel({
                                     )}
                                     </div>
                                     {(currentVisualContentEditable || isEditingVisualContent) && (
-                                        <div className="rounded-2xl border border-border/60 bg-background/72 backdrop-blur-sm p-4 text-left shadow-md space-y-1.5">
+                                        <div className="rounded-2xl border border-border/60 bg-white backdrop-blur-sm p-4 text-left shadow-md space-y-1.5">
                                             <p
                                                 className="uppercase tracking-widest text-muted-foreground"
                                                 style={{ fontSize: 'calc(var(--cs-label) - 1px)' }}
@@ -1444,8 +1444,8 @@ export function CarouselCanvasPanel({
                                     key={index}
                                     onClick={() => onSelectSlide(index)}
                                     className={cn(
-                                        "relative flex-shrink-0 rounded-[18px] p-1.5 transition-colors transition-shadow transition-opacity duration-200",
-                                        "bg-background/70 backdrop-blur border border-border/60",
+                                        "relative flex-shrink-0 rounded-xl p-1.5 transition-colors transition-shadow transition-opacity duration-200",
+                                        "bg-white backdrop-blur border border-border/60",
                                         aspectRatio === '1:1' ? "w-16 h-16" : "w-14 h-20",
                                         currentIndex === index
                                             ? "ring-2 ring-primary/70 shadow-[0_0_12px_hsl(var(--primary)/0.25)] z-10"
@@ -1456,7 +1456,7 @@ export function CarouselCanvasPanel({
                                     <div className="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1.5 rounded-full bg-foreground/15" />
                                     <div
                                         className={cn(
-                                            "relative w-full h-full rounded-[14px] overflow-hidden bg-muted/60 border border-border/50",
+                                            "relative w-full h-full rounded-xl overflow-hidden bg-muted/60 border border-border/50",
                                             aspectRatio === '1:1' ? "aspect-square" : "aspect-[3/4]"
                                         )}
                                     >
@@ -1477,7 +1477,7 @@ export function CarouselCanvasPanel({
                                         )}
                                     </div>
                                     {slide.status === 'generating' && (
-                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-[18px]">
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl">
                                             <div className="w-1 h-1 bg-primary-foreground rounded-full animate-ping" />
                                         </div>
                                     )}

@@ -24,7 +24,7 @@ export function LanguageCard({ selectedLanguage = 'es', onLanguageChange }: Lang
     const { t } = useTranslation('brandKit');
 
     return (
-        <Card className="glass-panel border-0 shadow-aero">
+        <Card className="bg-white border border-border shadow-sm">
             <CardHeader className="pb-3 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
                     <Globe className="w-5 h-5 text-primary" />
@@ -41,7 +41,7 @@ export function LanguageCard({ selectedLanguage = 'es', onLanguageChange }: Lang
                                 'flex items-center gap-2 rounded-xl border px-3 py-2.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]',
                                 selectedLanguage === lang.code
                                     ? 'border-transparent bg-primary text-primary-foreground shadow-aero-glow'
-                                    : 'border-border bg-background/50 hover:border-primary/50 hover:bg-primary/5'
+                                    : 'border-border bg-white hover:border-primary/50 hover:bg-primary/5'
                             )}
                         >
                             <span className="text-xl">{lang.flag}</span>

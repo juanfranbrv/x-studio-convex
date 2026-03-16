@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useUser } from '@clerk/nextjs'
 import { useMutation, useQuery } from 'convex/react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, Clock3, Copy, CreditCard, ExternalLink, Gift, ReceiptText, Share2, WalletCards } from 'lucide-react'
+import { IconCheck, IconClock, IconCopy, IconCreditCard, IconLink, IconGift, IconReceipt, IconShare, IconWallet } from '@/components/ui/icons'
 import { api } from '@/../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -124,13 +124,14 @@ export function SettingsBillingSection() {
     }
 
     return (
-        <section id="credits" className="overflow-hidden rounded-[2rem] border border-border/70 bg-background/85 shadow-sm">
-            <div className="border-b border-border/60 px-6 py-6 md:px-8">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+        <section id="credits" className="overflow-hidden rounded-2xl bg-white shadow-sm">
+            {/* Section header */}
+            <div className="px-6 py-6 md:px-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/70">
                     {t('sections.credits.eyebrow')}
                 </p>
-                <div className="mt-3 flex items-start justify-between gap-4">
-                    <div className="space-y-2">
+                <div className="mt-2 flex items-start justify-between gap-4">
+                    <div className="space-y-1">
                         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
                             {t('sections.credits.title')}
                         </h2>
@@ -138,19 +139,17 @@ export function SettingsBillingSection() {
                             {t('sections.credits.description')}
                         </p>
                     </div>
-                    <div className="hidden rounded-full border border-border/70 bg-muted/50 p-3 text-muted-foreground md:flex">
-                        <WalletCards className="h-5 w-5" />
+                    <div className="hidden rounded-full bg-primary/10 p-3 text-primary md:flex">
+                        <IconWallet className="h-5 w-5" />
                     </div>
                 </div>
             </div>
 
-            <div className="space-y-8 px-6 py-6 md:px-8">
-                <div className="grid overflow-hidden rounded-[1.75rem] border border-border/70 bg-muted/15 md:grid-cols-4">
-                    {summaryItems.map((item, index) => (
-                        <div
-                            key={item.key}
-                            className={`px-5 py-5 ${index < summaryItems.length - 1 ? 'border-b border-border/60 md:border-b-0 md:border-r' : ''}`}
-                        >
+            <div className="space-y-8 px-6 pb-8 md:px-8">
+                {/* Summary stats — flat row, no card wrapper */}
+                <div className="grid divide-x divide-border/40 overflow-hidden rounded-xl bg-muted/20 md:grid-cols-4">
+                    {summaryItems.map((item) => (
+                        <div key={item.key} className="px-5 py-5">
                             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                                 {item.label}
                             </p>
@@ -161,29 +160,29 @@ export function SettingsBillingSection() {
                     ))}
                 </div>
 
-                <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+                <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+                    {/* Quick buy */}
                     <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                                {t('sections.credits.quickBuyTitle')}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">{t('sections.credits.quickBuyDescription')}</p>
-                        </div>
+                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                            <span className="h-1 w-1 rounded-full bg-primary" />
+                            {t('sections.credits.quickBuyTitle')}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">{t('sections.credits.quickBuyDescription')}</p>
 
-                        <div className="grid gap-3">
+                        <div className="space-y-2">
                             {packs?.map((pack: any) => {
                                 const pending = state.pendingSlug === pack.slug
                                 return (
                                     <button
                                         key={pack.slug}
                                         onClick={() => void handleCheckout(pack.slug)}
-                                        className="group flex items-center justify-between rounded-[1.5rem] border border-border/70 bg-background/80 px-4 py-4 text-left transition-colors hover:bg-muted/25"
+                                        className="group flex w-full cursor-pointer items-center justify-between rounded-xl bg-muted/20 px-4 py-4 text-left transition-colors hover:bg-primary/5"
                                     >
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <p className="font-medium text-foreground">{t(`billing:packs.${pack.slug}.name`)}</p>
                                                 {pack.featured ? (
-                                                    <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[0.65rem] uppercase tracking-[0.18em]">
+                                                    <Badge variant="secondary" className="rounded-full bg-primary/10 px-2 py-0.5 text-[0.65rem] uppercase tracking-[0.18em] text-primary">
                                                         {t(`billing:packs.${pack.slug}.badge`)}
                                                     </Badge>
                                                 ) : null}
@@ -196,7 +195,7 @@ export function SettingsBillingSection() {
                                             <span className="text-sm font-semibold text-foreground">
                                                 {formatPrice(pack.price_cents, locale, String(pack.currency).toUpperCase())}
                                             </span>
-                                            {pending ? <Loader2 className="h-4 w-4 text-muted-foreground" /> : <ExternalLink className="h-4 w-4 text-muted-foreground" />}
+                                            {pending ? <Loader2 className="h-4 w-4 text-muted-foreground" /> : <IconLink className="h-4 w-4 text-muted-foreground" />}
                                         </div>
                                     </button>
                                 )
@@ -221,7 +220,7 @@ export function SettingsBillingSection() {
                                     </>
                                 ) : (
                                     <>
-                                        <CreditCard className="h-4 w-4" />
+                                        <IconCreditCard className="h-4 w-4" />
                                         {t('billing:account.actions.openPortal')}
                                     </>
                                 )}
@@ -229,17 +228,17 @@ export function SettingsBillingSection() {
                         </div>
                     </div>
 
+                    {/* Purchase history */}
                     <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                                {t('sections.credits.historyTitle')}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">{t('sections.credits.historyDescription')}</p>
-                        </div>
+                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                            <span className="h-1 w-1 rounded-full bg-primary" />
+                            {t('sections.credits.historyTitle')}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">{t('sections.credits.historyDescription')}</p>
 
-                        <div className="overflow-hidden rounded-[1.75rem] border border-border/70 bg-muted/15">
+                        <div className="overflow-hidden rounded-xl bg-muted/20">
                             {billing?.purchases?.length ? (
-                                <div className="divide-y divide-border/60">
+                                <div className="divide-y divide-border/40">
                                     {billing.purchases.map((purchase: any) => (
                                         <div key={purchase._id} className="grid gap-3 px-5 py-4 md:grid-cols-[1.3fr_0.7fr_0.8fr_1fr] md:items-center">
                                             <div className="min-w-0">
@@ -255,7 +254,7 @@ export function SettingsBillingSection() {
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <ReceiptText className="h-4 w-4" />
+                                                <IconReceipt className="h-4 w-4" />
                                                 {purchase.credits}
                                             </div>
                                             <p className="text-sm font-medium text-foreground">
@@ -270,7 +269,7 @@ export function SettingsBillingSection() {
                                                         className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                                                     >
                                                         {t('billing:account.history.receipt')}
-                                                        <ExternalLink className="h-3 w-3" />
+                                                        <IconLink className="h-3 w-3" />
                                                     </a>
                                                 ) : null}
                                                 {purchase.invoice_url ? (
@@ -281,7 +280,7 @@ export function SettingsBillingSection() {
                                                         className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                                                     >
                                                         {t('billing:account.history.invoice')}
-                                                        <ExternalLink className="h-3 w-3" />
+                                                        <IconLink className="h-3 w-3" />
                                                     </a>
                                                 ) : null}
                                             </div>
@@ -290,8 +289,8 @@ export function SettingsBillingSection() {
                                 </div>
                             ) : (
                                 <div className="flex min-h-40 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-                                    <div className="rounded-full border border-border/70 bg-background/80 p-3 text-muted-foreground">
-                                        <Clock3 className="h-5 w-5" />
+                                    <div className="rounded-full bg-primary/10 p-3 text-primary">
+                                        <IconClock className="h-5 w-5" />
                                     </div>
                                     <div className="space-y-1">
                                         <p className="font-medium text-foreground">{t('sections.credits.historyEmptyTitle')}</p>
@@ -305,109 +304,112 @@ export function SettingsBillingSection() {
                     </div>
                 </div>
 
-                <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-                    <div className="overflow-hidden rounded-[1.75rem] border border-border/70 bg-muted/15">
-                        <div className="border-b border-border/60 px-5 py-5">
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="space-y-1">
-                                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                                        {t('billing:referrals.title')}
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground">{t('billing:referrals.description')}</p>
-                                </div>
-                                <div className="rounded-full border border-border/70 bg-background/80 p-3 text-muted-foreground">
-                                    <Share2 className="h-5 w-5" />
-                                </div>
+                {/* Referrals + Activity */}
+                <div className="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
+                    {/* Referrals */}
+                    <div className="space-y-5">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-1">
+                                <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                    <span className="h-1 w-1 rounded-full bg-primary" />
+                                    {t('billing:referrals.title')}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">{t('billing:referrals.description')}</p>
+                            </div>
+                            <div className="rounded-full bg-primary/10 p-3 text-primary">
+                                <IconShare className="h-5 w-5" />
                             </div>
                         </div>
 
-                        <div className="space-y-5 px-5 py-5">
-                            <div className="grid gap-3 sm:grid-cols-3">
-                                <ReferralStat label={t('billing:referrals.stats.totalReferrals')} value={String(referral?.stats?.totalReferrals ?? 0)} />
-                                <ReferralStat label={t('billing:referrals.stats.signupCredits')} value={String(referral?.stats?.signupCredits ?? 0)} />
-                                <ReferralStat label={t('billing:referrals.stats.totalCreditsEarned')} value={String(referral?.stats?.totalCreditsEarned ?? 0)} />
-                            </div>
+                        <div className="grid gap-px overflow-hidden rounded-xl bg-border/30 sm:grid-cols-3">
+                            <ReferralStat label={t('billing:referrals.stats.totalReferrals')} value={String(referral?.stats?.totalReferrals ?? 0)} />
+                            <ReferralStat label={t('billing:referrals.stats.signupCredits')} value={String(referral?.stats?.signupCredits ?? 0)} />
+                            <ReferralStat label={t('billing:referrals.stats.totalCreditsEarned')} value={String(referral?.stats?.totalCreditsEarned ?? 0)} />
+                        </div>
 
-                            <div className="space-y-3 rounded-[1.4rem] border border-border/70 bg-background/75 p-4">
-                                <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                                    <Gift className="h-4 w-4 text-primary" />
-                                    <span>
-                                        {t('billing:referrals.rewardRule', {
-                                            signup: referral?.config?.signupRewardCredits ?? 5,
-                                            percentage: referral?.config?.purchaseRewardPercentage ?? 50,
-                                        })}
-                                    </span>
-                                </div>
-                                <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                                        {t('billing:referrals.linkLabel')}
-                                    </p>
-                                    <div className="flex flex-col gap-3 md:flex-row">
-                                        <div className="min-w-0 flex-1 rounded-[1.15rem] border border-border/70 bg-muted/25 px-4 py-3 text-sm text-foreground">
-                                            <span className="block truncate">{referralLink || t('billing:referrals.linkPending')}</span>
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            className="rounded-full px-5"
-                                            variant={copied ? 'secondary' : 'default'}
-                                            disabled={!referralLink}
-                                            onClick={() => void handleCopyReferralLink()}
-                                        >
-                                            {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                                            {copied ? t('billing:referrals.copied') : t('billing:referrals.copy')}
-                                        </Button>
+                        <div className="space-y-3">
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                <IconGift className="h-4 w-4 text-primary" />
+                                <span>
+                                    {t('billing:referrals.rewardRule', {
+                                        signup: referral?.config?.signupRewardCredits ?? 5,
+                                        percentage: referral?.config?.purchaseRewardPercentage ?? 50,
+                                    })}
+                                </span>
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                    {t('billing:referrals.linkLabel')}
+                                </p>
+                                <div className="flex flex-col gap-3 md:flex-row">
+                                    <div className="min-w-0 flex-1 rounded-xl bg-muted/30 px-4 py-3 text-sm text-foreground">
+                                        <span className="block truncate">{referralLink || t('billing:referrals.linkPending')}</span>
                                     </div>
+                                    <Button
+                                        type="button"
+                                        className="rounded-full px-5"
+                                        variant={copied ? 'secondary' : 'default'}
+                                        disabled={!referralLink}
+                                        onClick={() => void handleCopyReferralLink()}
+                                    >
+                                        {copied ? <IconCheck className="h-4 w-4" /> : <IconCopy className="h-4 w-4" />}
+                                        {copied ? t('billing:referrals.copied') : t('billing:referrals.copy')}
+                                    </Button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="overflow-hidden rounded-[1.75rem] border border-border/70 bg-muted/15">
-                        <div className="border-b border-border/60 px-5 py-5">
-                            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    {/* Referral activity */}
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                <span className="h-1 w-1 rounded-full bg-primary" />
                                 {t('billing:referrals.activityTitle')}
                             </h3>
                             <p className="mt-1 text-sm text-muted-foreground">{t('billing:referrals.activityDescription')}</p>
                         </div>
 
-                        {referral?.recentReferrals?.length ? (
-                            <div className="divide-y divide-border/60">
-                                {referral.recentReferrals.map((item: any) => (
-                                    <div key={item._id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                                        <div className="min-w-0">
-                                            <p className="truncate font-medium text-foreground">{item.referred_email}</p>
-                                            <p className="text-sm text-muted-foreground">
-                                                {new Date(item.created_at).toLocaleDateString(locale, {
-                                                    day: '2-digit',
-                                                    month: 'short',
-                                                    year: 'numeric',
-                                                })}
-                                            </p>
+                        <div className="overflow-hidden rounded-xl bg-muted/20">
+                            {referral?.recentReferrals?.length ? (
+                                <div className="divide-y divide-border/40">
+                                    {referral.recentReferrals.map((item: any) => (
+                                        <div key={item._id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="min-w-0">
+                                                <p className="truncate font-medium text-foreground">{item.referred_email}</p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {new Date(item.created_at).toLocaleDateString(locale, {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        year: 'numeric',
+                                                    })}
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 sm:justify-end">
+                                                <Badge variant="secondary" className="rounded-full bg-primary/10 px-3 py-1 text-primary">
+                                                    +{item.signup_reward_credits} {t('billing:referrals.badges.signup')}
+                                                </Badge>
+                                                <Badge variant="outline" className="rounded-full px-3 py-1">
+                                                    +{item.total_purchase_reward_credits} {t('billing:referrals.badges.purchase')}
+                                                </Badge>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-wrap gap-2 sm:justify-end">
-                                            <Badge variant="secondary" className="rounded-full px-3 py-1">
-                                                +{item.signup_reward_credits} {t('billing:referrals.badges.signup')}
-                                            </Badge>
-                                            <Badge variant="outline" className="rounded-full px-3 py-1">
-                                                +{item.total_purchase_reward_credits} {t('billing:referrals.badges.purchase')}
-                                            </Badge>
-                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex min-h-40 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+                                    <div className="rounded-full bg-primary/10 p-3 text-primary">
+                                        <IconClock className="h-5 w-5" />
                                     </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="flex min-h-40 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-                                <div className="rounded-full border border-border/70 bg-background/80 p-3 text-muted-foreground">
-                                    <Clock3 className="h-5 w-5" />
+                                    <div className="space-y-1">
+                                        <p className="font-medium text-foreground">{t('billing:referrals.emptyTitle')}</p>
+                                        <p className="max-w-sm text-sm text-muted-foreground">
+                                            {t('billing:referrals.emptyBody')}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="font-medium text-foreground">{t('billing:referrals.emptyTitle')}</p>
-                                    <p className="max-w-sm text-sm text-muted-foreground">
-                                        {t('billing:referrals.emptyBody')}
-                                    </p>
-                                </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -417,7 +419,7 @@ export function SettingsBillingSection() {
 
 function ReferralStat({ label, value }: { label: string; value: string }) {
     return (
-        <div className="rounded-[1.15rem] border border-border/60 bg-background/70 px-4 py-4">
+        <div className="bg-muted/20 px-4 py-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
             <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
         </div>

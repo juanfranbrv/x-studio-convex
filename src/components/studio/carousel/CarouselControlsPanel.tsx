@@ -3000,7 +3000,7 @@ export function CarouselControlsPanel({
                                                 return (
                                                     <div
                                                         key={`variant-row-modal-${slideIndex}`}
-                                                        className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                                                        className="rounded-2xl border border-border/60 bg-white p-4"
                                                     >
                                                         <div className="mb-3 flex items-center justify-between gap-3">
                                                             <div className="flex items-center gap-3">
@@ -3075,7 +3075,7 @@ export function CarouselControlsPanel({
                                         </div>
                                     </div>
 
-                                    <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-background/95 px-6 py-4">
+                                    <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-white px-6 py-4">
                                         <p className="text-[11px] leading-relaxed text-muted-foreground">
                                             {t('ui.variantChangesInstant', { defaultValue: 'Changes apply instantly while you choose variants.' })}
                                         </p>
