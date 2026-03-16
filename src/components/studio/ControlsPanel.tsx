@@ -219,6 +219,7 @@ interface ControlsPanelProps {
     sessionSaveError?: string | null
     hasUnsavedChanges?: boolean
     isCancelingAnalyze?: boolean
+    className?: string
 }
 
 export function ControlsPanel({
@@ -253,6 +254,7 @@ export function ControlsPanel({
     sessionSaveError = null,
     hasUnsavedChanges = false,
     isCancelingAnalyze = false,
+    className,
 }: ControlsPanelProps) {
     const { t, i18n } = useTranslation('image')
     const { toast } = useToast()
@@ -700,8 +702,9 @@ export function ControlsPanel({
     }
 
     return (
-        <div className={STUDIO_CONTROLS_SHELL_CLASS}>
-            <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-5">
+        <div className={cn(STUDIO_CONTROLS_SHELL_CLASS, className)}>
+            <div className="thin-scrollbar flex-1 overflow-y-auto pl-4 pr-0 -mr-[2px] pt-4 md:pl-5 md:pr-0 md:pt-5">
+                <div className="space-y-4 pr-4 pb-10 md:pr-5 md:pb-12">
                 {/* SECTION: Sessions */}
                 <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader
@@ -756,7 +759,7 @@ export function ControlsPanel({
                     />
                     <div className="space-y-3 pt-1.5">
                         <select
-                            className="h-9 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-xs"
+                            className="h-10 w-full min-w-0 rounded-xl border border-input/80 bg-background/90 px-3 text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                             value={effectiveSessionId}
                             onChange={(event) => {
                                 const value = event.target.value
@@ -896,7 +899,7 @@ export function ControlsPanel({
                                 onClick={onAnalyze}
                                 disabled={isMagicParsing || !promptValue.trim()}
                                 className={cn(
-                                    'group feedback-action h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap',
+                                    'group feedback-action h-9 rounded-full border border-primary/25 bg-primary/10 px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-primary shadow-[0_14px_30px_-24px_hsl(var(--primary)/0.45)] transition-all hover:bg-primary/16 hover:shadow-[0_18px_34px_-22px_hsl(var(--primary)/0.55)] sm:px-4 sm:text-xs whitespace-nowrap',
                                     isMobile ? 'w-full justify-center' : 'ml-auto'
                                 )}
                             >
@@ -1441,6 +1444,7 @@ export function ControlsPanel({
                         </div>
                     </>
                 )}
+                </div>
             </div>
 
         </div>
