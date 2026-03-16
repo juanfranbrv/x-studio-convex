@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Facebook, Instagram, Twitter, Linkedin, Youtube, Link as LinkIcon, Phone, Plus, Globe, Trash2, MapPin, Music } from 'lucide-react';
+import { IconMail, IconFacebook, IconInstagram, IconTwitter, IconLinkedin, IconYoutube, IconLink, IconPhone, IconPlus, IconGlobe, IconDelete, IconMapPin, IconMusic } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,13 +17,13 @@ interface ContactSocialCardProps {
 }
 
 const platformIcons: Record<string, any> = {
-    facebook: Facebook,
-    instagram: Instagram,
-    tiktok: Music,
-    twitter: Twitter,
-    linkedin: Linkedin,
-    youtube: Youtube,
-    other: LinkIcon,
+    facebook: IconFacebook,
+    instagram: IconInstagram,
+    tiktok: IconMusic,
+    twitter: IconTwitter,
+    linkedin: IconLinkedin,
+    youtube: IconYoutube,
+    other: IconLink,
 };
 
 export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], addresses = [], onUpdate }: ContactSocialCardProps) {
@@ -139,7 +139,7 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                 aria-label={t('contact.deleteAria', { defaultValue: 'Delete' })}
                 type="button"
             >
-                <Trash2 className="w-3.5 h-3.5" />
+                <IconDelete className="w-3.5 h-3.5" />
             </button>
         </div>
     );
@@ -149,7 +149,7 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-full blur-3xl -z-10" />
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground font-bold">
-                    <LinkIcon className="w-5 h-5 text-primary" />
+                    <IconLink className="w-5 h-5 text-primary" />
                     {t('contact.title', { defaultValue: 'Channels and direct contact' })}
                 </CardTitle>
                 <p className="text-[11px] text-muted-foreground mt-0.5">{t('contact.subtitle', { defaultValue: 'Official contact information detected on the website' })}</p>
@@ -157,7 +157,7 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
             <CardContent className="space-y-6 pt-2 pb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                        <SectionTitle icon={Mail} title={t('contact.emailsTitle', { defaultValue: 'Email addresses' })} />
+                        <SectionTitle icon={IconMail} title={t('contact.emailsTitle', { defaultValue: 'Email addresses' })} />
                         <div className="space-y-1">
                             {localEmails.map((email, idx) => (
                                 <FieldRow key={`email-${idx}`} onDelete={() => handleDelete('email', idx)}>
@@ -176,14 +176,14 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                                 onClick={() => handleAdd('email')}
                                 type="button"
                             >
-                                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                                <IconPlus className="w-3.5 h-3.5 mr-1.5" />
                                 {t('contact.addEmail', { defaultValue: 'Add email' })}
                             </Button>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <SectionTitle icon={Phone} title={t('contact.phonesTitle', { defaultValue: 'Contact phone numbers' })} />
+                        <SectionTitle icon={IconPhone} title={t('contact.phonesTitle', { defaultValue: 'Contact phone numbers' })} />
                         <div className="space-y-1">
                             {localPhones.map((phone, idx) => (
                                 <FieldRow key={`phone-${idx}`} onDelete={() => handleDelete('phone', idx)}>
@@ -202,7 +202,7 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                                 onClick={() => handleAdd('phone')}
                                 type="button"
                             >
-                                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                                <IconPlus className="w-3.5 h-3.5 mr-1.5" />
                                 {t('contact.addPhone', { defaultValue: 'Add phone' })}
                             </Button>
                         </div>
@@ -210,7 +210,7 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                 </div>
 
                 <div className="space-y-4 pt-2">
-                    <SectionTitle icon={MapPin} title={t('contact.addressesTitle', { defaultValue: 'Physical addresses' })} />
+                    <SectionTitle icon={IconMapPin} title={t('contact.addressesTitle', { defaultValue: 'Physical addresses' })} />
                     <div className="space-y-1">
                         {localAddresses.map((address, idx) => (
                             <FieldRow key={`address-${idx}`} onDelete={() => handleDelete('address', idx)}>
@@ -229,17 +229,17 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                             onClick={() => handleAdd('address')}
                             type="button"
                         >
-                            <Plus className="w-3.5 h-3.5 mr-1.5" />
+                            <IconPlus className="w-3.5 h-3.5 mr-1.5" />
                             {t('contact.addAddress', { defaultValue: 'Add address' })}
                         </Button>
                     </div>
                 </div>
 
                 <div className="space-y-4 pt-2">
-                    <SectionTitle icon={Globe} title={t('contact.socialTitle', { defaultValue: 'Social media presence' })} />
+                    <SectionTitle icon={IconGlobe} title={t('contact.socialTitle', { defaultValue: 'Social media presence' })} />
                     <div className="flex flex-col gap-1">
                         {localSocials.map((social, idx) => {
-                            const Icon = platformIcons[(social.platform || 'other').toLowerCase()] || LinkIcon;
+                            const Icon = platformIcons[(social.platform || 'other').toLowerCase()] || IconLink;
                             return (
                                 <FieldRow key={`social-${idx}`} onDelete={() => handleDelete('social', idx)}>
                                     <div className="grid grid-cols-1 md:grid-cols-[130px_1fr_1fr] gap-2 items-center">
@@ -287,7 +287,7 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                             onClick={() => handleAdd('social')}
                             type="button"
                         >
-                            <Plus className="w-3.5 h-3.5 mr-1.5" />
+                            <IconPlus className="w-3.5 h-3.5 mr-1.5" />
                             {t('contact.addSocial', { defaultValue: 'Add social profile' })}
                         </Button>
                     </div>

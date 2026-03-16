@@ -1,7 +1,6 @@
 'use client'
 
-import { Globe } from 'lucide-react'
-// Globe kept from lucide-react — no hugeicons equivalent
+import { IconGlobe } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
 import { setAppLocale } from '@/lib/i18n'
 import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '@/locales/config'
@@ -30,7 +29,7 @@ export function LanguageSwitcher({ compact = false, align = 'end' }: LanguageSwi
                     size="sm"
                     className={compact ? 'h-9 gap-2 rounded-xl px-3' : 'h-9 gap-2 rounded-full px-3'}
                 >
-                    <Globe className="h-4 w-4" />
+                    <IconGlobe className="h-4 w-4" />
                     <span className="text-xs font-semibold uppercase tracking-[0.16em]">
                         {activeLocale.slice(0, 2)}
                     </span>

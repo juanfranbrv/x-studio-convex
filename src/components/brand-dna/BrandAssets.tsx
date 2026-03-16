@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
 
-import { Trash2, Plus, Sparkles, Type, MessageCircle, Quote, Languages } from 'lucide-react';
+import { IconDelete, IconPlus, IconSparkles, IconTextFont, IconMessage, IconQuote, IconLanguages } from '@/components/ui/icons';
 
 const LANGUAGE_OPTIONS = [
     { value: 'es', label: '🇪🇸 Español' },
@@ -105,7 +105,7 @@ export function BrandAssets({
                 type="button"
                 aria-label={t('assets.deleteAria', { defaultValue: 'Delete' })}
             >
-                <Trash2 className="w-3.5 h-3.5" />
+                <IconDelete className="w-3.5 h-3.5" />
             </button>
         </div>
     );
@@ -115,7 +115,7 @@ export function BrandAssets({
             <Card className="md:col-span-2 bg-white border border-border shadow-sm">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                        <Quote className="w-5 h-5 text-primary" />
+                        <IconQuote className="w-5 h-5 text-primary" />
                         {t('assets.taglineTitle', { defaultValue: 'Tagline' })}
                     </CardTitle>
                 </CardHeader>
@@ -134,7 +134,7 @@ export function BrandAssets({
             <Card className="md:col-span-2 bg-white border border-border shadow-sm">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                        <Languages className="w-5 h-5 text-primary" />
+                        <IconLanguages className="w-5 h-5 text-primary" />
                         {t('assets.preferredLanguageTitle', { defaultValue: 'Preferred language' })}
                     </CardTitle>
                     <p className="text-xs text-muted-foreground">{t('assets.preferredLanguageDescription', { defaultValue: 'Language used for AI-generated content for this brand.' })}</p>
@@ -163,7 +163,7 @@ export function BrandAssets({
             <Card className="bg-white border border-border shadow-sm">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                        <Sparkles className="w-5 h-5 text-primary" />
+                        <IconSparkles className="w-5 h-5 text-primary" />
                         {t('assets.valuesTitle', { defaultValue: 'Values' })}
                     </CardTitle>
                 </CardHeader>
@@ -178,7 +178,7 @@ export function BrandAssets({
                         />
                     ))}
                     <Button variant="outline" size="sm" className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5" onClick={onAddValue} type="button">
-                        <Plus className="w-4 h-4 mr-1" />
+                        <IconPlus className="w-4 h-4 mr-1" />
                         {t('assets.addValue', { defaultValue: 'Add value' })}
                     </Button>
                 </CardContent>
@@ -187,7 +187,7 @@ export function BrandAssets({
             <Card className="bg-white border border-border shadow-sm">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                        <Type className="w-5 h-5 text-primary" />
+                        <IconTextFont className="w-5 h-5 text-primary" />
                         {t('assets.visualStylesTitle', { defaultValue: 'Visual styles' })}
                     </CardTitle>
                     <p className="text-xs text-muted-foreground">{t('assets.visualStylesDescription', { defaultValue: 'Used for image generation in the Image module.' })}</p>
@@ -210,7 +210,7 @@ export function BrandAssets({
                                             type="button"
                                             title={t('assets.styleSuggestionsTitle', { defaultValue: 'Style suggestions' })}
                                         >
-                                            <Sparkles className="w-3.5 h-3.5" />
+                                            <IconSparkles className="w-3.5 h-3.5" />
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="p-0 w-[350px] shadow-xl border-border max-h-[300px] overflow-hidden flex flex-col bg-card" align="start" sideOffset={5}>
@@ -245,7 +245,7 @@ export function BrandAssets({
                         />
                     ))}
                     <Button variant="outline" size="sm" className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5" onClick={onAddAesthetic} type="button">
-                        <Plus className="w-4 h-4 mr-1" />
+                        <IconPlus className="w-4 h-4 mr-1" />
                         {t('assets.addStyle', { defaultValue: 'Add style' })}
                     </Button>
                 </CardContent>
@@ -254,7 +254,7 @@ export function BrandAssets({
             <Card className="bg-white border border-border shadow-sm">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                        <MessageCircle className="w-5 h-5 text-primary" />
+                        <IconMessage className="w-5 h-5 text-primary" />
                         {t('assets.toneTitle', { defaultValue: 'Tone of voice' })}
                     </CardTitle>
                 </CardHeader>
@@ -269,7 +269,7 @@ export function BrandAssets({
                         />
                     ))}
                     <Button variant="outline" size="sm" className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5" onClick={onAddTone} type="button">
-                        <Plus className="w-4 h-4 mr-1" />
+                        <IconPlus className="w-4 h-4 mr-1" />
                         {t('assets.addTone', { defaultValue: 'Add tone' })}
                     </Button>
                 </CardContent>

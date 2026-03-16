@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
-import { Monitor, Building2, Sparkles, Image, Maximize2, Trash2, Upload, Info } from 'lucide-react';
+import { IconMonitor, IconBuilding, IconSparkles, IconImage, IconMaximize, IconDelete, IconUpload, IconInfo } from '@/components/ui/icons';
 import { useTranslation } from 'react-i18next';
 
 interface VisualAssetsProps {
@@ -64,7 +64,7 @@ export function VisualAssets({
                 <Card className="h-full overflow-hidden glass-panel border-0 shadow-none">
                     <CardHeader className="pb-2">
                         <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                            <Monitor className="w-5 h-5 text-[var(--accent)]" />
+                            <IconMonitor className="w-5 h-5 text-[var(--accent)]" />
                             {t('visualAssets.webScreenshotTitle', { defaultValue: 'Website screenshot' })}
                         </CardTitle>
                         <CardDescription className="text-xs text-muted-foreground mt-1">
@@ -82,7 +82,7 @@ export function VisualAssets({
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center p-8 text-center text-[var(--text-secondary)] min-h-[200px]">
-                                <Monitor className="w-10 h-10 opacity-20 mb-1" />
+                                <IconMonitor className="w-10 h-10 opacity-20 mb-1" />
                                 <p className="text-xs italic">{t('visualAssets.noScreenshot', { defaultValue: 'No screenshot available' })}</p>
                             </div>
                         )}
@@ -97,7 +97,7 @@ export function VisualAssets({
                     <Card className="glass-panel border-0 shadow-none">
                         <CardHeader className="pb-2">
                             <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                                <Building2 className="w-5 h-5 text-primary" />
+                                <IconBuilding className="w-5 h-5 text-primary" />
                                 {t('visualAssets.mainLogo', { defaultValue: 'Main logo' })}
                             </CardTitle>
                         </CardHeader>
@@ -110,7 +110,7 @@ export function VisualAssets({
                                 />
                             ) : (
                                 <div className="text-center text-muted-foreground opacity-50">
-                                    <Building2 className="w-8 h-8 mb-1" />
+                                    <IconBuilding className="w-8 h-8 mb-1" />
                                     <p className="text-[10px]">{t('visualAssets.noLogo', { defaultValue: 'No logo' })}</p>
                                 </div>
                             )}
@@ -121,7 +121,7 @@ export function VisualAssets({
                     <Card className="glass-panel border-0 shadow-none">
                         <CardHeader className="pb-2">
                             <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                                <Sparkles className="w-5 h-5 text-primary" />
+                                <IconSparkles className="w-5 h-5 text-primary" />
                                 {t('visualAssets.faviconTitle', { defaultValue: 'Favicon' })}
                             </CardTitle>
                         </CardHeader>
@@ -134,7 +134,7 @@ export function VisualAssets({
                                 />
                             ) : (
                                 <div className="text-center text-muted-foreground opacity-50">
-                                    <Sparkles className="w-8 h-8 mb-1" />
+                                    <IconSparkles className="w-8 h-8 mb-1" />
                                     <p className="text-[10px]">{t('visualAssets.noFavicon', { defaultValue: 'No favicon' })}</p>
                                 </div>
                             )}
@@ -146,7 +146,7 @@ export function VisualAssets({
                 <Card className="glass-panel border-0 shadow-none">
                     <CardHeader className="pb-2">
                         <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                            <Image className="w-5 h-5 text-[var(--accent)]" />
+                            <IconImage className="w-5 h-5 text-[var(--accent)]" />
                             {t('visualAssets.analyzedGallery', { defaultValue: 'Analyzed image gallery' })}
                         </CardTitle>
                         <CardDescription className="text-xs text-muted-foreground mt-1">
@@ -191,13 +191,13 @@ export function VisualAssets({
                                                 "p-0.5 rounded-full",
                                                 item.selected !== false ? "bg-white shadow-sm" : "bg-black/20"
                                             )}>
-                                                <Sparkles className={cn("w-3 h-3", item.selected !== false ? "text-primary" : "text-white")} />
+                                                <IconSparkles className={cn("w-3 h-3", item.selected !== false ? "text-primary" : "text-white")} />
                                             </div>
                                         </button>
                                     )}
 
                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                        <Maximize2 className="w-6 h-6 text-white shadow-lg" />
+                                        <IconMaximize className="w-6 h-6 text-white shadow-lg" />
                                     </div>
 
                                     <Button
@@ -209,7 +209,7 @@ export function VisualAssets({
                                             onRemoveImage(idx);
                                         }}
                                     >
-                                        <Trash2 className="w-3 h-3" />
+                                        <IconDelete className="w-3 h-3" />
                                     </Button>
                                 </div>
                             ))}
@@ -240,7 +240,7 @@ export function VisualAssets({
                                         <Loader2 className="w-6 h-6 text-muted-foreground" />
                                     ) : (
                                         <>
-                                            <Upload className="w-5 h-5 text-[var(--text-secondary)]" />
+                                            <IconUpload className="w-5 h-5 text-[var(--text-secondary)]" />
                                             <span className="text-[10px] font-medium text-[var(--text-secondary)]">{t('visualAssets.upload', { defaultValue: 'Upload' })}</span>
                                         </>
                                     )}

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
-import { Search, X, Filter } from 'lucide-react'
+import { IconSearch, IconClose, IconFilter } from '@/components/ui/icons'
 import { INTENT_OPTIONS } from '@/lib/creation-flow-types'
 import { Input } from '@/components/ui/input'
 
@@ -65,7 +65,7 @@ export function CompositionsFilterBar({
     return (
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
             <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
@@ -77,14 +77,14 @@ export function CompositionsFilterBar({
                         onClick={() => { setQ(''); updateUrl('', intent, mode); }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
-                        <X className="h-4 w-4" />
+                        <IconClose className="h-4 w-4" />
                     </button>
                 )}
             </div>
 
             <div className="flex items-center gap-2">
                 <div className="relative">
-                    <Filter className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <IconFilter className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     <select
                         value={intent}
                         onChange={handleIntentChange}
@@ -103,7 +103,7 @@ export function CompositionsFilterBar({
                 </div>
 
                 <div className="relative">
-                    <Filter className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <IconFilter className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     <select
                         value={mode}
                         onChange={handleModeChange}

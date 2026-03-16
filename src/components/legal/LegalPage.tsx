@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, ArrowUpRight, Mail, ShieldCheck } from 'lucide-react'
+import { IconArrowLeft, IconArrowUpRight, IconMail, IconShieldCheck } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
 
 type LegalPageProps = {
@@ -27,11 +27,11 @@ export function LegalPage({ page, sectionIds }: LegalPageProps) {
                         href="/"
                         className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
                     >
-                        <ArrowLeft className="h-3.5 w-3.5" />
+                        <IconArrowLeft className="h-3.5 w-3.5" />
                         {t('common.backHome')}
                     </Link>
                     <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-                        <ShieldCheck className="h-3.5 w-3.5" />
+                        <IconShieldCheck className="h-3.5 w-3.5" />
                         {t('common.trustCenter')}
                     </div>
                 </div>
@@ -89,7 +89,7 @@ export function LegalPage({ page, sectionIds }: LegalPageProps) {
                                                     className="flex items-center justify-between rounded-2xl border border-border/60 bg-white px-4 py-3 text-sm font-medium text-foreground transition-all hover:border-primary/35 hover:bg-primary/5"
                                                 >
                                                     <span>{t(`${item.key}.title`)}</span>
-                                                    <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                                                    <IconArrowUpRight className="h-4 w-4 text-muted-foreground" />
                                                 </Link>
                                             ))}
                                         </div>
@@ -97,7 +97,7 @@ export function LegalPage({ page, sectionIds }: LegalPageProps) {
 
                                     <div className="rounded-2xl border border-border/60 bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
                                         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                            <Mail className="h-4 w-4 text-primary" />
+                                            <IconMail className="h-4 w-4 text-primary" />
                                             {t('common.contactTitle')}
                                         </div>
                                         <p className="mt-3 text-sm leading-6 text-muted-foreground">

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { currentUser } from '@clerk/nextjs/server'
-import { ArrowLeft, Sparkles } from 'lucide-react'
+import { IconArrowLeft, IconSparkles } from '@/components/ui/icons'
 import { INTENT_OPTIONS } from '@/lib/creation-flow-types'
 import { autoGenerateAction } from '@/lib/admin-compositions-actions'
 import { Button } from '@/components/ui/button'
@@ -18,12 +18,12 @@ export default async function AutoGenerateCompositionsPage() {
             <div className="mx-auto max-w-4xl space-y-8">
                 <header className="space-y-2">
                     <Link href="/admin/compositions" className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
-                        <ArrowLeft className="h-4 w-4" />
+                        <IconArrowLeft className="h-4 w-4" />
                         Volver al Gestor de Diseños
                     </Link>
                     <div className="flex items-center gap-3">
                         <div className="rounded-lg bg-primary/10 p-2 text-primary">
-                            <Sparkles className="h-6 w-6" />
+                            <IconSparkles className="h-6 w-6" />
                         </div>
                         <h1 className="text-3xl font-bold tracking-tight">Generación Automática</h1>
                     </div>

@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Check, CreditCard, Receipt, ShieldCheck } from "lucide-react";
+import { IconArrowRight, IconCheckSimple, IconCreditCard, IconReceipt, IconShieldCheck } from "@/components/ui/icons";
 import { api } from "@/../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,9 +25,9 @@ export function PricingPageClient() {
 
   const trustCards = useMemo(
     () => [
-      { icon: ShieldCheck, title: t("pricing.trust.title1"), body: t("pricing.trust.body1") },
-      { icon: CreditCard, title: t("pricing.trust.title2"), body: t("pricing.trust.body2") },
-      { icon: Receipt, title: t("pricing.trust.title3"), body: t("pricing.trust.body3") },
+      { icon: IconShieldCheck, title: t("pricing.trust.title1"), body: t("pricing.trust.body1") },
+      { icon: IconCreditCard, title: t("pricing.trust.title2"), body: t("pricing.trust.body2") },
+      { icon: IconReceipt, title: t("pricing.trust.title3"), body: t("pricing.trust.body3") },
     ],
     [t]
   );
@@ -139,15 +139,15 @@ export function PricingPageClient() {
                   <p className="text-sm leading-6 text-muted-foreground">{t(`packs.${slug}.tagline`)}</p>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 text-sm text-foreground">
-                      <Check className="h-4 w-4 text-primary" />
+                      <IconCheckSimple className="h-4 w-4 text-primary" />
                       <span>{t("labels.creditsIncluded", { count: pack.credits })}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-foreground">
-                      <Check className="h-4 w-4 text-primary" />
+                      <IconCheckSimple className="h-4 w-4 text-primary" />
                       <span>{t("pricing.trust.body2")}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-foreground">
-                      <Check className="h-4 w-4 text-primary" />
+                      <IconCheckSimple className="h-4 w-4 text-primary" />
                       <span>{t("pricing.trust.body3")}</span>
                     </div>
                   </div>
@@ -191,7 +191,7 @@ export function PricingPageClient() {
 
         <div className="flex justify-end">
           <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            {t("pricing.backHome")} <ArrowRight className="h-4 w-4" />
+            {t("pricing.backHome")} <IconArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>

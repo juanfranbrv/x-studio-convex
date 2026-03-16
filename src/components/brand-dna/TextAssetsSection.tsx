@@ -15,7 +15,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-import { Megaphone, MousePointerClick, FileText, Info, Trash2, Plus, Upload } from 'lucide-react';
+import { IconMegaphone, IconMouseClick, IconFileText, IconInfo, IconDelete, IconPlus, IconUpload } from '@/components/ui/icons';
 import { analyzeBrandFile } from '@/app/actions/analyze-brand-file';
 import { ExtractionPreviewModal } from './ExtractionPreviewModal';
 import { useToast } from '@/hooks/use-toast';
@@ -110,7 +110,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <button className="p-0.5 rounded-full hover:bg-[var(--surface-hover)] transition-colors" type="button">
-                            <Info className="w-3.5 h-3.5 text-[var(--text-secondary)] opacity-60" />
+                            <IconInfo className="w-3.5 h-3.5 text-[var(--text-secondary)] opacity-60" />
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs text-xs bg-popover border-border text-popover-foreground">
@@ -148,7 +148,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                 type="button"
                 aria-label={t('contact.deleteAria', { defaultValue: 'Delete' })}
             >
-                <Trash2 className="w-3.5 h-3.5" />
+                <IconDelete className="w-3.5 h-3.5" />
             </button>
         </div>
     );
@@ -159,7 +159,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
             <CardHeader className="relative pb-3 flex flex-row items-center justify-between">
                 <div>
                     <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                        <FileText className="w-5 h-5 text-primary" />
+                        <IconFileText className="w-5 h-5 text-primary" />
                         {t('textAssets.title', { defaultValue: 'Text assets' })}
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">{t('textAssets.description', { defaultValue: 'Editable copy for campaigns and content generation' })}</p>
@@ -208,7 +208,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                         asChild
                     >
                         <label htmlFor="brand-file-upload">
-                            {isAnalyzing ? <Loader2 className="w-3.5 h-3.5" /> : <Upload className="w-3.5 h-3.5" />}
+                            {isAnalyzing ? <Loader2 className="w-3.5 h-3.5" /> : <IconUpload className="w-3.5 h-3.5" />}
                             {t('textAssets.importFromFile', { defaultValue: 'Import from file' })}
                         </label>
                     </Button>
@@ -217,7 +217,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
             <CardContent className="relative space-y-4 pt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                        <SectionTitle icon={Megaphone} title={t('textAssets.marketingHooksTitle', { defaultValue: 'Marketing headlines' })} tooltipKey="marketing_hooks" />
+                        <SectionTitle icon={IconMegaphone} title={t('textAssets.marketingHooksTitle', { defaultValue: 'Marketing headlines' })} tooltipKey="marketing_hooks" />
                         <div className="space-y-1">
                             {assets.marketing_hooks.map((hook, idx) => (
                                 <DirectEditableCard
@@ -235,14 +235,14 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                                 onClick={() => handleAdd('marketing_hooks')}
                                 type="button"
                             >
-                                <Plus className="w-4 h-4 mr-1" />
+                                <IconPlus className="w-4 h-4 mr-1" />
                                 {t('textAssets.addHeadline', { defaultValue: 'Add headline' })}
                             </Button>
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <SectionTitle icon={MousePointerClick} title={t('textAssets.ctasTitle', { defaultValue: 'Calls to action' })} tooltipKey="ctas" />
+                        <SectionTitle icon={IconMouseClick} title={t('textAssets.ctasTitle', { defaultValue: 'Calls to action' })} tooltipKey="ctas" />
                         <div className="space-y-1">
                             {assets.ctas.map((cta, idx) => (
                                 <DirectEditableCard
@@ -260,7 +260,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                                 onClick={() => handleAdd('ctas')}
                                 type="button"
                             >
-                                <Plus className="w-4 h-4 mr-1" />
+                                <IconPlus className="w-4 h-4 mr-1" />
                                 {t('textAssets.addCta', { defaultValue: 'Add CTA' })}
                             </Button>
                         </div>

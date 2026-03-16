@@ -8,8 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { Globe, ShieldAlert, Quote } from 'lucide-react'
-import { IconArrowLeft, IconArrowRight, IconCheck, IconPalette, IconUpload, IconImage, IconClose, IconPlus, IconColorPicker, IconSparkles, IconTextFont, IconMessage, IconMegaphone, IconMouseClick, IconDelete } from '@/components/ui/icons'
+import { IconGlobe, IconShield, IconQuote, IconArrowLeft, IconArrowRight, IconCheck, IconPalette, IconUpload, IconImage, IconClose, IconPlus, IconColorPicker, IconSparkles, IconTextFont, IconMessage, IconMegaphone, IconMouseClick, IconDelete } from '@/components/ui/icons'
 import { HexColorPicker } from 'react-colorful'
 import { ContactSocialCard } from './ContactSocialCard'
 import { TypographySection } from './TypographySection'
@@ -685,7 +684,7 @@ export function BrandKitAssistantWizard({
             {step === 'intro' && (
               <section className="rounded-2xl border border-border/70 bg-muted/25 p-6 md:p-8 space-y-5">
                 <div className="flex items-start gap-3">
-                  <ShieldAlert className="w-6 h-6 text-primary mt-1" />
+                  <IconShield className="w-6 h-6 text-primary mt-1" />
                   <div className="space-y-3">
                     {forceMode ? (
                       <>
@@ -729,7 +728,7 @@ export function BrandKitAssistantWizard({
               <section className="space-y-5">
                 <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
                   <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-primary" />
+                    <IconGlobe className="w-4 h-4 text-primary" />
                     <p className="text-sm font-medium text-foreground">{t('wizard.optionalAnalyzeTitle', { defaultValue: 'Optional step: analyze your website' })}</p>
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -1084,7 +1083,7 @@ export function BrandKitAssistantWizard({
             {step === 'slogan' && (
               <section className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <Quote className="w-5 h-5 text-primary mt-0.5" />
+                  <IconQuote className="w-5 h-5 text-primary mt-0.5" />
                 <p className="text-base text-muted-foreground">{t('wizard.sloganIntro', { defaultValue: 'Define your main tagline.' })}</p>
                 </div>
                 <Input

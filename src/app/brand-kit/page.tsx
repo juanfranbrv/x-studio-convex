@@ -17,7 +17,7 @@ import { fetchQuery } from 'convex/nextjs';
 import { api } from '../../../convex/_generated/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Globe, Sparkles, ArrowRight, Package, RefreshCcw, Plus, TriangleAlert, Check, X, Pencil, ListChecks, Trash2, Copy, Upload, Download } from 'lucide-react';
+import { IconGlobe, IconSparkles, IconArrowRight, IconPackage, IconRefresh, IconPlus, IconTriangleAlert, IconCheckSimple, IconClose, IconEdit, IconListChecks, IconDelete, IconCopy, IconUpload, IconDownload } from '@/components/ui/icons';
 import { BrandDNABoard } from '@/components/brand-dna/BrandDNABoard';
 import { BrandKitProgress } from '@/components/brand-dna/BrandKitProgress';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -608,7 +608,7 @@ function BrandKitPageContent() {
                 className="gap-2"
                 onClick={handleOpenAssistant}
             >
-                <ListChecks className="w-4 h-4" />
+                <IconListChecks className="w-4 h-4" />
                 Abrir asistente
             </Button>
             <Button
@@ -618,7 +618,7 @@ function BrandKitPageContent() {
                 onClick={() => void handleDuplicateCurrentBrandKit()}
                 disabled={isDuplicatingCurrent}
             >
-                {isDuplicatingCurrent ? <Loader2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {isDuplicatingCurrent ? <Loader2 className="w-4 h-4" /> : <IconCopy className="w-4 h-4" />}
                 Duplicar kit actual
             </Button>
             <Button
@@ -627,7 +627,7 @@ function BrandKitPageContent() {
                 className="gap-2"
                 onClick={handleOpenImport}
             >
-                <Upload className="w-4 h-4" />
+                <IconUpload className="w-4 h-4" />
                 Importar
             </Button>
             <Button
@@ -636,7 +636,7 @@ function BrandKitPageContent() {
                 className="gap-2"
                 onClick={handleOpenExport}
             >
-                <Download className="w-4 h-4" />
+                <IconDownload className="w-4 h-4" />
                 Exportar
             </Button>
             <Button
@@ -645,7 +645,7 @@ function BrandKitPageContent() {
                 className="gap-2 border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
                 onClick={() => setShowDeleteCurrentConfirm(true)}
             >
-                <Trash2 className="w-4 h-4" />
+                <IconDelete className="w-4 h-4" />
                 Borrar kit actual
             </Button>
         </div>
@@ -887,7 +887,7 @@ function BrandKitPageContent() {
                                 className="mb-6"
                             >
                                 <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center shadow-lg">
-                                    <Sparkles className="w-10 h-10 text-primary-foreground" />
+                                    <IconSparkles className="w-10 h-10 text-primary-foreground" />
                                 </div>
                             </motion.div>
 
@@ -912,7 +912,7 @@ function BrandKitPageContent() {
                                     isSocialUrl ? "border-amber-500/50" : "border-border/50 focus-within:border-primary/50"
                                 )}>
                                     <div className="pl-4">
-                                        <Globe className={cn(
+                                        <IconGlobe className={cn(
                                             "w-6 h-6 transition-colors",
                                             isSocialUrl ? "text-amber-500" : "text-muted-foreground group-focus-within:text-primary"
                                         )} />
@@ -935,7 +935,7 @@ function BrandKitPageContent() {
                                             <Loader2 className="w-5 h-5" />
                                         ) : (
                                             <>
-                                                <Sparkles className="w-5 h-5 mr-2" />
+                                                <IconSparkles className="w-5 h-5 mr-2" />
                                                 {t('hero.analyze', { defaultValue: 'Analyze' })}
                                             </>
                                         )}
@@ -962,7 +962,7 @@ function BrandKitPageContent() {
                                             onClick={handleManualCreation}
                                             className="border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
                                         >
-                                            <Pencil className="w-4 h-4 mr-2" />
+                                            <IconEdit className="w-4 h-4 mr-2" />
                                             {t('hero.buildManually', { defaultValue: 'Build the Brand Kit manually' })}
                                         </Button>
                                     </motion.div>
@@ -991,7 +991,7 @@ function BrandKitPageContent() {
                                         setUrl('');
                                     }}
                                 >
-                                    <X className="w-4 h-4 mr-2" />
+                                    <IconClose className="w-4 h-4 mr-2" />
                                     {t('common:actions.cancel', { defaultValue: 'Cancel' })}
                                 </Button>
                             )}
@@ -999,7 +999,7 @@ function BrandKitPageContent() {
 
                         {error && (
                             <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center justify-center gap-2 animate-in slide-in-from-bottom-2">
-                                <TriangleAlert className="w-4 h-4" />
+                                <IconTriangleAlert className="w-4 h-4" />
                                 {error}
                             </div>
                         )}
@@ -1336,7 +1336,7 @@ function BrandKitPageContent() {
                             <AlertDialogHeader>
                                 <AlertDialogTitle className="flex items-center gap-3 text-xl text-foreground">
                                     <div className="p-2.5 rounded-full bg-amber-500/10 text-amber-500">
-                                        <TriangleAlert className="w-6 h-6 animate-pulse" />
+                                        <IconTriangleAlert className="w-6 h-6 animate-pulse" />
                                     </div>
                                     {t('dialogs.regenerateTitle', { defaultValue: 'Regenerate brand kit' })}
                                 </AlertDialogTitle>
@@ -1350,7 +1350,7 @@ function BrandKitPageContent() {
 
                         <div className="px-6 py-4">
                             <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-4 flex gap-3">
-                                <TriangleAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                <IconTriangleAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                 <p className="text-sm text-red-500/90 font-medium">
                                     {t('dialogs.regenerateWarning', { defaultValue: 'Warning: all the manual changes you made in this profile will be permanently lost.' })}
                                 </p>
@@ -1365,7 +1365,7 @@ function BrandKitPageContent() {
                                 onClick={handleRegenerate}
                                 className="shadow-lg transition-all active:scale-95"
                             >
-                                <RefreshCcw className="w-4 h-4 mr-2" />
+                                <IconRefresh className="w-4 h-4 mr-2" />
                                 {t('dialogs.regenerateConfirm', { defaultValue: 'Yes, regenerate now' })}
                             </AlertDialogAction>
                         </AlertDialogFooter>
@@ -1376,7 +1376,7 @@ function BrandKitPageContent() {
                     <AlertDialogContent className="max-w-md">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-                                <Trash2 className="w-5 h-5" />
+                                <IconDelete className="w-5 h-5" />
                                 {t('dialogs.deleteCurrentTitle', { defaultValue: 'Delete current brand kit' })}
                             </AlertDialogTitle>
                             <AlertDialogDescription>

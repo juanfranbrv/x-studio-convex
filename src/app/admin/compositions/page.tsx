@@ -5,7 +5,7 @@ import { getLegacyCompositions } from '@/lib/legacy-compositions'
 import { readBasicLegacyLayouts, readPromotedLegacyLayouts } from '@/lib/legacy-promotions'
 import { CompositionsLayout } from '@/components/admin/CompositionsLayout'
 import { CompositionsFilterBar } from '@/components/admin/CompositionsFilterBar'
-import { Plus, LayoutGrid } from 'lucide-react'
+import { IconPlus, IconGrid } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 
 const ADMIN_EMAILS = ['juanfranbrv@gmail.com']
@@ -64,13 +64,13 @@ export default async function AdminCompositionsPage({ searchParams }: Compositio
                     <div className="flex items-center gap-3">
                         <Link href="/admin/compositions/auto">
                             <Button variant="outline" size="sm" className="gap-2">
-                                <LayoutGrid className="h-4 w-4" />
+                                <IconGrid className="h-4 w-4" />
                                 Auto-Generación
                             </Button>
                         </Link>
                         <Link href="/admin/compositions?nuevo=1">
                             <Button size="sm" className="gap-2">
-                                <Plus className="h-4 w-4" />
+                                <IconPlus className="h-4 w-4" />
                                 Nuevo Diseño
                             </Button>
                         </Link>

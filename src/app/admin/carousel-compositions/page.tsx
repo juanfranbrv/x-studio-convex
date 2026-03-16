@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { IconEditorSection } from '@/components/admin/IconEditorSection'
-import { LayoutGrid, Plus, Trash2, Pencil, ArrowUpDown, ArrowUp, ArrowDown, Power } from 'lucide-react'
+import { IconGrid, IconPlus, IconDelete, IconEdit, IconArrowUpDown, IconArrowUp, IconArrowDown, IconPower } from '@/components/ui/icons'
 import Link from 'next/link'
 
 const ADMIN_EMAILS = ['juanfranbrv@gmail.com']
@@ -82,7 +82,7 @@ function SortableHead({
     onClick: () => void
     className?: string
 }) {
-    const Icon = active ? (direction === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown
+    const Icon = active ? (direction === 'asc' ? IconArrowUp : IconArrowDown) : IconArrowUpDown
 
     return (
         <TableHead className={className}>
@@ -350,7 +350,7 @@ export default function CarouselCompositionsAdminPage() {
                         </Button>
                         <Link href="/admin/compositions">
                             <Button variant="outline" size="sm" className="gap-2">
-                                <LayoutGrid className="h-4 w-4" />
+                                <IconGrid className="h-4 w-4" />
                                 Diseños Imagen
                             </Button>
                         </Link>
@@ -428,7 +428,7 @@ export default function CarouselCompositionsAdminPage() {
                             <p className="text-sm text-muted-foreground">Estructuras narrativas globales del carrusel.</p>
                         </div>
                         <Button size="sm" onClick={() => { setEditingStructure(null); setStructureDialogOpen(true) }}>
-                            <Plus className="h-4 w-4 mr-1" /> Nueva narrativa
+                            <IconPlus className="h-4 w-4 mr-1" /> Nueva narrativa
                         </Button>
                     </div>
 
@@ -477,13 +477,13 @@ export default function CarouselCompositionsAdminPage() {
                                             onClick={() => handleToggleStructure(row)}
                                             title={row.isActive ? 'Desactivar narrativa' : 'Activar narrativa'}
                                         >
-                                            <Power className="h-4 w-4" />
+                                            <IconPower className="h-4 w-4" />
                                         </Button>
                                         <Button size="sm" variant="outline" onClick={() => { setEditingStructure(row); setStructureDialogOpen(true) }}>
-                                            <Pencil className="h-4 w-4" />
+                                            <IconEdit className="h-4 w-4" />
                                         </Button>
                                         <Button size="sm" variant="destructive" onClick={() => handleRemoveStructure(row)}>
-                                            <Trash2 className="h-4 w-4" />
+                                            <IconDelete className="h-4 w-4" />
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -506,7 +506,7 @@ export default function CarouselCompositionsAdminPage() {
                             <p className="text-sm text-muted-foreground">Layouts para carruseles. Globales o asociados a una narrativa.</p>
                         </div>
                         <Button size="sm" onClick={() => { setEditingComposition(null); setCompositionDialogOpen(true) }}>
-                            <Plus className="h-4 w-4 mr-1" /> Nuevo diseño
+                            <IconPlus className="h-4 w-4 mr-1" /> Nuevo diseño
                         </Button>
                     </div>
 
@@ -594,13 +594,13 @@ export default function CarouselCompositionsAdminPage() {
                                             onClick={() => handleToggleComposition(row)}
                                             title={row.isActive ? 'Desactivar diseño' : 'Activar diseño'}
                                         >
-                                            <Power className="h-4 w-4" />
+                                            <IconPower className="h-4 w-4" />
                                         </Button>
                                         <Button size="sm" variant="outline" onClick={() => { setEditingComposition(row); setCompositionDialogOpen(true) }}>
-                                            <Pencil className="h-4 w-4" />
+                                            <IconEdit className="h-4 w-4" />
                                         </Button>
                                         <Button size="sm" variant="destructive" onClick={() => handleRemoveComposition(row)}>
-                                            <Trash2 className="h-4 w-4" />
+                                            <IconDelete className="h-4 w-4" />
                                         </Button>
                                     </TableCell>
                                 </TableRow>

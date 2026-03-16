@@ -4,8 +4,7 @@ import { Loader2 } from '@/components/ui/spinner'
 ;
 
 import { useState, useEffect, useRef } from 'react';
-import { Globe, Building2 } from 'lucide-react';
-import { IconChevronDown, IconPlus, IconCheck } from '@/components/ui/icons';
+import { IconGlobe, IconBuilding, IconChevronDown, IconPlus, IconCheck } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { BrandKitSummary } from '@/lib/brand-types';
@@ -67,7 +66,7 @@ export function ProfileSwitcher({
                         className="w-5 h-5 rounded-sm object-contain"
                     />
                 ) : (
-                    <Building2 className="w-5 h-5 text-primary" />
+                    <IconBuilding className="w-5 h-5 text-primary" />
                 )}
 
                 <div className="flex flex-col items-start">
@@ -116,7 +115,7 @@ export function ProfileSwitcher({
                                         className="w-6 h-6 rounded-sm object-contain flex-shrink-0"
                                     />
                                 ) : (
-                                    <Globe className="w-6 h-6 text-muted-foreground flex-shrink-0" />
+                                    <IconGlobe className="w-6 h-6 text-muted-foreground flex-shrink-0" />
                                 )}
 
                                 <div className="flex-1 min-w-0">

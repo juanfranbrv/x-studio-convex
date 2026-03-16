@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Search, Sparkles, Wand2 } from 'lucide-react'
+import { IconSearch, IconSparkles, IconWand } from '@/components/ui/icons'
 import { IconSelector } from './IconSelector'
 import { suggestIconAction } from '@/lib/admin-compositions-actions'
 
@@ -57,7 +57,7 @@ export function IconEditorSection({ initialSvg, onChange }: IconEditorSectionPro
                             className="flex h-7 items-center gap-1.5 rounded-md border border-primary/20 bg-primary/5 px-2 text-[11px] text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
                             title="Sugerir icono con IA"
                         >
-                            <Sparkles className={`h-3.5 w-3.5 ${isSuggesting ? 'animate-pulse' : ''}`} />
+                            <IconSparkles className={`h-3.5 w-3.5 ${isSuggesting ? 'animate-pulse' : ''}`} />
                             {isSuggesting ? 'Sugiriendo...' : 'IA'}
                         </button>
                         <button
@@ -65,7 +65,7 @@ export function IconEditorSection({ initialSvg, onChange }: IconEditorSectionPro
                             onClick={() => setIsOpen(true)}
                             className="flex h-7 items-center gap-1.5 rounded-md border border-primary/20 bg-primary/5 px-2 text-[11px] text-primary hover:bg-primary/10 transition-colors"
                         >
-                            <Search className="h-3 w-3" />
+                            <IconSearch className="h-3 w-3" />
                             Catálogo
                         </button>
                     </div>

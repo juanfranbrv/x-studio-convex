@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
-import { Search, X } from 'lucide-react'
+import { IconSearch, IconClose } from '@/components/ui/icons'
 import iconsData from '@/lib/icons/material-icons.json'
 
 interface IconMetadata {
@@ -78,13 +78,13 @@ export function IconSelector({ onSelect, onClose }: IconSelectorProps) {
                 <header className="flex items-center justify-between border-b border-border p-4">
                     <h2 className="text-lg font-semibold text-foreground">Seleccionar Icono Material</h2>
                     <button onClick={onClose} className="rounded-full p-1 hover:bg-muted transition-colors">
-                        <X className="h-5 w-5" />
+                        <IconClose className="h-5 w-5" />
                     </button>
                 </header>
 
                 <div className="p-4">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <input
                             type="text"
                             placeholder="Buscar por nombre o etiqueta (ej: settings, home, menu)..."

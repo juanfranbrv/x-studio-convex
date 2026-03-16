@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useTranslation } from "react-i18next";
-import { Coins, CreditCard, Gift, RefreshCw, Save, Wallet } from "lucide-react";
+import { IconCoins, IconCreditCard, IconGift, IconRefresh, IconSave, IconWallet } from "@/components/ui/icons";
 import { api } from "@/../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,16 +99,16 @@ export function BillingAdminPanel({ adminEmail }: { adminEmail: string }) {
           <p className="text-sm text-muted-foreground">{t("admin.description")}</p>
         </div>
         <Button onClick={() => void handleSync()} disabled={syncing} className="gap-2">
-          {syncing ? <Loader2 className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
+          {syncing ? <Loader2 className="h-4 w-4" /> : <IconRefresh className="h-4 w-4" />}
           {syncing ? t("admin.syncing") : t("admin.sync")}
         </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <AdminMetric icon={Wallet} label={t("admin.stats.revenue")} value={formatPrice(data?.stats?.revenueCents ?? 0, locale)} />
-        <AdminMetric icon={CreditCard} label={t("admin.stats.purchases")} value={String(data?.stats?.purchaseCount ?? 0)} />
-        <AdminMetric icon={Coins} label={t("admin.stats.customers")} value={String(data?.stats?.payingCustomers ?? 0)} />
-        <AdminMetric icon={Coins} label={t("admin.stats.creditsSold")} value={String(data?.stats?.creditsSold ?? 0)} />
+        <AdminMetric icon={IconWallet} label={t("admin.stats.revenue")} value={formatPrice(data?.stats?.revenueCents ?? 0, locale)} />
+        <AdminMetric icon={IconCreditCard} label={t("admin.stats.purchases")} value={String(data?.stats?.purchaseCount ?? 0)} />
+        <AdminMetric icon={IconCoins} label={t("admin.stats.customers")} value={String(data?.stats?.payingCustomers ?? 0)} />
+        <AdminMetric icon={IconCoins} label={t("admin.stats.creditsSold")} value={String(data?.stats?.creditsSold ?? 0)} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
@@ -142,17 +142,17 @@ export function BillingAdminPanel({ adminEmail }: { adminEmail: string }) {
               </div>
             </div>
             <Button onClick={() => void handleSaveReferralRewards()} disabled={savingRewards} className="gap-2">
-              {savingRewards ? <Loader2 className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+              {savingRewards ? <Loader2 className="h-4 w-4" /> : <IconSave className="h-4 w-4" />}
               {savingRewards ? t("admin.referrals.saving") : t("admin.referrals.save")}
             </Button>
           </CardContent>
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <AdminMetric icon={Gift} label={t("admin.referrals.stats.totalReferrals")} value={String(referralData?.stats?.totalReferrals ?? 0)} />
-          <AdminMetric icon={Gift} label={t("admin.referrals.stats.activeReferrers")} value={String(referralData?.stats?.activeReferrers ?? 0)} />
-          <AdminMetric icon={Coins} label={t("admin.referrals.stats.signupCreditsAwarded")} value={String(referralData?.stats?.signupCreditsAwarded ?? 0)} />
-          <AdminMetric icon={Coins} label={t("admin.referrals.stats.purchaseCreditsAwarded")} value={String(referralData?.stats?.purchaseCreditsAwarded ?? 0)} />
+          <AdminMetric icon={IconGift} label={t("admin.referrals.stats.totalReferrals")} value={String(referralData?.stats?.totalReferrals ?? 0)} />
+          <AdminMetric icon={IconGift} label={t("admin.referrals.stats.activeReferrers")} value={String(referralData?.stats?.activeReferrers ?? 0)} />
+          <AdminMetric icon={IconCoins} label={t("admin.referrals.stats.signupCreditsAwarded")} value={String(referralData?.stats?.signupCreditsAwarded ?? 0)} />
+          <AdminMetric icon={IconCoins} label={t("admin.referrals.stats.purchaseCreditsAwarded")} value={String(referralData?.stats?.purchaseCreditsAwarded ?? 0)} />
         </div>
       </div>
 

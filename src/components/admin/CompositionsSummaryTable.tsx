@@ -13,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { Search, Shapes, ChevronUp, ChevronDown, Filter, Eye, Info } from 'lucide-react'
+import { IconSearch, IconShapes, IconChevronUp, IconChevronDown, IconFilter, IconEye, IconInfo } from '@/components/ui/icons'
 import {
     Tooltip,
     TooltipContent,
@@ -122,14 +122,14 @@ export function CompositionsSummaryTable({ initialData }: CompositionsSummaryTab
 
     const SortIcon = ({ column }: { column: keyof CompositionSummary }) => {
         if (sort?.key !== column) return null
-        return sort.direction === 'asc' ? <ChevronUp className="ml-1 h-3 w-3" /> : <ChevronDown className="ml-1 h-3 w-3" />
+        return sort.direction === 'asc' ? <IconChevronUp className="ml-1 h-3 w-3" /> : <IconChevronDown className="ml-1 h-3 w-3" />
     }
 
     return (
         <div className="space-y-4">
             <div className="flex flex-col gap-4 p-4 border-b bg-muted/5 md:flex-row md:items-center">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
@@ -140,7 +140,7 @@ export function CompositionsSummaryTable({ initialData }: CompositionsSummaryTab
 
                 <div className="flex flex-wrap items-center gap-2">
                     <div className="relative">
-                        <Filter className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                        <IconFilter className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                         <select
                             value={intent}
                             onChange={(e) => setIntent(e.target.value)}
@@ -217,7 +217,7 @@ export function CompositionsSummaryTable({ initialData }: CompositionsSummaryTab
                                                 {comp.svgIcon}
                                             </span>
                                         ) : (
-                                            <Shapes className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                                            <IconShapes className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
                                         )}
                                     </div>
                                 </TableCell>
@@ -232,13 +232,13 @@ export function CompositionsSummaryTable({ initialData }: CompositionsSummaryTab
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <button className="p-1 px-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-all active:scale-95 flex-shrink-0">
-                                                    <Eye className="h-7 w-7" />
+                                                    <IconEye className="h-7 w-7" />
                                                 </button>
                                             </TooltipTrigger>
                                             <TooltipContent side="right" className="max-w-[600px] p-6 bg-card border-border shadow-2xl">
                                                 <div className="space-y-4">
                                                     <div className="flex items-center gap-3 border-b pb-3">
-                                                        <Shapes className="h-6 w-6 text-primary" />
+                                                        <IconShapes className="h-6 w-6 text-primary" />
                                                         <p className="text-base font-bold text-primary uppercase tracking-wider">Prompt Estructural</p>
                                                     </div>
                                                     <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap font-medium">

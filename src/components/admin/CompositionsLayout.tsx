@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels'
 import { CompositionEditor } from '@/components/admin/CompositionEditor'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Wand2 } from 'lucide-react'
+import { IconFileText, IconWand } from '@/components/ui/icons'
 import type { LegacyComposition } from '@/lib/legacy-compositions'
 import { Button } from '@/components/ui/button'
 import { batchAssignIconsAction } from '@/lib/admin-compositions-actions'
@@ -70,7 +70,7 @@ export function CompositionsLayout({
                             onClick={handleBatchAssign}
                             disabled={isBatchPending}
                         >
-                            {isBatchPending ? <Loader2 className="h-3.5 w-3.5" /> : <Wand2 className="h-3.5 w-3.5" />}
+                            {isBatchPending ? <Loader2 className="h-3.5 w-3.5" /> : <IconWand className="h-3.5 w-3.5" />}
                             Asignar Iconos IA
                         </Button>
                     </div>
@@ -136,7 +136,7 @@ export function CompositionsLayout({
 
                     {compositions.length === 0 && (
                         <div className="h-full flex flex-col items-center justify-center text-muted-foreground py-20 space-y-4">
-                            <FileText className="h-12 w-12 opacity-20" />
+                            <IconFileText className="h-12 w-12 opacity-20" />
                             <p>No se encontraron diseños que coincidan con tu búsqueda.</p>
                         </div>
                     )}

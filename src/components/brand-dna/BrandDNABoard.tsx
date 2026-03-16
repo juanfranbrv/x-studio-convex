@@ -26,8 +26,7 @@ import { hexToRgb } from '@/lib/color-utils';
 import { calculateBrandKitCompleteness } from '@/lib/brand-kit-utils';
 import { useTranslation } from 'react-i18next';
 
-import { Globe } from 'lucide-react';
-import { IconSave, IconCheck, IconRotate, IconAlertCircle, IconClose, IconBug } from '@/components/ui/icons';
+import { IconGlobe, IconSave, IconCheck, IconRotate, IconAlertCircle, IconClose, IconBug } from '@/components/ui/icons';
 
 interface BrandDNABoardProps {
     data: BrandDNA;
@@ -1016,7 +1015,7 @@ export function BrandDNABoard({
 
                                 <div>
                                     <p className="text-[11px] font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
-                                        <Globe className="w-3.5 h-3.5" />
+                                        <IconGlobe className="w-3.5 h-3.5" />
                                         {t('board.stepUrl', { defaultValue: 'Step 2 (optional) · Website URL to analyze' })}
                                     </p>
                                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

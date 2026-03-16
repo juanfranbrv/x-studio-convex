@@ -5,7 +5,7 @@ import { ReactNode } from 'react'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { useQuery } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
-import { ShieldX, Clock } from 'lucide-react'
+import { IconShield, IconClock } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -72,7 +72,7 @@ function AccessDeniedScreen({ status, email, onSignOut }: { status: string; emai
                 <Card className="max-w-md w-full text-center">
                     <CardHeader>
                         <div className="mx-auto w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4">
-                            <Clock className="w-8 h-8 text-yellow-500" />
+                            <IconClock className="w-8 h-8 text-yellow-500" />
                         </div>
                         <CardTitle className="text-2xl">Solicitud Pendiente</CardTitle>
                         <CardDescription className="text-base">
@@ -98,7 +98,7 @@ function AccessDeniedScreen({ status, email, onSignOut }: { status: string; emai
             <Card className="max-w-md w-full text-center">
                 <CardHeader>
                     <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-                        <ShieldX className="w-8 h-8 text-destructive" />
+                        <IconShield className="w-8 h-8 text-destructive" />
                     </div>
                     <CardTitle className="text-2xl">
                         {status === 'rejected' ? 'Acceso Denegado' : 'Sin Acceso Beta'}

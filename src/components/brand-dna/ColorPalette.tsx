@@ -9,8 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { type ContextElement } from "@/app/image/page";
 import { cn } from '@/lib/utils';
 
-import { Info } from 'lucide-react';
-import { IconPalette, IconRotate, IconClose, IconColorPicker, IconCheck, IconPlus, IconCopy } from '@/components/ui/icons';
+import { IconInfo, IconPalette, IconRotate, IconClose, IconColorPicker, IconCheck, IconPlus, IconCopy } from '@/components/ui/icons';
 import { useTheme } from 'next-themes';
 import { hexToRgb, rgbToLab } from '@/lib/color-utils';
 import { useTranslation } from 'react-i18next';
@@ -152,7 +151,7 @@ export function ColorPalette({
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/60 cursor-help">
-                                            <Info className="w-4 h-4" />
+                                            <IconInfo className="w-4 h-4" />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="max-w-xs text-xs bg-popover border-border text-popover-foreground">

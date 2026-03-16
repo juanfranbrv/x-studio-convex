@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Globe } from 'lucide-react';
+import { IconGlobe } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
@@ -27,7 +27,7 @@ export function LanguageCard({ selectedLanguage = 'es', onLanguageChange }: Lang
         <Card className="bg-white border border-border shadow-sm">
             <CardHeader className="pb-3 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                    <Globe className="w-5 h-5 text-primary" />
+                    <IconGlobe className="w-5 h-5 text-primary" />
                     {t('language.title', { defaultValue: 'Preferred language' })}
                 </CardTitle>
             </CardHeader>

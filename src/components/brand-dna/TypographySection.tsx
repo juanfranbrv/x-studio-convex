@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Type, Search, Plus, Trash2, Info, Check, Pencil } from 'lucide-react';
+import { IconTextFont, IconSearch, IconPlus, IconDelete, IconInfo, IconCheckSimple, IconEdit } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
@@ -204,7 +204,7 @@ export function TypographySection({
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] w-4 h-4" />
+        <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] w-4 h-4" />
         <Input
           placeholder={t('typography.filterPlaceholder', { defaultValue: 'Filter fonts (optional)...' })}
           className="pl-10 h-9 bg-transparent border-border text-sm focus-visible:ring-primary"
@@ -249,9 +249,9 @@ export function TypographySection({
                   </span>
                 </div>
                 {guidedMode && currentRoleFamily === font ? (
-                  <Check className="w-4 h-4 text-primary" />
+                  <IconCheckSimple className="w-4 h-4 text-primary" />
                 ) : (
-                  <Plus className="w-4 h-4 opacity-0 group-hover:opacity-100 text-[var(--accent)]" />
+                  <IconPlus className="w-4 h-4 opacity-0 group-hover:opacity-100 text-[var(--accent)]" />
                 )}
               </button>
             ))}
@@ -270,7 +270,7 @@ export function TypographySection({
 
       {!fontSearch && visibleFonts.length > 0 && (
         <div className="flex items-center gap-2 justify-center py-2 text-[var(--text-secondary)]">
-          <Info className="w-3.5 h-3.5 opacity-50" />
+          <IconInfo className="w-3.5 h-3.5 opacity-50" />
           <span className="text-[10px]">{t('typography.showingPopular', { defaultValue: 'Showing popular fonts with preview' })}</span>
         </div>
       )}
@@ -281,7 +281,7 @@ export function TypographySection({
     <Card className="glass-panel border-0 shadow-none overflow-hidden">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base text-foreground">
-          <Type className="w-5 h-5 text-primary" />
+          <IconTextFont className="w-5 h-5 text-primary" />
           {t('typography.title', { defaultValue: 'Typography' })}
         </CardTitle>
       </CardHeader>
@@ -337,7 +337,7 @@ export function TypographySection({
                         void fetchGoogleFonts();
                       }}
                     >
-                      <Pencil className="w-3.5 h-3.5 mr-1" />
+                      <IconEdit className="w-3.5 h-3.5 mr-1" />
                       {t('typography.change', { defaultValue: 'Change' })}
                     </Button>
                   ) : (
@@ -349,7 +349,7 @@ export function TypographySection({
                       }}
                       className="p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500/10 text-red-500 transition-all"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <IconDelete className="w-4 h-4" />
                     </button>
                   )}
                 </div>

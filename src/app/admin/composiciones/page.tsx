@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, Layers3, LayoutGrid, Shapes } from 'lucide-react'
+import { IconArrowLeft, IconLayers, IconGrid, IconShapes } from '@/components/ui/icons'
 import { ALL_IMAGE_LAYOUTS, INTENT_CATALOG, LAYOUTS_BY_INTENT } from '@/lib/creation-flow-types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,7 +19,7 @@ export default function AdminComposicionesPage() {
                     <div className="flex items-center gap-3">
                         <Link href="/admin">
                             <Button variant="ghost" size="icon" title="Volver a Admin">
-                                <ArrowLeft className="h-5 w-5" />
+                                <IconArrowLeft className="h-5 w-5" />
                             </Button>
                         </Link>
                         <div>
@@ -28,7 +28,7 @@ export default function AdminComposicionesPage() {
                         </div>
                     </div>
                     <Badge variant="secondary" className="gap-2">
-                        <LayoutGrid className="h-4 w-4" />
+                        <IconGrid className="h-4 w-4" />
                         {ALL_IMAGE_LAYOUTS.length} diseños
                     </Badge>
                 </div>
@@ -37,7 +37,7 @@ export default function AdminComposicionesPage() {
                     <Card>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                <Shapes className="h-4 w-4 text-primary" />
+                                <IconShapes className="h-4 w-4 text-primary" />
                                 Total de objetivos
                             </CardTitle>
                         </CardHeader>
@@ -48,7 +48,7 @@ export default function AdminComposicionesPage() {
                     <Card>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                <Layers3 className="h-4 w-4 text-primary" />
+                                <IconLayers className="h-4 w-4 text-primary" />
                                 Diseños registrados
                             </CardTitle>
                         </CardHeader>

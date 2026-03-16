@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Palette, Wand2, LayoutTemplate, ArrowRight, X } from 'lucide-react'
+import { IconSparkles, IconPalette, IconWand, IconLayoutTemplate, IconArrowRight, IconClose } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -21,17 +21,17 @@ interface OnboardingModalProps {
 
 const BENEFITS = [
     {
-        icon: Palette,
+        icon: IconPalette,
         title: 'Identidad visual coherente',
         description: 'Tus colores, tipografías y logos siempre consistentes'
     },
     {
-        icon: Wand2,
+        icon: IconWand,
         title: 'Generaciones precisas',
         description: 'La IA entiende tu marca y crea contenido alineado'
     },
     {
-        icon: LayoutTemplate,
+        icon: IconLayoutTemplate,
         title: 'Plantillas personalizadas',
         description: 'Diseños que reflejan tu estilo único'
     }
@@ -59,7 +59,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
                 <div className="relative bg-gradient-to-br from-primary/20 via-primary/10 to-transparent px-6 pt-8 pb-6">
                     <div className="absolute top-4 right-4">
                         <Button variant="ghost" size="icon" onClick={handleSkip} className="h-8 w-8 rounded-full">
-                            <X className="h-4 w-4" />
+                            <IconClose className="h-4 w-4" />
                         </Button>
                     </div>
 
@@ -69,7 +69,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
                         transition={{ duration: 0.5, ease: "easeOut" }}
                         className="w-16 h-16 rounded-2xl bg-primary/10 backdrop-blur-sm border border-primary/20 flex items-center justify-center mb-4 shadow-lg"
                     >
-                        <Sparkles className="w-8 h-8 text-primary" />
+                        <IconSparkles className="w-8 h-8 text-primary" />
                     </motion.div>
 
                     <DialogHeader className="text-left">
@@ -120,7 +120,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
                         className="w-full h-12 text-base font-semibold gap-2 bg-primary hover:bg-primary/90"
                     >
                         Crear mi Kit de Marca
-                        <ArrowRight className="w-5 h-5" />
+                        <IconArrowRight className="w-5 h-5" />
                     </Button>
                     <Button
                         variant="ghost"

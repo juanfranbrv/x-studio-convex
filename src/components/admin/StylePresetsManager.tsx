@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { GripVertical, Pencil, Plus, RefreshCw, Search, Trash2 } from 'lucide-react'
+import { IconGripVertical, IconEdit, IconPlus, IconRefresh, IconSearch, IconDelete } from '@/components/ui/icons'
 import { useToast } from '@/hooks/use-toast'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 
@@ -623,7 +623,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
               Analizar estilo
             </Button>
             <Button type="button" onClick={createNewPreset} disabled={isCreating || !newAnalysis}>
-              {isCreating ? <Loader2 className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+              {isCreating ? <Loader2 className="w-4 h-4 mr-2" /> : <IconPlus className="w-4 h-4 mr-2" />}
               Guardar estilo
             </Button>
           </div>
@@ -654,7 +654,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
                 <div className="relative w-full sm:w-72">
-                  <Search className="w-4 h-4 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <IconSearch className="w-4 h-4 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <Input
                     value={listSearch}
                     onChange={(e) => setListSearch(e.target.value)}
@@ -773,7 +773,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
                     </div>
                     <div className="flex items-center justify-end">
                       <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <GripVertical className="w-3.5 h-3.5" />
+                        <IconGripVertical className="w-3.5 h-3.5" />
                         Arrastrar
                       </div>
                     </div>
@@ -801,7 +801,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
                         onClick={() => openPromptEditor(preset._id)}
                         disabled={Boolean(reanalyzingId)}
                       >
-                        <Pencil className="w-3.5 h-3.5 mr-1" />
+                        <IconEdit className="w-3.5 h-3.5 mr-1" />
                         Editar
                       </Button>
                       <Button
@@ -814,7 +814,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
                       >
                         {reanalyzingId === String(preset._id)
                           ? <Loader2 className="w-3.5 h-3.5 mr-1" />
-                          : <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                          : <IconRefresh className="w-3.5 h-3.5 mr-1" />
                         }
                         Reanalizar
                       </Button>
@@ -828,7 +828,7 @@ export function StylePresetsManager({ adminEmail }: StylePresetsManagerProps) {
                           await removePreset({ admin_email: adminEmail, id: preset._id })
                         }}
                       >
-                        <Trash2 className="w-3.5 h-3.5 mr-1" />
+                        <IconDelete className="w-3.5 h-3.5 mr-1" />
                         Eliminar
                       </Button>
                     </div>

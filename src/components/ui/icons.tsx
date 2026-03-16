@@ -95,6 +95,44 @@ import {
     Cancel01Icon,
     PaintBrush04Icon,
     SmartPhone01Icon,
+    // ─── New icons for admin/auth/legal/onboarding/landing/brand-kit migration ───
+    DragDropVerticalIcon,
+    File01Icon,
+    FilterIcon,
+    ShapesIcon,
+    EyeIcon,
+    InformationCircleIcon,
+    CoinsDollarIcon,
+    Activity01Icon,
+    LinkSquare01Icon,
+    Cash01Icon,
+    Sorting05Icon,
+    UserGroupIcon,
+    Tick02Icon,
+    FileImageIcon,
+    FolderKanbanIcon,
+    ArrowUpRight01Icon,
+    Shield01Icon,
+    Layout04Icon,
+    CalendarCheckIn01Icon,
+    GlobeIcon,
+    Package01Icon,
+    Alert02Icon,
+    CheckListIcon,
+    // ─── New icons for brand-dna/billing/settings/layout migration ───
+    Building02Icon,
+    QuoteDownIcon,
+    Camera01Icon,
+    CpuIcon,
+    LanguageCircleIcon,
+    ComputerIcon,
+    Target01Icon,
+    CenterFocusIcon,
+    FavouriteIcon,
+    CancelCircleIcon,
+    Facebook01Icon,
+    NewTwitterIcon,
+    ArrowDownRight01Icon,
 } from '@hugeicons/core-free-icons'
 import { ComponentProps } from 'react'
 
@@ -220,3 +258,43 @@ export const IconMinus = createIcon(MinusSignIcon)
 export const IconClose = createIcon(Cancel01Icon)
 export const IconBookmarkAdd = createIcon(BookmarkAdd01Icon)
 export const IconHistory = createIcon(WorkHistoryIcon)
+
+// ─── Admin / Auth / Legal / Onboarding / Landing / Brand-Kit ───
+export const IconGripVertical = createIcon(DragDropVerticalIcon)
+export const IconFileText = createIcon(File01Icon)
+export const IconFilter = createIcon(FilterIcon)
+export const IconShapes = createIcon(ShapesIcon)
+export const IconEye = createIcon(EyeIcon)
+export const IconInfo = createIcon(InformationCircleIcon)
+export const IconCoins = createIcon(CoinsDollarIcon)
+export const IconActivity = createIcon(Activity01Icon)
+export const IconExternalLink = createIcon(LinkSquare01Icon)
+export const IconBanknote = createIcon(Cash01Icon)
+export const IconArrowUpDown = createIcon(Sorting05Icon)
+export const IconUsers = createIcon(UserGroupIcon)
+export const IconCheckSimple = createIcon(Tick02Icon)
+export const IconFileImage = createIcon(FileImageIcon)
+export const IconFolderKanban = createIcon(FolderKanbanIcon)
+export const IconArrowUpRight = createIcon(ArrowUpRight01Icon)
+export const IconShieldCheck = createIcon(Shield01Icon)
+export const IconLayoutTemplate = createIcon(Layout04Icon)
+export const IconCalendarCheck = createIcon(CalendarCheckIn01Icon)
+export const IconGlobe = createIcon(GlobeIcon)
+export const IconPackage = createIcon(Package01Icon)
+export const IconTriangleAlert = createIcon(Alert02Icon)
+export const IconListChecks = createIcon(CheckListIcon)
+
+// ─── Brand-DNA / Billing / Settings / Layout ───
+export const IconBuilding = createIcon(Building02Icon)
+export const IconQuote = createIcon(QuoteDownIcon)
+export const IconCamera = createIcon(Camera01Icon)
+export const IconCpu = createIcon(CpuIcon)
+export const IconLanguages = createIcon(LanguageCircleIcon)
+export const IconMonitor = createIcon(ComputerIcon)
+export const IconTarget = createIcon(Target01Icon)
+export const IconCrosshair = createIcon(CenterFocusIcon)
+export const IconHeart = createIcon(FavouriteIcon)
+export const IconXCircle = createIcon(CancelCircleIcon)
+export const IconFacebook = createIcon(Facebook01Icon)
+export const IconTwitter = createIcon(NewTwitterIcon)
+export const IconArrowDownRight = createIcon(ArrowDownRight01Icon)

@@ -6,17 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
-    CheckCircle2,
-    XCircle,
-    FileText,
-    Megaphone,
-    Globe,
-    Users,
-    Heart,
-    MessageSquare,
-    Palette,
-    Mail,
-} from 'lucide-react';
+    IconCheck,
+    IconXCircle,
+    IconFileText,
+    IconMegaphone,
+    IconGlobe,
+    IconUsers,
+    IconHeart,
+    IconMessage,
+    IconPalette,
+    IconMail,
+} from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
@@ -144,7 +144,7 @@ export function ExtractionPreviewModal({ open, onOpenChange, data, onConfirm }: 
                 <DialogHeader className="border-b border-border/50 p-6 pb-2">
                     <div className="flex items-center gap-3">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-                            <FileText className="h-6 w-6" />
+                            <IconFileText className="h-6 w-6" />
                         </div>
                         <div>
                             <DialogTitle className="text-2xl font-bold text-foreground">
@@ -160,7 +160,7 @@ export function ExtractionPreviewModal({ open, onOpenChange, data, onConfirm }: 
                 <div className="custom-scrollbar flex-1 overflow-y-auto px-6 py-4">
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
-                            <Section title={t('extraction.identityTitle', { defaultValue: 'Basic identity' })} icon={CheckCircle2}>
+                            <Section title={t('extraction.identityTitle', { defaultValue: 'Basic identity' })} icon={IconCheck}>
                                 {data.brand_name ? <Item id="brand_name" label={t('extraction.brandName', { defaultValue: 'Brand name' })} value={data.brand_name} /> : null}
                                 {data.tagline ? <Item id="tagline" label={t('assets.taglineTitle', { defaultValue: 'Tagline' })} value={data.tagline} /> : null}
                                 {data.preferred_language ? (
@@ -172,13 +172,13 @@ export function ExtractionPreviewModal({ open, onOpenChange, data, onConfirm }: 
                                 ) : null}
                             </Section>
 
-                            <Section title={t('extraction.visionTitle', { defaultValue: 'Vision and overview' })} icon={Globe}>
+                            <Section title={t('extraction.visionTitle', { defaultValue: 'Vision and overview' })} icon={IconGlobe}>
                                 {data.business_overview ? <Item id="business_overview" label={t('extraction.businessOverview', { defaultValue: 'Business overview' })} value={data.business_overview} /> : null}
                                 {data.text_assets?.brand_context ? <Item id="text_assets-brand_context" label={t('extraction.brandContext', { defaultValue: 'Brand context' })} value={data.text_assets.brand_context} /> : null}
                             </Section>
                         </div>
 
-                        <Section title={t('extraction.marketingAssets', { defaultValue: 'Marketing assets' })} icon={Megaphone} className="border-primary/20 bg-primary/2">
+                        <Section title={t('extraction.marketingAssets', { defaultValue: 'Marketing assets' })} icon={IconMegaphone} className="border-primary/20 bg-primary/2">
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                                 {data.text_assets?.marketing_hooks?.map((hook: string, i: number) => (
                                     <Item key={i} id={`text_assets-marketing_hooks-${i}`} label={t('extraction.headlineLabel', { defaultValue: 'Headline {{index}}', index: i + 1 })} value={hook} sublabel="HOOK" />
@@ -190,17 +190,17 @@ export function ExtractionPreviewModal({ open, onOpenChange, data, onConfirm }: 
                         </Section>
 
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-3">
-                            <Section title={t('assets.valuesTitle', { defaultValue: 'Values' })} icon={Heart}>
+                            <Section title={t('assets.valuesTitle', { defaultValue: 'Values' })} icon={IconHeart}>
                                 {data.brand_values?.map((v: string, i: number) => (
                                     <Item key={i} id={`brand_values-${i}`} label={t('extraction.valueLabel', { defaultValue: 'Value {{index}}', index: i + 1 })} value={v} />
                                 ))}
                             </Section>
-                            <Section title={t('assets.toneTitle', { defaultValue: 'Tone of voice' })} icon={MessageSquare}>
+                            <Section title={t('assets.toneTitle', { defaultValue: 'Tone of voice' })} icon={IconMessage}>
                                 {data.tone_of_voice?.map((v: string, i: number) => (
                                     <Item key={i} id={`tone_of_voice-${i}`} label={t('extraction.toneLabel', { defaultValue: 'Tone {{index}}', index: i + 1 })} value={v} />
                                 ))}
                             </Section>
-                            <Section title={t('assets.visualStylesTitle', { defaultValue: 'Visual styles' })} icon={Palette}>
+                            <Section title={t('assets.visualStylesTitle', { defaultValue: 'Visual styles' })} icon={IconPalette}>
                                 {data.visual_aesthetic?.map((v: string, i: number) => (
                                     <Item key={i} id={`visual_aesthetic-${i}`} label={t('extraction.styleLabel', { defaultValue: 'Style {{index}}', index: i + 1 })} value={v} />
                                 ))}
@@ -208,12 +208,12 @@ export function ExtractionPreviewModal({ open, onOpenChange, data, onConfirm }: 
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
-                            <Section title={t('extraction.audienceTitle', { defaultValue: 'Target audience' })} icon={Users}>
+                            <Section title={t('extraction.audienceTitle', { defaultValue: 'Target audience' })} icon={IconUsers}>
                                 {data.target_audience?.map((v: string, i: number) => (
                                     <Item key={i} id={`target_audience-${i}`} label={t('extraction.profileLabel', { defaultValue: 'Profile {{index}}', index: i + 1 })} value={v} />
                                 ))}
                             </Section>
-                            <Section title={t('extraction.contactTitle', { defaultValue: 'Contact and social' })} icon={Mail}>
+                            <Section title={t('extraction.contactTitle', { defaultValue: 'Contact and social' })} icon={IconMail}>
                                 {data.emails?.map((v: string, i: number) => <Item key={i} id={`emails-${i}`} label={t('contact.emailsTitle', { defaultValue: 'Email addresses' })} value={v} />)}
                                 {data.phones?.map((v: string, i: number) => <Item key={i} id={`phones-${i}`} label={t('extraction.phone', { defaultValue: 'Phone' })} value={v} />)}
                                 {data.addresses?.map((v: string, i: number) => <Item key={i} id={`addresses-${i}`} label={t('extraction.address', { defaultValue: 'Address' })} value={v} />)}
@@ -225,11 +225,11 @@ export function ExtractionPreviewModal({ open, onOpenChange, data, onConfirm }: 
 
                 <DialogFooter className="bg-muted/20 p-6 border-t border-border/50">
                     <Button variant="ghost" onClick={() => onOpenChange(false)} className="gap-2">
-                        <XCircle className="h-4 w-4" />
+                        <IconXCircle className="h-4 w-4" />
                         {t('extraction.discardAll', { defaultValue: 'Discard all' })}
                     </Button>
                     <Button onClick={handleConfirm} className="gap-2 border-0 bg-primary px-8 text-primary-foreground hover:bg-primary/90">
-                        <CheckCircle2 className="h-4 w-4" />
+                        <IconCheck className="h-4 w-4" />
                         {t('extraction.addSelected', { defaultValue: 'Add selected to kit' })}
                     </Button>
                 </DialogFooter>

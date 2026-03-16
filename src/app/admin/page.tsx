@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '@/../convex/_generated/api'
 import type { Id } from '@/../convex/_generated/dataModel'
-import { Users, Coins, RefreshCw, Plus, Minus, Check, X, Settings, Activity, ArrowLeft, Mail, ExternalLink, Trash2, MessageSquare, Shapes, Banknote, Save, ChevronRight, ChevronDown, Download, Palette, Wand2 } from 'lucide-react'
+import { IconUsers, IconCoins, IconRefresh, IconPlus, IconMinus, IconCheckSimple, IconClose, IconSettings, IconActivity, IconArrowLeft, IconMail, IconExternalLink, IconDelete, IconMessage, IconShapes, IconBanknote, IconSave, IconChevronRight, IconChevronDown, IconDownload, IconPalette, IconWand } from '@/components/ui/icons'
 import { CreditsBadge } from '@/components/layout/CreditsBadge'
 import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/admin-compositions-actions'
 import { Button } from '@/components/ui/button'
@@ -397,7 +397,7 @@ export default function AdminPage() {
     if (!ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
         return (
             <div className="flex flex-col items-center justify-center h-screen gap-4">
-                <X className="w-16 h-16 text-destructive" />
+                <IconClose className="w-16 h-16 text-destructive" />
                 <h1 className="text-2xl font-bold">Acceso Denegado</h1>
                 <p className="text-muted-foreground">No tienes permisos de administrador.</p>
             </div>
@@ -653,7 +653,7 @@ export default function AdminPage() {
                     <div className="flex items-center gap-4">
                         <Link href="/image">
                             <Button variant="ghost" size="icon" title="Volver a Imagen">
-                                <ArrowLeft className="h-5 w-5" />
+                                <IconArrowLeft className="h-5 w-5" />
                             </Button>
                         </Link>
                         <div>
@@ -664,13 +664,13 @@ export default function AdminPage() {
                     <div className="flex items-center gap-3">
                         <Link href="/admin/compositions">
                             <Button variant="outline" className="gap-2">
-                                <Shapes className="h-4 w-4" />
+                                <IconShapes className="h-4 w-4" />
                                 Gestor de diseños
                             </Button>
                         </Link>
                         <Link href="/admin/carousel-compositions">
                             <Button variant="outline" className="gap-2">
-                                <Shapes className="h-4 w-4" />
+                                <IconShapes className="h-4 w-4" />
                                 Gestor carruseles
                             </Button>
                         </Link>
@@ -688,7 +688,7 @@ export default function AdminPage() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
-                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <IconUsers className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats?.totalUsers ?? '-'}</div>
@@ -697,7 +697,7 @@ export default function AdminPage() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium">Activos</CardTitle>
-                            <Check className="h-4 w-4 text-green-500" />
+                            <IconCheckSimple className="h-4 w-4 text-green-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-green-500">{stats?.activeUsers ?? '-'}</div>
@@ -706,7 +706,7 @@ export default function AdminPage() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium">Waitlist</CardTitle>
-                            <RefreshCw className="h-4 w-4 text-yellow-500" />
+                            <IconRefresh className="h-4 w-4 text-yellow-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-yellow-500">{stats?.waitlistUsers ?? '-'}</div>
@@ -715,7 +715,7 @@ export default function AdminPage() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium">Créditos Totales</CardTitle>
-                            <Coins className="h-4 w-4 text-muted-foreground" />
+                            <IconCoins className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats?.totalCreditsInCirculation ?? '-'}</div>
@@ -726,7 +726,7 @@ export default function AdminPage() {
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab((isAdminTab(value) ? value : DEFAULT_ADMIN_TAB))} className="space-y-4">
                     <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap">
                         <TabsTrigger value="requests" className="gap-2">
-                            <Mail className="h-4 w-4" /> Solicitudes
+                            <IconMail className="h-4 w-4" /> Solicitudes
                             {(stats?.pendingBetaRequests ?? 0) > 0 && (
                                 <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
                                     {stats?.pendingBetaRequests}
@@ -734,31 +734,31 @@ export default function AdminPage() {
                             )}
                         </TabsTrigger>
                         <TabsTrigger value="users" className="gap-2">
-                            <Users className="h-4 w-4" /> Usuarios
+                            <IconUsers className="h-4 w-4" /> Usuarios
                         </TabsTrigger>
                         <TabsTrigger value="transactions" className="gap-2">
-                            <Activity className="h-4 w-4" /> Transacciones
+                            <IconActivity className="h-4 w-4" /> Transacciones
                         </TabsTrigger>
                         <TabsTrigger value="settings" className="gap-2">
-                            <Settings className="h-4 w-4" /> Configuración
+                            <IconSettings className="h-4 w-4" /> Configuración
                         </TabsTrigger>
                         <TabsTrigger value="models" className="gap-2">
-                            <Shapes className="h-4 w-4" /> Modelos
+                            <IconShapes className="h-4 w-4" /> Modelos
                         </TabsTrigger>
                         <TabsTrigger value="styles" className="gap-2">
-                            <Palette className="h-4 w-4" /> Estilos
+                            <IconPalette className="h-4 w-4" /> Estilos
                         </TabsTrigger>
                         <TabsTrigger value="economics" className="gap-2">
-                            <Banknote className="h-4 w-4" /> Economía
+                            <IconBanknote className="h-4 w-4" /> Economía
                         </TabsTrigger>
                         <TabsTrigger value="billing" className="gap-2">
-                            <Coins className="h-4 w-4" /> Billing
+                            <IconCoins className="h-4 w-4" /> Billing
                         </TabsTrigger>
                         <TabsTrigger value="links" className="gap-2">
-                            <ExternalLink className="h-4 w-4" /> Enlaces
+                            <IconExternalLink className="h-4 w-4" /> Enlaces
                         </TabsTrigger>
                         <TabsTrigger value="feedback" className="gap-2">
-                            <MessageSquare className="h-4 w-4" /> Feedback
+                            <IconMessage className="h-4 w-4" /> Feedback
                             {(feedbackStats?.total ?? 0) > 0 && (
                                 <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
                                     {feedbackStats?.total}
@@ -766,10 +766,10 @@ export default function AdminPage() {
                             )}
                         </TabsTrigger>
                         <TabsTrigger value="compositions" className="gap-2">
-                            <Shapes className="h-4 w-4" /> Diseños
+                            <IconShapes className="h-4 w-4" /> Diseños
                         </TabsTrigger>
                         <TabsTrigger value="prompts" className="gap-2">
-                            <Wand2 className="w-4 h-4" />
+                            <IconWand className="w-4 h-4" />
                             Prompts
                         </TabsTrigger>
                     </TabsList>
@@ -816,7 +816,7 @@ export default function AdminPage() {
                                                             }
                                                         }}
                                                     >
-                                                        <Check className="h-4 w-4 mr-1" /> Aprobar
+                                                        <IconCheckSimple className="h-4 w-4 mr-1" /> Aprobar
                                                     </Button>
                                                     <Button
                                                         size="sm"
@@ -833,7 +833,7 @@ export default function AdminPage() {
                                                             }
                                                         }}
                                                     >
-                                                        <X className="h-4 w-4" />
+                                                        <IconClose className="h-4 w-4" />
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
@@ -888,7 +888,7 @@ export default function AdminPage() {
                                                                     }
                                                                 }}
                                                             >
-                                                                <X className="h-4 w-4" />
+                                                                <IconClose className="h-4 w-4" />
                                                             </Button>
                                                         </TableCell>
                                                     </TableRow>
@@ -937,7 +937,7 @@ export default function AdminPage() {
                                                             onClick={() => handleActivate(u._id)}
                                                             disabled={isProcessing}
                                                         >
-                                                            <Check className="h-4 w-4 mr-1" /> Activar
+                                                            <IconCheckSimple className="h-4 w-4 mr-1" /> Activar
                                                         </Button>
                                                     )}
                                                     {u.status === 'active' && (
@@ -947,7 +947,7 @@ export default function AdminPage() {
                                                             onClick={() => handleSuspend(u._id)}
                                                             disabled={isProcessing}
                                                         >
-                                                            <X className="h-4 w-4 mr-1" /> Suspender
+                                                            <IconClose className="h-4 w-4 mr-1" /> Suspender
                                                         </Button>
                                                     )}
                                                     {u.status === 'suspended' && (
@@ -956,7 +956,7 @@ export default function AdminPage() {
                                                             onClick={() => handleActivate(u._id)}
                                                             disabled={isProcessing}
                                                         >
-                                                            <Check className="h-4 w-4 mr-1" /> Reactivar
+                                                            <IconCheckSimple className="h-4 w-4 mr-1" /> Reactivar
                                                         </Button>
                                                     )}
                                                     <Button
@@ -967,7 +967,7 @@ export default function AdminPage() {
                                                             setAdjustDialogOpen(true)
                                                         }}
                                                     >
-                                                        <Coins className="h-4 w-4 mr-1" /> Créditos
+                                                        <IconCoins className="h-4 w-4 mr-1" /> Créditos
                                                     </Button>
                                                     <Button
                                                         size="sm"
@@ -977,7 +977,7 @@ export default function AdminPage() {
                                                         title="Eliminar usuario permanentemente"
                                                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                                     >
-                                                        <Trash2 className="h-4 w-4" />
+                                                        <IconDelete className="h-4 w-4" />
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
@@ -1050,7 +1050,7 @@ export default function AdminPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Palette className="h-5 w-5" />
+                                    <IconPalette className="h-5 w-5" />
                                     Tema por defecto
                                 </CardTitle>
                                 <CardDescription>Colores que verán los usuarios nuevos. El ajuste individual del usuario siempre prevalece.</CardDescription>
@@ -1235,7 +1235,7 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                                 <Button onClick={handleCreateCost} className="gap-2">
-                                    <Plus className="h-4 w-4" />
+                                    <IconPlus className="h-4 w-4" />
                                     Guardar coste
                                 </Button>
 
@@ -1328,7 +1328,7 @@ export default function AdminPage() {
                                                             >
                                                                 {activatingModelId === String(row._id)
                                                                     ? <Loader2 className="h-4 w-4" />
-                                                                    : <Check className="h-4 w-4" />}
+                                                                    : <IconCheckSimple className="h-4 w-4" />}
                                                             </Button>
                                                             <Button
                                                                 size="sm"
@@ -1337,7 +1337,7 @@ export default function AdminPage() {
                                                                 onClick={() => void handleSaveInlineCost(row)}
                                                                 title="Guardar coste"
                                                             >
-                                                                <Save className="h-4 w-4" />
+                                                                <IconSave className="h-4 w-4" />
                                                             </Button>
                                                             <Button
                                                                 size="sm"
@@ -1345,7 +1345,7 @@ export default function AdminPage() {
                                                                 onClick={() => handleDeleteCost(row._id)}
                                                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                                             >
-                                                                <Trash2 className="h-4 w-4" />
+                                                                <IconDelete className="h-4 w-4" />
                                                             </Button>
                                                         </TableCell>
                                                     </TableRow>
@@ -1449,7 +1449,7 @@ export default function AdminPage() {
                                                             >
                                                                 {activatingModelId === String(row._id)
                                                                     ? <Loader2 className="h-4 w-4" />
-                                                                    : <Check className="h-4 w-4" />}
+                                                                    : <IconCheckSimple className="h-4 w-4" />}
                                                             </Button>
                                                             <Button
                                                                 size="sm"
@@ -1458,7 +1458,7 @@ export default function AdminPage() {
                                                                 onClick={() => void handleSaveInlineCost(row)}
                                                                 title="Guardar coste"
                                                             >
-                                                                <Save className="h-4 w-4" />
+                                                                <IconSave className="h-4 w-4" />
                                                             </Button>
                                                             <Button
                                                                 size="sm"
@@ -1466,7 +1466,7 @@ export default function AdminPage() {
                                                                 onClick={() => handleDeleteCost(row._id)}
                                                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                                             >
-                                                                <Trash2 className="h-4 w-4" />
+                                                                <IconDelete className="h-4 w-4" />
                                                             </Button>
                                                         </TableCell>
                                                     </TableRow>
@@ -1499,7 +1499,7 @@ export default function AdminPage() {
                                             aria-label="Descargar logs en CSV"
                                             title="Descargar CSV"
                                         >
-                                            {exportingEconomicCsv ? <Loader2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+                                            {exportingEconomicCsv ? <Loader2 className="h-4 w-4" /> : <IconDownload className="h-4 w-4" />}
                                         </Button>
                                         <Button
                                             type="button"
@@ -1511,7 +1511,7 @@ export default function AdminPage() {
                                             title="Borrar logs"
                                             className="text-destructive hover:text-destructive"
                                         >
-                                            {clearingEconomicLogs ? <Loader2 className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+                                            {clearingEconomicLogs ? <Loader2 className="h-4 w-4" /> : <IconDelete className="h-4 w-4" />}
                                         </Button>
                                         <Button
                                             type="button"
@@ -1533,7 +1533,7 @@ export default function AdminPage() {
                                             aria-label="Refrescar log de auditoría económica"
                                             title="Refrescar datos"
                                         >
-                                            {refreshingEconomicLog ? <Loader2 className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
+                                            {refreshingEconomicLog ? <Loader2 className="h-4 w-4" /> : <IconRefresh className="h-4 w-4" />}
                                         </Button>
                                     </div>
                                 </div>
@@ -1575,8 +1575,8 @@ export default function AdminPage() {
                                                             title={expandedEconomicFlows[group.flowId] ? 'Colapsar flow' : 'Expandir flow'}
                                                         >
                                                             {expandedEconomicFlows[group.flowId]
-                                                                ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                                                : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                                                                ? <IconChevronDown className="h-4 w-4 text-muted-foreground" />
+                                                                : <IconChevronRight className="h-4 w-4 text-muted-foreground" />}
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>
@@ -1626,7 +1626,7 @@ export default function AdminPage() {
                                         Edita los campos y guarda todos los cambios de una vez.
                                     </p>
                                     <Button onClick={handleSaveModelSettings} disabled={!isModelSettingsDirty || savingModelSettings}>
-                                        {savingModelSettings ? <Loader2 className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                                        {savingModelSettings ? <Loader2 className="h-4 w-4 mr-2" /> : <IconSave className="h-4 w-4 mr-2" />}
                                         Guardar cambios
                                     </Button>
                                 </div>
@@ -1800,7 +1800,7 @@ export default function AdminPage() {
                                         >
                                             <div className="flex items-center justify-between mb-1">
                                                 <span className="font-semibold">{link.name}</span>
-                                                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                <IconExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                             </div>
                                             <span className="text-xs text-muted-foreground">{link.desc}</span>
                                         </a>
@@ -1915,7 +1915,7 @@ export default function AdminPage() {
                             </div>
                             <Link href="/admin/compositions">
                                 <Button className="gap-2 shadow-sm">
-                                    <Shapes className="h-4 w-4" />
+                                    <IconShapes className="h-4 w-4" />
                                     Abrir gestor completo
                                 </Button>
                             </Link>
@@ -1948,7 +1948,7 @@ export default function AdminPage() {
                                 onClick={handleSeedPrompts}
                                 disabled={isSeedingPrompts}
                             >
-                                {isSeedingPrompts ? <Loader2 className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                                {isSeedingPrompts ? <Loader2 className="w-4 h-4 mr-2" /> : <IconPlus className="w-4 h-4 mr-2" />}
                                 Seed defaults
                             </Button>
                         </div>
@@ -2045,7 +2045,7 @@ export default function AdminPage() {
                                     size="icon"
                                     onClick={() => setCreditAmount(prev => String((parseInt(prev) || 0) - 10))}
                                 >
-                                    <Minus className="h-4 w-4" />
+                                    <IconMinus className="h-4 w-4" />
                                 </Button>
                                 <Input
                                     type="number"
@@ -2060,7 +2060,7 @@ export default function AdminPage() {
                                     size="icon"
                                     onClick={() => setCreditAmount(prev => String((parseInt(prev) || 0) + 10))}
                                 >
-                                    <Plus className="h-4 w-4" />
+                                    <IconPlus className="h-4 w-4" />
                                 </Button>
                             </div>
                         </div>

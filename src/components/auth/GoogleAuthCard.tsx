@@ -2,7 +2,7 @@
 
 import { Loader2 } from '@/components/ui/spinner'
 import { useState } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { IconArrowRight } from '@/components/ui/icons'
 import { useSignIn } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
 import { AuthShell } from '@/components/auth/AuthShell'
@@ -60,7 +60,7 @@ export function GoogleAuthCard() {
           </span>
           <span>{t('google.continueWithGoogle')}</span>
         </span>
-        <ArrowRight className="h-4.5 w-4.5 opacity-70" />
+        <IconArrowRight className="h-4.5 w-4.5 opacity-70" />
       </Button>
 
       <div className="mt-4 min-h-10">

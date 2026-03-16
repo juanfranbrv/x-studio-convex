@@ -7,17 +7,17 @@ import { useAuth, useUser } from '@clerk/nextjs'
 import { useMutation, useQuery } from 'convex/react'
 import { useTranslation } from 'react-i18next'
 import {
-  ArrowRight,
-  Bot,
-  CheckCircle,
-  Clock,
-  Mail,
-  Megaphone,
-  Rocket,
-  CalendarCheck,
-  Sparkles,
-  Users,
-} from 'lucide-react'
+  IconArrowRight,
+  IconBot,
+  IconCheck,
+  IconClock,
+  IconMail,
+  IconMegaphone,
+  IconRocket,
+  IconCalendarCheck,
+  IconSparkles,
+  IconUsers,
+} from '@/components/ui/icons'
 import { AppLogo } from '@/components/ui/AppLogo'
 import { api } from '@/../convex/_generated/api'
 import { Button } from '@/components/ui/button'
@@ -124,9 +124,9 @@ function PendingAccessScreen({ status, email }: { status: string; email: string 
       <div className="bg-white rounded-2xl relative z-10 w-full max-w-md border border-border/40 p-8 text-center shadow-2xl">
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-border/30 bg-muted shadow-inner">
           {status === 'pending' ? (
-            <Clock className="h-10 w-10 animate-pulse text-primary" />
+            <IconClock className="h-10 w-10 animate-pulse text-primary" />
           ) : (
-            <Bot className="h-10 w-10 text-destructive" />
+            <IconBot className="h-10 w-10 text-destructive" />
           )}
         </div>
 
@@ -258,7 +258,7 @@ function LandingNav({ hasAccess }: { hasAccess: boolean }) {
           ) : (
             <Link href="/image">
               <Button className="bg-primary font-semibold text-primary-foreground shadow-md">
-                {t('landing.enterStudio')} <ArrowRight className="ml-1 h-4 w-4" />
+                {t('landing.enterStudio')} <IconArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
           )}
@@ -359,18 +359,18 @@ function HeroSection({ hasAccess }: { hasAccess: boolean }) {
           {hasAccess ? (
             <Link href="/image">
               <Button size="lg" className="h-14 rounded-2xl bg-primary px-10 text-lg font-bold text-primary-foreground shadow-lg transition-all hover:scale-105 hover:shadow-xl">
-                {t('landing.enterStudio')} <ArrowRight className="ml-2 h-5 w-5" />
+                {t('landing.enterStudio')} <IconArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
           ) : submitted ? (
             <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-6 py-4">
-              <CheckCircle className="h-6 w-6 text-primary" />
+              <IconCheck className="h-6 w-6 text-primary" />
               <p className="font-semibold text-primary">{message || t('landing.registrationCompleted')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex w-full max-w-lg flex-col gap-3 sm:flex-row">
               <div className="relative flex-1">
-                <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <IconMail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="email"
                   placeholder="tu@email.com"
@@ -429,11 +429,11 @@ function HeroSection({ hasAccess }: { hasAccess: boolean }) {
 /* ─────────────────────── Hero Pills Showcase (Slack style) ─────────────────────── */
 
 const HERO_PILLS = [
-  { key: 'productLaunch', icon: Rocket, image: '/landing/hero-launch.webp' },
-  { key: 'dailyPosts', icon: CalendarCheck, image: '/landing/hero-daily.webp' },
-  { key: 'campaignDesign', icon: Sparkles, image: '/landing/hero-campaign.webp' },
-  { key: 'teamContent', icon: Users, image: '/landing/hero-team.webp' },
-  { key: 'promoOffer', icon: Megaphone, image: '/landing/hero-promo.webp' },
+  { key: 'productLaunch', icon: IconRocket, image: '/landing/hero-launch.webp' },
+  { key: 'dailyPosts', icon: IconCalendarCheck, image: '/landing/hero-daily.webp' },
+  { key: 'campaignDesign', icon: IconSparkles, image: '/landing/hero-campaign.webp' },
+  { key: 'teamContent', icon: IconUsers, image: '/landing/hero-team.webp' },
+  { key: 'promoOffer', icon: IconMegaphone, image: '/landing/hero-promo.webp' },
 ] as const
 
 function HeroPillsShowcase() {
@@ -597,7 +597,7 @@ function FeatureTabsSection() {
                           href={tabHref(key)}
                           className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
                         >
-                          {t('landing.learnMore')} <ArrowRight className="h-4 w-4" />
+                          {t('landing.learnMore')} <IconArrowRight className="h-4 w-4" />
                         </Link>
                       </div>
                     </div>
@@ -715,7 +715,7 @@ function ShowcaseRow({ item, idx }: { item: typeof SHOWCASES[number]; idx: numbe
           href="/image"
           className="mt-6 inline-flex items-center gap-1.5 text-base font-semibold text-primary transition-colors hover:text-primary/80"
         >
-          {t(`showcase.${item.key}.link`)} <ArrowRight className="h-4 w-4" />
+          {t(`showcase.${item.key}.link`)} <IconArrowRight className="h-4 w-4" />
         </Link>
       </div>
 

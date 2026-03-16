@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FileImage, FolderKanban, House, LayoutPanelTop, PanelsTopLeft } from 'lucide-react'
+import { IconFileImage, IconFolderKanban, IconHome, IconLayout, IconStudio } from '@/components/ui/icons'
 import { AppLogo } from '@/components/ui/AppLogo'
 import { brand } from '@/lib/brand'
 
@@ -21,15 +21,15 @@ function AppPreview() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-3 rounded-xl bg-white/92 px-3 py-2 shadow-[0_14px_26px_-18px_rgba(15,23,42,0.35)]">
-                  <House className="h-4 w-4 text-slate-500" strokeWidth={1.9} />
+                  <IconHome className="h-4 w-4 text-slate-500" strokeWidth={1.9} />
                   <div className="h-2.5 w-8 rounded-full bg-slate-300/80" />
                 </div>
                 <div className="flex items-center gap-3 rounded-xl px-3 py-2 text-[#0f4aa3]">
-                  <FileImage className="h-4 w-4" strokeWidth={1.9} />
+                  <IconFileImage className="h-4 w-4" strokeWidth={1.9} />
                   <div className="h-2.5 w-8 rounded-full bg-[#0f4aa3]/30" />
                 </div>
                 <div className="flex items-center gap-3 rounded-xl px-3 py-2 text-slate-500">
-                  <FolderKanban className="h-4 w-4" strokeWidth={1.9} />
+                  <IconFolderKanban className="h-4 w-4" strokeWidth={1.9} />
                   <div className="h-2.5 w-8 rounded-full bg-slate-300/70" />
                 </div>
               </div>
@@ -68,7 +68,7 @@ function AppPreview() {
                         <div className="h-8 w-56 rounded-xl bg-black/12" />
                       </div>
                       <div className="rounded-2xl bg-white/16 p-2 text-white">
-                        <PanelsTopLeft className="h-5 w-5" strokeWidth={1.8} />
+                        <IconStudio className="h-5 w-5" strokeWidth={1.8} />
                       </div>
                     </div>
                     <div className="flex min-h-[17rem] items-end justify-center gap-6">
@@ -110,7 +110,7 @@ function AppPreview() {
                 <div className="rounded-2xl border border-slate-200/80 bg-white/84 p-4 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)]">
                   <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      <LayoutPanelTop className="h-4 w-4 text-[#0f4aa3]" strokeWidth={1.8} />
+                      <IconLayout className="h-4 w-4 text-[#0f4aa3]" strokeWidth={1.8} />
                       Historial
                     </div>
                     <div className="h-2.5 w-16 rounded-full bg-slate-200" />

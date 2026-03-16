@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from 'convex/react'
-import { ArrowDownRight, Settings2 } from 'lucide-react'
+import { IconArrowDownRight, IconSettings } from '@/components/ui/icons'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useUI } from '@/contexts/UIContext'
@@ -129,7 +129,7 @@ export default function SettingsPage() {
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
                                     <div className="rounded-xl bg-primary/10 p-3 text-primary">
-                                        <Settings2 className="h-5 w-5" />
+                                        <IconSettings className="h-5 w-5" />
                                     </div>
                                     <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
                                         {t('headerTitle')}
@@ -187,7 +187,7 @@ function AnchorChip({ href, title, description }: { href: string; title: string;
             href={href}
             className="group flex min-h-28 cursor-pointer flex-col justify-between rounded-xl bg-muted/20 p-4 transition-colors hover:bg-primary/5"
         >
-            <ArrowDownRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:translate-y-0.5" />
+            <IconArrowDownRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:translate-y-0.5" />
             <div className="space-y-1">
                 <p className="font-medium text-foreground">{title}</p>
                 <p className="text-sm leading-5 text-muted-foreground">{description}</p>

@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bug, Camera, Globe, Cpu, ChevronRight, Palette } from 'lucide-react';
+import { IconBug, IconCamera, IconGlobe, IconCpu, IconChevronRight, IconPalette } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import {
     Tooltip,
@@ -103,7 +103,7 @@ export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAu
                                 </TooltipProvider>
                                 {idx < steps.length - 1 && (
                                     <div className="mx-1 h-px w-4 bg-zinc-700 relative">
-                                        <ChevronRight className="w-3 h-3 text-zinc-600 absolute -top-[5.5px] -right-1" />
+                                        <IconChevronRight className="w-3 h-3 text-zinc-600 absolute -top-[5.5px] -right-1" />
                                     </div>
                                 )}
                             </div>
@@ -158,7 +158,7 @@ export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAu
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2 text-base text-foreground font-bold uppercase">
-                            <Bug className="w-5 h-5 text-primary" />
+                            <IconBug className="w-5 h-5 text-primary" />
                             {t('technicalAudit.title', { defaultValue: 'Extraction architecture' })}
                         </CardTitle>
                         <p className="text-[11px] text-muted-foreground mt-0.5 ml-7">
@@ -186,14 +186,14 @@ export function TechnicalAudit({ trace = [], isVisible, debugData }: TechnicalAu
                 <div className="grid grid-cols-1 gap-8 relative">
                     <div className="absolute left-[19px] top-4 bottom-4 w-px bg-border/60 -z-10 border-l border-dashed border-zinc-300" />
 
-                    {renderChain(t('technicalAudit.visualCaptureSequence', { defaultValue: 'Visual capture sequence' }), <Camera className="w-3.5 h-3.5" />, CAPTURE_CHAIN)}
-                    {renderChain(t('technicalAudit.codeProcessingSequence', { defaultValue: 'Code processing sequence' }), <Globe className="w-3.5 h-3.5" />, CONTENT_CHAIN)}
-                    {renderChain(t('technicalAudit.intelligenceSequence', { defaultValue: 'Intelligence sequence' }), <Cpu className="w-3.5 h-3.5" />, AI_CHAIN)}
+                    {renderChain(t('technicalAudit.visualCaptureSequence', { defaultValue: 'Visual capture sequence' }), <IconCamera className="w-3.5 h-3.5" />, CAPTURE_CHAIN)}
+                    {renderChain(t('technicalAudit.codeProcessingSequence', { defaultValue: 'Code processing sequence' }), <IconGlobe className="w-3.5 h-3.5" />, CONTENT_CHAIN)}
+                    {renderChain(t('technicalAudit.intelligenceSequence', { defaultValue: 'Intelligence sequence' }), <IconCpu className="w-3.5 h-3.5" />, AI_CHAIN)}
                 </div>
 
                 <div className="rounded-2xl border border-border/70 bg-muted/50 p-4 space-y-4">
                     <div className="flex items-center gap-2">
-                        <Palette className="w-4 h-4 text-primary" />
+                        <IconPalette className="w-4 h-4 text-primary" />
                         <p className="text-sm font-semibold">{t('technicalAudit.paletteConsensusTitle', { defaultValue: 'Palette consensus debug' })}</p>
                     </div>
 

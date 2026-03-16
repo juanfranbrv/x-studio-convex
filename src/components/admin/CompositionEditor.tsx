@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { saveAction, deleteAction, regenerateIconAction } from '@/lib/admin-compositions-actions'
-import { Trash2, RefreshCw, Save, X } from 'lucide-react'
+import { IconDelete, IconRefresh, IconSave, IconClose } from '@/components/ui/icons'
 
 interface CompositionEditorProps {
     composition: LegacyComposition | null
@@ -60,7 +60,7 @@ export function CompositionEditor({
                     {!isNew && <p className="text-xs text-muted-foreground font-mono mt-1">{composition?.id}</p>}
                 </div>
                 <Button variant="ghost" size="icon" onClick={handleClose} className="rounded-full">
-                    <X className="h-5 w-5" />
+                    <IconClose className="h-5 w-5" />
                 </Button>
             </header>
 
@@ -172,7 +172,7 @@ export function CompositionEditor({
                                     variant="outline"
                                     className="text-destructive hover:bg-destructive/10 border-destructive/20"
                                 >
-                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    <IconDelete className="h-4 w-4 mr-2" />
                                     Eliminar
                                 </Button>
                                 <Button
@@ -181,7 +181,7 @@ export function CompositionEditor({
                                     variant="outline"
                                     className="hidden sm:flex"
                                 >
-                                    <RefreshCw className="h-4 w-4 mr-2" />
+                                    <IconRefresh className="h-4 w-4 mr-2" />
                                     Refrescar Icono
                                 </Button>
                             </>
@@ -193,7 +193,7 @@ export function CompositionEditor({
                         className="px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-11"
                         disabled={isPending}
                     >
-                        <Save className="h-4 w-4 mr-2" />
+                        <IconSave className="h-4 w-4 mr-2" />
                         {isPending ? 'Guardando...' : 'Guardar Cambios'}
                     </Button>
                 </div>

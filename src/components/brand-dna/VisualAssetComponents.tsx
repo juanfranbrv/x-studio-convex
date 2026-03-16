@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 
-import { Monitor, Building2, Sparkles, Image, Maximize2, Trash2, Upload, Check } from 'lucide-react';
+import { IconMonitor, IconBuilding, IconSparkles, IconImage, IconMaximize, IconDelete, IconUpload, IconCheckSimple } from '@/components/ui/icons';
 import { useTranslation } from 'react-i18next';
 
 // --- Interfaces ---
@@ -61,7 +61,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, on
             <CardHeader className="pb-2 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground justify-between">
                     <div className="flex items-center gap-2">
-                        <Building2 className="w-5 h-5 text-primary" />
+                        <IconBuilding className="w-5 h-5 text-primary" />
                         {t('visualAssets.logoTitle', { defaultValue: 'Brand logo' })}
                     </div>
                     <span className="text-xs font-normal text-muted-foreground">
@@ -75,7 +75,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, on
                         className="h-full min-h-[120px] flex flex-col items-center justify-center text-muted-foreground opacity-50 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-accent/50 hover:text-accent-foreground transition-all"
                         onClick={handleUploadClick}
                     >
-                        <Building2 className="w-8 h-8 mb-2" />
+                        <IconBuilding className="w-8 h-8 mb-2" />
                         <p className="text-xs">{t('visualAssets.uploadLogos', { defaultValue: 'Upload logos (max 6)' })}</p>
                         <input
                             type="file"
@@ -141,7 +141,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, on
                                 />
                                 {logo.selected !== false && (
                                     <div className="absolute top-1 left-1 bg-primary text-white rounded-full p-0.5 shadow-sm">
-                                        <Check className="w-2 h-2" />
+                                        <IconCheckSimple className="w-2 h-2" />
                                     </div>
                                 )}
                                 {onRemove && (
@@ -152,7 +152,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, on
                                         }}
                                         className="absolute top-1 right-1 bg-destructive/90 text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
                                     >
-                                        <Trash2 className="w-2.5 h-2.5" />
+                                        <IconDelete className="w-2.5 h-2.5" />
                                     </button>
                                 )}
                             </div>
@@ -180,7 +180,7 @@ export function LogoCard({ logoUrl, logos = [], onUpload, onRemove, onToggle, on
                                 {isUploading ? (
                                     <Loader2 className="w-5 h-5" />
                                 ) : (
-                                    <Upload className="w-5 h-5" />
+                                    <IconUpload className="w-5 h-5" />
                                 )}
                             </div>
                         )}
@@ -197,7 +197,7 @@ export function FaviconCard({ faviconUrl }: FaviconCardProps) {
         <Card className="h-full glass-panel border-0 shadow-none">
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                    <Sparkles className="w-5 h-5 text-primary" />
+                    <IconSparkles className="w-5 h-5 text-primary" />
                     {t('visualAssets.faviconTitle', { defaultValue: 'Favicon' })}
                 </CardTitle>
             </CardHeader>
@@ -210,7 +210,7 @@ export function FaviconCard({ faviconUrl }: FaviconCardProps) {
                     />
                 ) : (
                     <div className="text-center text-muted-foreground opacity-50">
-                        <Sparkles className="w-8 h-8 mb-1" />
+                        <IconSparkles className="w-8 h-8 mb-1" />
                         <p className="text-[10px]">{t('visualAssets.noFavicon', { defaultValue: 'No favicon' })}</p>
                     </div>
                 )}
@@ -225,7 +225,7 @@ export function ScreenshotCard({ screenshotUrl }: ScreenshotCardProps) {
         <Card className="h-full overflow-hidden glass-panel border-0 shadow-none flex flex-col">
             <CardHeader className="pb-3 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                    <Monitor className="w-5 h-5 text-primary" />
+                    <IconMonitor className="w-5 h-5 text-primary" />
                     {t('visualAssets.screenshotTitle', { defaultValue: 'Website screenshot' })}
                 </CardTitle>
             </CardHeader>
@@ -240,7 +240,7 @@ export function ScreenshotCard({ screenshotUrl }: ScreenshotCardProps) {
                     </div>
                 ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center text-[var(--text-secondary)]">
-                        <Monitor className="w-12 h-12 opacity-20 mb-2" />
+                        <IconMonitor className="w-12 h-12 opacity-20 mb-2" />
                         <p className="text-sm italic">{t('visualAssets.noScreenshot', { defaultValue: 'No screenshot available' })}</p>
                     </div>
                 )}
@@ -285,7 +285,7 @@ export function ImageGallery({
         <Card className="glass-panel border-0 shadow-aero">
             <CardHeader className="pb-3 border-b border-border">
                 <CardTitle className="flex items-center gap-2 text-base text-foreground">
-                    <Image className="w-5 h-5 text-primary" />
+                    <IconImage className="w-5 h-5 text-primary" />
                     {t('visualAssets.analyzedGallery', { defaultValue: 'Analyzed image gallery' })}
                 </CardTitle>
             </CardHeader>
@@ -309,7 +309,7 @@ export function ImageGallery({
 
 
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                <Maximize2 className="w-8 h-8 text-white drop-shadow-lg" />
+                                <IconMaximize className="w-8 h-8 text-white drop-shadow-lg" />
                             </div>
                             <button
                                 onClick={(e) => {
@@ -318,7 +318,7 @@ export function ImageGallery({
                                 }}
                                 className="absolute top-3 right-3 w-7 h-7 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:scale-110 shadow-aero-lg z-10"
                             >
-                                <Trash2 className="w-4 h-4" />
+                                <IconDelete className="w-4 h-4" />
                             </button>
                         </div>
                     ))}
@@ -348,7 +348,7 @@ export function ImageGallery({
                                 <Loader2 className="w-8 h-8 text-primary" />
                             ) : (
                                 <>
-                                    <Upload className="w-8 h-8" />
+                                    <IconUpload className="w-8 h-8" />
                                     <span className="text-xs font-medium">{t('visualAssets.uploadImages', { defaultValue: 'Upload images' })}</span>
                                 </>
                             )}
@@ -357,7 +357,7 @@ export function ImageGallery({
                 </div>
                 {images.length === 0 && !isUploading && (
                     <div className="text-center py-12">
-                        <Image className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-20" />
+                        <IconImage className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-20" />
                         <p className="text-sm text-muted-foreground italic opacity-60">
                             {t('visualAssets.noExtraImages', { defaultValue: 'No additional images were found on the site.' })}
                         </p>
