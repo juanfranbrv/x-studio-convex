@@ -2,7 +2,7 @@
 
 import { Loader2 } from '@/components/ui/spinner'
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Upload, Image as ImageIcon, X, Sparkles, Palette, Check, Plus, Wand2, RefreshCw, Type } from 'lucide-react'
+import { IconUpload, IconImage, IconClose, IconSparkles, IconPalette, IconCheck, IconPlus, IconWand, IconRefresh, IconTextFont } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
@@ -200,7 +200,7 @@ export function ImageReferenceSelector({
             <div className="rounded-2xl border border-border/70 bg-muted/30 p-3.5 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="flex items-center justify-between gap-2">
                     <div className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        <Wand2 className="w-3.5 h-3.5" />
+                        <IconWand className="w-3.5 h-3.5" />
                         {t('imageReference.aiGeneratedContent', { defaultValue: 'AI-generated content' })}
                     </div>
                     <div className="flex items-center gap-2">
@@ -256,7 +256,7 @@ export function ImageReferenceSelector({
                 />
                 <div className="flex items-center justify-between px-0.5">
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
-                        <Sparkles className="w-3 h-3 text-primary" />
+                        <IconSparkles className="w-3 h-3 text-primary" />
                         {t('imageReference.aiWillGenerate', { defaultValue: 'AI will generate an image with this description' })}
                     </p>
                     {hasSuggestions && (
@@ -298,7 +298,7 @@ export function ImageReferenceSelector({
             <div className={cn('space-y-3 rounded-2xl border p-3.5 transition-all', mode === 'upload' ? 'border-primary/40 bg-primary/5' : 'border-border/70 bg-muted/20')}>
                 <div className="flex items-center justify-between">
                     <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        <Upload className="w-3.5 h-3.5" />
+                        <IconUpload className="w-3.5 h-3.5" />
                         {t('imageReference.uploadReferences', { defaultValue: 'Upload references' })}
                     </p>
                 </div>
@@ -313,7 +313,7 @@ export function ImageReferenceSelector({
                                         onClick={() => onRemoveUploadedImage(img)}
                                         className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-red-500 transition-all z-10 opacity-0 group-hover:opacity-100"
                                     >
-                                        <X className="w-3 h-3" />
+                                        <IconClose className="w-3 h-3" />
                                     </button>
                                 )}
                                 {onReferenceRoleChange && (
@@ -349,7 +349,7 @@ export function ImageReferenceSelector({
                     >
                         <input ref={inputRef} type="file" accept="image/*" multiple onChange={handleFileSelect} className="hidden" />
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-muted text-muted-foreground group-hover:text-primary transition-colors">
-                            {isDragging ? <Upload className="w-4 h-4" /> : uploadedImages.length > 0 ? <Plus className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
+                            {isDragging ? <IconUpload className="w-4 h-4" /> : uploadedImages.length > 0 ? <IconPlus className="w-4 h-4" /> : <IconImage className="w-4 h-4" />}
                         </div>
                         <p className="text-xs font-semibold text-foreground">
                             {isDragging ? t('imageReference.dropImages', { defaultValue: 'Drop the images' }) : uploadedImages.length > 0 ? t('imageReference.addMoreImages', { defaultValue: 'Add more images' }) : t('imageReference.uploadYourReferences', { defaultValue: 'Upload your references' })}
@@ -384,7 +384,7 @@ export function ImageReferenceSelector({
             <div className={cn('space-y-3 rounded-2xl border p-3.5 transition-all', mode === 'brandkit' ? 'border-primary/40 bg-primary/5' : 'border-border/70 bg-muted/20')}>
                 <div className="flex items-center justify-between">
                     <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        <Palette className="w-3.5 h-3.5" />
+                        <IconPalette className="w-3.5 h-3.5" />
                         {t('nav.brandKit', { defaultValue: 'Brand Kit' })}
                     </p>
                     <div className="flex items-center gap-2">
@@ -450,7 +450,7 @@ export function ImageReferenceSelector({
                                     {isSelected && (
                                         <div className="absolute inset-0 bg-primary/30 flex items-center justify-center backdrop-blur-[1px] z-20">
                                             <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg animate-in zoom-in duration-200">
-                                                <Check className="w-4 h-4 stroke-[3]" />
+                                                <IconCheck className="w-4 h-4 stroke-[3]" />
                                             </div>
                                         </div>
                                     )}
@@ -461,7 +461,7 @@ export function ImageReferenceSelector({
                 ) : (
                     <div className="h-28 rounded-2xl border border-dashed border-border bg-background flex flex-col items-center justify-center gap-2 text-center p-4">
                         <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                            <Palette className="w-4 h-4 text-muted-foreground" />
+                            <IconPalette className="w-4 h-4 text-muted-foreground" />
                         </div>
                         <p className="text-[10px] text-muted-foreground">{t('imageReference.noBrandKitImages', { defaultValue: 'There are no images in the Brand Kit' })}</p>
                     </div>
@@ -480,7 +480,7 @@ export function ImageReferenceSelector({
             {onCustomStyleChange && (
                 <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-3.5 transition-all">
                     <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        <Type className="w-3.5 h-3.5" />
+                        <IconTextFont className="w-3.5 h-3.5" />
                         {t('imageReference.textStyle', { defaultValue: 'Text style' })}
                     </p>
                     <div className="relative group">
@@ -513,11 +513,11 @@ export function ImageReferenceSelector({
                                 aria-label={t('imageReference.clearTextStyle', { defaultValue: 'Clear text style' })}
                                 title={t('styleImage.clear', { defaultValue: 'Clear' })}
                             >
-                                <X className="w-3.5 h-3.5" />
+                                <IconClose className="w-3.5 h-3.5" />
                             </button>
                         ) : (
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                                {customStyle ? <Check className="w-4 h-4 text-primary" /> : <RefreshCw className="w-4 h-4 opacity-50" />}
+                                {customStyle ? <IconCheck className="w-4 h-4 text-primary" /> : <IconRefresh className="w-4 h-4 opacity-50" />}
                             </div>
                         )}
                     </div>

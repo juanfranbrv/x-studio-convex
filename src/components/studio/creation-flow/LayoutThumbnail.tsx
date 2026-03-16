@@ -5,30 +5,28 @@ import { cn } from '@/lib/utils';
 import {
     Trophy,
     Star,
-    CheckCircle2,
     Users,
-    User,
     Award,
     Target,
     Flag,
     Flame,
-    Sparkles,
-    Calendar,
-    Search,
-    Clock,
     Box,
-    MessageSquare,
-    Layers,
-    Rocket,
     BarChart3,
     Heart,
     HandMetal,
     Crown,
-    Gift,
     Zap,
     Bell,
     BookOpen
 } from 'lucide-react';
+import {
+    IconCheck,
+    IconUser,
+    IconSparkles,
+    IconCalendar,
+    IconMessage,
+    IconGift,
+} from '@/components/ui/icons';
 
 interface LayoutThumbnailProps {
     layout: LayoutOption;
@@ -813,7 +811,7 @@ function IconLayout() {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary/70">
-                <Sparkles className="w-6 h-6" />
+                <IconSparkles className="w-6 h-6" />
             </div>
             <div className="text-[10px] font-bold text-primary/70">+50%</div>
         </div>
@@ -1169,7 +1167,7 @@ function CitaBocadilloLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center p-2">
             <div className="bg-primary/20 rounded-xl px-4 py-2 relative">
-                <MessageSquare className="w-6 h-6 text-primary/60" />
+                <IconMessage className="w-6 h-6 text-primary/60" />
                 <div className="absolute -bottom-1 left-3 w-3 h-3 bg-primary/20 rotate-45" />
             </div>
         </div>
@@ -1254,7 +1252,7 @@ function EquipoQuoteLayout() {
 function EquipoActionLayout() {
     return (
         <div className="w-full h-full flex items-end justify-center p-2">
-            <User className="w-12 h-12 text-primary/40" />
+            <IconUser className="w-12 h-12 text-primary/40" />
         </div>
     );
 }
@@ -1342,7 +1340,7 @@ function LogroSealLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center p-1">
             <div className="w-10 h-10 rounded-full border-2 border-primary/50 flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-primary/60" />
+                <IconCheck className="w-6 h-6 text-primary/60" />
             </div>
         </div>
     );
@@ -1416,7 +1414,7 @@ function LanzamientoRevealLayout() {
 function LanzamientoSilhouetteLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center p-1 bg-primary/10">
-            <User className="w-10 h-10 text-primary/60 scale-150 mt-4 translate-y-2 opacity-50" />
+            <IconUser className="w-10 h-10 text-primary/60 scale-150 mt-4 translate-y-2 opacity-50" />
         </div>
     );
 }
@@ -1512,8 +1510,8 @@ function RetoGiveawayLayout() {
     return (
         <div className="w-full h-full flex items-center justify-center p-1">
             <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center relative">
-                <Gift className="w-8 h-8 text-primary/60" />
-                <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-primary/40" />
+                <IconGift className="w-8 h-8 text-primary/60" />
+                <IconSparkles className="absolute -top-1 -right-1 w-4 h-4 text-primary/40" />
             </div>
         </div>
     );
@@ -1852,7 +1850,7 @@ function EfemerideStampLayout() {
 function EfemerideMinimalLayout() {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-1">
-            <Calendar className="w-10 h-10 text-primary/50" />
+            <IconCalendar className="w-10 h-10 text-primary/50" />
             <div className="w-[60%] h-1 bg-primary/25 rounded-full" />
         </div>
     );
@@ -2117,7 +2115,7 @@ function PasosIconsLayout() {
             </div>
             <div className="text-primary/30 text-lg">→</div>
             <div className="w-10 h-10 rounded-full bg-primary/30 flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-primary/70" />
+                <IconCheck className="w-6 h-6 text-primary/70" />
             </div>
         </div>
     );

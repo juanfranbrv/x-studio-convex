@@ -3,7 +3,7 @@
 import { Loader2 } from '@/components/ui/spinner'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BookmarkPlus } from 'lucide-react'
+import { IconBookmarkAdd } from '@/components/ui/icons'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,7 +38,7 @@ export function SavePresetDialog({
                 <DialogHeader>
                     <div className="flex items-center gap-2">
                         <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                            <BookmarkPlus className="w-5 h-5" />
+                            <IconBookmarkAdd className="w-5 h-5" />
                         </div>
                         <DialogTitle>{t('presets.saveAsFavoriteTitle', { defaultValue: 'Save as favorite' })}</DialogTitle>
                     </div>

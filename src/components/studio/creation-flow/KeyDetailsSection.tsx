@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Sparkles, Wand2, Eraser } from 'lucide-react'
+import { IconSparkles, IconWand, IconEraser } from '@/components/ui/icons'
 import { IntentRequiredField } from '@/lib/creation-flow-types'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -38,7 +38,7 @@ export function KeyDetailsSection({
         <div className="animate-in slide-in-from-top-2 space-y-3 rounded-lg border border-primary/10 bg-primary/5 p-3 fade-in duration-300">
             <div className="flex items-center justify-between">
                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary">
-                    <Sparkles className="h-3 w-3" />
+                    <IconSparkles className="h-3 w-3" />
                     {t('keyDetails.title', { defaultValue: 'Key details' })}
                 </label>
 
@@ -75,7 +75,7 @@ export function KeyDetailsSection({
                                         className="rounded-md p-1 text-primary transition-colors hover:bg-primary/10"
                                         title={t('keyDetails.regenerateField', { field: field.label, defaultValue: 'Regenerate {{field}}' })}
                                     >
-                                        <Wand2 className="h-3 w-3" />
+                                        <IconWand className="h-3 w-3" />
                                     </button>
                                 )}
                             </div>
@@ -102,14 +102,14 @@ export function KeyDetailsSection({
                     <div key={id} className="animate-in slide-in-from-top-1 space-y-1.5 fade-in duration-200">
                         <div className="flex items-center justify-between">
                             <label className="flex items-center gap-1.5 text-[11px] font-semibold text-primary/80">
-                                <Sparkles className="h-3 w-3" />
+                                <IconSparkles className="h-3 w-3" />
                                 {id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                             </label>
                             <button
                                 onClick={() => onCustomTextChange(id, '')}
                                 className="text-muted-foreground hover:text-red-500"
                             >
-                                <Eraser className="h-3 w-3" />
+                                <IconEraser className="h-3 w-3" />
                             </button>
                         </div>
                         {(String(value).length > 50 || String(value).includes('\n')) ? (

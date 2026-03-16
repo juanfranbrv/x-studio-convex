@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, useDragControls, useReducedMotion } from 'framer-motion'
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { IconChevronLeft, IconChevronRight } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 type MobileWorkPanelDrawerProps = {
@@ -95,9 +95,9 @@ export function MobileWorkPanelDrawer({
             >
                 <div className="relative flex items-center justify-center">
                     {open ? (
-                        <PanelLeftOpen className="h-6 w-6" />
+                        <IconChevronRight className="h-6 w-6" />
                     ) : (
-                        <PanelLeftClose className="h-6 w-6" />
+                        <IconChevronLeft className="h-6 w-6" />
                     )}
                 </div>
             </motion.button>

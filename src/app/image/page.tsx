@@ -21,7 +21,7 @@ import { useCreationFlow, UseCreationFlowOptions } from '@/hooks/useCreationFlow
 import { useDisablePullToRefresh } from '@/hooks/useDisablePullToRefresh'
 import { uploadBrandImage } from '@/app/actions/upload-image'
 import { SOCIAL_FORMATS, ALL_IMAGE_LAYOUTS, LAYOUTS_BY_INTENT, type DebugPromptData, type DebugContextItem } from '@/lib/creation-flow-types'
-import { ArrowUp, Plus, RotateCcw, Sparkles } from 'lucide-react'
+import { IconArrowUp, IconPlus, IconRotate, IconSparkles } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { PromptDebugModal } from '@/components/studio/modals/PromptDebugModal'
 import { buildEditPrompt } from '@/lib/prompts/image-edit'
@@ -2403,7 +2403,7 @@ export default function ImagePage() {
                             aria-label={t('image:ui.applyCorrection', { defaultValue: 'Apply correction' })}
                             title={t('image:ui.applyCorrection', { defaultValue: 'Apply correction' })}
                         >
-                            <ArrowUp className="h-3.5 w-3.5" />
+                            <IconArrowUp className="h-3.5 w-3.5" />
                         </Button>
                     ) : null}
                 </div>
@@ -2433,7 +2433,7 @@ export default function ImagePage() {
                                 </>
                             ) : (
                                 <>
-                                    <RotateCcw className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
+                                    <IconRotate className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
                                     {t('image:ui.retrySameSettings', { defaultValue: 'Generate another with the same settings' })}
                                 </>
                             )}
@@ -2467,7 +2467,7 @@ export default function ImagePage() {
                                 </>
                             ) : (
                                 <>
-                                    <Sparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                                    <IconSparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
                                     {t('image:ui.generate', { defaultValue: 'Generate Image' })}
                                 </>
                             )}
@@ -2515,7 +2515,7 @@ export default function ImagePage() {
                         </>
                     ) : (
                         <>
-                            <Sparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                            <IconSparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
                             {t('image:ui.generate', { defaultValue: 'Generate Image' })}
                         </>
                     )}
@@ -2573,7 +2573,7 @@ export default function ImagePage() {
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                     <div className="max-w-md space-y-4">
                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-                            <Plus className="w-8 h-8 text-muted-foreground" />
+                            <IconPlus className="w-8 h-8 text-muted-foreground" />
                         </div>
                         <h2 className="text-2xl font-semibold">{t('ui.selectBrandKitTitle')}</h2>
                         <p className="text-muted-foreground">

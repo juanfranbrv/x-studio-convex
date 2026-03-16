@@ -1,6 +1,6 @@
 import { LayoutProps } from './types'
 import { cn } from '@/lib/utils'
-import { Smartphone } from 'lucide-react'
+import { IconPhone } from '@/components/ui/icons'
 
 export function PromoMovil({ image, texts, brandColors, aspectRatio, isGhost }: LayoutProps) {
     const mainColor = isGhost ? '#f4f4f5' : (brandColors[0] || '#2563eb')
@@ -41,7 +41,7 @@ export function PromoMovil({ image, texts, brandColors, aspectRatio, isGhost }: 
                             )}>
                                 {!isGhost && (
                                     <>
-                                        <Smartphone className="w-6 h-6 text-zinc-300" />
+                                        <IconPhone className="w-6 h-6 text-zinc-300" />
                                         <span className="text-[10px] font-mono text-zinc-400">APP SCREEN</span>
                                     </>
                                 )}

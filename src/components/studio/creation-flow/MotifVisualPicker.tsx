@@ -1,7 +1,7 @@
 'use client'
 
 import { CSSProperties } from 'react'
-import { LayoutTemplate, Route, Wand2 } from 'lucide-react'
+import { IconLayout, IconRoute, IconWand } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 
@@ -198,7 +198,7 @@ const getMeta = (mode: PickerMode) => {
             label: 'Estructura',
             autoLabel: 'Auto',
             autoDescription: 'El sistema decide como distribuir el contenido para tu idea.',
-            Icon: LayoutTemplate,
+            Icon: IconLayout,
             emptyDescription: 'Distribucion visual base del diseño.',
         }
     }
@@ -207,7 +207,7 @@ const getMeta = (mode: PickerMode) => {
             label: 'Enfoque narrativo',
             autoLabel: 'Auto',
             autoDescription: 'El sistema decide como guiar la lectura y la atencion.',
-            Icon: Route,
+            Icon: IconRoute,
             emptyDescription: 'Guia visual del recorrido de lectura.',
         }
     }
@@ -215,7 +215,7 @@ const getMeta = (mode: PickerMode) => {
         label: 'Estilo visual',
         autoLabel: 'Auto',
         autoDescription: 'El sistema define el look visual que mejor encaja con tu idea.',
-        Icon: Wand2,
+        Icon: IconWand,
         emptyDescription: 'Look visual dominante del diseño.',
     }
 }

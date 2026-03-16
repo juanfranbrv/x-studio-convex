@@ -13,7 +13,7 @@ import { OnboardingModal } from '@/components/onboarding/OnboardingModal'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { AlertTriangle } from 'lucide-react'
+import { IconAlertCircle } from '@/components/ui/icons'
 import { calculateBrandKitCompleteness } from '@/lib/brand-kit-utils'
 import { BrandKitSummary, BrandDNA } from '@/lib/brand-types'
 
@@ -160,7 +160,7 @@ export function DashboardLayout({
                 <DialogContent className="sm:max-w-[480px]">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5 text-amber-500" />
+                            <IconAlertCircle className="h-5 w-5 text-amber-500" />
                             Completa tu Kit de Marca primero
                         </DialogTitle>
                         <DialogDescription className="pt-2 space-y-2">

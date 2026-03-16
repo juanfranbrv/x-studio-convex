@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { Check, Image as ImageIcon, Palette, Sparkles, Upload, X } from 'lucide-react'
+import { IconCheck, IconImage, IconPalette, IconSparkles, IconUpload, IconClose } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
@@ -156,7 +156,7 @@ export function ContentImageCard({
                                 className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                 aria-label={tt('contentImage.removeUploadedAria', 'Remove content image')}
                             >
-                                <X className="w-3 h-3" />
+                                <IconClose className="w-3 h-3" />
                             </button>
                         )}
                     </div>
@@ -174,7 +174,7 @@ export function ContentImageCard({
                             {tt('contentImage.brandKitBadge', 'Brand Kit')}
                         </span>
                         <span className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity inline-flex">
-                            <X className="w-3 h-3" />
+                            <IconClose className="w-3 h-3" />
                         </span>
                     </button>
                 ))}
@@ -229,7 +229,7 @@ export function ContentImageCard({
                         className="min-h-[96px] text-xs resize-none"
                     />
                     <p className="text-[10px] text-muted-foreground inline-flex items-center gap-1.5">
-                        <Sparkles className="w-3 h-3 text-primary" />
+                        <IconSparkles className="w-3 h-3 text-primary" />
                         {tt('contentImage.aiHelper', 'AI will build the main visual content of the image.')}
                     </p>
                 </div>
@@ -244,7 +244,7 @@ export function ContentImageCard({
                             onClick={() => inputRef.current?.click()}
                             disabled={!canAddMoreManual}
                         >
-                            <Upload className="w-3 h-3" />
+                            <IconUpload className="w-3 h-3" />
                             {tt('contentImage.upload', 'Upload content')}
                         </Button>
                         <Button
@@ -254,7 +254,7 @@ export function ContentImageCard({
                             className="h-7 px-2 text-[10px] gap-1"
                             onClick={() => setIsBrandKitModalOpen(true)}
                         >
-                            <Palette className="w-3 h-3" />
+                            <IconPalette className="w-3 h-3" />
                             {tt('contentImage.fromBrandKit', 'From Brand Kit')}
                         </Button>
                             {(contentUploadedImages.length > 0 || contentBrandKitImageIds.length > 0) && (
@@ -298,7 +298,7 @@ export function ContentImageCard({
                             )}
                         >
                             <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center">
-                                {isDragging ? <Upload className="w-4 h-4 text-primary" /> : <ImageIcon className="w-4 h-4 text-muted-foreground" />}
+                                {isDragging ? <IconUpload className="w-4 h-4 text-primary" /> : <IconImage className="w-4 h-4 text-muted-foreground" />}
                             </div>
                             <p className="text-xs font-medium">
                                 {isDragging
@@ -365,7 +365,7 @@ export function ContentImageCard({
                                             {isSelected && (
                                                 <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
                                                     <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
-                                                        <Check className="w-4 h-4" />
+                                                        <IconCheck className="w-4 h-4" />
                                                     </span>
                                                 </div>
                                             )}

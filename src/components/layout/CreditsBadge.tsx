@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery } from 'convex/react'
-import { AlertTriangle, Clock, Coins } from 'lucide-react'
+import { Coins } from 'lucide-react'
+import { IconAlertCircle, IconClock } from '@/components/ui/icons'
 import { api } from '@/../convex/_generated/api'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -76,7 +77,7 @@ export function CreditsBadge() {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <Badge variant="secondary" className="cursor-help gap-2 px-3 py-1.5">
-                        <Clock className="h-5 w-5" />
+                        <IconClock className="h-5 w-5" />
                         <span className="text-base">{t('credits.waitlist')}</span>
                     </Badge>
                 </TooltipTrigger>
@@ -102,7 +103,7 @@ export function CreditsBadge() {
                     variant={isLow ? 'destructive' : 'default'}
                     className={`cursor-help gap-2 px-3 py-1.5 ${!isLow ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
                 >
-                    {isLow ? <AlertTriangle className="h-5 w-5" /> : null}
+                    {isLow ? <IconAlertCircle className="h-5 w-5" /> : null}
                     <Coins className="h-5 w-5" />
                     <span className="font-mono text-base">{credits}</span>
                 </Badge>

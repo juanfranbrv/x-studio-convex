@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Check, Copy, Sparkles } from 'lucide-react'
+import { IconCheck, IconCopy, IconSparkles } from '@/components/ui/icons'
 import { DebugPromptData } from '@/lib/creation-flow-types'
 
 interface PromptDebugModalProps {
@@ -183,7 +183,7 @@ export function PromptDebugModal({
             <DialogContent className="max-h-[95vh] h-[95vh] flex flex-col" style={{ width: '92vw', maxWidth: '1500px' }}>
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-primary" />
+                        <IconSparkles className="w-5 h-5 text-primary" />
                         {t('promptDebug.title', { defaultValue: 'Debug: generation payload' })}
                     </DialogTitle>
                     <DialogDescription>
@@ -198,9 +198,9 @@ export function PromptDebugModal({
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('promptDebug.promptSent', { defaultValue: 'Prompt sent (payload.prompt)' })}</p>
                                 <Button variant="ghost" size="sm" onClick={handleCopyPrompt} className="h-7 px-2" disabled={!payloadPrompt}>
                                     {copiedPrompt ? (
-                                        <><Check className="w-3 h-3 mr-1" />{t('copyCard.copied')}</>
+                                        <><IconCheck className="w-3 h-3 mr-1" />{t('copyCard.copied')}</>
                                     ) : (
-                                        <><Copy className="w-3 h-3 mr-1" />{t('promptDebug.copyPrompt', { defaultValue: 'Copy prompt' })}</>
+                                        <><IconCopy className="w-3 h-3 mr-1" />{t('promptDebug.copyPrompt', { defaultValue: 'Copy prompt' })}</>
                                     )}
                                 </Button>
                             </div>
@@ -242,9 +242,9 @@ export function PromptDebugModal({
                                     <div className="flex items-center justify-end">
                                         <Button variant="ghost" size="sm" onClick={handleCopyPayload} className="h-7 px-2">
                                             {copiedPayload ? (
-                                                <><Check className="w-3 h-3 mr-1" />{t('copyCard.copied')}</>
+                                                <><IconCheck className="w-3 h-3 mr-1" />{t('copyCard.copied')}</>
                                             ) : (
-                                                <><Copy className="w-3 h-3 mr-1" />{t('promptDebug.copyJson', { defaultValue: 'Copy JSON' })}</>
+                                                <><IconCopy className="w-3 h-3 mr-1" />{t('promptDebug.copyJson', { defaultValue: 'Copy JSON' })}</>
                                             )}
                                         </Button>
                                     </div>
@@ -340,7 +340,7 @@ export function PromptDebugModal({
                         <>
                             <Button variant="outline" onClick={onClose}>{t('promptDebug.cancelGeneration', { defaultValue: 'Cancel generation' })}</Button>
                             <Button onClick={() => onConfirm(undefined)} className="bg-primary">
-                                <Sparkles className="w-4 h-4 mr-2" />
+                                <IconSparkles className="w-4 h-4 mr-2" />
                                 {t('promptDebug.sendPrompt', { defaultValue: 'Send prompt' })}
                             </Button>
                         </>

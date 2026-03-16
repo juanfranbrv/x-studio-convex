@@ -2,7 +2,7 @@
 
 import { Loader2 } from '@/components/ui/spinner'
 import { useState } from 'react'
-import { Sparkles, Send, Wand2 } from 'lucide-react'
+import { IconSparkles, IconSend, IconWand } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
 
@@ -84,7 +84,7 @@ export function PromptCard({
                             className="absolute right-3 top-3 text-primary/70 hover:text-primary transition-colors disabled:opacity-50"
                             title={t('promptCard.analyzeWithAi', { defaultValue: 'Analyze with AI' })}
                         >
-                            <Sparkles className="w-4 h-4" />
+                            <IconSparkles className="w-4 h-4" />
                         </button>
                     )}
                 </div>
@@ -97,7 +97,7 @@ export function PromptCard({
                         <Loader2 className="w-4 h-4" />
                     ) : (
                         <>
-                            <Send className="w-4 h-4 mr-2" />
+                            <IconSend className="w-4 h-4 mr-2" />
                             {getButtonLabel()}
                         </>
                     )}
@@ -114,7 +114,7 @@ export function PromptCard({
                         {isInspiring ? (
                             <Loader2 className="w-3.5 h-3.5" />
                         ) : (
-                            <Wand2 className="w-3.5 h-3.5" />
+                            <IconWand className="w-3.5 h-3.5" />
                         )}
                         {t('promptCard.inspireMe', { defaultValue: 'Generar idea para mí' })}
                     </button>

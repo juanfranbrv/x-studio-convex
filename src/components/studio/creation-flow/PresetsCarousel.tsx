@@ -2,7 +2,8 @@
 
 import { useQuery, useMutation } from 'convex/react'
 import { useTranslation } from 'react-i18next'
-import { icons, X } from 'lucide-react'
+import { icons } from 'lucide-react'
+import { IconClose } from '@/components/ui/icons'
 import { api } from '../../../../convex/_generated/api'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -94,13 +95,13 @@ export function PresetsCarousel({ onSelectPreset, onReset, userId, className, fi
                                         title={t('presets.deleteTitle', { defaultValue: 'Delete preset' })}
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        <X className="w-2.5 h-2.5" />
+                                        <IconClose className="w-2.5 h-2.5" />
                                     </button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent className="bg-background border-border/50 max-w-[440px] p-6 shadow-2xl">
                                     <div className="flex items-start gap-4">
                                         <div className="flex-none p-3 rounded-xl bg-muted/50 text-foreground border border-border mt-1">
-                                            <X className="w-5 h-5" />
+                                            <IconClose className="w-5 h-5" />
                                         </div>
                                         <div className="flex-1 space-y-1.5 pt-1">
                                             <AlertDialogTitle className="text-base font-bold text-foreground">

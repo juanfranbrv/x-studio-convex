@@ -2,7 +2,7 @@
 
 import { Loader2 } from '@/components/ui/spinner'
 import { useCallback, useState, useRef } from 'react'
-import { Upload, Image as ImageIcon, X, Check } from 'lucide-react'
+import { IconUpload, IconImage, IconClose, IconCheck } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import type { VisionAnalysis } from '@/lib/creation-flow-types'
 import { useTranslation } from 'react-i18next'
@@ -79,7 +79,7 @@ export function SmartImageDropzone({
                             }}
                             className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors z-10"
                         >
-                            <X className="w-3.5 h-3.5" />
+                            <IconClose className="w-3.5 h-3.5" />
                         </button>
                     )}
 
@@ -105,7 +105,7 @@ export function SmartImageDropzone({
                 {visionAnalysis && !isAnalyzing && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
                         <div className="flex items-center gap-2 text-xs text-green-600$1">
-                            <Check className="w-3.5 h-3.5" />
+                            <IconCheck className="w-3.5 h-3.5" />
                             <span className="font-medium">{t('smartDropzone.detected', { defaultValue: 'Detected' })}: {visionAnalysis.subjectLabel}</span>
                         </div>
 
@@ -177,9 +177,9 @@ export function SmartImageDropzone({
                     isDragging ? "bg-primary text-primary-foreground" : "bg-muted"
                 )}>
                     {isDragging ? (
-                        <Upload className="w-5 h-5" />
+                        <IconUpload className="w-5 h-5" />
                     ) : (
-                        <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                        <IconImage className="w-5 h-5 text-muted-foreground" />
                     )}
                 </div>
 

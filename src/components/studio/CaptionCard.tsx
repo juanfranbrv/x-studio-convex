@@ -2,7 +2,7 @@
 
 import { Loader2 } from '@/components/ui/spinner'
 import { useState } from 'react'
-import { Copy, RefreshCw, Check } from 'lucide-react'
+import { IconCopy, IconRefresh, IconCheck } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
 
@@ -44,7 +44,7 @@ export function CaptionCard({
                             disabled={isRegenerating}
                             title={t('copyCard.regenerate', { defaultValue: 'Regenerate' })}
                         >
-                            {isRegenerating ? <Loader2 className="h-3.5 w-3.5" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                            {isRegenerating ? <Loader2 className="h-3.5 w-3.5" /> : <IconRefresh className="h-3.5 w-3.5" />}
                         </Button>
                     )}
                     <Button
@@ -55,9 +55,9 @@ export function CaptionCard({
                         title={t('copyCard.copy', { defaultValue: 'Copy' })}
                     >
                         {copied ? (
-                            <Check className="w-3.5 h-3.5 text-green-500" />
+                            <IconCheck className="w-3.5 h-3.5 text-green-500" />
                         ) : (
-                            <Copy className="w-3.5 h-3.5" />
+                            <IconCopy className="w-3.5 h-3.5" />
                         )}
                     </Button>
                 </div>

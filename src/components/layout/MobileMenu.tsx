@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
-import { FileSpreadsheet, GalleryHorizontal, Home, Image, LogOut, Menu, PanelsTopLeft, Play, Settings } from 'lucide-react'
+import { IconCarousel, IconHome, IconImage, IconLogout, IconMenu, IconSettings, IconStudio, IconVideo } from '@/components/ui/icons'
 import { AppLogo } from '@/components/ui/AppLogo'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -26,20 +26,20 @@ export function MobileMenu() {
     const [open, setOpen] = useState(false)
 
     const navItems = [
-        { icon: Home, label: 'nav.home', href: '/' },
-        { icon: FileSpreadsheet, label: 'nav.brandKit', href: '/brand-kit' },
-        { icon: Image, label: 'nav.image', href: '/image' },
-        { icon: PanelsTopLeft, label: 'nav.studioWorkspace', href: '/studio' },
-        { icon: GalleryHorizontal, label: 'nav.carousel', href: '/carousel' },
-        { icon: Play, label: 'nav.video', href: '/video' },
-        { icon: Settings, label: 'nav.settings', href: '/settings' },
+        { icon: IconHome, label: 'nav.home', href: '/' },
+        { icon: IconCarousel, label: 'nav.brandKit', href: '/brand-kit' },
+        { icon: IconImage, label: 'nav.image', href: '/image' },
+        { icon: IconStudio, label: 'nav.studioWorkspace', href: '/studio' },
+        { icon: IconCarousel, label: 'nav.carousel', href: '/carousel' },
+        { icon: IconVideo, label: 'nav.video', href: '/video' },
+        { icon: IconSettings, label: 'nav.settings', href: '/settings' },
     ]
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="-ml-2 md:hidden">
-                    <Menu className="h-6 w-6" />
+                    <IconMenu className="h-6 w-6" />
                 </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[80vw] p-0 sm:w-[350px]">
@@ -117,7 +117,7 @@ export function MobileMenu() {
                                 await signOut({ redirectUrl: '/' })
                             }}
                         >
-                            <LogOut className="h-4.5 w-4.5" />
+                            <IconLogout className="h-4.5 w-4.5" />
                             {t('actions.logout')}
                         </Button>
                     </div>

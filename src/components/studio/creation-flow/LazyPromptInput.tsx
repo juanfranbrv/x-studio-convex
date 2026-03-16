@@ -2,7 +2,7 @@
 
 import { Loader2 } from '@/components/ui/spinner'
 import React, { useState, useEffect, useRef } from 'react'
-import { ArrowUp } from 'lucide-react'
+import { IconArrowUp } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { IntentCategory } from '@/lib/creation-flow-types'
 import { useTranslation } from 'react-i18next'
@@ -101,7 +101,7 @@ export function LazyPromptInput({
                     {isAnalyzing ? (
                         <Loader2 className="h-5 w-5 text-primary-foreground" />
                     ) : (
-                        <ArrowUp className="h-5 w-5 text-primary-foreground transition-transform group-hover:scale-110" />
+                        <IconArrowUp className="h-5 w-5 text-primary-foreground transition-transform group-hover:scale-110" />
                     )}
                     <span className="sr-only">{t('lazyPrompt.generateAria', { defaultValue: 'Generate' })}</span>
                 </button>

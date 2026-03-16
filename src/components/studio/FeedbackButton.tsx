@@ -4,7 +4,7 @@ import { Loader2 } from '@/components/ui/spinner'
 import { useEffect, useRef, useState } from 'react'
 import { useMutation } from 'convex/react'
 import { useUser } from '@clerk/nextjs'
-import { Check, MessageSquare, Send, X } from 'lucide-react'
+import { IconCheck, IconMessage, IconSend, IconClose } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
 import { api } from '../../../convex/_generated/api'
 import { Id } from '../../../convex/_generated/dataModel'
@@ -183,7 +183,7 @@ export function FeedbackButton({
                     )}
                     title={t('feedback.openTitle', { defaultValue: 'Send feedback' })}
                 >
-                    <MessageSquare className="h-3.5 w-3.5 text-primary transition-transform group-hover:scale-110" />
+                    <IconMessage className="h-3.5 w-3.5 text-primary transition-transform group-hover:scale-110" />
                     <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-medium text-foreground/60 group-hover:text-foreground/90 tracking-wide">
                         {t('feedback.compactLabel', { defaultValue: 'Feedback' })}
                     </span>
@@ -204,7 +204,7 @@ export function FeedbackButton({
                     )}
                     title={t('feedback.openTitle', { defaultValue: 'Send feedback' })}
                 >
-                    <MessageSquare className="h-4 w-4 text-primary transition-transform group-hover:scale-110" />
+                    <IconMessage className="h-4 w-4 text-primary transition-transform group-hover:scale-110" />
                     <span
                         className={cn(
                             compact ? 'text-xs font-medium' : 'text-sm font-medium',
@@ -244,7 +244,7 @@ export function FeedbackButton({
                                 }}
                                 className="rounded-full p-1 transition-colors hover:bg-muted/50"
                             >
-                                <X className="h-4 w-4 text-muted-foreground" />
+                                <IconClose className="h-4 w-4 text-muted-foreground" />
                             </button>
                         </div>
 
@@ -299,7 +299,7 @@ export function FeedbackButton({
                                         </>
                                     ) : (
                                         <>
-                                            <Send className="h-4 w-4" />
+                                            <IconSend className="h-4 w-4" />
                                             {t('feedback.send', { defaultValue: 'Send feedback' })}
                                         </>
                                     )}
@@ -325,7 +325,7 @@ export function FeedbackButton({
                     )}
                 >
                     <div className="flex h-12 w-12 items-center justify-center rounded-full border border-primary/35 bg-primary/20 shadow-lg">
-                        <Check className="h-6 w-6 text-primary" />
+                        <IconCheck className="h-6 w-6 text-primary" />
                     </div>
                 </div>
             )}

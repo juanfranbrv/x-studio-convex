@@ -1,6 +1,6 @@
 'use client'
 
-import { RotateCcw } from 'lucide-react'
+import { IconRotate } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -40,7 +40,7 @@ export function SuggestionsList({
               onClick={onUndo}
               className="h-5 px-1.5 text-[9px] text-muted-foreground hover:text-primary gap-1 opacity-60 hover:opacity-100 transition-opacity"
             >
-              <RotateCcw className="w-2.5 h-2.5" />
+              <IconRotate className="w-2.5 h-2.5" />
               {t('suggestions.backToOriginal').toUpperCase()}
             </Button>
           ) : (

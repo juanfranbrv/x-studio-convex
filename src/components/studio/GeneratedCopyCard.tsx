@@ -7,7 +7,7 @@ import { Loader2 } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Copy, RefreshCw, Lock, Unlock, Check, Undo2 } from 'lucide-react'
+import { IconCopy, IconRefresh, IconLock, IconUnlock, IconCheck, IconUndo } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { useBrandKit } from '@/contexts/BrandKitContext'
 import { useTranslation } from 'react-i18next'
@@ -135,7 +135,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                         disabled={isLoading}
                         className="h-7 text-xs text-muted-foreground hover:text-primary"
                     >
-                        {isLoading ? <Loader2 className="mr-1.5 h-3 w-3" /> : <RefreshCw className="mr-1.5 h-3 w-3" />}
+                        {isLoading ? <Loader2 className="mr-1.5 h-3 w-3" /> : <IconRefresh className="mr-1.5 h-3 w-3" />}
                         {isLoading ? t('copyCard.regenerating') : t('copyCard.regenerate')}
                     </Button>
                     {hasPreviousVersion && onRestorePrevious ? (
@@ -146,7 +146,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                             disabled={isLoading}
                             className="h-7 text-xs text-muted-foreground hover:text-primary"
                         >
-                            <Undo2 className="mr-1.5 h-3 w-3" />
+                            <IconUndo className="mr-1.5 h-3 w-3" />
                             {t('copyCard.restorePrevious', { defaultValue: 'Volver al anterior' })}
                         </Button>
                     ) : null}
@@ -170,7 +170,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                         className={cn('h-7 text-xs', isLocked ? 'bg-primary/10 text-primary' : 'text-muted-foreground')}
                         title={isLocked ? t('copyCard.unlockTitle') : t('copyCard.lockTitle')}
                     >
-                        {isLocked ? <Lock className="mr-1.5 h-3 w-3" /> : <Unlock className="mr-1.5 h-3 w-3" />}
+                        {isLocked ? <IconLock className="mr-1.5 h-3 w-3" /> : <IconUnlock className="mr-1.5 h-3 w-3" />}
                         {isLocked ? t('copyCard.locked') : t('copyCard.lock')}
                     </Button>
 
@@ -181,7 +181,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                         className={cn('h-7 text-xs transition-all', isCopied && 'bg-primary/10 text-primary')}
                         title={isCopied ? t('copyCard.copied') : t('copyCard.copy')}
                     >
-                        {isCopied ? <Check className="mr-1.5 h-3 w-3" /> : <Copy className="mr-1.5 h-3 w-3" />}
+                        {isCopied ? <IconCheck className="mr-1.5 h-3 w-3" /> : <IconCopy className="mr-1.5 h-3 w-3" />}
                         {isCopied ? t('copyCard.copied') : t('copyCard.copy')}
                     </Button>
                 </div>

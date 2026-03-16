@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, MousePointerClick, Fingerprint, Link2, Plus } from 'lucide-react'
+import { IconClose, IconMouseClick, IconFingerprint, IconLink, IconPlus } from '@/components/ui/icons'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -118,7 +118,7 @@ export function TextLayersEditor({
                             )}
                             style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                         >
-                            <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
+                            <IconClose style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
                         </Button>
                     )}
                 </div>
@@ -163,7 +163,7 @@ export function TextLayersEditor({
                                 )}
                                 style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                             >
-                                <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
+                                <IconClose style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                             </Button>
                         </div>
                     ))}
@@ -206,7 +206,7 @@ export function TextLayersEditor({
                                     )}
                                     style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                 >
-                                    <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
+                                    <IconClose style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                                 </Button>
                             </div>
                         ))}
@@ -230,7 +230,7 @@ export function TextLayersEditor({
                                     maxWidth: '92%',
                                 }}
                             >
-                                <Fingerprint style={{ width: 'var(--tl-brand-icon)', height: 'var(--tl-brand-icon)' }} className="text-primary" />
+                                <IconFingerprint style={{ width: 'var(--tl-brand-icon)', height: 'var(--tl-brand-icon)' }} className="text-primary" />
                                 {t('preview.brandTexts', { defaultValue: 'Brand Kit texts' })}
                             </Button>
                         </DropdownMenuTrigger>
@@ -250,7 +250,7 @@ export function TextLayersEditor({
                                 })}
                                 className="text-xs gap-2"
                             >
-                                <Plus className="w-3.5 h-3.5 text-muted-foreground" />
+                                <IconPlus className="w-3.5 h-3.5 text-muted-foreground" />
                                 <span className="text-muted-foreground">{t('textLayerEditor.addFreeText', { defaultValue: 'Add free text...' })}</span>
                             </DropdownMenuItem>
 
@@ -301,7 +301,7 @@ export function TextLayersEditor({
                             maxWidth: '92%',
                         }}
                     >
-                        <MousePointerClick style={{ width: 'var(--tl-cta-icon)', height: 'var(--tl-cta-icon)' }} className="text-muted-foreground flex-shrink-0" />
+                        <IconMouseClick style={{ width: 'var(--tl-cta-icon)', height: 'var(--tl-cta-icon)' }} className="text-muted-foreground flex-shrink-0" />
                         <input
                             value={cta || ''}
                             onChange={(e) => onCtaChange(e.target.value)}
@@ -319,7 +319,7 @@ export function TextLayersEditor({
                                 )}
                                 style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                             >
-                                <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
+                                <IconClose style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
                             </Button>
                         )}
                     </div>
@@ -337,7 +337,7 @@ export function TextLayersEditor({
                                 maxWidth: '92%',
                             }}
                         >
-                            <Link2 style={{ width: 'var(--tl-url-icon)', height: 'var(--tl-url-icon)' }} className={`${ctaUrl ? 'text-primary' : 'text-muted-foreground'}`} />
+                            <IconLink style={{ width: 'var(--tl-url-icon)', height: 'var(--tl-url-icon)' }} className={`${ctaUrl ? 'text-primary' : 'text-muted-foreground'}`} />
                             <input
                                 type="text"
                                 value={ctaUrl || ''}
@@ -356,7 +356,7 @@ export function TextLayersEditor({
                                     )}
                                     style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                                 >
-                                    <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
+                                    <IconClose style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
                                 </button>
                             )}
                         </div>

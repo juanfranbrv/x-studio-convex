@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Instagram, Music2, Youtube, Linkedin } from 'lucide-react'
+import { IconInstagram, IconMusic, IconYoutube, IconLinkedin } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,10 +23,10 @@ interface CampaignBriefPanelProps {
 }
 
 const platforms: { id: Platform; icon: React.ComponentType<{ className?: string }>; color: string }[] = [
-    { id: 'instagram', icon: Instagram, color: 'platform-instagram' },
-    { id: 'tiktok', icon: Music2, color: 'platform-tiktok' },
-    { id: 'youtube', icon: Youtube, color: 'platform-youtube' },
-    { id: 'linkedin', icon: Linkedin, color: 'platform-linkedin' },
+    { id: 'instagram', icon: IconInstagram, color: 'platform-instagram' },
+    { id: 'tiktok', icon: IconMusic, color: 'platform-tiktok' },
+    { id: 'youtube', icon: IconYoutube, color: 'platform-youtube' },
+    { id: 'linkedin', icon: IconLinkedin, color: 'platform-linkedin' },
 ]
 
 export function CampaignBriefPanel({ onGenerate, isGenerating = false }: CampaignBriefPanelProps) {

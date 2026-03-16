@@ -21,6 +21,10 @@ import {
     ArrowRight01Icon,
     ArrowDown01Icon,
     ArrowUp01Icon,
+    ArrowLeft01Icon,
+    ArrowLeft05Icon,
+    ArrowRight05Icon,
+    ArrowUp05Icon,
     SparklesIcon,
     Logout02Icon,
     User02Icon,
@@ -53,6 +57,44 @@ import {
     Rotate01Icon,
     ArrowDown05Icon,
     Loading03Icon,
+    // ─── New icons for studio/image/carousel migration ───
+    AlertCircleIcon,
+    MailAtSign01Icon,
+    BookmarkAdd01Icon,
+    Bug01Icon,
+    Eraser01Icon,
+    ImageAdd01Icon,
+    ImageDownloadIcon,
+    InstagramIcon,
+    LayerIcon,
+    Layout01Icon,
+    BulbIcon,
+    Linkedin01Icon,
+    SquareLock01Icon,
+    SquareUnlock01Icon,
+    MapPinIcon,
+    Maximize01Icon,
+    Message01Icon,
+    MinusSignIcon,
+    MouseLeftClick01Icon,
+    MusicNote01Icon,
+    ColorPickerIcon,
+    PowerIcon,
+    Route01Icon,
+    SentIcon,
+    SquareArrowDown01Icon,
+    TextFontIcon,
+    Undo02Icon,
+    MagicWand01Icon,
+    YoutubeIcon,
+    ZoomInAreaIcon,
+    ZoomOutAreaIcon,
+    FloppyDiskIcon,
+    WorkHistoryIcon,
+    FingerPrintIcon,
+    Cancel01Icon,
+    PaintBrush04Icon,
+    SmartPhone01Icon,
 } from '@hugeicons/core-free-icons'
 import { ComponentProps } from 'react'
 
@@ -93,23 +135,35 @@ export const IconShare = createIcon(Share01Icon)
 export const IconLink = createIcon(Link01Icon)
 export const IconSearch = createIcon(Search01Icon)
 export const IconMenu = createIcon(Menu02Icon)
+export const IconSave = createIcon(FloppyDiskIcon)
+export const IconUndo = createIcon(Undo02Icon)
+export const IconEraser = createIcon(Eraser01Icon)
+export const IconSend = createIcon(SentIcon)
 
-// ─── Arrows ───
+// ─── Arrows & Chevrons ───
 export const IconArrowRight = createIcon(ArrowRight01Icon)
 export const IconArrowDown = createIcon(ArrowDown01Icon)
 export const IconArrowUp = createIcon(ArrowUp01Icon)
+export const IconArrowLeft = createIcon(ArrowLeft01Icon)
 export const IconChevronDown = createIcon(ArrowDown05Icon)
+export const IconChevronUp = createIcon(ArrowUp05Icon)
+export const IconChevronLeft = createIcon(ArrowLeft05Icon)
+export const IconChevronRight = createIcon(ArrowRight05Icon)
 
 // ─── Status ───
 export const IconSparkles = createIcon(SparklesIcon)
 export const IconCheck = createIcon(CheckmarkCircle01Icon)
 export const IconClock = createIcon(Clock01Icon)
 export const IconLoading = createIcon(Loading03Icon)
+export const IconAlertCircle = createIcon(AlertCircleIcon)
+export const IconBug = createIcon(Bug01Icon)
+export const IconPower = createIcon(PowerIcon)
 
 // ─── User ───
 export const IconUser = createIcon(User02Icon)
 export const IconLogout = createIcon(Logout02Icon)
 export const IconShield = createIcon(ShieldEnergyIcon)
+export const IconFingerprint = createIcon(FingerPrintIcon)
 
 // ─── Billing ───
 export const IconWallet = createIcon(Wallet02Icon)
@@ -122,8 +176,47 @@ export const IconMail = createIcon(Mail01Icon)
 export const IconMegaphone = createIcon(Megaphone02Icon)
 export const IconBot = createIcon(BotIcon)
 export const IconRocket = createIcon(Rocket01Icon)
+export const IconMessage = createIcon(Message01Icon)
 
-// ─── Design ───
+// ─── Design & Studio ───
 export const IconPalette = createIcon(PaintBrush01Icon)
 export const IconGrid = createIcon(GridViewIcon)
 export const IconCalendar = createIcon(Calendar03Icon)
+export const IconWand = createIcon(MagicWand01Icon)
+export const IconPaintbrush = createIcon(PaintBrush04Icon)
+export const IconColorPicker = createIcon(ColorPickerIcon)
+export const IconLayers = createIcon(LayerIcon)
+export const IconLayout = createIcon(Layout01Icon)
+export const IconImageAdd = createIcon(ImageAdd01Icon)
+export const IconImageDownload = createIcon(ImageDownloadIcon)
+export const IconSquareArrowDown = createIcon(SquareArrowDown01Icon)
+export const IconTextFont = createIcon(TextFontIcon)
+export const IconMouseClick = createIcon(MouseLeftClick01Icon)
+export const IconLightbulb = createIcon(BulbIcon)
+export const IconRoute = createIcon(Route01Icon)
+
+// ─── Media & Social ───
+export const IconInstagram = createIcon(InstagramIcon)
+export const IconLinkedin = createIcon(Linkedin01Icon)
+export const IconYoutube = createIcon(YoutubeIcon)
+export const IconMusic = createIcon(MusicNote01Icon)
+
+// ─── Security ───
+export const IconLock = createIcon(SquareLock01Icon)
+export const IconUnlock = createIcon(SquareUnlock01Icon)
+
+// ─── Map & Location ───
+export const IconMapPin = createIcon(MapPinIcon)
+export const IconPhone = createIcon(SmartPhone01Icon)
+export const IconAtSign = createIcon(MailAtSign01Icon)
+
+// ─── Zoom ───
+export const IconZoomIn = createIcon(ZoomInAreaIcon)
+export const IconZoomOut = createIcon(ZoomOutAreaIcon)
+export const IconMaximize = createIcon(Maximize01Icon)
+
+// ─── Misc ───
+export const IconMinus = createIcon(MinusSignIcon)
+export const IconClose = createIcon(Cancel01Icon)
+export const IconBookmarkAdd = createIcon(BookmarkAdd01Icon)
+export const IconHistory = createIcon(WorkHistoryIcon)

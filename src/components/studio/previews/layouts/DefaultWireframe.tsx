@@ -1,5 +1,4 @@
 import { LayoutProps } from './types'
-import { AlignCenter } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface DefaultWireframeProps extends LayoutProps {

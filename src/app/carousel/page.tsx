@@ -44,7 +44,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { ThumbnailHistory } from '@/components/studio/ThumbnailHistory'
 import { getCarouselCompositionRecommendation } from '@/lib/carousel-composition-governance'
-import { ArrowUp, Layers3, Power, RotateCcw, Sparkles, Wand2 } from 'lucide-react'
+import { IconArrowUp, IconLayers, IconPower, IconRotate, IconSparkles, IconWand } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
 import { MobileWorkPanelDrawer } from '@/components/studio/shared/MobileWorkPanelDrawer'
 import {
@@ -1767,7 +1767,7 @@ export default function CarouselPage() {
                         </>
                     ) : (
                         <>
-                            <Sparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                            <IconSparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
                             {t('carousel:ui.generateCarousel', { defaultValue: 'Generate carousel' })}
                         </>
                     )}
@@ -1823,7 +1823,7 @@ export default function CarouselPage() {
                             {isRegenerating && regeneratingIndex === currentSlideIndex ? (
                                 <Loader2 className="h-3.5 w-3.5" />
                             ) : (
-                                <ArrowUp className="h-3.5 w-3.5" />
+                                <IconArrowUp className="h-3.5 w-3.5" />
                             )}
                         </Button>
                     ) : null}
@@ -1851,7 +1851,7 @@ export default function CarouselPage() {
                                 </>
                             ) : (
                                 <>
-                                    <RotateCcw className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
+                                    <IconRotate className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
                                     {t('carousel:ui.retryCarousel', { defaultValue: 'Generate another carousel with the same settings' })}
                                 </>
                             )}
@@ -1885,7 +1885,7 @@ export default function CarouselPage() {
                                 </>
                             ) : (
                                 <>
-                                    <Sparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                                    <IconSparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
                                     {t('carousel:ui.generateCarousel', { defaultValue: 'Generate carousel' })}
                                 </>
                             )}
@@ -1961,7 +1961,7 @@ export default function CarouselPage() {
                                 >
                                     <div className="min-w-0 flex flex-1 flex-wrap items-center gap-2">
                                         <Badge variant="outline" className="gap-1">
-                                            <Sparkles className="h-3 w-3" />
+                                            <IconSparkles className="h-3 w-3" />
                                             {t('admin.badge', { defaultValue: 'Admin composition' })}
                                         </Badge>
                                         <Badge variant={activeComposition.isActive ? 'default' : 'destructive'}>
@@ -2079,7 +2079,7 @@ export default function CarouselPage() {
                                                         variant={activeComposition.scope === 'global' ? 'default' : 'outline'}
                                                         onClick={() => void handleAdminCompositionPatch({ scope: 'global' })}
                                                     >
-                                                        <Layers3 className="mr-1 h-4 w-4" />
+                                                        <IconLayers className="mr-1 h-4 w-4" />
                                                         Global
                                                     </Button>
                                                     <Button
@@ -2094,7 +2094,7 @@ export default function CarouselPage() {
                                                         variant={activeComposition.isActive ? 'outline' : 'destructive'}
                                                         onClick={() => void handleAdminCompositionPatch({ isActive: !activeComposition.isActive })}
                                                     >
-                                                        <Power className="mr-1 h-4 w-4" />
+                                                        <IconPower className="mr-1 h-4 w-4" />
                                                         {activeComposition.isActive
                                                             ? t('admin.deactivate', { defaultValue: 'Deactivate' })
                                                             : t('admin.activate', { defaultValue: 'Activate' })}
@@ -2115,7 +2115,7 @@ export default function CarouselPage() {
                                                     disabled={!activeCompositionRecommendation.shouldChangeAnything}
                                                     onClick={() => void handleApplyAutomaticRecommendation()}
                                                 >
-                                                    <Wand2 className="mr-1 h-4 w-4" />
+                                                    <IconWand className="mr-1 h-4 w-4" />
                                                     {activeCompositionRecommendation.shouldChangeAnything
                                                         ? t('admin.applyAutomaticSuggestion', { defaultValue: 'Apply automatic suggestion' })
                                                         : t('admin.alreadyMatchesSuggestion', { defaultValue: 'The composition already matches the suggestion' })}

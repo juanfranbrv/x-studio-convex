@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Minus, Palette, Wand2, Layout, Layers, ImagePlus, Fingerprint, GalleryHorizontal, RotateCcw, History, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { IconPlus, IconMinus, IconPalette, IconWand, IconLayout, IconLayers, IconImageAdd, IconFingerprint, IconCarousel, IconRotate, IconHistory, IconSave, IconCheck, IconAlertCircle, IconClose } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import type { CarouselSuggestion, CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
@@ -183,7 +183,7 @@ function AddAccentSwatch({
                     )}
                     title={label}
                 >
-                    <Plus className="h-5 w-5" />
+                    <IconPlus className="h-5 w-5" />
                 </button>
             </PopoverTrigger>
             <PopoverContent className="z-[140] w-56 space-y-3 border border-border/80 bg-card p-3 shadow-xl" align="start">
@@ -2707,7 +2707,7 @@ export function CarouselControlsPanel({
                                 {/* SECTION: Sessions */}
                 <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader
-                        icon={History}
+                        icon={IconHistory}
                         title={t('ui.history')}
                         className="mb-2"
                         extra={
@@ -2720,14 +2720,14 @@ export function CarouselControlsPanel({
                                         </>
                                     ) : saveError ? (
                                         <>
-                                            <AlertCircle className="h-3 w-3" />
+                                            <IconAlertCircle className="h-3 w-3" />
                                             {t('ui.errorShort')}
                                         </>
                                     ) : hasUnsavedChanges ? (
                                         t('ui.unsavedChanges')
                                     ) : lastSavedAt ? (
                                         <>
-                                            <CheckCircle2 className="h-3 w-3" />
+                                            <IconCheck className="h-3 w-3" />
                                             {t('ui.savedAt', {
                                                 time: new Date(lastSavedAt).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })
                                             })}
@@ -2743,7 +2743,7 @@ export function CarouselControlsPanel({
                                     disabled={!userId || !scopedBrandId || isHydratingSession || isSavingSession || !hasUnsavedChanges}
                                     title={t('ui.saveSessionNow')}
                                 >
-                                    <Save
+                                    <IconSave
                                         className={cn(
                                             "h-3.5 w-3.5 transition-colors",
                                             isSavingSession
@@ -2790,7 +2790,7 @@ export function CarouselControlsPanel({
                             className="h-7 px-2 text-[10px] gap-1"
                             onClick={() => void createNewCarouselSession()}
                         >
-                            <Plus className="w-3 h-3" />
+                            <IconPlus className="w-3 h-3" />
                             {t('ui.newSession')}
                         </Button>
                         <Button
@@ -2824,17 +2824,17 @@ export function CarouselControlsPanel({
                 {/* Slide Count */}
                 {isStepVisible(1) && (
                 <div ref={(el) => { stepRefs.current[1] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                    <SectionHeader icon={GalleryHorizontal} title={t('ui.slideCount')} />
+                    <SectionHeader icon={IconCarousel} title={t('ui.slideCount')} />
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(-1)} disabled={slideCount <= 0}>
-                            <Minus className="w-4 h-4" />
+                            <IconMinus className="w-4 h-4" />
                         </Button>
                         <div className="flex-1 text-center">
                             <span className="text-3xl font-bold">{slideCount}</span>
                             <span className="text-sm text-muted-foreground ml-2">{t('ui.slides')}</span>
                         </div>
                         <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(1)} disabled={slideCount >= 15}>
-                            <Plus className="w-4 h-4" />
+                            <IconPlus className="w-4 h-4" />
                         </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">{t('ui.slideRange')}</p>
@@ -2845,7 +2845,7 @@ export function CarouselControlsPanel({
                 {isStepVisible(2) && (
                 <div ref={(el) => { stepRefs.current[2] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
-                        icon={Wand2}
+                        icon={IconWand}
                         title={t('ui.whatToCreate')}
                     />
                     <div className="relative">
@@ -2879,7 +2879,7 @@ export function CarouselControlsPanel({
                                     {isInspiring ? (
                                         <Loader2 className="w-3.5 h-3.5" />
                                     ) : (
-                                        <Wand2 className="w-3.5 h-3.5" />
+                                        <IconWand className="w-3.5 h-3.5" />
                                     )}
                                     {t('inspireMe')}
                                 </button>
@@ -2943,7 +2943,7 @@ export function CarouselControlsPanel({
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="space-y-1">
                                         <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-                                            <Layers className="h-3 w-3" />
+                                            <IconLayers className="h-3 w-3" />
                                             {t('ui.advancedCompositionBadge', { defaultValue: 'Advanced composition' })}
                                         </div>
                                         <p className="text-sm font-semibold text-foreground">
@@ -2969,7 +2969,7 @@ export function CarouselControlsPanel({
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="space-y-2">
                                                 <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-                                                    <Layers className="h-3.5 w-3.5" />
+                                                    <IconLayers className="h-3.5 w-3.5" />
                                                     {t('ui.advancedCompositionBadge', { defaultValue: 'Advanced composition' })}
                                                 </div>
                                                 <DialogTitle className="text-xl font-semibold">
@@ -2986,7 +2986,7 @@ export function CarouselControlsPanel({
                                                     onClick={onUndoSuggestion}
                                                     className="h-9 rounded-full px-4 text-[11px]"
                                                 >
-                                                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                                                    <IconRotate className="mr-1.5 h-3.5 w-3.5" />
                                                     {t('common:suggestions.backToOriginal', { defaultValue: 'Back to original' })}
                                                 </Button>
                                             )}
@@ -3106,7 +3106,7 @@ export function CarouselControlsPanel({
                 {isStepVisible(3) && (
                 <div ref={(el) => { stepRefs.current[3] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
-                        icon={Layout}
+                        icon={IconLayout}
                         title={t('ui.designTitle')}
                         extra={
                             <div className="flex items-center gap-2">
@@ -3187,7 +3187,7 @@ export function CarouselControlsPanel({
                 {/* Format */}
                 {isStepVisible(4) && (
                 <div ref={(el) => { stepRefs.current[4] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                    <SectionHeader icon={Layers} title={t('ui.formatTitle')} />
+                    <SectionHeader icon={IconLayers} title={t('ui.formatTitle')} />
                     <div className="space-y-2">
                         <button
                             onClick={() => handleAspectRatioSelect('4:5')}
@@ -3252,7 +3252,7 @@ export function CarouselControlsPanel({
                     <>
                         <div ref={(el) => { stepRefs.current[5] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                             <SectionHeader
-                                icon={ImagePlus}
+                                icon={IconImageAdd}
                                 title={imageSourceMode === 'generate' ? t('ui.generatedContentTitle') : t('ui.userContentTitle')}
                                 extra={(
                                     <Switch
@@ -3284,7 +3284,7 @@ export function CarouselControlsPanel({
                         </div>
 
                         <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                            <SectionHeader icon={Palette} title={t('ui.styleTitle')} />
+                            <SectionHeader icon={IconPalette} title={t('ui.styleTitle')} />
                             <StyleImageCard
                                 uploadedImages={uploadedImages}
                                 onUpload={handleStyleUpload}
@@ -3330,7 +3330,7 @@ export function CarouselControlsPanel({
                         </div>
 
                         <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-6`}>
-                            <SectionHeader icon={Fingerprint} title={t('ui.brandKitTitle')} />
+                            <SectionHeader icon={IconFingerprint} title={t('ui.brandKitTitle')} />
 
                             <div className="space-y-3">
                                 <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.logo')}</p>
@@ -3369,7 +3369,7 @@ export function CarouselControlsPanel({
                                         onClick={refreshBrandColorsFromKit}
                                         className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
                                     >
-                                        <RotateCcw className="w-3 h-3" />
+                                        <IconRotate className="w-3 h-3" />
                             {t('ui.reload', { defaultValue: 'Reload' })}
                                     </Button>
                                 </div>
@@ -3487,7 +3487,7 @@ export function CarouselControlsPanel({
                                                         onClick={() => removeBrandColor(accentColor)}
                                                         title={t('ui.removeAccent')}
                                                     >
-                                                        <X className="h-3 w-3" />
+                                                        <IconClose className="h-3 w-3" />
                                                     </button>
                                                 </div>
                                             ))}
@@ -3614,7 +3614,7 @@ export function CarouselControlsPanel({
                 {primaryActionRequiresReanalysis ? (
                     <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
                         <div className="flex items-start gap-2">
-                            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
+                            <IconAlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
                             <p className="text-[11px] leading-relaxed text-muted-foreground">
                                 {t('ui.pendingStructuralChanges')}
                             </p>

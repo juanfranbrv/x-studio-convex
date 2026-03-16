@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { IconChevronLeft, IconChevronRight } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
 
 interface Generation {
@@ -76,7 +76,7 @@ export function ThumbnailHistory({
                             disabled={safePage <= 1}
                             aria-label={t('preview.previousPage')}
                         >
-                            <ChevronLeft className="h-3.5 w-3.5" />
+                            <IconChevronLeft className="h-3.5 w-3.5" />
                         </button>
                         <span className="px-1 text-[10px] text-muted-foreground">
                             {safePage}/{totalPages}
@@ -88,7 +88,7 @@ export function ThumbnailHistory({
                             disabled={safePage >= totalPages}
                             aria-label={t('preview.nextPage')}
                         >
-                            <ChevronRight className="h-3.5 w-3.5" />
+                            <IconChevronRight className="h-3.5 w-3.5" />
                         </button>
                     </div>
                 ) : null}

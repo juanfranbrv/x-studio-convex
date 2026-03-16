@@ -2,7 +2,7 @@
 
 import { Loader2 } from '@/components/ui/spinner'
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
-import { Check, Plus, Palette, Pipette, X, Type, Sparkles, Fingerprint } from 'lucide-react'
+import { IconCheck, IconPlus, IconPalette, IconColorPicker, IconClose, IconTextFont, IconSparkles, IconFingerprint } from '@/components/ui/icons'
 import { HexColorPicker } from 'react-colorful'
 import Link from 'next/link'
 import { useBrandKit } from '@/contexts/BrandKitContext'
@@ -120,7 +120,7 @@ function CustomColorPicker({
                     className="aspect-square rounded-full border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center text-muted-foreground hover:text-primary group"
                     title={t('brandingConfigurator.addCustomColor', { defaultValue: 'Add custom color' })}
                 >
-                    <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <IconPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
                 </button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-4 shadow-xl border-border/50 bg-white backdrop-blur-sm z-[100]" align="start" sideOffset={8}>
@@ -131,7 +131,7 @@ function CustomColorPicker({
                             onClick={() => setIsOpen(false)}
                             className="p-1 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            <X className="w-3.5 h-3.5" />
+                            <IconClose className="w-3.5 h-3.5" />
                         </button>
                     </div>
 
@@ -173,7 +173,7 @@ function CustomColorPicker({
                             onClick={handleEyedropper}
                             className="w-full h-9 gap-2 text-xs font-semibold bg-background hover:bg-accent border-border/50 shadow-sm"
                         >
-                            <Pipette className="w-3.5 h-3.5 text-primary" />
+                            <IconColorPicker className="w-3.5 h-3.5 text-primary" />
                             {t('brandingConfigurator.capture', { defaultValue: 'Capture' })}
                         </Button>
 
@@ -195,7 +195,7 @@ function CustomColorPicker({
                                 onClick={handleSubmit}
                                 disabled={!/^#[0-9A-F]{6}$/i.test(value)}
                             >
-                                <Check className="w-4 h-4" />
+                                <IconCheck className="w-4 h-4" />
                             </Button>
                         </div>
                     </div>
@@ -260,7 +260,7 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
                             className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 hover:text-primary transition-colors text-muted-foreground/50 hover:text-muted-foreground"
                             title={t('preview.useBrandText', { defaultValue: 'Use Brand Kit text' })}
                         >
-                            <Fingerprint className="w-4 h-4" />
+                            <IconFingerprint className="w-4 h-4" />
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 max-h-60 overflow-y-auto">
@@ -303,7 +303,7 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
                 {isGenerating ? (
                     <Loader2 className="w-4 h-4" />
                 ) : (
-                    <Sparkles className="w-4 h-4" />
+                    <IconSparkles className="w-4 h-4" />
                 )}
             </button>
 
@@ -313,7 +313,7 @@ function TextAssetRow({ asset, textResources, rawMessage, onUpdate, onRemove, on
                 className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-destructive"
                 title={t('actions.delete', { defaultValue: 'Delete' })}
             >
-                <X className="w-3.5 h-3.5" />
+                <IconClose className="w-3.5 h-3.5" />
             </button>
 
             {/* Font Preview Indicator */}
@@ -490,7 +490,7 @@ export function BrandingConfigurator({
                                     />
                                     {isSelected && (
                                         <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                            <Check className="w-4 h-4 text-primary" />
+                                            <IconCheck className="w-4 h-4 text-primary" />
                                         </div>
                                     )}
                                 </button>
@@ -573,7 +573,7 @@ export function BrandingConfigurator({
                                             className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center opacity-0 group-hover/swatch:opacity-100 transition-all hover:scale-110 z-20"
                                             title={`${t('actions.delete', { defaultValue: 'Delete' })} color`}
                                         >
-                                            <X className="w-2.5 h-2.5" />
+                                            <IconClose className="w-2.5 h-2.5" />
                                         </button>
                                     )}
                                 </div>
@@ -591,7 +591,7 @@ export function BrandingConfigurator({
                 <div className="space-y-3 pt-2 border-t border-border/10">
                     <div className="flex items-center justify-between">
                         <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                            <Type className="w-3 h-3 text-primary" />
+                            <IconTextFont className="w-3 h-3 text-primary" />
                             {t('brandingConfigurator.typography', { defaultValue: 'Typography' })}
                         </label>
                         <Link
@@ -686,7 +686,7 @@ export function BrandingConfigurator({
             {showBrandTexts && textAssets.length > 0 && (
                 <div className="space-y-3 pt-2 border-t border-border/10">
                     <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                        <Fingerprint className="w-3 h-3 text-primary" />
+                        <IconFingerprint className="w-3 h-3 text-primary" />
                         {t('preview.brandTexts', { defaultValue: 'Brand Kit texts' })}
                     </label>
 

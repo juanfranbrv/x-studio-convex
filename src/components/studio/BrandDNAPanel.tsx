@@ -8,7 +8,7 @@ import Link from 'next/link'
 import type { BrandDNA } from '@/lib/brand-types'
 import { ColorPalette } from '@/components/brand-dna/ColorPalette'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Image, Check, Plus, X, ZoomIn, ChevronDown, Type, FileText, Link2, AtSign, Phone, MapPin, Mail } from 'lucide-react'
+import { IconPalette, IconImage, IconCheck, IconPlus, IconClose, IconZoomIn, IconChevronDown, IconTextFont, IconLink, IconAtSign, IconPhone, IconMapPin, IconMail, IconDelete } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { useTheme } from 'next-themes'
 import { uploadBrandImage } from '@/app/actions/upload-image'
@@ -16,7 +16,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-react'
 import { ARTISTIC_STYLE_CATALOG } from '@/lib/creation-flow-types'
 
 import { ContextElement, ContextType } from '@/app/image/page'
@@ -56,7 +55,7 @@ function DraggableChip({ id, type, value, label, icon: Icon, isSelected, onDragS
         >
             {Icon && <Icon className="w-3 h-3 opacity-60 pointer-events-none" />}
             <span className="truncate max-w-[180px] pointer-events-none">{label}</span>
-            {isSelected && <Check className="w-3 h-3 ml-0.5 pointer-events-none" />}
+            {isSelected && <IconCheck className="w-3 h-3 ml-0.5 pointer-events-none" />}
         </div>
     )
 }
@@ -511,7 +510,7 @@ export function BrandDNAPanel({
                         )}
                     </span>
                 </div>
-                <ChevronDown className={cn(
+                <IconChevronDown className={cn(
                     "w-4 h-4 text-muted-foreground/40 transition-transform duration-300",
                     isOpen && "rotate-180"
                 )} />
@@ -537,7 +536,7 @@ export function BrandDNAPanel({
                         onClick={() => setViewerImage(null)}
                         className="absolute top-5 right-5 text-white/60 hover:text-white transition-colors"
                     >
-                        <X className="w-8 h-8" />
+                        <IconClose className="w-8 h-8" />
                     </button>
                     <img
                         src={viewerImage}
@@ -556,7 +555,7 @@ export function BrandDNAPanel({
                 <Collapsible open={openSections.colors} onOpenChange={() => toggleSection('colors')}>
                     <div className="space-y-0.5">
                         <SectionHeader
-                            icon={Palette}
+                            icon={IconPalette}
                             title={t('brandDNA.colorPalette')}
                             isOpen={openSections.colors}
                             extra={isSaving && (
@@ -592,7 +591,7 @@ export function BrandDNAPanel({
                 <Collapsible open={openSections.logos} onOpenChange={() => toggleSection('logos')}>
                     <div className="space-y-1">
                         <SectionHeader
-                            icon={Image}
+                            icon={IconImage}
                             title={t('brandDnaPanel.brandLogos', { defaultValue: 'Brand logos' })}
                             count={logos.length}
                             maxCount={6}
@@ -602,7 +601,7 @@ export function BrandDNAPanel({
                                     "cursor-pointer hover:text-primary transition-colors p-0.5",
                                     logos.length >= 6 && "opacity-20 cursor-not-allowed pointer-events-none"
                                 )} onClick={(e) => e.stopPropagation()}>
-                                    <Plus className="w-3 h-3 text-muted-foreground/60" />
+                                    <IconPlus className="w-3 h-3 text-muted-foreground/60" />
                                     <input type="file" className="hidden" accept="image/*" onChange={handleUploadLogos} disabled={logos.length >= 6} />
                                 </label>
                             }
@@ -648,20 +647,20 @@ export function BrandDNAPanel({
                                                     ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                                                     : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)]"
                                             )}>
-                                                <Check className="w-3.5 h-3.5 stroke-[3px]" />
+                                                <IconCheck className="w-3.5 h-3.5 stroke-[3px]" />
                                             </div>
                                         )}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleRemoveLogo(idx); }}
                                             className="absolute top-0.5 right-0.5 p-0.5 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
                                         >
-                                            <X className="w-2 h-2" />
+                                            <IconClose className="w-2 h-2" />
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setViewerImage(logo.url); }}
                                             className="absolute bottom-0.5 right-0.5 p-0.5 bg-white/90 text-black rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
                                         >
-                                            <ZoomIn className="w-2 h-2" />
+                                            <IconZoomIn className="w-2 h-2" />
                                         </button>
                                     </div>
                                 ))}
@@ -670,7 +669,7 @@ export function BrandDNAPanel({
                                         key={`placeholder-${i}`}
                                         className="border border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center bg-muted/5 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer aspect-square group"
                                     >
-                                        <Plus className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary/50" />
+                                        <IconPlus className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary/50" />
                                         <input type="file" className="hidden" accept="image/*" onChange={handleUploadLogos} />
                                     </label>
                                 ))}
@@ -685,7 +684,7 @@ export function BrandDNAPanel({
                 <Collapsible open={openSections.images} onOpenChange={() => toggleSection('images')}>
                     <div className="space-y-1">
                         <SectionHeader
-                            icon={Image}
+                            icon={IconImage}
                             title={t('brandDnaPanel.images', { defaultValue: 'Images' })}
                             count={selectedCount}
                             maxCount={totalCount}
@@ -695,7 +694,7 @@ export function BrandDNAPanel({
                                     "cursor-pointer hover:text-primary transition-colors p-0.5",
                                     totalCount >= 20 && "opacity-20 cursor-not-allowed pointer-events-none"
                                 )} onClick={(e) => e.stopPropagation()}>
-                                    <Plus className="w-3 h-3 text-muted-foreground/60" />
+                                    <IconPlus className="w-3 h-3 text-muted-foreground/60" />
                                     <input type="file" multiple className="hidden" accept="image/*" onChange={handleUploadImages} disabled={totalCount >= 20} />
                                 </label>
                             }
@@ -752,7 +751,7 @@ export function BrandDNAPanel({
                                                             "absolute top-1 left-1 z-30 pointer-events-none",
                                                             isDark ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)]"
                                                         )}>
-                                                            <Check className="w-3.5 h-3.5 stroke-[3px]" />
+                                                            <IconCheck className="w-3.5 h-3.5 stroke-[3px]" />
                                                         </div>
                                                     )}
                                                     <div className="absolute bottom-0.5 right-0.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-30">
@@ -760,13 +759,13 @@ export function BrandDNAPanel({
                                                             onClick={(e) => { e.stopPropagation(); setViewerImage(img.url); }}
                                                             className="w-4 h-4 bg-white/90 text-black rounded-full flex items-center justify-center hover:scale-110"
                                                         >
-                                                            <ZoomIn className="w-2 h-2" />
+                                                            <IconZoomIn className="w-2 h-2" />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleRemoveImage(originalIdx); }}
                                                             className="w-4 h-4 bg-destructive text-white rounded-full flex items-center justify-center hover:scale-110"
                                                         >
-                                                            <X className="w-2 h-2" />
+                                                            <IconClose className="w-2 h-2" />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -830,7 +829,7 @@ export function BrandDNAPanel({
                                                             "absolute top-1 left-1 z-30 pointer-events-none",
                                                             isDark ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" : "text-primary drop-shadow-[0_0_8px_rgba(255,255,255,1)]"
                                                         )}>
-                                                            <Check className="w-3.5 h-3.5 stroke-[3px]" />
+                                                            <IconCheck className="w-3.5 h-3.5 stroke-[3px]" />
                                                         </div>
                                                     )}
                                                     <div className="absolute bottom-0.5 right-0.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-30">
@@ -838,13 +837,13 @@ export function BrandDNAPanel({
                                                             onClick={(e) => { e.stopPropagation(); setViewerImage(img.url); }}
                                                             className="w-4 h-4 bg-white/90 text-black rounded-full flex items-center justify-center hover:scale-110"
                                                         >
-                                                            <ZoomIn className="w-2 h-2" />
+                                                            <IconZoomIn className="w-2 h-2" />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
                                                             className="w-4 h-4 bg-destructive text-white rounded-full flex items-center justify-center hover:scale-110"
                                                         >
-                                                            <X className="w-2 h-2" />
+                                                            <IconClose className="w-2 h-2" />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -852,7 +851,7 @@ export function BrandDNAPanel({
                                         })}
                                         {totalCount < 20 && (
                                             <label className="border border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer aspect-square group">
-                                                <Plus className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary/50" />
+                                                <IconPlus className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary/50" />
                                                 <input type="file" multiple className="hidden" accept="image/*" onChange={handleUploadImages} />
                                             </label>
                                         )}
@@ -869,7 +868,7 @@ export function BrandDNAPanel({
                 <Collapsible open={openSections.typography} onOpenChange={() => toggleSection('typography')}>
                     <div className="space-y-1">
                         <SectionHeader
-                            icon={Type}
+                            icon={IconTextFont}
                             title={t('brandDnaPanel.typography', { defaultValue: 'Typography' })}
                             isOpen={openSections.typography}
                             extra={
@@ -891,7 +890,7 @@ export function BrandDNAPanel({
                                             <DraggableChip
                                                 key={`heading-font-${idx}`}
                                                 {...chipProps(`font-heading-${idx}`, 'font', font.family, font.family)}
-                                                icon={Type}
+                                                icon={IconTextFont}
                                             />
                                         ))}
                                     </div>
@@ -908,7 +907,7 @@ export function BrandDNAPanel({
                                             <DraggableChip
                                                 key={`body-font-${idx}`}
                                                 {...chipProps(`font-body-${idx}`, 'font', font.family, font.family)}
-                                                icon={Type}
+                                                icon={IconTextFont}
                                             />
                                         ))}
                                     </div>
@@ -925,7 +924,7 @@ export function BrandDNAPanel({
                                                     <DraggableChip
                                                         key={`other-font-${idx}`}
                                                         {...chipProps(`font-other-${idx}`, 'font', family, family)}
-                                                        icon={Type}
+                                                        icon={IconTextFont}
                                                     />
                                                 )
                                             })}
@@ -947,7 +946,7 @@ export function BrandDNAPanel({
                 <Collapsible open={openSections.textAssets} onOpenChange={() => toggleSection('textAssets')}>
                     <div className="space-y-1">
                         <SectionHeader
-                            icon={FileText}
+                            icon={IconTextFont}
                             title={t('preview.brandTexts', { defaultValue: 'Brand Kit texts' })}
                             isOpen={openSections.textAssets}
                         />
@@ -1013,7 +1012,7 @@ export function BrandDNAPanel({
                                             onClick={() => handleAddAesthetic(newAesthetic)}
                                             disabled={!newAesthetic.trim()}
                                         >
-                                            <Plus className="w-3.5 h-3.5" />
+                                            <IconPlus className="w-3.5 h-3.5" />
                                         </Button>
                                     </div>
 
@@ -1044,7 +1043,7 @@ export function BrandDNAPanel({
                                                         }}
                                                         className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
                                                     >
-                                                        <X className="w-2.5 h-2.5" />
+                                                        <IconClose className="w-2.5 h-2.5" />
                                                     </button>
                                                 </div>
                                             ))}
@@ -1066,7 +1065,7 @@ export function BrandDNAPanel({
                 <Collapsible open={openSections.links} onOpenChange={() => toggleSection('links')}>
                     <div className="space-y-1">
                         <SectionHeader
-                            icon={Link2}
+                            icon={IconLink}
                             title={t('brandDnaPanel.linksAndContact', { defaultValue: 'Links and contact' })}
                             isOpen={openSections.links}
                         />
@@ -1076,7 +1075,7 @@ export function BrandDNAPanel({
                                 {url && (
                                     <DraggableChip
                                         {...chipProps('url', 'link', url, url.replace(/^https?:\/\//, '').replace(/\/$/, ''))}
-                                        icon={Link2}
+                                        icon={IconLink}
                                     />
                                 )}
 
@@ -1090,7 +1089,7 @@ export function BrandDNAPanel({
                                             className="h-5 text-[10px] text-muted-foreground hover:text-primary px-1"
                                             onClick={handleAddSocialLink}
                                         >
-                                            <Plus className="w-3 h-3 mr-1" /> {t('brandDnaPanel.addSocial', { defaultValue: 'Add social' })}
+                                            <IconPlus className="w-3 h-3 mr-1" /> {t('brandDnaPanel.addSocial', { defaultValue: 'Add social' })}
                                         </Button>
                                     </div>
 
@@ -1118,7 +1117,7 @@ export function BrandDNAPanel({
                                                         className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0 opacity-50 group-hover:opacity-100 transition-opacity"
                                                         onClick={() => handleRemoveSocialLink(idx)}
                                                     >
-                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                        <IconDelete className="w-3.5 h-3.5" />
                                                     </Button>
                                                 </div>
                                             ))}
@@ -1127,7 +1126,7 @@ export function BrandDNAPanel({
                                         <div className="text-center py-4 border border-dashed border-border/50 rounded-lg">
                                             <p className="text-[10px] text-muted-foreground/60 mb-2">{t('brandDnaPanel.noSocials', { defaultValue: 'You have not added social profiles yet' })}</p>
                                             <Button variant="outline" size="sm" onClick={handleAddSocialLink} className="h-7 text-xs">
-                                                <Plus className="w-3 h-3 mr-1" /> {t('brandDnaPanel.addFirstSocial', { defaultValue: 'Add first social' })}
+                                                <IconPlus className="w-3 h-3 mr-1" /> {t('brandDnaPanel.addFirstSocial', { defaultValue: 'Add first social' })}
                                             </Button>
                                         </div>
                                     )}
@@ -1140,7 +1139,7 @@ export function BrandDNAPanel({
                                             <DraggableChip
                                                 key={`email-${idx}`}
                                                 {...chipProps(`email-${idx}`, 'contact', email, email)}
-                                                icon={Mail}
+                                                icon={IconMail}
                                             />
                                         ))}
                                     </div>
@@ -1153,7 +1152,7 @@ export function BrandDNAPanel({
                                             <DraggableChip
                                                 key={`phone-${idx}`}
                                                 {...chipProps(`phone-${idx}`, 'contact', phone, phone)}
-                                                icon={Phone}
+                                                icon={IconPhone}
                                             />
                                         ))}
                                     </div>
@@ -1166,7 +1165,7 @@ export function BrandDNAPanel({
                                             <DraggableChip
                                                 key={`address-${idx}`}
                                                 {...chipProps(`address-${idx}`, 'contact', addr, addr.length > 30 ? addr.substring(0, 30) + '...' : addr)}
-                                                icon={MapPin}
+                                                icon={IconMapPin}
                                             />
                                         ))}
                                     </div>

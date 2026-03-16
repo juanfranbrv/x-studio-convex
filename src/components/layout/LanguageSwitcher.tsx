@@ -1,6 +1,7 @@
 'use client'
 
 import { Globe } from 'lucide-react'
+// Globe kept from lucide-react — no hugeicons equivalent
 import { useTranslation } from 'react-i18next'
 import { setAppLocale } from '@/lib/i18n'
 import { AppLocale, LOCALE_LABELS, SUPPORTED_LOCALES } from '@/locales/config'

@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { Loader2 } from '@/components/ui/spinner'
-import { Sparkles } from 'lucide-react'
+import { IconSparkles } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -43,7 +43,7 @@ export function GenerateButton({
                 </>
             ) : (
                 <>
-                    <Sparkles className="w-4 h-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                    <IconSparkles className="w-4 h-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
                     <span>{label || t('actions.create')}</span>
                 </>
             )}

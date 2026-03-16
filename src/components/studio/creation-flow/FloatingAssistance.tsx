@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lightbulb, X } from 'lucide-react';
+import { IconLightbulb, IconClose } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import { createPortal } from 'react-dom';
 import { useEffect, useState, useRef } from 'react';
@@ -146,7 +146,7 @@ export function FloatingAssistance({
                 <div className="relative flex gap-3">
                     <div className="mt-1 shrink-0">
                         <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                            <Lightbulb className="w-4 h-4" />
+                            <IconLightbulb className="w-4 h-4" />
                         </div>
                     </div>
 
@@ -167,7 +167,7 @@ export function FloatingAssistance({
                         aria-label={t('floatingAssistance.closeAria', { defaultValue: 'Close help and disable assistance' })}
                         title={t('floatingAssistance.closeTitle', { defaultValue: 'Close help' })}
                     >
-                        <X className="w-3.5 h-3.5" />
+                        <IconClose className="w-3.5 h-3.5" />
                     </button>
                 </div>
             </motion.div>

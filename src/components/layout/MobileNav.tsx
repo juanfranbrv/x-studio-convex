@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
-import { Home, Image, FileSpreadsheet, Settings, PanelsTopLeft } from 'lucide-react'
+import { IconHome, IconImage, IconCarousel, IconSettings, IconStudio } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 export function MobileNav() {
@@ -11,11 +11,11 @@ export function MobileNav() {
     const pathname = usePathname()
 
     const navItems = [
-        { icon: Home, label: 'nav.home', href: '/' },
-        { icon: FileSpreadsheet, label: 'nav.brandKit', href: '/brand-kit' },
-        { icon: Image, label: 'nav.image', href: '/image' },
-        { icon: PanelsTopLeft, label: 'nav.studioWorkspace', href: '/studio' },
-        { icon: Settings, label: 'nav.settings', href: '/settings' },
+        { icon: IconHome, label: 'nav.home', href: '/' },
+        { icon: IconCarousel, label: 'nav.brandKit', href: '/brand-kit' },
+        { icon: IconImage, label: 'nav.image', href: '/image' },
+        { icon: IconStudio, label: 'nav.studioWorkspace', href: '/studio' },
+        { icon: IconSettings, label: 'nav.settings', href: '/settings' },
     ]
 
     return (

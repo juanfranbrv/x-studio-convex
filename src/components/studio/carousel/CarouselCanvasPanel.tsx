@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { GeneratedCopyCard } from '@/components/studio/GeneratedCopyCard'
 import { useToast } from '@/hooks/use-toast'
-import { ChevronLeft, ChevronRight, RefreshCw, ZoomIn, ZoomOut, MoreHorizontal, Share2, Images, Fingerprint, ImageDown, SquareArrowDown, Bug, Video, Music, Maximize2 } from 'lucide-react'
+import { IconChevronLeft, IconChevronRight, IconRefresh, IconZoomIn, IconZoomOut, IconMenu, IconShare, IconImage, IconFingerprint, IconImageDownload, IconSquareArrowDown, IconBug, IconVideo, IconMusic, IconMaximize } from '@/components/ui/icons'
 import JSZip from 'jszip'
 import {
     DropdownMenu,
@@ -469,7 +469,7 @@ export function CarouselCanvasPanel({
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     title={tt('common:preview.useBrandText', 'Use Brand Kit text')}
                 >
-                    <Fingerprint className="w-4 h-4" />
+                    <IconFingerprint className="w-4 h-4" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72 max-h-80 overflow-y-auto">
@@ -502,11 +502,11 @@ export function CarouselCanvasPanel({
     const handleNext = () => currentIndex < slides.length - 1 && onSelectSlide(currentIndex + 1)
 
     // Zoom handlers
-    const handleZoomIn = () => {
+    const handleIconZoomIn = () => {
         setHasManualZoom(true)
         setZoom(z => Math.min(z + 25, 300))
     }
-    const handleZoomOut = () => {
+    const handleIconZoomOut = () => {
         setHasManualZoom(true)
         setZoom(z => Math.max(z - 25, 25))
     }
@@ -914,8 +914,8 @@ export function CarouselCanvasPanel({
                 {/* Right: Actions */}
                 <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4 border border-border/60 bg-white backdrop-blur-sm">
                     <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
-                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut}>
-                            <ZoomOut className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleIconZoomOut}>
+                            <IconZoomOut className="w-4 h-4" />
                         </Button>
                         <button
                             type="button"
@@ -926,19 +926,19 @@ export function CarouselCanvasPanel({
                         >
                             {zoom}%
                         </button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomIn}>
-                            <ZoomIn className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleIconZoomIn}>
+                            <IconZoomIn className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-10 w-10 ml-1" onClick={handleMaximizeZoom}>
-                            <Maximize2 className="w-4 h-4" />
+                            <IconMaximize className="w-4 h-4" />
                         </Button>
                     </div>
 
                     <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadCurrent} disabled={!currentSlide?.imageUrl} title={tt('common:preview.downloadCurrentSlide', 'Download current slide')}>
-                        <ImageDown className="w-4 h-4" />
+                        <IconImageDownload className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadBundle} disabled={completedSlides === 0} title={tt('common:preview.downloadCarouselZip', 'Download carousel ZIP')}>
-                        <SquareArrowDown className="w-4 h-4" />
+                        <IconSquareArrowDown className="w-4 h-4" />
                     </Button>
                     <Button
                         variant="ghost"
@@ -950,7 +950,7 @@ export function CarouselCanvasPanel({
                             ? tt('common:preview.regeneratingCurrentSlide', 'Regenerating current slide...')
                             : tt('common:preview.regenerateCurrentSlide', 'Regenerate current slide')}
                     >
-                        {isRegenerating ? <Loader2 className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
+                        {isRegenerating ? <Loader2 className="w-4 h-4" /> : <IconRefresh className="w-4 h-4" />}
                     </Button>
                     <Button
                         variant="ghost"
@@ -960,22 +960,22 @@ export function CarouselCanvasPanel({
                         disabled={isExportingVideo || completedSlides === 0}
                         title={tt('common:preview.exportVideoWithMusic', 'Export video with music')}
                     >
-                        <Music className={cn("w-4 h-4", isExportingVideo && "animate-pulse")} />
+                        <IconMusic className={cn("w-4 h-4", isExportingVideo && "animate-pulse")} />
                     </Button>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-10 w-10">
-                                <MoreHorizontal className="w-4 h-4" />
+                                <IconMenu className="w-4 h-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-popover/95 border-border/60 backdrop-blur-sm">
                             <DropdownMenuItem onClick={() => exportCarouselVideo(false)} disabled={isExportingVideo || completedSlides === 0}>
-                                <Video className={cn("w-4 h-4 mr-2", isExportingVideo && "animate-pulse")} />
+                                <IconVideo className={cn("w-4 h-4 mr-2", isExportingVideo && "animate-pulse")} />
                                 {tt('common:preview.exportVideoDurations', 'Export video (4s / 6s)')}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                                <Share2 className="w-4 h-4 mr-2" />
+                                <IconShare className="w-4 h-4 mr-2" />
                                 {tt('common:preview.shareCarousel', 'Share carousel')}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -1067,7 +1067,7 @@ export function CarouselCanvasPanel({
                                     )}
                                     aria-label={tt('common:preview.previousSlide', 'Previous slide')}
                                 >
-                                    <ChevronLeft className="w-5 h-5" />
+                                    <IconChevronLeft className="w-5 h-5" />
                                 </Button>
                                 <Button
                                     variant="ghost"
@@ -1080,7 +1080,7 @@ export function CarouselCanvasPanel({
                                     )}
                                     aria-label={tt('common:preview.nextSlide', 'Next slide')}
                                 >
-                                    <ChevronRight className="w-5 h-5" />
+                                    <IconChevronRight className="w-5 h-5" />
                                 </Button>
                             </>
                         )}
@@ -1192,7 +1192,7 @@ export function CarouselCanvasPanel({
                                     className="h-9 w-9 rounded-full bg-white backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
                                     title={tt('common:preview.promptDebug', 'Prompt debug')}
                                 >
-                                    <Bug className="w-4 h-4" />
+                                    <IconBug className="w-4 h-4" />
                                 </Button>
                             </div>
                         )}
@@ -1201,7 +1201,7 @@ export function CarouselCanvasPanel({
                         {!currentSlide ? (
                             <div className="flex flex-col items-center justify-center text-muted-foreground p-12 text-center">
                                 <div className="w-20 h-20 rounded-3xl bg-white border border-border/50 shadow-inner flex items-center justify-center mb-6">
-                                    <Images className="w-10 h-10 opacity-20" />
+                                    <IconImage className="w-10 h-10 opacity-20" />
                                 </div>
                                 <h3 className="text-lg font-semibold opacity-80">{tt('common:preview.startCreation', 'Start your creation')}</h3>
                                 <p className="text-sm opacity-50 max-w-[200px] mt-1">{tt('common:preview.configureCarouselPanel', 'Set up the details in the right panel to generate slides')}</p>
@@ -1210,7 +1210,7 @@ export function CarouselCanvasPanel({
                             <div className="flex flex-col items-center justify-center bg-destructive/10 p-8 rounded-xl border border-destructive/20">
                                 <p className="text-destructive font-medium mb-4">{currentSlide.error || tt('common:preview.slideError', 'Error on this slide')}</p>
                                 <Button variant="outline" size="sm" onClick={() => onRegenerateSlide(currentIndex)}>
-                                    <RefreshCw className="w-4 h-4 mr-2" /> {tt('common:actions.retry', 'Retry')}
+                                    <IconRefresh className="w-4 h-4 mr-2" /> {tt('common:actions.retry', 'Retry')}
                                 </Button>
                             </div>
                         ) : currentSlide.imageUrl ? (
@@ -1286,7 +1286,7 @@ export function CarouselCanvasPanel({
                                                                 size="sm"
                                                                 className="h-8 px-3 text-xs uppercase font-bold tracking-wide text-muted-foreground hover:text-foreground transition-colors gap-2"
                                                             >
-                                                                <Fingerprint className="w-3.5 h-3.5 text-primary" />
+                                                                <IconFingerprint className="w-3.5 h-3.5 text-primary" />
                                                                 {tt('common:preview.brandTexts', 'Brand Kit texts')}
                                                             </Button>
                                                         </DropdownMenuTrigger>

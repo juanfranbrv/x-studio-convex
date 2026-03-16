@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState } from 'react'
-import { Search, X, Layout, Check } from 'lucide-react'
+import { IconSearch, IconClose, IconLayout, IconCheck } from '@/components/ui/icons'
 import {
     Dialog,
     DialogContent,
@@ -64,7 +64,7 @@ export function TemplateSelectorModal({
                 <DialogHeader className="p-6 border-b border-border/50">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                            <Layout className="w-5 h-5" />
+                            <IconLayout className="w-5 h-5" />
                         </div>
                         <div>
                             <DialogTitle className="text-xl font-heading">{t('templateModal.title', { defaultValue: 'Template library' })}</DialogTitle>
@@ -79,7 +79,7 @@ export function TemplateSelectorModal({
                     {/* Search and Filters */}
                     <div className="flex flex-col sm:flex-row gap-4">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
                                 placeholder={t('templateModal.searchPlaceholder', { defaultValue: 'Search styles, categories...' })}
                                 value={search}
@@ -128,7 +128,7 @@ export function TemplateSelectorModal({
 
                                     {selectedTemplateId === template.id && (
                                         <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
-                                            <Check className="w-5 h-5" />
+                                            <IconCheck className="w-5 h-5" />
                                         </div>
                                     )}
                                 </div>

@@ -2,7 +2,7 @@
 
 import { Loader2 } from '@/components/ui/spinner'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Image as ImageIcon, Palette, Upload, X } from 'lucide-react'
+import { IconCheck, IconImage, IconPalette, IconUpload, IconClose } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
@@ -189,7 +189,7 @@ export function StyleImageCard({
                             className="h-7 px-1.5 text-[10px] gap-1 min-w-0"
                             onClick={() => inputRef.current?.click()}
                         >
-                            <Upload className="w-3 h-3 shrink-0" />
+                            <IconUpload className="w-3 h-3 shrink-0" />
                             <span className="truncate">{tt('styleImage.upload', 'Upload style')}</span>
                         </Button>
                         <Button
@@ -199,7 +199,7 @@ export function StyleImageCard({
                             className="h-7 px-1.5 text-[10px] gap-1 min-w-0"
                             onClick={() => setIsBrandKitModalOpen(true)}
                         >
-                            <Palette className="w-3 h-3 shrink-0" />
+                            <IconPalette className="w-3 h-3 shrink-0" />
                             <span className="truncate">{tt('styleImage.fromBrandKit', 'From Brand Kit')}</span>
                         </Button>
                         <Button
@@ -278,7 +278,7 @@ export function StyleImageCard({
                             className="absolute top-2 right-2 w-5 h-5 rounded-full bg-black/55 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                             aria-label={tt('styleImage.removeAria', 'Remove style image')}
                         >
-                            <X className="w-3 h-3" />
+                            <IconClose className="w-3 h-3" />
                         </button>
                     ) : null}
                 </div>
@@ -296,7 +296,7 @@ export function StyleImageCard({
                     )}
                 >
                     <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center">
-                        {isDragging ? <Upload className="w-4 h-4 text-primary" /> : <ImageIcon className="w-4 h-4 text-muted-foreground" />}
+                        {isDragging ? <IconUpload className="w-4 h-4 text-primary" /> : <IconImage className="w-4 h-4 text-muted-foreground" />}
                     </div>
                     <p className="text-xs font-medium">
                         {isDragging ? tt('styleImage.dropHere', 'Drop your style image') : tt('styleImage.dragOrClick', 'Drag one style image here or click')}
@@ -350,7 +350,7 @@ export function StyleImageCard({
                                             {isSelected && (
                                                 <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
                                                     <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
-                                                        <Check className="w-4 h-4" />
+                                                        <IconCheck className="w-4 h-4" />
                                                     </span>
                                                 </div>
                                             )}
@@ -429,7 +429,7 @@ export function StyleImageCard({
                                                 </div>
                                                 {isSelected && (
                                                     <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
-                                                        <Check className="w-4 h-4" />
+                                                        <IconCheck className="w-4 h-4" />
                                                     </div>
                                                 )}
                                             </button>

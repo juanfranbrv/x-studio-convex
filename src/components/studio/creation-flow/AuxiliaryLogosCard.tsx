@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Check, ChevronDown, ChevronUp, Fingerprint, Upload, X } from 'lucide-react'
+import { IconCheck, IconChevronDown, IconChevronUp, IconFingerprint, IconUpload, IconClose } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
@@ -157,7 +157,7 @@ export function AuxiliaryLogosCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary ring-1 ring-primary/20">
-            <Fingerprint className="w-3.5 h-3.5" />
+            <IconFingerprint className="w-3.5 h-3.5" />
           </div>
           <h3 className="text-[11px] font-semibold text-foreground/95 uppercase tracking-[0.12em]">{tt('auxLogos.title', 'Auxiliary logos')}</h3>
         </div>
@@ -177,7 +177,7 @@ export function AuxiliaryLogosCard({
             ? tt('auxLogos.expandAria', 'Expand auxiliary logos')
             : tt('auxLogos.collapseAria', 'Collapse auxiliary logos')}
         >
-          {collapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+          {collapsed ? <IconChevronDown className="w-4 h-4" /> : <IconChevronUp className="w-4 h-4" />}
         </Button>
       </div>
 
@@ -191,7 +191,7 @@ export function AuxiliaryLogosCard({
               className="h-7 px-2 text-[10px] gap-1"
               onClick={() => inputRef.current?.click()}
             >
-              <Upload className="w-3 h-3" />
+              <IconUpload className="w-3 h-3" />
               {tt('auxLogos.upload', 'Upload logos')}
             </Button>
             <Button
@@ -201,7 +201,7 @@ export function AuxiliaryLogosCard({
               className="h-7 px-2 text-[10px] gap-1"
               onClick={() => setIsBrandKitModalOpen(true)}
             >
-              <Fingerprint className="w-3 h-3" />
+              <IconFingerprint className="w-3 h-3" />
               {tt('auxLogos.fromBrandKit', 'From Brand Kit')}
             </Button>
             {hasAuxLogos ? (
@@ -246,7 +246,7 @@ export function AuxiliaryLogosCard({
                     className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     aria-label={tt('auxLogos.removeAria', 'Remove auxiliary logo')}
                   >
-                    <X className="w-3 h-3" />
+                    <IconClose className="w-3 h-3" />
                   </button>
                 </div>
               ))}
@@ -264,7 +264,7 @@ export function AuxiliaryLogosCard({
                     {tt('auxLogos.brandKitBadge', 'Kit')}
                   </span>
                   <span className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity inline-flex">
-                    <X className="w-3 h-3" />
+                    <IconClose className="w-3 h-3" />
                   </span>
                 </button>
               ))}
@@ -333,7 +333,7 @@ export function AuxiliaryLogosCard({
                       {isSelected ? (
                         <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
                           <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
-                            <Check className="w-4 h-4" />
+                            <IconCheck className="w-4 h-4" />
                           </span>
                         </div>
                       ) : null}

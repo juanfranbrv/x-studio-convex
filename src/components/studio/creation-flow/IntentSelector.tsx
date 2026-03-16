@@ -6,18 +6,12 @@ import {
     Info,
     Users,
     GraduationCap,
-    MessageCircle,
-    ChevronRight,
     Percent,
     Package,
-    Grid3x3,
-    Rocket,
     Briefcase,
     FileText,
-    Calendar,
     ListChecks,
     ArrowLeftRight,
-    Sparkles,
     Quote,
     UserPlus,
     Trophy,
@@ -28,6 +22,14 @@ import {
     HelpCircle,
     Gamepad2,
 } from 'lucide-react'
+import {
+    IconMessage,
+    IconChevronRight,
+    IconGrid,
+    IconRocket,
+    IconCalendar,
+    IconSparkles,
+} from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import {
     type IntentGroup,
@@ -38,9 +40,9 @@ import {
 
 // Icon mapping for dynamic rendering
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-    ShoppingBag, Info, Users, GraduationCap, MessageCircle,
-    Percent, Package, Grid3x3, Rocket, Briefcase,
-    FileText, Calendar, ListChecks, ArrowLeftRight, Sparkles,
+    ShoppingBag, Info, Users, GraduationCap, MessageCircle: IconMessage,
+    Percent, Package, Grid3x3: IconGrid, Rocket: IconRocket, Briefcase,
+    FileText, Calendar: IconCalendar, ListChecks, ArrowLeftRight, Sparkles: IconSparkles,
     Quote, UserPlus, Trophy, Clapperboard, BarChart3,
     ListOrdered, BookOpen, HelpCircle, Gamepad2,
 }
@@ -127,13 +129,13 @@ export function IntentSelector({
                                     <p className="text-[10px] text-muted-foreground line-clamp-1">{group.description}</p>
                                 </div>
                                 {!isChosen || showAll ? (
-                                    <ChevronRight className={cn(
+                                    <IconChevronRight className={cn(
                                         "w-4 h-4 text-muted-foreground transition-transform",
                                         isExpanded && "rotate-90"
                                     )} />
                                 ) : (
                                     <div className="p-1 rounded-full bg-primary/10">
-                                        <ChevronRight className="w-3.5 h-3.5 text-primary" />
+                                        <IconChevronRight className="w-3.5 h-3.5 text-primary" />
                                     </div>
                                 )}
                             </button>
@@ -196,7 +198,7 @@ export function IntentSelector({
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-[11px] leading-tight">{intent.name}</p>
                                                         </div>
-                                                        <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                                                        <IconSparkles className="w-3 h-3 text-primary animate-pulse" />
                                                     </button>
                                                     {/* Extended Description - 3 lines */}
                                                     {intent.extendedDescription && (

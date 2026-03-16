@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/image/page'
-import { Layout, X, Image as ImageIcon, Type, FileText, Link2, AtSign, Minus, Plus, SquareArrowDown, ImageDown, Bug, Sparkles, Paintbrush, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+import { IconLayout, IconClose, IconImage, IconTextFont, IconLink, IconAtSign, IconMinus, IconPlus, IconSquareArrowDown, IconImageDownload, IconBug, IconSparkles, IconPaintbrush, IconZoomIn, IconZoomOut, IconMaximize } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
@@ -206,7 +206,7 @@ function StyleReferenceCorner({
                         )}
                         style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                     >
-                        <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
+                        <IconClose style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
                     </Button>
                 )}
             </div>
@@ -818,7 +818,7 @@ export function CanvasPanel({
                     {/* Zoom Controls */}
                     <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
                         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut} title={tt('common:preview.zoomOut', 'Zoom out')}>
-                            <ZoomOut className="w-4 h-4" />
+                            <IconZoomOut className="w-4 h-4" />
                         </Button>
                         <button
                             type="button"
@@ -830,18 +830,18 @@ export function CanvasPanel({
                             {effectiveZoom}%
                         </button>
                         <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomIn} title={tt('common:preview.zoomIn', 'Zoom in')}>
-                            <ZoomIn className="w-4 h-4" />
+                            <IconZoomIn className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-10 w-10 ml-1" onClick={handleMaximizeZoom} title={tt('common:preview.fitHeight', 'Fit to height')}>
-                            <Maximize2 className="w-4 h-4" />
+                            <IconMaximize className="w-4 h-4" />
                         </Button>
                     </div>
 
                     <Button variant="ghost" size="icon" onClick={handleDownload} className="h-10 w-10" title={tt('common:preview.downloadImage', 'Download image')}>
-                        <ImageDown className="w-4 h-4" />
+                        <IconImageDownload className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={handleDownloadBundle} className="h-10 w-10" title={tt('common:preview.downloadBundle', 'Download ZIP')}>
-                        <SquareArrowDown className="w-4 h-4" />
+                        <IconSquareArrowDown className="w-4 h-4" />
                     </Button>
                 </div>
             </div>
@@ -978,7 +978,7 @@ export function CanvasPanel({
                                             className="h-9 w-9 rounded-full bg-white backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
                                             title={tt('common:preview.viewPrompt', 'View prompt')}
                                         >
-                                            <Bug className="w-4 h-4" />
+                                            <IconBug className="w-4 h-4" />
                                         </Button>
                                     </div>
                                 )}
@@ -992,7 +992,7 @@ export function CanvasPanel({
                                             className="h-9 w-9 rounded-full border border-border bg-white shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
                                             title={tt('common:preview.downloadImage', 'Download image')}
                                         >
-                                            <ImageDown className="w-4 h-4" />
+                                            <IconImageDownload className="w-4 h-4" />
                                         </Button>
                                         <Button
                                             type="button"
@@ -1002,7 +1002,7 @@ export function CanvasPanel({
                                             className="h-9 w-9 rounded-full border border-border bg-white shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
                                             title={tt('common:preview.downloadBundle', 'Download ZIP')}
                                         >
-                                            <SquareArrowDown className="w-4 h-4" />
+                                            <IconSquareArrowDown className="w-4 h-4" />
                                         </Button>
                                     </div>
                                 )}
@@ -1110,7 +1110,7 @@ export function CanvasPanel({
                                                             />
                                                         {variant === 'style' && (
                                                             <div className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-violet-600 text-white text-[9px] font-bold flex items-center justify-center shadow-md ring-2 ring-white/70">
-                                                                <Sparkles className="w-2.5 h-2.5" />
+                                                                <IconSparkles className="w-2.5 h-2.5" />
                                                             </div>
                                                         )}
                                                         {variant === 'style' && (
@@ -1130,7 +1130,7 @@ export function CanvasPanel({
                                                                 )}
                                                                 style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                                             >
-                                                                <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
+                                                                <IconClose style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                                                             </Button>
                                                         )}
                                                     </div>
@@ -1182,7 +1182,7 @@ export function CanvasPanel({
                                                                     )}
                                                                     style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                                                 >
-                                                                    <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
+                                                                    <IconClose style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                                                                 </Button>
                                                             )}
                                                         </div>
@@ -1209,7 +1209,7 @@ export function CanvasPanel({
                                                                     )}
                                                                     style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
                                                                 >
-                                                                    <X style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
+                                                                    <IconClose style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
                                                                 </Button>
                                                             )}
                                                         </div>
@@ -1245,7 +1245,7 @@ export function CanvasPanel({
                                                 )}
                                                 style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
                                             >
-                                                <X style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
+                                                <IconClose style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
                                             </Button>
                                         )}
                                     </div>
@@ -1330,7 +1330,7 @@ export function CanvasPanel({
                                         <div className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: item.value }} />
                                     )}
                                     {item.type === 'template' && (
-                                        <Layout className="w-3.5 h-3.5 text-primary shrink-0" />
+                                        <IconLayout className="w-3.5 h-3.5 text-primary shrink-0" />
                                     )}
                                     {(item.type === 'logo' || item.type === 'image') && (
                                         <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
@@ -1349,22 +1349,22 @@ export function CanvasPanel({
 
                                     {/* Font */}
                                     {item.type === 'font' && (
-                                        <Type className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                                        <IconTextFont className="w-3.5 h-3.5 text-purple-500 shrink-0" />
                                     )}
 
                                     {/* Text assets */}
                                     {item.type === 'text' && (
-                                        <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                        <IconTextFont className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                                     )}
 
                                     {/* Links */}
                                     {item.type === 'link' && (
-                                        <Link2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                        <IconLink className="w-3.5 h-3.5 text-green-500 shrink-0" />
                                     )}
 
                                     {/* Contact */}
                                     {item.type === 'contact' && (
-                                        <AtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                                        <IconAtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                                     )}
 
                                     {(item.type === 'color' || item.type === 'template' || item.type === 'font' || item.type === 'text' || item.type === 'link' || item.type === 'contact') && (
@@ -1377,7 +1377,7 @@ export function CanvasPanel({
                                         onClick={() => onRemoveContext?.(item.id, 'style')}
                                         className="p-0.5 hover:bg-muted rounded text-muted-foreground hover:text-destructive transition-colors ml-auto"
                                     >
-                                        <X className="w-3.5 h-3.5" />
+                                        <IconClose className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
                             ))
@@ -1396,7 +1396,7 @@ export function CanvasPanel({
                                             <div className="w-4 h-4 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: draggedElement.value }} />
                                         )}
                                         {draggedElement.type === 'template' && (
-                                            <Layout className="w-3.5 h-3.5 text-primary shrink-0" />
+                                            <IconLayout className="w-3.5 h-3.5 text-primary shrink-0" />
                                         )}
                                         {(draggedElement.type === 'logo' || draggedElement.type === 'image') && (
                                             <div className="w-10 h-10 flex-shrink-0 bg-muted/20 border-r border-border/30">
@@ -1415,22 +1415,22 @@ export function CanvasPanel({
 
                                         {/* Font */}
                                         {draggedElement.type === 'font' && (
-                                            <Type className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                                            <IconTextFont className="w-3.5 h-3.5 text-purple-500 shrink-0" />
                                         )}
 
                                         {/* Text assets */}
                                         {draggedElement.type === 'text' && (
-                                            <FileText className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                            <IconTextFont className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                                         )}
 
                                         {/* Links */}
                                         {draggedElement.type === 'link' && (
-                                            <Link2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                                            <IconLink className="w-3.5 h-3.5 text-green-500 shrink-0" />
                                         )}
 
                                         {/* Contact */}
                                         {draggedElement.type === 'contact' && (
-                                            <AtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                                            <IconAtSign className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                                         )}
 
                                         {(draggedElement.type === 'color' || draggedElement.type === 'template' || draggedElement.type === 'font' || draggedElement.type === 'text' || draggedElement.type === 'link' || draggedElement.type === 'contact') && (

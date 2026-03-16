@@ -9,7 +9,7 @@ import { ContentImageCard } from './creation-flow/ContentImageCard'
 import { StyleImageCard } from './creation-flow/StyleImageCard'
 import { AuxiliaryLogosCard } from './creation-flow/AuxiliaryLogosCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { Palette, Layout, Layers, ImagePlus, Wand2, Fingerprint, RotateCcw, History, Plus, Save, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { IconPalette, IconLayout, IconLayers, IconImageAdd, IconWand, IconFingerprint, IconRotate, IconHistory, IconPlus, IconSave, IconCheck, IconAlertCircle, IconClose } from '@/components/ui/icons'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -152,7 +152,7 @@ function AddAccentSwatch({
                     )}
                     title={label}
                 >
-                    <Plus className="w-5 h-5" />
+                    <IconPlus className="w-5 h-5" />
                 </button>
             </PopoverTrigger>
             <PopoverContent className="w-56 p-3 space-y-3 bg-card border border-border/80 shadow-xl z-[140]" align="start">
@@ -705,7 +705,7 @@ export function ControlsPanel({
                 {/* SECTION: Sessions */}
                 <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader
-                        icon={History}
+                        icon={IconHistory}
                         title={t('ui.history')}
                         className="mb-2"
                         extra={
@@ -718,14 +718,14 @@ export function ControlsPanel({
                                         </>
                                     ) : sessionSaveError ? (
                                         <>
-                                            <AlertCircle className="w-3 h-3" />
+                                            <IconAlertCircle className="w-3 h-3" />
                                             {t('ui.errorShort')}
                                         </>
                                     ) : hasUnsavedChanges ? (
                                         t('ui.unsavedChanges')
                                     ) : sessionSavedAt ? (
                                         <>
-                                            <CheckCircle2 className="w-3 h-3" />
+                                            <IconCheck className="w-3 h-3" />
                                             {t('ui.savedAt', {
                                                 time: new Date(sessionSavedAt).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })
                                             })}
@@ -740,7 +740,7 @@ export function ControlsPanel({
                                     disabled={isSavingSession || !hasUnsavedChanges}
                                     title={t('ui.saveHistoryNow')}
                                 >
-                                    <Save
+                                    <IconSave
                                         className={cn(
                                             "w-3.5 h-3.5 transition-colors",
                                             isSavingSession
@@ -779,7 +779,7 @@ export function ControlsPanel({
                             onClick={onCreateSession}
                             disabled={isCreatingSession}
                         >
-                            <Plus className="w-3 h-3" />
+                            <IconPlus className="w-3 h-3" />
                             {t('ui.newSession')}
                         </Button>
                         <Button
@@ -817,7 +817,7 @@ export function ControlsPanel({
                         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 animate-shimmer" />
                     )}
                     <SectionHeader
-                        icon={Wand2}
+                        icon={IconWand}
                         title={t('ui.whatToCreate')}
                     />
                     <div className="relative">
@@ -848,7 +848,7 @@ export function ControlsPanel({
                                 {isInspiring ? (
                                     <Loader2 className="w-3.5 h-3.5" />
                                 ) : (
-                                    <Wand2 className="w-3.5 h-3.5" />
+                                    <IconWand className="w-3.5 h-3.5" />
                                 )}
                                 {t('inspireMe')}
                             </button>
@@ -868,7 +868,7 @@ export function ControlsPanel({
                                     {isInspiring ? (
                                         <Loader2 className="w-3.5 h-3.5" />
                                     ) : (
-                                        <Wand2 className="w-3.5 h-3.5" />
+                                        <IconWand className="w-3.5 h-3.5" />
                                     )}
                                     {t('inspireMe')}
                                 </button>
@@ -946,7 +946,7 @@ export function ControlsPanel({
                             <div ref={step2Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 2 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[2]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step2Ref} />
                                 <SectionHeader
-                                    icon={Layout}
+                                    icon={IconLayout}
                                     title={t('ui.designTitle')}
                                     extra={
                                         <div className="flex items-center gap-2">
@@ -1010,7 +1010,7 @@ export function ControlsPanel({
                         {/* STEP 3: FORMAT */}
                         <div ref={step3Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 3 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[3]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step3Ref} />
-                                <SectionHeader icon={Layers} title={t('ui.formatTitle')} />
+                                <SectionHeader icon={IconLayers} title={t('ui.formatTitle')} />
                                 <SocialFormatSelector
                                     selectedPlatform={state.selectedPlatform}
                                     selectedFormat={state.selectedFormat}
@@ -1028,7 +1028,7 @@ export function ControlsPanel({
                         <div ref={step4Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 4 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[4]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step4Ref} />
                                 <SectionHeader
-                                    icon={ImagePlus}
+                                    icon={IconImageAdd}
                                     title={state.imageSourceMode === 'generate' ? t('ui.generatedContentTitle') : t('ui.userContentTitle')}
                                     extra={(
                                         <Switch
@@ -1061,7 +1061,7 @@ export function ControlsPanel({
 
                         {/* STEP 4B: STYLE */}
                         <div className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
-                                <SectionHeader icon={Palette} title={t('ui.styleTitle', { defaultValue: 'Estilo' })} />
+                                <SectionHeader icon={IconPalette} title={t('ui.styleTitle', { defaultValue: 'Estilo' })} />
                                 <StyleImageCard
                                     uploadedImages={state.uploadedImages}
                                     onUpload={uploadImage}
@@ -1124,7 +1124,7 @@ export function ControlsPanel({
                         {/* STEP 6: KIT DE MARCA */}
                         <div ref={step6Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-6`}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep >= 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
-                                <SectionHeader icon={Fingerprint} title={t('ui.brandKitSection')} />
+                                <SectionHeader icon={IconFingerprint} title={t('ui.brandKitSection')} />
 
                                 <div className="space-y-3">
                                     <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.logo')}</p>
@@ -1155,7 +1155,7 @@ export function ControlsPanel({
                                             }}
                                             className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
                                         >
-                                            <RotateCcw className="w-3 h-3" />
+                                            <IconRotate className="w-3 h-3" />
                                             {t('ui.reload')}
                                         </Button>
                                     </div>
@@ -1286,7 +1286,7 @@ export function ControlsPanel({
                                                             onClick={() => removeBrandColor(accentColor)}
                                                             title={t('ui.removeAccent')}
                                                         >
-                                                            <X className="w-3 h-3" />
+                                                            <IconClose className="w-3 h-3" />
                                                         </button>
                                                     </div>
                                                 ))}
