@@ -141,6 +141,8 @@ import {
     DashboardSquare03Icon,
     AtomicPowerIcon,
     AiChat02Icon,
+    CircleArrowLeft01Icon,
+    CircleArrowRight01Icon,
 } from '@hugeicons/core-free-icons'
 import { ComponentProps } from 'react'
 
@@ -195,6 +197,8 @@ export const IconChevronDown = createIcon(ArrowDown05Icon)
 export const IconChevronUp = createIcon(ArrowUp05Icon)
 export const IconChevronLeft = createIcon(ArrowLeft05Icon)
 export const IconChevronRight = createIcon(ArrowRight05Icon)
+export const IconCircleArrowLeft = createIcon(CircleArrowLeft01Icon)
+export const IconCircleArrowRight = createIcon(CircleArrowRight01Icon)
 
 // ─── Status ───
 export const IconSparkles = createIcon(SparklesIcon)

@@ -45,6 +45,7 @@ import { StylePresetsManager } from '@/components/admin/StylePresetsManager'
 import { BillingAdminPanel } from '@/components/admin/BillingAdminPanel'
 import {
     buildThemeColors,
+    deriveSchemeAsHex,
     DEFAULT_THEME_DRAFT,
     THEME_PALETTE_FIELDS,
     type ThemePaletteDraft,
@@ -136,11 +137,110 @@ function createThemePreset(id: string, name: string, description: string, palett
 }
 
 const THEME_PRESETS: ThemePreset[] = [
-    createThemePreset('berry-signal', 'Berry Signal', 'Granate electrico con rosas frios y aire editorial.', ['#880d1e', '#dd2d4a', '#f26a8d', '#f49cbb', '#cbeef3']),
-    createThemePreset('atlas-stone', 'Atlas Stone', 'Azul petroleo, arena y cobre suave para interfaz sobria.', ['#2b3a67', '#496a81', '#66999b', '#b3af8f', '#ffc482']),
-    createThemePreset('ultra-wave', 'Ultra Wave', 'Violeta tecnico con azules nitidos y pulso digital.', ['#672DCC', '#701EFC', '#71B3D9', '#2D7BA8', '#5A8FAD']),
-    createThemePreset('electric-depth', 'Electric Depth', 'Azules frios escalados para un look brillante y limpio.', ['#add7f6', '#87bfff', '#3f8efc', '#2667ff', '#3b28cc']),
-    createThemePreset('paper-noir', 'Paper Noir', 'Carbones y marfiles apagados con tono de estudio.', ['#474448', '#2d232e', '#e0ddcf', '#534b52', '#f1f0ea']),
+    {
+        id: 'postlab-classic',
+        name: 'Postlab Classic',
+        description: 'Azul limpio con acento cálido',
+        palette: ['#1f5eff', '#f59e0b', '#f6f8ff', '#5f6b85', '#d7def4'],
+        primary: '#1f5eff',
+        secondary: '#f59e0b',
+        surface: '#f6f8ff',
+        surfaceAlt: '#ffffff',
+        muted: '#5f6b85',
+        border: '#d7def4',
+        ring: '#1f5eff',
+    },
+    {
+        id: 'olive-editorial',
+        name: 'Olive Editorial',
+        description: 'Marfil, oliva y piedra con tono de revista',
+        palette: ['#556b2f', '#c2a878', '#f5f0e6', '#6f665b', '#d7cdbd'],
+        primary: '#556b2f',
+        secondary: '#c2a878',
+        surface: '#f5f0e6',
+        surfaceAlt: '#fbf7f1',
+        muted: '#6f665b',
+        border: '#d7cdbd',
+        ring: '#6b7d3c',
+    },
+    {
+        id: 'terracotta-paper',
+        name: 'Terracotta Paper',
+        description: 'Más cálido, más táctil, menos SaaS',
+        palette: ['#a4472d', '#e3a86b', '#f7ede6', '#7a6257', '#ddc1b1'],
+        primary: '#a4472d',
+        secondary: '#e3a86b',
+        surface: '#f7ede6',
+        surfaceAlt: '#fff8f3',
+        muted: '#7a6257',
+        border: '#ddc1b1',
+        ring: '#a4472d',
+    },
+    {
+        id: 'midnight-editor',
+        name: 'Midnight Editor',
+        description: 'Nocturno profundo con contraste frío',
+        palette: ['#7c8cff', '#37c8ab', '#161a28', '#aab3cf', '#303854'],
+        primary: '#7c8cff',
+        secondary: '#37c8ab',
+        surface: '#161a28',
+        surfaceAlt: '#1e2334',
+        muted: '#aab3cf',
+        border: '#303854',
+        ring: '#8ea1ff',
+    },
+    {
+        id: 'acid-notes',
+        name: 'Acid Notes',
+        description: 'Lima eléctrica sobre papel gris claro',
+        palette: ['#334155', '#d9ff3f', '#eef1eb', '#5f6a57', '#c9d4b8'],
+        primary: '#334155',
+        secondary: '#d9ff3f',
+        surface: '#eef1eb',
+        surfaceAlt: '#f8fbf2',
+        muted: '#5f6a57',
+        border: '#c9d4b8',
+        ring: '#b9ec18',
+    },
+    {
+        id: 'mediterranean-signal',
+        name: 'Mediterranean Signal',
+        description: 'Azul mar con coral y superficies salinas',
+        palette: ['#0f4c81', '#ff7a59', '#eef5fa', '#597489', '#c9d8e4'],
+        primary: '#0f4c81',
+        secondary: '#ff7a59',
+        surface: '#eef5fa',
+        surfaceAlt: '#f8fbfd',
+        muted: '#597489',
+        border: '#c9d8e4',
+        ring: '#0f4c81',
+    },
+    {
+        id: 'ink-berry',
+        name: 'Ink Berry',
+        description: 'Tinta oscura con baya intensa y fondo lavanda',
+        palette: ['#312e81', '#e11d48', '#f4f1fb', '#655b7d', '#d8d0ea'],
+        primary: '#312e81',
+        secondary: '#e11d48',
+        surface: '#f4f1fb',
+        surfaceAlt: '#fcf8ff',
+        muted: '#655b7d',
+        border: '#d8d0ea',
+        ring: '#4f46e5',
+    },
+    {
+        id: 'sand-night',
+        name: 'Sand Night',
+        description: 'Carbón suave, arena y contraste editorial',
+        palette: ['#1f2937', '#d4a373', '#f2ece5', '#72675d', '#d8cabd'],
+        primary: '#1f2937',
+        secondary: '#d4a373',
+        surface: '#f2ece5',
+        surfaceAlt: '#fbf8f4',
+        muted: '#72675d',
+        border: '#d8cabd',
+        ring: '#8b5e34',
+    },
 ]
 
 const THEME_SETTINGS_HIDDEN_KEYS = new Set([
@@ -325,6 +425,8 @@ export default function AdminPage() {
     // Admin default theme state
     const [adminThemePalette, setAdminThemePalette] = useState<ThemePaletteDraft>(DEFAULT_THEME_DRAFT)
     const [savingTheme, setSavingTheme] = useState(false)
+    const [customPresets, setCustomPresets] = useState<ThemePreset[]>([])
+    const [savingPresetName, setSavingPresetName] = useState('')
     const economicModelSuggestions = Array.from(
         new Set([
             ...INTELLIGENCE_MODEL_OPTIONS.map((option) => option.value),
@@ -348,6 +450,11 @@ export default function AdminPage() {
             })
             setEditingSettings(settingsMap)
             setAdminThemePalette(createAdminThemeDraft(settingsMap))
+            // Load custom presets
+            const raw = settingsMap['theme_custom_presets']
+            if (typeof raw === 'string') {
+                try { setCustomPresets(JSON.parse(raw)) } catch { /* ignore */ }
+            }
         }
     }, [settings])
 
@@ -607,6 +714,68 @@ export default function AdminPage() {
             ...current,
             [field]: value,
         }))
+    }
+
+    const handleDeriveFromPrimarySecondary = () => {
+        const primary = adminThemePalette.primary || DEFAULT_THEME_DRAFT.primary || '#7B61FF'
+        const secondary = adminThemePalette.secondary || DEFAULT_THEME_DRAFT.secondary || '#00C4CC'
+        const derived = deriveSchemeAsHex(primary, secondary)
+        setAdminThemePalette((current) => ({
+            ...current,
+            surface: derived.surface,
+            surfaceAlt: derived.surfaceAlt,
+            muted: derived.muted,
+            border: derived.border,
+            ring: derived.ring,
+        }))
+    }
+
+    const handleSaveCustomPreset = async () => {
+        const name = savingPresetName.trim()
+        if (!name) {
+            toast({ title: 'Nombre requerido', description: 'Escribe un nombre para la paleta.', variant: 'destructive' })
+            return
+        }
+        const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        const newPreset: ThemePreset = {
+            id: `custom-${id}-${Date.now()}`,
+            name,
+            description: 'Paleta personalizada',
+            palette: [
+                adminThemePalette.primary || '#7B61FF',
+                adminThemePalette.secondary || '#00C4CC',
+                adminThemePalette.surface || '#f6f8ff',
+                adminThemePalette.muted || '#5f6b85',
+                adminThemePalette.border || '#d7def4',
+            ],
+            primary: adminThemePalette.primary,
+            secondary: adminThemePalette.secondary,
+            surface: adminThemePalette.surface,
+            surfaceAlt: adminThemePalette.surfaceAlt,
+            muted: adminThemePalette.muted,
+            border: adminThemePalette.border,
+            ring: adminThemePalette.ring,
+        }
+        const updated = [...customPresets, newPreset]
+        setCustomPresets(updated)
+        setSavingPresetName('')
+        try {
+            await updateSetting({ admin_email: userEmail, key: 'theme_custom_presets', value: JSON.stringify(updated) })
+            toast({ title: 'Paleta guardada', description: `"${name}" disponible como preset.` })
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' })
+        }
+    }
+
+    const handleDeleteCustomPreset = async (presetId: string) => {
+        const updated = customPresets.filter((p) => p.id !== presetId)
+        setCustomPresets(updated)
+        try {
+            await updateSetting({ admin_email: userEmail, key: 'theme_custom_presets', value: JSON.stringify(updated) })
+            toast({ title: 'Paleta eliminada' })
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' })
+        }
     }
 
     const handleUpsertCost = async (model: string, kind: 'intelligence' | 'image', costEur: number, comment?: string) => {
@@ -1209,6 +1378,45 @@ export default function AdminPage() {
                                             </button>
                                         ))}
                                     </div>
+                                    {customPresets.length > 0 && (
+                                        <>
+                                            <Label className="mt-4 text-sm font-medium">Mis paletas guardadas</Label>
+                                            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                                {customPresets.map((preset) => (
+                                                    <div
+                                                        key={preset.id}
+                                                        className="group relative rounded-xl border border-border/70 bg-muted/20 p-3 text-left transition-colors hover:border-primary/30 hover:bg-accent/30"
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleApplyThemePreset(preset)}
+                                                            className="w-full text-left"
+                                                        >
+                                                            <div className="mb-3 flex items-center gap-2">
+                                                                {preset.palette.map((color) => (
+                                                                    <span
+                                                                        key={`${preset.id}-${color}`}
+                                                                        className="h-7 w-7 rounded-full border border-border/60"
+                                                                        style={{ backgroundColor: color }}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                            <div className="text-sm font-semibold">{preset.name}</div>
+                                                            <div className="mt-1 text-xs text-muted-foreground">{preset.description}</div>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteCustomPreset(preset.id)}
+                                                            className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                                                            title="Eliminar paleta"
+                                                        >
+                                                            <IconClose className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                                 <div className="space-y-3">
                                     <div>
@@ -1243,6 +1451,16 @@ export default function AdminPage() {
                                         ))}
                                     </div>
                                 </div>
+                                <div className="flex items-center gap-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3">
+                                    <Button variant="outline" size="sm" onClick={handleDeriveFromPrimarySecondary}>
+                                        <IconWand className="mr-1.5 h-4 w-4" />
+                                        Auto-derivar desde primario + secundario
+                                    </Button>
+                                    <span className="text-xs text-muted-foreground">
+                                        Rellena surface, muted, border y ring a partir de los dos colores principales. Luego ajusta a mano.
+                                    </span>
+                                </div>
+
                                 <div className="rounded-2xl border border-border/70 bg-muted/15 p-4">
                                     <div className="flex flex-wrap items-center gap-3">
                                         <span className="text-sm font-medium">Vista previa rápida</span>
@@ -1266,13 +1484,25 @@ export default function AdminPage() {
                                             Esta previsualización usa la paleta completa, no solo primario y secundario.
                                         </div>
                                     </div>
-                                    <div className="mt-4 flex items-center gap-3">
+                                    <div className="mt-4 flex flex-wrap items-center gap-3">
                                         <Button onClick={handleSaveAdminTheme} disabled={savingTheme} size="sm">
                                             {savingTheme ? 'Guardando...' : 'Guardar paleta global'}
                                         </Button>
                                         <span className="text-sm text-muted-foreground">
                                             Persiste todos los tokens del tema en Convex para toda la app.
                                         </span>
+                                    </div>
+                                    <div className="mt-3 flex items-center gap-2">
+                                        <Input
+                                            placeholder="Nombre de la paleta..."
+                                            value={savingPresetName}
+                                            onChange={(e) => setSavingPresetName(e.target.value)}
+                                            className="max-w-[220px] h-8 text-sm"
+                                        />
+                                        <Button variant="outline" size="sm" onClick={handleSaveCustomPreset}>
+                                            <IconSave className="mr-1.5 h-3.5 w-3.5" />
+                                            Guardar como preset
+                                        </Button>
                                     </div>
                                 </div>
                             </CardContent>

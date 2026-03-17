@@ -150,6 +150,53 @@ const extractHue = (value: string, fallback: number) => {
     return normalized
 }
 
+function hslToHex(hslRaw: string): string {
+    const parts = hslRaw.trim().split(/\s+/)
+    if (parts.length < 3) return hslRaw
+    const h = parseFloat(parts[0]) / 360
+    const s = parseFloat(parts[1]) / 100
+    const l = parseFloat(parts[2]) / 100
+    if (!Number.isFinite(h) || !Number.isFinite(s) || !Number.isFinite(l)) return hslRaw
+
+    const hue2rgb = (p: number, q: number, t: number) => {
+        let tt = t
+        if (tt < 0) tt += 1
+        if (tt > 1) tt -= 1
+        if (tt < 1 / 6) return p + (q - p) * 6 * tt
+        if (tt < 1 / 2) return q
+        if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6
+        return p
+    }
+
+    let r: number, g: number, b: number
+    if (s === 0) {
+        r = g = b = l
+    } else {
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+        const p = 2 * l - q
+        r = hue2rgb(p, q, h + 1 / 3)
+        g = hue2rgb(p, q, h)
+        b = hue2rgb(p, q, h - 1 / 3)
+    }
+
+    const toHex = (c: number) => Math.round(Math.min(255, Math.max(0, c * 255))).toString(16).padStart(2, '0')
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
+
+/** Like deriveSchemeFromColors but returns all values as hex (for color pickers) */
+export function deriveSchemeAsHex(primary: string, accent: string): Record<string, string> {
+    const scheme = deriveSchemeFromColors(primary, accent)
+    return {
+        primary: scheme.primary,
+        accent: scheme.accent,
+        surface: hslToHex(scheme.surface),
+        surfaceAlt: hslToHex(scheme.surfaceAlt),
+        muted: hslToHex(scheme.muted),
+        border: hslToHex(scheme.border),
+        ring: scheme.ring,
+    }
+}
+
 export function applyThemeColors(theme: ThemeColors) {
     if (typeof window === 'undefined') return
 

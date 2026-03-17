@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { GeneratedCopyCard } from '@/components/studio/GeneratedCopyCard'
 import { useToast } from '@/hooks/use-toast'
-import { IconChevronLeft, IconChevronRight, IconRefresh, IconZoomIn, IconZoomOut, IconImage, IconFingerprint, IconImageDownload, IconSquareArrowDown, IconBug, IconVideo, IconMusic, IconMaximize, IconAiChat } from '@/components/ui/icons'
+import { IconRefresh, IconZoomIn, IconZoomOut, IconImage, IconFingerprint, IconImageDownload, IconSquareArrowDown, IconBug, IconVideo, IconMusic, IconMaximize, IconAiChat } from '@/components/ui/icons'
 import JSZip from 'jszip'
 import {
     DropdownMenu,
@@ -1011,35 +1011,43 @@ export function CarouselCanvasPanel({
                             </div>
                         )}
 
-                        {/* Side Navigation */}
+                        {/* Instagram-style slide navigation */}
                         {slides.length > 1 && (
                             <>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
+                                <button
+                                    type="button"
                                     onClick={handlePrevious}
                                     disabled={currentIndex === 0}
                                     className={cn(
-                                        "absolute left-3 top-1/2 -translate-y-1/2 z-40 h-10 w-10 rounded-full",
-                                        "bg-white backdrop-blur border border-border shadow-sm"
+                                        "absolute left-3 top-1/2 -translate-y-1/2 z-40",
+                                        "h-[clamp(22px,4.5cqw,32px)] w-[clamp(22px,4.5cqw,32px)] rounded-full bg-white/90 shadow-lg",
+                                        "flex items-center justify-center",
+                                        "text-neutral-500 transition-all hover:bg-white hover:text-neutral-700",
+                                        "disabled:opacity-0 disabled:pointer-events-none"
                                     )}
                                     aria-label={tt('common:preview.previousSlide', 'Previous slide')}
                                 >
-                                    <IconChevronLeft className="w-5 h-5" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-[45%] h-[45%]">
+                                        <polyline points="15 18 9 12 15 6" />
+                                    </svg>
+                                </button>
+                                <button
+                                    type="button"
                                     onClick={handleNext}
                                     disabled={currentIndex === slides.length - 1}
                                     className={cn(
-                                        "absolute right-3 top-1/2 -translate-y-1/2 z-40 h-10 w-10 rounded-full",
-                                        "bg-white backdrop-blur border border-border shadow-sm"
+                                        "absolute right-3 top-1/2 -translate-y-1/2 z-40",
+                                        "h-[clamp(22px,4.5cqw,32px)] w-[clamp(22px,4.5cqw,32px)] rounded-full bg-white/90 shadow-lg",
+                                        "flex items-center justify-center",
+                                        "text-neutral-500 transition-all hover:bg-white hover:text-neutral-700",
+                                        "disabled:opacity-0 disabled:pointer-events-none"
                                     )}
                                     aria-label={tt('common:preview.nextSlide', 'Next slide')}
                                 >
-                                    <IconChevronRight className="w-5 h-5" />
-                                </Button>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-[45%] h-[45%]">
+                                        <polyline points="9 18 15 12 9 6" />
+                                    </svg>
+                                </button>
                             </>
                         )}
 

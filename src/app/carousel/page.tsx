@@ -1763,7 +1763,7 @@ export default function CarouselPage() {
             hasGeneratedImage={slides.some(slide => Boolean(slide.imageUrl))}
             generatingLabel={t('carousel:ui.generating', { defaultValue: 'Generating...' })}
             generateLabel={t('carousel:ui.generateCarousel', { defaultValue: 'Generate carousel' })}
-            retryLabel={t('carousel:ui.retryCarousel', { defaultValue: 'Generate another carousel with the same settings' })}
+            retryLabel={t('carousel:ui.retryCarousel', { defaultValue: 'Generate another carousel with current settings' })}
             stopLabel={t('carousel:ui.stopGeneration', { defaultValue: 'Stop generation' })}
             cancelingLabel={t('carousel:ui.canceling', { defaultValue: 'Canceling...' })}
         />

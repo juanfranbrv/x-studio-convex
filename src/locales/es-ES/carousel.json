@@ -83,7 +83,7 @@
     "analyzing": "Analizando...",
     "generatingProgress": "Generando {{current}}/{{total}}...",
     "generateCarousel": "Generar carrusel",
-    "retryCarousel": "Generar otro carrusel con mismos ajustes",
+    "retryCarousel": "Generar otro carrusel con los ajustes actuales",
     "editSlidePlaceholder": "Describe los cambios para editar la diapositiva...",
     "setupCarouselPlaceholder": "Configura tu carrusel en el panel lateral...",
     "applyCorrection": "Realizar corrección",
