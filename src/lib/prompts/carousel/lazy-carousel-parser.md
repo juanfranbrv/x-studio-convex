@@ -95,8 +95,9 @@ Cada slide tiene dos textos distintos con funciones diferentes:
 - Piensa en el como el titular grande que se lee al pasar el dedo por el feed.
 - Nunca debe contener parrafos, bullets, listas ni explicaciones.
 - Es el gancho visual, no el contenido completo.
-- Ejemplos buenos: "Tu plaza no es cuestion de suerte", "3 errores que te cuestan clientes", "Empieza hoy, cobra manana".
+- Ejemplos buenos: "Tu plaza no es cuestion de suerte", "3 errores que te cuestan clientes", "Empieza hoy, cobra manana", "Preparacion real, resultados reales".
 - Ejemplos malos: "Las pruebas de acceso a Ciclos, Universidad o Bachillerato pueden ser estresantes si no tienes un plan." (demasiado largo, parece un parrafo).
+- PROHIBIDO ABSOLUTAMENTE: headlines que describan el ROL o la FUNCION del slide en vez de su contenido real. Nunca escribas cosas como "El gancho del exito", "Cierre y accion", "Contenido principal", "Slide de desarrollo", "CTA final". Esos son nombres internos de estructura, NO titulares. El headline debe ser COPY REAL que el usuario final leera en Instagram.
 
 ### description (texto narrativo)
 - Es el contenido que acompana a la imagen como copy, caption o texto de apoyo.
@@ -261,6 +262,7 @@ Asegurate de que:
 - los detalles concretos del usuario siguen presentes
 - el numero de slides es exacto
 - el resultado parece un carrusel de Instagram, no un resumen de acta
+- TODOS los headlines son COPY REAL (frases que un usuario leeria en Instagram), NO descripciones de la funcion del slide. Si alguno dice "gancho", "cierre", "accion", "desarrollo", "contenido" como descriptor meta, reescribelo con copy real.
 
 ## FORMATO DE SALIDA
 Devuelve un unico JSON valido, sin markdown:
@@ -286,9 +288,9 @@ Devuelve un unico JSON valido, sin markdown:
         {
           "index": 0,
           "role": "hook | content | cta",
-          "headline": "Frase corta y potente (max 8-10 palabras). UNICO texto visible en la imagen.",
-          "title": "Titulo editorial del slide",
-          "description": "Copy narrativo completo. NO aparece en la imagen. Va al caption y al guion.",
+          "headline": "COPY REAL para la imagen (max 8-10 palabras, NUNCA una descripcion del rol del slide)",
+          "title": "Titulo editorial del slide para el guion",
+          "description": "Copy narrativo completo para el caption (NO aparece en la imagen)",
           "composition": "Blueprint arquitectonico del slide: reticula, areas, jerarquia, anclajes y margenes.",
           "visualPrompt": "Instruccion visual detallada en el mismo idioma del usuario y alineada con la referencia visual.",
           "focus": "Foco principal del slide"
