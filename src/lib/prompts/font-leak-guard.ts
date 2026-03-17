@@ -1,4 +1,4 @@
-type BrandFont = { family: string; role?: 'heading' | 'body' } | string
+type BrandFont = { family?: string; role?: 'heading' | 'body' | string } | string | null | undefined
 
 function escapeRegex(value: string): string {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
