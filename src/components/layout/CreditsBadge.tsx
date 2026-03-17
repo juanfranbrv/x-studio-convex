@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery } from 'convex/react'
-import { IconAlertCircle } from '@/components/ui/icons'
+import { IconAlertCircle, IconCoins01 } from '@/components/ui/icons'
 import { api } from '@/../convex/_generated/api'
 import {
     Tooltip,
@@ -22,6 +22,7 @@ export function CreditsBadge() {
 
     const userEmail = user?.emailAddresses[0]?.emailAddress || ''
     const creditsShortLabel = i18n.language.startsWith('es') ? 'créditos' : 'credits'
+    const creditsIconClassName = 'relative top-[3px] h-[18px] w-[18px] shrink-0'
 
     const creditsData = useQuery(api.users.getCredits, user?.id ? { clerk_id: user.id } : 'skip')
     const upsertUser = useMutation(api.users.upsertUser)
@@ -59,6 +60,7 @@ export function CreditsBadge() {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <span className="inline-flex min-h-10 items-baseline gap-2 px-2 py-1 text-foreground/80">
+                        <IconCoins01 className={cn(creditsIconClassName, 'text-foreground/78')} />
                         <span className="font-mono text-[clamp(1.02rem,0.97rem+0.18vw,1.12rem)]">--</span>
                         <span className="text-[0.82rem] font-medium uppercase tracking-[0.08em] text-muted-foreground">{creditsShortLabel}</span>
                     </span>
@@ -77,6 +79,7 @@ export function CreditsBadge() {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <span className="inline-flex min-h-10 items-baseline gap-2 px-2 py-1 text-foreground/82">
+                        <IconCoins01 className={cn(creditsIconClassName, 'text-foreground/78')} />
                         <span className="font-mono text-[clamp(0.98rem,0.94rem+0.16vw,1.05rem)]">--</span>
                         <span className="text-[0.82rem] font-medium uppercase tracking-[0.08em] text-muted-foreground">{t('credits.waitlist')}</span>
                     </span>
@@ -107,6 +110,7 @@ export function CreditsBadge() {
                             : 'inline-flex min-h-10 items-baseline gap-2 px-2 py-1 text-foreground'
                     )}
                 >
+                    <IconCoins01 className={cn(creditsIconClassName, isLow ? 'text-destructive' : 'text-foreground/84')} />
                     {isLow ? <IconAlertCircle className="h-4.5 w-4.5 shrink-0" /> : null}
                     <span className="font-mono text-[clamp(1.02rem,0.97rem+0.18vw,1.12rem)]">{credits}</span>
                     <span className={cn(

@@ -92,105 +92,55 @@ type ThemePreset = ThemePaletteDraft & {
     id: string
     name: string
     description: string
+    palette: string[]
+}
+
+const hexToRgb = (hex: string) => {
+    const normalized = hex.replace('#', '')
+    const int = Number.parseInt(normalized, 16)
+    return {
+        r: (int >> 16) & 255,
+        g: (int >> 8) & 255,
+        b: int & 255,
+    }
+}
+
+const getRelativeLuminance = (hex: string) => {
+    const { r, g, b } = hexToRgb(hex)
+    const channel = (value: number) => {
+        const normalized = value / 255
+        return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+    }
+    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+}
+
+function createThemePreset(id: string, name: string, description: string, palette: string[]): ThemePreset {
+    const uniquePalette = Array.from(new Set(palette.map((color) => color.trim())))
+    const byLightness = [...uniquePalette].sort((a, b) => getRelativeLuminance(b) - getRelativeLuminance(a))
+    const byDarkness = [...uniquePalette].sort((a, b) => getRelativeLuminance(a) - getRelativeLuminance(b))
+    const middleColor = uniquePalette[Math.floor(uniquePalette.length / 2)] || uniquePalette[0]
+
+    return {
+        id,
+        name,
+        description,
+        palette: uniquePalette,
+        primary: uniquePalette[0] || byDarkness[0],
+        secondary: uniquePalette[1] || uniquePalette[0],
+        surface: byLightness[0] || uniquePalette[uniquePalette.length - 1],
+        surfaceAlt: byLightness[1] || byLightness[0] || uniquePalette[0],
+        muted: middleColor,
+        border: byLightness[1] || byLightness[0] || uniquePalette[0],
+        ring: uniquePalette[0] || byDarkness[0],
+    }
 }
 
 const THEME_PRESETS: ThemePreset[] = [
-    {
-        id: 'postlab-classic',
-        name: 'Postlab Classic',
-        description: 'Azul limpio con acento cálido',
-        primary: '#1f5eff',
-        secondary: '#f59e0b',
-        surface: '#f6f8ff',
-        surfaceAlt: '#ffffff',
-        muted: '#5f6b85',
-        border: '#d7def4',
-        ring: '#1f5eff',
-    },
-    {
-        id: 'olive-editorial',
-        name: 'Olive Editorial',
-        description: 'Marfil, oliva y piedra con tono de revista',
-        primary: '#556b2f',
-        secondary: '#c2a878',
-        surface: '#f5f0e6',
-        surfaceAlt: '#fbf7f1',
-        muted: '#6f665b',
-        border: '#d7cdbd',
-        ring: '#6b7d3c',
-    },
-    {
-        id: 'terracotta-paper',
-        name: 'Terracotta Paper',
-        description: 'Más cálido, más táctil, menos SaaS',
-        primary: '#a4472d',
-        secondary: '#e3a86b',
-        surface: '#f7ede6',
-        surfaceAlt: '#fff8f3',
-        muted: '#7a6257',
-        border: '#ddc1b1',
-        ring: '#a4472d',
-    },
-    {
-        id: 'midnight-editor',
-        name: 'Midnight Editor',
-        description: 'Nocturno profundo con contraste frío',
-        primary: '#7c8cff',
-        secondary: '#37c8ab',
-        surface: '#161a28',
-        surfaceAlt: '#1e2334',
-        muted: '#aab3cf',
-        border: '#303854',
-        ring: '#8ea1ff',
-    },
-    {
-        id: 'acid-notes',
-        name: 'Acid Notes',
-        description: 'Lima eléctrica sobre papel gris claro',
-        primary: '#334155',
-        secondary: '#d9ff3f',
-        surface: '#eef1eb',
-        surfaceAlt: '#f8fbf2',
-        muted: '#5f6a57',
-        border: '#c9d4b8',
-        ring: '#b9ec18',
-    },
-    {
-        id: 'mediterranean-signal',
-        name: 'Mediterranean Signal',
-        description: 'Azul mar con coral y superficies salinas',
-        primary: '#0f4c81',
-        secondary: '#ff7a59',
-        surface: '#eef5fa',
-        surfaceAlt: '#f8fbfd',
-        muted: '#597489',
-        border: '#c9d8e4',
-        ring: '#0f4c81',
-    },
-    {
-        id: 'ink-berry',
-        name: 'Ink Berry',
-        description: 'Tinta oscura con baya intensa y fondo lavanda',
-        primary: '#312e81',
-        secondary: '#e11d48',
-        surface: '#f4f1fb',
-        surfaceAlt: '#fcf8ff',
-        muted: '#655b7d',
-        border: '#d8d0ea',
-        ring: '#4f46e5',
-    },
-    {
-        id: 'sand-night',
-        name: 'Sand Night',
-        description: 'Carbón suave, arena y contraste editorial',
-        primary: '#1f2937',
-        secondary: '#d4a373',
-        surface: '#f2ece5',
-        surfaceAlt: '#fbf8f4',
-        muted: '#72675d',
-        border: '#d8cabd',
-        ring: '#8b5e34',
-    },
+    createThemePreset('berry-signal', 'Berry Signal', 'Granate electrico con rosas frios y aire editorial.', ['#880d1e', '#dd2d4a', '#f26a8d', '#f49cbb', '#cbeef3']),
+    createThemePreset('atlas-stone', 'Atlas Stone', 'Azul petroleo, arena y cobre suave para interfaz sobria.', ['#2b3a67', '#496a81', '#66999b', '#b3af8f', '#ffc482']),
+    createThemePreset('ultra-wave', 'Ultra Wave', 'Violeta tecnico con azules nitidos y pulso digital.', ['#672DCC', '#701EFC', '#71B3D9', '#2D7BA8', '#5A8FAD']),
+    createThemePreset('electric-depth', 'Electric Depth', 'Azules frios escalados para un look brillante y limpio.', ['#add7f6', '#87bfff', '#3f8efc', '#2667ff', '#3b28cc']),
+    createThemePreset('paper-noir', 'Paper Noir', 'Carbones y marfiles apagados con tono de estudio.', ['#474448', '#2d232e', '#e0ddcf', '#534b52', '#f1f0ea']),
 ]
 
 const THEME_SETTINGS_HIDDEN_KEYS = new Set([
@@ -1246,10 +1196,13 @@ export default function AdminPage() {
                                                 className="rounded-xl border border-border/70 bg-muted/20 p-3 text-left transition-colors hover:border-primary/30 hover:bg-accent/30"
                                             >
                                                 <div className="mb-3 flex items-center gap-2">
-                                                    <span className="h-7 w-7 rounded-full border border-border/60" style={{ backgroundColor: preset.primary }} />
-                                                    <span className="h-7 w-7 rounded-full border border-border/60" style={{ backgroundColor: preset.secondary }} />
-                                                    <span className="h-7 w-7 rounded-full border border-border/60" style={{ backgroundColor: preset.surface }} />
-                                                    <span className="h-7 w-7 rounded-full border border-border/60" style={{ backgroundColor: preset.border }} />
+                                                    {preset.palette.map((color) => (
+                                                        <span
+                                                            key={`${preset.id}-${color}`}
+                                                            className="h-7 w-7 rounded-full border border-border/60"
+                                                            style={{ backgroundColor: color }}
+                                                        />
+                                                    ))}
                                                 </div>
                                                 <div className="text-sm font-semibold">{preset.name}</div>
                                                 <div className="mt-1 text-xs text-muted-foreground">{preset.description}</div>

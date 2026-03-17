@@ -475,6 +475,21 @@ These values are editable from Admin and must remain the single source of truth 
 - `/admin` debe ofrecer presets propuestos de tema para acelerar la seleccion de combinaciones coherentes sin obligar a partir de cero.
 - Esos presets no son una segunda fuente de verdad: rellenan la paleta editable de Admin y el guardado posterior persiste los tokens finales en `app_settings`.
 - La UI de Admin debe exponer la paleta completa para que Juanfran pueda retocar cada token antes de guardar.
+- Cuando un preset se construye desde una paleta corta de varios colores, la UI debe conservar y mostrar la paleta original completa como referencia visual, aunque luego derive los tokens globales (`theme_primary`, `theme_secondary`, `theme_surface`, `theme_surface_alt`, `theme_muted`, `theme_border`, `theme_ring`) para la edicion.
+
+## Blindaje de tipografias en prompts
+
+### Regla de producto
+
+- Los nombres de fuente pueden mencionarse en prompts porque ayudan al modelo a aproximarse a la familia correcta.
+- Esa mencion nunca puede tratarse como copy visible ni imprimirse dentro de la imagen final.
+
+### Regla de implementacion
+
+1. Las referencias a fuentes deben formularse como metadato invisible de estilo.
+2. Los bloques de prompt de `image` y `carousel` deben incluir una prohibicion explicita de renderizar nombres de fuente, etiquetas internas o tokens como texto visible.
+3. Si una fuente aparece en contexto, contrato tipografico o instrucciones de estilo, el modelo solo puede usarla para decidir forma, peso, ritmo, remates, contraste y jerarquia del texto.
+4. Antes de interpolar texto narrativo o visual en prompts finales, conviene sanear menciones directas a familias conocidas para reducir fugas accidentales.
 
 ### DNS minimo de Clerk
 

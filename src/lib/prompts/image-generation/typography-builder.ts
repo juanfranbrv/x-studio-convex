@@ -1,3 +1,4 @@
+import { buildFontLeakPreventionDirective } from '@/lib/prompts/font-leak-guard'
 import { buildTypographyContract } from '@/lib/prompts/priorities/p09-brand-dna'
 import { inferStyleMediumProfile } from '@/lib/prompts/image-generation/style-medium-profile'
 
@@ -208,7 +209,7 @@ function normalizeFonts(fonts: FontInput[]): { family: string; role?: 'heading' 
         .filter((font): font is { family: string; role?: 'heading' | 'body' } => Boolean(font))
 }
 
-function buildDisabledDirective(): string {
+function buildDisabledDirective(fonts: FontInput[]): string {
     return [
         'TRATAMIENTO TIPOGRAFICO:',
         '- Mantener la tipografia definida por el Kit de Marca para titular y parrafo.',
@@ -218,11 +219,13 @@ function buildDisabledDirective(): string {
         '- Los ajustes NO permitidos en este modo son cambiar la familia tipografica, mezclar familias nuevas o dejar que el estilo visual elija una fuente distinta.',
         '- No renderizar el texto como tipografia plana de interfaz pegada encima de la imagen.',
         '- El titular puede tener presencia editorial o pequenos adornos compatibles con la escena, sin perder legibilidad.',
-        '- El parrafo debe seguir siendo claro, ordenado y muy legible en movil.'
+        '- El parrafo debe seguir siendo claro, ordenado y muy legible en movil.',
+        '- Si el nombre de una fuente aparece en el prompt, interpretalo como metadato invisible de estilo y nunca como copy visible.',
+        buildFontLeakPreventionDirective(fonts),
     ].join('\n')
 }
 
-function buildEnabledDirective(options?: TypographyInstructionOptions): string {
+function buildEnabledDirective(fonts: FontInput[], options?: TypographyInstructionOptions): string {
     const profile = inferStyleMediumProfile({
         analysisText: buildAnalysisText(options),
         fallbackText: buildFallbackStyleText(options),
@@ -247,7 +250,9 @@ function buildEnabledDirective(options?: TypographyInstructionOptions): string {
         '- Priorizar contraste, lectura rapida y nitidez del texto por encima del efecto visual.',
         '- El parrafo puede heredar rasgos del estilo, pero siempre con una intensidad menor que el titular y con prioridad absoluta a la legibilidad.',
         '- Nunca renderizar nombres de fuentes ni etiquetas internas como texto visible (por ejemplo Google Sans Flex, HEADLINE_FONT o BODY_FONT).',
-        '- Con esta opcion activa, la tipografia ya no viene fijada por el Kit de Marca: el modelo debe elegir la familia y el estilismo que mejor encajen con el estilo visual dominante.'
+        '- Si una fuente se menciona explicitamente, usala solo como metadato invisible para decidir forma, ritmo, peso y jerarquia. El nombre nunca puede aparecer impreso.',
+        '- Con esta opcion activa, la tipografia ya no viene fijada por el Kit de Marca: el modelo debe elegir la familia y el estilismo que mejor encajen con el estilo visual dominante.',
+        buildFontLeakPreventionDirective(fonts),
     ].join('\n')
 }
 
@@ -256,7 +261,8 @@ export function buildTypographyInstructions(fonts: FontInput[], options?: Typogr
         'INTERPRETACION DEL CONTRATO TIPOGRAFICO:',
         '- La familia tipografica de marca define coherencia, jerarquia y tono, no una textura literal ni un medio visual concreto.',
         '- Terminos como geometric, bold o structural deben interpretarse como claridad, presencia y construccion precisa de la letra.',
-        '- Mantener siempre la nitidez del texto y la coherencia con el medio visual de la referencia analizada.'
+        '- Mantener siempre la nitidez del texto y la coherencia con el medio visual de la referencia analizada.',
+        '- Cualquier nombre de fuente mencionado aqui es una instruccion invisible de direccion de arte; no puede imprimirse como palabra dentro de la imagen.'
     ].join('\n')
 
     if (options?.applyStyleToTypography) {
@@ -271,13 +277,13 @@ export function buildTypographyInstructions(fonts: FontInput[], options?: Typogr
             '- No renderices nombres de fuente ni tokens internos como texto visible.'
         ].join('\n')
 
-        return `\n${interpretationGuard}\n${freeTypographySelection}\n${buildTypographyFingerprintBlock(options)}\n${buildEnabledDirective(options)}\n`
+        return `\n${interpretationGuard}\n${freeTypographySelection}\n${buildTypographyFingerprintBlock(options)}\n${buildEnabledDirective(fonts, options)}\n`
     }
 
     const normalized = normalizeFonts(fonts || [])
     if (normalized.length === 0) {
-        return `\n${interpretationGuard}\n${buildDisabledDirective()}\n`
+        return `\n${interpretationGuard}\n${buildDisabledDirective(fonts)}\n`
     }
 
-    return `\n${buildTypographyContract(normalized)}\n${interpretationGuard}\n${buildDisabledDirective()}\n`
+    return `\n${buildTypographyContract(normalized)}\n${interpretationGuard}\n${buildDisabledDirective(fonts)}\n`
 }

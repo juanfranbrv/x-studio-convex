@@ -4,6 +4,10 @@ import * as P09 from '@/lib/prompts/priorities/p09-brand-dna'
 import { P10B } from '@/lib/prompts/priorities/p10b-secondary-logos'
 import { FINAL_IMAGE_PROMPT_TEMPLATE } from './final-image.template'
 import { LANGUAGE_ENFORCEMENT_INSTRUCTION } from '@/lib/prompts/priorities/p12-preferred-language'
+import {
+    buildFontLeakPreventionDirective as sharedBuildFontLeakPreventionDirective,
+    sanitizeFontLeakText,
+} from '@/lib/prompts/font-leak-guard'
 import { inferStyleMediumProfile } from '@/lib/prompts/image-generation/style-medium-profile'
 
 // --- EXTRACT LOGO POSITION FROM COMPOSITION ---
@@ -538,6 +542,7 @@ function escapeRegex(value: string): string {
 }
 
 function stripFontMentions(text: string, fonts?: { family: string; role?: 'heading' | 'body' }[]): string {
+    return sanitizeFontLeakText(text, fonts)
     let next = text || ''
     const explicitFamilies = (fonts || [])
         .map((font) => (font.family || '').trim())
@@ -571,20 +576,7 @@ function stripFontMentions(text: string, fonts?: { family: string; role?: 'headi
 }
 
 function buildFontLeakPreventionDirective(fonts?: { family: string; role?: 'heading' | 'body' }[]): string {
-    const familyList = (fonts || [])
-        .map((font) => (font.family || '').trim())
-        .filter(Boolean)
-
-    const hasExplicitFamilies = familyList.length > 0
-
-    return `FONT NAME RENDER BAN (ABSOLUTE):
-- Font family names are internal production instructions only.
-- NEVER render any font family name as visible text.
-- NEVER place any font family name as headline, pretitle, kicker, label, watermark, signature, decorative stamp, or footer.
-- If any font family name appears anywhere else in this prompt, treat it as invisible metadata and remove it from the final artwork.
-- Font names, style labels, and typography instructions are not content. They must influence styling only and must never become printed words inside the image.
-- The only allowed visible words are the user-facing copy supplied in the TEXT block and, on the final slide, the approved CTA/URL block.
-- This applies to all Brand Kit font families${hasExplicitFamilies ? ' referenced in the typography contract above' : ''}.`
+    return sharedBuildFontLeakPreventionDirective(fonts)
 }
 
 function buildContactDirective(contactLines: string[] | undefined): string {

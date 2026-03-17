@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { GeneratedCopyCard } from '@/components/studio/GeneratedCopyCard'
 import { useToast } from '@/hooks/use-toast'
-import { IconChevronLeft, IconChevronRight, IconRefresh, IconZoomIn, IconZoomOut, IconMenu, IconShare, IconImage, IconFingerprint, IconImageDownload, IconSquareArrowDown, IconBug, IconVideo, IconMusic, IconMaximize, IconAiChat } from '@/components/ui/icons'
+import { IconChevronLeft, IconChevronRight, IconRefresh, IconZoomIn, IconZoomOut, IconImage, IconFingerprint, IconImageDownload, IconSquareArrowDown, IconBug, IconVideo, IconMusic, IconMaximize, IconAiChat } from '@/components/ui/icons'
 import JSZip from 'jszip'
 import {
     DropdownMenu,
@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next'
 import {
     STUDIO_CANVAS_FLOATING_TOOLBAR_CLASS,
     STUDIO_CANVAS_TOOL_BUTTON_CLASS,
+    STUDIO_CANVAS_TOOL_VALUE_CLASS,
 } from '@/components/studio/shared/canvasStyles'
 import {
     STUDIO_DECISION_DIALOG_CLASS,
@@ -102,6 +103,8 @@ function splitVisualPromptForEditor(value: string): { editable: string; hiddenIn
 
 const CANVAS_FLOATING_TOOLBAR_CLASS = STUDIO_CANVAS_FLOATING_TOOLBAR_CLASS
 const CANVAS_TOOL_BUTTON_CLASS = STUDIO_CANVAS_TOOL_BUTTON_CLASS
+const CANVAS_TOOL_VALUE_CLASS = STUDIO_CANVAS_TOOL_VALUE_CLASS
+const CANVAS_TOOL_ICON_CLASS = '!h-8 !w-8'
 
 function renderCompositionGhostIcon(iconName: string) {
     const trimmed = (iconName || '').trim()
@@ -233,6 +236,7 @@ export function CarouselCanvasPanel({
     const [videoExportPhase, setVideoExportPhase] = useState('')
     const [prevImageUrl, setPrevImageUrl] = useState<string | null>(null)
     const [wasJustGenerated, setWasJustGenerated] = useState(false)
+    const [currentSlideNaturalSize, setCurrentSlideNaturalSize] = useState<{ w: number; h: number } | null>(null)
     const { toast } = useToast()
 
     // Track viewport for responsive heights
@@ -287,24 +291,7 @@ export function CarouselCanvasPanel({
 
     const calcMaxZoom = () => {
         if (isMobile) return 100
-        const [w, h] = aspectRatio.split(':').map(Number)
-        const ratio = w / h
-        const footerOffset = getFooterOffset()
-
-        const availableWidth = (containerRef.current?.parentElement?.clientWidth
-            ? containerRef.current.parentElement.clientWidth - (isMobile ? 12 : 32)
-            : (isMobile ? window.innerWidth - 12 : 900))
-        const availableHeight = Math.max(200, viewportHeight - footerOffset)
-
-        let baseWidth
-        let baseHeight
-        if (ratio >= 1) {
-            baseWidth = Math.min(availableWidth, availableHeight * ratio)
-            baseHeight = baseWidth / ratio
-        } else {
-            baseHeight = Math.min(availableHeight, availableWidth / ratio)
-            baseWidth = baseHeight * ratio
-        }
+        const { canvasHeight: baseHeight, availableHeight } = getCanvasFitMetrics()
 
         const fitScale = availableHeight / baseHeight
         const boost = getAutoZoomBoost(viewportHeight)
@@ -334,18 +321,65 @@ export function CarouselCanvasPanel({
     const currentVisualContentEditable = currentVisualPromptParts.editable
     const currentVisualIntentHidden = currentVisualPromptParts.hiddenIntent
     const currentImageUrl = currentSlide?.imageUrl || null
+    const fallbackCanvasAspectRatio = useMemo(() => {
+        const [w, h] = aspectRatio.split(':').map(Number)
+        return w / h
+    }, [aspectRatio])
+    const canvasAspectRatio = useMemo(() => {
+        if (currentImageUrl && currentSlideNaturalSize?.w && currentSlideNaturalSize?.h) {
+            return currentSlideNaturalSize.w / currentSlideNaturalSize.h
+        }
+        return fallbackCanvasAspectRatio
+    }, [currentImageUrl, currentSlideNaturalSize, fallbackCanvasAspectRatio])
+
+    const getCanvasFitMetrics = () => {
+        const ratio = canvasAspectRatio
+        const footerOffset = getFooterOffset()
+        const availableHeight = Math.max(200, viewportHeight - footerOffset)
+        const availableWidth = (
+            containerRef.current?.parentElement?.clientWidth
+                ? containerRef.current.parentElement.clientWidth - (isMobile ? 12 : 32)
+                : (isMobile ? window.innerWidth - 12 : 900)
+        )
+
+        let canvasWidth: number
+        let canvasHeight: number
+
+        if (isMobile) {
+            canvasWidth = availableWidth
+            canvasHeight = canvasWidth / ratio
+        } else if (ratio >= 1) {
+            canvasWidth = Math.min(availableWidth, availableHeight * ratio)
+            canvasHeight = canvasWidth / ratio
+        } else {
+            canvasHeight = Math.min(availableHeight, availableWidth / ratio)
+            canvasWidth = canvasHeight * ratio
+        }
+
+        return {
+            ratio,
+            availableHeight,
+            availableWidth,
+            canvasWidth,
+            canvasHeight,
+        }
+    }
+
+    useEffect(() => {
+        setCurrentSlideNaturalSize(null)
+    }, [currentImageUrl])
 
     useEffect(() => {
         if (hasManualZoom) return
         const autoZoom = calcMaxZoom()
         if (zoom !== autoZoom) setZoom(autoZoom)
-    }, [hasManualZoom, isMobile, viewportHeight, zoom, currentSlide?.imageUrl, aspectRatio])
+    }, [hasManualZoom, isMobile, viewportHeight, zoom, currentSlide?.imageUrl, canvasAspectRatio])
 
     useEffect(() => {
         if (!isMobile) return
         setHasManualZoom(false)
         setZoom(100)
-    }, [isMobile, currentSlide?.imageUrl, aspectRatio])
+    }, [isMobile, currentSlide?.imageUrl, canvasAspectRatio])
     const hasScript = Boolean(currentSlide && !currentSlide.imageUrl && (currentSlide.title || currentSlide.description))
     const completedSlides = slides.filter(s => s.status === 'done').length
     const isGeneratingAny = isGenerating || slides.some(s => s.status === 'generating') || isRegenerating
@@ -837,10 +871,11 @@ export function CarouselCanvasPanel({
                                 {aspectRatio}
                                 <span className="opacity-60"> &middot; </span>
                                 {(() => {
-                                    const [w, h] = aspectRatio.split(':').map(Number)
-                                    const ratio = w / h
+                                    if (currentSlideNaturalSize?.w && currentSlideNaturalSize?.h) {
+                                        return `${currentSlideNaturalSize.w}x${currentSlideNaturalSize.h}`
+                                    }
                                     const baseH = 600
-                                    const calcW = baseH * ratio
+                                    const calcW = baseH * fallbackCanvasAspectRatio
                                     return `${Math.round(calcW)}x${baseH}`
                                 })()}
                             </span>
@@ -864,32 +899,29 @@ export function CarouselCanvasPanel({
 
                 {/* Right: Actions */}
                 <div className={CANVAS_FLOATING_TOOLBAR_CLASS}>
-                    <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
-                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleIconZoomOut}>
-                            <IconZoomOut className="w-4 h-4" />
-                        </Button>
-                        <button
-                            type="button"
-                            className="text-xs font-mono w-10 text-center cursor-pointer"
-                            onClick={handleResetZoom}
-                            title={tt('common:preview.resetZoom', 'Reset zoom')}
-                            aria-label={tt('common:preview.resetZoomAria', 'Reset zoom')}
-                        >
-                            {zoom}%
-                        </button>
-                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleIconZoomIn}>
-                            <IconZoomIn className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleMaximizeZoom}>
-                            <IconMaximize className="w-4 h-4" />
-                        </Button>
-                    </div>
-
+                    <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleIconZoomOut}>
+                        <IconZoomOut className={CANVAS_TOOL_ICON_CLASS} />
+                    </Button>
+                    <button
+                        type="button"
+                        className={CANVAS_TOOL_VALUE_CLASS}
+                        onClick={handleResetZoom}
+                        title={tt('common:preview.resetZoom', 'Reset zoom')}
+                        aria-label={tt('common:preview.resetZoomAria', 'Reset zoom')}
+                    >
+                        {zoom}%
+                    </button>
+                    <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleIconZoomIn}>
+                        <IconZoomIn className={CANVAS_TOOL_ICON_CLASS} />
+                    </Button>
+                    <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleMaximizeZoom}>
+                        <IconMaximize className={CANVAS_TOOL_ICON_CLASS} />
+                    </Button>
                     <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleDownloadCurrent} disabled={!currentSlide?.imageUrl} title={tt('common:preview.downloadCurrentSlide', 'Download current slide')}>
-                        <IconImageDownload className="w-4 h-4" />
+                        <IconImageDownload className={CANVAS_TOOL_ICON_CLASS} />
                     </Button>
                     <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleDownloadBundle} disabled={completedSlides === 0} title={tt('common:preview.downloadCarouselZip', 'Download carousel ZIP')}>
-                        <IconSquareArrowDown className="w-4 h-4" />
+                        <IconSquareArrowDown className={CANVAS_TOOL_ICON_CLASS} />
                     </Button>
                     <Button
                         variant="ghost"
@@ -901,7 +933,7 @@ export function CarouselCanvasPanel({
                             ? tt('common:preview.regeneratingCurrentSlide', 'Regenerating current slide...')
                             : tt('common:preview.regenerateCurrentSlide', 'Regenerate current slide')}
                     >
-                        {isRegenerating ? <Loader2 className="w-4 h-4" /> : <IconRefresh className="w-4 h-4" />}
+                        {isRegenerating ? <Loader2 className="w-4 h-4" /> : <IconRefresh className={CANVAS_TOOL_ICON_CLASS} />}
                     </Button>
                     <Button
                         variant="ghost"
@@ -911,26 +943,19 @@ export function CarouselCanvasPanel({
                         disabled={isExportingVideo || completedSlides === 0}
                         title={tt('common:preview.exportVideoWithMusic', 'Export video with music')}
                     >
-                        <IconMusic className={cn("w-4 h-4", isExportingVideo && "animate-pulse")} />
+                        <IconMusic className={cn(CANVAS_TOOL_ICON_CLASS, isExportingVideo && "animate-pulse")} />
                     </Button>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS}>
-                                <IconMenu className="w-4 h-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-popover/95 border-border/60 backdrop-blur-sm">
-                            <DropdownMenuItem onClick={() => exportCarouselVideo(false)} disabled={isExportingVideo || completedSlides === 0}>
-                                <IconVideo className={cn("w-4 h-4 mr-2", isExportingVideo && "animate-pulse")} />
-                                {tt('common:preview.exportVideoDurations', 'Export video (4s / 6s)')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <IconShare className="w-4 h-4 mr-2" />
-                                {tt('common:preview.shareCarousel', 'Share carousel')}
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className={CANVAS_TOOL_BUTTON_CLASS}
+                        onClick={() => exportCarouselVideo(false)}
+                        disabled={isExportingVideo || completedSlides === 0}
+                        title={tt('common:preview.exportVideoDurations', 'Export video (4s / 6s)')}
+                    >
+                        <IconVideo className={cn(CANVAS_TOOL_ICON_CLASS, isExportingVideo && "animate-pulse")} />
+                    </Button>
                 </div>
             </div>
 
@@ -943,16 +968,7 @@ export function CarouselCanvasPanel({
                 <div
                     className="shrink-0 flex items-start justify-center w-full"
                     style={(() => {
-                        const [w, h] = aspectRatio.split(':').map(Number)
-                        const ratio = w / h
-                        const footerOffset = getFooterOffset()
-                        const availableHeight = Math.max(200, viewportHeight - footerOffset)
-                        const availableWidth = (containerRef.current?.parentElement?.clientWidth
-                            ? containerRef.current.parentElement.clientWidth - (isMobile ? 12 : 32)
-                            : (isMobile ? window.innerWidth - 12 : 900))
-
-                        const canvasWidth = Math.min(availableWidth, availableHeight * ratio)
-                        const canvasHeight = canvasWidth / ratio
+                        const { canvasHeight } = getCanvasFitMetrics()
                         return { height: `${canvasHeight * (zoom / 100)}px` }
                     })()}
                 >
@@ -963,16 +979,7 @@ export function CarouselCanvasPanel({
                             wasJustGenerated && "canvas-success-flash"
                         )}
                         style={(() => {
-                            const [w, h] = aspectRatio.split(':').map(Number)
-                            const ratio = w / h
-                            const footerOffset = getFooterOffset()
-                            const availableHeight = Math.max(200, viewportHeight - footerOffset)
-                            const availableWidth = (containerRef.current?.parentElement?.clientWidth
-                                ? containerRef.current.parentElement.clientWidth - (isMobile ? 12 : 32)
-                                : (isMobile ? window.innerWidth - 12 : 900))
-
-                            const canvasWidth = Math.min(availableWidth, availableHeight * ratio)
-                            const canvasHeight = canvasWidth / ratio
+                            const { canvasWidth, canvasHeight } = getCanvasFitMetrics()
 
                             return {
                                 width: `${canvasWidth}px`,
@@ -999,7 +1006,7 @@ export function CarouselCanvasPanel({
                         </AnimatePresence>
 
                         {compositionGhostIcon && !isGeneratingAny && !currentSlide?.imageUrl && (
-                            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none opacity-50">
+                            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none opacity-30">
                                 {renderCompositionGhostIcon(compositionGhostIcon)}
                             </div>
                         )}
@@ -1191,7 +1198,16 @@ export function CarouselCanvasPanel({
                                     <img
                                         src={currentSlide.imageUrl}
                                         alt={tt('common:preview.slideThumbnailAlt', 'Slide {{index}} thumbnail', { index: currentIndex + 1 })}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-contain"
+                                        onLoad={(e) => {
+                                            const target = e.currentTarget
+                                            if (target.naturalWidth && target.naturalHeight) {
+                                                setCurrentSlideNaturalSize({
+                                                    w: target.naturalWidth,
+                                                    h: target.naturalHeight,
+                                                })
+                                            }
+                                        }}
                                     />
                                 </motion.div>
                             </div>

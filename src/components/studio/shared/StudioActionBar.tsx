@@ -106,22 +106,24 @@ export function StudioGenerateBar({
                     isGenerating && 'pr-28'
                 )}
             >
-                {isGenerating ? (
-                    <>
-                        <Loader2 className="mr-2 h-5 w-5" />
-                        {generatingLabel}
-                    </>
-                ) : hasGeneratedImage ? (
-                    <>
-                        <IconRotate className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
-                        {retryLabel}
-                    </>
-                ) : (
-                    <>
-                        <IconSparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
-                        {generateLabel}
-                    </>
-                )}
+                <span className="inline-flex min-w-0 items-center justify-center gap-2">
+                    {isGenerating ? (
+                        <>
+                            <Loader2 className="h-5 w-5" />
+                            <span className="truncate">{generatingLabel}</span>
+                        </>
+                    ) : hasGeneratedImage ? (
+                        <>
+                            <IconRotate className="h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
+                            <span className="truncate">{retryLabel}</span>
+                        </>
+                    ) : (
+                        <>
+                            <IconSparkles className="h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
+                            <span className="truncate">{generateLabel}</span>
+                        </>
+                    )}
+                </span>
             </Button>
             {isGenerating ? (
                 <button

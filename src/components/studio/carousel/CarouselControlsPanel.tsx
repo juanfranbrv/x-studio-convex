@@ -2932,49 +2932,51 @@ export function CarouselControlsPanel({
                             }}
                             className="min-h-[132px] rounded-2xl border border-border/70 bg-background/90 px-4 py-3 !text-[14px] leading-[1.45] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-all focus:border-primary/60 focus:ring-2 focus:ring-primary/18 pb-14 pr-3"
                         />
-                        <div className="absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2">
-                            {brandKit && (
-                                <button
-                                    type="button"
-                                    onClick={handleInspire}
-                                    disabled={isInspiring}
-                                    className={cn('mr-auto inline-flex items-center gap-1.5', PANEL_TEXT_BUTTON_REVEAL_CLASS)}
-                                >
-                                    {isInspiring ? (
-                                        <Loader2 className="w-3.5 h-3.5" />
-                                    ) : (
-                                        <IconWand className="w-3.5 h-3.5" />
-                                    )}
-                                    {t('inspireMe')}
-                                </button>
-                            )}
-                            <div className="flex items-center gap-2">
-                                {isAnalyzing && onCancelAnalyze && (
-                                    <div className="flex items-center gap-2">
-                                        <Button
-                                            type="button"
-                                            variant="link"
-                                            onClick={onCancelAnalyze}
-                                            className="min-h-[42px] rounded-[1rem] px-4 text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] font-semibold text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                                        >
-                                            {t('ui.stop')}
-                                        </Button>
-                                        <motion.span
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: isCancelingAnalyze ? 1 : 0 }}
-                                            transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
-                                        className="text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] font-medium text-muted-foreground"
+                        <div className="absolute left-2 right-2 bottom-2 flex items-center gap-3">
+                            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+                                {brandKit ? (
+                                    <button
+                                        type="button"
+                                        onClick={handleInspire}
+                                        disabled={isInspiring}
+                                        className={cn('inline-flex min-w-0 items-center gap-1.5', PANEL_TEXT_BUTTON_REVEAL_CLASS)}
                                     >
-                                        {t('ui.canceling')}
-                                    </motion.span>
-                                    </div>
-                                )}
+                                        {isInspiring ? (
+                                            <Loader2 className="h-3.5 w-3.5 shrink-0" />
+                                        ) : (
+                                            <IconWand className="h-3.5 w-3.5 shrink-0" />
+                                        )}
+                                        <span className="truncate">{t('inspireMe')}</span>
+                                    </button>
+                                ) : null}
+                                <div className="flex min-w-[146px] items-center justify-start gap-2">
+                                    {isAnalyzing && onCancelAnalyze ? (
+                                        <>
+                                            <Button
+                                                type="button"
+                                                variant="link"
+                                                onClick={onCancelAnalyze}
+                                                className="min-h-[42px] rounded-[1rem] px-4 text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] font-semibold text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                                            >
+                                                {t('ui.stop')}
+                                            </Button>
+                                            <motion.span
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: isCancelingAnalyze ? 1 : 0 }}
+                                                transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
+                                                className="text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] font-medium text-muted-foreground"
+                                            >
+                                                {t('ui.canceling')}
+                                            </motion.span>
+                                        </>
+                                    ) : null}
+                                </div>
                             </div>
                             <Button
                                 size="sm"
                                 onClick={handleAnalyze}
                                 disabled={!canAnalyze}
-                                className="group feedback-action ml-auto h-[42px] rounded-[1rem] border border-transparent bg-primary/90 px-4 text-[clamp(0.94rem,0.9rem+0.12vw,1rem)] font-semibold text-primary-foreground shadow-[0_16px_34px_-22px_rgba(59,130,246,0.58)] transition-all hover:bg-primary hover:shadow-primary/25 sm:px-5 whitespace-nowrap"
+                                className="group feedback-action h-[42px] shrink-0 rounded-[1rem] border border-transparent bg-primary/90 px-4 text-[clamp(0.94rem,0.9rem+0.12vw,1rem)] font-semibold text-primary-foreground shadow-[0_16px_34px_-22px_rgba(59,130,246,0.58)] transition-all hover:bg-primary hover:shadow-primary/25 sm:px-5 whitespace-nowrap"
                             >
                                 {isAnalyzing ? (
                                     <>

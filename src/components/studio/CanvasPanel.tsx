@@ -31,6 +31,7 @@ import {
     STUDIO_CANVAS_OVERLAY_BUTTON_CLASS,
     STUDIO_CANVAS_REMOVE_BUTTON_CLASS,
     STUDIO_CANVAS_TOOL_BUTTON_CLASS,
+    STUDIO_CANVAS_TOOL_VALUE_CLASS,
 } from '@/components/studio/shared/canvasStyles'
 
 export interface Generation {
@@ -46,6 +47,8 @@ const CANVAS_FLOATING_TOOLBAR_CLASS = STUDIO_CANVAS_FLOATING_TOOLBAR_CLASS
 const CANVAS_TOOL_BUTTON_CLASS = STUDIO_CANVAS_TOOL_BUTTON_CLASS
 const CANVAS_OVERLAY_BUTTON_CLASS = STUDIO_CANVAS_OVERLAY_BUTTON_CLASS
 const CANVAS_REMOVE_BUTTON_CLASS = STUDIO_CANVAS_REMOVE_BUTTON_CLASS
+const CANVAS_TOOL_VALUE_CLASS = STUDIO_CANVAS_TOOL_VALUE_CLASS
+const CANVAS_TOOL_ICON_CLASS = '!h-8 !w-8'
 
 function renderLayoutIcon(svgIcon: string) {
     const trimmed = (svgIcon || '').trim()
@@ -255,6 +258,7 @@ export function CanvasPanel({
     const [viewportHeight, setViewportHeight] = useState(800) // Default fallback
     const [viewportWidth, setViewportWidth] = useState(1200)
     const [isMobile, setIsMobile] = useState(false)
+    const [currentImageNaturalSize, setCurrentImageNaturalSize] = useState<{ w: number; h: number } | null>(null)
     const selectedLogoUrl = useMemo(() => {
         if (!creationState.selectedLogoId || !activeBrandKit?.logos?.length) return null
         const found = activeBrandKit.logos.find((logo: any, idx: number) =>
@@ -275,6 +279,52 @@ export function CanvasPanel({
         return icon
     }, [creationState.selectedLayout, layoutIconOverrides])
 
+    const fallbackCanvasAspectRatio = useMemo(() => {
+        const [w, h] = aspectRatio.split(':').map(Number)
+        return w / h
+    }, [aspectRatio])
+
+    const canvasAspectRatio = useMemo(() => {
+        if (currentImage && currentImageNaturalSize?.w && currentImageNaturalSize?.h) {
+            return currentImageNaturalSize.w / currentImageNaturalSize.h
+        }
+        return fallbackCanvasAspectRatio
+    }, [currentImage, currentImageNaturalSize, fallbackCanvasAspectRatio])
+
+    const getCanvasFitMetrics = () => {
+        const ratio = canvasAspectRatio
+        const footerOffset = getFooterOffset()
+        const availableHeight = Math.max(200, viewportHeight - footerOffset)
+        const padding = isMobile ? 0 : 48
+        const availableWidth = (
+            containerRef.current?.parentElement?.clientWidth
+                ? containerRef.current.parentElement.clientWidth - padding
+                : (isMobile ? window.innerWidth : 1000)
+        )
+
+        let canvasWidth: number
+        let canvasHeight: number
+
+        if (isMobile) {
+            canvasWidth = availableWidth
+            canvasHeight = canvasWidth / ratio
+        } else if (ratio >= 1) {
+            canvasWidth = Math.min(availableWidth, availableHeight * ratio)
+            canvasHeight = canvasWidth / ratio
+        } else {
+            canvasHeight = Math.min(availableHeight, availableWidth / ratio)
+            canvasWidth = canvasHeight * ratio
+        }
+
+        return {
+            ratio,
+            availableHeight,
+            availableWidth,
+            canvasWidth,
+            canvasHeight,
+        }
+    }
+
     // Track viewport height for responsive canvas
     useEffect(() => {
         const updateHeight = () => {
@@ -286,6 +336,10 @@ export function CanvasPanel({
         window.addEventListener('resize', updateHeight)
         return () => window.removeEventListener('resize', updateHeight)
     }, [])
+
+    useEffect(() => {
+        setCurrentImageNaturalSize(null)
+    }, [currentImage])
 
     const getWidthBucket = (width: number) => {
         if (width <= 1366) return '1:HD (<=1366)'
@@ -319,30 +373,12 @@ export function CanvasPanel({
 
     // Calculate effective zoom (base scale * manual zoom)
     const effectiveZoom = useMemo(() => {
-        const [w, h] = aspectRatio.split(':').map(Number);
-        const ratio = w / h;
         const baseHeight = 600;
-
-        // Smarter dimension calculation matching the container style
-        // We use the same offsets to ensure indicator matches reality
-        const footerOffset = getFooterOffset();
-        const availableHeight = Math.max(200, viewportHeight - footerOffset);
-        const padding = isMobile ? 0 : 48;
-        const availableWidth = (containerRef.current?.parentElement?.clientWidth
-            ? containerRef.current.parentElement.clientWidth - padding
-            : (isMobile ? window.innerWidth : 800));
-
-        let canvasHeight;
-        if (ratio >= 1) {
-            const maxWidth = Math.min(availableWidth, availableHeight * ratio);
-            canvasHeight = maxWidth / ratio;
-        } else {
-            canvasHeight = Math.min(availableHeight, availableWidth / ratio);
-        }
+        const { canvasHeight } = getCanvasFitMetrics()
 
         const baseScale = (canvasHeight / baseHeight) * 100;
         return Math.round(baseScale * (zoom / 100));
-    }, [aspectRatio, viewportHeight, zoom, currentImage, isMobile])
+    }, [canvasAspectRatio, viewportHeight, zoom, currentImage, isMobile])
 
     // Animation & Reveal States
     const [isRevealing, setIsRevealing] = useState(false)
@@ -410,25 +446,7 @@ export function CanvasPanel({
 
     const calcMaxZoom = () => {
         if (isMobile) return 100
-
-        const [w, h] = aspectRatio.split(':').map(Number);
-        const ratio = w / h;
-        const footerOffset = getFooterOffset();
-
-        const availableWidth = (containerRef.current?.parentElement?.clientWidth
-            ? containerRef.current.parentElement.clientWidth - (isMobile ? 12 : 32)
-            : (isMobile ? window.innerWidth - 12 : 900));
-        const availableHeight = Math.max(200, viewportHeight - footerOffset);
-
-        let baseWidth;
-        let baseHeight;
-        if (ratio >= 1) {
-            baseWidth = Math.min(availableWidth, availableHeight * ratio);
-            baseHeight = baseWidth / ratio;
-        } else {
-            baseHeight = Math.min(availableHeight, availableWidth / ratio);
-            baseWidth = baseHeight * ratio;
-        }
+        const { canvasHeight: baseHeight, availableHeight } = getCanvasFitMetrics()
 
         const fitScale = availableHeight / baseHeight;
         const boost = getAutoZoomBoost(viewportHeight);
@@ -456,7 +474,7 @@ export function CanvasPanel({
         if (zoom !== 100) {
             setZoom(100)
         }
-    }, [isMobile, currentImage, aspectRatio])
+    }, [isMobile, currentImage, canvasAspectRatio])
 
     // Handle Generation Reveal Effect - simplified, no longer wraps generation
 
@@ -736,10 +754,11 @@ export function CanvasPanel({
                                 {aspectRatio}
                                 <span className="opacity-60"> &middot; </span>
                                 {(() => {
-                                    const [w, h] = aspectRatio.split(':').map(Number);
-                                    const ratio = w / h;
+                                    if (currentImageNaturalSize?.w && currentImageNaturalSize?.h) {
+                                        return `${currentImageNaturalSize.w}x${currentImageNaturalSize.h}`;
+                                    }
                                     const baseH = 600;
-                                    const calcW = baseH * ratio;
+                                    const calcW = baseH * fallbackCanvasAspectRatio;
                                     return `${Math.round(calcW)}x${baseH}`;
                                 })()}
                             </span>
@@ -764,33 +783,29 @@ export function CanvasPanel({
                 {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}
                 {/* Zoom Controls & Actions */}
                 <div className={CANVAS_FLOATING_TOOLBAR_CLASS}>
-                    {/* Zoom Controls */}
-                    <div className="flex flex-col items-center gap-1.5 rounded-[1.1rem] border border-border/55 bg-background/72 px-1.5 py-1.5">
-                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleZoomOut} title={tt('common:preview.zoomOut', 'Zoom out')}>
-                            <IconZoomOut className="w-4 h-4" />
-                        </Button>
-                        <button
-                            type="button"
-                            className="min-w-[52px] rounded-xl px-2 py-1 text-[0.82rem] font-semibold text-foreground/82 transition-colors hover:bg-background/88"
-                            onClick={handleResetZoom}
-                            title={tt('common:preview.resetZoom', 'Reset zoom')}
-                            aria-label={tt('common:preview.resetZoomAria', 'Reset zoom')}
-                        >
-                            {effectiveZoom}%
-                        </button>
-                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleZoomIn} title={tt('common:preview.zoomIn', 'Zoom in')}>
-                            <IconZoomIn className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleMaximizeZoom} title={tt('common:preview.fitHeight', 'Fit to height')}>
-                            <IconMaximize className="w-4 h-4" />
-                        </Button>
-                    </div>
-
+                    <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleZoomOut} title={tt('common:preview.zoomOut', 'Zoom out')}>
+                        <IconZoomOut className={CANVAS_TOOL_ICON_CLASS} />
+                    </Button>
+                    <button
+                        type="button"
+                        className={CANVAS_TOOL_VALUE_CLASS}
+                        onClick={handleResetZoom}
+                        title={tt('common:preview.resetZoom', 'Reset zoom')}
+                        aria-label={tt('common:preview.resetZoomAria', 'Reset zoom')}
+                    >
+                        {effectiveZoom}%
+                    </button>
+                    <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleZoomIn} title={tt('common:preview.zoomIn', 'Zoom in')}>
+                        <IconZoomIn className={CANVAS_TOOL_ICON_CLASS} />
+                    </Button>
+                    <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleMaximizeZoom} title={tt('common:preview.fitHeight', 'Fit to height')}>
+                        <IconMaximize className={CANVAS_TOOL_ICON_CLASS} />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={handleDownload} className={CANVAS_TOOL_BUTTON_CLASS} title={tt('common:preview.downloadImage', 'Download image')}>
-                        <IconImageDownload className="w-4 h-4" />
+                        <IconImageDownload className={CANVAS_TOOL_ICON_CLASS} />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={handleDownloadBundle} className={CANVAS_TOOL_BUTTON_CLASS} title={tt('common:preview.downloadBundle', 'Download ZIP')}>
-                        <IconSquareArrowDown className="w-4 h-4" />
+                        <IconSquareArrowDown className={CANVAS_TOOL_ICON_CLASS} />
                     </Button>
                 </div>
             </div>
@@ -804,27 +819,7 @@ export function CanvasPanel({
                 <div
                     className="shrink-0 flex items-start justify-center w-full"
                     style={(() => {
-                        const [w, h] = aspectRatio.split(':').map(Number);
-                        const ratio = w / h;
-                        const footerOffset = getFooterOffset();
-                        const availableHeight = Math.max(200, viewportHeight - footerOffset);
-                        const padding = isMobile ? 0 : 48;
-                        const availableWidth = (containerRef.current?.parentElement?.clientWidth
-                            ? containerRef.current.parentElement.clientWidth - padding
-                            : (isMobile ? window.innerWidth : 1000));
-
-                        let canvasHeight;
-                        if (isMobile) {
-                            canvasHeight = availableWidth / ratio;
-                        } else {
-                            if (ratio >= 1) {
-                                const canvasWidth = Math.min(availableWidth, availableHeight * ratio);
-                                canvasHeight = canvasWidth / ratio;
-                            } else {
-                                canvasHeight = Math.min(availableHeight, availableWidth / ratio);
-                            }
-                        }
-
+                        const { canvasHeight } = getCanvasFitMetrics()
                         // Strictly follow scaled height to maintain fixed gap below
                         const scaledHeight = canvasHeight * (zoom / 100);
                         return {
@@ -841,31 +836,7 @@ export function CanvasPanel({
                             wasJustGenerated && "canvas-success-flash"
                         )}
                         style={(() => {
-                            const [w, h] = aspectRatio.split(':').map(Number);
-                            const ratio = w / h;
-
-                            const footerOffset = getFooterOffset();
-                            const availableHeight = Math.max(200, viewportHeight - footerOffset);
-
-                            const padding = isMobile ? 0 : 48;
-                            const availableWidth = (containerRef.current?.parentElement?.clientWidth
-                                ? containerRef.current.parentElement.clientWidth - padding
-                                : (isMobile ? window.innerWidth : 1000));
-
-                            let canvasWidth, canvasHeight;
-
-                            if (isMobile) {
-                                canvasWidth = availableWidth;
-                                canvasHeight = canvasWidth / ratio;
-                            } else {
-                                if (ratio >= 1) {
-                                    canvasWidth = Math.min(availableWidth, availableHeight * ratio);
-                                    canvasHeight = canvasWidth / ratio;
-                                } else {
-                                    canvasHeight = Math.min(availableHeight, availableWidth / ratio);
-                                    canvasWidth = canvasHeight * ratio;
-                                }
-                            }
+                            const { canvasWidth, canvasHeight } = getCanvasFitMetrics()
 
                             return {
                                 width: `${canvasWidth}px`,
@@ -973,6 +944,15 @@ export function CanvasPanel({
                                             src={currentImage}
                                             alt={tt('common:preview.currentImage', 'Current image')}
                                             className="w-full h-full object-contain"
+                                            onLoad={(e) => {
+                                                const target = e.currentTarget
+                                                if (target.naturalWidth && target.naturalHeight) {
+                                                    setCurrentImageNaturalSize({
+                                                        w: target.naturalWidth,
+                                                        h: target.naturalHeight,
+                                                    })
+                                                }
+                                            }}
                                         />
                                     </motion.div>
                                 </div>
@@ -981,10 +961,7 @@ export function CanvasPanel({
                             <div className="relative w-full h-full z-10">
                                 <WireframeRenderer
                                     state={creationState}
-                                    aspectRatio={(() => {
-                                        const [w, h] = aspectRatio.split(':').map(Number);
-                                        return w / h;
-                                    })()}
+                                    aspectRatio={fallbackCanvasAspectRatio}
                                 />
                             </div>
                         ) : (

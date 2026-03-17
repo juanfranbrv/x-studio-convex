@@ -9,6 +9,7 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
     Home01Icon,
+    SecondBracketSquareIcon,
     Image02Icon,
     Settings01Icon,
     Briefcase02Icon,
@@ -45,6 +46,8 @@ import {
     PaintBrush02Icon,
     Menu02Icon,
     Search01Icon,
+    SearchAddIcon,
+    SearchMinusIcon,
     Delete01Icon,
     Download02Icon,
     Upload02Icon,
@@ -66,7 +69,7 @@ import {
     Bug01Icon,
     Eraser01Icon,
     ImageAdd01Icon,
-    ImageDownloadIcon,
+    ImageDownload02Icon,
     InstagramIcon,
     LayerIcon,
     Layout01Icon,
@@ -84,13 +87,11 @@ import {
     PowerIcon,
     Route01Icon,
     SentIcon,
-    SquareArrowDown01Icon,
+    Zip02Icon,
     TextFontIcon,
     Undo02Icon,
     MagicWand01Icon,
     YoutubeIcon,
-    ZoomInAreaIcon,
-    ZoomOutAreaIcon,
     FloppyDiskIcon,
     WorkHistoryIcon,
     FingerPrintIcon,
@@ -104,6 +105,7 @@ import {
     ShapesIcon,
     EyeIcon,
     InformationCircleIcon,
+    Coins01Icon,
     CoinsDollarIcon,
     Activity01Icon,
     LinkSquare01Icon,
@@ -234,8 +236,8 @@ export const IconColorPicker = createIcon(ColorPickerIcon)
 export const IconLayers = createIcon(LayerIcon)
 export const IconLayout = createIcon(Layout01Icon)
 export const IconImageAdd = createIcon(ImageAdd01Icon)
-export const IconImageDownload = createIcon(ImageDownloadIcon)
-export const IconSquareArrowDown = createIcon(SquareArrowDown01Icon)
+export const IconImageDownload = createIcon(ImageDownload02Icon)
+export const IconSquareArrowDown = createIcon(Zip02Icon)
 export const IconTextFont = createIcon(TextFontIcon)
 export const IconMouseClick = createIcon(MouseLeftClick01Icon)
 export const IconLightbulb = createIcon(BulbIcon)
@@ -261,9 +263,9 @@ export const IconPhone = createIcon(SmartPhone01Icon)
 export const IconAtSign = createIcon(MailAtSign01Icon)
 
 // ─── Zoom ───
-export const IconZoomIn = createIcon(ZoomInAreaIcon)
-export const IconZoomOut = createIcon(ZoomOutAreaIcon)
-export const IconMaximize = createIcon(Maximize01Icon)
+export const IconZoomIn = createIcon(SearchAddIcon)
+export const IconZoomOut = createIcon(SearchMinusIcon)
+export const IconMaximize = createIcon(SecondBracketSquareIcon)
 
 // ─── Misc ───
 export const IconMinus = createIcon(MinusSignIcon)
@@ -278,6 +280,7 @@ export const IconFilter = createIcon(FilterIcon)
 export const IconShapes = createIcon(ShapesIcon)
 export const IconEye = createIcon(EyeIcon)
 export const IconInfo = createIcon(InformationCircleIcon)
+export const IconCoins01 = createIcon(Coins01Icon)
 export const IconCoins = createIcon(CoinsDollarIcon)
 export const IconActivity = createIcon(Activity01Icon)
 export const IconExternalLink = createIcon(LinkSquare01Icon)

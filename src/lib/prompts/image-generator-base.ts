@@ -58,6 +58,9 @@ COMPOSICION:
 - If space is limited, shorten URL visual treatment instead of scaling up.
 - AUTO-FIT TIPOGRAFICO OBLIGATORIO: ningun texto puede quedar cortado. Si el titular es largo, reduce tamano y haz salto de linea hasta que el 100% del texto sea visible.
 - SAFE MARGINS DE TEXTO: deja al menos un 8% de margen respecto a bordes del lienzo y evita recortes de ascenders/descenders.
+- PROTECCION ANTIFUGA DE FUENTES: cualquier nombre de fuente o familia tipografica mencionado en el prompt es metadato invisible para estilizar el texto.
+- NUNCA imprimas nombres de fuente, etiquetas internas ni tokens de produccion como copy visible dentro de la imagen.
+- Si aparece una fuente en el prompt, usala solo para decidir forma, peso, ritmo, remates y jerarquia del texto.
 - PROHIBICION DE COLORES EXTRANOS: NO uses colores que no esten en la paleta de marca. Si la plantilla tiene elementos rojos y la marca no tiene rojo, cambialos al color primario de la marca ({{colorList}}).
 - Fidelidad estructural absoluta al layout de referencia, pero con estetica 100% de la marca.
 ---------------------------------------------------------

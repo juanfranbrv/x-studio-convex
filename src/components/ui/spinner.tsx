@@ -18,7 +18,7 @@ export const Loader2 = React.forwardRef<SVGSVGElement, SpinnerProps>(function Lo
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden={title ? undefined : true}
             role={title ? 'img' : 'presentation'}
-            className={cn('inline-block shrink-0 text-primary', className)}
+            className={cn('inline-block shrink-0 text-current', className)}
             {...props}
         >
             {title ? <title>{title}</title> : null}
