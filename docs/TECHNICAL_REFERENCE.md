@@ -1,6 +1,6 @@
-# Referencia TÃ©cnica
+# Referencia Técnica
 
-Documento vivo de referencia tÃ©cnica para Juanfran y cualquier IA que trabaje en `x-studio`.
+Documento vivo de referencia técnica para Juanfran y cualquier IA que trabaje en `x-studio`.
 
 ## Reglas de sistema UI
 
@@ -22,26 +22,26 @@ Decision vigente:
 - los dropdowns deben mantener la misma escala tipografica cerrados y abiertos
 - los estados informativos no deben encapsularse por defecto si se leen mejor como texto limpio
 - dentro de tarjetas con varios subbloques funcionales, se evita tanto la linea dura como el patron de tarjeta dentro de tarjeta; primero se resuelve con espacio, tipografia y ritmo vertical
-## DetecciÃ³n de idioma con Detect Language API
+## Detección de idioma con Detect Language API
 
-### PropÃ³sito
+### Propósito
 
-Se usa para mejorar la detecciÃ³n de idioma en prompts cortos o ambiguos, especialmente en espaÃ±ol, catalÃ¡n y portuguÃ©s.
+Se usa para mejorar la detección de idioma en prompts cortos o ambiguos, especialmente en español, catalán y portugués.
 
-No sustituye por completo la heurÃ­stica local:
+No sustituye por completo la heurística local:
 
-- en cliente se mantiene detecciÃ³n local sÃ­ncrona
+- en cliente se mantiene detección local síncrona
 - en servidor se usa Detect Language API con fallback local
 
 Esto evita exponer la clave y mantiene la app funcional si la API falla.
 
-### ConfiguraciÃ³n
+### Configuración
 
 - Variable de entorno: `DETECT_LANGUAGE_API_KEY`
 - Endpoint: `POST https://ws.detectlanguage.com/0.2/detect`
-- AutenticaciÃ³n: `Authorization: Bearer <API_KEY>`
+- Autenticación: `Authorization: Bearer <API_KEY>`
 
-### ImplementaciÃ³n compartida
+### Implementación compartida
 
 Archivo base:
 
@@ -49,12 +49,12 @@ Archivo base:
 
 Funciones principales:
 
-- `detectLanguage(text)`: heurÃ­stica local sÃ­ncrona
-- `detectLanguageFromParts(parts, fallback)`: heurÃ­stica local para varias entradas
-- `detectLanguageWithApi(text, fallback)`: detecciÃ³n en servidor con API + fallback local
+- `detectLanguage(text)`: heurística local síncrona
+- `detectLanguageFromParts(parts, fallback)`: heurística local para varias entradas
+- `detectLanguageWithApi(text, fallback)`: detección en servidor con API + fallback local
 - `detectLanguageFromPartsWithApi(parts, fallback)`: variante agregada para varias entradas
 
-### DÃ³nde se usa
+### Dónde se usa
 
 Acciones de servidor conectadas a la API:
 
@@ -63,17 +63,17 @@ Acciones de servidor conectadas a la API:
 - [src/app/actions/parse-intent.ts](F:/_PROYECTOS/x-studio/src/app/actions/parse-intent.ts)
 - [src/app/actions/analyze-brand-dna.ts](F:/_PROYECTOS/x-studio/src/app/actions/analyze-brand-dna.ts)
 
-Uso local sÃ­ncrono en cliente o utilidades que no deben depender de red:
+Uso local síncrono en cliente o utilidades que no deben depender de red:
 
-- hooks del flujo de creaciÃ³n
-- lÃ³gica de apoyo en imagen/carrusel
+- hooks del flujo de creación
+- lógica de apoyo en imagen/carrusel
 - constructores de prompt que necesitan respuesta inmediata
 
-### Regla de decisiÃ³n
+### Regla de decisión
 
 El sistema sigue esta prioridad:
 
-1. heurÃ­stica local
+1. heurística local
 2. consulta a Detect Language API en servidor
 3. si la API es fiable, se acepta su idioma
 4. si falla, no hay clave o la respuesta es dudosa, se conserva el resultado local
@@ -81,8 +81,8 @@ El sistema sigue esta prioridad:
 ### Notas de mantenimiento
 
 - No mover la llamada a la API a cliente.
-- No usar esta integraciÃ³n para bloquear flujos crÃ­ticos.
-- Si aparece una regresiÃ³n en detecciÃ³n, ajustar primero [src/lib/language-detection.ts](F:/_PROYECTOS/x-studio/src/lib/language-detection.ts), no parchear cada mÃ³dulo por separado.
+- No usar esta integración para bloquear flujos críticos.
+- Si aparece una regresión en detección, ajustar primero [src/lib/language-detection.ts](F:/_PROYECTOS/x-studio/src/lib/language-detection.ts), no parchear cada módulo por separado.
 ## Plan vivo de responsive e internacionalizacion
 
 Existe un checklist operativo para abordar la revision responsive/mobile y la internacionalizacion ES/EN:
@@ -114,6 +114,72 @@ Nota operativa:
 - Para probar desde movil u otros dispositivos en la misma red hay que usar `npm run dev:lan` o `npm run dev:lan:quiet`.
 - Ese flujo detecta una IP privada util, expone Next en `0.0.0.0:3000`, inyecta `NEXT_PUBLIC_APP_URL` con la URL LAN correcta para esa sesion y rellena `allowedDevOrigins`.
 - Evitar fijar manualmente una IP LAN en `.env.local`; la IP puede cambiar entre redes y romper Clerk o los redirects de desarrollo.
+
+## Navegador automatizado y verificacion visual
+
+### Regla operativa
+
+- La via prioritaria para control del navegador y verificacion visual es `Google Chrome CDP` mediante `chrome-devtools`.
+- `Playwright` queda como herramienta secundaria para flujos puntuales o automatizaciones concretas, no como capa principal de inspeccion visual diaria.
+
+### Motivo
+
+- Mezclar `Playwright` y `Chrome CDP` como si fueran equivalentes genera diagnosticos inconsistentes.
+- El patron estable del proyecto es:
+  1. levantar la app
+  2. arrancar el navegador aislado con `npm run chrome:debug` o `npm run dev:debug-browser`
+  3. verificar que el puerto `9222` responde correctamente
+  4. usar `chrome-devtools` como fuente principal de verdad para snapshots, consola, red y validacion visual
+
+### Regla de saneamiento del puerto 9222
+
+- Si el puerto `9222` esta ocupado por un Chrome viejo o un listener degradado, la automatizacion deja de ser fiable aunque parezca que "hay navegador".
+- El helper compartido `scripts/chrome-debug-common.ps1` debe actuar solo sobre el Chrome aislado del proyecto (`.tmp/chrome-debug`) y su arbol de procesos.
+- No se debe matar el navegador personal de Juanfran para limpiar el entorno del proyecto.
+- Antes de declarar que CDP "no funciona", comprobar siempre:
+  - que `npm run chrome:debug:kill` deja libre `9222`
+  - que `npm run chrome:debug` vuelve a levantar un listener sano
+  - que `chrome-devtools` puede listar paginas o tomar snapshot sin timeout de `Network.enable`
+
+### Navegador personal vs navegador aislado
+
+- `Chrome CDP` puede controlar un navegador con sesion real solo si ese navegador ha sido lanzado explicitamente con puerto de depuracion remoto.
+- El flujo estandar del proyecto sigue siendo un navegador aislado para no interferir con otras pestanas o trabajo personal.
+- Si se quiere usar el navegador personal con cookies reales, debe tratarse como un modo deliberado y no como comportamiento por defecto.
+
+### CLI oficial del proyecto para Chrome CDP
+
+- El wrapper oficial del repo vive en `scripts/cdp.mjs`.
+- Ese wrapper delega en el skill instalado en `.agents/skills/chrome-cdp/scripts/cdp.mjs` y evita depender de rutas manuales.
+- Script npm oficial:
+  - `npm run cdp -- list`
+  - `npm run cdp -- snap <target>`
+  - `npm run cdp -- shot <target>`
+  - `npm run cdp -- click <target> "<selector>"`
+  - `npm run cdp -- type <target> "texto"`
+- Regla operativa:
+  1. habilitar remote debugging en `chrome://inspect/#remote-debugging`
+  2. usar `npm run cdp -- list` para comprobar que el navegador real responde
+  3. trabajar sobre esa sesion como via prioritaria si el contexto requiere cookies y login reales
+
+### Reutilizacion de sesion de depuracion ya concedida
+
+- Si Chrome ya muestra el aviso de que esta siendo controlado por software automatizado, se asume que la depuracion remota ya esta concedida para esa sesion.
+- En ese estado no se debe forzar un nuevo navegador ni provocar una nueva peticion de aprobacion si antes puede verificarse el control existente.
+- Orden de comprobacion obligatorio antes de lanzar nuevas peticiones o abrir un Chrome alternativo:
+  1. `npm run cdp -- list`
+  2. si responde, reutilizar esa sesion
+  3. solo intentar una nueva conexion o un navegador alternativo si la comprobacion anterior falla de verdad
+- Objetivo: no depender de que Juanfran este delante para aceptar prompts repetidos de depuracion.
+
+### Doble verificacion recomendada
+
+- Cuando se toque infraestructura de navegador o se sospeche intermitencia:
+  1. parar Chrome debug
+  2. arrancarlo limpio
+  3. probar CDP
+  4. repetir el ciclo una segunda vez
+- No dar por cerrada una incidencia de navegador con una unica prueba positiva.
 
 ## Arquitectura de internacionalizacion
 
@@ -161,7 +227,7 @@ La arquitectura queda preparada para sumar mas idiomas anadiendo nuevos director
 ### Deuda conocida
 
 - El repo sigue teniendo mojibake heredado en archivos antiguos fuera del bloque nuevo de i18n.
-- Antes de cerrar fases grandes de texto UI conviene ejecutar una busqueda de `Ãƒ`, `Ã‚` y `ï¿½` sobre `src`.
+- Antes de cerrar fases grandes de texto UI conviene ejecutar una busqueda de `?`, `?` y `?` sobre `src`.
 ## Loading, cancelacion y paginas legales
 
 ### Spinner global
@@ -440,3 +506,29 @@ Si Clerk exige verificacion completa del dominio para correo o cuenta hospedada,
 - El catalogo visible se limita a las plataformas `instagram`, `tiktok`, `facebook`, `x`, `youtube` y `linkedin`.
 - `whatsapp` queda fuera del selector y del catalogo activo; no debe reaparecer salvo decision explicita de producto.
 - Solo se muestran formatos con proporcion estandar util para composicion visual. Las medidas especiales sin ratio reutilizable (cabeceras, covers exoticos o casos puntuales sin familia clara) se excluyen del selector para no mezclar formatos operativos con excepciones de soporte.
+
+## Paridad visual entre Image y Carousel
+
+- `image` actua como referencia principal del lenguaje visual del estudio creativo.
+- `carousel` debe reutilizar los mismos patrones compartidos siempre que la funcion sea equivalente.
+- Componentes y constantes compartidas vigentes:
+  - `src/components/studio/shared/selectStyles.ts`
+  - `src/components/studio/shared/StudioActionBar.tsx`
+  - `src/components/studio/shared/dialogStyles.ts`
+  - `src/components/studio/shared/canvasStyles.ts`
+- Regla de mantenimiento:
+  - si un dropdown, dialogo de decision, barra inferior o toolbar flotante se pule en `image`, revisar si `carousel` debe heredar el mismo ajuste en la misma sesion o en la siguiente.
+
+## Brand Kit y lenguaje visual compartido
+
+- `brand-kit` debe seguir el mismo lenguaje visual base que `image` y `carousel`.
+- Las superficies nuevas de `brand-kit` deben reutilizar estilos compartidos desde `src/components/brand-dna/brandKitStyles.ts`.
+- Regla operativa:
+  1. evitar `glass-panel` como solucion por defecto
+  2. evitar el patron de tarjeta dentro de tarjeta
+  3. usar la misma jerarquia tipografica y la misma familia de radios y alturas para campos, botones y dialogos
+  4. mantener la misma logica de seleccion visual: panel = color/fondo/borde, modal de imagen = check si aporta claridad
+- Regla de borradores del asistente:
+  - un `Brand Kit` nuevo creado desde el asistente debe arrancar en `0%`
+  - placeholders como `My Brand`, `Mi marca` o equivalentes no cuentan como progreso real
+  - la completitud solo debe subir cuando el usuario rellena contenido real o cuando el analisis autocompleta datos validos

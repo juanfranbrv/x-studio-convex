@@ -8,6 +8,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { type ContextElement } from "@/app/image/page";
 import { cn } from '@/lib/utils';
+import {
+    BRAND_KIT_GHOST_BUTTON_CLASS,
+    BRAND_KIT_PANEL_CLASS,
+    BRAND_KIT_PANEL_DESCRIPTION_CLASS,
+    BRAND_KIT_PANEL_HEADER_CLASS,
+    BRAND_KIT_REMOVE_BUTTON_CLASS,
+    BRAND_KIT_PANEL_TITLE_CLASS,
+} from './brandKitStyles';
 
 import { IconInfo, IconPalette, IconRotate, IconClose, IconColorPicker, IconCheck, IconPlus, IconCopy } from '@/components/ui/icons';
 import { useTheme } from 'next-themes';
@@ -136,21 +144,26 @@ export function ColorPalette({
     return (
         <TooltipProvider delayDuration={400}>
             <Card className={cn(
-                "relative overflow-visible z-40 glass-panel border-0 shadow-none",
+                "relative overflow-visible z-40",
+                BRAND_KIT_PANEL_CLASS,
                 hideHeader && "bg-transparent backdrop-blur-0 border-none shadow-none"
             )}>
                 {!hideHeader && (
                     <>
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[var(--accent)]/5 to-transparent rounded-full blur-3xl" />
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
+                        <CardHeader className={cn(BRAND_KIT_PANEL_HEADER_CLASS, "flex-row items-start justify-between pb-4")}>
+                            <div className="space-y-1.5">
+                            <CardTitle className={BRAND_KIT_PANEL_TITLE_CLASS}>
                                 <IconPalette className="w-5 h-5 text-primary" />
                                 {t('palette.title', { defaultValue: 'Color palette' })}
                             </CardTitle>
+                                <p className={BRAND_KIT_PANEL_DESCRIPTION_CLASS}>
+                                    {t('palette.description', { defaultValue: 'Tonos principales que definen la identidad de marca y alimentan el resto de módulos.' })}
+                                </p>
+                            </div>
                             <div className="flex items-center gap-2">
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/60 cursor-help">
+                                        <Button variant="ghost" size="icon" className={cn(BRAND_KIT_GHOST_BUTTON_CLASS, "h-9 w-9 cursor-help px-0 text-muted-foreground/70")}>
                                             <IconInfo className="w-4 h-4" />
                                         </Button>
                                     </TooltipTrigger>
@@ -163,7 +176,7 @@ export function ColorPalette({
                                         variant="ghost"
                                         size="sm"
                                         onClick={onReset}
-                                        className="text-xs h-7 gap-1"
+                                        className={cn(BRAND_KIT_GHOST_BUTTON_CLASS, "gap-1.5")}
                                     >
                                         <IconRotate className="w-3.5 h-3.5" />
                                         {t('palette.reset', { defaultValue: 'Reset' })}
@@ -173,7 +186,7 @@ export function ColorPalette({
                         </CardHeader>
                     </>
                 )}
-                <CardContent className={cn("relative space-y-1 overflow-visible", hideHeader && "p-0")}>
+                <CardContent className={cn("relative overflow-visible px-6 pb-6 pt-0", hideHeader && "p-0")}>
                     <div className="flex items-start gap-3 flex-wrap">
                         {orderedIndexes.map((idx, visualIdx) => {
                             const item = colors[idx];
@@ -220,7 +233,7 @@ export function ColorPalette({
                                                         "hover:scale-110 hover:shadow-xl border-2",
                                                         "relative overflow-visible flex items-center justify-center w-20 h-20",
                                                         addLeftSpacingForAccents && "ml-2",
-                                                        colorPickerOpen === idx ? 'border-primary ring-2 ring-primary/20' : '',
+                                                        colorPickerOpen === idx ? 'border-primary ring-2 ring-primary/20' : 'shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]',
                                                         draggedColorIndex !== null && draggedColorIndex !== idx && 'ring-2 ring-primary/20',
                                                         selectedColorIds.includes(`color-${idx}`)
                                                             ? "border-primary shadow-md"
@@ -246,14 +259,14 @@ export function ColorPalette({
                                                             e.stopPropagation();
                                                             onRemoveColor(idx);
                                                         }}
-                                                        className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:scale-110 shadow-lg z-50"
+                                                        className={cn(BRAND_KIT_REMOVE_BUTTON_CLASS, "right-0 top-0 -translate-y-1/4 translate-x-1/4 z-50")}
                                                     >
-                                                        <IconClose className="w-2.5 h-2.5" />
+                                                        <IconClose className="h-3 w-3" />
                                                     </button>
                                                 </div>
                                             </PopoverTrigger>
                                         </TooltipTrigger>
-                                        <PopoverContent className="w-[240px] p-3 border-border bg-popover z-[100]" side="right" align="start">
+                                        <PopoverContent className="z-[100] w-[260px] rounded-[1.2rem] border-border/70 bg-popover p-3 shadow-[0_26px_74px_-40px_rgba(15,23,42,0.36)]" side="right" align="start">
                                             <div className="space-y-4">
                                                 <div>
                                                     <p className="text-[10px] uppercase font-bold text-muted-foreground/60 mb-2 px-1">{t('palette.brandColor', { defaultValue: 'Brand color' })}</p>
@@ -268,17 +281,17 @@ export function ColorPalette({
 
                                                 <div className="space-y-2">
                                                     <p className="text-[10px] uppercase font-bold text-muted-foreground/60 px-1">{t('palette.colorRole', { defaultValue: 'Color role' })}</p>
-                                                    <div className="flex gap-1 bg-muted/30 p-1 rounded-xl border border-white/10">
+                                                    <div className="flex gap-1 rounded-xl border border-border/70 bg-[hsl(var(--surface-alt))]/70 p-1">
                                                         {(['Texto', 'Fondo', 'Acento'] as const).map(role => (
                                                             <Button
                                                                 key={role}
                                                                 variant={item.role === role ? "secondary" : "ghost"}
                                                                 size="sm"
                                                                 className={cn(
-                                                                    "flex-1 h-7 text-[10px] px-0 rounded-lg transition-all",
+                                                                    "flex-1 h-8 rounded-lg px-0 text-[0.72rem] font-medium transition-all",
                                                                     item.role === role
-                                                                        ? "bg-white shadow-sm text-primary font-bold"
-                                                                        : "hover:bg-white/50 text-muted-foreground"
+                                                                        ? "bg-background shadow-sm text-primary"
+                                                                        : "text-muted-foreground hover:bg-background/75"
                                                                 )}
                                                                 onClick={() => onUpdateRole(idx, role)}
                                                             >
@@ -288,24 +301,24 @@ export function ColorPalette({
                                                     </div>
                                                 </div>
 
-                                                <div className="flex gap-2 pt-2 border-t border-border/40">
+                                                <div className="flex gap-2 border-t border-border/40 pt-2">
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
                                                         onClick={() => handleEyedropper(idx)}
-                                                        className="flex-1 gap-1 h-8 text-xs font-medium rounded-lg"
+                                                        className="h-9 flex-1 gap-1 rounded-[0.9rem] text-[0.86rem] font-medium"
                                                     >
                                                         <IconColorPicker className="w-4 h-4" />
                                                         {t('palette.capture', { defaultValue: 'Capture' })}
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground rounded-lg" onClick={() => setColorPickerOpen(null)}>
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-[0.9rem] text-muted-foreground" onClick={() => setColorPickerOpen(null)}>
                                                         <IconClose className="w-4 h-4" />
                                                     </Button>
                                                 </div>
                                             </div>
                                         </PopoverContent>
                                     </Popover>
-                                    <TooltipContent side="bottom" className="flex flex-col gap-1 p-2 bg-popover border-border shadow-md z-[110]">
+                                    <TooltipContent side="bottom" className="z-[110] flex flex-col gap-1 rounded-[1rem] border-border/70 bg-popover p-2 shadow-md">
                                         <p className="text-xs font-bold text-foreground">{t(`palette.roles.${role}`, { defaultValue: role })}</p>
                                         <p className="text-[9px] text-muted-foreground/60">{t('palette.dragHint', { defaultValue: 'Drag onto another color to swap roles' })}</p>
                                     </TooltipContent>
@@ -318,7 +331,7 @@ export function ColorPalette({
                         {colors.length < 10 && (
                             <div
                                 onClick={onAddColor}
-                                className="rounded-full border-2 border-dashed border-border hover:border-primary flex items-center justify-center transition-colors group bg-muted/50 cursor-pointer w-20 h-20"
+                                className="h-20 w-20 cursor-pointer rounded-full border-2 border-dashed border-border bg-[hsl(var(--surface-alt))]/55 flex items-center justify-center transition-colors group hover:border-primary/25 hover:bg-[hsl(var(--surface))]"
                             >
                                 <IconPlus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
                             </div>

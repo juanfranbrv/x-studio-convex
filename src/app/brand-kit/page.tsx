@@ -34,6 +34,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import {
+    BRAND_KIT_MODAL_CLASS,
+    BRAND_KIT_MODAL_DESCRIPTION_CLASS,
+    BRAND_KIT_MODAL_FOOTER_CLASS,
+    BRAND_KIT_MODAL_HEADER_CLASS,
+    BRAND_KIT_MODAL_TITLE_CLASS,
+    BRAND_KIT_SECONDARY_BUTTON_CLASS,
+} from '@/components/brand-dna/brandKitStyles';
 
 function BrandKitPageContent() {
     const { t } = useTranslation('brandKit');
@@ -244,7 +252,7 @@ function BrandKitPageContent() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     clerk_user_id: user.id,
-                    brand_name: t('board.namePlaceholder', { defaultValue: 'My Brand' }),
+                    brand_name: '',
                 }),
             });
 
@@ -601,11 +609,11 @@ function BrandKitPageContent() {
     };
 
     const assistantHeaderAction = activeBrandKit ? (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
             <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "gap-2")}
                 onClick={handleOpenAssistant}
             >
                 <IconListChecks className="w-4 h-4" />
@@ -614,7 +622,7 @@ function BrandKitPageContent() {
             <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "gap-2")}
                 onClick={() => void handleDuplicateCurrentBrandKit()}
                 disabled={isDuplicatingCurrent}
             >
@@ -624,7 +632,7 @@ function BrandKitPageContent() {
             <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "gap-2")}
                 onClick={handleOpenImport}
             >
                 <IconUpload className="w-4 h-4" />
@@ -633,7 +641,7 @@ function BrandKitPageContent() {
             <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "gap-2")}
                 onClick={handleOpenExport}
             >
                 <IconDownload className="w-4 h-4" />
@@ -642,7 +650,7 @@ function BrandKitPageContent() {
             <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "gap-2 border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive")}
                 onClick={() => setShowDeleteCurrentConfirm(true)}
             >
                 <IconDelete className="w-4 h-4" />
@@ -852,6 +860,7 @@ function BrandKitPageContent() {
             onBrandDelete={handleBrandDelete}
             onNewBrandKit={handleNewProfile}
             headerAfterBrandActions={assistantHeaderAction}
+            contentContainerVariant="plain"
         >
             <main className="p-6 md:p-12 max-w-7xl mx-auto">
 
@@ -1331,16 +1340,16 @@ function BrandKitPageContent() {
                         if (!open) setPendingRegenerateUrl('');
                     }}
                 >
-                    <AlertDialogContent className="max-w-md shadow-2xl p-0 overflow-hidden gap-0">
+                    <AlertDialogContent className={cn(BRAND_KIT_MODAL_CLASS, "max-w-md gap-0 overflow-hidden")}>
                         <div className="p-6 pb-2">
-                            <AlertDialogHeader>
-                                <AlertDialogTitle className="flex items-center gap-3 text-xl text-foreground">
+                            <AlertDialogHeader className={BRAND_KIT_MODAL_HEADER_CLASS}>
+                                <AlertDialogTitle className={cn(BRAND_KIT_MODAL_TITLE_CLASS, "flex items-center gap-3 text-foreground")}>
                                     <div className="p-2.5 rounded-full bg-amber-500/10 text-amber-500">
                                         <IconTriangleAlert className="w-6 h-6 animate-pulse" />
                                     </div>
                                     {t('dialogs.regenerateTitle', { defaultValue: 'Regenerate brand kit' })}
                                 </AlertDialogTitle>
-                                <AlertDialogDescription className="text-muted-foreground pt-4 text-base leading-relaxed">
+                                <AlertDialogDescription className={cn(BRAND_KIT_MODAL_DESCRIPTION_CLASS, "pt-4")}>
                                     {t('dialogs.regenerateDescriptionBefore', { defaultValue: 'This action will analyze the website ' })}
                                     <span className='font-semibold text-foreground'>{normalizeUrlForAnalysis(pendingRegenerateUrl) || normalizeUrlForAnalysis(activeBrandKit?.url || '') || t('dialogs.invalidUrl', { defaultValue: 'without a valid URL' })}</span>
                                     {t('dialogs.regenerateDescriptionAfter', { defaultValue: ' again from scratch.' })}
@@ -1357,13 +1366,13 @@ function BrandKitPageContent() {
                             </div>
                         </div>
 
-                        <AlertDialogFooter className="p-6 border-t border-border flex-row justify-end gap-3 sm:space-x-0">
-                            <AlertDialogCancel className="mt-0 border-border hover:bg-accent hover:text-accent-foreground text-foreground transition-all active:scale-95">
+                        <AlertDialogFooter className={cn(BRAND_KIT_MODAL_FOOTER_CLASS, "border-t border-border flex-row gap-3 sm:space-x-0")}>
+                            <AlertDialogCancel className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "mt-0 border-border hover:bg-accent hover:text-accent-foreground text-foreground transition-all active:scale-95")}>
                                 {t('common:actions.cancel', { defaultValue: 'Cancel' })}
                             </AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleRegenerate}
-                                className="shadow-lg transition-all active:scale-95"
+                                className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "shadow-lg transition-all active:scale-95")}
                             >
                                 <IconRefresh className="w-4 h-4 mr-2" />
                                 {t('dialogs.regenerateConfirm', { defaultValue: 'Yes, regenerate now' })}
@@ -1373,23 +1382,32 @@ function BrandKitPageContent() {
                 </AlertDialog>
 
                 <AlertDialog open={showDeleteCurrentConfirm} onOpenChange={setShowDeleteCurrentConfirm}>
-                    <AlertDialogContent className="max-w-md">
-                        <AlertDialogHeader>
-                            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-                                <IconDelete className="w-5 h-5" />
+                    <AlertDialogContent className={cn(BRAND_KIT_MODAL_CLASS, "!w-[min(92vw,40rem)] !max-w-[40rem] sm:!max-w-[40rem] gap-0 overflow-hidden rounded-[1.9rem] p-0")}>
+                        <div className="px-8 pb-4 pt-8">
+                        <AlertDialogHeader className={cn(BRAND_KIT_MODAL_HEADER_CLASS, "px-0 pb-0 pt-0 text-left")}>
+                            <AlertDialogTitle className={cn(BRAND_KIT_MODAL_TITLE_CLASS, "flex items-center gap-3 text-destructive text-[clamp(1.2rem,1.1rem+0.2vw,1.34rem)]")}>
+                                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                                    <IconDelete className="w-5 h-5" />
+                                </span>
                                 {t('dialogs.deleteCurrentTitle', { defaultValue: 'Delete current brand kit' })}
                             </AlertDialogTitle>
-                            <AlertDialogDescription>
+                            <AlertDialogDescription className={cn(BRAND_KIT_MODAL_DESCRIPTION_CLASS, "pt-4 text-[1rem] leading-relaxed")}>
                                 {t('dialogs.deleteCurrentBefore', { defaultValue: 'The following will be deleted: ' })}
-                                <span className="font-semibold">{activeBrandKit?.brand_name || t('dialogs.thisKit', { defaultValue: 'this kit' })}</span>
+                                <span className="font-semibold text-foreground">{activeBrandKit?.brand_name || t('dialogs.thisKit', { defaultValue: 'this kit' })}</span>
                                 {t('dialogs.deleteCurrentAfter', { defaultValue: ' and this action cannot be undone.' })}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>{t('common:actions.cancel', { defaultValue: 'Cancel' })}</AlertDialogCancel>
+                        </div>
+                        <div className="px-8 pb-5">
+                            <div className="rounded-[1.15rem] border border-destructive/15 bg-destructive/[0.04] px-4 py-3 text-sm text-muted-foreground">
+                                {t('dialogs.deleteCurrentWarning', { defaultValue: 'Esta acción eliminará también sus activos asociados dentro del kit actual.' })}
+                            </div>
+                        </div>
+                        <AlertDialogFooter className={cn(BRAND_KIT_MODAL_FOOTER_CLASS, "mx-0 mb-0 rounded-none border-0 bg-transparent px-8 pb-8 pt-1")}>
+                            <AlertDialogCancel className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "mt-0")}>{t('common:actions.cancel', { defaultValue: 'Cancel' })}</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleDeleteCurrentBrandKit}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-none")}
                             >
                                 {t('dialogs.deleteCurrentConfirm', { defaultValue: 'Delete kit' })}
                             </AlertDialogAction>

@@ -8,13 +8,29 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { IconGlobe, IconShield, IconQuote, IconArrowLeft, IconArrowRight, IconCheck, IconPalette, IconUpload, IconImage, IconClose, IconPlus, IconColorPicker, IconSparkles, IconTextFont, IconMessage, IconMegaphone, IconMouseClick, IconDelete } from '@/components/ui/icons'
+import { IconGlobe, IconShield, IconQuote, IconArrowLeft, IconArrowRight, IconCheck, IconPalette, IconUpload, IconImage, IconClose, IconPlus, IconColorPicker, IconSparkles, IconTextFont, IconMessage, IconMegaphone, IconMouseClick } from '@/components/ui/icons'
 import { HexColorPicker } from 'react-colorful'
 import { ContactSocialCard } from './ContactSocialCard'
 import { TypographySection } from './TypographySection'
 import { ImageGallery } from './VisualAssetComponents'
 import { BrandContextCard } from './BrandContextCard'
 import { useTranslation } from 'react-i18next'
+import {
+  BRAND_KIT_CALLOUT_CLASS,
+  BRAND_KIT_MODAL_CLASS,
+  BRAND_KIT_MODAL_DESCRIPTION_CLASS,
+  BRAND_KIT_MODAL_FOOTER_CLASS,
+  BRAND_KIT_MODAL_HEADER_CLASS,
+  BRAND_KIT_MODAL_TITLE_CLASS,
+  BRAND_KIT_FIELD_CLASS,
+  BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS,
+  BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS,
+  BRAND_KIT_SECONDARY_BUTTON_CLASS,
+  BRAND_KIT_TEXTAREA_CLASS,
+} from './brandKitStyles'
+
+const WIZARD_FIELD_CLASS = `${BRAND_KIT_FIELD_CLASS} !h-[42px] !rounded-[16px] !px-4 !text-[14px]`
+const WIZARD_TEXTAREA_CLASS = `${BRAND_KIT_TEXTAREA_CLASS} !rounded-[16px] !px-4 !py-3.5 !text-[14px]`
 
 type WizardStepId =
   | 'intro'
@@ -244,7 +260,8 @@ function AddAccentSwatch({
           type="button"
           disabled={disabled}
           className={cn(
-            'w-12 h-12 rounded-full border border-dashed border-border/80 flex items-center justify-center text-muted-foreground',
+            BRAND_KIT_CALLOUT_CLASS,
+            'w-12 h-12 rounded-full flex items-center justify-center p-0 text-muted-foreground',
             'hover:text-primary hover:border-primary/60 transition-colors',
             disabled && 'opacity-40 cursor-not-allowed'
           )}
@@ -614,53 +631,44 @@ export function BrandKitAssistantWizard({
       }}
     >
         <DialogContent
-          showCloseButton={false}
+          showCloseButton={!forceMode}
           overlayClassName="bg-black/85 backdrop-blur-md"
           onEscapeKeyDown={(event) => {
             if (forceMode) event.preventDefault()
           }}
           onPointerDownOutside={(event) => event.preventDefault()}
-          className="w-[min(97.5vw,1160px)] max-w-[1160px] h-[min(90vh,820px)] p-0 overflow-hidden"
+          className={cn(
+            BRAND_KIT_MODAL_CLASS,
+            "!w-[min(97.5vw,1160px)] !max-w-[1160px] sm:!max-w-[1160px] h-[min(92vh,860px)] overflow-hidden p-0 !rounded-[2rem]"
+          )}
         >
         <div className="h-full min-h-0 flex flex-col">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50 shrink-0">
-            <div className="flex items-start justify-between gap-3">
-              <DialogTitle className="min-w-0 text-xl md:text-2xl truncate">
+          <DialogHeader className={cn(BRAND_KIT_MODAL_HEADER_CLASS, "shrink-0 px-8 pb-3 pt-8 pr-20")}>
+            <div className="flex items-start justify-between gap-4">
+              <DialogTitle className={cn(BRAND_KIT_MODAL_TITLE_CLASS, "min-w-0 pr-0 text-[clamp(1.55rem,1.35rem+0.4vw,1.9rem)] leading-[1.08]")}>
             {t('wizard.title', { defaultValue: 'Brand Kit Assistant' })}
               </DialogTitle>
               <div className="flex items-start gap-2 shrink-0">
-                <div className="text-sm text-muted-foreground font-medium whitespace-nowrap pt-1">
+                <div className="rounded-full border border-border/70 bg-[hsl(var(--surface-alt))]/78 px-3 py-1 text-[0.78rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground whitespace-nowrap">
                   {headerStepLabel}
                 </div>
-                {!forceMode && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 -mt-1"
-                    onClick={closeWizard}
-            aria-label={t('common:actions.close', { defaultValue: 'Close assistant' })}
-                  >
-                    <IconClose className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
             </div>
-            <DialogDescription className="text-base">
+            <DialogDescription className={cn(BRAND_KIT_MODAL_DESCRIPTION_CLASS, "pr-12 text-[1.02rem]")}>
               Te guiamos paso a paso.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5 px-6 py-5 overflow-y-auto flex-1 min-h-0">
+          <div className="space-y-6 px-8 py-5 overflow-y-auto flex-1 min-h-0">
             <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
               <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
             </div>
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2">
+            <div className="rounded-[1.35rem] border border-border/70 bg-[hsl(var(--surface-alt))]/62 p-4 md:p-5 space-y-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">{t('wizard.realCompletion', { defaultValue: 'Real kit completion' })}</p>
+                <p className="text-[0.9rem] font-medium text-muted-foreground">{t('wizard.realCompletion', { defaultValue: 'Real kit completion' })}</p>
                 <p
                   className={cn(
-                    'text-xs font-semibold',
+                    'text-[0.95rem] font-semibold',
                     canFinishWizard ? 'text-emerald-600' : 'text-amber-600'
                   )}
                 >
@@ -676,13 +684,13 @@ export function BrandKitAssistantWizard({
                   style={{ width: `${completionClamped}%` }}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[0.92rem] leading-relaxed text-muted-foreground">
                 {t('wizard.completionHint', { defaultValue: 'This percentage grows with what you complete manually and with any auto-filled data extracted from the URL analysis.' })}
               </p>
             </div>
 
             {step === 'intro' && (
-              <section className="rounded-2xl border border-border/70 bg-muted/25 p-6 md:p-8 space-y-5">
+              <section className="rounded-[1.55rem] border border-border/70 bg-[hsl(var(--surface-alt))]/52 p-7 md:p-9 space-y-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]">
                 <div className="flex items-start gap-3">
                   <IconShield className="w-6 h-6 text-primary mt-1" />
                   <div className="space-y-3">
@@ -719,14 +727,14 @@ export function BrandKitAssistantWizard({
                   value={brand.brand_name || ''}
                   onChange={(e) => onUpdateBrandName(e.target.value)}
                     placeholder={t('wizard.brandNamePlaceholder', { defaultValue: 'e.g. My Brand' })}
-                  className="h-12 text-base"
+                  className={WIZARD_FIELD_CLASS}
                 />
               </section>
             )}
 
             {step === 'url' && (
               <section className="space-y-5">
-                <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
+                <div className={cn(BRAND_KIT_CALLOUT_CLASS, "space-y-2 p-4")}>
                   <div className="flex items-center gap-2">
                     <IconGlobe className="w-4 h-4 text-primary" />
                     <p className="text-sm font-medium text-foreground">{t('wizard.optionalAnalyzeTitle', { defaultValue: 'Optional step: analyze your website' })}</p>
@@ -745,7 +753,7 @@ export function BrandKitAssistantWizard({
                       value={visibleUrlValue}
                       onChange={(e) => onUpdateUrl(e.target.value)}
                       placeholder="https://tuweb.com"
-                      className="h-11 text-base"
+                      className={WIZARD_FIELD_CLASS}
                     />
                     <Button variant="outline" disabled={!canAnalyze} onClick={handleAnalyzeClick} className="h-11 text-base">
                     {t('wizard.analyzeUrl', { defaultValue: 'Analyze URL' })}
@@ -765,7 +773,7 @@ export function BrandKitAssistantWizard({
                   </p>
                 )}
 
-                <div className="rounded-lg border border-dashed border-border/70 p-3">
+                <div className={cn(BRAND_KIT_CALLOUT_CLASS, "p-3")}>
                   <p className="text-xs text-muted-foreground">
                     {t('wizard.noWebsiteHint.before')} <span className="font-medium text-foreground">{t('wizard.next', { defaultValue: 'Next' })}</span> {t('wizard.noWebsiteHint.after')}
                   </p>
@@ -775,7 +783,7 @@ export function BrandKitAssistantWizard({
             )}
 
             {step === 'post-analysis' && (
-              <section className="rounded-2xl border border-border/70 bg-muted/25 p-6 md:p-8 space-y-4">
+              <section className={cn(BRAND_KIT_CALLOUT_CLASS, "space-y-4 p-6 md:p-8")}>
                 <div className="flex items-start gap-3">
                   <IconCheck className="w-6 h-6 text-primary mt-1" />
                   <div className="space-y-3">
@@ -821,12 +829,12 @@ export function BrandKitAssistantWizard({
                     await handleLogoFiles(event.dataTransfer.files)
                   }}
                   className={cn(
-                    'rounded-xl border-2 border-dashed p-4 cursor-pointer transition-colors bg-muted/20',
+                    `${BRAND_KIT_CALLOUT_CLASS} cursor-pointer p-4 transition-colors`,
                     isDraggingLogos ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg border border-border bg-background flex items-center justify-center">
+                    <div className={cn(BRAND_KIT_CALLOUT_CLASS, "flex h-9 w-9 items-center justify-center rounded-lg bg-background p-0")}>
                       <IconUpload className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <div>
@@ -854,13 +862,13 @@ export function BrandKitAssistantWizard({
                 />
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-1">
                   {currentLogos.length === 0 && (
-                    <div className="col-span-full text-sm text-muted-foreground border border-dashed border-border rounded-lg p-3">
+                    <div className={cn(BRAND_KIT_CALLOUT_CLASS, "col-span-full p-3 text-sm text-muted-foreground")}>
                       {t('wizard.noLogosYet', { defaultValue: 'There are no logos yet. You can upload one or several.' })}
                     </div>
                   )}
                   {currentLogos.map((logo, index) => (
-                    <div key={`${logo.url}-${index}`} className="rounded-lg border border-border overflow-hidden bg-card">
-                      <div className="h-20 transparency-grid bg-muted/20">
+                    <div key={`${logo.url}-${index}`} className={cn(BRAND_KIT_CALLOUT_CLASS, "overflow-hidden rounded-[1.1rem] p-0")}>
+                      <div className={cn(BRAND_KIT_CALLOUT_CLASS, "h-20 transparency-grid")}>
                         <img
                           src={logo.url}
                           alt={t('visualAssets.mainLogo', { defaultValue: 'Main logo' })}
@@ -872,7 +880,7 @@ export function BrandKitAssistantWizard({
                           type="button"
                           size="sm"
                           variant="ghost"
-                          className="h-7 w-7 p-0"
+                          className={BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS}
                           onClick={() => onRemoveLogo(index)}
                           aria-label={t('wizard.removeLogo', { defaultValue: 'Remove logo' })}
                         >
@@ -1014,7 +1022,7 @@ export function BrandKitAssistantWizard({
                         <span className="text-xs text-muted-foreground">{t('wizard.accentsLabel', { defaultValue: 'Accents' })}</span>
                   </div>
                 </div>
-                <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
+                <div className={cn(BRAND_KIT_CALLOUT_CLASS, "space-y-2 p-4")}>
                   <p className="text-sm font-medium text-foreground">{t('wizard.colorRolesUsageTitle', { defaultValue: 'How these roles are used' })}</p>
                   <p className="text-xs text-muted-foreground">
                   {t('wizard.textColorHint.before', { defaultValue: 'The' })} <span className="font-medium text-foreground">{t('wizard.textRole', { defaultValue: 'Text' })}</span> {t('wizard.textColorHint.after', { defaultValue: 'color will be used for headlines and text inside generated images.' })}
@@ -1062,7 +1070,7 @@ export function BrandKitAssistantWizard({
 
             {step === 'typography' && (
               <section className="space-y-4">
-                <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                <div className={cn(BRAND_KIT_CALLOUT_CLASS, "p-4")}>
                   <p className="text-sm font-medium text-foreground">{t('wizard.typographyNoKnowledge', { defaultValue: "Don't worry if you do not know Google Fonts." })}</p>
                   <p className="text-sm text-muted-foreground mt-1">
                 {t('wizard.typographyIntro', { defaultValue: 'Choose one font for headlines and another for paragraphs. You can test and change them at any time.' })}
@@ -1090,7 +1098,7 @@ export function BrandKitAssistantWizard({
                   value={brand.tagline || ''}
                   onChange={(event) => onUpdateTagline(event.target.value)}
                   placeholder={t('wizard.sloganPlaceholder', { defaultValue: 'e.g. Your brand, your style' })}
-                  className="h-11 text-base"
+                  className={WIZARD_FIELD_CLASS}
                 />
               </section>
             )}
@@ -1108,14 +1116,14 @@ export function BrandKitAssistantWizard({
                         value={value}
                         onChange={(event) => onUpdateValue(index, event.target.value)}
                     placeholder={t('wizard.valuePlaceholder', { defaultValue: 'Brand value' })}
-                        className="h-10 text-sm"
+                        className={WIZARD_FIELD_CLASS}
                       />
-                      <Button type="button" variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={() => onRemoveValue(index)}>
-                        <IconDelete className="w-4 h-4" />
+                      <Button type="button" variant="ghost" size="sm" className={BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS} onClick={() => onRemoveValue(index)}>
+                        <IconClose className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
-                  <Button type="button" variant="outline" size="sm" className="h-9 text-sm" onClick={onAddValue}>
+                  <Button type="button" variant="outline" size="sm" className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS} onClick={onAddValue}>
                     <IconPlus className="w-4 h-4 mr-1" />
                   {t('wizard.addValue', { defaultValue: 'Add value' })}
                   </Button>
@@ -1136,14 +1144,14 @@ export function BrandKitAssistantWizard({
                         value={style}
                         onChange={(event) => onUpdateAesthetic(index, event.target.value)}
                         placeholder={t('wizard.visualStylePlaceholder', { defaultValue: 'e.g. Minimalist, editorial, premium...' })}
-                        className="h-10 text-sm"
+                        className={WIZARD_FIELD_CLASS}
                       />
-                      <Button type="button" variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={() => onRemoveAesthetic(index)}>
-                        <IconDelete className="w-4 h-4" />
+                      <Button type="button" variant="ghost" size="sm" className={BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS} onClick={() => onRemoveAesthetic(index)}>
+                        <IconClose className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
-                  <Button type="button" variant="outline" size="sm" className="h-9 text-sm" onClick={onAddAesthetic}>
+                  <Button type="button" variant="outline" size="sm" className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS} onClick={onAddAesthetic}>
                     <IconPlus className="w-4 h-4 mr-1" />
                   {t('wizard.addStyle', { defaultValue: 'Add style' })}
                   </Button>
@@ -1164,14 +1172,14 @@ export function BrandKitAssistantWizard({
                         value={tone}
                         onChange={(event) => onUpdateTone(index, event.target.value)}
                         placeholder={t('wizard.tonePlaceholder', { defaultValue: 'e.g. Close, professional, direct...' })}
-                        className="h-10 text-sm"
+                        className={WIZARD_FIELD_CLASS}
                       />
-                      <Button type="button" variant="ghost" size="sm" className="h-9 w-9 p-0" onClick={() => onRemoveTone(index)}>
-                        <IconDelete className="w-4 h-4" />
+                      <Button type="button" variant="ghost" size="sm" className={BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS} onClick={() => onRemoveTone(index)}>
+                        <IconClose className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
-                  <Button type="button" variant="outline" size="sm" className="h-9 text-sm" onClick={onAddTone}>
+                  <Button type="button" variant="outline" size="sm" className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS} onClick={onAddTone}>
                     <IconPlus className="w-4 h-4 mr-1" />
                   {t('wizard.addTone', { defaultValue: 'Add tone' })}
                   </Button>
@@ -1195,19 +1203,19 @@ export function BrandKitAssistantWizard({
                           nextHooks[index] = event.target.value
                           onChangeTextAssets({ ...textAssets, marketing_hooks: nextHooks })
                         }}
-                        className="w-full min-h-[88px] rounded-md border border-border bg-background px-3 py-2 text-sm"
+                        className={cn(WIZARD_TEXTAREA_CLASS, "min-h-[108px]")}
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-9 w-9 p-0 mt-1"
+                        className={BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS}
                         onClick={() => {
                           const nextHooks = textAssets.marketing_hooks.filter((_, itemIndex) => itemIndex !== index)
                           onChangeTextAssets({ ...textAssets, marketing_hooks: nextHooks })
                         }}
                       >
-                        <IconDelete className="w-4 h-4" />
+                        <IconClose className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
@@ -1215,7 +1223,7 @@ export function BrandKitAssistantWizard({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-9 text-sm"
+                    className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS}
                     onClick={() => onChangeTextAssets({ ...textAssets, marketing_hooks: [...textAssets.marketing_hooks, t('wizard.newHook', { defaultValue: 'New headline' })] })}
                   >
                     <IconPlus className="w-4 h-4 mr-1" />
@@ -1245,19 +1253,19 @@ export function BrandKitAssistantWizard({
                           onChangeTextAssets({ ...textAssets, ctas: nextCtas })
                         }}
                         placeholder={t('wizard.ctaPlaceholder', { defaultValue: 'e.g. Book now' })}
-                        className="h-10 text-sm"
+                        className={WIZARD_FIELD_CLASS}
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-9 w-9 p-0"
+                        className={BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS}
                         onClick={() => {
                           const nextCtas = textAssets.ctas.filter((_, itemIndex) => itemIndex !== index)
                           onChangeTextAssets({ ...textAssets, ctas: nextCtas })
                         }}
                       >
-                        <IconDelete className="w-4 h-4" />
+                        <IconClose className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
@@ -1265,7 +1273,7 @@ export function BrandKitAssistantWizard({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-9 text-sm"
+                    className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS}
                     onClick={() => onChangeTextAssets({ ...textAssets, ctas: [...textAssets.ctas, t('wizard.newCta', { defaultValue: 'New CTA' })] })}
                   >
                     <IconPlus className="w-4 h-4 mr-1" />
@@ -1291,7 +1299,7 @@ export function BrandKitAssistantWizard({
             )}
 
             {step === 'done' && (
-              <section className="rounded-xl border border-border/60 bg-muted/20 p-5 space-y-3">
+              <section className={cn(BRAND_KIT_CALLOUT_CLASS, "space-y-3 p-5")}>
                 <div className="flex items-start gap-3">
                   <IconCheck className="w-5 h-5 text-primary mt-0.5" />
                   <div className="space-y-1">
@@ -1326,10 +1334,10 @@ export function BrandKitAssistantWizard({
             )}
           </div>
 
-          <div className="px-6 py-4 border-t border-border/50 shrink-0">
+          <div className="px-8 pb-8 pt-4 shrink-0">
             <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={goBack} disabled={stepIndex === 0} className="h-11 text-base">
+              <Button variant="outline" onClick={goBack} disabled={stepIndex === 0} className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "h-[42px] text-base")}>
                 <IconArrowLeft className="w-4 h-4 mr-1" />
                 {t('wizard.previous', { defaultValue: 'Previous' })}
               </Button>
@@ -1338,7 +1346,7 @@ export function BrandKitAssistantWizard({
                 {step !== 'done' ? (
                   <Button
                     onClick={handleNextClick}
-                    className="h-11 text-base"
+                    className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "h-[42px] text-base")}
                     disabled={previewLoading || previewAnalyzing}
                   >
               {step === 'url' && hasUrlValue
@@ -1347,7 +1355,7 @@ export function BrandKitAssistantWizard({
                     <IconArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 ) : (
-                  <Button onClick={completeWizard} className="h-11 text-base" disabled={!canFinishWizard}>
+                  <Button onClick={completeWizard} className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "h-[42px] text-base")} disabled={!canFinishWizard}>
                     {canFinishWizard
                       ? t('wizard.goToEditor', { defaultValue: 'Go to editor' })
                       : t('wizard.pendingCompletion', { defaultValue: '{{missing}}% left', missing: completionMissing })}
@@ -1366,32 +1374,32 @@ export function BrandKitAssistantWizard({
         }}
       >
         <DialogContent
-          showCloseButton={false}
+          showCloseButton={!previewLoading && !previewAnalyzing}
           onEscapeKeyDown={(event) => {
             if (previewLoading || previewAnalyzing) event.preventDefault()
           }}
           onPointerDownOutside={(event) => {
             if (previewLoading || previewAnalyzing) event.preventDefault()
           }}
-          className="w-[min(96vw,980px)] max-w-[980px]"
+          className={cn(BRAND_KIT_MODAL_CLASS, "!w-[min(96vw,980px)] !max-w-[980px] sm:!max-w-[980px] !rounded-[1.9rem] p-0")}
         >
-          <DialogHeader>
-          <DialogTitle>{t('wizard.confirmWebsiteTitle', { defaultValue: 'Confirm your website' })}</DialogTitle>
-            <DialogDescription>
+          <DialogHeader className={cn(BRAND_KIT_MODAL_HEADER_CLASS, "px-8 pb-3 pt-8 pr-20")}>
+          <DialogTitle className={BRAND_KIT_MODAL_TITLE_CLASS}>{t('wizard.confirmWebsiteTitle', { defaultValue: 'Confirm your website' })}</DialogTitle>
+            <DialogDescription className={BRAND_KIT_MODAL_DESCRIPTION_CLASS}>
               {previewData?.url || currentUrl}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3">
+          <div className="space-y-4 px-8 pb-4 pt-2">
             {previewLoading && (
-              <div className="rounded-lg border border-border p-6 flex items-center justify-center gap-2 text-muted-foreground">
+              <div className="rounded-[1.2rem] border border-border/70 p-6 flex items-center justify-center gap-2 text-muted-foreground bg-[hsl(var(--surface-alt))]/52">
                 <Loader2 className="h-4 w-4" />
                 {t('wizard.preparingPreview', { defaultValue: 'Preparing preview...' })}
               </div>
             )}
 
             {previewAnalyzing && (
-              <div className="rounded-lg border border-border p-6 space-y-4 bg-muted/20">
+              <div className="rounded-[1.2rem] border border-border/70 p-6 space-y-4 bg-[hsl(var(--surface-alt))]/52">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="h-4 w-4" />
               {t('wizard.analyzingWebsite', { defaultValue: 'We are analyzing your website. This may take a few seconds.' })}
@@ -1411,17 +1419,17 @@ export function BrandKitAssistantWizard({
             )}
 
             {!previewLoading && previewData?.screenshotUrl && (
-              <div className="rounded-lg border border-border overflow-hidden bg-muted/20 flex items-center justify-center p-2">
+              <div className="rounded-[1.25rem] border border-border/70 overflow-hidden bg-[hsl(var(--surface-alt))]/42 flex items-center justify-center p-3">
                 <img
                   src={previewData.screenshotUrl}
                     alt={t('wizard.websitePreviewAlt', { defaultValue: 'Website preview' })}
-                  className="w-full max-h-[520px] object-contain rounded-md"
+                  className="w-full max-h-[520px] object-contain rounded-[1.2rem]"
                 />
               </div>
             )}
 
             {!previewLoading && !previewData?.screenshotUrl && (
-              <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+              <div className={cn(BRAND_KIT_CALLOUT_CLASS, "p-4 text-sm text-muted-foreground")}>
                   {t('wizard.previewUnavailable', { defaultValue: 'We could not show the screenshot right now, but you can still confirm whether the URL is correct.' })}
               </div>
             )}
@@ -1437,8 +1445,8 @@ export function BrandKitAssistantWizard({
             )}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewOpen(false)} disabled={previewLoading || previewAnalyzing}>
+          <DialogFooter className={BRAND_KIT_MODAL_FOOTER_CLASS}>
+            <Button variant="outline" onClick={() => setPreviewOpen(false)} disabled={previewLoading || previewAnalyzing} className={BRAND_KIT_SECONDARY_BUTTON_CLASS}>
             {t('wizard.fixUrl', { defaultValue: 'No, fix URL' })}
             </Button>
             {previewAnalyzing ? (
@@ -1450,7 +1458,7 @@ export function BrandKitAssistantWizard({
                 {t('wizard.stopAnalysis', { defaultValue: 'Stop' })}
               </Button>
             ) : null}
-            <Button onClick={confirmAnalyze} disabled={previewLoading || previewAnalyzing || !previewData?.url}>
+            <Button onClick={confirmAnalyze} disabled={previewLoading || previewAnalyzing || !previewData?.url} className={BRAND_KIT_SECONDARY_BUTTON_CLASS}>
             {previewAnalyzing
               ? t('wizard.analyzing', { defaultValue: 'Analyzing...' })
               : t('wizard.confirmWebsite', { defaultValue: 'Yes, this is my website' })}

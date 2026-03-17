@@ -33,6 +33,14 @@ import { FeedbackButton } from '@/components/studio/FeedbackButton'
 import { MobileWorkPanelDrawer } from '@/components/studio/shared/MobileWorkPanelDrawer'
 import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialog'
 import { StudioEditPromptBar, StudioGenerateBar } from '@/components/studio/shared/StudioActionBar'
+import {
+    STUDIO_DECISION_BUTTON_CLASS,
+    STUDIO_DECISION_DIALOG_CLASS,
+    STUDIO_DECISION_DIALOG_DESCRIPTION_CLASS,
+    STUDIO_DECISION_DIALOG_FOOTER_CLASS,
+    STUDIO_DECISION_DIALOG_HEADER_CLASS,
+    STUDIO_DECISION_DIALOG_TITLE_CLASS,
+} from '@/components/studio/shared/dialogStyles'
 import { Id } from '../../../convex/_generated/dataModel'
 import type { BrandDNA } from '@/lib/brand-types'
 import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/admin-compositions-actions'
@@ -91,12 +99,12 @@ type CompactGeneration = Pick<Generation, 'id' | 'image_url' | 'image_storage_id
     }
 }
 
-const IMAGE_DECISION_DIALOG_CLASS = 'max-w-[min(92vw,34rem)] rounded-[1.7rem] border border-border/70 bg-background/98 p-0 shadow-[0_38px_100px_-56px_rgba(15,23,42,0.42)]'
-const IMAGE_DECISION_DIALOG_HEADER_CLASS = 'gap-3 px-6 pb-4 pt-6 text-left sm:text-left'
-const IMAGE_DECISION_DIALOG_TITLE_CLASS = 'pr-10 text-[clamp(1.16rem,1.08rem+0.18vw,1.28rem)] font-semibold tracking-[-0.01em]'
-const IMAGE_DECISION_DIALOG_DESCRIPTION_CLASS = 'text-[1rem] leading-relaxed text-muted-foreground'
-const IMAGE_DECISION_DIALOG_FOOTER_CLASS = 'gap-2 px-6 pb-6 pt-0 sm:justify-end'
-const IMAGE_DECISION_BUTTON_CLASS = 'min-h-[42px] rounded-[1rem] px-4 text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium'
+const IMAGE_DECISION_DIALOG_CLASS = STUDIO_DECISION_DIALOG_CLASS
+const IMAGE_DECISION_DIALOG_HEADER_CLASS = STUDIO_DECISION_DIALOG_HEADER_CLASS
+const IMAGE_DECISION_DIALOG_TITLE_CLASS = STUDIO_DECISION_DIALOG_TITLE_CLASS
+const IMAGE_DECISION_DIALOG_DESCRIPTION_CLASS = STUDIO_DECISION_DIALOG_DESCRIPTION_CLASS
+const IMAGE_DECISION_DIALOG_FOOTER_CLASS = STUDIO_DECISION_DIALOG_FOOTER_CLASS
+const IMAGE_DECISION_BUTTON_CLASS = STUDIO_DECISION_BUTTON_CLASS
 
 export type ContextType = 'color' | 'logo' | 'aux_logo' | 'template' | 'image' | 'font' | 'text' | 'link' | 'contact'
 

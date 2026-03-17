@@ -1,14 +1,14 @@
 ﻿'use client'
 
 import { Loader2 } from '@/components/ui/spinner'
-import { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { GeneratedCopyCard } from '@/components/studio/GeneratedCopyCard'
 import { useToast } from '@/hooks/use-toast'
-import { IconChevronLeft, IconChevronRight, IconRefresh, IconZoomIn, IconZoomOut, IconMenu, IconShare, IconImage, IconFingerprint, IconImageDownload, IconSquareArrowDown, IconBug, IconVideo, IconMusic, IconMaximize } from '@/components/ui/icons'
+import { IconChevronLeft, IconChevronRight, IconRefresh, IconZoomIn, IconZoomOut, IconMenu, IconShare, IconImage, IconFingerprint, IconImageDownload, IconSquareArrowDown, IconBug, IconVideo, IconMusic, IconMaximize, IconAiChat } from '@/components/ui/icons'
 import JSZip from 'jszip'
 import {
     DropdownMenu,
@@ -24,6 +24,15 @@ import { DigitalStaticLoader } from '../DigitalStaticLoader'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { ReferenceImageRole } from '@/lib/creation-flow-types'
 import { useTranslation } from 'react-i18next'
+import {
+    STUDIO_CANVAS_FLOATING_TOOLBAR_CLASS,
+    STUDIO_CANVAS_TOOL_BUTTON_CLASS,
+} from '@/components/studio/shared/canvasStyles'
+import {
+    STUDIO_DECISION_DIALOG_CLASS,
+    STUDIO_DECISION_DIALOG_HEADER_CLASS,
+    STUDIO_DECISION_DIALOG_TITLE_CLASS,
+} from '@/components/studio/shared/dialogStyles'
 
 interface CarouselCanvasPanelProps {
     slides: CarouselSlide[]
@@ -91,66 +100,8 @@ function splitVisualPromptForEditor(value: string): { editable: string; hiddenIn
     }
 }
 
-function AiPromptIcon({ className, style }: { className?: string; style?: CSSProperties }) {
-    return (
-        <svg
-            viewBox="0 0 120 120"
-            className={className}
-            style={style}
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-        >
-            <rect x="26" y="26" width="68" height="68" rx="12" fill="currentColor" />
-            <text
-                x="60"
-                y="68"
-                textAnchor="middle"
-                fontSize="22"
-                fontFamily="monospace"
-                fill="white"
-            >
-                AI
-            </text>
-            <g stroke="currentColor" strokeWidth="4" strokeLinecap="round">
-                <line x1="8" y1="34" x2="26" y2="34" />
-                <line x1="8" y1="52" x2="26" y2="52" />
-                <line x1="8" y1="70" x2="26" y2="70" />
-                <line x1="8" y1="88" x2="26" y2="88" />
-                <line x1="94" y1="34" x2="112" y2="34" />
-                <line x1="94" y1="52" x2="112" y2="52" />
-                <line x1="94" y1="70" x2="112" y2="70" />
-                <line x1="94" y1="88" x2="112" y2="88" />
-                <line x1="34" y1="8" x2="34" y2="26" />
-                <line x1="52" y1="8" x2="52" y2="26" />
-                <line x1="70" y1="8" x2="70" y2="26" />
-                <line x1="88" y1="8" x2="88" y2="26" />
-                <line x1="34" y1="94" x2="34" y2="112" />
-                <line x1="52" y1="94" x2="52" y2="112" />
-                <line x1="70" y1="94" x2="70" y2="112" />
-                <line x1="88" y1="94" x2="88" y2="112" />
-            </g>
-            <g fill="currentColor">
-                <circle cx="8" cy="34" r="4.5" />
-                <circle cx="8" cy="52" r="4.5" />
-                <circle cx="8" cy="70" r="4.5" />
-                <circle cx="8" cy="88" r="4.5" />
-                <circle cx="112" cy="34" r="4.5" />
-                <circle cx="112" cy="52" r="4.5" />
-                <circle cx="112" cy="70" r="4.5" />
-                <circle cx="112" cy="88" r="4.5" />
-                <circle cx="34" cy="8" r="4.5" />
-                <circle cx="52" cy="8" r="4.5" />
-                <circle cx="70" cy="8" r="4.5" />
-                <circle cx="88" cy="8" r="4.5" />
-                <circle cx="34" cy="112" r="4.5" />
-                <circle cx="52" cy="112" r="4.5" />
-                <circle cx="70" cy="112" r="4.5" />
-                <circle cx="88" cy="112" r="4.5" />
-            </g>
-        </svg>
-    )
-}
+const CANVAS_FLOATING_TOOLBAR_CLASS = STUDIO_CANVAS_FLOATING_TOOLBAR_CLASS
+const CANVAS_TOOL_BUTTON_CLASS = STUDIO_CANVAS_TOOL_BUTTON_CLASS
 
 function renderCompositionGhostIcon(iconName: string) {
     const trimmed = (iconName || '').trim()
@@ -912,9 +863,9 @@ export function CarouselCanvasPanel({
                 )}
 
                 {/* Right: Actions */}
-                <div className="hidden md:flex pointer-events-auto text-muted-foreground transition-colors duration-200 hover:text-foreground flex-col items-center gap-2 rounded-2xl px-2 py-2 absolute right-9 top-4 border border-border/60 bg-white backdrop-blur-sm">
+                <div className={CANVAS_FLOATING_TOOLBAR_CLASS}>
                     <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
-                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleIconZoomOut}>
+                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleIconZoomOut}>
                             <IconZoomOut className="w-4 h-4" />
                         </Button>
                         <button
@@ -926,24 +877,24 @@ export function CarouselCanvasPanel({
                         >
                             {zoom}%
                         </button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleIconZoomIn}>
+                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleIconZoomIn}>
                             <IconZoomIn className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 ml-1" onClick={handleMaximizeZoom}>
+                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleMaximizeZoom}>
                             <IconMaximize className="w-4 h-4" />
                         </Button>
                     </div>
 
-                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadCurrent} disabled={!currentSlide?.imageUrl} title={tt('common:preview.downloadCurrentSlide', 'Download current slide')}>
+                    <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleDownloadCurrent} disabled={!currentSlide?.imageUrl} title={tt('common:preview.downloadCurrentSlide', 'Download current slide')}>
                         <IconImageDownload className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleDownloadBundle} disabled={completedSlides === 0} title={tt('common:preview.downloadCarouselZip', 'Download carousel ZIP')}>
+                    <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleDownloadBundle} disabled={completedSlides === 0} title={tt('common:preview.downloadCarouselZip', 'Download carousel ZIP')}>
                         <IconSquareArrowDown className="w-4 h-4" />
                     </Button>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10"
+                        className={CANVAS_TOOL_BUTTON_CLASS}
                         onClick={() => onRegenerateSlide(currentIndex)}
                         disabled={!currentSlide || isRegenerating}
                         title={isCurrentSlideRegenerating
@@ -955,7 +906,7 @@ export function CarouselCanvasPanel({
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10"
+                        className={CANVAS_TOOL_BUTTON_CLASS}
                         onClick={() => exportCarouselVideo(true)}
                         disabled={isExportingVideo || completedSlides === 0}
                         title={tt('common:preview.exportVideoWithMusic', 'Export video with music')}
@@ -965,7 +916,7 @@ export function CarouselCanvasPanel({
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-10 w-10">
+                            <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS}>
                                 <IconMenu className="w-4 h-4" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -1137,7 +1088,7 @@ export function CarouselCanvasPanel({
                                                 <div className="absolute top-2 right-4 z-40 flex flex-col items-end gap-2">
                                                     {hasAiPromptReference && (
                                                         <div className="relative group">
-                                                            <AiPromptIcon
+                                                            <IconAiChat
                                                                 className="text-primary drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
                                                                 style={{ width: 'var(--canvas-ai-size)', height: 'var(--canvas-ai-size)' }}
                                                             />
@@ -1563,11 +1514,11 @@ export function CarouselCanvasPanel({
             </Dialog>
 
             <Dialog open={isExportingVideo} onOpenChange={() => { }}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{tt('common:preview.generatingVideo', 'Generating carousel video')}</DialogTitle>
+                <DialogContent className={STUDIO_DECISION_DIALOG_CLASS}>
+                    <DialogHeader className={STUDIO_DECISION_DIALOG_HEADER_CLASS}>
+                        <DialogTitle className={STUDIO_DECISION_DIALOG_TITLE_CLASS}>{tt('common:preview.generatingVideo', 'Generating carousel video')}</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <div className="space-y-4 px-6 pb-6">
                         <p className="text-sm text-muted-foreground">
                             {videoExportPhase || tt('common:preview.processing', 'Processing')}
                         </p>

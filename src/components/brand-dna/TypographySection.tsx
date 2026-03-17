@@ -8,9 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { IconTextFont, IconSearch, IconPlus, IconDelete, IconInfo, IconCheckSimple, IconEdit } from '@/components/ui/icons';
+import { IconTextFont, IconSearch, IconPlus, IconClose, IconInfo, IconCheckSimple, IconEdit } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
+import {
+  BRAND_KIT_CALLOUT_CLASS,
+  BRAND_KIT_FIELD_CLASS,
+  BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS,
+  BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS,
+  BRAND_KIT_PANEL_CLASS,
+  BRAND_KIT_PANEL_DESCRIPTION_CLASS,
+  BRAND_KIT_PANEL_HEADER_CLASS,
+  BRAND_KIT_PANEL_TITLE_CLASS,
+} from './brandKitStyles';
 
 const FONT_FEELINGS: Array<{ id: string; families: string[] }> = [
   { id: 'business', families: ['Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Work Sans', 'Noto Sans'] },
@@ -182,9 +192,9 @@ export function TypographySection({
   };
 
   const renderExplorer = () => (
-    <div className="flex flex-col gap-3 p-4 border-2 border-dashed border-border rounded-xl bg-muted/50 transition-colors focus-within:border-primary/50 focus-within:bg-muted">
+    <div className={cn(BRAND_KIT_CALLOUT_CLASS, "flex flex-col gap-3 p-4 transition-colors focus-within:border-primary/50")}>
       {guidedMode && (
-        <div className="rounded-lg border border-border/60 bg-white p-3 space-y-2">
+        <div className={cn(BRAND_KIT_CALLOUT_CLASS, "space-y-2 p-3")}>
           <p className="text-xs font-medium text-foreground">
             {roleToChoose === 'heading'
               ? t('typography.chooseHeadings', { defaultValue: 'Choose typography for headings' })
@@ -198,7 +208,7 @@ export function TypographySection({
         </div>
       )}
 
-      <div className="rounded-lg border border-border/60 bg-white p-3">
+          <div className={cn(BRAND_KIT_CALLOUT_CLASS, "p-3.5")}>
         <p className="text-xs font-medium text-foreground">{t('typography.exploreTitle', { defaultValue: 'Browse fonts with live preview' })}</p>
         <p className="text-xs text-muted-foreground mt-1">{t('typography.exploreDescription', { defaultValue: 'You do not need to know font names. Browse examples and pick the one you like.' })}</p>
       </div>
@@ -207,7 +217,7 @@ export function TypographySection({
         <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] w-4 h-4" />
         <Input
           placeholder={t('typography.filterPlaceholder', { defaultValue: 'Filter fonts (optional)...' })}
-          className="pl-10 h-9 bg-transparent border-border text-sm focus-visible:ring-primary"
+          className={cn(BRAND_KIT_FIELD_CLASS, "pl-10")}
           value={fontSearch}
           onFocus={() => fetchGoogleFonts()}
           onChange={(e) => setFontSearch(e.target.value)}
@@ -220,7 +230,7 @@ export function TypographySection({
       </div>
 
       {visibleFonts.length > 0 && (
-        <ScrollArea className="h-[260px] rounded-lg border border-border bg-muted p-2 shadow-inner">
+          <ScrollArea className={cn("h-[260px] p-2 shadow-inner", BRAND_KIT_CALLOUT_CLASS)}>
           <div className="space-y-1">
             {visibleFonts.map((font) => (
               <button
@@ -236,10 +246,10 @@ export function TypographySection({
                   }
                 }}
                 className={cn(
-                  'w-full flex items-center justify-between p-2 px-3 rounded text-sm transition-all group text-left border',
+                  'group flex w-full items-center justify-between rounded-[1rem] border p-2 px-3 text-left text-sm transition-all',
                   guidedMode && currentRoleFamily === font
                     ? 'bg-primary/10 border-primary/40'
-                    : 'border-transparent hover:border-border/70 hover:bg-[var(--accent)]/10'
+                    : 'border-transparent hover:border-border/70 hover:bg-[hsl(var(--surface-alt))]/68'
                 )}
               >
                 <div className="flex flex-col">
@@ -256,7 +266,7 @@ export function TypographySection({
               </button>
             ))}
             {visibleCount < filteredFonts.length && (
-              <Button type="button" variant="outline" className="mt-1 h-10 w-full text-sm" onClick={() => setVisibleCount((prev) => prev + 24)}>
+              <Button type="button" variant="outline" className={cn(BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS, "mt-1")} onClick={() => setVisibleCount((prev) => prev + 24)}>
                 {t('typography.loadMore', { defaultValue: 'Load more fonts' })}
               </Button>
             )}
@@ -278,14 +288,17 @@ export function TypographySection({
   );
 
   return (
-    <Card className="glass-panel border-0 shadow-none overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base text-foreground">
+    <Card className={cn(BRAND_KIT_PANEL_CLASS, "overflow-hidden")}>
+      <CardHeader className={cn(BRAND_KIT_PANEL_HEADER_CLASS, "pb-4")}>
+        <CardTitle className={BRAND_KIT_PANEL_TITLE_CLASS}>
           <IconTextFont className="w-5 h-5 text-primary" />
           {t('typography.title', { defaultValue: 'Typography' })}
         </CardTitle>
+        <p className={BRAND_KIT_PANEL_DESCRIPTION_CLASS}>
+          {t('typography.description', { defaultValue: 'Elige tipografia para titulares y parrafos con el mismo criterio visual usado en Imagen y Carrusel.' })}
+        </p>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-6 pb-6 pt-0">
         <div className="grid grid-cols-1 gap-4">
           {(guidedMode ? fonts.filter((f) => f.role === 'heading' || f.role === 'body') : fonts).map((fontObj, idx) => (
             <div key={`${fontObj.family}-${idx}`} className="space-y-4">
@@ -296,12 +309,12 @@ export function TypographySection({
                   handleToggleRole(realIndex >= 0 ? realIndex : idx);
                 }}
                 className={cn(
-                  'group relative p-4 border rounded-xl transition-all cursor-pointer',
+                  'group relative p-4 border rounded-[1.25rem] transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]',
                   fontObj.role === 'heading'
-                    ? 'bg-primary/5 border-primary/30'
+                    ? 'bg-primary/6 border-primary/30'
                     : fontObj.role === 'body'
-                      ? 'bg-accent/5 border-accent/20'
-                      : 'bg-muted/20 border-border hover:border-primary/20'
+                      ? 'bg-[hsl(var(--surface-alt))]/72 border-border/70'
+                      : 'bg-[linear-gradient(180deg,hsl(var(--surface-alt))/0.64,white)] border-border/70 hover:border-primary/20'
                 )}
               >
                 <div className="flex justify-between items-start mb-2">
@@ -313,7 +326,7 @@ export function TypographySection({
                           ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                           : fontObj.role === 'body'
                             ? 'bg-zinc-800 text-zinc-100 border-zinc-700 shadow-sm'
-                            : 'bg-muted/50 text-muted-foreground border-border'
+                            : 'bg-[hsl(var(--surface-alt))]/76 text-muted-foreground border-border/70'
                       )}
                     >
                       {fontObj.role === 'heading'
@@ -347,9 +360,9 @@ export function TypographySection({
                         const roleMatchIndex = fonts.findIndex((f) => f.family === fontObj.family && f.role === fontObj.role);
                         onRemoveFont(roleMatchIndex >= 0 ? roleMatchIndex : idx);
                       }}
-                      className="p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500/10 text-red-500 transition-all"
+                      className={BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS}
                     >
-                      <IconDelete className="w-4 h-4" />
+                      <IconClose className="w-4 h-4" />
                     </button>
                   )}
                 </div>

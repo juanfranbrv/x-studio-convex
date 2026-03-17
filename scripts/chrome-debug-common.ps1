@@ -43,6 +43,58 @@ function Get-DebugEndpoint {
     }
 }
 
+function Get-DebugPortOwnerProcessId {
+    param(
+        [int]$Port = 9222
+    )
+
+    try {
+        $connection = Get-NetTCPConnection -LocalAddress "127.0.0.1" -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+
+        if ($connection) {
+            return [int]$connection.OwningProcess
+        }
+    }
+    catch {
+    }
+
+    return $null
+}
+
+function Get-ProcessDescendants {
+    param(
+        [int[]]$RootProcessIds
+    )
+
+    if (-not $RootProcessIds -or $RootProcessIds.Count -eq 0) {
+        return @()
+    }
+
+    $allProcesses = @(Get-CimInstance Win32_Process -Filter "name = 'chrome.exe'" -ErrorAction SilentlyContinue)
+    $pending = New-Object System.Collections.Generic.Queue[int]
+    $visited = New-Object System.Collections.Generic.HashSet[int]
+
+    foreach ($rootId in $RootProcessIds) {
+        if ($visited.Add($rootId)) {
+            $pending.Enqueue($rootId)
+        }
+    }
+
+    while ($pending.Count -gt 0) {
+        $currentId = $pending.Dequeue()
+        $children = @($allProcesses | Where-Object { $_.ParentProcessId -eq $currentId })
+
+        foreach ($child in $children) {
+            if ($visited.Add([int]$child.ProcessId)) {
+                $pending.Enqueue([int]$child.ProcessId)
+            }
+        }
+    }
+
+    return @($visited)
+}
+
 function Stop-DebugChrome {
     param(
         [string]$UserDataDir,
@@ -51,6 +103,7 @@ function Stop-DebugChrome {
 
     $normalizedUserDataDir = [System.IO.Path]::GetFullPath($UserDataDir)
     $processes = Get-CimInstance Win32_Process -Filter "name = 'chrome.exe'" -ErrorAction SilentlyContinue
+    $rootProcessIds = @()
 
     foreach ($process in @($processes)) {
         $commandLine = [string]$process.CommandLine
@@ -58,8 +111,13 @@ function Stop-DebugChrome {
             $commandLine -like "*--remote-debugging-port=$Port*" -or
             $commandLine -like "*$normalizedUserDataDir*"
         ) {
-            Stop-Process -Id $process.ProcessId -Force -ErrorAction SilentlyContinue
+            $rootProcessIds += [int]$process.ProcessId
         }
+    }
+
+    $processIdsToStop = Get-ProcessDescendants -RootProcessIds $rootProcessIds | Sort-Object -Descending
+    foreach ($processId in @($processIdsToStop)) {
+        Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
     }
 }
 

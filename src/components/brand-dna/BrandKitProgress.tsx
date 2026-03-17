@@ -12,6 +12,12 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useTranslation } from 'react-i18next'
+import {
+    BRAND_KIT_PAGE_SHELL_CLASS,
+    BRAND_KIT_PANEL_DESCRIPTION_CLASS,
+    BRAND_KIT_PANEL_HEADER_CLASS,
+    BRAND_KIT_PANEL_TITLE_CLASS,
+} from './brandKitStyles'
 
 interface BrandKitProgressProps {
     brandKit: BrandDNA | null
@@ -30,19 +36,19 @@ export function BrandKitProgress({ brandKit, showDetails = true, compact = false
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <div className={cn("flex items-center gap-2 cursor-help", className)}>
-                            <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                        <div className={cn("flex items-center gap-3 cursor-help", className)}>
+                            <div className="h-2.5 w-28 overflow-hidden rounded-full bg-[hsl(var(--surface-alt))]">
                                 <div
                                     className={cn(
-                                        "h-full transition-all duration-500 ease-out rounded-full",
+                                        "h-full rounded-full transition-all duration-500 ease-out",
                                         completeness.isComplete
-                                            ? "bg-green-500"
-                                            : "bg-gradient-to-r from-primary to-primary/70"
+                                            ? "bg-primary"
+                                            : "bg-gradient-to-r from-primary to-primary/75"
                                     )}
                                     style={{ width: `${completeness.percentage}%` }}
                                 />
                             </div>
-                            <span className="text-xs font-medium text-muted-foreground">
+                            <span className="text-sm font-medium text-muted-foreground">
                                 {completeness.percentage}%
                             </span>
                         </div>
@@ -63,63 +69,64 @@ export function BrandKitProgress({ brandKit, showDetails = true, compact = false
     }
 
     return (
-        <div className={cn("glass-panel rounded-xl p-4", className)}>
-            {/* Header */}
-            <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
+        <div className={cn(BRAND_KIT_PAGE_SHELL_CLASS, "px-6 py-5", className)}>
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className={cn(BRAND_KIT_PANEL_HEADER_CLASS, "px-0 pt-0")}>
+                    <div className={BRAND_KIT_PANEL_TITLE_CLASS}>
                     {completeness.isComplete ? (
-                        <IconCheck className="w-5 h-5 text-green-500" />
+                            <IconCheck className="h-5 w-5 text-primary" />
                     ) : (
-                        <IconSparkles className="w-5 h-5 text-primary" />
+                            <IconSparkles className="h-5 w-5 text-primary" />
                     )}
-                    <span className="font-medium text-sm">{t('progress.title', { defaultValue: 'Brand Kit completeness' })}</span>
+                        <span>{t('progress.title', { defaultValue: 'Completitud del Kit de Marca' })}</span>
+                    </div>
+                    <p className={BRAND_KIT_PANEL_DESCRIPTION_CLASS}>
+                        {completeness.isComplete
+                            ? t('progress.complete', { defaultValue: 'Tu Kit de Marca esta listo para generar contenido de alta calidad.' })
+                            : t('progress.description', { defaultValue: 'Completa los activos visuales y editoriales para que el resto de la app genere con mas precision.' })}
+                    </p>
                 </div>
-                <span className={cn("text-lg font-bold", message.color)}>
-                    {completeness.percentage}%
-                </span>
+                <div className="rounded-[1.1rem] border border-border/70 bg-[hsl(var(--surface-alt))]/70 px-4 py-3 text-right shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+                    <p className="text-[0.78rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                        {t('progress.scoreLabel', { defaultValue: 'Progreso' })}
+                    </p>
+                    <span className="text-[clamp(1.35rem,1.28rem+0.24vw,1.55rem)] font-semibold tracking-[-0.02em] text-foreground">
+                        {completeness.percentage}%
+                    </span>
+                </div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="w-full h-3 bg-muted/50 rounded-full overflow-hidden mb-3">
+            <div className="mt-5 h-3.5 w-full overflow-hidden rounded-full bg-[hsl(var(--surface-alt))]">
                 <div
                     className={cn(
-                        "h-full transition-all duration-700 ease-out rounded-full",
+                        "h-full rounded-full transition-all duration-700 ease-out",
                         completeness.isComplete
-                            ? "bg-gradient-to-r from-green-500 to-emerald-400"
-                            : "bg-gradient-to-r from-primary via-primary/80 to-primary/60"
+                            ? "bg-primary"
+                            : "bg-gradient-to-r from-primary via-primary/85 to-primary/65"
                     )}
                     style={{ width: `${completeness.percentage}%` }}
                 />
             </div>
 
-            {/* Message */}
-            <p className={cn("text-sm font-medium mb-2", message.color)}>
+            <p className={cn("mt-4 text-[1rem] font-medium", message.color)}>
                 {message.emoji} {message.message}
             </p>
 
-            {/* Tips */}
             {showDetails && completeness.tips.length > 0 && !completeness.isComplete && (
-                <div className="mt-3 pt-3 border-t border-border/50">
-                    <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                        <IconAlertCircle className="w-3 h-3" />
+                <div className="mt-4 rounded-[1.2rem] border border-border/70 bg-[hsl(var(--surface-alt))]/70 px-4 py-4">
+                    <p className="mb-3 flex items-center gap-1.5 text-[0.82rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                        <IconAlertCircle className="h-3.5 w-3.5" />
                         {t('progress.improve', { defaultValue: 'To improve:' })}
                     </p>
-                    <ul className="space-y-1">
+                    <ul className="space-y-2.5">
                         {completeness.tips.map((tip, i) => (
-                            <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                                <span className="text-primary">•</span>
+                            <li key={i} className="flex items-start gap-2.5 text-[0.96rem] leading-relaxed text-foreground/85">
+                                <span className="mt-1 h-2 w-2 rounded-full bg-primary/65" />
                                 {tip}
                             </li>
                         ))}
                     </ul>
                 </div>
-            )}
-
-            {/* Complete celebration */}
-            {completeness.isComplete && (
-                <p className="text-xs text-muted-foreground mt-2">
-                    {t('progress.complete', { defaultValue: 'Your Brand Kit is ready to generate high-quality content.' })}
-                </p>
             )}
         </div>
     )

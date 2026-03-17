@@ -1,8 +1,8 @@
 'use client'
 
-import { motion } from'framer-motion'
-import { cn } from'@/lib/utils'
-import { resolveCarouselCompositionIcon } from'@/lib/carousel-composition-icon'
+import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
+import { resolveCarouselCompositionIcon } from '@/lib/carousel-composition-icon'
 
 type CarouselComposition = {
  id: string
@@ -11,7 +11,7 @@ type CarouselComposition = {
  layoutPrompt?: string
  icon?: string
  iconPrompt?: string
- scope:'global' |'narrative'
+ scope: 'global' | 'narrative'
 }
 
 interface CarouselCompositionSelectorProps {
@@ -25,23 +25,23 @@ function renderCompositionIcon(iconName: string) {
  if (!trimmed) return null
 
  if (trimmed.startsWith('<svg')) {
- return (
- <div
- className="w-10 h-10 text-primary/70 overflow-hidden flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:block"
- dangerouslySetInnerHTML={{ __html: trimmed }}
- />
- )
+   return (
+     <div
+       className="h-11 w-11 overflow-hidden text-primary/72 [&>svg]:block [&>svg]:h-full [&>svg]:w-full"
+       dangerouslySetInnerHTML={{ __html: trimmed }}
+     />
+   )
  }
 
  return (
- <div className="w-10 h-10 flex items-center justify-center text-primary/70">
- <span
- className="material-symbols-outlined leading-none"
- style={{ fontSize:'40px' }}
- >
- {trimmed}
- </span>
- </div>
+   <div className="flex h-11 w-11 items-center justify-center text-primary/72">
+     <span
+       className="material-symbols-outlined leading-none"
+       style={{ fontSize: '42px' }}
+     >
+       {trimmed}
+     </span>
+   </div>
  )
 }
 
@@ -50,76 +50,63 @@ export function CarouselCompositionSelector({
  selectedId,
  onSelect
 }: CarouselCompositionSelectorProps) {
- return (
- <div className="space-y-3">
- <div className="grid grid-cols-3 gap-2">
- {compositions.map((composition) => {
- const isSelected = selectedId === composition.id
- const resolvedIcon = resolveCarouselCompositionIcon(composition)
- const isGlobal = composition.scope ==='global'
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2">
+        {compositions.map((composition) => {
+          const isSelected = selectedId === composition.id
+          const resolvedIcon = resolveCarouselCompositionIcon(composition)
 
- return (
- <motion.button
- key={composition.id}
- whileHover={{ scale: 1.02 }}
- whileTap={{ scale: 0.95 }}
- onClick={() => onSelect(composition.id)}
- className={cn(
-'group relative flex h-full flex-col rounded-xl border overflow-hidden text-left backdrop-blur-sm transition-all duration-300',
- isSelected
- ?'border-primary/40 bg-primary/5 shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.25)]'
- : isGlobal
- ?'border-slate-200/75 bg-white/50 hover:bg-white/85 hover:border-slate-300/75 hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.06)]'
- :'border-slate-200/85 bg-slate-50/75 hover:bg-white/92 hover:border-slate-300/85 hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)]'
- )}
- title={composition.description}
- >
- <div
- className={cn(
-'w-full flex items-center justify-center px-1 py-2 transition-colors',
- isSelected
- ?'bg-primary/5'
- : isGlobal
- ?'bg-zinc-50/35 group-hover:bg-zinc-50/70'
- :'bg-slate-100/55 group-hover:bg-slate-100/75'
- )}
- >
- {renderCompositionIcon(resolvedIcon)}
- </div>
+          return (
+            <motion.button
+              key={composition.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => onSelect(composition.id)}
+              className={cn(
+                'group relative flex h-full flex-col overflow-hidden rounded-[1rem] border text-left transition-all duration-300',
+                isSelected
+                  ? 'border-primary/32 bg-primary/[0.07] shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]'
+                  : 'border-border/55 bg-background/55 hover:border-border/80 hover:bg-background/92 hover:shadow-[0_16px_32px_-28px_rgba(15,23,42,0.2)]'
+              )}
+              title={composition.description}
+            >
+              <div
+                className={cn(
+                  'flex w-full items-center justify-center px-1 py-2.5 transition-colors',
+                  isSelected ? 'bg-primary/[0.055]' : 'bg-background/40 group-hover:bg-background/78'
+                )}
+              >
+                {renderCompositionIcon(resolvedIcon)}
+              </div>
 
- <div
- className={cn(
-'flex flex-1 flex-col gap-0.5 border-t p-1.5 pt-1 transition-colors',
- isSelected
- ?'border-primary/20 bg-primary/5'
- : isGlobal
- ?'border-slate-100 bg-white/35'
- :'border-slate-200/70 bg-slate-50/55'
- )}
- >
- <span
- className={cn(
-'block truncate text-center text-[9px] font-semibold transition-colors duration-200',
- isSelected
- ?'text-primary'
- :'text-slate-500 group-hover:text-slate-700'
- )}
- >
- {composition.name}
- </span>
- <span
- className={cn(
-'line-clamp-3 text-center text-[9px] leading-tight opacity-90',
- isSelected ?'text-primary/75' :'text-muted-foreground/80'
- )}
- >
- {composition.description}
- </span>
- </div>
- </motion.button>
- )
- })}
- </div>
- </div>
- )
+              <div
+                className={cn(
+                  'flex flex-1 flex-col gap-1 border-t px-2 py-2 transition-colors',
+                  isSelected ? 'border-primary/18 bg-primary/[0.055]' : 'border-border/40 bg-background/72'
+                )}
+              >
+                <span
+                  className={cn(
+                    'block truncate text-center text-[clamp(0.82rem,0.78rem+0.08vw,0.88rem)] font-semibold leading-tight transition-colors duration-200',
+                    isSelected ? 'text-primary/90' : 'text-foreground/86 group-hover:text-foreground/92'
+                  )}
+                >
+                  {composition.name}
+                </span>
+                <span
+                  className={cn(
+                    'line-clamp-3 text-center text-[clamp(0.74rem,0.7rem+0.08vw,0.8rem)] leading-snug opacity-90',
+                    isSelected ? 'text-primary/72' : 'text-muted-foreground/82'
+                  )}
+                >
+                  {composition.description}
+                </span>
+              </div>
+            </motion.button>
+          )
+        })}
+      </div>
+    </div>
+  )
 }

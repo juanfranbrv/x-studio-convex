@@ -15,12 +15,34 @@ interface FieldWeight {
     tip: string
 }
 
+function hasMeaningfulBrandName(value: string | null | undefined): boolean {
+    if (!value) return false
+
+    const normalized = value
+        .trim()
+        .toLocaleLowerCase('es-ES')
+        .replace(/\s+/g, ' ')
+
+    if (!normalized) return false
+
+    const placeholderValues = new Set([
+        'my brand',
+        'mi marca',
+        'ej. mi marca',
+        'ej: mi marca',
+        'example brand',
+        'marca',
+    ])
+
+    return !placeholderValues.has(normalized)
+}
+
 const FIELD_WEIGHTS: FieldWeight[] = [
     {
         field: 'brand_name',
         label: 'Nombre de marca',
         weight: 10,
-        check: (bk) => !!bk.brand_name && bk.brand_name.trim().length > 0,
+        check: (bk) => hasMeaningfulBrandName(bk.brand_name),
         tip: 'Añade el nombre de tu marca'
     },
     {

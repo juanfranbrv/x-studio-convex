@@ -199,3 +199,29 @@ Si una nueva necesidad obliga a romper alguna de estas reglas:
 - documentar la excepcion
 - explicar por que la excepcion mejora el sistema
 - evitar decisiones implicitas enterradas en clases locales
+
+## Paridad entre modulos creativos
+
+- `image` y `carousel` deben sentirse como el mismo producto con distinto objetivo, no como dos consolas distintas.
+- Si existe un patron ya resuelto en `image` para panel derecho, dropdown, toolbar flotante, dialogo de decision o barra de accion inferior, `carousel` debe reutilizarlo o colgar de la misma constante compartida.
+- Antes de crear una variante local para `carousel`, comprobar si la necesidad real es distinta o si solo falta adaptar copy y comportamiento.
+- La regla operativa es:
+  - mismos `select` de primer nivel
+  - mismos dialogos de decision
+  - misma familia de CTA y barra inferior
+  - mismo lenguaje para estados activos e inactivos
+  - mismo tono visual en overlays y toolbar del canvas
+
+## Brand Kit
+
+- `brand-kit` debe alinearse con el lenguaje premium de `image` y `carousel`, no con el lenguaje historico de dashboard o backoffice.
+- Evitar `glass-panel` y las tarjetas dentro de tarjetas como solucion por defecto.
+- En `brand-kit` la jerarquia debe resolverse con:
+  - una superficie principal clara
+  - subbloques por ritmo vertical
+  - cabeceras con descripcion corta
+  - campos y listas con la misma familia de radios y alturas que el resto del estudio
+- Logos, colores y activos visuales deben seguir la misma regla de seleccion que el panel creativo:
+  - en paneles, activo por color/fondo/borde
+  - los checks se reservan para modales de seleccion de imagen cuando hagan falta
+- Los dialogos de `brand-kit` deben compartir radio, escala tipografica y CTA con los dialogos premium de `image` y `carousel`.

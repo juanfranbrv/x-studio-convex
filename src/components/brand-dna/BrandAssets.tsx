@@ -12,6 +12,16 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/utils';
+import {
+    BRAND_KIT_FIELD_CLASS,
+    BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS,
+    BRAND_KIT_PANEL_CLASS,
+    BRAND_KIT_PANEL_DESCRIPTION_CLASS,
+    BRAND_KIT_PANEL_HEADER_CLASS,
+    BRAND_KIT_PANEL_TITLE_CLASS,
+    BRAND_KIT_SECONDARY_BUTTON_CLASS,
+} from './brandKitStyles';
 
 import { IconDelete, IconPlus, IconSparkles, IconTextFont, IconMessage, IconQuote, IconLanguages } from '@/components/ui/icons';
 
@@ -96,7 +106,7 @@ export function BrandAssets({
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
-                className="h-10 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
+                className={BRAND_KIT_FIELD_CLASS}
             />
             {right}
             <button
@@ -112,40 +122,40 @@ export function BrandAssets({
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="md:col-span-2 bg-white border border-border shadow-sm">
-                <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+            <Card className={cn(BRAND_KIT_PANEL_CLASS, "md:col-span-2")}>
+                <CardHeader className={cn(BRAND_KIT_PANEL_HEADER_CLASS, "pb-4")}>
+                    <CardTitle className={BRAND_KIT_PANEL_TITLE_CLASS}>
                         <IconQuote className="w-5 h-5 text-primary" />
                         {t('assets.taglineTitle', { defaultValue: 'Tagline' })}
                     </CardTitle>
                 </CardHeader>
-            <CardContent>
+            <CardContent className="px-6 pb-6 pt-0">
                     <div className="py-1">
                         <Input
                             value={tagline}
                             onChange={(e) => onUpdateTagline(e.target.value)}
-                            className="h-10 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
+                            className={BRAND_KIT_FIELD_CLASS}
                             placeholder={t('assets.taglinePlaceholder', { defaultValue: 'Write the brand tagline' })}
                         />
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="md:col-span-2 bg-white border border-border shadow-sm">
-                <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+            <Card className={cn(BRAND_KIT_PANEL_CLASS, "md:col-span-2")}>
+                <CardHeader className={cn(BRAND_KIT_PANEL_HEADER_CLASS, "pb-4")}>
+                    <CardTitle className={BRAND_KIT_PANEL_TITLE_CLASS}>
                         <IconLanguages className="w-5 h-5 text-primary" />
-                        {t('assets.preferredLanguageTitle', { defaultValue: 'Preferred language' })}
+                        {t('assets.preferredLanguageTitle', { defaultValue: 'Idioma preferido' })}
                     </CardTitle>
-                    <p className="text-xs text-muted-foreground">{t('assets.preferredLanguageDescription', { defaultValue: 'Language used for AI-generated content for this brand.' })}</p>
+                    <p className={BRAND_KIT_PANEL_DESCRIPTION_CLASS}>{t('assets.preferredLanguageDescription', { defaultValue: 'Idioma que usará la IA al generar contenido para esta marca.' })}</p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-6 pb-6 pt-0">
                     <div className="py-1">
                         <Select
                             value={preferredLanguage || 'es'}
                             onValueChange={(val) => onUpdateLanguage?.(val)}
                         >
-                            <SelectTrigger className="h-10 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus:ring-0 focus:border-primary shadow-none w-full max-w-xs">
+                            <SelectTrigger className={cn(BRAND_KIT_FIELD_CLASS, "w-full max-w-xs")}>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -160,14 +170,14 @@ export function BrandAssets({
                 </CardContent>
             </Card>
 
-            <Card className="bg-white border border-border shadow-sm">
-                <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+            <Card className={BRAND_KIT_PANEL_CLASS}>
+                <CardHeader className={cn(BRAND_KIT_PANEL_HEADER_CLASS, "pb-4")}>
+                    <CardTitle className={BRAND_KIT_PANEL_TITLE_CLASS}>
                         <IconSparkles className="w-5 h-5 text-primary" />
                         {t('assets.valuesTitle', { defaultValue: 'Values' })}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-1">
+                <CardContent className="space-y-1 px-6 pb-6 pt-0">
                     {values.map((v, i) => (
                         <DirectRow
                             key={`value-${i}`}
@@ -177,22 +187,22 @@ export function BrandAssets({
                             placeholder={t('assets.valuePlaceholder', { defaultValue: 'Brand value' })}
                         />
                     ))}
-                    <Button variant="outline" size="sm" className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5" onClick={onAddValue} type="button">
+                    <Button variant="outline" size="sm" className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS} onClick={onAddValue} type="button">
                         <IconPlus className="w-4 h-4 mr-1" />
                         {t('assets.addValue', { defaultValue: 'Add value' })}
                     </Button>
                 </CardContent>
             </Card>
 
-            <Card className="bg-white border border-border shadow-sm">
-                <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+            <Card className={BRAND_KIT_PANEL_CLASS}>
+                <CardHeader className={cn(BRAND_KIT_PANEL_HEADER_CLASS, "pb-4")}>
+                    <CardTitle className={BRAND_KIT_PANEL_TITLE_CLASS}>
                         <IconTextFont className="w-5 h-5 text-primary" />
                         {t('assets.visualStylesTitle', { defaultValue: 'Visual styles' })}
                     </CardTitle>
-                    <p className="text-xs text-muted-foreground">{t('assets.visualStylesDescription', { defaultValue: 'Used for image generation in the Image module.' })}</p>
+                    <p className={BRAND_KIT_PANEL_DESCRIPTION_CLASS}>{t('assets.visualStylesDescription', { defaultValue: 'Se usan para generar imágenes en el módulo Imagen.' })}</p>
                 </CardHeader>
-                <CardContent className="space-y-1">
+                <CardContent className="space-y-1 px-6 pb-6 pt-0">
                     {aesthetic.map((v, i) => (
                         <DirectRow
                             key={`aesthetic-${i}`}
@@ -206,14 +216,14 @@ export function BrandAssets({
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="h-9 w-9 p-0 hover:bg-primary/10"
+                                            className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "h-10 w-10 px-0")}
                                             type="button"
                                             title={t('assets.styleSuggestionsTitle', { defaultValue: 'Style suggestions' })}
                                         >
                                             <IconSparkles className="w-3.5 h-3.5" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="p-0 w-[350px] shadow-xl border-border max-h-[300px] overflow-hidden flex flex-col bg-card" align="start" sideOffset={5}>
+                                    <PopoverContent className="flex max-h-[320px] w-[350px] flex-col overflow-hidden rounded-[1.25rem] border-border/70 bg-card p-0 shadow-[0_26px_72px_-44px_rgba(15,23,42,0.35)]" align="start" sideOffset={5}>
                                         <div className="overflow-y-auto flex-1">
                                             {Object.entries(groupedSuggestions).map(([groupId, group]) => (
                                                 <div key={groupId}>
@@ -244,21 +254,21 @@ export function BrandAssets({
                             }
                         />
                     ))}
-                    <Button variant="outline" size="sm" className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5" onClick={onAddAesthetic} type="button">
+                    <Button variant="outline" size="sm" className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS} onClick={onAddAesthetic} type="button">
                         <IconPlus className="w-4 h-4 mr-1" />
                         {t('assets.addStyle', { defaultValue: 'Add style' })}
                     </Button>
                 </CardContent>
             </Card>
 
-            <Card className="bg-white border border-border shadow-sm">
-                <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+            <Card className={BRAND_KIT_PANEL_CLASS}>
+                <CardHeader className={cn(BRAND_KIT_PANEL_HEADER_CLASS, "pb-4")}>
+                    <CardTitle className={BRAND_KIT_PANEL_TITLE_CLASS}>
                         <IconMessage className="w-5 h-5 text-primary" />
                         {t('assets.toneTitle', { defaultValue: 'Tone of voice' })}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-1">
+                <CardContent className="space-y-1 px-6 pb-6 pt-0">
                     {tone.map((v, i) => (
                         <DirectRow
                             key={`tone-${i}`}
@@ -268,7 +278,7 @@ export function BrandAssets({
                             placeholder={t('assets.tonePlaceholder', { defaultValue: 'Tone of voice' })}
                         />
                     ))}
-                    <Button variant="outline" size="sm" className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5" onClick={onAddTone} type="button">
+                    <Button variant="outline" size="sm" className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS} onClick={onAddTone} type="button">
                         <IconPlus className="w-4 h-4 mr-1" />
                         {t('assets.addTone', { defaultValue: 'Add tone' })}
                     </Button>

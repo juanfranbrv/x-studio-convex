@@ -47,6 +47,15 @@ import { getCarouselCompositionRecommendation } from '@/lib/carousel-composition
 import { IconArrowUp, IconLayers, IconPower, IconRotate, IconSparkles, IconWand } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
 import { MobileWorkPanelDrawer } from '@/components/studio/shared/MobileWorkPanelDrawer'
+import { StudioEditPromptBar, StudioGenerateBar } from '@/components/studio/shared/StudioActionBar'
+import {
+    STUDIO_DECISION_BUTTON_CLASS,
+    STUDIO_DECISION_DIALOG_CLASS,
+    STUDIO_DECISION_DIALOG_DESCRIPTION_CLASS,
+    STUDIO_DECISION_DIALOG_FOOTER_CLASS,
+    STUDIO_DECISION_DIALOG_HEADER_CLASS,
+    STUDIO_DECISION_DIALOG_TITLE_CLASS,
+} from '@/components/studio/shared/dialogStyles'
 import {
     localizeCarouselCompositionDescription,
     localizeCarouselCompositionName,
@@ -1740,6 +1749,43 @@ export default function CarouselPage() {
         />
     )
 
+    const generateBar = (
+        <StudioGenerateBar
+            onGenerate={() => {
+                if (!carouselSettings) return
+                void handleGenerate(carouselSettings)
+            }}
+            onRetry={() => void handleRetryLastGenerate()}
+            onCancelGenerate={handleCancelGenerate}
+            isGenerating={isGenerating}
+            isCancelingGenerate={isCancelingGenerate}
+            canGenerate={Boolean(carouselSettings) && !isAnalyzing && !requiresReanalysis}
+            hasGeneratedImage={slides.some(slide => Boolean(slide.imageUrl))}
+            generatingLabel={t('carousel:ui.generating', { defaultValue: 'Generating...' })}
+            generateLabel={t('carousel:ui.generateCarousel', { defaultValue: 'Generate carousel' })}
+            retryLabel={t('carousel:ui.retryCarousel', { defaultValue: 'Generate another carousel with the same settings' })}
+            stopLabel={t('carousel:ui.stopGeneration', { defaultValue: 'Stop generation' })}
+            cancelingLabel={t('carousel:ui.canceling', { defaultValue: 'Canceling...' })}
+        />
+    )
+
+    const editPromptBar = (
+        <StudioEditPromptBar
+            editPrompt={slideCorrectionPrompt}
+            onEditPromptChange={setSlideCorrectionPrompt}
+            onApply={handleApplySlideCorrection}
+            isApplying={Boolean(isRegenerating && regeneratingIndex === currentSlideIndex)}
+            isEnabled={Boolean(currentSlide?.imageUrl)}
+            hasGeneratedImage={Boolean(currentSlide?.imageUrl)}
+            editPlaceholder={
+                currentSlide?.imageUrl
+                    ? t('carousel:ui.editSlidePlaceholder', { defaultValue: 'Describe the changes to edit the slide...' })
+                    : t('carousel:ui.setupCarouselPlaceholder', { defaultValue: 'Set up your carousel in the side panel...' })
+            }
+            applyLabel={t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
+        />
+    )
+
     const mobileControlsDrawer = isMobile ? (
         <MobileWorkPanelDrawer
             open={mobileControlsOpen}
@@ -1750,28 +1796,18 @@ export default function CarouselPage() {
             closeLabel={t('ui.closeWorkPanel')}
         >
             {controlsPanel}
-            <div className="sticky bottom-0 border-t border-border/40 bg-white p-3">
-                <Button
-                    onClick={() => {
-                        if (!carouselSettings) return
-                        setMobileControlsOpen(false)
-                        void handleGenerate(carouselSettings)
-                    }}
-                    disabled={isGenerating || isAnalyzing || !carouselSettings || requiresReanalysis}
-                    className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25 disabled:cursor-not-allowed"
-                >
-                    {isGenerating ? (
-                        <>
-                            <Loader2 className="mr-2 h-5 w-5" />
-                            {t('carousel:ui.generating', { defaultValue: 'Generating...' })}
-                        </>
-                    ) : (
-                        <>
-                            <IconSparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
-                            {t('carousel:ui.generateCarousel', { defaultValue: 'Generate carousel' })}
-                        </>
-                    )}
-                </Button>
+            <div className="sticky bottom-0 bg-transparent p-3 pt-2">
+                <div className="rounded-[1.35rem] border border-border/45 bg-background/95 p-2 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.3)]">
+                    <div
+                        onClick={() => {
+                            if (!carouselSettings || isGenerating || isAnalyzing || requiresReanalysis) return
+                            setMobileControlsOpen(false)
+                            void handleGenerate(carouselSettings)
+                        }}
+                    >
+                        {generateBar}
+                    </div>
+                </div>
             </div>
         </MobileWorkPanelDrawer>
     ) : null
@@ -1790,44 +1826,7 @@ export default function CarouselPage() {
                 'flex-1 flex flex-col items-stretch gap-2',
                 isMobile ? '' : 'p-3 md:p-4 sm:flex-row sm:items-end'
             )}>
-                <div className="relative w-full">
-                    <Textarea
-                        placeholder={
-                            currentSlide?.imageUrl
-                                ? t('carousel:ui.editSlidePlaceholder', { defaultValue: 'Describe the changes to edit the slide...' })
-                                : t('carousel:ui.setupCarouselPlaceholder', { defaultValue: 'Set up your carousel in the side panel...' })
-                        }
-                        value={slideCorrectionPrompt}
-                        onChange={(e) => setSlideCorrectionPrompt(e.target.value)}
-                        disabled={!currentSlide?.imageUrl || (isRegenerating && regeneratingIndex === currentSlideIndex)}
-                        className={cn(
-                            'w-full min-h-[44px] max-h-[120px] resize-none bg-muted/30 border-border/60 text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-100 disabled:cursor-not-allowed transition-all',
-                            currentSlide?.imageUrl ? 'pr-14' : ''
-                        )}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault()
-                                handleApplySlideCorrection()
-                            }
-                        }}
-                    />
-                    {currentSlide?.imageUrl ? (
-                        <Button
-                            onClick={handleApplySlideCorrection}
-                            disabled={isGenerating || (isRegenerating && regeneratingIndex === currentSlideIndex) || !slideCorrectionPrompt.trim()}
-                            size="icon"
-                            className="absolute right-2 top-1/2 h-9 w-9 -translate-y-1/2 rounded-xl bg-primary text-primary-foreground shadow-md transition-all hover:bg-primary/90 disabled:opacity-45"
-                            aria-label={t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
-                            title={t('carousel:ui.applyCorrection', { defaultValue: 'Apply correction' })}
-                        >
-                            {isRegenerating && regeneratingIndex === currentSlideIndex ? (
-                                <Loader2 className="h-3.5 w-3.5" />
-                            ) : (
-                                <IconArrowUp className="h-3.5 w-3.5" />
-                            )}
-                        </Button>
-                    ) : null}
-                </div>
+                {editPromptBar}
             </div>
 
             {!isMobile ? <div className={cn(
@@ -1837,72 +1836,7 @@ export default function CarouselPage() {
                     panelPosition === 'right' ? 'lg:border-l border-border/40' : 'lg:border-r border-border/40'
                 )
             )}>
-                {slides.some(slide => Boolean(slide.imageUrl)) ? (
-                    <div className="space-y-2">
-                        <Button
-                            onClick={() => void handleRetryLastGenerate()}
-                            disabled={isGenerating || isAnalyzing || !carouselSettings || requiresReanalysis}
-                            className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25 disabled:cursor-not-allowed"
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <Loader2 className="mr-2 h-5 w-5" />
-                                    {t('carousel:ui.generating', { defaultValue: 'Generating...' })}
-                                </>
-                            ) : (
-                                <>
-                                    <IconRotate className="mr-2 h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:-rotate-45" />
-                                    {t('carousel:ui.retryCarousel', { defaultValue: 'Generate another carousel with the same settings' })}
-                                </>
-                            )}
-                        </Button>
-                        {isGenerating ? (
-                            <button
-                                type="button"
-                                onClick={handleCancelGenerate}
-                                className="w-full text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                                {isCancelingGenerate
-                                    ? t('carousel:ui.canceling', { defaultValue: 'Canceling...' })
-                                    : t('carousel:ui.stopGeneration', { defaultValue: 'Stop generation' })}
-                            </button>
-                        ) : null}
-                    </div>
-                ) : (
-                    <div className="space-y-2">
-                        <Button
-                            onClick={() => {
-                                if (!carouselSettings) return
-                                void handleGenerate(carouselSettings)
-                            }}
-                            disabled={isGenerating || isAnalyzing || !carouselSettings || requiresReanalysis}
-                            className="group feedback-action h-[44px] w-full rounded-xl bg-primary font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:shadow-primary/25 disabled:cursor-not-allowed"
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <Loader2 className="mr-2 h-5 w-5" />
-                                    {t('carousel:ui.generating', { defaultValue: 'Generating...' })}
-                                </>
-                            ) : (
-                                <>
-                                    <IconSparkles className="mr-2 h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
-                                    {t('carousel:ui.generateCarousel', { defaultValue: 'Generate carousel' })}
-                                </>
-                            )}
-                        </Button>
-                        {isGenerating ? (
-                            <button
-                                type="button"
-                                onClick={handleCancelGenerate}
-                                className="w-full text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                                {isCancelingGenerate
-                                    ? t('carousel:ui.canceling', { defaultValue: 'Canceling...' })
-                                    : t('carousel:ui.stopGeneration', { defaultValue: 'Stop generation' })}
-                            </button>
-                        ) : null}
-                    </div>
-                )}
+                {generateBar}
             </div> : null}
         </div>
     )
@@ -1935,6 +1869,7 @@ export default function CarouselPage() {
             onBrandDelete={deleteBrandKitById}
             onNewBrandKit={handleNewBrandKit}
             isFixed={!isMobile}
+            contentContainerVariant="plain"
         >
             <div className={cn(
                 'flex-1 relative min-h-0',
@@ -2212,19 +2147,20 @@ export default function CarouselPage() {
             />
 
             <Dialog open={errorModal.open} onOpenChange={(open) => setErrorModal(prev => ({ ...prev, open }))}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-destructive">
+                <DialogContent className={STUDIO_DECISION_DIALOG_CLASS}>
+                    <DialogHeader className={STUDIO_DECISION_DIALOG_HEADER_CLASS}>
+                        <DialogTitle className={cn(STUDIO_DECISION_DIALOG_TITLE_CLASS, 'flex items-center gap-2 text-destructive')}>
                             {errorModal.title}
                         </DialogTitle>
-                        <DialogDescription className="text-muted-foreground whitespace-pre-wrap">
+                        <DialogDescription className={cn(STUDIO_DECISION_DIALOG_DESCRIPTION_CLASS, 'whitespace-pre-wrap')}>
                             {errorModal.message}
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter className="gap-2">
+                    <DialogFooter className={STUDIO_DECISION_DIALOG_FOOTER_CLASS}>
                         {errorModal.suggestedSlideCount ? (
                             <Button
                                 variant="outline"
+                                className={STUDIO_DECISION_BUTTON_CLASS}
                                 onClick={() => {
                                     setSlideCountOverride(errorModal.suggestedSlideCount || null)
                                     setErrorModal(prev => ({ ...prev, open: false }))
@@ -2233,7 +2169,7 @@ export default function CarouselPage() {
                                 {t('errors.adjustToSlides', { count: errorModal.suggestedSlideCount, defaultValue: 'Adjust to {{count}} slides' })}
                             </Button>
                         ) : null}
-                        <Button onClick={() => setErrorModal(prev => ({ ...prev, open: false }))}>
+                        <Button className={STUDIO_DECISION_BUTTON_CLASS} onClick={() => setErrorModal(prev => ({ ...prev, open: false }))}>
                             {t('common:actions.gotIt', { defaultValue: 'Got it' })}
                         </Button>
                     </DialogFooter>

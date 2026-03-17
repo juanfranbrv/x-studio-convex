@@ -15,11 +15,21 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-import { IconMegaphone, IconMouseClick, IconFileText, IconInfo, IconDelete, IconPlus, IconUpload } from '@/components/ui/icons';
+import { IconMegaphone, IconMouseClick, IconFileText, IconInfo, IconClose, IconPlus, IconUpload } from '@/components/ui/icons';
 import { analyzeBrandFile } from '@/app/actions/analyze-brand-file';
 import { ExtractionPreviewModal } from './ExtractionPreviewModal';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import {
+    BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS,
+    BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS,
+    BRAND_KIT_PANEL_CLASS,
+    BRAND_KIT_PANEL_DESCRIPTION_CLASS,
+    BRAND_KIT_PANEL_HEADER_CLASS,
+    BRAND_KIT_PANEL_TITLE_CLASS,
+    BRAND_KIT_SECONDARY_BUTTON_CLASS,
+    BRAND_KIT_TEXTAREA_CLASS,
+} from './brandKitStyles';
 
 interface TextAssetsSectionProps {
     data?: TextAssets;
@@ -137,32 +147,31 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 className={cn(
-                    'flex-1 text-sm bg-transparent border border-border/70 focus-visible:outline-none focus-visible:ring-0 focus-visible:border-primary rounded-md p-2 resize-y leading-relaxed',
-                    sectionType === 'marketing_hooks' ? 'min-h-[110px]' : 'min-h-[80px]'
+                    BRAND_KIT_TEXTAREA_CLASS,
+                    sectionType === 'marketing_hooks' ? 'min-h-[118px]' : 'min-h-[88px]'
                 )}
                 rows={sectionType === 'marketing_hooks' ? 4 : 3}
             />
             <button
-                className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors hover:bg-red-500/10 hover:text-red-500 md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100"
+                className={BRAND_KIT_INLINE_REMOVE_BUTTON_CLASS}
                 onClick={onDelete}
                 type="button"
                 aria-label={t('contact.deleteAria', { defaultValue: 'Delete' })}
             >
-                <IconDelete className="w-3.5 h-3.5" />
+                <IconClose className="w-3.5 h-3.5" />
             </button>
         </div>
     );
 
     return (
-        <Card className="glass-panel border-0 shadow-none relative overflow-visible">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--accent)]/10 to-transparent rounded-full blur-3xl" />
-            <CardHeader className="relative pb-3 flex flex-row items-center justify-between">
+        <Card className={cn(BRAND_KIT_PANEL_CLASS, "relative overflow-visible")}>
+            <CardHeader className={cn(BRAND_KIT_PANEL_HEADER_CLASS, "relative flex-row items-start justify-between pb-4")}>
                 <div>
-                    <CardTitle className="flex items-center gap-2 text-base text-foreground">
+                    <CardTitle className={BRAND_KIT_PANEL_TITLE_CLASS}>
                         <IconFileText className="w-5 h-5 text-primary" />
                         {t('textAssets.title', { defaultValue: 'Text assets' })}
                     </CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">{t('textAssets.description', { defaultValue: 'Editable copy for campaigns and content generation' })}</p>
+                    <p className={cn(BRAND_KIT_PANEL_DESCRIPTION_CLASS, "mt-1")}>{t('textAssets.description', { defaultValue: 'Textos editables para campañas y generación de contenido' })}</p>
                 </div>
 
                 <div className="flex gap-2">
@@ -203,7 +212,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                     <Button
                         variant="outline"
                         size="sm"
-                        className="h-10 gap-2 bg-primary/5 border-primary/20 text-primary cursor-pointer hover:bg-primary/10"
+                        className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "gap-2 border-primary/20 bg-primary/5 text-primary cursor-pointer hover:bg-primary/10")}
                         disabled={isAnalyzing}
                         asChild
                     >
@@ -214,7 +223,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent className="relative space-y-4 pt-2">
+            <CardContent className="relative space-y-4 px-6 pb-6 pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                         <SectionTitle icon={IconMegaphone} title={t('textAssets.marketingHooksTitle', { defaultValue: 'Marketing headlines' })} tooltipKey="marketing_hooks" />
@@ -231,7 +240,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5"
+                                className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS}
                                 onClick={() => handleAdd('marketing_hooks')}
                                 type="button"
                             >
@@ -256,7 +265,7 @@ export function TextAssetsSection({ data, onChange, onAppendData }: TextAssetsSe
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-10 w-full border-dashed border-border text-sm hover:border-primary hover:bg-primary/5"
+                                className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS}
                                 onClick={() => handleAdd('ctas')}
                                 type="button"
                             >

@@ -68,6 +68,11 @@ const PANEL_SECTION_HELPER_CLASS = "text-[0.84rem] text-muted-foreground leading
 const PANEL_TEXT_BUTTON_REVEAL_CLASS = "rounded-xl px-3 py-2 text-[clamp(0.9rem,0.86rem+0.12vw,0.98rem)] text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.28)] disabled:opacity-50"
 const PANEL_SECONDARY_BUTTON_CLASS = "min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal"
 const PANEL_RICH_SELECT_TRIGGER_CLASS = STUDIO_RICH_SELECT_TRIGGER_CLASS
+const PANEL_RICH_SELECT_CONTENT_STYLE = {
+    width: 'var(--radix-select-trigger-width)',
+    minWidth: 'var(--radix-select-trigger-width)',
+    maxWidth: 'var(--radix-select-trigger-width)',
+} as const
 const BRAND_KIT_GROUP_CLASS = "space-y-3"
 const BRAND_KIT_CONTACT_ROW_CLASS = "space-y-2 border-b border-border/40 py-2.5 last:border-b-0"
 const BRAND_KIT_SUBTLE_BUTTON_CLASS = "h-9 rounded-xl border border-border/65 bg-background/82 px-3 text-[0.9rem] font-medium text-foreground/88 transition-all duration-200 hover:border-border/90 hover:bg-background hover:shadow-[0_12px_28px_-24px_rgba(15,23,42,0.18)]"
@@ -816,7 +821,7 @@ export function ControlsPanel({
                             <SelectTrigger className={PANEL_RICH_SELECT_TRIGGER_CLASS}>
                                 <SelectValue
                                     placeholder={t('ui.noSessions')}
-                                    className="pointer-events-none absolute inset-0 opacity-0"
+                                    className="sr-only"
                                 />
                                 <span className="flex min-w-0 items-center gap-2">
                                     <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">
@@ -834,7 +839,7 @@ export function ControlsPanel({
                                     ) : null}
                                 </span>
                             </SelectTrigger>
-                            <SelectContent className={PANEL_SECTION_SELECT_CONTENT_CLASS} position="popper" align="start">
+                            <SelectContent className={PANEL_SECTION_SELECT_CONTENT_CLASS} position="popper" align="start" style={PANEL_RICH_SELECT_CONTENT_STYLE}>
                                 {sessions.length === 0 ? (
                                     <SelectItem
                                         value="__none"
@@ -1075,7 +1080,7 @@ export function ControlsPanel({
                                                     <SelectTrigger className={PANEL_RICH_SELECT_TRIGGER_CLASS}>
                                                         <SelectValue
                                                             placeholder={t('ui.selectIntent')}
-                                                            className="pointer-events-none absolute inset-0 opacity-0"
+                                                            className="sr-only"
                                                         />
                                                         <span className="flex min-w-0 items-center gap-2">
                                                             <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">
@@ -1088,7 +1093,7 @@ export function ControlsPanel({
                                                             </span>
                                                         </span>
                                                     </SelectTrigger>
-                                                    <SelectContent className={PANEL_SECTION_SELECT_CONTENT_CLASS} position="popper" align="start">
+                                                    <SelectContent className={PANEL_SECTION_SELECT_CONTENT_CLASS} position="popper" align="start" style={PANEL_RICH_SELECT_CONTENT_STYLE}>
                                                         <SelectItem value="auto" className={PANEL_SECTION_SELECT_ITEM_CLASS}>
                                                             {t('ui.autoDetectedIntent', {
                                                                 defaultValue: 'Auto (detected: {{intent}})',

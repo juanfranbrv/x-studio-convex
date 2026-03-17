@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { IconPlus, IconMinus, IconPalette, IconWand, IconLayout, IconLayers, IconImageAdd, IconFingerprint, IconCarousel, IconRotate, IconHistory, IconSave, IconCheck, IconAlertCircle, IconClose } from '@/components/ui/icons'
+import { IconPlus, IconMinus, IconIdea, IconLayout, IconLayers, IconImageAdd, IconFingerprint, IconCarousel, IconRotate, IconHistory, IconSave, IconCheck, IconAlertCircle, IconClose, IconPaintbrush02, IconWand } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import type { BrandDNA } from '@/lib/brand-types'
 import type { CarouselSuggestion, CarouselSlide, SlideContent } from '@/app/actions/generate-carousel'
@@ -47,11 +47,25 @@ import {
     STUDIO_PANEL_CARD_PADDED_CLASS,
     STUDIO_PANEL_CARD_PADDED_LG_CLASS,
 } from '@/components/studio/shared/panelStyles'
+import {
+    STUDIO_RICH_SELECT_TRIGGER_CLASS,
+    STUDIO_SELECT_CONTENT_CLASS,
+    STUDIO_SELECT_ITEM_CLASS,
+    STUDIO_SELECT_TRIGGER_CLASS,
+} from '@/components/studio/shared/selectStyles'
 import { SuggestionsList } from '@/components/studio/shared/SuggestionsList'
 import { useStylePresetImages } from '@/hooks/useStylePresetImages'
 import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialog'
 import { HexColorPicker } from 'react-colorful'
 import { useTranslation } from 'react-i18next'
+import {
+    STUDIO_DECISION_BUTTON_CLASS,
+    STUDIO_DECISION_DIALOG_CLASS,
+    STUDIO_DECISION_DIALOG_DESCRIPTION_CLASS,
+    STUDIO_DECISION_DIALOG_FOOTER_CLASS,
+    STUDIO_DECISION_DIALOG_HEADER_CLASS,
+    STUDIO_DECISION_DIALOG_TITLE_CLASS,
+} from '@/components/studio/shared/dialogStyles'
 
 export interface SlideConfig {
     index: number
@@ -259,6 +273,17 @@ type SessionDecisionButton = {
     label: string
     variant?: 'default' | 'outline' | 'destructive'
 }
+
+const PANEL_SECTION_HEADER_ICON_CLASS = 'h-9 w-9 rounded-none border-0 bg-transparent text-foreground/72 shadow-none'
+const PANEL_SECTION_HEADER_TITLE_CLASS = 'text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88'
+const PANEL_TEXT_BUTTON_REVEAL_CLASS = 'rounded-xl px-3 py-2 text-[clamp(0.9rem,0.86rem+0.12vw,0.98rem)] text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.28)] disabled:opacity-50'
+const PANEL_SECONDARY_BUTTON_CLASS = 'min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal'
+const PANEL_RICH_SELECT_CONTENT_STYLE = {
+    width: 'var(--radix-select-trigger-width)',
+    minWidth: 'var(--radix-select-trigger-width)',
+    maxWidth: 'var(--radix-select-trigger-width)',
+} as const
+const ADVANCED_COMPOSITION_MODAL_CLASS = 'h-[min(90vh,920px)] w-[min(94vw,1200px)] !max-w-[min(94vw,1200px)] overflow-hidden rounded-[1.9rem] border border-border/70 bg-background/98 p-0 shadow-[0_38px_100px_-56px_rgba(15,23,42,0.42)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.985] data-[state=closed]:zoom-out-[0.985] data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:slide-out-to-bottom-2 duration-200 flex flex-col'
 
 type SessionDecisionModalState = {
     open: boolean
@@ -2704,15 +2729,17 @@ export function CarouselControlsPanel({
     return (
         <div className={STUDIO_CONTROLS_SHELL_CLASS}>
             <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-5">
-                                {/* SECTION: Sessions */}
+                {/* SECTION: Sessions */}
                 <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
                     <SectionHeader
                         icon={IconHistory}
                         title={t('ui.history')}
                         className="mb-2"
+                        iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                        titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
                         extra={
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                                <span className="text-[clamp(0.88rem,0.84rem+0.1vw,0.94rem)] text-muted-foreground inline-flex items-center gap-1">
                                     {isSavingSession ? (
                                         <>
                                             <Loader2 className="h-3 w-3" />
@@ -2738,7 +2765,7 @@ export function CarouselControlsPanel({
                                     type="button"
                                     size="icon"
                                     variant="ghost"
-                                    className="h-7 w-7"
+                                    className="h-9 w-9 rounded-[1rem] border border-border/65 bg-background/82 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                                     onClick={() => void handleSaveNow()}
                                     disabled={!userId || !scopedBrandId || isHydratingSession || isSavingSession || !hasUnsavedChanges}
                                     title={t('ui.saveSessionNow')}
@@ -2758,11 +2785,9 @@ export function CarouselControlsPanel({
                         }
                     />
                     <div className="space-y-3 pt-1.5">
-                        <select
-                            className="h-9 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-xs"
+                        <Select
                             value={selectedSessionToLoad || currentSessionId || ''}
-                            onChange={(event) => {
-                                const id = event.target.value
+                            onValueChange={(id) => {
                                 setSelectedSessionToLoad(id)
                                 if (id && id !== currentSessionId) {
                                     void handleLoadSession(id).then((loaded) => {
@@ -2773,30 +2798,67 @@ export function CarouselControlsPanel({
                                 }
                             }}
                         >
-                            {(workSessions || []).length === 0 ? (
-                                <option value="">{t('ui.noSessions')}</option>
-                            ) : null}
-                            {(workSessions || []).map((session) => (
-                                <option key={String(session._id)} value={String(session._id)}>
-                                    {buildSessionTitle(session.title || t('ui.untitledSession'))} {session.active ? `(${t('ui.activeSession')})` : ''} - {new Date(session.updated_at).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })}
-                                </option>
-                            ))}
-                        </select>
+                            <SelectTrigger className={STUDIO_RICH_SELECT_TRIGGER_CLASS}>
+                                <SelectValue
+                                    placeholder={t('ui.noSessions')}
+                                    className="sr-only"
+                                />
+                                <span className="flex min-w-0 items-center gap-2">
+                                    <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">
+                                        {buildSessionTitle(activeSessionMeta?.title || t('ui.noSessions'))}
+                                    </span>
+                                    {activeSessionMeta?.active ? (
+                                        <span className="whitespace-nowrap rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[0.78rem] font-semibold text-primary">
+                                            {t('ui.activeSession')}
+                                        </span>
+                                    ) : null}
+                                    {activeSessionMeta?.updated_at ? (
+                                        <span className="shrink-0 text-[0.82rem] text-muted-foreground">
+                                            {new Date(activeSessionMeta.updated_at).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    ) : null}
+                                </span>
+                            </SelectTrigger>
+                            <SelectContent className={STUDIO_SELECT_CONTENT_CLASS} position="popper" align="start" style={PANEL_RICH_SELECT_CONTENT_STYLE}>
+                                {(workSessions || []).length === 0 ? (
+                                    <SelectItem value="__none" disabled className={STUDIO_SELECT_ITEM_CLASS}>
+                                        {t('ui.noSessions')}
+                                    </SelectItem>
+                                ) : null}
+                                {(workSessions || []).map((session) => (
+                                    <SelectItem key={String(session._id)} value={String(session._id)} className={STUDIO_SELECT_ITEM_CLASS}>
+                                        <span className="flex min-w-0 items-center gap-2">
+                                            <span className="truncate">
+                                                {buildSessionTitle(session.title || t('ui.untitledSession'))}
+                                            </span>
+                                            {session.active ? (
+                                                <span className="rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[0.78rem] font-semibold text-primary">
+                                                    {t('ui.activeSession')}
+                                                </span>
+                                            ) : null}
+                                            <span className="shrink-0 text-[0.82rem] text-muted-foreground">
+                                                {new Date(session.updated_at).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <div className="grid grid-cols-2 gap-2 pt-1">
                         <Button
                             variant="default"
                             size="sm"
-                            className="h-7 px-2 text-[10px] gap-1"
+                            className={PANEL_SECONDARY_BUTTON_CLASS}
                             onClick={() => void createNewCarouselSession()}
                         >
-                            <IconPlus className="w-3 h-3" />
+                            <IconPlus className="mr-1.5 h-3.5 w-3.5" />
                             {t('ui.newSession')}
                         </Button>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 px-2 text-[10px]"
+                            className={PANEL_SECONDARY_BUTTON_CLASS}
                             onClick={() => void handleRenameCurrentSession()}
                             disabled={!currentSessionId}
                         >
@@ -2805,7 +2867,7 @@ export function CarouselControlsPanel({
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 px-2 text-[10px]"
+                            className={PANEL_SECONDARY_BUTTON_CLASS}
                             onClick={() => void handleDeleteCurrentSession()}
                         >
                             {t('ui.deleteSession')}
@@ -2813,10 +2875,10 @@ export function CarouselControlsPanel({
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 px-2 text-[10px]"
+                            className={PANEL_SECONDARY_BUTTON_CLASS}
                             onClick={() => void handleClearAllSessions()}
                         >
-                            {t('ui.deleteHistory')}
+                            {t('ui.deleteAllSessions', { defaultValue: 'Borrar todas las sesiones' })}
                         </Button>
                     </div>
                 </div>
@@ -2845,8 +2907,10 @@ export function CarouselControlsPanel({
                 {isStepVisible(2) && (
                 <div ref={(el) => { stepRefs.current[2] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
                     <SectionHeader
-                        icon={IconWand}
+                        icon={IconIdea}
                         title={t('ui.whatToCreate')}
+                        iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                        titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
                     />
                     <div className="relative">
                         <Textarea
@@ -2866,7 +2930,7 @@ export function CarouselControlsPanel({
                                     }
                                 }
                             }}
-                            className="min-h-[100px] text-sm resize-none bg-background border border-border focus:ring-1 focus:ring-primary focus:border-primary pb-12 pr-2 transition-all"
+                            className="min-h-[132px] rounded-2xl border border-border/70 bg-background/90 px-4 py-3 !text-[14px] leading-[1.45] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-all focus:border-primary/60 focus:ring-2 focus:ring-primary/18 pb-14 pr-3"
                         />
                         <div className="absolute left-2 right-2 bottom-2 flex flex-wrap items-center gap-2">
                             {brandKit && (
@@ -2874,7 +2938,7 @@ export function CarouselControlsPanel({
                                     type="button"
                                     onClick={handleInspire}
                                     disabled={isInspiring}
-                                    className="mr-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                                    className={cn('mr-auto inline-flex items-center gap-1.5', PANEL_TEXT_BUTTON_REVEAL_CLASS)}
                                 >
                                     {isInspiring ? (
                                         <Loader2 className="w-3.5 h-3.5" />
@@ -2889,10 +2953,9 @@ export function CarouselControlsPanel({
                                     <div className="flex items-center gap-2">
                                         <Button
                                             type="button"
-                                            size="sm"
                                             variant="link"
                                             onClick={onCancelAnalyze}
-                                            className="h-6 px-1 text-[11px]"
+                                            className="min-h-[42px] rounded-[1rem] px-4 text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] font-semibold text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                                         >
                                             {t('ui.stop')}
                                         </Button>
@@ -2900,10 +2963,10 @@ export function CarouselControlsPanel({
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: isCancelingAnalyze ? 1 : 0 }}
                                             transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.2 }}
-                                            className="text-[10px] uppercase tracking-wider text-muted-foreground"
-                                        >
-                                            {t('ui.canceling')}
-                                        </motion.span>
+                                        className="text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] font-medium text-muted-foreground"
+                                    >
+                                        {t('ui.canceling')}
+                                    </motion.span>
                                     </div>
                                 )}
                             </div>
@@ -2911,7 +2974,7 @@ export function CarouselControlsPanel({
                                 size="sm"
                                 onClick={handleAnalyze}
                                 disabled={!canAnalyze}
-                                className="group feedback-action ml-auto h-8 px-3 sm:px-4 text-[11px] sm:text-xs uppercase font-bold tracking-wider bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 whitespace-nowrap"
+                                className="group feedback-action ml-auto h-[42px] rounded-[1rem] border border-transparent bg-primary/90 px-4 text-[clamp(0.94rem,0.9rem+0.12vw,1rem)] font-semibold text-primary-foreground shadow-[0_16px_34px_-22px_rgba(59,130,246,0.58)] transition-all hover:bg-primary hover:shadow-primary/25 sm:px-5 whitespace-nowrap"
                             >
                                 {isAnalyzing ? (
                                     <>
@@ -2956,7 +3019,7 @@ export function CarouselControlsPanel({
                                     <Button
                                         size="sm"
                                         onClick={() => setIsAdvancedCompositionOpen(true)}
-                                        className="h-8 rounded-full px-3 text-[11px]"
+                                        className={PANEL_SECONDARY_BUTTON_CLASS}
                                     >
                                         {t('ui.openEditor', { defaultValue: 'Open editor' })}
                                     </Button>
@@ -2964,68 +3027,74 @@ export function CarouselControlsPanel({
                             </motion.div>
 
                             <Dialog open={isAdvancedCompositionOpen} onOpenChange={setIsAdvancedCompositionOpen}>
-                                <DialogContent className="grid h-[92vh] w-[calc(100vw-3rem)] max-w-[1600px] grid-rows-[auto,minmax(0,1fr),auto] overflow-hidden p-0 sm:!max-w-[1600px]">
-                                    <DialogHeader className="shrink-0 border-b border-border/70 bg-gradient-to-r from-background to-primary/5 px-6 py-5">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="space-y-2">
-                                                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-                                                    <IconLayers className="h-3.5 w-3.5" />
-                                                    {t('ui.advancedCompositionBadge', { defaultValue: 'Advanced composition' })}
+                                <DialogContent className={ADVANCED_COMPOSITION_MODAL_CLASS}>
+                                    <motion.div
+                                        initial={shouldReduceMotion ? false : { opacity: 0, y: 18, scale: 0.972 }}
+                                        animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+                                        transition={shouldReduceMotion ? undefined : { duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                                        className="flex min-h-0 flex-1 flex-col"
+                                    >
+                                        <DialogHeader className="px-7 pb-2 pt-7">
+                                            <div className="flex flex-wrap items-start justify-between gap-3 pr-16">
+                                                <div className="space-y-2">
+                                                    <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                                                        <IconLayers className="h-3.5 w-3.5" />
+                                                        {t('ui.advancedCompositionBadge', { defaultValue: 'Advanced composition' })}
+                                                    </div>
+                                                    <DialogTitle className="text-[clamp(1.16rem,1.08rem+0.18vw,1.28rem)] font-semibold tracking-[-0.01em]">
+                                                        {t('ui.composeSlideBySlide', { defaultValue: 'Build the carousel slide by slide' })}
+                                                    </DialogTitle>
+                                                    <DialogDescription className="max-w-3xl text-[1rem] leading-relaxed text-muted-foreground">
+                                                        {t('ui.composeSlideBySlideDescription', { defaultValue: 'Each row represents one slide. Horizontally you see the original option and every available variant for that position.' })}
+                                                    </DialogDescription>
                                                 </div>
-                                                <DialogTitle className="text-xl font-semibold">
-                                                    {t('ui.composeSlideBySlide', { defaultValue: 'Build the carousel slide by slide' })}
-                                                </DialogTitle>
-                                                <DialogDescription className="max-w-3xl text-sm leading-relaxed">
-                                                    {t('ui.composeSlideBySlideDescription', { defaultValue: 'Each row represents one slide. Horizontally you see the original option and every available variant for that position.' })}
-                                                </DialogDescription>
-                                            </div>
-                                            {hasOriginalSuggestion && onUndoSuggestion && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={onUndoSuggestion}
-                                                    className="h-9 rounded-full px-4 text-[11px]"
-                                                >
-                                                    <IconRotate className="mr-1.5 h-3.5 w-3.5" />
-                                                    {t('common:suggestions.backToOriginal', { defaultValue: 'Back to original' })}
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </DialogHeader>
-
-                                    <div className="min-h-0 overflow-y-auto px-8 py-6">
-                                        <div className="space-y-4">
-                                            {previewScriptSlides.map((slide, slideIndex) => {
-                                                const selectedSource = slideVariantSelection[slideIndex] || 'original'
-                                                return (
-                                                    <div
-                                                        key={`variant-row-modal-${slideIndex}`}
-                                                        className="rounded-2xl border border-border/60 bg-white p-4"
+                                                {hasOriginalSuggestion && onUndoSuggestion && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={onUndoSuggestion}
+                                                        className={cn(PANEL_SECONDARY_BUTTON_CLASS, 'pr-5')}
                                                     >
-                                                        <div className="mb-3 flex items-center justify-between gap-3">
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-primary/12 px-2 text-sm font-bold text-primary">
-                                                                    {slideIndex + 1}
-                                                                </span>
-                                                                <div>
-                                                                    <p className="text-sm font-semibold text-foreground">
-                                                                        {slide.role === 'hook'
-                                                                            ? t('ui.hook', { defaultValue: 'Hook' })
-                                                                            : slide.role === 'cta'
-                                                                                ? t('ui.closingCta', { defaultValue: 'Closing / CTA' })
-                                                                                : t('ui.slideLabel', { index: slideIndex + 1, defaultValue: 'Slide {{index}}' })}
-                                                                    </p>
-                                                                    <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                                                                        {t('ui.activeVariant', { defaultValue: 'Active' })}: {slideVariantSources.find((source) => source.id === selectedSource)?.label || t('ui.original', { defaultValue: 'Original' })}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                            <span className="rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-                                                                {t('ui.variantsCount', { count: slideVariantSources.length, defaultValue: '{{count}} variants' })}
-                                                            </span>
-                                                        </div>
+                                                        <IconRotate className="mr-1.5 h-3.5 w-3.5" />
+                                                        {t('common:suggestions.backToOriginal', { defaultValue: 'Back to original' })}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </DialogHeader>
 
-                                                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                        <div className="min-h-0 flex-1 overflow-y-auto px-7 py-6">
+                                            <div className="space-y-4">
+                                                {previewScriptSlides.map((slide, slideIndex) => {
+                                                    const selectedSource = slideVariantSelection[slideIndex] || 'original'
+                                                    return (
+                                                        <div
+                                                            key={`variant-row-modal-${slideIndex}`}
+                                                            className="rounded-[1.4rem] border border-border/60 bg-background/74 p-4 shadow-[0_18px_38px_-34px_rgba(15,23,42,0.16)]"
+                                                        >
+                                                            <div className="mb-3 flex items-center justify-between gap-3">
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-primary/12 px-2 text-sm font-bold text-primary">
+                                                                        {slideIndex + 1}
+                                                                    </span>
+                                                                    <div>
+                                                                        <p className="text-sm font-semibold text-foreground">
+                                                                            {slide.role === 'hook'
+                                                                                ? t('ui.hook', { defaultValue: 'Hook' })
+                                                                                : slide.role === 'cta'
+                                                                                    ? t('ui.closingCta', { defaultValue: 'Closing / CTA' })
+                                                                                    : t('ui.slideLabel', { index: slideIndex + 1, defaultValue: 'Slide {{index}}' })}
+                                                                        </p>
+                                                                        <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                                                                            {t('ui.activeVariant', { defaultValue: 'Active' })}: {slideVariantSources.find((source) => source.id === selectedSource)?.label || t('ui.original', { defaultValue: 'Original' })}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <span className="rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                                                                    {t('ui.variantsCount', { count: slideVariantSources.length, defaultValue: '{{count}} variants' })}
+                                                                </span>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                                                                 {slideVariantSources.map((source) => {
                                                                     const candidate = source.slides[slideIndex]
                                                                     if (!candidate) return null
@@ -3036,65 +3105,79 @@ export function CarouselControlsPanel({
                                                                             type="button"
                                                                             onClick={() => onApplySlideVariant?.(slideIndex, source.id)}
                                                                             className={cn(
-                                                                                "group min-h-[220px] w-full rounded-2xl border p-4 text-left transition-all duration-200",
+                                                                                'group flex min-h-[220px] w-full flex-col overflow-hidden rounded-[1.15rem] border text-left transition-all duration-200',
                                                                                 isSelected
-                                                                                    ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/20"
-                                                                                    : "border-border/70 bg-muted/30 hover:border-primary/40 hover:bg-primary/5"
+                                                                                    ? 'border-primary/30 bg-primary/[0.07] shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]'
+                                                                                    : 'border-border/65 bg-background/78 hover:border-primary/18 hover:bg-[hsl(var(--surface-alt))]/82 hover:shadow-[0_14px_30px_-24px_rgba(15,23,42,0.24)]'
                                                                             )}
                                                                         >
-                                                                            <div className="flex items-start justify-between gap-2">
-                                                                                <div>
-                                                                                    <p className="text-xs font-semibold text-foreground">
-                                                                                        {source.label}
-                                                                                    </p>
-                                                                                    <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
-                                                                                        {source.tone}
-                                                                                    </p>
+                                                                            <div className={cn(
+                                                                                'w-full px-3 py-3 transition-colors',
+                                                                                isSelected
+                                                                                    ? 'bg-primary/[0.055]'
+                                                                                    : 'bg-background/40 group-hover:bg-background/78'
+                                                                            )}>
+                                                                                <div className="flex items-start justify-between gap-2">
+                                                                                    <div className="min-w-0">
+                                                                                        <p className="truncate text-[0.82rem] font-semibold text-foreground">
+                                                                                            {source.label}
+                                                                                        </p>
+                                                                                        <p className="mt-0.5 line-clamp-1 text-[0.74rem] text-muted-foreground">
+                                                                                            {source.tone}
+                                                                                        </p>
+                                                                                    </div>
                                                                                 </div>
-                                                                                {isSelected && (
-                                                                                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                                                                                        ✓
-                                                                                    </span>
-                                                                                )}
                                                                             </div>
-                                                                            <div className="mt-3 space-y-2">
-                                                                                <p className="line-clamp-2 text-base font-semibold leading-tight text-foreground">
+                                                                            <div className={cn(
+                                                                                'flex flex-1 flex-col gap-2 border-t px-3 py-3 transition-colors',
+                                                                                isSelected
+                                                                                    ? 'border-primary/18 bg-primary/[0.055]'
+                                                                                    : 'border-border/40 bg-background/72'
+                                                                            )}>
+                                                                                <p className={cn(
+                                                                                    'line-clamp-2 text-[clamp(0.92rem,0.88rem+0.08vw,0.98rem)] font-semibold leading-tight transition-colors',
+                                                                                    isSelected ? 'text-primary/90' : 'text-foreground/86 group-hover:text-foreground/92'
+                                                                                )}>
                                                                                     {candidate.title || t('ui.untitled', { defaultValue: 'Untitled' })}
                                                                                 </p>
-                                                                                <p className="line-clamp-5 text-[12px] leading-relaxed text-muted-foreground">
-                                    {candidate.description || t('ui.noDescription', { defaultValue: 'No description' })}
+                                                                                <p className={cn(
+                                                                                    'line-clamp-5 text-[0.8rem] leading-relaxed opacity-90',
+                                                                                    isSelected ? 'text-primary/72' : 'text-muted-foreground/82'
+                                                                                )}>
+                                                                                    {candidate.description || t('ui.noDescription', { defaultValue: 'No description' })}
                                                                                 </p>
                                                                             </div>
                                                                         </button>
                                                                     )
                                                                 })}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )
-                                            })}
+                                                    )
+                                                })}
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/70 bg-white px-6 py-4">
-                                        <p className="text-[11px] leading-relaxed text-muted-foreground">
-                                            {t('ui.variantChangesInstant', { defaultValue: 'Changes apply instantly while you choose variants.' })}
-                                        </p>
-                                        <div className="flex items-center gap-2">
-                                            <Button
-                                                variant="ghost"
-                                                onClick={() => setIsAdvancedCompositionOpen(false)}
-                                                className="h-9 rounded-full px-4 text-[11px]"
-                                            >
-                                                {t('ui.keepEditingLater', { defaultValue: 'Keep editing later' })}
-                                            </Button>
-                                            <Button
-                                                onClick={() => setIsAdvancedCompositionOpen(false)}
-                                                className="h-9 rounded-full px-4 text-[11px]"
-                                            >
-                                                {t('ui.useThisComposition', { defaultValue: 'Use this composition' })}
-                                            </Button>
+                                        <div className="flex shrink-0 items-center justify-between gap-3 px-7 pb-6 pt-2">
+                                            <p className="text-[0.92rem] leading-relaxed text-muted-foreground">
+                                                {t('ui.variantChangesInstant', { defaultValue: 'Changes apply instantly while you choose variants.' })}
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={() => setIsAdvancedCompositionOpen(false)}
+                                                    className={PANEL_SECONDARY_BUTTON_CLASS}
+                                                >
+                                                    {t('ui.keepEditingLater', { defaultValue: 'Keep editing later' })}
+                                                </Button>
+                                                <Button
+                                                    onClick={() => setIsAdvancedCompositionOpen(false)}
+                                                    className={PANEL_SECONDARY_BUTTON_CLASS}
+                                                >
+                                                    {t('ui.useThisComposition', { defaultValue: 'Use this composition' })}
+                                                </Button>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 </DialogContent>
                             </Dialog>
                         </>
@@ -3108,9 +3191,11 @@ export function CarouselControlsPanel({
                     <SectionHeader
                         icon={IconLayout}
                         title={t('ui.designTitle')}
+                        iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                        titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
                         extra={
-                            <div className="flex items-center gap-2">
-                                <span className={cn("text-[10px] font-medium", compositionMode === 'advanced' ? "text-primary" : "text-muted-foreground")}>
+                            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/72 px-2.5 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+                                <span className={cn('text-[clamp(0.88rem,0.84rem+0.1vw,0.94rem)] font-medium', compositionMode === 'advanced' ? 'text-primary/90' : 'text-muted-foreground')}>
                                     {t('ui.advancedMode')}
                                 </span>
                                 <Switch
@@ -3141,19 +3226,20 @@ export function CarouselControlsPanel({
                         }}
                     >
                         <SelectTrigger
-                            size="sm"
-                            className="h-6 px-2 text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 rounded-full shadow-none"
+                            className={STUDIO_RICH_SELECT_TRIGGER_CLASS}
                         >
-                            <SelectValue placeholder={t('ui.structurePlaceholder')} />
+                            <SelectValue placeholder={t('ui.structurePlaceholder')} className="sr-only" />
+                            <span className="flex min-w-0 items-center gap-2">
+                                <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">
+                                    {structures.find((structure) => structure.id === structureId)?.name || t('ui.structurePlaceholder')}
+                                </span>
+                            </span>
                         </SelectTrigger>
-                        <SelectContent align="end">
+                        <SelectContent className={STUDIO_SELECT_CONTENT_CLASS} position="popper" align="start" style={PANEL_RICH_SELECT_CONTENT_STYLE}>
                             {structures.map((structure) => (
-                                <SelectItem key={structure.id} value={structure.id}>
+                                <SelectItem key={structure.id} value={structure.id} className={STUDIO_SELECT_ITEM_CLASS}>
                                     <span className="flex items-center justify-between w-full gap-2">
                                         <span>{structure.name}</span>
-                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                                            {structure.id}
-                                        </span>
                                     </span>
                                 </SelectItem>
                             ))}
@@ -3187,13 +3273,20 @@ export function CarouselControlsPanel({
                 {/* Format */}
                 {isStepVisible(4) && (
                 <div ref={(el) => { stepRefs.current[4] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                    <SectionHeader icon={IconLayers} title={t('ui.formatTitle')} />
+                    <SectionHeader
+                        icon={IconLayers}
+                        title={t('ui.formatTitle')}
+                        iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                        titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
+                    />
                     <div className="space-y-2">
                         <button
                             onClick={() => handleAspectRatioSelect('4:5')}
                             className={cn(
-                                "feedback-action flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
-                                aspectRatio === '4:5' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                                'feedback-action flex items-center gap-3 rounded-[1.2rem] border p-3.5 transition-all w-full text-left',
+                                aspectRatio === '4:5'
+                                    ? 'border-primary/35 bg-primary/8 shadow-[0_18px_38px_-30px_rgba(59,130,246,0.3)]'
+                                    : 'border-border/65 bg-background/74 hover:border-primary/20 hover:bg-[hsl(var(--surface-alt))]/75'
                             )}
                         >
                             <div className="w-8 h-10 rounded bg-muted border border-border" />
@@ -3210,8 +3303,10 @@ export function CarouselControlsPanel({
                         <button
                             onClick={() => handleAspectRatioSelect('3:4')}
                             className={cn(
-                                "feedback-action flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
-                                aspectRatio === '3:4' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                                'feedback-action flex items-center gap-3 rounded-[1.2rem] border p-3.5 transition-all w-full text-left',
+                                aspectRatio === '3:4'
+                                    ? 'border-primary/35 bg-primary/8 shadow-[0_18px_38px_-30px_rgba(59,130,246,0.3)]'
+                                    : 'border-border/65 bg-background/74 hover:border-primary/20 hover:bg-[hsl(var(--surface-alt))]/75'
                             )}
                         >
                             <div className="w-8 h-10 rounded bg-muted border border-border" />
@@ -3228,8 +3323,10 @@ export function CarouselControlsPanel({
                         <button
                             onClick={() => handleAspectRatioSelect('1:1')}
                             className={cn(
-                                "feedback-action flex items-center gap-3 p-3 rounded-lg border-2 transition-all w-full text-left",
-                                aspectRatio === '1:1' ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                                'feedback-action flex items-center gap-3 rounded-[1.2rem] border p-3.5 transition-all w-full text-left',
+                                aspectRatio === '1:1'
+                                    ? 'border-primary/35 bg-primary/8 shadow-[0_18px_38px_-30px_rgba(59,130,246,0.3)]'
+                                    : 'border-border/65 bg-background/74 hover:border-primary/20 hover:bg-[hsl(var(--surface-alt))]/75'
                             )}
                         >
                             <div className="w-10 h-10 rounded bg-muted border border-border" />
@@ -3254,6 +3351,8 @@ export function CarouselControlsPanel({
                             <SectionHeader
                                 icon={IconImageAdd}
                                 title={imageSourceMode === 'generate' ? t('ui.generatedContentTitle') : t('ui.userContentTitle')}
+                                iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                                titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
                                 extra={(
                                     <Switch
                                         checked={imageSourceMode === 'generate'}
@@ -3284,7 +3383,12 @@ export function CarouselControlsPanel({
                         </div>
 
                         <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                            <SectionHeader icon={IconPalette} title={t('ui.styleTitle')} />
+                            <SectionHeader
+                                icon={IconPaintbrush02}
+                                title={t('ui.styleTitle')}
+                                iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                                titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
+                            />
                             <StyleImageCard
                                 uploadedImages={uploadedImages}
                                 onUpload={handleStyleUpload}
@@ -3330,7 +3434,12 @@ export function CarouselControlsPanel({
                         </div>
 
                         <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-6`}>
-                            <SectionHeader icon={IconFingerprint} title={t('ui.brandKitTitle')} />
+                            <SectionHeader
+                                icon={IconFingerprint}
+                                title={t('ui.brandKitTitle')}
+                                iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                                titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
+                            />
 
                             <div className="space-y-3">
                                 <p className="text-[11px] font-semibold text-foreground/90 uppercase tracking-[0.08em]">{t('ui.logo')}</p>
@@ -3630,16 +3739,17 @@ export function CarouselControlsPanel({
                     }
                 }}
             >
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{t('ui.unsavedDialogTitle')}</DialogTitle>
-                        <DialogDescription>
+                <DialogContent className={STUDIO_DECISION_DIALOG_CLASS}>
+                    <DialogHeader className={STUDIO_DECISION_DIALOG_HEADER_CLASS}>
+                        <DialogTitle className={STUDIO_DECISION_DIALOG_TITLE_CLASS}>{t('ui.unsavedDialogTitle')}</DialogTitle>
+                        <DialogDescription className={STUDIO_DECISION_DIALOG_DESCRIPTION_CLASS}>
                             {t('ui.unsavedDialogDescription')}
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter className="gap-2">
+                    <DialogFooter className={STUDIO_DECISION_DIALOG_FOOTER_CLASS}>
                         <Button
                             variant="outline"
+                            className={STUDIO_DECISION_BUTTON_CLASS}
                             onClick={handleUnsavedNavigateCancel}
                             disabled={isResolvingUnsavedNavigation}
                         >
@@ -3647,12 +3757,14 @@ export function CarouselControlsPanel({
                         </Button>
                         <Button
                             variant="destructive"
+                            className={STUDIO_DECISION_BUTTON_CLASS}
                             onClick={handleUnsavedNavigateDiscard}
                             disabled={isResolvingUnsavedNavigation}
                         >
                             {t('ui.discardLeave')}
                         </Button>
                         <Button
+                            className={STUDIO_DECISION_BUTTON_CLASS}
                             onClick={() => void handleUnsavedNavigateSave()}
                             disabled={isResolvingUnsavedNavigation}
                         >
@@ -3669,16 +3781,17 @@ export function CarouselControlsPanel({
                     }
                 }}
             >
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{sessionDecisionModal.title}</DialogTitle>
-                        <DialogDescription>{sessionDecisionModal.description}</DialogDescription>
+                <DialogContent className={STUDIO_DECISION_DIALOG_CLASS}>
+                    <DialogHeader className={STUDIO_DECISION_DIALOG_HEADER_CLASS}>
+                        <DialogTitle className={STUDIO_DECISION_DIALOG_TITLE_CLASS}>{sessionDecisionModal.title}</DialogTitle>
+                        <DialogDescription className={STUDIO_DECISION_DIALOG_DESCRIPTION_CLASS}>{sessionDecisionModal.description}</DialogDescription>
                     </DialogHeader>
-                    <DialogFooter className="gap-2">
+                    <DialogFooter className={STUDIO_DECISION_DIALOG_FOOTER_CLASS}>
                         {sessionDecisionModal.buttons.map((button) => (
                             <Button
                                 key={button.id}
                                 variant={button.variant || 'default'}
+                                className={STUDIO_DECISION_BUTTON_CLASS}
                                 onClick={() => closeSessionDecisionModal(button.id)}
                             >
                                 {button.label}

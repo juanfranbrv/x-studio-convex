@@ -2,11 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { IconMail, IconFacebook, IconInstagram, IconTwitter, IconLinkedin, IconYoutube, IconLink, IconPhone, IconPlus, IconGlobe, IconDelete, IconMapPin, IconMusic } from '@/components/ui/icons';
+import { IconMail, IconFacebook, IconInstagram, IconTwitter, IconLinkedin, IconYoutube, IconLink, IconPhone, IconPlus, IconGlobe, IconClose, IconMapPin, IconMusic } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/utils';
+import {
+    BRAND_KIT_FIELD_CLASS,
+    BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS,
+    BRAND_KIT_PANEL_CLASS,
+    BRAND_KIT_PANEL_DESCRIPTION_CLASS,
+    BRAND_KIT_PANEL_HEADER_CLASS,
+    BRAND_KIT_REMOVE_BUTTON_CLASS,
+    BRAND_KIT_PANEL_TITLE_CLASS,
+} from './brandKitStyles';
 
 interface ContactSocialCardProps {
     socialLinks?: { platform: string; url: string; username?: string }[];
@@ -134,27 +144,26 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
         <div className="group relative flex items-center gap-2 py-1.5">
             <div className="flex-1">{children}</div>
             <button
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-500 md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100"
+                className={cn(BRAND_KIT_REMOVE_BUTTON_CLASS, "static shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100")}
                 onClick={onDelete}
                 aria-label={t('contact.deleteAria', { defaultValue: 'Delete' })}
                 type="button"
             >
-                <IconDelete className="w-3.5 h-3.5" />
+                <IconClose className="h-3 w-3" />
             </button>
         </div>
     );
 
     return (
-        <Card className="glass-panel border-0 shadow-none relative overflow-visible">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-full blur-3xl -z-10" />
-            <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base text-foreground font-bold">
+        <Card className={cn(BRAND_KIT_PANEL_CLASS, "relative overflow-hidden")}>
+            <CardHeader className={cn(BRAND_KIT_PANEL_HEADER_CLASS, "pb-4")}>
+                <CardTitle className={BRAND_KIT_PANEL_TITLE_CLASS}>
                     <IconLink className="w-5 h-5 text-primary" />
                     {t('contact.title', { defaultValue: 'Channels and direct contact' })}
                 </CardTitle>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{t('contact.subtitle', { defaultValue: 'Official contact information detected on the website' })}</p>
+                <p className={BRAND_KIT_PANEL_DESCRIPTION_CLASS}>{t('contact.subtitle', { defaultValue: 'Información de contacto oficial detectada en la web' })}</p>
             </CardHeader>
-            <CardContent className="space-y-6 pt-2 pb-6">
+            <CardContent className="space-y-6 px-6 pb-6 pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                         <SectionTitle icon={IconMail} title={t('contact.emailsTitle', { defaultValue: 'Email addresses' })} />
@@ -165,14 +174,14 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                                         value={email}
                                         onChange={(e) => updateEmailAt(idx, e.target.value)}
                                         placeholder={t('contact.emailPlaceholder', { defaultValue: 'email@company.com' })}
-                                        className="h-9 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
+                                        className={BRAND_KIT_FIELD_CLASS}
                                     />
                                 </FieldRow>
                             ))}
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="w-full border-dashed border-zinc-200 hover:border-primary hover:bg-primary/5 text-[10px] font-bold uppercase tracking-wider h-9"
+                                className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS}
                                 onClick={() => handleAdd('email')}
                                 type="button"
                             >
@@ -191,14 +200,14 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                                         value={phone}
                                         onChange={(e) => updatePhoneAt(idx, e.target.value)}
                                         placeholder="+34 600 000 000"
-                                        className="h-9 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
+                                        className={BRAND_KIT_FIELD_CLASS}
                                     />
                                 </FieldRow>
                             ))}
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="w-full border-dashed border-zinc-200 hover:border-primary hover:bg-primary/5 text-[10px] font-bold uppercase tracking-wider h-9"
+                                className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS}
                                 onClick={() => handleAdd('phone')}
                                 type="button"
                             >
@@ -218,14 +227,14 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                                     value={address}
                                     onChange={(e) => updateAddressAt(idx, e.target.value)}
                                     placeholder={t('contact.addressPlaceholder', { defaultValue: 'Street, number, city, postal code' })}
-                                    className="h-9 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
+                                    className={BRAND_KIT_FIELD_CLASS}
                                 />
                             </FieldRow>
                         ))}
                         <Button
                             variant="outline"
                             size="sm"
-                            className="w-full border-dashed border-zinc-200 hover:border-primary hover:bg-primary/5 text-[10px] font-bold uppercase tracking-wider h-9"
+                            className={BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS}
                             onClick={() => handleAdd('address')}
                             type="button"
                         >
@@ -244,14 +253,14 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                                 <FieldRow key={`social-${idx}`} onDelete={() => handleDelete('social', idx)}>
                                     <div className="grid grid-cols-1 md:grid-cols-[130px_1fr_1fr] gap-2 items-center">
                                         <div className="flex items-center gap-2">
-                                            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-muted/40 border border-border/60 shrink-0">
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-[hsl(var(--surface-alt))] shrink-0">
                                                 <Icon className="w-3.5 h-3.5 text-primary opacity-80" />
                                             </div>
                                             <Select
                                                 value={social.platform || 'instagram'}
                                                 onValueChange={(value) => updateSocialAt(idx, { platform: value })}
                                             >
-                                                <SelectTrigger className="h-9 text-xs bg-transparent border-border/70 focus:ring-0 focus:border-primary">
+                                                <SelectTrigger className={BRAND_KIT_FIELD_CLASS}>
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -268,13 +277,13 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                                             value={social.url || ''}
                                             onChange={(e) => updateSocialAt(idx, { url: e.target.value })}
                                             placeholder="https://..."
-                                            className="h-9 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
+                                            className={BRAND_KIT_FIELD_CLASS}
                                         />
                                         <Input
                                             value={social.username || ''}
                                             onChange={(e) => updateSocialAt(idx, { username: e.target.value })}
                                             placeholder={t('contact.usernamePlaceholder', { defaultValue: '@username' })}
-                                            className="h-9 text-sm bg-transparent border-0 border-b border-border rounded-none px-1 focus-visible:ring-0 focus-visible:border-primary shadow-none"
+                                            className={BRAND_KIT_FIELD_CLASS}
                                         />
                                     </div>
                                 </FieldRow>
@@ -283,7 +292,7 @@ export function ContactSocialCard({ socialLinks = [], emails = [], phones = [], 
                         <Button
                             variant="outline"
                             size="sm"
-                            className="w-full border-dashed border-zinc-200 hover:border-primary hover:bg-primary/5 text-[10px] font-bold uppercase tracking-wider h-10 mt-2"
+                            className={cn(BRAND_KIT_OUTLINE_DASHED_BUTTON_CLASS, "mt-2")}
                             onClick={() => handleAdd('social')}
                             type="button"
                         >

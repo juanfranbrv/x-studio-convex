@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (!brand_name) {
+        if (typeof brand_name !== 'string') {
             return NextResponse.json(
                 { success: false, error: 'brand_name is required' },
                 { status: 400 }

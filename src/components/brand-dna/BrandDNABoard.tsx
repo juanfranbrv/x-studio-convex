@@ -7,7 +7,7 @@ import { BrandDNA } from '@/lib/brand-types';
 import { cn } from '@/lib/utils';
 import { TextAssetsSection } from './TextAssetsSection';
 import { ColorPalette } from './ColorPalette';
-import { LogoCard, FaviconCard, ScreenshotCard, ImageGallery } from './VisualAssetComponents';
+import { LogoCard, ScreenshotCard, ImageGallery } from './VisualAssetComponents';
 import { BrandAssets } from './BrandAssets';
 import { TypographySection } from './TypographySection';
 import { BrandContextCard } from './BrandContextCard';
@@ -27,6 +27,21 @@ import { calculateBrandKitCompleteness } from '@/lib/brand-kit-utils';
 import { useTranslation } from 'react-i18next';
 
 import { IconGlobe, IconSave, IconCheck, IconRotate, IconAlertCircle, IconClose, IconBug } from '@/components/ui/icons';
+import {
+    BRAND_KIT_CALLOUT_CLASS,
+    BRAND_KIT_FIELD_CLASS,
+    BRAND_KIT_MODAL_CLASS,
+    BRAND_KIT_MODAL_DESCRIPTION_CLASS,
+    BRAND_KIT_MODAL_FOOTER_CLASS,
+    BRAND_KIT_MODAL_HEADER_CLASS,
+    BRAND_KIT_MODAL_TITLE_CLASS,
+    BRAND_KIT_PAGE_SHELL_CLASS,
+    BRAND_KIT_PANEL_CLASS,
+    BRAND_KIT_PANEL_DESCRIPTION_CLASS,
+    BRAND_KIT_PANEL_HEADER_CLASS,
+    BRAND_KIT_PANEL_TITLE_CLASS,
+    BRAND_KIT_SECONDARY_BUTTON_CLASS,
+} from './brandKitStyles';
 
 interface BrandDNABoardProps {
     data: BrandDNA;
@@ -982,19 +997,19 @@ export function BrandDNABoard({
     return (
         <div className="space-y-8 pb-12">
             {!assistantPriorityMode && (
-            <div className="rounded-2xl glass-panel transition-all duration-200 mb-6 p-5 md:p-6">
+            <div className={cn(BRAND_KIT_PAGE_SHELL_CLASS, "mb-6 p-5 transition-all duration-200 md:p-6")}>
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex-1 space-y-4">
-                        <div className="rounded-xl border border-border/60 bg-white p-3">
-                            <p className="text-xs font-semibold text-foreground mb-1">{t('board.howToCompleteTitle', { defaultValue: 'How to complete this section' })}</p>
-                            <p className="text-xs text-muted-foreground">{t('board.howToCompleteDescription', { defaultValue: 'Step 1: give your kit a name. Step 2 (optional): paste a URL and click Analyze URL to autofill content.' })}</p>
+                        <div className={cn(BRAND_KIT_CALLOUT_CLASS, "p-4")}>
+                            <p className="mb-1 text-[0.82rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{t('board.howToCompleteTitle', { defaultValue: 'How to complete this section' })}</p>
+                            <p className={BRAND_KIT_PANEL_DESCRIPTION_CLASS}>{t('board.howToCompleteDescription', { defaultValue: 'Step 1: give your kit a name. Step 2 (optional): paste a URL and click Analyze URL to autofill content.' })}</p>
                         </div>
 
                         <div className="flex items-stretch gap-3">
-                            <div className="w-20 md:w-24 rounded-xl bg-accent flex items-center justify-center text-accent-foreground shadow-sm shrink-0 self-stretch min-h-[132px]">
+                            <div className={cn(BRAND_KIT_CALLOUT_CLASS, "min-h-[132px] w-20 shrink-0 self-stretch flex items-center justify-center text-accent-foreground md:w-24")}>
                                 {data.logo_url ? (
-                                    <img src={data.logo_url} className="w-14 h-14 md:w-16 md:h-16 object-contain" alt="Logo" />
-                                ) : (
+                                      <img src={data.logo_url} className="w-14 h-14 md:w-16 md:h-16 object-contain" alt="Logo" />
+                                  ) : (
                                     <span className="text-2xl md:text-3xl font-bold">{data.brand_name?.[0] || 'M'}</span>
                                 )}
                             </div>
@@ -1008,7 +1023,7 @@ export function BrandDNABoard({
                                             setData((prev) => ({ ...prev, brand_name: e.target.value }));
                                             setHasUnsavedChanges(true);
                                         }}
-                                        className="h-10 px-3 bg-background border-border focus-visible:ring-primary font-semibold"
+                                        className={cn(BRAND_KIT_FIELD_CLASS, "h-[42px] font-semibold")}
                                         placeholder={t('board.namePlaceholder', { defaultValue: 'Ex: My Brand' })}
                                     />
                                 </div>
@@ -1026,13 +1041,13 @@ export function BrandDNABoard({
                                                 setHasUnsavedChanges(true);
                                             }}
                                             placeholder={t('board.urlPlaceholder', { defaultValue: 'https://your-site.com' })}
-                                            className="text-xs h-9 px-3 bg-background border-border focus-visible:ring-primary sm:max-w-[360px]"
+                                            className={cn(BRAND_KIT_FIELD_CLASS, "h-[42px] text-[0.96rem] sm:max-w-[360px]")}
                                         />
                                         {onRegenerate && (
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-9 text-xs px-4 w-full sm:w-auto"
+                                                className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "w-full sm:w-auto")}
                                                 disabled={!normalizedAnalysisUrl}
                                                 onClick={() => onRegenerate(normalizedAnalysisUrl || rawBrandUrl)}
                                             >
@@ -1054,17 +1069,17 @@ export function BrandDNABoard({
 
                     <div className="flex items-center gap-3 lg:pt-1">
                         {isSaving ? (
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium animate-pulse">
+                            <div className={cn(BRAND_KIT_CALLOUT_CLASS, "flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground animate-pulse")}>
                                 <Loader2 className="w-4 h-4 mr-2" />
                                 {t('board.saving', { defaultValue: 'Saving...' })}
                             </div>
                         ) : hasUnsavedChanges ? (
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                            <div className={cn(BRAND_KIT_CALLOUT_CLASS, "flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground")}>
                                 <IconSave className="w-4 h-4 mr-2" />
                                 {t('board.pendingChanges', { defaultValue: 'Pending changes' })}
                             </div>
                         ) : (
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                            <div className={cn(BRAND_KIT_CALLOUT_CLASS, "flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground")}>
                                 <IconCheck className="w-4 h-4 mr-2" />
                                 {t('board.synced', { defaultValue: 'Synced' })}
                             </div>
@@ -1085,7 +1100,8 @@ export function BrandDNABoard({
         variant="ghost"
         size="sm"
         className={cn(
-            "text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-all gap-2 h-9",
+            BRAND_KIT_SECONDARY_BUTTON_CLASS,
+            "text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-all gap-2",
             showDebug && "text-emerald-500 bg-emerald-500/10"
         )}
         onClick={() => setShowDebug(!showDebug)}
@@ -1098,7 +1114,7 @@ export function BrandDNABoard({
                         size="sm"
                         onClick={() => handleSave(false)}
                         disabled={!hasUnsavedChanges || isSaving}
-                        className="gap-2 h-9 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
+                        className={cn(BRAND_KIT_SECONDARY_BUTTON_CLASS, "gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0")}
                     >
                         {isSaving ? <Loader2 className="w-4 h-4" /> : <IconSave className="w-4 h-4" />}
                         {t('board.saveNow', { defaultValue: 'Save now' })}
@@ -1109,7 +1125,7 @@ export function BrandDNABoard({
 
             {assistantPriorityMode && !allowAssistantExit ? (
                 !showAssistantWizard && (
-                    <div className="rounded-xl border border-dashed border-border/70 p-6 bg-muted/20">
+                    <div className={cn(BRAND_KIT_CALLOUT_CLASS, "p-6")}>
                         <p className="text-base font-medium text-foreground mb-1">{t('board.completeAssistantTitle', { defaultValue: 'Complete the guided assistant first' })}</p>
                         <p className="text-sm text-muted-foreground mb-4">
                             {t('board.completeAssistantDescription', { defaultValue: 'When you finish these steps, the full editor will unlock.' })}
@@ -1121,22 +1137,18 @@ export function BrandDNABoard({
                 <>
                     {/* NEW LAYOUT IMPLEMENTATION */}
 
-                    {/* Top Section: Branding & Screenshot */}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
-                        {/* Left Column: Identities & Palette */}
+                    {/* Main content layout: editable content on the left, visual references on the right */}
+                    <div className="grid grid-cols-1 items-start gap-10 xl:grid-cols-[minmax(0,1.02fr)_minmax(22rem,0.98fr)]">
                         <div className="space-y-10">
-                            <div className="grid grid-cols-2 gap-8">
-                                <LogoCard
-                                    logoUrl={data.logo_url}
-                                    logos={data.logos}
-                                    onUpload={handleUploadLogos}
-                                    onRemove={handleRemoveLogo}
-                                    onToggle={handleToggleLogoSelection}
-                                    onReorder={handleReorderLogos}
-                                    isUploading={isUploading}
-                                />
-                                <FaviconCard faviconUrl={data.favicon_url} />
-                            </div>
+                            <LogoCard
+                                logoUrl={data.logo_url}
+                                logos={data.logos}
+                                onUpload={handleUploadLogos}
+                                onRemove={handleRemoveLogo}
+                                onToggle={handleToggleLogoSelection}
+                                onReorder={handleReorderLogos}
+                                isUploading={isUploading}
+                            />
                             <ColorPalette
                                 colors={data.colors || []}
                                 isEdited={JSON.stringify(data.colors) !== JSON.stringify(initialData.colors)}
@@ -1146,35 +1158,20 @@ export function BrandDNABoard({
                                 onAddColor={handleAddColor}
                                 onReset={handleResetColors}
                             />
-                        </div>
-
-                        {/* Right Column: Screenshot */}
-                        <div className="h-full min-h-[400px]">
-                            <ScreenshotCard screenshotUrl={data.screenshot_url} />
-                        </div>
-                    </div>
-
-                    {/* Middle Section: Brand Context (Full Width Focus) */}
-                    <div className="w-full">
-                        <BrandContextCard
-                            context={data.business_overview || ''}
-                            onUpdate={(val) => updateData(prev => ({
-                                ...prev,
-                                business_overview: val,
-                                text_assets: prev.text_assets ? { ...prev.text_assets, brand_context: val } : {
-                                    marketing_hooks: [],
-                                    visual_keywords: [],
-                                    ctas: [],
-                                    brand_context: val
-                                }
-                            }))}
-                        />
-                    </div>
-
-                    {/* Two-Column Layout: Content Cards (Left) + Image Gallery (Right) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-                        {/* Left Column: All Content/Info Cards */}
-                        <div className="space-y-6">
+                            <BrandContextCard
+                                context={data.business_overview || ''}
+                                minHeightClassName="min-h-[180px]"
+                                onUpdate={(val) => updateData(prev => ({
+                                    ...prev,
+                                    business_overview: val,
+                                    text_assets: prev.text_assets ? { ...prev.text_assets, brand_context: val } : {
+                                        marketing_hooks: [],
+                                        visual_keywords: [],
+                                        ctas: [],
+                                        brand_context: val
+                                    }
+                                }))}
+                            />
                             <TargetAudienceCard audience={data.target_audience} />
                             <ContactSocialCard
                                 socialLinks={data.social_links}
@@ -1219,7 +1216,8 @@ export function BrandDNABoard({
                             />
                         </div>
 
-                        <div className="lg:sticky lg:top-6">
+                        <div className="space-y-10">
+                            <ScreenshotCard screenshotUrl={data.screenshot_url} faviconUrl={data.favicon_url} />
                             <ImageGallery
                                 images={data.images || []}
                                 isUploading={isUploading}
@@ -1253,18 +1251,18 @@ export function BrandDNABoard({
 
             {/* Error Dialog */}
             <Dialog open={errorModal.open} onOpenChange={(open) => setErrorModal(prev => ({ ...prev, open }))}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-destructive">
+                <DialogContent className={BRAND_KIT_MODAL_CLASS}>
+                    <DialogHeader className={BRAND_KIT_MODAL_HEADER_CLASS}>
+                        <DialogTitle className={cn(BRAND_KIT_MODAL_TITLE_CLASS, "flex items-center gap-2 text-destructive")}>
                             <IconAlertCircle className="w-5 h-5" />
                             {errorModal.title}
                         </DialogTitle>
-                        <DialogDescription className="text-muted-foreground">
+                        <DialogDescription className={BRAND_KIT_MODAL_DESCRIPTION_CLASS}>
                             {errorModal.message}
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter>
-                        <Button onClick={() => setErrorModal(prev => ({ ...prev, open: false }))}>
+                    <DialogFooter className={BRAND_KIT_MODAL_FOOTER_CLASS}>
+                        <Button className={BRAND_KIT_SECONDARY_BUTTON_CLASS} onClick={() => setErrorModal(prev => ({ ...prev, open: false }))}>
                             Entendido
                         </Button>
                     </DialogFooter>
@@ -1278,18 +1276,18 @@ export function BrandDNABoard({
                     setImportProgressModal((prev) => ({ ...prev, open }));
                 }}
             >
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>
+                <DialogContent className={cn(BRAND_KIT_MODAL_CLASS, "sm:max-w-md")}>
+                    <DialogHeader className={BRAND_KIT_MODAL_HEADER_CLASS}>
+                        <DialogTitle className={BRAND_KIT_MODAL_TITLE_CLASS}>
                             {importProgressModal.completed ? 'Importacion completada' : 'Importando kit de marca'}
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className={BRAND_KIT_MODAL_DESCRIPTION_CLASS}>
                             {importProgressModal.message}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-3">
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                    <div className="space-y-3 px-6">
+                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-[hsl(var(--surface-alt))]">
                             <div
                                 className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-500 transition-all duration-500 ease-out"
                                 style={{ width: `${Math.max(0, Math.min(100, importProgressModal.progress))}%` }}
@@ -1300,7 +1298,7 @@ export function BrandDNABoard({
                         </div>
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className={BRAND_KIT_MODAL_FOOTER_CLASS}>
                         {!importProgressModal.completed ? (
                             <div className="w-full text-sm text-muted-foreground flex items-center justify-end gap-2">
                                 <Loader2 className="w-4 h-4" />
@@ -1308,6 +1306,7 @@ export function BrandDNABoard({
                             </div>
                         ) : (
                             <Button
+                                className={BRAND_KIT_SECONDARY_BUTTON_CLASS}
                                 onClick={() => setImportProgressModal((prev) => ({ ...prev, open: false }))}
                             >
                                 Aceptar
