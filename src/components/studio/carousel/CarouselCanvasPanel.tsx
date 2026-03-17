@@ -41,7 +41,7 @@ interface CarouselCanvasPanelProps {
     currentIndex: number
     onSelectSlide: (index: number) => void
     onRegenerateSlide: (index: number, correctionPrompt?: string) => void
-    onUpdateSlideScript?: (index: number, updates: { title?: string; description?: string; visualPrompt?: string; mustKeepFacts?: string[] }) => void
+    onUpdateSlideScript?: (index: number, updates: { headline?: string; title?: string; description?: string; visualPrompt?: string; mustKeepFacts?: string[] }) => void
     isGenerating?: boolean
     isRegenerating: boolean
     regeneratingIndex: number | null

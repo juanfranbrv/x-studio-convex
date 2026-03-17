@@ -278,6 +278,8 @@ function normalizeCarouselReferenceInputs(
 
 export interface SlideContent {
     index: number
+    /** Short, punchy text rendered inside the image (max ~10 words). Falls back to title when absent. */
+    headline?: string
     title: string
     description: string
     visualPrompt: string

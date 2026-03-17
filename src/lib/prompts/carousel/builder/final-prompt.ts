@@ -810,10 +810,8 @@ CREATIVE DIRECTION: Apply the STYLE TRAITS and LIGHTING only. Ignore any implied
     const accentColors = toUniqueColorList(brandColors.accent, '#f0e500')
 
     const safeVisualRefBlock = stripFontMentions(visualRefBlock, fonts)
-    const safeTitle = stripFontMentions(slideData.title, fonts)
-    const safeDescription = stripVisibleListMarkers(
-        stripFontMentions(slideData.description || '', fonts)
-    )
+    // headline (visual text for the image) — falls back to title for legacy slides
+    const safeHeadline = stripFontMentions(slideData.headline || slideData.title, fonts)
 
     return template
         .replace('{{LANGUAGE_BLOCK}}', languageBlock)
@@ -831,7 +829,7 @@ CREATIVE DIRECTION: Apply the STYLE TRAITS and LIGHTING only. Ignore any implied
         .replace('{{ACCENT_COLORS}}', toBulletList(accentColors))
         .replace('{{SUBJECT}}', subject)
         .replace('{{MOOD}}', currentMood)
-        .replace('{{TEXT}}', `"${safeTitle}"${safeDescription ? ` - "${safeDescription}"` : ''}.`)
+        .replace('{{TEXT}}', `"${safeHeadline}".`)
         .replace('{{FINAL_ACTION_BLOCK}}', finalActionBlock)
         .replace('{{LOGO_BLOCK}}', logoBlock)
         .replace('{{CONTINUITY}}', continuityInstruction)

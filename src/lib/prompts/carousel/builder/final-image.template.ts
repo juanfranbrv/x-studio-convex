@@ -27,6 +27,13 @@ EVERYTHING ELSE IS INVISIBLE STYLE.
 Coordinates, percentages, insets, measurements, grid values, and layout numbers are invisible blueprint metadata and must NEVER be rendered as visible text.
 Typography compliance is mandatory and has precedence over aesthetic freedom.
 Typography lock already defined above. Do not override.
+
+TEXT DENSITY RULE (CRITICAL):
+- The TEXT field contains ONLY the headline — a short, punchy phrase designed for visual impact.
+- The image must contain AT MOST 1-2 visible text blocks (headline + optional brand name or CTA).
+- NEVER render paragraphs, bullet lists, long descriptions, or explanatory copy inside the image.
+- If the TEXT field somehow exceeds ~12 words, render ONLY the first sentence.
+- Detailed copy belongs in the caption, NOT in the image. The image is a visual hook, not a flyer.
 {{TYPOGRAPHY_RENDER_GUARD}}
 
 # PRIORITY 04 - CONSISTENCY LOCK (G)

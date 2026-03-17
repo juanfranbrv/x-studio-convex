@@ -86,6 +86,28 @@ Escribe como una mini historia editorial.
 - Los titulos deben ser cortos, claros y con pegada.
 - Las descripciones deben ampliar, concretar o empujar la idea del titulo.
 
+## SEPARACION HEADLINE / DESCRIPTION (CRITICA)
+Cada slide tiene dos textos distintos con funciones diferentes:
+
+### headline (texto visual)
+- Es lo UNICO que aparecera renderizado dentro de la imagen generada.
+- Debe ser corto, directo e impactante: maximo 8-10 palabras.
+- Piensa en el como el titular grande que se lee al pasar el dedo por el feed.
+- Nunca debe contener parrafos, bullets, listas ni explicaciones.
+- Es el gancho visual, no el contenido completo.
+- Ejemplos buenos: "Tu plaza no es cuestion de suerte", "3 errores que te cuestan clientes", "Empieza hoy, cobra manana".
+- Ejemplos malos: "Las pruebas de acceso a Ciclos, Universidad o Bachillerato pueden ser estresantes si no tienes un plan." (demasiado largo, parece un parrafo).
+
+### description (texto narrativo)
+- Es el contenido que acompana a la imagen como copy, caption o texto de apoyo.
+- Aqui va toda la informacion util, los detalles, los argumentos, los bullets, las explicaciones.
+- NO aparece dentro de la imagen. Se muestra en la interfaz como guion y se usa para construir el caption.
+- Puede ser tan largo y detallado como el contenido lo necesite.
+
+### Regla de oro
+Preguntate: "Si solo veo la imagen 1 segundo en el feed, ¿que necesito leer?" → eso es el headline.
+Todo lo demas → description.
+
 ## REGLAS DE AUDIENCIA
 - Usa el publico objetivo y el tono de voz de la marca si aparecen en el contexto.
 - Si el producto o curso va dirigido a ninos, pero quien compra o decide es un adulto, puedes escribir para el decisor real.
@@ -264,8 +286,9 @@ Devuelve un unico JSON valido, sin markdown:
         {
           "index": 0,
           "role": "hook | content | cta",
-          "title": "Titulo corto",
-          "description": "Texto breve del slide. Puede incluir saltos de linea y bullets si el contenido lo pide.",
+          "headline": "Frase corta y potente (max 8-10 palabras). UNICO texto visible en la imagen.",
+          "title": "Titulo editorial del slide",
+          "description": "Copy narrativo completo. NO aparece en la imagen. Va al caption y al guion.",
           "composition": "Blueprint arquitectonico del slide: reticula, areas, jerarquia, anclajes y margenes.",
           "visualPrompt": "Instruccion visual detallada en el mismo idioma del usuario y alineada con la referencia visual.",
           "focus": "Foco principal del slide"
@@ -277,8 +300,9 @@ Devuelve un unico JSON valido, sin markdown:
     {
       "index": 0,
       "role": "hook | content | cta",
-      "title": "Titulo corto",
-      "description": "Texto breve del slide. Puede incluir saltos de linea y bullets si el contenido lo pide.",
+      "headline": "Frase corta y potente (max 8-10 palabras). UNICO texto visible en la imagen.",
+      "title": "Titulo editorial del slide",
+      "description": "Copy narrativo completo. NO aparece en la imagen. Va al caption y al guion.",
       "composition": "Blueprint arquitectonico del slide: reticula, areas, jerarquia, anclajes y margenes.",
       "visualPrompt": "Instruccion visual detallada en el mismo idioma del usuario y alineada con la referencia visual.",
       "focus": "Foco principal del slide"
@@ -290,6 +314,8 @@ Devuelve un unico JSON valido, sin markdown:
 - Los indices deben ir de 0 a optimalSlideCount - 1.
 - El numero de slides debe coincidir exactamente con REQUESTED_SLIDE_COUNT.
 - Genera exactamente 3 suggestions.
+- headline es OBLIGATORIO en cada slide. Maximo 8-10 palabras. Es el unico texto que se renderizara dentro de la imagen.
+- description contiene el copy completo/narrativo. Nunca se renderiza en la imagen. Puede ser largo.
 - Cada suggestion debe ser claramente diferente en gancho y narrativa.
 - role debe ser: slide 0 = hook, ultima slide = cta, resto = content.
 - El caption debe tener 2 a 4 frases, con emojis y hashtags, y terminar con la URL de marca si existe.
