@@ -138,6 +138,7 @@
     "logo": "Logo",
     "colors": "Colores",
     "reload": "Recargar",
+    "reloading": "Recargando...",
     "colorsReloadedTitle": "Colores recargados",
     "colorsReloadedDescription": "Se volvieron a importar los colores del Kit de marca.",
     "layoutVotesImportedTitle": "Ratings migrados a Convex",

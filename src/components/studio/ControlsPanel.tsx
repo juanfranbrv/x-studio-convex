@@ -9,7 +9,7 @@ import { ContentImageCard } from './creation-flow/ContentImageCard'
 import { StyleImageCard } from './creation-flow/StyleImageCard'
 import { AuxiliaryLogosCard } from './creation-flow/AuxiliaryLogosCard'
 import { useBrandKit } from '@/contexts/BrandKitContext'
-import { IconPalette, IconLayout, IconDashboardSquare, IconImageAdd, IconWand, IconIdea, IconFingerprint, IconRotate, IconHistory, IconPlus, IconSave, IconCheck, IconAlertCircle, IconClose } from '@/components/ui/icons'
+import { IconLayout, IconDashboardSquare, IconImageAdd, IconWand, IconIdea, IconFingerprint, IconRotate, IconHistory, IconPlus, IconSave, IconCheck, IconAlertCircle, IconClose, IconPaintbrush02 } from '@/components/ui/icons'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -39,6 +39,12 @@ import {
     STUDIO_PANEL_CARD_PADDED_CLASS,
     STUDIO_PANEL_CARD_PADDED_LG_CLASS,
 } from '@/components/studio/shared/panelStyles'
+import {
+    STUDIO_SELECT_CONTENT_CLASS,
+    STUDIO_SELECT_ITEM_CLASS,
+    STUDIO_RICH_SELECT_TRIGGER_CLASS,
+    STUDIO_SELECT_TRIGGER_CLASS,
+} from '@/components/studio/shared/selectStyles'
 import { SuggestionsList } from '@/components/studio/shared/SuggestionsList'
 import {
     clearLegacyLayoutRatingStorage,
@@ -54,13 +60,17 @@ import type { CompositionSummary } from '@/lib/admin-compositions-actions'
 const RESET_USES4_FLAG = 'admin_layout_ratings_reset_uses4_done_v1'
 const PANEL_SECTION_HEADER_ICON_CLASS = "h-9 w-9 rounded-none border-0 bg-transparent text-foreground/72 shadow-none"
 const PANEL_SECTION_HEADER_TITLE_CLASS = "text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88"
-const PANEL_SECTION_SELECT_TRIGGER_CLASS = "h-11 w-full rounded-2xl border border-input/80 bg-background/90 px-3.5 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-const PANEL_SECTION_SELECT_CONTENT_CLASS = "rounded-2xl border-border/70 p-2 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.34)]"
-const PANEL_SECTION_SELECT_ITEM_CLASS = "min-h-11 rounded-xl px-3 py-2 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium"
+const PANEL_SECTION_SELECT_TRIGGER_CLASS = STUDIO_SELECT_TRIGGER_CLASS
+const PANEL_SECTION_SELECT_CONTENT_CLASS = STUDIO_SELECT_CONTENT_CLASS
+const PANEL_SECTION_SELECT_ITEM_CLASS = STUDIO_SELECT_ITEM_CLASS
 const PANEL_SECTION_LABEL_CLASS = "text-[0.78rem] font-semibold text-foreground/90 uppercase tracking-[0.08em]"
 const PANEL_SECTION_HELPER_CLASS = "text-[0.84rem] text-muted-foreground leading-relaxed"
 const PANEL_TEXT_BUTTON_REVEAL_CLASS = "rounded-xl px-3 py-2 text-[clamp(0.9rem,0.86rem+0.12vw,0.98rem)] text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.28)] disabled:opacity-50"
 const PANEL_SECONDARY_BUTTON_CLASS = "min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal"
+const PANEL_RICH_SELECT_TRIGGER_CLASS = STUDIO_RICH_SELECT_TRIGGER_CLASS
+const BRAND_KIT_GROUP_CLASS = "space-y-3"
+const BRAND_KIT_CONTACT_ROW_CLASS = "space-y-2 border-b border-border/40 py-2.5 last:border-b-0"
+const BRAND_KIT_SUBTLE_BUTTON_CLASS = "h-9 rounded-xl border border-border/65 bg-background/82 px-3 text-[0.9rem] font-medium text-foreground/88 transition-all duration-200 hover:border-border/90 hover:bg-background hover:shadow-[0_12px_28px_-24px_rgba(15,23,42,0.18)]"
 
 type BrandColorRole = 'Texto' | 'Fondo' | 'Acento'
 type DraggedBrandColor = { role: BrandColorRole; color: string } | null
@@ -102,7 +112,7 @@ function RoleColorSwatch({
             <PopoverTrigger asChild>
                 <button
                     type="button"
-                    className={cn(sizeClass, "border border-border/70 shadow-sm")}
+                    className={cn(sizeClass, "border border-border/70 shadow-[0_14px_28px_-24px_rgba(15,23,42,0.28)] transition-transform duration-200 hover:scale-[1.03]")}
                     style={{ backgroundColor: initial }}
                     title={initial}
                     draggable={draggable}
@@ -155,7 +165,7 @@ function AddAccentSwatch({
                     type="button"
                     disabled={disabled}
                     className={cn(
-                        "w-12 h-12 rounded-full border border-dashed border-border/80 flex items-center justify-center text-muted-foreground",
+                        "w-12 h-12 rounded-[1rem] border border-dashed border-border/80 flex items-center justify-center text-muted-foreground shadow-[0_14px_28px_-24px_rgba(15,23,42,0.2)]",
                         "hover:text-primary hover:border-primary/60 transition-colors",
                         disabled && "opacity-40 cursor-not-allowed"
                     )}
@@ -273,6 +283,7 @@ export function ControlsPanel({
     const [layoutIntentOverride, setLayoutIntentOverride] = useState<'auto' | IntentCategory>('auto')
     const [draggedBrandColor, setDraggedBrandColor] = useState<DraggedBrandColor>(null)
     const [isInspiring, setIsInspiring] = useState(false)
+    const [isRefreshingBrandColors, setIsRefreshingBrandColors] = useState(false)
     const STEP_ASSISTANCE: Record<number, { title: string; description: string }> = {
         1: { title: t('ui.ideaTitle'), description: t('ui.ideaDescription') },
         2: { title: t('ui.designTitle'), description: t('ui.designDescription') },
@@ -422,6 +433,18 @@ export function ControlsPanel({
         if (!currentId) return
         await setActiveBrandKit(String(currentId), false, false)
         await reloadBrandKits(true)
+    }
+
+    const handleReloadBrandColors = async () => {
+        if (isRefreshingBrandColors) return
+        setIsRefreshingBrandColors(true)
+        await refreshActiveBrandKitContent()
+        refreshBrandColorsFromKit()
+        toast({
+            title: t('ui.colorsReloadedTitle'),
+            description: t('ui.colorsReloadedDescription'),
+        })
+        setIsRefreshingBrandColors(false)
     }
 
     const layoutRatingStore: Record<string, LayoutRatingStoreEntry> = (layoutRatingsRows || []).reduce(
@@ -628,12 +651,16 @@ export function ControlsPanel({
     const effectiveSessionId = selectedSessionId !== undefined
         ? selectedSessionId
         : (sessions.find((session) => session.active)?.id || '')
+    const selectedSession = sessions.find((session) => session.id === effectiveSessionId)
     const selectedIntentMeta = INTENT_CATALOG.find((intent) => intent.id === state.selectedIntent)
     const effectiveLayoutIntent: IntentCategory = (
         layoutIntentOverride === 'auto'
             ? (state.selectedIntent as IntentCategory)
             : layoutIntentOverride
     )
+    const selectedLayoutIntentMeta = layoutIntentOverride === 'auto'
+        ? selectedIntentMeta
+        : INTENT_CATALOG.find((intent) => intent.id === layoutIntentOverride)
 
     const compositionCatalogLayouts = useMemo(() => {
         const base = MERGED_LAYOUTS_BY_INTENT[effectiveLayoutIntent] || availableLayouts
@@ -786,15 +813,33 @@ export function ControlsPanel({
                                 if (value && value !== '__none') onSelectSession?.(value)
                             }}
                         >
-                            <SelectTrigger className="h-11 w-full rounded-2xl border border-input/80 bg-background/90 px-3.5 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
-                                <SelectValue placeholder={t('ui.noSessions')} />
+                            <SelectTrigger className={PANEL_RICH_SELECT_TRIGGER_CLASS}>
+                                <SelectValue
+                                    placeholder={t('ui.noSessions')}
+                                    className="pointer-events-none absolute inset-0 opacity-0"
+                                />
+                                <span className="flex min-w-0 items-center gap-2">
+                                    <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">
+                                        {selectedSession?.title || t('ui.noSessions')}
+                                    </span>
+                                    {selectedSession?.active ? (
+                                        <span className="whitespace-nowrap rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[0.78rem] font-semibold text-primary">
+                                            {t('ui.activeSession')}
+                                        </span>
+                                    ) : null}
+                                    {selectedSession?.updatedAt ? (
+                                        <span className="shrink-0 text-[0.82rem] text-muted-foreground">
+                                            {new Date(selectedSession.updatedAt).toLocaleTimeString(i18n.language || t('ui.locale'), { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    ) : null}
+                                </span>
                             </SelectTrigger>
-                            <SelectContent className="rounded-2xl border-border/70 p-2 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.34)]">
+                            <SelectContent className={PANEL_SECTION_SELECT_CONTENT_CLASS} position="popper" align="start">
                                 {sessions.length === 0 ? (
                                     <SelectItem
                                         value="__none"
                                         disabled
-                                        className="min-h-11 rounded-xl px-3 py-2 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium"
+                                        className={PANEL_SECTION_SELECT_ITEM_CLASS}
                                     >
                                         {t('ui.noSessions')}
                                     </SelectItem>
@@ -803,7 +848,7 @@ export function ControlsPanel({
                                     <SelectItem
                                         key={session.id}
                                         value={session.id}
-                                        className="min-h-11 rounded-xl px-3 py-2 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium"
+                                        className={PANEL_SECTION_SELECT_ITEM_CLASS}
                                     >
                                         <span className="flex min-w-0 items-center gap-2">
                                             <span className="truncate">
@@ -1027,10 +1072,23 @@ export function ControlsPanel({
                                                     value={layoutIntentOverride}
                                                     onValueChange={(value) => setLayoutIntentOverride(value as 'auto' | IntentCategory)}
                                                 >
-                                                    <SelectTrigger className={PANEL_SECTION_SELECT_TRIGGER_CLASS}>
-                                                        <SelectValue placeholder={t('ui.selectIntent')} />
+                                                    <SelectTrigger className={PANEL_RICH_SELECT_TRIGGER_CLASS}>
+                                                        <SelectValue
+                                                            placeholder={t('ui.selectIntent')}
+                                                            className="pointer-events-none absolute inset-0 opacity-0"
+                                                        />
+                                                        <span className="flex min-w-0 items-center gap-2">
+                                                            <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">
+                                                                {layoutIntentOverride === 'auto'
+                                                                    ? t('ui.autoDetectedIntent', {
+                                                                        defaultValue: 'Auto (detected: {{intent}})',
+                                                                        intent: selectedIntentMeta?.name || state.selectedIntent,
+                                                                    })
+                                                                    : (selectedLayoutIntentMeta?.name || t('ui.selectIntent'))}
+                                                            </span>
+                                                        </span>
                                                     </SelectTrigger>
-                                                    <SelectContent className={PANEL_SECTION_SELECT_CONTENT_CLASS}>
+                                                    <SelectContent className={PANEL_SECTION_SELECT_CONTENT_CLASS} position="popper" align="start">
                                                         <SelectItem value="auto" className={PANEL_SECTION_SELECT_ITEM_CLASS}>
                                                             {t('ui.autoDetectedIntent', {
                                                                 defaultValue: 'Auto (detected: {{intent}})',
@@ -1122,7 +1180,7 @@ export function ControlsPanel({
                         {/* STEP 4B: STYLE */}
                         <div className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
                                 <SectionHeader
-                                    icon={IconPalette}
+                                    icon={IconPaintbrush02}
                                     title={t('ui.styleTitle', { defaultValue: 'Estilo' })}
                                     iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
                                     titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
@@ -1196,7 +1254,7 @@ export function ControlsPanel({
                                     titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
                                 />
 
-                                <div className="space-y-3">
+                                <div className={BRAND_KIT_GROUP_CLASS}>
                                     <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.logo')}</p>
                                     <BrandingConfigurator
                                         selectedLayout={selectedLayoutMeta || null}
@@ -1210,31 +1268,26 @@ export function ControlsPanel({
                                     />
                                 </div>
 
-                                <div className="space-y-3 border-t border-border/60 pt-4">
+                                <div className={cn(BRAND_KIT_GROUP_CLASS, "pt-1")}>
                                     <div className="flex items-center justify-between gap-2">
                                         <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.colors')}</p>
                                         <Button
-                                            variant="ghost"
+                                            variant="outline"
                                             size="sm"
-                                            onClick={() => {
-                                                refreshBrandColorsFromKit()
-                                                toast({
-                                                    title: t('ui.colorsReloadedTitle'),
-                                                    description: t('ui.colorsReloadedDescription'),
-                                                })
-                                            }}
-                                            className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                                            onClick={handleReloadBrandColors}
+                                            disabled={isRefreshingBrandColors}
+                                            className={cn(BRAND_KIT_SUBTLE_BUTTON_CLASS, "gap-1.5")}
                                         >
-                                            <IconRotate className="w-3 h-3" />
-                                            {t('ui.reload')}
+                                            <IconRotate className={cn("h-3.5 w-3.5", isRefreshingBrandColors && "animate-spin")} />
+                                            {isRefreshingBrandColors ? t('ui.reloading', { defaultValue: 'Recargando...' }) : t('ui.reload')}
                                         </Button>
                                     </div>
 
-                                    <div className="flex items-end gap-3 flex-wrap pb-1">
+                                    <div className="flex items-end gap-4 flex-wrap pb-1">
                                         <div
                                             className={cn(
-                                                "flex flex-col items-center gap-1 rounded-xl p-1 transition-colors",
-                                                draggedBrandColor && draggedBrandColor.role !== 'Texto' && "bg-primary/5 border border-primary/20"
+                                                "flex flex-col items-center gap-2 rounded-[1rem] border border-transparent px-2 py-1.5 transition-colors",
+                                                draggedBrandColor && draggedBrandColor.role !== 'Texto' && "border-primary/20 bg-primary/5"
                                             )}
                                             onDragOver={(event) => event.preventDefault()}
                                             onDrop={(event) => {
@@ -1262,19 +1315,19 @@ export function ControlsPanel({
                                                     type="button"
                                                     size="sm"
                                                     variant="outline"
-                                                    className="h-8 px-2 text-[10px]"
+                                                    className={cn(BRAND_KIT_SUBTLE_BUTTON_CLASS, "h-11 px-3 text-[0.88rem]")}
                                                     onClick={() => replaceRoleColor('Texto', '#111111')}
                                                 >
                                                     {t('ui.add')}
                                                 </Button>
                                             )}
-                                            <span className="text-[10px] text-muted-foreground">{t('ui.text')}</span>
+                                            <span className="text-[0.8rem] font-medium text-muted-foreground">{t('ui.text')}</span>
                                         </div>
 
                                         <div
                                             className={cn(
-                                                "flex flex-col items-center gap-1 rounded-xl p-1 transition-colors",
-                                                draggedBrandColor && draggedBrandColor.role !== 'Fondo' && "bg-primary/5 border border-primary/20"
+                                                "flex flex-col items-center gap-2 rounded-[1rem] border border-transparent px-2 py-1.5 transition-colors",
+                                                draggedBrandColor && draggedBrandColor.role !== 'Fondo' && "border-primary/20 bg-primary/5"
                                             )}
                                             onDragOver={(event) => event.preventDefault()}
                                             onDrop={(event) => {
@@ -1302,17 +1355,17 @@ export function ControlsPanel({
                                                     type="button"
                                                     size="sm"
                                                     variant="outline"
-                                                    className="h-8 px-2 text-[10px]"
+                                                    className={cn(BRAND_KIT_SUBTLE_BUTTON_CLASS, "h-11 px-3 text-[0.88rem]")}
                                                     onClick={() => replaceRoleColor('Fondo', '#ffffff')}
                                                 >
                                                     {t('ui.add')}
                                                 </Button>
                                             )}
-                                            <span className="text-[10px] text-muted-foreground">{t('ui.background')}</span>
+                                            <span className="text-[0.8rem] font-medium text-muted-foreground">{t('ui.background')}</span>
                                         </div>
 
                                         <div
-                                            className="flex flex-col gap-1 min-w-0 pl-3 ml-2 rounded-xl p-1"
+                                            className="ml-1 flex min-w-0 flex-col gap-2 rounded-[1rem] border border-transparent px-2 py-1.5"
                                             onDragOver={(event) => event.preventDefault()}
                                             onDrop={(event) => {
                                                 event.preventDefault()
@@ -1321,7 +1374,7 @@ export function ControlsPanel({
                                                 setDraggedBrandColor(null)
                                             }}
                                         >
-                                            <div className="flex items-center gap-2 flex-wrap">
+                                            <div className="flex items-center gap-2.5 flex-wrap">
                                                 {brandColorsByRole.Acento.map((accentColor) => (
                                                     <div
                                                         key={accentColor}
@@ -1352,7 +1405,7 @@ export function ControlsPanel({
                                                         />
                                                         <button
                                                             type="button"
-                                                            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-background border border-border/70 text-muted-foreground hover:text-destructive hover:border-destructive/50 inline-flex items-center justify-center shadow-sm opacity-0 group-hover/accent:opacity-100 group-focus-within/accent:opacity-100 transition-opacity"
+                                                            className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-sm opacity-0 transition-opacity group-hover/accent:opacity-100 group-focus-within/accent:opacity-100 hover:bg-black/70"
                                                             onClick={() => removeBrandColor(accentColor)}
                                                             title={t('ui.removeAccent')}
                                                         >
@@ -1366,13 +1419,13 @@ export function ControlsPanel({
                                                     label={t('ui.addAccent')}
                                                 />
                                             </div>
-                                            <span className="text-[10px] text-muted-foreground w-12 text-center">{t('ui.accents')}</span>
+                                            <span className="text-[0.8rem] font-medium text-muted-foreground">{t('ui.accents')}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 border-t border-border/60 pt-4">
-                                    <div className="flex items-center justify-between gap-2">
+                                <div className={cn(BRAND_KIT_GROUP_CLASS, "pt-1")}>
+                                    <div className="flex items-center justify-between gap-3">
                                         <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.link')}</p>
                                         <Switch
                                             checked={state.ctaUrlEnabled}
@@ -1387,20 +1440,20 @@ export function ControlsPanel({
                                             value={state.ctaUrl}
                                             onChange={(e) => setCtaUrl(e.target.value)}
                                             placeholder={activeBrandKit?.url?.trim() || 'tuweb.com'}
-                                            className="h-10 text-[0.88rem]"
+                                            className="h-11 rounded-2xl border border-input/80 bg-background/90 text-[0.95rem]"
                                         />
                                     ) : (
-                                        <p className={PANEL_SECTION_HELPER_CLASS}>
+                                        <p className={cn(PANEL_SECTION_HELPER_CLASS, "text-[0.9rem]")}>
                                             {t('ui.linkDescription')}
                                         </p>
                                     )}
                                 </div>
 
                                 {(primaryEmail || phoneValues.length > 0 || addressValues.length > 0) ? (
-                                    <div className="space-y-3 pt-1">
+                                    <div className={cn(BRAND_KIT_GROUP_CLASS, "pt-2")}>
                                         <div className="space-y-3">
                                             {primaryEmail ? (
-                                                <div className="space-y-1.5">
+                                                <div className={BRAND_KIT_CONTACT_ROW_CLASS}>
                                                     <div className="flex items-center justify-between gap-2">
                                                         <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.email')}</p>
                                                         <Switch
@@ -1424,10 +1477,10 @@ export function ControlsPanel({
                                                             value={getContactAssetById('contact-email-main')?.value || ''}
                                                             onChange={(e) => updateContactAssetValue('contact-email-main', e.target.value)}
                                                             placeholder={primaryEmail}
-                                                            className="h-10 text-[0.88rem]"
+                                                            className="h-11 rounded-2xl border border-input/80 bg-background/90 text-[0.95rem]"
                                                         />
                                                     ) : (
-                                                        <p className="truncate text-[0.84rem] text-muted-foreground">{primaryEmail}</p>
+                                                        <p className="truncate text-[0.95rem] text-foreground/82">{primaryEmail}</p>
                                                     )}
                                                 </div>
                                             ) : null}
@@ -1436,7 +1489,7 @@ export function ControlsPanel({
                                                 const assetId = `contact-phone-${idx}`
                                                 const selectedPhoneAsset = getContactAssetById(assetId)
                                                 return (
-                                                    <div key={assetId} className="space-y-1.5">
+                                                    <div key={assetId} className={BRAND_KIT_CONTACT_ROW_CLASS}>
                                                         <div className="flex items-center justify-between gap-2">
                                                             <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.phone', { index: idx + 1 })}</p>
                                                             <Switch
@@ -1460,10 +1513,10 @@ export function ControlsPanel({
                                                                 value={selectedPhoneAsset.value || ''}
                                                                 onChange={(e) => updateContactAssetValue(assetId, e.target.value)}
                                                                 placeholder={phone}
-                                                                className="h-10 text-[0.88rem]"
+                                                                className="h-11 rounded-2xl border border-input/80 bg-background/90 text-[0.95rem]"
                                                             />
                                                         ) : (
-                                                            <p className="truncate text-[0.84rem] text-muted-foreground">{phone}</p>
+                                                            <p className="truncate text-[0.95rem] text-foreground/82">{phone}</p>
                                                         )}
                                                     </div>
                                                 )
@@ -1473,7 +1526,7 @@ export function ControlsPanel({
                                                 const assetId = `contact-address-${idx}`
                                                 const selectedAddressAsset = getContactAssetById(assetId)
                                                 return (
-                                                    <div key={assetId} className="space-y-1.5">
+                                                    <div key={assetId} className={BRAND_KIT_CONTACT_ROW_CLASS}>
                                                         <div className="flex items-center justify-between gap-2">
                                                             <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.address', { index: idx + 1 })}</p>
                                                             <Switch
@@ -1497,10 +1550,10 @@ export function ControlsPanel({
                                                                 value={selectedAddressAsset.value || ''}
                                                                 onChange={(e) => updateContactAssetValue(assetId, e.target.value)}
                                                                 placeholder={address}
-                                                                className="h-10 text-[0.88rem]"
+                                                                className="h-11 rounded-2xl border border-input/80 bg-background/90 text-[0.95rem]"
                                                             />
                                                         ) : (
-                                                            <p className="break-words text-[0.84rem] text-muted-foreground">{address}</p>
+                                                            <p className="break-words text-[0.95rem] text-foreground/82">{address}</p>
                                                         )}
                                                     </div>
                                                 )

@@ -30,6 +30,22 @@ const contentImageCardSource = fs.readFileSync(
     path.resolve(__dirname, '../creation-flow/ContentImageCard.tsx'),
     'utf8'
 )
+const styleImageCardSource = fs.readFileSync(
+    path.resolve(__dirname, '../creation-flow/StyleImageCard.tsx'),
+    'utf8'
+)
+const auxiliaryLogosCardSource = fs.readFileSync(
+    path.resolve(__dirname, '../creation-flow/AuxiliaryLogosCard.tsx'),
+    'utf8'
+)
+const brandingConfiguratorSource = fs.readFileSync(
+    path.resolve(__dirname, '../creation-flow/BrandingConfigurator.tsx'),
+    'utf8'
+)
+const sharedSelectStylesSource = fs.readFileSync(
+    path.resolve(__dirname, '../shared/selectStyles.ts'),
+    'utf8'
+)
 
 describe('ControlsPanel bottom spacing', () => {
     it('reserva solo un margen corto antes de la barra de generar', () => {
@@ -43,12 +59,19 @@ describe('ControlsPanel bottom spacing', () => {
         expect(controlsPanelSource).toContain('SelectTrigger')
         expect(controlsPanelSource).toContain('text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88')
         expect(controlsPanelSource).toContain('const PANEL_SECTION_HEADER_TITLE_CLASS = "text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88"')
-        expect(controlsPanelSource).toContain('const PANEL_SECTION_SELECT_TRIGGER_CLASS = "h-11 w-full rounded-2xl border border-input/80 bg-background/90 px-3.5 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"')
+        expect(controlsPanelSource).toContain('const PANEL_SECTION_SELECT_TRIGGER_CLASS = STUDIO_SELECT_TRIGGER_CLASS')
+        expect(controlsPanelSource).toContain('const PANEL_SECTION_SELECT_CONTENT_CLASS = STUDIO_SELECT_CONTENT_CLASS')
+        expect(controlsPanelSource).toContain('const PANEL_SECTION_SELECT_ITEM_CLASS = STUDIO_SELECT_ITEM_CLASS')
+        expect(controlsPanelSource).toContain('const PANEL_RICH_SELECT_TRIGGER_CLASS = STUDIO_RICH_SELECT_TRIGGER_CLASS')
+        expect(sharedSelectStylesSource).toContain('export const STUDIO_SELECT_TRIGGER_CLASS =')
+        expect(sharedSelectStylesSource).toContain("'h-11 w-full rounded-2xl border border-input/80 bg-[hsl(var(--surface-alt))]/90 px-3.5 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-all hover:border-primary/20 hover:bg-white'")
+        expect(sharedSelectStylesSource).toContain('export const STUDIO_RICH_SELECT_TRIGGER_CLASS =')
+        expect(sharedSelectStylesSource).toContain('`${STUDIO_SELECT_TRIGGER_CLASS} relative !h-[3rem] !rounded-[1.1rem] justify-between gap-2 px-4 text-left [&_[data-slot=select-value]]:hidden`')
         expect(controlsPanelSource).toContain('const PANEL_SECONDARY_BUTTON_CLASS = "min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal"')
         expect(controlsPanelSource).toContain('grid grid-cols-2 gap-2')
         expect(controlsPanelSource).toContain('className={PANEL_SECONDARY_BUTTON_CLASS}')
         expect(controlsPanelSource).toContain("t('ui.deleteAllSessions', { defaultValue: 'Borrar todas las sesiones' })")
-        expect(controlsPanelSource).toContain('h-11 w-full rounded-2xl border border-input/80 bg-background/90 px-3.5 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium')
+        expect(sharedSelectStylesSource).toContain('border border-input/80 bg-[hsl(var(--surface-alt))]/90 px-3.5 text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium')
         expect(controlsPanelSource).toContain('iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}')
         expect(controlsPanelSource).toContain('titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}')
         expect(controlsPanelSource).toContain('"inline-flex min-h-9 items-center text-[0.8rem] font-medium"')
@@ -154,5 +177,79 @@ describe('ControlsPanel bottom spacing', () => {
         expect(contentImageCardSource).not.toContain("border-b border-border/60")
         expect(contentImageCardSource).not.toContain("border-t border-border/60")
         expect(contentImageCardSource).not.toContain("rounded-full bg-primary text-primary-foreground")
+    })
+
+    it('normaliza estilo con botones de altura M en una rejilla 2x2 y mantiene una x consistente en la preview activa', () => {
+        expect(styleImageCardSource).toContain("const STYLE_ACTION_BUTTON_CLASS = 'min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal'")
+        expect(styleImageCardSource).toContain("const STYLE_MODAL_CLASS = 'h-[min(88vh,860px)] w-[min(92vw,1120px)] !max-w-[min(92vw,1120px)] overflow-hidden rounded-[1.9rem] border border-border/70 bg-background/98 p-0")
+        expect(styleImageCardSource).toContain("grid grid-cols-2 gap-2 min-w-0")
+        expect(styleImageCardSource).toContain("const clearCurrentStyle = useCallback(() => {")
+        expect(styleImageCardSource).toContain("className={cn(STYLE_ACTION_BUTTON_CLASS, 'gap-2 min-w-0')}")
+        expect(styleImageCardSource).toContain("className={cn(STYLE_ACTION_BUTTON_CLASS, 'min-w-0', !currentStyleId && !selectedStylePresetId && 'opacity-45')}")
+        expect(styleImageCardSource).toContain("disabled={!currentStyleId && !selectedStylePresetId}")
+        expect(styleImageCardSource).toContain("{tt('styleImage.clear', 'Clear')}")
+        expect(styleImageCardSource).toContain("DialogContent className={STYLE_MODAL_CLASS}")
+        expect(styleImageCardSource).toContain("import { motion } from 'framer-motion'")
+        expect(styleImageCardSource).toContain("initial={{ opacity: 0, y: 18, scale: 0.972 }}")
+        expect(styleImageCardSource).toContain("animate={{ opacity: 1, y: 0, scale: 1 }}")
+        expect(styleImageCardSource).toContain("transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}")
+        expect(styleImageCardSource).toContain("transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}")
+        expect(styleImageCardSource).toContain("DialogTitle className=\"text-[clamp(1.16rem,1.08rem+0.18vw,1.28rem)] font-semibold tracking-[-0.01em]\"")
+        expect(styleImageCardSource).toContain("DialogDescription className=\"text-[1rem] leading-relaxed text-muted-foreground\"")
+        expect(styleImageCardSource).toContain("className={STYLE_ACTION_BUTTON_CLASS}")
+        expect(styleImageCardSource).toContain("rounded-[1.15rem] overflow-hidden border")
+        expect(styleImageCardSource).toContain("text-[0.92rem] text-muted-foreground")
+        expect(styleImageCardSource).toContain("absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white")
+        expect(styleImageCardSource).toContain("aria-label={tt('styleImage.removeAria', 'Remove style image')}")
+        expect(styleImageCardSource).toContain("IconClose className=\"h-3.5 w-3.5\"")
+        expect(styleImageCardSource).toContain("IconCheck className=\"absolute right-2.5 top-2.5 h-7 w-7 text-white")
+        expect(styleImageCardSource).not.toContain("border-t border-border")
+        expect(styleImageCardSource).not.toContain("rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center")
+        expect(styleImageCardSource).not.toContain("absolute inset-0 bg-primary/30 flex items-center justify-center")
+    })
+
+    it('lleva logos auxiliares al mismo lenguaje visual que contenido del usuario cuando se expande', () => {
+        expect(auxiliaryLogosCardSource).toContain("const AUX_ACTION_BUTTON_CLASS = 'min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal'")
+        expect(auxiliaryLogosCardSource).toContain("const AUX_MODAL_CLASS = 'h-[min(88vh,860px)] w-[min(92vw,1120px)] !max-w-[min(92vw,1120px)] overflow-hidden rounded-[1.9rem] border border-border/70 bg-background/98 p-0")
+        expect(auxiliaryLogosCardSource).toContain("const AUX_REMOVE_BUTTON_CLASS = 'absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-black/70'")
+        expect(auxiliaryLogosCardSource).toContain("grid grid-cols-2 gap-2")
+        expect(auxiliaryLogosCardSource).toContain("className={cn(AUX_ACTION_BUTTON_CLASS, 'gap-2')}")
+        expect(auxiliaryLogosCardSource).toContain("grid grid-cols-3 gap-2.5")
+        expect(auxiliaryLogosCardSource).toContain("rounded-[1.15rem] border border-border/65 bg-background shadow-[0_18px_38px_-30px_rgba(15,23,42,0.28)]")
+        expect(auxiliaryLogosCardSource).toContain("rounded-[1.4rem] border border-dashed border-border/80 bg-background/72")
+        expect(auxiliaryLogosCardSource).toContain("IconCheckCircle className=\"absolute right-2.5 top-2.5 h-9 w-9 text-white")
+        expect(auxiliaryLogosCardSource).toContain("DialogContent className={AUX_MODAL_CLASS}")
+        expect(auxiliaryLogosCardSource).toContain("initial={{ opacity: 0, y: 18, scale: 0.972 }}")
+        expect(auxiliaryLogosCardSource).toContain("transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}")
+        expect(auxiliaryLogosCardSource).toContain("initial={{ opacity: 0, y: 10, scale: 0.985 }}")
+        expect(auxiliaryLogosCardSource).not.toContain("border-t border-border")
+        expect(auxiliaryLogosCardSource).not.toContain("rounded-full bg-primary text-primary-foreground")
+    })
+
+    it('restyla kit de marca con grupos suaves y seleccion visual mas cuidada', () => {
+        expect(controlsPanelSource).toContain('const BRAND_KIT_GROUP_CLASS = "space-y-3"')
+        expect(controlsPanelSource).toContain('const BRAND_KIT_CONTACT_ROW_CLASS = "space-y-2 border-b border-border/40 py-2.5 last:border-b-0"')
+        expect(controlsPanelSource).toContain('const BRAND_KIT_SUBTLE_BUTTON_CLASS = "h-9 rounded-xl border border-border/65 bg-background/82 px-3 text-[0.9rem] font-medium')
+        expect(controlsPanelSource).toContain('className={BRAND_KIT_GROUP_CLASS}')
+        expect(controlsPanelSource).toContain('className={cn(BRAND_KIT_SUBTLE_BUTTON_CLASS, "gap-1.5")}')
+        expect(controlsPanelSource).toContain('const handleReloadBrandColors = async () => {')
+        expect(controlsPanelSource).toContain('await refreshActiveBrandKitContent()')
+        expect(controlsPanelSource).toContain('setIsRefreshingBrandColors(true)')
+        expect(controlsPanelSource).toContain('disabled={isRefreshingBrandColors}')
+        expect(controlsPanelSource).toContain("isRefreshingBrandColors ? t('ui.reloading', { defaultValue: 'Recargando...' }) : t('ui.reload')")
+        expect(controlsPanelSource).toContain('className="h-11 rounded-2xl border border-input/80 bg-background/90 text-[0.95rem]"')
+        expect(controlsPanelSource).toContain('className={BRAND_KIT_CONTACT_ROW_CLASS}')
+        expect(controlsPanelSource).toContain('text-[0.95rem] text-foreground/82')
+        expect(controlsPanelSource).not.toContain('rounded-[1.35rem] border border-border/65 bg-background/72 p-4')
+        expect(controlsPanelSource).not.toContain('rounded-[1.15rem] border border-border/60 bg-background/82 px-3.5 py-3')
+        expect(brandingConfiguratorSource).toContain('const logoOptionClassName =')
+        expect(brandingConfiguratorSource).toContain('h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-[1rem]')
+        expect(brandingConfiguratorSource).toContain("t('brandingConfigurator.noLogo', { defaultValue: 'Sin logo' })")
+        expect(brandingConfiguratorSource).toContain('border-primary/36 bg-primary/[0.07] shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]')
+        expect(brandingConfiguratorSource).toContain('grid grid-cols-5 gap-3')
+        expect(brandingConfiguratorSource).toContain('rounded-[1rem] border transition-all shadow-[0_18px_34px_-28px_rgba(15,23,42,0.28)]')
+        expect(brandingConfiguratorSource).not.toContain('bg-white$1')
+        expect(brandingConfiguratorSource).not.toContain('border-white/30$1hover:border-primary/50 hover:scale-105')
+        expect(brandingConfiguratorSource).not.toContain('logoCheckClassName')
     })
 })

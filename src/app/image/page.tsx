@@ -91,6 +91,13 @@ type CompactGeneration = Pick<Generation, 'id' | 'image_url' | 'image_storage_id
     }
 }
 
+const IMAGE_DECISION_DIALOG_CLASS = 'max-w-[min(92vw,34rem)] rounded-[1.7rem] border border-border/70 bg-background/98 p-0 shadow-[0_38px_100px_-56px_rgba(15,23,42,0.42)]'
+const IMAGE_DECISION_DIALOG_HEADER_CLASS = 'gap-3 px-6 pb-4 pt-6 text-left sm:text-left'
+const IMAGE_DECISION_DIALOG_TITLE_CLASS = 'pr-10 text-[clamp(1.16rem,1.08rem+0.18vw,1.28rem)] font-semibold tracking-[-0.01em]'
+const IMAGE_DECISION_DIALOG_DESCRIPTION_CLASS = 'text-[1rem] leading-relaxed text-muted-foreground'
+const IMAGE_DECISION_DIALOG_FOOTER_CLASS = 'gap-2 px-6 pb-6 pt-0 sm:justify-end'
+const IMAGE_DECISION_BUTTON_CLASS = 'min-h-[42px] rounded-[1rem] px-4 text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium'
+
 export type ContextType = 'color' | 'logo' | 'aux_logo' | 'template' | 'image' | 'font' | 'text' | 'link' | 'contact'
 
 export interface ContextElement {
@@ -2496,18 +2503,19 @@ export default function ImagePage() {
             />
 
             <Dialog open={unsavedNavModalOpen} onOpenChange={(open) => { if (!open) handleUnsavedNavigateCancel() }}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{t('unsaved.navigateTitle')}</DialogTitle>
-                        <DialogDescription>
+                <DialogContent className={IMAGE_DECISION_DIALOG_CLASS}>
+                    <DialogHeader className={IMAGE_DECISION_DIALOG_HEADER_CLASS}>
+                        <DialogTitle className={IMAGE_DECISION_DIALOG_TITLE_CLASS}>{t('unsaved.navigateTitle')}</DialogTitle>
+                        <DialogDescription className={IMAGE_DECISION_DIALOG_DESCRIPTION_CLASS}>
                             {t('unsaved.navigateDescription')}
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter className="gap-2">
+                    <DialogFooter className={IMAGE_DECISION_DIALOG_FOOTER_CLASS}>
                         <Button
                             variant="outline"
                             onClick={handleUnsavedNavigateCancel}
                             disabled={isResolvingUnsavedNavigation}
+                            className={IMAGE_DECISION_BUTTON_CLASS}
                         >
                             {t('common:actions.cancel')}
                         </Button>
@@ -2515,12 +2523,14 @@ export default function ImagePage() {
                             variant="destructive"
                             onClick={handleUnsavedNavigateDiscard}
                             disabled={isResolvingUnsavedNavigation}
+                            className={IMAGE_DECISION_BUTTON_CLASS}
                         >
                             {t('unsaved.discardLeave')}
                         </Button>
                         <Button
                             onClick={() => void handleUnsavedNavigateSave()}
                             disabled={isResolvingUnsavedNavigation}
+                            className={IMAGE_DECISION_BUTTON_CLASS}
                         >
                             {t('unsaved.saveLeave')}
                         </Button>
@@ -2535,17 +2545,18 @@ export default function ImagePage() {
                     }
                 }}
             >
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{sessionDecisionModal.title}</DialogTitle>
-                        <DialogDescription>{sessionDecisionModal.description}</DialogDescription>
+                <DialogContent className={IMAGE_DECISION_DIALOG_CLASS}>
+                    <DialogHeader className={IMAGE_DECISION_DIALOG_HEADER_CLASS}>
+                        <DialogTitle className={IMAGE_DECISION_DIALOG_TITLE_CLASS}>{sessionDecisionModal.title}</DialogTitle>
+                        <DialogDescription className={IMAGE_DECISION_DIALOG_DESCRIPTION_CLASS}>{sessionDecisionModal.description}</DialogDescription>
                     </DialogHeader>
-                    <DialogFooter className="gap-2">
+                    <DialogFooter className={IMAGE_DECISION_DIALOG_FOOTER_CLASS}>
                         {sessionDecisionModal.buttons.map((button) => (
                             <Button
                                 key={button.id}
                                 variant={button.variant || 'default'}
                                 onClick={() => closeSessionDecisionModal(button.id)}
+                                className={IMAGE_DECISION_BUTTON_CLASS}
                             >
                                 {button.label}
                             </Button>

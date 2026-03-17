@@ -3,7 +3,7 @@
 import { ReactNode, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
-import { IconChevronDown, IconPlus, IconSettings, IconDelete } from '@/components/ui/icons'
+import { IconArrowDown, IconPlus, IconSettings, IconDelete } from '@/components/ui/icons'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { CreditsBadge } from './CreditsBadge'
@@ -13,6 +13,7 @@ import {
     HEADER_DROPDOWN_ITEM_CLASS,
     HEADER_DROPDOWN_META_CLASS,
 } from './headerDropdownStyles'
+import { STUDIO_RICH_SELECT_TRIGGER_CLASS } from '@/components/studio/shared/selectStyles'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -92,7 +93,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                     {brands.length > 0 ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-11 w-[clamp(9.5rem,42vw,12.75rem)] min-w-0 justify-between gap-2 rounded-2xl border-border/70 bg-[hsl(var(--surface-alt))]/90 px-3 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.28)] transition-all hover:border-primary/20 hover:bg-white md:h-[3.15rem] md:w-72 md:px-4">
+                                <Button variant="outline" size="sm" className={`${STUDIO_RICH_SELECT_TRIGGER_CLASS} w-[clamp(9.5rem,42vw,12.75rem)] min-w-0 md:w-72`}>
                                     <span className="flex min-w-0 items-center gap-2">
                                         <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-[hsl(var(--surface))] translate-y-[1px]">
                                             {currentBrandFavicon ? (
@@ -103,7 +104,7 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                         </span>
                                         <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">{currentBrandName}</span>
                                     </span>
-                                    <IconChevronDown className="h-4 w-4 shrink-0" />
+                                    <IconArrowDown className="h-[18px] w-[18px] shrink-0 opacity-60" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" className={`w-[320px] ${HEADER_DROPDOWN_CONTENT_CLASS} md:w-[440px]`}>

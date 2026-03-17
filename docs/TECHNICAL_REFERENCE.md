@@ -21,6 +21,7 @@ Decision vigente:
 - Analizar pertenece a la misma familia visual que el CTA principal, pero con menor jerarquia
 - los dropdowns deben mantener la misma escala tipografica cerrados y abiertos
 - los estados informativos no deben encapsularse por defecto si se leen mejor como texto limpio
+- dentro de tarjetas con varios subbloques funcionales, se evita tanto la linea dura como el patron de tarjeta dentro de tarjeta; primero se resuelve con espacio, tipografia y ritmo vertical
 ## DetecciÃ³n de idioma con Detect Language API
 
 ### PropÃ³sito

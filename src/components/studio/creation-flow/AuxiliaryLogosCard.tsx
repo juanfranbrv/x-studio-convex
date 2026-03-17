@@ -1,22 +1,25 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { IconCheck, IconChevronDown, IconChevronUp, IconFingerprint, IconUpload, IconClose } from '@/components/ui/icons'
+import { IconArrowDown, IconArrowUp, IconCheckCircle, IconFingerprint, IconImage, IconUpload, IconClose } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import type { ReferenceImageRole } from '@/lib/creation-flow-types'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
 const MAX_REFERENCE_IMAGES = 10
 const MAX_AUX_LOGOS = 4
+const AUX_ACTION_BUTTON_CLASS = 'min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal'
+const AUX_MODAL_CLASS = 'h-[min(88vh,860px)] w-[min(92vw,1120px)] !max-w-[min(92vw,1120px)] overflow-hidden rounded-[1.9rem] border border-border/70 bg-background/98 p-0 shadow-[0_38px_100px_-56px_rgba(15,23,42,0.42)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.985] data-[state=closed]:zoom-out-[0.985] data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:slide-out-to-bottom-2 duration-200 flex flex-col'
+const AUX_REMOVE_BUTTON_CLASS = 'absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-black/70'
 
 interface AuxiliaryLogosCardProps {
   uploadedImages: string[]
   onUpload: (file: File, roleHint?: ReferenceImageRole) => void
   onRemoveUploadedImage?: (url: string) => void
   brandKitImages?: Array<{ id: string; url: string; name?: string }>
-  // Backward compatibility: legacy source based on primary logos
   brandKitLogos?: Array<{ id: string; url: string; name?: string }>
   onRefreshBrandKitContent?: () => Promise<void> | void
   selectedBrandKitImageIds?: string[]
@@ -42,6 +45,7 @@ export function AuxiliaryLogosCard({
   const { t } = useTranslation('common')
   const tt = (key: string, defaultValue: string, options?: Record<string, unknown>) =>
     t(key, { defaultValue, ...options })
+
   const [collapsed, setCollapsed] = useState(true)
   const [isBrandKitModalOpen, setIsBrandKitModalOpen] = useState(false)
   const [isRefreshingBrandKit, setIsRefreshingBrandKit] = useState(false)
@@ -60,7 +64,9 @@ export function AuxiliaryLogosCard({
     () => selectedBrandKitImageIds.filter((id) => isAuxLogoRole(referenceImageRoles[id])),
     [selectedBrandKitImageIds, referenceImageRoles]
   )
+
   const auxTotalCount = auxUploadedIds.length + auxBrandKitIds.length
+  const canAddMoreAux = auxTotalCount < MAX_AUX_LOGOS && globalReferenceCount < MAX_REFERENCE_IMAGES
 
   const brandKitSources = useMemo(
     () => (brandKitImages.length > 0 ? brandKitImages : brandKitLogos),
@@ -136,7 +142,6 @@ export function AuxiliaryLogosCard({
   const hasAuxLogos = auxUploadedIds.length > 0 || selectedBrandKitAssets.length > 0
 
   useEffect(() => {
-    // Keep the card expanded whenever there are auxiliary logos selected.
     if (hasAuxLogos) {
       setCollapsed(false)
     }
@@ -165,7 +170,7 @@ export function AuxiliaryLogosCard({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="h-9 w-9"
           onClick={() => {
             if (hasAuxLogos) {
               setCollapsed(false)
@@ -177,47 +182,32 @@ export function AuxiliaryLogosCard({
             ? tt('auxLogos.expandAria', 'Expand auxiliary logos')
             : tt('auxLogos.collapseAria', 'Collapse auxiliary logos')}
         >
-          {collapsed ? <IconChevronDown className="w-4 h-4" /> : <IconChevronUp className="w-4 h-4" />}
+          {collapsed ? <IconArrowDown className="h-[18px] w-[18px]" /> : <IconArrowUp className="h-[18px] w-[18px]" />}
         </Button>
       </div>
 
       {!collapsed ? (
-        <>
-          <div className="flex items-center gap-2">
+        <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               type="button"
-              size="sm"
               variant="outline"
-              className="h-8 px-3 text-[0.82rem] gap-1.5"
+              className={cn(AUX_ACTION_BUTTON_CLASS, 'gap-2')}
               onClick={() => inputRef.current?.click()}
+              disabled={!canAddMoreAux}
             >
-              <IconUpload className="w-3 h-3" />
+              <IconUpload className="h-3.5 w-3.5" />
               {tt('auxLogos.upload', 'Upload logos')}
             </Button>
             <Button
               type="button"
-              size="sm"
               variant="outline"
-              className="h-8 px-3 text-[0.82rem] gap-1.5"
+              className={cn(AUX_ACTION_BUTTON_CLASS, 'gap-2')}
               onClick={() => setIsBrandKitModalOpen(true)}
             >
-              <IconFingerprint className="w-3 h-3" />
+              <IconFingerprint className="h-3.5 w-3.5" />
               {tt('auxLogos.fromBrandKit', 'From Brand Kit')}
             </Button>
-            {hasAuxLogos ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="ml-auto h-8 px-3 text-[0.82rem]"
-                onClick={() => {
-                  auxUploadedIds.forEach((id) => removeAuxLogo(id))
-                  selectedBrandKitAssets.forEach((item) => removeAuxLogo(item.id))
-                }}
-              >
-                {tt('auxLogos.clear', 'Clear')}
-              </Button>
-            ) : null}
           </div>
 
           <input
@@ -233,20 +223,20 @@ export function AuxiliaryLogosCard({
           />
 
           {hasAuxLogos ? (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2.5">
               {auxUploadedIds.map((url, index) => (
-                <div key={url} className="relative rounded-xl overflow-hidden border border-border/60 bg-background aspect-square group">
-                  <img src={url} alt={tt('auxLogos.uploadedAlt', 'Uploaded auxiliary logo {{index}}', { index: index + 1 })} className="w-full h-full object-cover" />
-                  <span className="absolute top-1 left-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-sky-500/85 text-white">
+                <div key={url} className="group relative aspect-square overflow-hidden rounded-[1.15rem] border border-border/65 bg-background shadow-[0_18px_38px_-30px_rgba(15,23,42,0.28)]">
+                  <img src={url} alt={tt('auxLogos.uploadedAlt', 'Uploaded auxiliary logo {{index}}', { index: index + 1 })} className="h-full w-full object-cover" />
+                  <span className="absolute left-2 top-2 rounded-full border border-sky-500/20 bg-sky-500/90 px-2 py-1 text-[0.7rem] font-semibold text-white shadow-sm">
                     {tt('auxLogos.uploadedBadge', 'Uploaded')}
                   </span>
                   <button
                     type="button"
                     onClick={() => removeAuxLogo(url)}
-                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className={AUX_REMOVE_BUTTON_CLASS}
                     aria-label={tt('auxLogos.removeAria', 'Remove auxiliary logo')}
                   >
-                    <IconClose className="w-3 h-3" />
+                    <IconClose className="h-3 w-3" />
                   </button>
                 </div>
               ))}
@@ -256,103 +246,122 @@ export function AuxiliaryLogosCard({
                   key={item.id}
                   type="button"
                   onClick={() => removeAuxLogo(item.id)}
-                  className="relative rounded-xl overflow-hidden border border-border/60 bg-background aspect-square group"
+                  className="group relative aspect-square overflow-hidden rounded-[1.15rem] border border-border/65 bg-background shadow-[0_18px_38px_-30px_rgba(15,23,42,0.28)]"
                   title={tt('auxLogos.removeTitle', 'Remove auxiliary logo')}
                 >
-                  <img src={item.url} alt={item.name || tt('auxLogos.brandKitAssetAlt', 'Brand Kit auxiliary asset')} className="w-full h-full object-cover" />
-                  <span className="absolute top-1 left-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold bg-emerald-500/85 text-white">
+                  <img src={item.url} alt={item.name || tt('auxLogos.brandKitAssetAlt', 'Brand Kit auxiliary asset')} className="h-full w-full object-cover" />
+                  <span className="absolute left-2 top-2 rounded-full border border-emerald-500/20 bg-emerald-500/90 px-2 py-1 text-[0.7rem] font-semibold text-white shadow-sm">
                     {tt('auxLogos.brandKitBadge', 'Kit')}
                   </span>
-                  <span className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/55 text-white items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity inline-flex">
-                    <IconClose className="w-3 h-3" />
+                  <span className={AUX_REMOVE_BUTTON_CLASS}>
+                    <IconClose className="h-3 w-3" />
                   </span>
                 </button>
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-border/60 bg-muted/25 p-3">
-              <p className="text-[0.84rem] text-muted-foreground leading-relaxed">
+            <div
+              onClick={() => inputRef.current?.click()}
+              className="flex cursor-pointer flex-col items-center justify-center gap-2.5 rounded-[1.4rem] border border-dashed border-border/80 bg-background/72 px-5 py-6 text-center transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] hover:border-primary/35 hover:bg-background hover:shadow-[0_16px_38px_-30px_rgba(15,23,42,0.2)]"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-[1rem] border border-border/70 bg-background transition-colors">
+                <IconImage className="h-4.5 w-4.5 text-muted-foreground" />
+              </div>
+              <p className="text-[clamp(0.96rem,0.92rem+0.1vw,1.02rem)] font-semibold text-foreground/92">
+                {tt('auxLogos.emptyTitle', 'Añade logos auxiliares')}
+              </p>
+              <p className="text-[clamp(0.84rem,0.8rem+0.08vw,0.9rem)] text-muted-foreground">
                 {tt('auxLogos.emptyHint', 'Add one or more auxiliary logos to use them as secondary brand support.')}
               </p>
             </div>
           )}
-        </>
+        </div>
       ) : null}
 
       <Dialog open={isBrandKitModalOpen} onOpenChange={setIsBrandKitModalOpen}>
-        <DialogContent className="!w-[64vw] !max-w-[64vw] sm:!max-w-[64vw] h-[min(88vh,860px)] p-0 overflow-hidden flex flex-col">
-          <DialogHeader className="px-6 pt-6 pb-3">
-            <div className="flex items-center justify-between gap-3">
-              <DialogTitle>{tt('auxLogos.selectFromBrandKitTitle', 'Select auxiliary logos from Brand Kit')}</DialogTitle>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-9 text-[0.84rem]"
-                onClick={() => void refreshBrandKitContent()}
-                disabled={isRefreshingBrandKit}
-              >
-                {isRefreshingBrandKit
-                  ? tt('auxLogos.refreshing', 'Refreshing...')
-                  : tt('auxLogos.refresh', 'Refresh Kit')}
+        <DialogContent className={AUX_MODAL_CLASS}>
+          <motion.div
+            initial={{ opacity: 0, y: 18, scale: 0.972 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <DialogHeader className="px-7 pb-2 pt-7 pr-20">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-2">
+                  <DialogTitle className="text-[clamp(1.08rem,1.02rem+0.14vw,1.18rem)] font-semibold tracking-[-0.01em]">
+                    {tt('auxLogos.selectFromBrandKitTitle', 'Select auxiliary logos from Brand Kit')}
+                  </DialogTitle>
+                  <DialogDescription className="text-[0.94rem] leading-relaxed text-muted-foreground">
+                    {tt('auxLogos.selectFromBrandKitDescription', 'Brand Kit images are shown here so you can choose auxiliary logos or secondary visual assets.')}
+                  </DialogDescription>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className={cn(AUX_ACTION_BUTTON_CLASS, 'min-w-[152px]')}
+                  onClick={() => void refreshBrandKitContent()}
+                  disabled={isRefreshingBrandKit}
+                >
+                  {isRefreshingBrandKit
+                    ? tt('auxLogos.refreshing', 'Refreshing...')
+                    : tt('auxLogos.refresh', 'Refresh Kit')}
+                </Button>
+              </div>
+            </DialogHeader>
+
+            <div className="flex-1 min-h-0 overflow-y-auto px-7 py-6">
+              {brandKitSources.length > 0 ? (
+                <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(120px,1fr))] gap-4 sm:[grid-template-columns:repeat(auto-fill,minmax(132px,1fr))]">
+                  {brandKitSources.map((item, index) => {
+                    const isSelected = auxBrandKitIds.includes(item.id)
+                    const canSelect = isSelected || (
+                      (globalReferenceCount < MAX_REFERENCE_IMAGES || selectedBrandKitImageIds.includes(item.id)) &&
+                      (auxTotalCount < MAX_AUX_LOGOS || auxBrandKitIds.includes(item.id))
+                    )
+
+                    return (
+                      <motion.button
+                        key={item.id}
+                        type="button"
+                        initial={{ opacity: 0, y: 10, scale: 0.985 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.18, delay: Math.min(0.012 * (index + 1), 0.14), ease: 'easeOut' }}
+                        onClick={() => {
+                          if (!canSelect) return
+                          toggleAuxFromKit(item)
+                        }}
+                        className={cn(
+                          'group relative w-full overflow-hidden rounded-[1.15rem] border aspect-square transition-all text-left',
+                          isSelected
+                            ? 'border-primary/30 bg-primary/[0.07] shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]'
+                            : canSelect
+                              ? 'border-border/65 bg-background hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-30px_rgba(15,23,42,0.24)]'
+                              : 'cursor-not-allowed border-border/50 bg-muted/30 opacity-50'
+                        )}
+                      >
+                        <img src={item.url} alt={item.name || tt('auxLogos.brandKitImageAlt', 'Brand Kit image')} className="h-full w-full object-cover" />
+                        {isSelected ? (
+                          <IconCheckCircle className="absolute right-2.5 top-2.5 h-9 w-9 text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.62)]" />
+                        ) : null}
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="mt-1 rounded-[1.15rem] border border-dashed border-border/70 bg-background/72 p-8 text-center text-[0.94rem] text-muted-foreground">
+                  {tt('auxLogos.noBrandKitImages', 'This Brand Kit does not have any images yet.')}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end px-7 pb-6 pt-2">
+              <Button type="button" size="sm" className={AUX_ACTION_BUTTON_CLASS} onClick={() => setIsBrandKitModalOpen(false)}>
+                {tt('actions.continue', 'Continue')}
               </Button>
             </div>
-            <DialogDescription>
-              {tt('auxLogos.selectFromBrandKitDescription', 'Brand Kit images are shown here so you can choose auxiliary logos or secondary visual assets.')}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
-            {brandKitSources.length > 0 ? (
-              <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(132px,1fr))] gap-3">
-                {brandKitSources.map((item) => {
-                  const isSelected = auxBrandKitIds.includes(item.id)
-                  const canSelect = isSelected || (
-                    (globalReferenceCount < MAX_REFERENCE_IMAGES || selectedBrandKitImageIds.includes(item.id)) &&
-                    (auxTotalCount < MAX_AUX_LOGOS || auxBrandKitIds.includes(item.id))
-                  )
-
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        if (!canSelect) return
-                        toggleAuxFromKit(item)
-                      }}
-                      className={cn(
-                        'relative w-full rounded-xl overflow-hidden border aspect-square transition-all',
-                        isSelected
-                          ? 'border-primary ring-2 ring-primary/20'
-                          : canSelect
-                            ? 'border-border hover:border-primary/40'
-                            : 'border-border opacity-50 cursor-not-allowed'
-                      )}
-                    >
-                        <img src={item.url} alt={item.name || tt('auxLogos.brandKitImageAlt', 'Brand Kit image')} className="w-full h-full object-cover" />
-                      {isSelected ? (
-                        <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
-                          <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
-                            <IconCheck className="w-4 h-4" />
-                          </span>
-                        </div>
-                      ) : null}
-                    </button>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed border-border mt-1 p-6 text-center text-sm text-muted-foreground">
-                {tt('auxLogos.noBrandKitImages', 'This Brand Kit does not have any images yet.')}
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-border px-6 py-3 flex justify-end">
-            <Button type="button" size="sm" onClick={() => setIsBrandKitModalOpen(false)}>
-              {tt('actions.continue', 'Continue')}
-            </Button>
-          </div>
+          </motion.div>
         </DialogContent>
       </Dialog>
     </div>

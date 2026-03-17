@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo, type CSSProperties } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select'
 import { TemplateSelectorModal, Template } from './TemplateSelectorModal'
 import { ContextElement } from '@/app/image/page'
-import { IconLayout, IconClose, IconImage, IconImageAdd, IconTextFont, IconLink, IconAtSign, IconMinus, IconPlus, IconSquareArrowDown, IconImageDownload, IconBug, IconSparkles, IconPaintbrush, IconZoomIn, IconZoomOut, IconMaximize } from '@/components/ui/icons'
+import { IconLayout, IconClose, IconImage, IconImageAdd, IconTextFont, IconLink, IconAtSign, IconMinus, IconPlus, IconSquareArrowDown, IconImageDownload, IconBug, IconSparkles, IconPaintbrush, IconZoomIn, IconZoomOut, IconMaximize, IconAiChat } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DigitalStaticLoader } from './DigitalStaticLoader'
@@ -36,66 +36,10 @@ export interface Generation {
 import { GenerateButton } from './creation-flow/GenerateButton'
 import { TextLayersEditor } from './TextLayersEditor'
 
-function AiPromptIcon({ className, style }: { className?: string; style?: CSSProperties }) {
-    return (
-        <svg
-            viewBox="0 0 120 120"
-            className={className}
-            style={style}
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-        >
-            <rect x="26" y="26" width="68" height="68" rx="12" fill="currentColor" />
-            <text
-                x="60"
-                y="68"
-                textAnchor="middle"
-                fontSize="22"
-                fontFamily="monospace"
-                fill="white"
-            >
-                AI
-            </text>
-            <g stroke="currentColor" strokeWidth="4" strokeLinecap="round">
-                <line x1="8" y1="34" x2="26" y2="34" />
-                <line x1="8" y1="52" x2="26" y2="52" />
-                <line x1="8" y1="70" x2="26" y2="70" />
-                <line x1="8" y1="88" x2="26" y2="88" />
-                <line x1="94" y1="34" x2="112" y2="34" />
-                <line x1="94" y1="52" x2="112" y2="52" />
-                <line x1="94" y1="70" x2="112" y2="70" />
-                <line x1="94" y1="88" x2="112" y2="88" />
-                <line x1="34" y1="8" x2="34" y2="26" />
-                <line x1="52" y1="8" x2="52" y2="26" />
-                <line x1="70" y1="8" x2="70" y2="26" />
-                <line x1="88" y1="8" x2="88" y2="26" />
-                <line x1="34" y1="94" x2="34" y2="112" />
-                <line x1="52" y1="94" x2="52" y2="112" />
-                <line x1="70" y1="94" x2="70" y2="112" />
-                <line x1="88" y1="94" x2="88" y2="112" />
-            </g>
-            <g fill="currentColor">
-                <circle cx="8" cy="34" r="4.5" />
-                <circle cx="8" cy="52" r="4.5" />
-                <circle cx="8" cy="70" r="4.5" />
-                <circle cx="8" cy="88" r="4.5" />
-                <circle cx="112" cy="34" r="4.5" />
-                <circle cx="112" cy="52" r="4.5" />
-                <circle cx="112" cy="70" r="4.5" />
-                <circle cx="112" cy="88" r="4.5" />
-                <circle cx="34" cy="8" r="4.5" />
-                <circle cx="52" cy="8" r="4.5" />
-                <circle cx="70" cy="8" r="4.5" />
-                <circle cx="88" cy="8" r="4.5" />
-                <circle cx="34" cy="112" r="4.5" />
-                <circle cx="52" cy="112" r="4.5" />
-                <circle cx="70" cy="112" r="4.5" />
-                <circle cx="88" cy="112" r="4.5" />
-            </g>
-        </svg>
-    )
-}
+const CANVAS_FLOATING_TOOLBAR_CLASS = 'absolute right-9 top-4 hidden pointer-events-auto flex-col items-center gap-2 rounded-[1.45rem] border border-border/65 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),hsl(var(--surface-alt))/0.96)] px-2.5 py-2.5 text-muted-foreground shadow-[0_22px_54px_-34px_rgba(15,23,42,0.34)] backdrop-blur-xl md:flex'
+const CANVAS_TOOL_BUTTON_CLASS = 'h-10 w-10 rounded-xl border border-transparent bg-transparent text-muted-foreground transition-all duration-200 hover:border-border/70 hover:bg-background/90 hover:text-foreground hover:shadow-[0_14px_30px_-24px_rgba(15,23,42,0.32)] active:scale-[0.97]'
+const CANVAS_OVERLAY_BUTTON_CLASS = 'h-10 w-10 rounded-xl border border-border/70 bg-background/88 text-foreground/82 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.32)] backdrop-blur-xl transition-all duration-200 hover:border-border/90 hover:bg-background hover:text-foreground hover:shadow-[0_16px_34px_-24px_rgba(15,23,42,0.36)] active:scale-[0.97]'
+const CANVAS_REMOVE_BUTTON_CLASS = 'absolute -top-2 -right-2 rounded-full border border-white/20 bg-black/55 text-white shadow-lg transition-opacity z-40 hover:bg-black/70 hover:text-white'
 
 function renderLayoutIcon(svgIcon: string) {
     const trimmed = (svgIcon || '').trim()
@@ -813,33 +757,33 @@ export function CanvasPanel({
 
                 {/* Right: Actions - Hidden on mobile (actions now with RESULTADO section) */}
                 {/* Zoom Controls & Actions */}
-                <div className="absolute right-9 top-4 hidden pointer-events-auto flex-col items-center gap-2 rounded-[1.4rem] border border-border/60 bg-[linear-gradient(180deg,white,hsl(var(--surface-alt))/0.92)] px-2 py-2 text-muted-foreground shadow-[0_16px_40px_-28px_rgba(15,23,42,0.4)] backdrop-blur-sm transition-colors duration-200 hover:text-foreground md:flex">
+                <div className={CANVAS_FLOATING_TOOLBAR_CLASS}>
                     {/* Zoom Controls */}
-                    <div className="flex flex-col items-center border-b border-border/60 pb-2 gap-1">
-                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomOut} title={tt('common:preview.zoomOut', 'Zoom out')}>
+                    <div className="flex flex-col items-center gap-1.5 rounded-[1.1rem] border border-border/55 bg-background/72 px-1.5 py-1.5">
+                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleZoomOut} title={tt('common:preview.zoomOut', 'Zoom out')}>
                             <IconZoomOut className="w-4 h-4" />
                         </Button>
                         <button
                             type="button"
-                            className="text-xs font-mono w-10 text-center cursor-pointer"
+                            className="min-w-[52px] rounded-xl px-2 py-1 text-[0.82rem] font-semibold text-foreground/82 transition-colors hover:bg-background/88"
                             onClick={handleResetZoom}
                             title={tt('common:preview.resetZoom', 'Reset zoom')}
                             aria-label={tt('common:preview.resetZoomAria', 'Reset zoom')}
                         >
                             {effectiveZoom}%
                         </button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10" onClick={handleZoomIn} title={tt('common:preview.zoomIn', 'Zoom in')}>
+                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleZoomIn} title={tt('common:preview.zoomIn', 'Zoom in')}>
                             <IconZoomIn className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 ml-1" onClick={handleMaximizeZoom} title={tt('common:preview.fitHeight', 'Fit to height')}>
+                        <Button variant="ghost" size="icon" className={CANVAS_TOOL_BUTTON_CLASS} onClick={handleMaximizeZoom} title={tt('common:preview.fitHeight', 'Fit to height')}>
                             <IconMaximize className="w-4 h-4" />
                         </Button>
                     </div>
 
-                    <Button variant="ghost" size="icon" onClick={handleDownload} className="h-10 w-10" title={tt('common:preview.downloadImage', 'Download image')}>
+                    <Button variant="ghost" size="icon" onClick={handleDownload} className={CANVAS_TOOL_BUTTON_CLASS} title={tt('common:preview.downloadImage', 'Download image')}>
                         <IconImageDownload className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={handleDownloadBundle} className="h-10 w-10" title={tt('common:preview.downloadBundle', 'Download ZIP')}>
+                    <Button variant="ghost" size="icon" onClick={handleDownloadBundle} className={CANVAS_TOOL_BUTTON_CLASS} title={tt('common:preview.downloadBundle', 'Download ZIP')}>
                         <IconSquareArrowDown className="w-4 h-4" />
                     </Button>
                 </div>
@@ -975,7 +919,7 @@ export function CanvasPanel({
                                             variant="ghost"
                                             size="icon"
                                             onClick={onOpenPromptDebug}
-                                            className="h-9 w-9 rounded-full border border-border/70 bg-background/86 shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:scale-[1.03] hover:shadow-md active:scale-[0.98]"
+                                            className={CANVAS_OVERLAY_BUTTON_CLASS}
                                             title={tt('common:preview.viewPrompt', 'View prompt')}
                                         >
                                             <IconBug className="w-4 h-4" />
@@ -989,7 +933,7 @@ export function CanvasPanel({
                                             variant="ghost"
                                             size="icon"
                                             onClick={handleDownload}
-                                            className="h-9 w-9 rounded-full border border-border/70 bg-background/86 shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
+                                            className={CANVAS_OVERLAY_BUTTON_CLASS}
                                             title={tt('common:preview.downloadImage', 'Download image')}
                                         >
                                             <IconImageDownload className="w-4 h-4" />
@@ -999,7 +943,7 @@ export function CanvasPanel({
                                             variant="ghost"
                                             size="icon"
                                             onClick={handleDownloadBundle}
-                                            className="h-9 w-9 rounded-full border border-border/70 bg-background/86 shadow-sm backdrop-blur transition-transform transition-shadow duration-200 hover:shadow-md active:scale-[0.97]"
+                                            className={CANVAS_OVERLAY_BUTTON_CLASS}
                                             title={tt('common:preview.downloadBundle', 'Download ZIP')}
                                         >
                                             <IconSquareArrowDown className="w-4 h-4" />
@@ -1128,7 +1072,7 @@ export function CanvasPanel({
                                                                 size="icon"
                                                                 onClick={() => onRemoveReferenceImage(item.url)}
                                                                 className={cn(
-                                                                    'absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground',
+                                                                    CANVAS_REMOVE_BUTTON_CLASS,
                                                                     isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                                                                 )}
                                                                 style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
@@ -1169,7 +1113,7 @@ export function CanvasPanel({
                                                 <div className="absolute top-2 right-4 z-40 flex flex-col items-end gap-2">
                                                     {hasAiPromptReference && (
                                                         <div className="relative group">
-                                                            <AiPromptIcon
+                                                            <IconAiChat
                                                                 className="text-primary drop-shadow-[0_10px_18px_rgba(0,0,0,0.26)]"
                                                                 style={{ width: 'var(--canvas-ai-size)', height: 'var(--canvas-ai-size)' }}
                                                             />
@@ -1180,7 +1124,7 @@ export function CanvasPanel({
                                                                     size="icon"
                                                                     onClick={onDisableAiPromptReference}
                                                                     className={cn(
-                                                                        'absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground',
+                                                                        CANVAS_REMOVE_BUTTON_CLASS,
                                                                         isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                                                                     )}
                                                                     style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
@@ -1207,7 +1151,7 @@ export function CanvasPanel({
                                                                     size="icon"
                                                                     onClick={() => onRemoveReferenceImage(item.url)}
                                                                     className={cn(
-                                                                        'absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-40 hover:bg-destructive hover:text-destructive-foreground',
+                                                                        CANVAS_REMOVE_BUTTON_CLASS,
                                                                         isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                                                                     )}
                                                                     style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
@@ -1243,7 +1187,7 @@ export function CanvasPanel({
                                                 size="icon"
                                                 onClick={() => onSelectLogo(null)}
                                                 className={cn(
-                                                    'absolute -top-2 -right-2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-30 hover:bg-destructive hover:text-destructive-foreground',
+                                                    CANVAS_REMOVE_BUTTON_CLASS.replace('z-40', 'z-30'),
                                                     isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                                                 )}
                                                 style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}

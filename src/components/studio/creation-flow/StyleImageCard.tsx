@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import type { ReferenceImageRole } from '@/lib/creation-flow-types'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+
+const STYLE_ACTION_BUTTON_CLASS = 'min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal'
+const STYLE_MODAL_CLASS = 'h-[min(88vh,860px)] w-[min(92vw,1120px)] !max-w-[min(92vw,1120px)] overflow-hidden rounded-[1.9rem] border border-border/70 bg-background/98 p-0 shadow-[0_38px_100px_-56px_rgba(15,23,42,0.42)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.985] data-[state=closed]:zoom-out-[0.985] data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:slide-out-to-bottom-2 duration-200 flex flex-col'
 
 interface StyleImageCardProps {
     uploadedImages: string[]
@@ -128,6 +132,16 @@ export function StyleImageCard({
         }
     }, [uploadedImages, selectedBrandKitImageIds, onRemoveUploadedImage, onToggleBrandKitImage])
 
+    const clearCurrentStyle = useCallback(() => {
+        if (currentStyleId) {
+            removeStyleId(currentStyleId)
+            return
+        }
+        if (selectedStylePresetId) {
+            onSelectStylePreset?.(null)
+        }
+    }, [currentStyleId, onSelectStylePreset, removeStyleId, selectedStylePresetId])
+
     const applyAsSingleStyle = useCallback((id: string, source: 'upload' | 'brandkit') => {
         if (!onReferenceRoleChange) return
         onSelectStylePreset?.(null)
@@ -180,59 +194,44 @@ export function StyleImageCard({
     return (
         <div className="space-y-3">
             <div className="flex items-center gap-2">
-                <div className="w-full flex items-center gap-2">
-                    <div className="grid grid-cols-3 gap-1.5 flex-1 min-w-0">
+                <div className="w-full">
+                    <div className="grid grid-cols-2 gap-2 min-w-0">
                         <Button
                             type="button"
-                            size="sm"
                             variant="outline"
-                            className="h-8 px-2.5 text-[0.82rem] gap-1.5 min-w-0"
+                            className={cn(STYLE_ACTION_BUTTON_CLASS, 'gap-2 min-w-0')}
                             onClick={() => inputRef.current?.click()}
                         >
-                            <IconUpload className="w-3 h-3 shrink-0" />
+                            <IconUpload className="h-3.5 w-3.5 shrink-0" />
                             <span className="truncate">{tt('styleImage.upload', 'Upload style')}</span>
                         </Button>
                         <Button
                             type="button"
-                            size="sm"
                             variant="outline"
-                            className="h-8 px-2.5 text-[0.82rem] gap-1.5 min-w-0"
+                            className={cn(STYLE_ACTION_BUTTON_CLASS, 'gap-2 min-w-0')}
                             onClick={() => setIsBrandKitModalOpen(true)}
                         >
-                            <IconPalette className="w-3 h-3 shrink-0" />
+                            <IconPalette className="h-3.5 w-3.5 shrink-0" />
                             <span className="truncate">{tt('styleImage.fromBrandKit', 'From Brand Kit')}</span>
                         </Button>
                         <Button
                             type="button"
-                            size="sm"
                             variant="outline"
-                            className="h-8 px-2.5 text-[0.82rem] gap-1.5 min-w-0"
+                            className={cn(STYLE_ACTION_BUTTON_CLASS, 'min-w-0')}
                             onClick={() => setIsPresetModalOpen(true)}
                         >
                             <span className="truncate">{tt('styleImage.presetButton', 'Preset style')}</span>
                         </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className={cn(STYLE_ACTION_BUTTON_CLASS, 'min-w-0', !currentStyleId && !selectedStylePresetId && 'opacity-45')}
+                            onClick={clearCurrentStyle}
+                            disabled={!currentStyleId && !selectedStylePresetId}
+                        >
+                            <span className="truncate">{tt('styleImage.clear', 'Clear')}</span>
+                        </Button>
                     </div>
-
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        className={cn(
-                            'h-8 px-3 text-[0.82rem] shrink-0',
-                            !currentStyleId && !selectedStylePresetId && 'invisible pointer-events-none'
-                        )}
-                        onClick={() => {
-                            if (currentStyleId) {
-                                removeStyleId(currentStyleId)
-                                return
-                            }
-                            if (selectedStylePresetId) {
-                                onSelectStylePreset?.(null)
-                            }
-                        }}
-                    >
-                        {tt('styleImage.clear', 'Clear')}
-                    </Button>
                 </div>
             </div>
 
@@ -271,16 +270,17 @@ export function StyleImageCard({
                         </div>
                     </div>
 
-                    {visualStylePreview.removable ? (
-                        <button
-                            type="button"
-                            onClick={() => removeStyleId(visualStylePreview.id)}
-                            className="absolute top-2 right-2 w-5 h-5 rounded-full bg-black/55 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                            aria-label={tt('styleImage.removeAria', 'Remove style image')}
-                        >
-                            <IconClose className="w-3 h-3" />
-                        </button>
-                    ) : null}
+                    <button
+                        type="button"
+                        onClick={clearCurrentStyle}
+                        className={cn(
+                            'absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-black/70',
+                            !visualStylePreview.removable && !selectedStylePresetId && 'pointer-events-none'
+                        )}
+                        aria-label={tt('styleImage.removeAria', 'Remove style image')}
+                    >
+                        <IconClose className="h-3.5 w-3.5" />
+                    </button>
                 </div>
             ) : (
                 <div
@@ -318,153 +318,167 @@ export function StyleImageCard({
             )}
 
             <Dialog open={isBrandKitModalOpen} onOpenChange={setIsBrandKitModalOpen}>
-                <DialogContent className="!w-[64vw] !max-w-[64vw] sm:!max-w-[64vw] h-[min(88vh,860px)] p-0 overflow-hidden flex flex-col">
-                    <DialogHeader className="px-6 pt-6 pb-3">
-                        <DialogTitle>{tt('styleImage.selectFromBrandKitTitle', 'Select style from Brand Kit')}</DialogTitle>
-                        <DialogDescription>
-                            {tt('styleImage.selectFromBrandKitDescription', 'You can only choose one style image. If you select another one, it replaces the current one.')}
-                        </DialogDescription>
-                    </DialogHeader>
+                <DialogContent className={STYLE_MODAL_CLASS}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 18, scale: 0.972 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                        className="flex min-h-0 flex-1 flex-col"
+                    >
+                        <DialogHeader className="px-7 pb-2 pt-7">
+                            <DialogTitle className="text-[clamp(1.16rem,1.08rem+0.18vw,1.28rem)] font-semibold tracking-[-0.01em]">
+                                {tt('styleImage.selectFromBrandKitTitle', 'Select style from Brand Kit')}
+                            </DialogTitle>
+                            <DialogDescription className="text-[1rem] leading-relaxed text-muted-foreground">
+                                {tt('styleImage.selectFromBrandKitDescription', 'You can only choose one style image. If you select another one, it replaces the current one.')}
+                            </DialogDescription>
+                        </DialogHeader>
 
-                    <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
-                        {brandKitImages.length > 0 ? (
-                            <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(132px,1fr))] gap-3">
-                                {brandKitImages.map((image) => {
-                                    const isSelected = currentStyleId === image.id
-                                    return (
-                                        <button
-                                            key={image.id}
-                                            type="button"
-                                            onClick={() => {
-                                                applyAsSingleStyle(image.id, 'brandkit')
-                                                setIsBrandKitModalOpen(false)
-                                            }}
-                                            className={cn(
-                                                'relative w-full rounded-xl overflow-hidden border aspect-square transition-all',
-                                                isSelected
-                                                    ? 'border-primary ring-2 ring-primary/20'
-                                                    : 'border-border hover:border-primary/40'
-                                            )}
-                                        >
-                                            <img src={image.url} alt={image.name || tt('styleImage.brandKitImageAlt', 'Brand Kit image')} className="w-full h-full object-cover" />
-                                            {isSelected && (
-                                                <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
-                                                    <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
-                                                        <IconCheck className="w-4 h-4" />
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        ) : (
-                            <div className="rounded-xl border border-dashed border-border mt-1 p-6 text-center text-sm text-muted-foreground">
-                                {tt('styleImage.noBrandKitImages', 'This Brand Kit does not have any images yet.')}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="border-t border-border px-6 py-3 flex justify-end">
-                        <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => setIsBrandKitModalOpen(false)}
-                        >
-                            {tt('actions.continue', 'Continue')}
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={isPresetModalOpen} onOpenChange={setIsPresetModalOpen}>
-                <DialogContent className="h-[min(84vh,920px)] w-[min(94vw,1240px)] !max-w-[min(94vw,1240px)] p-0 overflow-hidden flex flex-col">
-                    <DialogHeader className="px-6 pt-6 pb-3">
-                        <DialogTitle>{tt('styleImage.selectPresetTitle', 'Select preset style')}</DialogTitle>
-                        <DialogDescription>
-                            {tt('styleImage.selectPresetDescription', 'This style uses a saved analysis and is injected directly into the prompt.')}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
-                        {stylePresets.length > 0 ? (
-                            <div className="space-y-4">
-                                <div className="text-xs text-muted-foreground">
-                                    {tt('styleImage.showingPresets', 'Showing {{count}} styles', { count: stylePresets.length })}
-                                </div>
-                                <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(118px,1fr))] gap-3 sm:[grid-template-columns:repeat(auto-fill,minmax(124px,1fr))]">
-                                    {stylePresets.map((preset) => {
-                                        const isSelected = selectedStylePresetId === preset._id
+                        <div className="flex-1 min-h-0 overflow-y-auto px-7 py-6">
+                            {brandKitImages.length > 0 ? (
+                                <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(120px,1fr))] gap-4 sm:[grid-template-columns:repeat(auto-fill,minmax(132px,1fr))]">
+                                    {brandKitImages.map((image) => {
+                                        const isSelected = currentStyleId === image.id
                                         return (
                                             <button
-                                                key={preset._id}
+                                                key={image.id}
                                                 type="button"
                                                 onClick={() => {
-                                                    onSelectStylePreset?.({
-                                                        id: preset._id,
-                                                        name: preset.name,
-                                                    })
-                                                    setIsPresetModalOpen(false)
+                                                    applyAsSingleStyle(image.id, 'brandkit')
+                                                    setIsBrandKitModalOpen(false)
                                                 }}
                                                 className={cn(
-                                                    'relative w-full rounded-xl overflow-hidden border transition-all text-left group',
+                                                    'relative w-full rounded-[1.15rem] overflow-hidden border aspect-square transition-all',
                                                     isSelected
-                                                        ? 'border-primary ring-2 ring-primary/20'
-                                                        : 'border-border hover:border-primary/40'
+                                                        ? 'border-primary/30 bg-primary/[0.07] shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]'
+                                                        : 'border-border/65 bg-background hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-30px_rgba(15,23,42,0.24)]'
                                                 )}
                                             >
-                                                <div className="aspect-[2/3]">
-                                                    {canRenderImageUrl(preset.image_url) ? (
-                                                        <img
-                                                            src={preset.image_url}
-                                                            alt={preset.name || tt('styleImage.presetTitle', 'Preset style')}
-                                                            className="w-full h-full object-cover"
-                                                            onError={() => markImageAsFailed(preset.image_url)}
-                                                        />
-                                                ) : (
-                                                        <div className="w-full h-full bg-muted/50 flex items-center justify-center text-[11px] text-muted-foreground font-medium">
-                                                            {tt('styleImage.noImage', 'No image')}
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                <img src={image.url} alt={image.name || tt('styleImage.brandKitImageAlt', 'Brand Kit image')} className="w-full h-full object-cover" />
                                                 {isSelected && (
-                                                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center">
-                                                        <IconCheck className="w-4 h-4" />
-                                                    </div>
+                                                    <IconCheck className="absolute right-2.5 top-2.5 h-7 w-7 text-white drop-shadow-[0_3px_10px_rgba(15,23,42,0.55)]" />
                                                 )}
                                             </button>
                                         )
                                     })}
                                 </div>
-                                {stylePresetsStatus !== 'Exhausted' ? (
-                                    <div className="flex justify-center">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={onLoadMoreStylePresets}
-                                            disabled={stylePresetsStatus === 'LoadingFirstPage' || stylePresetsStatus === 'LoadingMore'}
-                                        >
-                                            {stylePresetsStatus === 'LoadingFirstPage' || stylePresetsStatus === 'LoadingMore'
-                                                ? <Loader2 className="w-4 h-4 mr-2" />
-                                                : null}
-                                            {tt('styleImage.loadMore', 'Load more styles')}
-                                        </Button>
-                                    </div>
-                                ) : null}
-                            </div>
-                        ) : (
-                            <div className="rounded-xl border border-dashed border-border mt-1 p-6 text-center text-sm text-muted-foreground">
-                                {tt('styleImage.noActivePresets', 'There are no active preset styles.')}
-                            </div>
-                        )}
-                    </div>
+                            ) : (
+                                <div className="mt-1 rounded-[1.15rem] border border-dashed border-border/70 bg-background/72 p-8 text-center text-[0.94rem] text-muted-foreground">
+                                    {tt('styleImage.noBrandKitImages', 'This Brand Kit does not have any images yet.')}
+                                </div>
+                            )}
+                        </div>
 
-                    <div className="border-t border-border px-6 py-3 flex justify-end">
-                        <Button type="button" size="sm" onClick={() => setIsPresetModalOpen(false)}>
-                            {tt('actions.continue', 'Continue')}
-                        </Button>
-                    </div>
+                        <div className="flex justify-end px-7 pb-6 pt-2">
+                            <Button
+                                type="button"
+                                size="sm"
+                                className={STYLE_ACTION_BUTTON_CLASS}
+                                onClick={() => setIsBrandKitModalOpen(false)}
+                            >
+                                {tt('actions.continue', 'Continue')}
+                            </Button>
+                        </div>
+                    </motion.div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isPresetModalOpen} onOpenChange={setIsPresetModalOpen}>
+                <DialogContent className={STYLE_MODAL_CLASS}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 18, scale: 0.972 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                        className="flex min-h-0 flex-1 flex-col"
+                    >
+                        <DialogHeader className="px-7 pb-2 pt-7">
+                            <DialogTitle className="text-[clamp(1.16rem,1.08rem+0.18vw,1.28rem)] font-semibold tracking-[-0.01em]">
+                                {tt('styleImage.selectPresetTitle', 'Select preset style')}
+                            </DialogTitle>
+                            <DialogDescription className="text-[1rem] leading-relaxed text-muted-foreground">
+                                {tt('styleImage.selectPresetDescription', 'This style uses a saved analysis and is injected directly into the prompt.')}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="flex-1 min-h-0 overflow-y-auto px-7 py-6">
+                            {stylePresets.length > 0 ? (
+                                <div className="space-y-4">
+                                    <div className="text-[0.92rem] text-muted-foreground">
+                                        {tt('styleImage.showingPresets', 'Showing {{count}} styles', { count: stylePresets.length })}
+                                    </div>
+                                    <div className="grid content-start [grid-template-columns:repeat(auto-fill,minmax(118px,1fr))] gap-4 sm:[grid-template-columns:repeat(auto-fill,minmax(132px,1fr))]">
+                                        {stylePresets.map((preset) => {
+                                            const isSelected = selectedStylePresetId === preset._id
+                                            return (
+                                                <button
+                                                    key={preset._id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        onSelectStylePreset?.({
+                                                            id: preset._id,
+                                                            name: preset.name,
+                                                        })
+                                                        setIsPresetModalOpen(false)
+                                                    }}
+                                                    className={cn(
+                                                        'relative w-full rounded-[1.15rem] overflow-hidden border transition-all text-left group',
+                                                        isSelected
+                                                            ? 'border-primary/30 bg-primary/[0.07] shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]'
+                                                            : 'border-border/65 bg-background hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-30px_rgba(15,23,42,0.24)]'
+                                                    )}
+                                                >
+                                                    <div className="aspect-[2/3]">
+                                                        {canRenderImageUrl(preset.image_url) ? (
+                                                            <img
+                                                                src={preset.image_url}
+                                                                alt={preset.name || tt('styleImage.presetTitle', 'Preset style')}
+                                                                className="w-full h-full object-cover"
+                                                                onError={() => markImageAsFailed(preset.image_url)}
+                                                            />
+                                                        ) : (
+                                                            <div className="flex h-full w-full items-center justify-center bg-muted/50 text-[0.84rem] font-medium text-muted-foreground">
+                                                                {tt('styleImage.noImage', 'No image')}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {isSelected && (
+                                                        <IconCheck className="absolute right-2.5 top-2.5 h-7 w-7 text-white drop-shadow-[0_3px_10px_rgba(15,23,42,0.55)]" />
+                                                    )}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                    {stylePresetsStatus !== 'Exhausted' ? (
+                                        <div className="flex justify-center">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className={STYLE_ACTION_BUTTON_CLASS}
+                                                onClick={onLoadMoreStylePresets}
+                                                disabled={stylePresetsStatus === 'LoadingFirstPage' || stylePresetsStatus === 'LoadingMore'}
+                                            >
+                                                {stylePresetsStatus === 'LoadingFirstPage' || stylePresetsStatus === 'LoadingMore'
+                                                    ? <Loader2 className="w-4 h-4 mr-2" />
+                                                    : null}
+                                                {tt('styleImage.loadMore', 'Load more styles')}
+                                            </Button>
+                                        </div>
+                                    ) : null}
+                                </div>
+                            ) : (
+                                <div className="mt-1 rounded-[1.15rem] border border-dashed border-border/70 bg-background/72 p-8 text-center text-[0.94rem] text-muted-foreground">
+                                    {tt('styleImage.noActivePresets', 'There are no active preset styles.')}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end px-7 pb-6 pt-2">
+                            <Button type="button" size="sm" className={STYLE_ACTION_BUTTON_CLASS} onClick={() => setIsPresetModalOpen(false)}>
+                                {tt('actions.continue', 'Continue')}
+                            </Button>
+                        </div>
+                    </motion.div>
                 </DialogContent>
             </Dialog>
         </div>

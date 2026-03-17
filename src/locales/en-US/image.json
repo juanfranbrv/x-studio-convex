@@ -138,6 +138,7 @@
     "logo": "Logo",
     "colors": "Colors",
     "reload": "Reload",
+    "reloading": "Reloading...",
     "colorsReloadedTitle": "Colors reloaded",
     "colorsReloadedDescription": "Brand Kit colors were imported again.",
     "layoutVotesImportedTitle": "Ratings migrated to Convex",

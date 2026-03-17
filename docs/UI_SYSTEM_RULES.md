@@ -165,6 +165,17 @@ Aplicacion actual:
 
 - `Sin cambios` o `Hay cambios por guardar` se presentan mejor como texto de estado que como capsula decorativa
 
+## Agrupacion de secciones dentro de una tarjeta
+
+- evitar lineas horizontales como solucion por defecto para separar bloques funcionales dentro del panel creativo
+- evitar tambien el patron de `tarjeta dentro de tarjeta` como respuesta rapida a la jerarquia
+- dentro de una tarjeta principal, priorizar espacio, tipografia y ritmo vertical antes que crear sub-superficies con borde y fondo
+- usar sub-superficies solo cuando exista una interaccion realmente distinta o un bloque que deba sentirse aislado de forma semantica
+
+Aplicacion actual:
+
+- `Kit de marca` debe mantenerse como una sola superficie con secciones limpias, no como una pila de subcards
+
 ## Botones de cierre y borrado con `x`
 
 - las `x` de cerrar, quitar o borrar elementos pequenos deben pertenecer a una sola familia visual en toda la app

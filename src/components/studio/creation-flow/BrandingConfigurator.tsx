@@ -459,12 +459,14 @@ export function BrandingConfigurator({
         }
     }, [logos, onSelectLogo, primaryLogoId, selectedLogoId])
 
+    const logoOptionClassName =
+        "group relative flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-[1rem] border bg-background/80 p-2 shadow-[0_16px_34px_-30px_rgba(15,23,42,0.28)] transition-all duration-200"
     return (
         <div className="space-y-4">
             {/* Logo Selector */}
             {showLogo && logos.length > 0 && (
-                <div className="space-y-2">
-                    <div className="flex gap-2">
+                <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2.5">
                         {/* Logo options */}
                         {logos.map((logo, idx) => {
                             const logoId = `logo-${idx}`
@@ -476,23 +478,17 @@ export function BrandingConfigurator({
                                     key={logoId}
                                     onClick={() => onSelectLogo(logoId)}
                                     className={cn(
-                                        "relative w-12 h-12 rounded-lg border-2 overflow-hidden transition-all",
-                                        "bg-white$1",
+                                        logoOptionClassName,
                                         isSelected
-                                            ? "border-primary ring-2 ring-primary/30"
-                                            : "border-border hover:border-primary/50"
+                                            ? "border-primary/36 bg-primary/[0.07] shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]"
+                                            : "border-border/65 hover:border-border/90 hover:bg-background"
                                     )}
                                 >
                                     <img
                                         src={logoUrl}
                                         alt={`Logo ${idx + 1}`}
-                                        className="w-full h-full object-contain p-1"
+                                        className="h-full w-full object-contain"
                                     />
-                                    {isSelected && (
-                                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                            <IconCheck className="w-4 h-4 text-primary" />
-                                        </div>
-                                    )}
                                 </button>
                             )
                         })}
@@ -501,14 +497,16 @@ export function BrandingConfigurator({
                         <button
                             onClick={() => onSelectLogo(null)}
                             className={cn(
-                                "w-12 h-12 rounded-lg border-2 flex items-center justify-center transition-all",
-                                "text-[10px] text-muted-foreground leading-none px-1 text-center",
+                                logoOptionClassName,
+                                "text-[0.78rem] font-medium text-muted-foreground leading-tight",
                                 selectedLogoId === null
-                                    ? "border-primary bg-primary/10"
-                                    : "border-border hover:border-primary/50 bg-muted/30"
+                                    ? "border-primary/36 bg-primary/[0.07] text-foreground shadow-[0_18px_38px_-28px_rgba(120,142,84,0.42)]"
+                                    : "border-border/65 hover:border-border/90 hover:bg-background"
                             )}
                         >
-                            Sin Logo
+                            <span className="max-w-[46px] text-center">
+                                {t('brandingConfigurator.noLogo', { defaultValue: 'Sin logo' })}
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -517,7 +515,7 @@ export function BrandingConfigurator({
             {/* Brand Colors */}
             {showColors && (
                 <div className="space-y-3">
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-5 gap-3">
                         {colors.slice(0, 10).map((colorObj, idx) => {
                             const color = extractHex(colorObj)
                             if (!color) return null
@@ -539,8 +537,10 @@ export function BrandingConfigurator({
                                         onToggleBrandColor(color)
                                     }}
                                     className={cn(
-                                        "relative aspect-square rounded-full border-2 transition-all shadow-sm flex items-center justify-center group/swatch cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
-                                        "border-white/30$1hover:border-primary/50 hover:scale-105"
+                                        "group/swatch relative aspect-square rounded-[1rem] border transition-all shadow-[0_18px_34px_-28px_rgba(15,23,42,0.28)] flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+                                        isSelected
+                                            ? "border-primary/30 ring-1 ring-primary/20"
+                                            : "border-border/65 hover:border-border/90 hover:scale-[1.03]"
                                     )}
                                     style={{
                                         backgroundColor: color,
@@ -570,7 +570,7 @@ export function BrandingConfigurator({
                                                 console.log('[BrandingConfigurator] calling onRemoveBrandColor prop...')
                                                 onRemoveBrandColor(color)
                                             }}
-                                            className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground shadow-lg flex items-center justify-center opacity-0 group-hover/swatch:opacity-100 transition-all hover:scale-110 z-20"
+                                            className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-lg opacity-0 transition-all duration-200 group-hover/swatch:opacity-100 hover:bg-black/70 z-20"
                                             title={`${t('actions.delete', { defaultValue: 'Delete' })} color`}
                                         >
                                             <IconClose className="w-2.5 h-2.5" />

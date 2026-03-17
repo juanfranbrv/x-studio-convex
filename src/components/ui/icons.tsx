@@ -42,6 +42,7 @@ import {
     BotIcon,
     Megaphone02Icon,
     PaintBrush01Icon,
+    PaintBrush02Icon,
     Menu02Icon,
     Search01Icon,
     Delete01Icon,
@@ -136,6 +137,8 @@ import {
     ArrowDownRight01Icon,
     IdeaIcon,
     DashboardSquare03Icon,
+    AtomicPowerIcon,
+    AiChat02Icon,
 } from '@hugeicons/core-free-icons'
 import { ComponentProps } from 'react'
 
@@ -226,6 +229,7 @@ export const IconGrid = createIcon(GridViewIcon)
 export const IconCalendar = createIcon(Calendar03Icon)
 export const IconWand = createIcon(MagicWand01Icon)
 export const IconPaintbrush = createIcon(PaintBrush04Icon)
+export const IconPaintbrush02 = createIcon(PaintBrush02Icon)
 export const IconColorPicker = createIcon(ColorPickerIcon)
 export const IconLayers = createIcon(LayerIcon)
 export const IconLayout = createIcon(Layout01Icon)
@@ -237,6 +241,8 @@ export const IconMouseClick = createIcon(MouseLeftClick01Icon)
 export const IconLightbulb = createIcon(BulbIcon)
 export const IconIdea = createIcon(IdeaIcon)
 export const IconDashboardSquare = createIcon(DashboardSquare03Icon)
+export const IconAtomicPower = createIcon(AtomicPowerIcon)
+export const IconAiChat = createIcon(AiChat02Icon)
 export const IconRoute = createIcon(Route01Icon)
 
 // ─── Media & Social ───

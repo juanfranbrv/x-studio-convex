@@ -1134,7 +1134,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'instagram',
         name: 'Cuadrado',
         aspectRatio: '1:1',
-        description: 'Feed, carruseles, v?deos y anuncios (1080 x 1080 px)',
+        description: 'Feed, carruseles, vídeos y anuncios (1080 x 1080 px)',
         icon: 'Instagram'
     },
     {
@@ -1150,15 +1150,15 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'instagram',
         name: 'Vertical',
         aspectRatio: '4:5',
-        description: 'Feed vertical, v?deos y carruseles (1080 x 1350 px)',
+        description: 'Feed vertical, vídeos y carruseles (1080 x 1350 px)',
         icon: 'Instagram'
     },
     {
         id: 'ig-mobile-portrait',
         platform: 'instagram',
-        name: 'Vertical m?vil',
+        name: 'Vertical móvil',
         aspectRatio: '3:4',
-        description: 'Feed y carruseles, ideal para fotos directas del m?vil (1080 x 1440 px)',
+        description: 'Feed y carruseles, ideal para fotos directas del móvil (1080 x 1440 px)',
         icon: 'Instagram'
     },
     {
@@ -1166,15 +1166,15 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'instagram',
         name: 'Horizontal 1.91',
         aspectRatio: '1.91:1',
-        description: 'Fotograf?as del feed, carruseles y anuncios (1080 x 566 px)',
+        description: 'Fotografías del feed, carruseles y anuncios (1080 x 566 px)',
         icon: 'Instagram'
     },
     {
         id: 'ig-landscape-video',
         platform: 'instagram',
-        name: 'V?deo horizontal',
+        name: 'Vídeo horizontal',
         aspectRatio: '16:9',
-        description: 'V?deos horizontales (1920 x 1080 px o 1080 x 608 px)',
+        description: 'Vídeos horizontales (1920 x 1080 px o 1080 x 608 px)',
         icon: 'Instagram'
     },
     // TikTok
@@ -1183,7 +1183,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'tiktok',
         name: 'Cuadrado',
         aspectRatio: '1:1',
-        description: 'Im?genes (1080 x 1080 px)',
+        description: 'Imágenes (1080 x 1080 px)',
         icon: 'Tiktok'
     },
     {
@@ -1191,7 +1191,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'tiktok',
         name: 'Vertical',
         aspectRatio: '9:16',
-        description: 'Im?genes, v?deos y stories (1080 x 1920 px)',
+        description: 'Imágenes, vídeos y stories (1080 x 1920 px)',
         icon: 'Tiktok'
     },
     {
@@ -1199,7 +1199,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'tiktok',
         name: 'Horizontal',
         aspectRatio: '16:9',
-        description: 'V?deos (1920 x 1080 px)',
+        description: 'Vídeos (1920 x 1080 px)',
         icon: 'Tiktok'
     },
     // Facebook
@@ -1208,7 +1208,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'facebook',
         name: 'Cuadrado',
         aspectRatio: '1:1',
-        description: 'Publicaciones, v?deo y anuncios en feed (1080 x 1080 px)',
+        description: 'Publicaciones, vídeo y anuncios en feed (1080 x 1080 px)',
         icon: 'Facebook'
     },
     {
@@ -1224,7 +1224,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'facebook',
         name: 'Horizontal',
         aspectRatio: '16:9',
-        description: 'Portadas para escritorio y m?vil (m?nimo 400 x 150 px)',
+        description: 'Portadas para escritorio y móvil (mínimo 400 x 150 px)',
         icon: 'Facebook'
     },
     {
@@ -1241,7 +1241,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'x',
         name: 'Cuadrado',
         aspectRatio: '1:1',
-        description: 'Im?genes, v?deos y anuncios (1200 x 1200 px)',
+        description: 'Imágenes, vídeos y anuncios (1200 x 1200 px)',
         icon: 'Twitter'
     },
     {
@@ -1249,7 +1249,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'x',
         name: 'Horizontal',
         aspectRatio: '16:9',
-        description: 'Imagen horizontal, enlace y v?deo (1200 x 675 px)',
+        description: 'Imagen horizontal, enlace y vídeo (1200 x 675 px)',
         icon: 'Twitter'
     },
     {
@@ -1257,7 +1257,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'x',
         name: 'Vertical',
         aspectRatio: '9:16',
-        description: 'V?deo vertical (1080 x 1920 px)',
+        description: 'Vídeo vertical (1080 x 1920 px)',
         icon: 'Twitter'
     },
     {
@@ -1282,7 +1282,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'youtube',
         name: 'Horizontal',
         aspectRatio: '16:9',
-        description: 'Portada, v?deo largo y miniatura (2048 x 1152 / 1920 x 1080 / 1280 x 720 px)',
+        description: 'Portada, vídeo largo y miniatura (2048 x 1152 / 1920 x 1080 / 1280 x 720 px)',
         icon: 'Youtube'
     },
     // LinkedIn
@@ -1291,7 +1291,7 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
         platform: 'linkedin',
         name: 'Cuadrado',
         aspectRatio: '1:1',
-        description: 'Anuncios de una imagen, carrusel y v?deo (1200 x 1200 px)',
+        description: 'Anuncios de una imagen, carrusel y vídeo (1200 x 1200 px)',
         icon: 'Linkedin'
     },
     {
@@ -1313,17 +1313,17 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
     {
         id: 'li-video-landscape',
         platform: 'linkedin',
-        name: 'V?deo horizontal',
+        name: 'Vídeo horizontal',
         aspectRatio: '16:9',
-        description: 'Ratio admitido para anuncios de v?deo horizontales',
+        description: 'Ratio admitido para anuncios de vídeo horizontales',
         icon: 'Linkedin'
     },
     {
         id: 'li-video-vertical',
         platform: 'linkedin',
-        name: 'V?deo vertical',
+        name: 'Vídeo vertical',
         aspectRatio: '9:16',
-        description: 'Ratio admitido para anuncios de v?deo verticales',
+        description: 'Ratio admitido para anuncios de vídeo verticales',
         icon: 'Linkedin'
     }
 ]
@@ -1466,4 +1466,3 @@ export const INITIAL_GENERATION_STATE: GenerationState = {
     hasGeneratedImage: false,
     error: null,
 }
-
