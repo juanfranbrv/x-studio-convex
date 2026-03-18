@@ -1,6 +1,0 @@
-model,spec_id,difficulty,time_s,prompt_tokens,gen_tokens,tok_per_sec,followed_format,quality_notes
-glm-5:cloud,01-simple-edit,easy,24,0,0,0,NO,
-glm-5:cloud,02-refactor,medium,20,0,0,0,NO,
-glm-5:cloud,03-generate-type,medium,9,0,0,0,NO,
-glm-5:cloud,04-test-gen,hard,13,0,0,0,NO,
-glm-5:cloud,05-multi-file,hard,7,0,0,0,NO,

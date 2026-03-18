@@ -148,6 +148,8 @@ Aplicacion actual:
 
 - en historial se prefiere `Nueva sesion`
 - se prefiere `Borrar todas las sesiones` frente a `Borrar historial` por ser mas explicito
+- queda prohibido usar el icono de `sparkles` o estrellitas en botones, CTAs y acciones nuevas del sistema
+- si hace falta un apoyo visual para IA o inspiracion, usar iconos mas sobrios como `Idea`, `Wand` o directamente ningun icono si el copy ya es claro
 
 ## Layout de acciones
 

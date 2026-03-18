@@ -73,7 +73,7 @@
   "ui": {
     "locale": "es-ES",
     "loading": "Cargando Imagen...",
-    "editPlaceholder": "Describe los cambios para editar la imagen...",
+    "editPlaceholder": "Describe el detalle que quieres corregir en esta imagen. Ej.: cambia el fondo, mejora el texto o ajusta el color.",
     "setupPlaceholder": "Configura tu imagen en el panel superior...",
     "applyCorrection": "Realizar corrección",
     "retrySameSettings": "Generar otra con mismos ajustes",

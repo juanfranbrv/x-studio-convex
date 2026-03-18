@@ -124,6 +124,15 @@
   --background-image-brand-gradient: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
 }
 
+@keyframes studio-indeterminate {
+  0% {
+    transform: translateX(-130%);
+  }
+  100% {
+    transform: translateX(280%);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

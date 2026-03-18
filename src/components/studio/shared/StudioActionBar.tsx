@@ -3,7 +3,7 @@
 import { Loader2 } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { IconArrowUp, IconRotate, IconSparkles } from '@/components/ui/icons'
+import { IconArrowUp02, IconRotate } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 type StudioEditPromptBarProps = {
@@ -75,7 +75,7 @@ export function StudioEditPromptBar({
                     aria-label={applyLabel}
                     title={applyLabel}
                 >
-                    <IconArrowUp className="h-3.5 w-3.5" />
+                    <IconArrowUp02 className="h-3.5 w-3.5" />
                 </Button>
             </div>
         </div>
@@ -119,7 +119,6 @@ export function StudioGenerateBar({
                         </>
                     ) : (
                         <>
-                            <IconSparkles className="h-5 w-5 motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-110 group-hover:rotate-6" />
                             <span className="truncate">{generateLabel}</span>
                         </>
                     )}

@@ -84,7 +84,7 @@
     "generatingProgress": "Generando {{current}}/{{total}}...",
     "generateCarousel": "Generar carrusel",
     "retryCarousel": "Generar otro carrusel con los ajustes actuales",
-    "editSlidePlaceholder": "Describe los cambios para editar la diapositiva...",
+    "editSlidePlaceholder": "Describe el detalle que quieres corregir en esta diapositiva. Ej.: cambia el fondo, mejora el texto o ajusta el color.",
     "setupCarouselPlaceholder": "Configura tu carrusel en el panel lateral...",
     "applyCorrection": "Realizar corrección",
     "correcting": "Corrigiendo...",

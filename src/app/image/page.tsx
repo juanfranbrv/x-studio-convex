@@ -33,6 +33,7 @@ import { FeedbackButton } from '@/components/studio/FeedbackButton'
 import { MobileWorkPanelDrawer } from '@/components/studio/shared/MobileWorkPanelDrawer'
 import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialog'
 import { StudioEditPromptBar, StudioGenerateBar } from '@/components/studio/shared/StudioActionBar'
+import { IndeterminateProgressBar } from '@/components/studio/shared/IndeterminateProgressBar'
 import {
     STUDIO_DECISION_BUTTON_CLASS,
     STUDIO_DECISION_DIALOG_CLASS,
@@ -2299,7 +2300,13 @@ export default function ImagePage() {
                         onCaptionChange={creationFlow.setCaption}
                         onHeadlineChange={creationFlow.setHeadline}
                         onCtaChange={creationFlow.setCta}
-                        onCtaUrlChange={creationFlow.setCtaUrl}
+                        onCtaUrlChange={(value) => {
+                            if (value.trim()) {
+                                creationFlow.setCtaUrl(value)
+                                return
+                            }
+                            creationFlow.setCtaUrlEnabled(false)
+                        }}
                         onCustomTextChange={creationFlow.setCustomText}
                         onAddTextAsset={(asset) => creationFlow.addTextAsset(asset)}
                         onRemoveTextAsset={creationFlow.removeTextAsset}
@@ -2531,8 +2538,23 @@ export default function ImagePage() {
                 onEditablePromptChange={setEditableDebugPrompt}
             />
 
-            <Dialog open={unsavedNavModalOpen} onOpenChange={(open) => { if (!open) handleUnsavedNavigateCancel() }}>
-                <DialogContent className={IMAGE_DECISION_DIALOG_CLASS}>
+            <Dialog
+                open={unsavedNavModalOpen}
+                onOpenChange={(open) => { if (!open && !isResolvingUnsavedNavigation) handleUnsavedNavigateCancel() }}
+            >
+                <DialogContent
+                    className={IMAGE_DECISION_DIALOG_CLASS}
+                    showCloseButton={!isResolvingUnsavedNavigation}
+                    onEscapeKeyDown={(event) => {
+                        if (isResolvingUnsavedNavigation) event.preventDefault()
+                    }}
+                    onPointerDownOutside={(event) => {
+                        if (isResolvingUnsavedNavigation) event.preventDefault()
+                    }}
+                    onInteractOutside={(event) => {
+                        if (isResolvingUnsavedNavigation) event.preventDefault()
+                    }}
+                >
                     <DialogHeader className={IMAGE_DECISION_DIALOG_HEADER_CLASS}>
                         <DialogTitle className={IMAGE_DECISION_DIALOG_TITLE_CLASS}>{t('unsaved.navigateTitle')}</DialogTitle>
                         <DialogDescription className={IMAGE_DECISION_DIALOG_DESCRIPTION_CLASS}>
@@ -2564,6 +2586,7 @@ export default function ImagePage() {
                             {t('unsaved.saveLeave')}
                         </Button>
                     </DialogFooter>
+                    {isResolvingUnsavedNavigation ? <IndeterminateProgressBar className="mx-6 mb-6 mt-1" /> : null}
                 </DialogContent>
             </Dialog>
             <Dialog

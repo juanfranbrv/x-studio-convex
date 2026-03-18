@@ -126,64 +126,67 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                 </div>
             </CardContent>
 
-            <CardFooter className="flex justify-between border-t bg-muted/20 p-2">
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onRegenerate}
-                        disabled={isLoading}
-                        className="h-7 text-xs text-muted-foreground hover:text-primary"
-                    >
-                        {isLoading ? <Loader2 className="mr-1.5 h-3 w-3" /> : <IconRefresh className="mr-1.5 h-3 w-3" />}
-                        {isLoading ? t('copyCard.regenerating') : t('copyCard.regenerate')}
-                    </Button>
-                    {hasPreviousVersion && onRestorePrevious ? (
+            <CardFooter className="border-t bg-muted/20 p-2">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={onRestorePrevious}
+                            onClick={onRegenerate}
                             disabled={isLoading}
                             className="h-7 text-xs text-muted-foreground hover:text-primary"
+                            title={t('copyCard.regenerateHelp', { defaultValue: 'Genera una nueva versión del copy' })}
                         >
-                            <IconUndo className="mr-1.5 h-3 w-3" />
-                            {t('copyCard.restorePrevious', { defaultValue: 'Volver al anterior' })}
+                            {isLoading ? <Loader2 className="mr-1.5 h-3 w-3" /> : <IconRefresh className="mr-1.5 h-3 w-3" />}
+                            {isLoading ? t('copyCard.regenerating') : t('copyCard.tryAnotherVersion')}
                         </Button>
-                    ) : null}
-                    {isLoading && onCancel ? (
+                        {hasPreviousVersion && onRestorePrevious ? (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={onRestorePrevious}
+                                disabled={isLoading}
+                                className="h-7 text-xs text-muted-foreground hover:text-primary"
+                            >
+                                <IconUndo className="mr-1.5 h-3 w-3" />
+                                {t('copyCard.restorePrevious', { defaultValue: 'Volver al anterior' })}
+                            </Button>
+                        ) : null}
+                        {isLoading && onCancel ? (
+                            <Button
+                                variant="link"
+                                size="sm"
+                                onClick={onCancel}
+                                className="h-7 px-0 text-[11px] text-muted-foreground hover:text-foreground"
+                            >
+                                {isCanceling ? t('actions.canceling', { defaultValue: 'Canceling...' }) : t('actions.stop', { defaultValue: 'Stop' })}
+                            </Button>
+                        ) : null}
+                    </div>
+
+                    <div className="flex gap-1">
                         <Button
-                            variant="link"
+                            variant="ghost"
                             size="sm"
-                            onClick={onCancel}
-                            className="h-7 px-0 text-[11px] text-muted-foreground hover:text-foreground"
+                            onClick={onToggleLock}
+                            className={cn('h-7 text-xs', isLocked ? 'bg-primary/10 text-primary' : 'text-muted-foreground')}
+                            title={isLocked ? t('copyCard.unlockTitle') : t('copyCard.lockHelp')}
                         >
-                            {isCanceling ? t('actions.canceling', { defaultValue: 'Canceling...' }) : t('actions.stop', { defaultValue: 'Stop' })}
+                            {isLocked ? <IconLock className="mr-1.5 h-3 w-3" /> : <IconUnlock className="mr-1.5 h-3 w-3" />}
+                            {isLocked ? t('copyCard.locked') : t('copyCard.keepThisText')}
                         </Button>
-                    ) : null}
-                </div>
 
-                <div className="flex gap-1">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onToggleLock}
-                        className={cn('h-7 text-xs', isLocked ? 'bg-primary/10 text-primary' : 'text-muted-foreground')}
-                        title={isLocked ? t('copyCard.unlockTitle') : t('copyCard.lockTitle')}
-                    >
-                        {isLocked ? <IconLock className="mr-1.5 h-3 w-3" /> : <IconUnlock className="mr-1.5 h-3 w-3" />}
-                        {isLocked ? t('copyCard.locked') : t('copyCard.lock')}
-                    </Button>
-
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleCopy}
-                        className={cn('h-7 text-xs transition-all', isCopied && 'bg-primary/10 text-primary')}
-                        title={isCopied ? t('copyCard.copied') : t('copyCard.copy')}
-                    >
-                        {isCopied ? <IconCheck className="mr-1.5 h-3 w-3" /> : <IconCopy className="mr-1.5 h-3 w-3" />}
-                        {isCopied ? t('copyCard.copied') : t('copyCard.copy')}
-                    </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCopy}
+                            className={cn('h-7 text-xs transition-all', isCopied && 'bg-primary/10 text-primary')}
+                            title={isCopied ? t('copyCard.copied') : t('copyCard.copy')}
+                        >
+                            {isCopied ? <IconCheck className="mr-1.5 h-3 w-3" /> : <IconCopy className="mr-1.5 h-3 w-3" />}
+                            {isCopied ? t('copyCard.copied') : t('copyCard.copy')}
+                        </Button>
+                    </div>
                 </div>
             </CardFooter>
         </Card>

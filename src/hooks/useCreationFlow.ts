@@ -274,19 +274,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 hasChanges = true
             }
 
-            if (typeof activeBrandKit.cta_url_enabled === 'boolean') {
-                nextState.ctaUrlEnabled = activeBrandKit.cta_url_enabled
-                nextState.ctaUrlManual = false
-                if (!activeBrandKit.cta_url_enabled) {
-                    nextState.ctaUrl = ''
-                }
-                hasChanges = true
-            } else {
-                nextState.ctaUrlEnabled = true
-                nextState.ctaUrlManual = false
-                nextState.ctaUrl = activeBrandKit?.url?.trim() || ''
-                hasChanges = true
-            }
+            // In the image module, new sessions should start with link disabled by default.
+            // Saved sessions can still rehydrate their own CTA URL state later.
+            nextState.ctaUrlEnabled = false
+            nextState.ctaUrlManual = false
+            nextState.ctaUrl = ''
+            hasChanges = true
         }
 
         if (hasChanges) {

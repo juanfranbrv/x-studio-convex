@@ -85,7 +85,11 @@
     "locked": "Congelado",
     "lock": "Congelar",
     "copied": "Copiado",
-    "copy": "Copiar"
+    "copy": "Copiar",
+    "tryAnotherVersion": "Probar otra versión",
+    "regenerateHelp": "Genera una nueva versión del copy",
+    "keepThisText": "Mantener este texto",
+    "lockHelp": "Mantiene este texto aunque regeneres la imagen"
   },
   "preview": {
     "zoomOut": "Alejar zoom",

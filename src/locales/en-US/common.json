@@ -85,7 +85,11 @@
     "locked": "Frozen",
     "lock": "Freeze",
     "copied": "Copied",
-    "copy": "Copy"
+    "copy": "Copy",
+    "tryAnotherVersion": "Try another version",
+    "regenerateHelp": "Generate a new version of the copy",
+    "keepThisText": "Keep this text",
+    "lockHelp": "Keep this text even if you regenerate the image"
   },
   "preview": {
     "zoomOut": "Zoom out",

@@ -22,6 +22,7 @@ Decision vigente:
 - los dropdowns deben mantener la misma escala tipografica cerrados y abiertos
 - los estados informativos no deben encapsularse por defecto si se leen mejor como texto limpio
 - dentro de tarjetas con varios subbloques funcionales, se evita tanto la linea dura como el patron de tarjeta dentro de tarjeta; primero se resuelve con espacio, tipografia y ritmo vertical
+- el icono de `sparkles` queda prohibido en botones y CTAs de `x-studio`; si se necesita apoyo visual para acciones de IA, usar iconos funcionales o mas sobrios, o prescindir del icono
 ## Detección de idioma con Detect Language API
 
 ### Propósito

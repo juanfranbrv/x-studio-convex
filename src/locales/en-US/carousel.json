@@ -84,7 +84,7 @@
     "generatingProgress": "Generating {{current}}/{{total}}...",
     "generateCarousel": "Generate carousel",
     "retryCarousel": "Generate another carousel with current settings",
-    "editSlidePlaceholder": "Describe the changes to edit the slide...",
+    "editSlidePlaceholder": "Describe the specific detail you want to fix in this slide. E.g. change the background, improve the text, or adjust the color.",
     "setupCarouselPlaceholder": "Set up your carousel in the side panel...",
     "applyCorrection": "Apply correction",
     "correcting": "Correcting...",

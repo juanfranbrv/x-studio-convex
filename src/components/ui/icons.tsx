@@ -22,11 +22,12 @@ import {
     ArrowRight01Icon,
     ArrowDown01Icon,
     ArrowUp01Icon,
+    ArrowUp02Icon,
     ArrowLeft01Icon,
     ArrowLeft05Icon,
     ArrowRight05Icon,
     ArrowUp05Icon,
-    SparklesIcon,
+    SquareArrowUp02Icon,
     Logout02Icon,
     User02Icon,
     ShieldEnergyIcon,
@@ -192,6 +193,8 @@ export const IconSend = createIcon(SentIcon)
 export const IconArrowRight = createIcon(ArrowRight01Icon)
 export const IconArrowDown = createIcon(ArrowDown01Icon)
 export const IconArrowUp = createIcon(ArrowUp01Icon)
+export const IconArrowUp02 = createIcon(ArrowUp02Icon)
+export const IconSquareArrowUp = createIcon(SquareArrowUp02Icon)
 export const IconArrowLeft = createIcon(ArrowLeft01Icon)
 export const IconChevronDown = createIcon(ArrowDown05Icon)
 export const IconChevronUp = createIcon(ArrowUp05Icon)
@@ -201,7 +204,9 @@ export const IconCircleArrowLeft = createIcon(CircleArrowLeft01Icon)
 export const IconCircleArrowRight = createIcon(CircleArrowRight01Icon)
 
 // ─── Status ───
-export const IconSparkles = createIcon(SparklesIcon)
+// Legacy alias kept to avoid broad churn in callers. Sparkles are banned in UI;
+// route old uses to a calmer idea glyph until callers are migrated.
+export const IconSparkles = createIcon(IdeaIcon)
 export const IconCheck = createIcon(CheckmarkCircle01Icon)
 export const IconCheckCircle = createIcon(CheckmarkCircle02Icon)
 export const IconClock = createIcon(Clock01Icon)

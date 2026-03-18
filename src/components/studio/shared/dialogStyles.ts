@@ -1,5 +1,5 @@
 export const STUDIO_DECISION_DIALOG_CLASS =
-  'max-w-[min(92vw,34rem)] rounded-[1.7rem] border border-border/70 bg-background/98 p-0 shadow-[0_38px_100px_-56px_rgba(15,23,42,0.42)]'
+  'max-w-[min(92vw,34rem)] overflow-hidden rounded-[1.7rem] border border-border/70 bg-background/98 p-0 shadow-[0_38px_100px_-56px_rgba(15,23,42,0.42)]'
 
 export const STUDIO_DECISION_DIALOG_HEADER_CLASS =
   'gap-3 px-6 pb-4 pt-6 text-left sm:text-left'

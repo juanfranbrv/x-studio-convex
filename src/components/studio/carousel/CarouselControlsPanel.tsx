@@ -56,6 +56,7 @@ import {
 import { SuggestionsList } from '@/components/studio/shared/SuggestionsList'
 import { useStylePresetImages } from '@/hooks/useStylePresetImages'
 import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialog'
+import { IndeterminateProgressBar } from '@/components/studio/shared/IndeterminateProgressBar'
 import { HexColorPicker } from 'react-colorful'
 import { useTranslation } from 'react-i18next'
 import {
@@ -3752,12 +3753,24 @@ export function CarouselControlsPanel({
             <Dialog
                 open={unsavedNavModalOpen}
                 onOpenChange={(open) => {
-                    if (!open) {
+                    if (!open && !isResolvingUnsavedNavigation) {
                         handleUnsavedNavigateCancel()
                     }
                 }}
             >
-                <DialogContent className={STUDIO_DECISION_DIALOG_CLASS}>
+                <DialogContent
+                    className={STUDIO_DECISION_DIALOG_CLASS}
+                    showCloseButton={!isResolvingUnsavedNavigation}
+                    onEscapeKeyDown={(event) => {
+                        if (isResolvingUnsavedNavigation) event.preventDefault()
+                    }}
+                    onPointerDownOutside={(event) => {
+                        if (isResolvingUnsavedNavigation) event.preventDefault()
+                    }}
+                    onInteractOutside={(event) => {
+                        if (isResolvingUnsavedNavigation) event.preventDefault()
+                    }}
+                >
                     <DialogHeader className={STUDIO_DECISION_DIALOG_HEADER_CLASS}>
                         <DialogTitle className={STUDIO_DECISION_DIALOG_TITLE_CLASS}>{t('ui.unsavedDialogTitle')}</DialogTitle>
                         <DialogDescription className={STUDIO_DECISION_DIALOG_DESCRIPTION_CLASS}>
@@ -3789,6 +3802,7 @@ export function CarouselControlsPanel({
                             {t('ui.saveLeave')}
                         </Button>
                     </DialogFooter>
+                    {isResolvingUnsavedNavigation ? <IndeterminateProgressBar className="mx-6 mb-6 mt-1" /> : null}
                 </DialogContent>
             </Dialog>
             <Dialog
