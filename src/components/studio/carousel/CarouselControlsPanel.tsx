@@ -3080,11 +3080,11 @@ export function CarouselControlsPanel({
                                                                     </span>
                                                                     <div>
                                                                         <p className="text-sm font-semibold text-foreground">
-                                                                            {slide.role === 'hook'
+                                                                            {slide.title || (slide.role === 'hook'
                                                                                 ? t('ui.hook', { defaultValue: 'Hook' })
                                                                                 : slide.role === 'cta'
                                                                                     ? t('ui.closingCta', { defaultValue: 'Closing / CTA' })
-                                                                                    : t('ui.slideLabel', { index: slideIndex + 1, defaultValue: 'Slide {{index}}' })}
+                                                                                    : t('ui.slideLabel', { index: slideIndex + 1, defaultValue: 'Slide {{index}}' }))}
                                                                         </p>
                                                                         <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
                                                                             {t('ui.activeVariant', { defaultValue: 'Active' })}: {slideVariantSources.find((source) => source.id === selectedSource)?.label || t('ui.original', { defaultValue: 'Original' })}

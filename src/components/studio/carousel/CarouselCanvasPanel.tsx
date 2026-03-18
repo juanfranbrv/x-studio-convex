@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { GeneratedCopyCard } from '@/components/studio/GeneratedCopyCard'
 import { useToast } from '@/hooks/use-toast'
-import { IconRefresh, IconZoomIn, IconZoomOut, IconImage, IconFingerprint, IconImageDownload, IconSquareArrowDown, IconBug, IconVideo, IconMusic, IconMaximize, IconAiChat } from '@/components/ui/icons'
+import { IconRefresh, IconZoomIn, IconZoomOut, IconImage, IconFingerprint, IconImageDownload, IconSquareArrowDown, IconBug, IconVideo, IconMusic, IconMaximize, IconAiChat, IconEdit, IconEye } from '@/components/ui/icons'
 import JSZip from 'jszip'
 import {
     DropdownMenu,
@@ -225,7 +225,9 @@ export function CarouselCanvasPanel({
     const lastViewportHeightRef = useRef<number | null>(null)
     const [isEditingScript, setIsEditingScript] = useState(false)
     const [isEditingVisualContent, setIsEditingVisualContent] = useState(false)
+    const [showScriptOverlay, setShowScriptOverlay] = useState(false)
     const [draftTitle, setDraftTitle] = useState('')
+    const [draftHeadline, setDraftHeadline] = useState('')
     const [draftDescription, setDraftDescription] = useState('')
     const [draftVisualPrompt, setDraftVisualPrompt] = useState('')
     const loaderVisibleRef = useRef(false)
@@ -389,10 +391,12 @@ export function CarouselCanvasPanel({
     useEffect(() => {
         if (!currentSlide) return
         setDraftTitle(currentSlide.title || '')
+        setDraftHeadline(currentSlide.headline || '')
         setDraftDescription(currentSlide.description || '')
         setDraftVisualPrompt(currentVisualContentEditable)
         setIsEditingScript(false)
         setIsEditingVisualContent(false)
+        setShowScriptOverlay(false)
     }, [currentSlide?.index, currentVisualContentEditable])
 
     useEffect(() => {
@@ -414,13 +418,19 @@ export function CarouselCanvasPanel({
 
     const handleSaveScript = () => {
         if (!currentSlide) return
-        const nextTitle = draftTitle.trim() || currentSlide.title
+        const nextHeadline = draftHeadline.trim() || currentSlide.headline
         const nextDescription = draftDescription.trim() || currentSlide.description
+        const headlineChanged = nextHeadline !== (currentSlide.headline || '')
         onUpdateSlideScript?.(currentSlide.index, {
-            title: nextTitle,
+            title: currentSlide.title,
+            headline: nextHeadline,
             description: nextDescription
         })
         setIsEditingScript(false)
+        if (headlineChanged && currentSlide.imageUrl) {
+            setShowScriptOverlay(false)
+            onRegenerateSlide(currentSlide.index)
+        }
     }
 
     const handleSaveVisualContent = () => {
@@ -1147,9 +1157,30 @@ export function CarouselCanvasPanel({
                             </>
                         )}
 
-                        {/* Debug Prompt Trigger (Top Right) */}
+                        {/* Debug + Script Toggle (Top Right) */}
                         {currentSlide?.imageUrl && (
                             <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                        setShowScriptOverlay(!showScriptOverlay)
+                                        if (!showScriptOverlay) {
+                                            setIsEditingScript(false)
+                                        }
+                                    }}
+                                    className="h-9 w-9 rounded-full bg-white backdrop-blur border border-border shadow-sm hover:shadow-md transition-transform transition-shadow duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                                    title={showScriptOverlay
+                                        ? tt('common:preview.showImage', 'Show image')
+                                        : tt('common:preview.editHeadline', 'Edit headline')
+                                    }
+                                >
+                                    {showScriptOverlay
+                                        ? <IconEye className="w-4 h-4" />
+                                        : <IconEdit className="w-4 h-4" />
+                                    }
+                                </Button>
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -1203,6 +1234,59 @@ export function CarouselCanvasPanel({
                                             </div>
                                         </div>
                                     )}
+                                    {showScriptOverlay && !isCurrentSlideRegenerating && (
+                                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-white/90 backdrop-blur-sm p-8">
+                                            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/50">
+                                                {currentSlide.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
+                                            </p>
+                                            {isEditingScript ? (
+                                                <div className="w-full max-w-sm space-y-3">
+                                                    <Input
+                                                        value={draftHeadline}
+                                                        onChange={(e) => setDraftHeadline(e.target.value)}
+                                                        placeholder={tt('common:preview.slideHeadlinePlaceholder', 'Headline visible en la imagen')}
+                                                        className="text-sm font-semibold text-center"
+                                                        disabled={isGeneratingAny}
+                                                        autoFocus
+                                                    />
+                                                    <div className="flex gap-2 justify-center">
+                                                        <Button size="sm" onClick={handleSaveScript} disabled={isGeneratingAny}>
+                                                            {tt('common:preview.saveAndRegenerate', 'Save & regenerate')}
+                                                        </Button>
+                                                        <Button size="sm" variant="outline" onClick={() => {
+                                                            setIsEditingScript(false)
+                                                            setDraftHeadline(currentSlide.headline || '')
+                                                        }}>
+                                                            {tt('common:actions.cancel', 'Cancel')}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <h3
+                                                        className="font-semibold text-foreground text-center text-lg cursor-text px-4"
+                                                        onClick={() => {
+                                                            setDraftHeadline(currentSlide.headline || '')
+                                                            setIsEditingScript(true)
+                                                        }}
+                                                        title={tt('common:preview.clickToEdit', 'Click to edit')}
+                                                    >
+                                                        {currentSlide.headline || currentSlide.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
+                                                    </h3>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            setDraftHeadline(currentSlide.headline || '')
+                                                            setIsEditingScript(true)
+                                                        }}
+                                                    >
+                                                        {tt('common:preview.editHeadline', 'Edit headline')}
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
                                     <img
                                         src={currentSlide.imageUrl}
                                         alt={tt('common:preview.slideThumbnailAlt', 'Slide {{index}} thumbnail', { index: currentIndex + 1 })}
@@ -1228,63 +1312,22 @@ export function CarouselCanvasPanel({
                                     </p>
                                     {isEditingScript ? (
                                         <div className="space-y-3 text-left">
+                                            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/50 text-center" style={{ fontSize: 'var(--cs-label, 9px)' }}>
+                                                {currentSlide?.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
+                                            </p>
                                             <div className="relative">
                                                 <Input
-                                                    value={draftTitle}
-                                                    onChange={(e) => setDraftTitle(e.target.value)}
-                                                    placeholder={tt('common:preview.slideTitlePlaceholder', 'Slide title')}
-                                                    className="text-sm pr-9"
+                                                    value={draftHeadline}
+                                                    onChange={(e) => setDraftHeadline(e.target.value)}
+                                                    placeholder={tt('common:preview.slideHeadlinePlaceholder', 'Headline visible en la imagen')}
+                                                    className="text-sm font-semibold pr-9"
                                                     disabled={isGeneratingAny}
                                                 />
                                                 {brandKitTexts.length > 0 && renderBrandTextMenu((value) =>
-                                                    setDraftTitle(prev => appendBrandText(prev, value))
+                                                    setDraftHeadline(prev => appendBrandText(prev, value))
                                                 )}
                                             </div>
-                                            <div className="relative">
-                                                <Textarea
-                                                    value={draftDescription}
-                                                    onChange={(e) => setDraftDescription(e.target.value)}
-                                                    placeholder={tt('common:preview.slideDescription', 'Slide description')}
-                                                    className="min-h-[90px] text-sm resize-none pr-9"
-                                                    disabled={isGeneratingAny}
-                                                />
-                                                {brandKitTexts.length > 0 && renderBrandTextMenu((value) =>
-                                                    setDraftDescription(prev => appendBrandText(prev, value))
-                                                )}
-                                            </div>
-                                            {brandKitTexts.length > 0 && (
-                                                <div className="flex justify-start">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="h-8 px-3 text-xs uppercase font-bold tracking-wide text-muted-foreground hover:text-foreground transition-colors gap-2"
-                                                            >
-                                                                <IconFingerprint className="w-3.5 h-3.5 text-primary" />
-                                                                {tt('common:preview.brandTexts', 'Brand Kit texts')}
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="start" className="w-72 max-h-80 overflow-y-auto">
-                                                            <DropdownMenuLabel className="text-xs uppercase tracking-wide text-muted-foreground">
-                                                                {tt('common:preview.selectBrandText', 'Select a Brand Kit text')}
-                                                            </DropdownMenuLabel>
-                                                            <DropdownMenuSeparator />
-                                                            {brandKitTexts.map((option) => (
-                                                                <DropdownMenuItem
-                                                                    key={`button-${option.id}`}
-                                                                    onClick={() => setDraftDescription(prev => appendBrandText(prev, option.value))}
-                                                                    className="text-xs flex flex-col items-start gap-0.5 py-2"
-                                                                >
-                                                                    <span className="text-[9px] uppercase text-primary font-bold">{option.label}</span>
-                                                                    <span className="text-foreground truncate max-w-full">{option.value}</span>
-                                                                </DropdownMenuItem>
-                                                            ))}
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-                                            )}
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 justify-center">
                                                 <Button size="sm" onClick={handleSaveScript} disabled={isGeneratingAny}>
                                                     {tt('common:actions.save', 'Save')}
                                                 </Button>
@@ -1313,12 +1356,12 @@ export function CarouselCanvasPanel({
                                                 aria-label={tt('common:preview.editScript', 'Edit script')}
                                                 title={tt('common:preview.clickToEdit', 'Click to edit')}
                                             >
-                                                <h3 className="font-semibold text-foreground" style={{ fontSize: 'var(--cs-title)', lineHeight: 1.2 }}>
+                                                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/50" style={{ fontSize: 'var(--cs-label, 9px)' }}>
                                                     {currentSlide?.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
-                                                </h3>
-                                                <p className="text-muted-foreground leading-relaxed" style={{ fontSize: 'var(--cs-body)' }}>
-                                                    {currentSlide?.description || tt('common:preview.noDescription', 'No description')}
                                                 </p>
+                                                <h3 className="font-semibold text-foreground" style={{ fontSize: 'var(--cs-title)', lineHeight: 1.2 }}>
+                                                    {currentSlide?.headline || currentSlide?.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
+                                                </h3>
                                             </div>
                                             <Button
                                                 size="sm"
@@ -1327,7 +1370,7 @@ export function CarouselCanvasPanel({
                                                     setIsEditingVisualContent(false)
                                                     setIsEditingScript(true)
                                                 }}
-                                                className="mt-2"
+                                                className="mt-1"
                                                 style={{ fontSize: 'var(--cs-button)' }}
                                             >
                                                 {tt('common:preview.editScript', 'Edit script')}

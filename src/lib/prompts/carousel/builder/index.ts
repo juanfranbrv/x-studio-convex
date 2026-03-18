@@ -140,8 +140,9 @@ The output must be a single JSON object with:
 - "slides": array of objects with:
   - "index": number (0-based)
   - "role": "hook" | "content" | "cta"
-  - "title": string
-  - "description": string
+  - "headline": string (REQUIRED - short punchy copy for the image, max 8-10 words, NEVER a role label)
+  - "title": string (editorial function of the slide, e.g. "Gancho de autoridad", "Propuesta de valor")
+  - "description": string (full narrative copy - goes to caption, NOT rendered in image)
   - "composition": string (layout blueprint only, no colors or typography)
   - "visualPrompt": string (semantic scene description only: what should be shown and why for this slide, never colors, medium, camera, lighting or visual style)
   - "focus": string
@@ -165,6 +166,7 @@ The output must be a single JSON object with:
 - **visualPrompt Scope**: The "visualPrompt" must define only the semantic content of the scene for that specific slide. It must not prescribe colors, palette, illustration vs photography, camera, lens, lighting, rendering technique, texture, or finish.
 - **Conceptuality Over Literalism**: Visual prompts should stay conceptual-editorial. Suggest category-level contexts, not fake-specific facilities. Example: "entorno academico neutro" is valid; "recepcion moderna de la academia" is not unless the user explicitly provided that place.
 - **Prop Hierarchy**: Supporting objects may appear, but they must not become the protagonist unless the slide is explicitly about that object or machine.
+- **Caption Quality**: The "caption" field is the Instagram post text. It must integrate the narrative content from all slide descriptions into a flowing, informative paragraph (4-8 sentences). Include specific arguments, data, and benefits from the descriptions. It is NOT a generic tagline — it is the complementary reading that adds value beyond the images. End with relevant emojis, hashtags, and brand URL if available.
 - **No Font Names in Copy**: Never include font family names (e.g., Google Sans Flex, Inter, Roboto) inside title/description/visualPrompt.
 - **Brand Kit Fonts Are Mandatory**: If the Brand Kit defines heading/body fonts, treat them as the typography source of truth for the carousel. Respect those roles conceptually, but never write the font family names inside the JSON copy.
 ${ctx.includeLogo ? LOGO_PROTECTION_RULE : ''}

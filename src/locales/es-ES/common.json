@@ -166,6 +166,10 @@
     "slideError": "Error en este slide",
     "scriptPreview": "Guion previo",
     "slideTitlePlaceholder": "Título del slide",
+    "slideHeadlinePlaceholder": "Headline visible en la imagen",
+    "showImage": "Ver imagen",
+    "editHeadline": "Editar headline",
+    "saveAndRegenerate": "Guardar y regenerar",
     "noExperimentalTracks": "No hay pistas experimentales disponibles en /songs."
   },
   "feedback": {

@@ -316,11 +316,11 @@ Devuelve un unico JSON valido, sin markdown:
 - Los indices deben ir de 0 a optimalSlideCount - 1.
 - El numero de slides debe coincidir exactamente con REQUESTED_SLIDE_COUNT.
 - Genera exactamente 3 suggestions.
-- headline es OBLIGATORIO en cada slide. Maximo 8-10 palabras. Es el unico texto que se renderizara dentro de la imagen.
+- headline es OBLIGATORIO en cada slide. Maximo 8-10 palabras. Es el unico texto que se renderizara dentro de la imagen. NUNCA uses el nombre del rol como headline (prohibido: "Gancho emocional", "Contenido", "CTA", "Cierre", "Hook", etc.). El headline debe ser COPY REAL dirigido al lector, no una etiqueta meta.
 - description contiene el copy completo/narrativo. Nunca se renderiza en la imagen. Puede ser largo.
 - Cada suggestion debe ser claramente diferente en gancho y narrativa.
 - role debe ser: slide 0 = hook, ultima slide = cta, resto = content.
-- El caption debe tener 2 a 4 frases, con emojis y hashtags, y terminar con la URL de marca si existe.
+- El caption es el texto que acompana al carrusel en Instagram. Debe integrar y desarrollar el contenido narrativo de las descriptions de los slides, NO ser un resumen generico. Incluye los argumentos clave, los datos concretos y los beneficios mencionados en las descriptions. Estructura: parrafo narrativo que fluya naturalmente (4-8 frases), luego emojis y hashtags relevantes. Termina con la URL de marca si existe. El caption NO debe ser una mera frase comercial; debe aportar el valor informativo que complementa las imagenes.
 - No inventes IDs de intentos ni estructuras.
 - No repitas el mismo headline o CTA exactos en multiples slides.
 - En composition esta prohibido mencionar colores, tipografias, materiales o atmosferas.

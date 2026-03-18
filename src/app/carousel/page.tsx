@@ -454,7 +454,7 @@ export default function CarouselPage() {
             .toLowerCase()
     }, [])
 
-    const handleUpdateSlideScript = useCallback((index: number, updates: { title?: string; description?: string; visualPrompt?: string; mustKeepFacts?: string[] }) => {
+    const handleUpdateSlideScript = useCallback((index: number, updates: { headline?: string; title?: string; description?: string; visualPrompt?: string; mustKeepFacts?: string[] }) => {
         setSlides(prev => prev.map(s => s.index === index ? { ...s, ...updates } : s))
         setScriptSlides(prev => prev ? prev.map(s => s.index === index ? { ...s, ...updates } : s) : prev)
     }, [])
@@ -523,6 +523,7 @@ export default function CarouselPage() {
             }
             const mappedSlides = result.slides.map(s => ({
                 index: s.index,
+                headline: s.headline,
                 title: s.title,
                 description: s.description,
                 status: 'pending' as const
@@ -832,6 +833,7 @@ export default function CarouselPage() {
         if (!suggestion) return
         const mappedSlides = suggestion.slides.map(s => ({
             index: s.index,
+            headline: s.headline,
             title: s.title,
             description: s.description,
             status: 'pending' as const
@@ -898,6 +900,7 @@ export default function CarouselPage() {
         setScriptSlides(remixedSlides)
         setSlides(remixedSlides.map((slide) => ({
             index: slide.index,
+            headline: slide.headline,
             title: slide.title,
             description: slide.description,
             status: 'pending' as const
@@ -1040,6 +1043,7 @@ export default function CarouselPage() {
             const totalSlides = normalizedSlides.length
             const initialSlides: CarouselSlide[] = normalizedSlides.map((s) => ({
                 index: s.index,
+                headline: s.headline,
                 title: s.title,
                 description: s.description,
                 status: 'pending' as const

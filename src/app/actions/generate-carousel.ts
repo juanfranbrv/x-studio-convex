@@ -297,6 +297,7 @@ export interface CarouselSlide {
     image_preview_storage_id?: string
     imageOriginalUrl?: string
     image_original_storage_id?: string
+    headline?: string
     title: string
     description: string
     mustKeepFacts?: string[]
@@ -1854,6 +1855,10 @@ const normalizeParsed = (parsed: any) => {
         let slides: SlideContent[] = rawSlides.map((raw: any, i: number) => {
             const fallbackRole = roleByIndex(i)
             const safeRole = normalizeRole(raw?.role) || fallbackRole
+            const rawHeadline = sanitizeTextFromMarkdownLinks(typeof raw?.headline === 'string' ? raw.headline.trim() : '')
+            // Discard headlines that are just role labels instead of real copy
+            const roleLabels = /^(gancho\s*emocional|hook|contenido|content|cta|cierre|portada|inicio|desarrollo|conclusi[oó]n|accion|acci[oó]n|llamada\s*a\s*la\s*acci[oó]n)$/i
+            const safeHeadline = roleLabels.test(rawHeadline.trim()) ? '' : rawHeadline
             const safeTitle = sanitizeTextFromMarkdownLinks(typeof raw?.title === 'string' ? raw.title.trim() : '')
             const safeDescription = sanitizeTextFromMarkdownLinks(typeof raw?.description === 'string' ? raw.description.trim() : '')
             const safeVisualPrompt = typeof raw?.visualPrompt === 'string' ? raw.visualPrompt.trim() : ''
@@ -1869,6 +1874,7 @@ const normalizeParsed = (parsed: any) => {
                 : 'Contenido principal del carrusel.')
             return {
                 index: i,
+                headline: safeHeadline || undefined,
                 title: resolvedTitle,
                 description: resolvedDescription,
                 visualPrompt: enforceVisualPromptLanguage(
@@ -2398,6 +2404,7 @@ export async function generateCarouselAction(
         // Step 2: Generate images
         const slides: CarouselSlide[] = slideContents.slice(0, effectiveSlideCount).map(sc => ({
             index: sc.index,
+            headline: sc.headline,
             title: sc.title,
             description: sc.description,
             status: 'pending' as const
