@@ -1,0 +1,5 @@
+{
+    "task": "Write a comprehensive Vitest test file for the exported functions in theme-colors.ts. Cover these functions:\n\n1. deriveSchemeFromColors(primary, accent) - test with hex inputs, verify all returned fields are populated\n2. buildThemeColors(theme?) - test with no args (defaults), partial theme, full theme\n3. deriveSchemeAsHex(primary, accent) - test that surface/muted/border come back as hex strings\n4. applyThemeColors(theme) - mock document.documentElement.style.setProperty and verify CSS custom properties are set\n\nAlso test the edge cases:\n- Invalid hex inputs to deriveSchemeFromColors\n- Empty/undefined theme to buildThemeColors\n- Known color conversions (e.g. #FF0000 should produce hue ~0, #00FF00 hue ~120)\n\nUse describe/it blocks. Import from '../lib/theme-colors'. Output ONLY a ```create:src/__tests__/theme-colors.test.ts``` block, nothing else.",
+    "files": ["src/lib/theme-colors.ts"],
+    "output_format": "create block"
+}

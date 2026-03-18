@@ -1,0 +1,8 @@
+{
+    "task": "Add the missing 'subtitle' key to both translation files. In the carousel namespace, inside the 'preview' section, add a key 'slideSubtitlePlaceholder' with value 'Subtítulo visible en la imagen' for Spanish and 'Subtitle visible in the image' for English. Show me the edit blocks for both files.",
+    "files": [
+        "src/locales/es-ES/common.json",
+        "src/locales/en-US/common.json"
+    ],
+    "output_format": "edit blocks"
+}

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
-import { IconCarousel, IconHome, IconImage, IconLogout, IconMenu, IconSettings, IconStudio, IconVideo } from '@/components/ui/icons'
+import { IconCarousel, IconHome, IconImage, IconLogout, IconMenu, IconSettings } from '@/components/ui/icons'
 import { AppLogo } from '@/components/ui/AppLogo'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -29,9 +29,7 @@ export function MobileMenu() {
         { icon: IconHome, label: 'nav.home', href: '/' },
         { icon: IconCarousel, label: 'nav.brandKit', href: '/brand-kit' },
         { icon: IconImage, label: 'nav.image', href: '/image' },
-        { icon: IconStudio, label: 'nav.studioWorkspace', href: '/studio' },
         { icon: IconCarousel, label: 'nav.carousel', href: '/carousel' },
-        { icon: IconVideo, label: 'nav.video', href: '/video' },
         { icon: IconSettings, label: 'nav.settings', href: '/settings' },
     ]
 

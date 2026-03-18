@@ -66,6 +66,7 @@ import {
     STUDIO_DECISION_DIALOG_HEADER_CLASS,
     STUDIO_DECISION_DIALOG_TITLE_CLASS,
 } from '@/components/studio/shared/dialogStyles'
+import { buildAutomaticSessionTitle, getSessionDisplayTitle, normalizeCustomSessionTitle } from '@/lib/session-titles'
 
 export interface SlideConfig {
     index: number
@@ -738,12 +739,20 @@ export function CarouselControlsPanel({
     const isStepVisible = (step: number) => showAllSteps || currentStep >= step
     const basicCompositions = compositions.filter((composition) => composition.mode === 'basic')
     const advancedCompositions = compositions
-    const buildSessionTitle = useCallback((value?: string | null) => {
-        const cleaned = (value || '').replace(/\s+/g, ' ').trim()
-        if (!cleaned) return t('ui.newSessionTitle', { defaultValue: 'New session' })
-        if (cleaned.length <= 48) return cleaned
-        return `${cleaned.slice(0, 48)}...`
-    }, [])
+    const buildAutoSessionTitle = useCallback((value?: string | null) => (
+        buildAutomaticSessionTitle(value, t('ui.newSessionTitle', { defaultValue: 'New session' }))
+    ), [t])
+
+    const buildDisplaySessionTitle = useCallback((value?: string | null, customized = false) => (
+        getSessionDisplayTitle(value, {
+            fallback: t('ui.newSessionTitle', { defaultValue: 'New session' }),
+            customized,
+        })
+    ), [t])
+
+    const buildCustomSessionTitle = useCallback((value?: string | null) => (
+        normalizeCustomSessionTitle(value, t('ui.newSessionTitle', { defaultValue: 'New session' }))
+    ), [t])
     const activeSessionMeta = useMemo(() => {
         const currentId = currentSessionId ? String(currentSessionId) : ''
         if (!currentId) return null
@@ -1323,7 +1332,7 @@ export function CarouselControlsPanel({
             user_id: userId,
             module: 'carousel',
             brand_id: scopedBrandId,
-            title: buildSessionTitle(''),
+            title: buildAutoSessionTitle(''),
             title_customized: false,
             snapshot: emptySnapshot,
         })
@@ -1341,7 +1350,7 @@ export function CarouselControlsPanel({
             }, 0)
         }
         return id
-    }, [userId, scopedBrandId, confirmDiscardUnsavedChanges, analysisStructure?.id, structures, buildEmptyWorkspaceSnapshot, createWorkSession, buildSessionTitle, resetCarouselDraft, extractSavedPreviewVariantKeys, buildWorkspaceChangeSignature])
+    }, [userId, scopedBrandId, confirmDiscardUnsavedChanges, analysisStructure?.id, structures, buildEmptyWorkspaceSnapshot, createWorkSession, buildAutoSessionTitle, resetCarouselDraft, extractSavedPreviewVariantKeys, buildWorkspaceChangeSignature])
 
     const handleLoadSession = useCallback(async (
         sessionId: string,
@@ -1509,7 +1518,7 @@ export function CarouselControlsPanel({
                 module: 'carousel',
                 brand_id: scopedBrandId,
                 session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
-                title: options?.titleOverride ?? buildSessionTitle(snapshot.prompt || 'Sesion de carrusel'),
+                title: options?.titleOverride ?? buildAutoSessionTitle(snapshot.prompt || 'Sesion de carrusel'),
                 title_customized: options?.titleCustomized,
                 snapshot,
             })
@@ -1546,7 +1555,7 @@ export function CarouselControlsPanel({
         extractSavedPreviewVariantKeys,
         upsertWorkSession,
         currentSessionId,
-        buildSessionTitle
+        buildAutoSessionTitle
     ])
 
     const ensureCarouselSessionForAnalyze = useCallback(async () => {
@@ -1557,7 +1566,7 @@ export function CarouselControlsPanel({
             user_id: userId,
             module: 'carousel',
             brand_id: scopedBrandId,
-            title: buildSessionTitle(prompt || 'Sesion de carrusel'),
+            title: buildAutoSessionTitle(prompt || 'Sesion de carrusel'),
             title_customized: false,
             root_prompt: prompt.trim() || undefined,
             snapshot,
@@ -1578,7 +1587,7 @@ export function CarouselControlsPanel({
         previewSlides,
         previewSessionHistory,
         createWorkSession,
-        buildSessionTitle,
+        buildAutoSessionTitle,
         prompt,
         extractSavedPreviewVariantKeys,
         buildWorkspaceChangeSignature,
@@ -1588,14 +1597,17 @@ export function CarouselControlsPanel({
         if (!userId || !scopedBrandId || isHydratingSession) return false
         try {
             if (activeSessionMeta?.title_customized !== true) {
-                const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || prompt || 'Sesion de carrusel')
+                const suggestedTitle = buildDisplaySessionTitle(
+                    activeSessionMeta?.title || prompt || 'Sesion de carrusel',
+                    Boolean(activeSessionMeta?.title_customized)
+                )
                 const selectedTitle = await openSessionTitleDialog(suggestedTitle)
                 if (!selectedTitle) return false
                 await persistWorkspaceSnapshot({
                     silent: false,
                     markSavedAt: true,
                     force: true,
-                    titleOverride: buildSessionTitle(selectedTitle),
+                    titleOverride: buildCustomSessionTitle(selectedTitle),
                     titleCustomized: true,
                 })
                 return true
@@ -1615,10 +1627,11 @@ export function CarouselControlsPanel({
         scopedBrandId,
         isHydratingSession,
         activeSessionMeta,
-        buildSessionTitle,
+        buildDisplaySessionTitle,
         openSessionTitleDialog,
         persistWorkspaceSnapshot,
         prompt,
+        buildCustomSessionTitle,
     ])
     saveSessionBeforeContinueRef.current = saveSessionBeforeContinue
 
@@ -1630,7 +1643,10 @@ export function CarouselControlsPanel({
     }, [saveSessionBeforeContinue])
     const handleRenameCurrentSession = useCallback(async () => {
         if (!userId || !scopedBrandId || isHydratingSession || !currentSessionId) return
-        const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || prompt || 'Sesion de carrusel')
+        const suggestedTitle = buildDisplaySessionTitle(
+            activeSessionMeta?.title || prompt || 'Sesion de carrusel',
+            Boolean(activeSessionMeta?.title_customized)
+        )
         const selectedTitle = await openSessionTitleDialog(suggestedTitle)
         if (!selectedTitle) return
         try {
@@ -1638,14 +1654,14 @@ export function CarouselControlsPanel({
                 silent: false,
                 markSavedAt: true,
                 force: true,
-                titleOverride: buildSessionTitle(selectedTitle),
+                titleOverride: buildCustomSessionTitle(selectedTitle),
                 titleCustomized: true,
             })
             log.success('SESSION', 'Sesion activa de carrusel renombrada')
         } catch {
             log.warn('SESSION', 'No se pudo renombrar la sesion activa de carrusel')
         }
-    }, [userId, scopedBrandId, isHydratingSession, currentSessionId, activeSessionMeta, buildSessionTitle, openSessionTitleDialog, persistWorkspaceSnapshot, prompt])
+    }, [userId, scopedBrandId, isHydratingSession, currentSessionId, activeSessionMeta, buildDisplaySessionTitle, openSessionTitleDialog, persistWorkspaceSnapshot, prompt, buildCustomSessionTitle])
 
     const workspaceSignature = useMemo(() => {
         return buildWorkspaceChangeSignature(buildWorkspaceSnapshot(previewSlides || [], previewSessionHistory || []))
@@ -2805,7 +2821,7 @@ export function CarouselControlsPanel({
                                 />
                                 <span className="flex min-w-0 items-center gap-2">
                                     <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">
-                                        {buildSessionTitle(activeSessionMeta?.title || t('ui.noSessions'))}
+                                        {buildDisplaySessionTitle(activeSessionMeta?.title || t('ui.noSessions'), Boolean(activeSessionMeta?.title_customized))}
                                     </span>
                                     {activeSessionMeta?.active ? (
                                         <span className="whitespace-nowrap rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[0.78rem] font-semibold text-primary">
@@ -2829,7 +2845,7 @@ export function CarouselControlsPanel({
                                     <SelectItem key={String(session._id)} value={String(session._id)} className={STUDIO_SELECT_ITEM_CLASS}>
                                         <span className="flex min-w-0 items-center gap-2">
                                             <span className="truncate">
-                                                {buildSessionTitle(session.title || t('ui.untitledSession'))}
+                                                {buildDisplaySessionTitle(session.title || t('ui.untitledSession'), Boolean(session.title_customized))}
                                             </span>
                                             {session.active ? (
                                                 <span className="rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[0.78rem] font-semibold text-primary">
@@ -3810,7 +3826,7 @@ export function CarouselControlsPanel({
                 confirmLabel={t('ui.sessionDialogConfirm')}
                 onValueChange={setSessionTitleDraft}
                 onCancel={() => closeSessionTitleDialog(null)}
-                onConfirm={() => closeSessionTitleDialog(buildSessionTitle(sessionTitleDraft))}
+                onConfirm={() => closeSessionTitleDialog(buildCustomSessionTitle(sessionTitleDraft))}
             />
         </div>
     )

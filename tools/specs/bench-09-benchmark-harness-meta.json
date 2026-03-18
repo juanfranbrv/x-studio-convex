@@ -1,0 +1,10 @@
+{
+    "id": "09-benchmark-harness-meta",
+    "difficulty": "medium",
+    "task": "Improve the benchmark harness so format compliance is evaluated from the saved result markdown instead of stdout heuristics. The summary should distinguish YES, PARTIAL, UNCLEAR and NO, and report valid block count plus whether there is text outside code blocks. Modify ONLY the listed files. Output ONLY edit blocks.",
+    "files": [
+        "tools/run-benchmark.sh",
+        "tools/evaluate-worker-result.mjs"
+    ],
+    "output_format": "edit blocks"
+}

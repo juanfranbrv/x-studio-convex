@@ -1,0 +1,11 @@
+{
+    "id": "06-i18n-save-preset-dialog",
+    "difficulty": "easy",
+    "task": "Refactor SavePresetDialog so it stops using inline defaultValue fallbacks for the preset copy. Reuse the existing common namespace, keep the same keys when they already exist, and add only the missing translation keys needed in both locale files. Modify ONLY the listed files. Output ONLY edit blocks.",
+    "files": [
+        "src/components/studio/creation-flow/SavePresetDialog.tsx",
+        "src/locales/es-ES/common.json",
+        "src/locales/en-US/common.json"
+    ],
+    "output_format": "edit blocks"
+}

@@ -45,6 +45,7 @@ import { Id } from '../../../convex/_generated/dataModel'
 import type { BrandDNA } from '@/lib/brand-types'
 import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/admin-compositions-actions'
 import { useTranslation } from 'react-i18next'
+import { buildAutomaticSessionTitle, getSessionDisplayTitle, normalizeCustomSessionTitle } from '@/lib/session-titles'
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
@@ -338,12 +339,20 @@ export default function ImagePage() {
         return cleaned.length > 0 ? cleaned : null
     }, [])
 
-    const buildSessionTitle = useCallback((value?: string | null) => {
-        const cleaned = (value || '').replace(/\s+/g, ' ').trim()
-        if (!cleaned) return t('sessions.newSessionTitle', { defaultValue: 'New session' })
-        if (cleaned.length <= 48) return cleaned
-        return `${cleaned.slice(0, 48)}...`
-    }, [])
+    const buildAutoSessionTitle = useCallback((value?: string | null) => (
+        buildAutomaticSessionTitle(value, t('sessions.newSessionTitle', { defaultValue: 'New session' }))
+    ), [t])
+
+    const buildDisplaySessionTitle = useCallback((value?: string | null, customized = false) => (
+        getSessionDisplayTitle(value, {
+            fallback: t('sessions.newSessionTitle', { defaultValue: 'New session' }),
+            customized,
+        })
+    ), [t])
+
+    const buildCustomSessionTitle = useCallback((value?: string | null) => (
+        normalizeCustomSessionTitle(value, t('sessions.newSessionTitle', { defaultValue: 'New session' }))
+    ), [t])
     const activeSessionMeta = useMemo(() => {
         const currentId = currentSessionId ? String(currentSessionId) : ''
         if (!currentId) return null
@@ -602,7 +611,7 @@ export default function ImagePage() {
                 user_id: user.id,
                 module: 'image',
                 brand_id: scopedBrandId,
-                title: buildSessionTitle(prompt),
+                title: buildAutoSessionTitle(prompt),
                 title_customized: false,
                 root_prompt: normalizedPrompt || undefined,
                 snapshot: draftSnapshot,
@@ -625,7 +634,7 @@ export default function ImagePage() {
             createSessionInFlightRef.current = false
             setIsCreatingSession(false)
         }
-    }, [user?.id, scopedBrandId, normalizePromptForSession, resetImageDraft, createWorkSession, toast, buildSessionTitle, confirmDiscardUnsavedChanges, buildWorkspaceSnapshot, buildWorkspaceChangeSignature, t])
+    }, [user?.id, scopedBrandId, normalizePromptForSession, resetImageDraft, createWorkSession, toast, buildAutoSessionTitle, confirmDiscardUnsavedChanges, buildWorkspaceSnapshot, buildWorkspaceChangeSignature, t])
 
     const handleLoadSession = useCallback(async (
         sessionId: string,
@@ -792,7 +801,7 @@ export default function ImagePage() {
                 module: 'image',
                 brand_id: scopedBrandId,
                 session_id: currentSessionId ? (currentSessionId as Id<'work_sessions'>) : undefined,
-                title: options?.titleOverride ?? buildSessionTitle(snapshot.promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' })),
+                title: options?.titleOverride ?? buildAutoSessionTitle(snapshot.promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' })),
                 title_customized: options?.titleCustomized,
                 root_prompt: normalizePromptForSession(snapshot.rootPrompt || snapshot.promptValue) || undefined,
                 snapshot,
@@ -825,7 +834,7 @@ export default function ImagePage() {
         materializeGenerationsForSnapshot,
         upsertWorkSession,
         currentSessionId,
-        buildSessionTitle,
+        buildAutoSessionTitle,
         normalizePromptForSession
     ])
 
@@ -837,7 +846,7 @@ export default function ImagePage() {
             user_id: user.id,
             module: 'image',
             brand_id: scopedBrandId,
-            title: buildSessionTitle(promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' })),
+            title: buildAutoSessionTitle(promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' })),
             title_customized: false,
             root_prompt: normalizedPrompt || undefined,
             snapshot: draftSnapshot,
@@ -850,20 +859,23 @@ export default function ImagePage() {
         lastSavedSnapshotSignatureRef.current = buildWorkspaceChangeSignature(draftSnapshot)
         setHasUnsavedChanges(false)
         return sessionId
-    }, [user?.id, scopedBrandId, currentSessionId, buildWorkspaceSnapshot, createWorkSession, buildSessionTitle, promptValue, buildWorkspaceChangeSignature])
+    }, [user?.id, scopedBrandId, currentSessionId, buildWorkspaceSnapshot, createWorkSession, buildAutoSessionTitle, promptValue, buildWorkspaceChangeSignature])
 
     const handleSaveSessionNow = useCallback(async () => {
         if (!user?.id || !scopedBrandId || isHydratingSession) return
         try {
             if (activeSessionMeta?.title_customized !== true) {
-                const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' }))
+                const suggestedTitle = buildDisplaySessionTitle(
+                    activeSessionMeta?.title || promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' }),
+                    Boolean(activeSessionMeta?.title_customized)
+                )
                 const selectedTitle = await openSessionTitleDialog(suggestedTitle)
                 if (!selectedTitle) return
                 await persistImageWorkspaceSnapshot({
                     silent: false,
                     markSavedAt: true,
                     force: true,
-                    titleOverride: buildSessionTitle(selectedTitle),
+                    titleOverride: buildCustomSessionTitle(selectedTitle),
                     titleCustomized: true,
                 })
                 return
@@ -876,10 +888,13 @@ export default function ImagePage() {
         } catch (error) {
             console.error('Manual save session failed:', error)
         }
-    }, [user?.id, scopedBrandId, isHydratingSession, activeSessionMeta, buildSessionTitle, openSessionTitleDialog, persistImageWorkspaceSnapshot, promptValue])
+    }, [user?.id, scopedBrandId, isHydratingSession, activeSessionMeta, buildDisplaySessionTitle, openSessionTitleDialog, persistImageWorkspaceSnapshot, promptValue, buildCustomSessionTitle, t])
     const handleRenameCurrentSession = useCallback(async () => {
         if (!user?.id || !scopedBrandId || isHydratingSession || !currentSessionId) return
-        const suggestedTitle = buildSessionTitle(activeSessionMeta?.title || promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' }))
+        const suggestedTitle = buildDisplaySessionTitle(
+            activeSessionMeta?.title || promptValue || t('sessions.imageSessionTitle', { defaultValue: 'Image session' }),
+            Boolean(activeSessionMeta?.title_customized)
+        )
         const selectedTitle = await openSessionTitleDialog(suggestedTitle)
         if (!selectedTitle) return
         try {
@@ -887,13 +902,13 @@ export default function ImagePage() {
                 silent: false,
                 markSavedAt: true,
                 force: true,
-                titleOverride: buildSessionTitle(selectedTitle),
+                titleOverride: buildCustomSessionTitle(selectedTitle),
                 titleCustomized: true,
             })
         } catch (error) {
             console.error('Rename session failed:', error)
         }
-    }, [user?.id, scopedBrandId, isHydratingSession, currentSessionId, activeSessionMeta, buildSessionTitle, openSessionTitleDialog, persistImageWorkspaceSnapshot, promptValue])
+    }, [user?.id, scopedBrandId, isHydratingSession, currentSessionId, activeSessionMeta, buildDisplaySessionTitle, openSessionTitleDialog, persistImageWorkspaceSnapshot, promptValue, buildCustomSessionTitle, t])
 
     const workspaceSignature = useMemo(() => {
         return buildWorkspaceChangeSignature(buildWorkspaceSnapshot())
@@ -2298,7 +2313,10 @@ export default function ImagePage() {
                         showPromptDebugTrigger={Boolean(isAdmin && creationFlow.state.generatedImage && debugPromptData?.finalPrompt)}
                         layoutIconOverrides={layoutIconOverrides}
                         isAdmin={Boolean(isAdmin)}
-                        sessionName={buildSessionTitle(activeSessionMeta?.title || selectedSessionToLoad || t('sessions.newSessionTitle', { defaultValue: 'New session' }))}
+                        sessionName={buildDisplaySessionTitle(
+                            activeSessionMeta?.title || selectedSessionToLoad || t('sessions.newSessionTitle', { defaultValue: 'New session' }),
+                            Boolean(activeSessionMeta?.title_customized)
+                        )}
                     />
                     {!isMobile && (
                         <FeedbackButton
@@ -2369,7 +2387,10 @@ export default function ImagePage() {
             layoutOverrides={layoutOverrides}
             sessions={(workSessions || []).map((session) => ({
                 id: String(session._id),
-                title: buildSessionTitle(session.title || t('sessions.untitled', { defaultValue: 'Untitled session' })),
+                title: buildDisplaySessionTitle(
+                    session.title || t('sessions.untitled', { defaultValue: 'Untitled session' }),
+                    Boolean(session.title_customized)
+                ),
                 updatedAt: session.updated_at,
                 active: session.active,
             }))}
@@ -2580,7 +2601,7 @@ export default function ImagePage() {
                 confirmLabel={t('ui.sessionDialogConfirm')}
                 onValueChange={setSessionTitleDraft}
                 onCancel={() => closeSessionTitleDialog(null)}
-                onConfirm={() => closeSessionTitleDialog(buildSessionTitle(sessionTitleDraft))}
+                onConfirm={() => closeSessionTitleDialog(buildCustomSessionTitle(sessionTitleDraft))}
             />
         </DashboardLayout >
     )

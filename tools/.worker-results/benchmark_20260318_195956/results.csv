@@ -1,0 +1,12 @@
+model,spec_id,difficulty,time_s,prompt_tokens,gen_tokens,tok_per_sec,followed_format,valid_blocks,has_extraneous_text,quality_notes
+glm-5:cloud,01-simple-edit,easy,25,271,229,0,YES,1,NO,
+glm-5:cloud,02-refactor,medium,25,372,946,0,YES,1,NO,
+glm-5:cloud,03-generate-type,medium,7,367,542,0,YES,1,NO,
+glm-5:cloud,04-test-gen,hard,16,404,1484,0,YES,1,NO,
+glm-5:cloud,05-multi-file,hard,15,358,401,0,YES,2,NO,
+glm-5:cloud,06-i18n-save-preset-dialog,easy,12,12149,892,0,YES,5,NO,
+glm-5:cloud,07-logger-branding-configurator,medium,26,8290,1956,0,PARTIAL,3,YES,
+glm-5:cloud,08-i18n-creation-flow-batch,medium,90,19292,4096,0,PARTIAL,12,YES,
+glm-5:cloud,09-benchmark-harness-meta,medium,70,2549,4096,0,NO,0,NO,
+glm-5:cloud,10-logger-analyze-brand-dna,hard,27,31415,1924,0,YES,3,NO,
+glm-5:cloud,11-i18n-carousel-page,hard,51,24770,4096,0,NO,0,NO,

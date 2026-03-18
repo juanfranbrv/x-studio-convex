@@ -1,0 +1,13 @@
+{
+    "id": "08-i18n-creation-flow-batch",
+    "difficulty": "medium",
+    "task": "Reduce inline defaultValue fallback strings across the listed creation-flow components by moving missing copy into the common locale files and then calling t() without repeating the fallback where the key now exists. Do not rename existing keys unless necessary. Modify ONLY the listed files. Output ONLY edit blocks.",
+    "files": [
+        "src/components/studio/creation-flow/StyleChipsSelector.tsx",
+        "src/components/studio/creation-flow/ImageReferenceSelector.tsx",
+        "src/components/studio/creation-flow/LazyPromptInput.tsx",
+        "src/locales/es-ES/common.json",
+        "src/locales/en-US/common.json"
+    ],
+    "output_format": "edit blocks"
+}

@@ -1,0 +1,11 @@
+{
+    "id": "nico-01-i18n-style-chips",
+    "difficulty": "green-from-yellow",
+    "task": "Microplan: clean up inline defaultValue fallbacks only in StyleChipsSelector. Reuse existing keys in the common namespace when they already exist. If any key is missing, add only the minimal new keys needed to both locale files. Do not touch any other component. Do not change behavior, layout, or styling. Output ONLY edit blocks.",
+    "files": [
+        "src/components/studio/creation-flow/StyleChipsSelector.tsx",
+        "src/locales/es-ES/common.json",
+        "src/locales/en-US/common.json"
+    ],
+    "output_format": "edit blocks"
+}

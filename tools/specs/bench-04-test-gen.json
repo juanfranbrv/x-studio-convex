@@ -1,0 +1,8 @@
+{
+    "id": "04-test-gen",
+    "difficulty": "hard",
+    "task": "Write a Vitest test file for the function below. Cover: 1) valid input returns processed object, 2) empty title returns null, 3) negative index returns null, 4) description over 500 chars returns null, 5) trims whitespace from title and description. Use describe/it blocks. Output ONLY a ```create:__tests__/processSlide.test.ts``` block.",
+    "files": [],
+    "inline_context": "export function processSlide(input: { title: string; description: string; index: number }) {\n    if (!input.title || input.title.trim().length === 0) {\n        console.error('Title is required');\n        return null;\n    }\n    if (input.index < 0 || input.index > 20) {\n        console.error('Index must be between 0 and 20');\n        return null;\n    }\n    if (input.description && input.description.length > 500) {\n        console.error('Description too long');\n        return null;\n    }\n    return {\n        ...input,\n        title: input.title.trim(),\n        description: input.description?.trim() || '',\n        processedAt: Date.now()\n    };\n}",
+    "output_format": "create block"
+}

@@ -1,0 +1,8 @@
+{
+    "id": "01-simple-edit",
+    "difficulty": "easy",
+    "task": "In the TypeScript interface below, add a new optional field 'subtitle' of type string, with a JSDoc comment '/** Short subtitle for the image */'. Place it right after the 'headline' field. Output ONLY the edit block, nothing else.",
+    "files": [],
+    "inline_context": "export interface CarouselSlide {\n    index: number\n    headline?: string\n    title: string\n    description: string\n    status: 'pending' | 'generating' | 'done' | 'error'\n}",
+    "output_format": "edit blocks"
+}

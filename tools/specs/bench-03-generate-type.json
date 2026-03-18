@@ -1,0 +1,8 @@
+{
+    "id": "03-generate-type",
+    "difficulty": "medium",
+    "task": "Given the API response example below, generate a TypeScript type definition called 'ApiSlideResponse' that accurately types this JSON structure. Include JSDoc comments for each field. Output ONLY a ```create:types/api-slide.ts``` block.",
+    "files": [],
+    "inline_context": "{\n    \"id\": \"slide_abc123\",\n    \"index\": 0,\n    \"title\": \"Welcome\",\n    \"headline\": \"Big Bold Text\",\n    \"description\": \"Some description here\",\n    \"status\": \"done\",\n    \"imageUrl\": \"https://example.com/img.png\",\n    \"metadata\": {\n        \"generatedAt\": \"2026-03-18T10:00:00Z\",\n        \"model\": \"gemini-flash\",\n        \"promptTokens\": 1200,\n        \"completionTokens\": 340\n    },\n    \"tags\": [\"carousel\", \"branded\"],\n    \"dimensions\": { \"width\": 1080, \"height\": 1080 }\n}",
+    "output_format": "create block"
+}

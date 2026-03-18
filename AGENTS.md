@@ -190,6 +190,53 @@ Cuando Juanfran añada **"misión autónoma"** a cualquier petición, se activa 
 4. **Solo detenerse al final**: Una vez que el agente tiene certeza visual de que la tarea está completa y correcta, informar a Juanfran con el resultado final, el estado del navegador y lo que se hizo.
 5. **Excepciones únicas**: Solo interrumpir el ciclo autónomo si se encuentra una decisión de producto ambigua con más de una dirección válida, una modificación en zona protegida por `DONT_TOUCH.md`, o un rediseño completo no autorizado (regla 7).
 
+### 18. Protocolo de delegación con EmilIA
+
+Cuando exista una tarea susceptible de delegación mecánica a un worker local/cloud, el agente principal debe evaluar si conviene enviársela a **EmilIA**.
+
+#### Regla de decisión
+
+Aplicar siempre un semáforo antes de delegar:
+
+- **Verde**:
+  - tarea mecánica
+  - alcance acotado
+  - archivos conocidos
+  - revisión barata
+  - se puede delegar a `EmilIA`
+- **Amarillo**:
+  - tarea mecánica pero demasiado amplia para una sola spec
+  - requiere partirse en piezas
+  - primero se trocea y luego se delega a `EmilIA` por microtareas
+- **Rojo**:
+  - diagnóstico
+  - arquitectura
+  - UX/UI ambigua
+  - lógica de negocio difusa
+  - no se delega a `EmilIA`
+
+#### Regla de envío
+
+`EmilIA` **nunca** debe recibir una misión vaga.
+
+Siempre debe recibir:
+- un **plan corto cerrado** para una tarea verde, o
+- un **microplan** que forme parte de un plan mayor para una tarea amarilla
+
+Cada plan o microplan para `EmilIA` debe incluir:
+- objetivo exacto
+- archivos permitidos
+- transformación concreta
+- límites de lo que no puede tocar
+- formato de salida esperado
+- criterio rápido de revisión
+
+#### Regla de seguridad
+
+- `EmilIA` trabaja en **modo propuesta**, no en autoaplicación por defecto
+- el agente principal sigue siendo responsable de revisar, corregir y decidir si aplicar o no
+- si una tarea necesita demasiada explicación para delegarse con seguridad, no es tarea para `EmilIA`
+
 ### 16. Regla Anti-Mojibake (UTF-8 estricto)
 - Antes de cerrar una tarea con cambios de texto UI, ejecutar: `rg -n -P "\\u00C3|\\u00C2|\\uFFFD" src`.
 - Si hay coincidencias, no finalizar hasta corregirlas.

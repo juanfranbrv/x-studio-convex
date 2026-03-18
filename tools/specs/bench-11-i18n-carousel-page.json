@@ -1,0 +1,11 @@
+{
+    "id": "11-i18n-carousel-page",
+    "difficulty": "hard",
+    "task": "Propose a real large-task i18n pass on carousel/page.tsx. Move a contained but meaningful set of missing UI strings from inline defaultValue fallbacks into the carousel locale files, then update the page to consume those keys without repeating the same inline English fallback. Keep the change bounded and reviewable; do not touch unrelated behavior. Modify ONLY the listed files. Output ONLY edit blocks.",
+    "files": [
+        "src/app/carousel/page.tsx",
+        "src/locales/es-ES/carousel.json",
+        "src/locales/en-US/carousel.json"
+    ],
+    "output_format": "edit blocks"
+}

@@ -24,6 +24,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useTranslation } from 'react-i18next'
+import { log } from '@/lib/logger'
 
 import { type LayoutOption, type SelectedColor, type TextAsset } from '@/lib/creation-flow-types'
 
@@ -87,14 +88,14 @@ function CustomColorPicker({
     const [isOpen, setIsOpen] = useState(false)
 
     const handleSubmit = () => {
-        console.log('[CustomColorPicker] handleSubmit called, value:', value)
+        log.debug('BRAND', 'Custom color picker submit', { value })
         if (/^#[0-9A-F]{6}$/i.test(value)) {
-            console.log('[CustomColorPicker] Calling onAdd with:', value)
+            log.debug('BRAND', 'Adding custom brand color', { color: value })
             onAdd(value)
             setValue('#')
             setIsOpen(false)
         } else {
-            console.log('[CustomColorPicker] Value does not match regex')
+            log.debug('BRAND', 'Rejected custom color with invalid hex', { value })
         }
     }
 
@@ -108,7 +109,7 @@ function CustomColorPicker({
                     setValue(result.sRGBHex.toUpperCase())
                 }
             } catch (error) {
-                console.log('Eyedropper cancelled or failed', error)
+                log.debug('BRAND', 'Eyedropper cancelled or failed', error)
             }
         }
     }
@@ -447,7 +448,10 @@ export function BrandingConfigurator({
     }
 
     if (debugLabel.includes('Colors')) {
-        console.log(`[BrandingConfigurator:${debugLabel}] Render: selected=${selectedBrandColors.length}, total_grid=${colors.length}`)
+        log.debug('BRAND', `BrandingConfigurator render: ${debugLabel}`, {
+            selected: selectedBrandColors.length,
+            totalGrid: colors.length,
+        })
     }
 
     // Ensure first logo is selected by default if none is selected and logos exist
@@ -533,7 +537,7 @@ export function BrandingConfigurator({
                                     role="button"
                                     tabIndex={0}
                                     onClick={() => {
-                                        console.log(`[BrandingConfigurator] Toggling color: ${color}`)
+                                        log.debug('BRAND', 'Toggling brand color', { color })
                                         onToggleBrandColor(color)
                                     }}
                                     className={cn(
@@ -566,8 +570,7 @@ export function BrandingConfigurator({
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation()
-                                                console.log('[BrandingConfigurator] Removing color:', color)
-                                                console.log('[BrandingConfigurator] calling onRemoveBrandColor prop...')
+                                                log.debug('BRAND', 'Removing brand color', { color })
                                                 onRemoveBrandColor(color)
                                             }}
                                             className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white shadow-lg opacity-0 transition-all duration-200 group-hover/swatch:opacity-100 hover:bg-black/70 z-20"

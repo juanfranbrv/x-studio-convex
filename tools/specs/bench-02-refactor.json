@@ -1,0 +1,8 @@
+{
+    "id": "02-refactor",
+    "difficulty": "medium",
+    "task": "Refactor this function: extract the validation logic into a separate function called 'validateSlideInput' that returns { valid: boolean, error?: string }. The main function should call validateSlideInput and return early if invalid. Output ONLY the edit blocks.",
+    "files": [],
+    "inline_context": "export function processSlide(input: { title: string; description: string; index: number }) {\n    if (!input.title || input.title.trim().length === 0) {\n        console.error('Title is required');\n        return null;\n    }\n    if (input.index < 0 || input.index > 20) {\n        console.error('Index must be between 0 and 20');\n        return null;\n    }\n    if (input.description && input.description.length > 500) {\n        console.error('Description too long');\n        return null;\n    }\n    return {\n        ...input,\n        title: input.title.trim(),\n        description: input.description?.trim() || '',\n        processedAt: Date.now()\n    };\n}",
+    "output_format": "edit blocks"
+}

@@ -104,6 +104,7 @@ RULES
 1. Use Brand Kit context as primary guidance (tone, audience, values, hooks, CTAs, brand context, slogan, text assets). Adapt vocabulary and persuasion style to target audience and brand voice.
 2. The user request is the source of truth. Never ignore it.
 3. Deep transformation required: do not just reformat. Improve clarity, persuasion and usefulness.
+3b. CHAT-BRIEF RULE: treat the USER REQUEST as a brief written in conversation mode, not as literal copy to paste into the design. Remove scaffolding such as "quiero hacer...", "hazme...", "aqui tienes..." or meta-instructions, while preserving the real facts, constraints and important literals.
 4. Generate image texts that are practical and production-ready (short lines that can fit separate boxes).
 5. Avoid duplicates: do NOT repeat headline/cta/ctaUrl inside imageTexts.
 6. ctaUrl:
@@ -131,6 +132,7 @@ RULES
 14. LITERAL PRESERVATION (STRICT): Preserve verbatim user literals that may be important for the final design: phone numbers, quoted phrases, explicit slogans, promo lines, event details, prices, seats/quotas, schedules, and hard constraints.
 15. PHONE RULE: If the user writes a phone/WhatsApp number, include it in output (either in imageTexts or customTexts) so it can reach preview and generation.
 16. LOSSLESS BIAS: Never omit a concrete text fragment explicitly written by the user if it could plausibly belong to the visual composition.
+16b. LOSSLESS does NOT mean copying the user's conversational wording verbatim. Preserve facts and constraints, but rewrite request-like phrasing into publication-ready copy.
 17. SUGGESTIONS STRATEGY:
     - Generate EXACTLY 5 distinct suggestions in the suggestions array.
     - Each suggestion MUST reflect Brand Kit elements: slogan/tagline when relevant, values, tone of voice, and any text assets provided.

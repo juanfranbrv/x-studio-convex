@@ -1,0 +1,10 @@
+{
+    "id": "10-logger-analyze-brand-dna",
+    "difficulty": "hard",
+    "task": "Propose a contained logging cleanup for analyze-brand-dna.ts: replace a representative batch of noisy console.log and console.error calls with the shared logger while keeping the diagnostic intent. Do not rewrite the whole file and do not change product behavior. Limit the proposal to a coherent subset near the top of the file so the patch stays reviewable. Modify ONLY the listed files. Output ONLY edit blocks.",
+    "files": [
+        "src/app/actions/analyze-brand-dna.ts",
+        "src/lib/logger.ts"
+    ],
+    "output_format": "edit blocks"
+}

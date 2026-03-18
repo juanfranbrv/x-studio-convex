@@ -55,7 +55,7 @@ export function StyleChipsSelector({
  <span className="text-xs font-semibold">{style.label}</span>
  {isSuggested ? (
  <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary">
- {t('suggestions.alternatives', { defaultValue:'Alternatives' })}
+ {t('suggestions.alternatives')}
  </span>
  ) : null}
  {isSelected ? <Check className="h-3.5 w-3.5" /> : null}
@@ -68,14 +68,14 @@ export function StyleChipsSelector({
 
  <div className="pt-2">
  <label className="mb-2 block pl-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
- {t('styleChips.otherStyle', { defaultValue:'Another style in mind?' })}
+ {t('styleChips.otherStyle')}
  </label>
  <div className="group relative">
  <input
  type="text"
  value={customStyle}
  onChange={(e) => onCustomStyleChange(e.target.value)}
- placeholder={t('styleChips.placeholder', { defaultValue:'e.g. Cyberpunk, Watercolor, Lego...' })}
+ placeholder={t('styleChips.placeholder')}
  className={cn(
 'h-11 w-full rounded-xl border border-slate-200 bg-white/50 px-4 text-sm backdrop-blur-md transition-all duration-300',
 'placeholder:text-slate-400',
@@ -93,7 +93,7 @@ export function StyleChipsSelector({
  <div className="animate-in slide-in-from-bottom-2 flex items-center gap-2 px-1 pt-2 fade-in duration-300">
  <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
  <p className="text-[10px] font-medium text-slate-500">
- {t('styleChips.configuredDirection', { count: selectedStyles.length + (customStyle ? 1 : 0), defaultValue:'Aesthetic direction configured ({{count}} styles)' })}
+ {t('styleChips.configuredDirection', { count: selectedStyles.length + (customStyle ? 1 : 0) })}
  </p>
  </div>
  )}

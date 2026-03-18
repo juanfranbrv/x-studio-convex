@@ -1,0 +1,8 @@
+{
+    "id": "05-multi-file",
+    "difficulty": "hard",
+    "task": "Add a new 'priority' field (type: 'low' | 'medium' | 'high', default 'medium') to the CarouselSlide type AND update the createSlide factory function to accept and default it. Show edit blocks for BOTH files.",
+    "files": [],
+    "inline_context": "--- FILE: types/carousel.ts ---\nexport interface CarouselSlide {\n    index: number\n    headline?: string\n    title: string\n    description: string\n    status: 'pending' | 'generating' | 'done' | 'error'\n}\n--- END FILE ---\n\n--- FILE: utils/slideFactory.ts ---\nimport { CarouselSlide } from '../types/carousel'\n\nexport function createSlide(params: { title: string; description: string; index: number }): CarouselSlide {\n    return {\n        index: params.index,\n        title: params.title,\n        description: params.description,\n        status: 'pending'\n    }\n}\n--- END FILE ---",
+    "output_format": "edit blocks"
+}

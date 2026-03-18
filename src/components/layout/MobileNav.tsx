@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
-import { IconHome, IconImage, IconCarousel, IconSettings, IconStudio } from '@/components/ui/icons'
+import { IconHome, IconImage, IconCarousel, IconSettings } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 
 export function MobileNav() {
@@ -14,7 +14,6 @@ export function MobileNav() {
         { icon: IconHome, label: 'nav.home', href: '/' },
         { icon: IconCarousel, label: 'nav.brandKit', href: '/brand-kit' },
         { icon: IconImage, label: 'nav.image', href: '/image' },
-        { icon: IconStudio, label: 'nav.studioWorkspace', href: '/studio' },
         { icon: IconSettings, label: 'nav.settings', href: '/settings' },
     ]
 

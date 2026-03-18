@@ -1,0 +1,10 @@
+{
+    "id": "07-logger-branding-configurator",
+    "difficulty": "medium",
+    "task": "Replace debug-oriented console.log calls inside BrandingConfigurator and its nested helpers with the shared logger from src/lib/logger.ts. Keep behavior minimal: preserve only useful debug information, use clear labels, and do not touch unrelated logic or styling. Modify ONLY the listed files. Output ONLY edit blocks.",
+    "files": [
+        "src/components/studio/creation-flow/BrandingConfigurator.tsx",
+        "src/lib/logger.ts"
+    ],
+    "output_format": "edit blocks"
+}

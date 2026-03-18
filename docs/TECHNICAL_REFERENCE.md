@@ -230,6 +230,27 @@ La arquitectura queda preparada para sumar mas idiomas anadiendo nuevos director
 - Antes de cerrar fases grandes de texto UI conviene ejecutar una busqueda de `?`, `?` y `?` sobre `src`.
 ## Loading, cancelacion y paginas legales
 
+## Benchmark operativo de local-worker
+
+### Objetivo
+
+- El benchmark de `local-worker` existe para medir ahorro real de coste operativo en tareas mecanicas del repo, no para autoaplicar cambios.
+
+### Nombre operativo
+
+- La persona operativa del worker delegado en este proyecto se llama `EmilIA`.
+- Cuando una tarea se delega a `local-worker`, se entiende que el plan o microplan se esta enviando a `EmilIA` en modo propuesta.
+
+### Regla de seguridad
+
+1. El worker solo genera propuestas en `tools/.worker-results/`.
+2. El benchmark nunca debe ejecutarse con `--apply`.
+3. La validez del workflow se evalua primero por formato aplicable, despues por calidad tecnica.
+
+### Fuente operativa
+
+- La documentacion viva del benchmark esta en [docs/LOCAL_WORKER_BENCHMARK.md](F:/_PROYECTOS/x-studio/docs/LOCAL_WORKER_BENCHMARK.md)
+
 ### Spinner global
 
 - El proyecto usa [src/components/ui/spinner.tsx](F:/_PROYECTOS/x-studio/src/components/ui/spinner.tsx) como spinner visual unico.

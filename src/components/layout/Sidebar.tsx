@@ -7,12 +7,9 @@ import { usePathname } from 'next/navigation'
 import { useClerk, useUser } from '@clerk/nextjs'
 import { useTranslation } from 'react-i18next'
 import {
-    IconHome,
     IconBrandKit,
     IconImage,
-    IconStudio,
     IconCarousel,
-    IconVideo,
     IconSettings,
     IconUser,
     IconLogout,
@@ -40,12 +37,9 @@ export function Sidebar({ className }: SidebarProps) {
     const [isLoggingOut, setIsLoggingOut] = useState(false)
 
     const navItems = [
-        { icon: IconHome, label: t('nav.home'), href: '/' },
         { icon: IconBrandKit, label: t('nav.brandKit'), href: '/brand-kit' },
         { icon: IconImage, label: t('nav.image'), href: '/image' },
-        { icon: IconStudio, label: t('nav.studioWorkspace'), href: '/studio' },
         { icon: IconCarousel, label: t('nav.carousel'), href: '/carousel' },
-        { icon: IconVideo, label: t('nav.video'), href: '/video' },
     ]
 
     const handleLogout = async () => {
@@ -61,21 +55,21 @@ export function Sidebar({ className }: SidebarProps) {
     return (
         <aside
             className={cn(
-                'flex h-screen w-[104px] shrink-0 flex-col border-r border-border/60 bg-[linear-gradient(180deg,hsl(var(--surface-alt))/0.96,hsl(var(--surface))/0.98)] backdrop-blur-xl transition-colors duration-300 ease-in-out',
+                'flex h-dvh w-[104px] shrink-0 flex-col overflow-hidden border-r border-border/60 bg-[linear-gradient(180deg,hsl(var(--surface-alt))/0.96,hsl(var(--surface))/0.98)] backdrop-blur-xl transition-colors duration-300 ease-in-out [@media(max-height:820px)]:w-[96px]',
                 className
             )}
         >
-            <div className="flex flex-col items-center gap-3 border-b border-border/60 px-3 pb-[31px] pt-4">
+            <div className="flex flex-col items-center gap-3 border-b border-border/60 px-3 pb-[31px] pt-4 [@media(max-height:820px)]:gap-2 [@media(max-height:820px)]:px-2.5 [@media(max-height:820px)]:pb-5 [@media(max-height:820px)]:pt-3.5">
                 <Link
                     href="/"
                     aria-label="Post laboratory"
-                    className="flex h-14 w-14 items-center justify-center rounded-2xl border border-transparent bg-transparent shadow-none transition-transform duration-200 hover:scale-[1.03]"
+                    className="flex h-14 w-14 items-center justify-center rounded-2xl border border-transparent bg-transparent shadow-none transition-transform duration-200 hover:scale-[1.03] [@media(max-height:820px)]:h-12 [@media(max-height:820px)]:w-12"
                 >
-                    <AppLogo className="h-[56px] w-[66px] translate-x-[7px] translate-y-[4px]" />
+                    <AppLogo className="h-[56px] w-[66px] translate-x-[7px] translate-y-[4px] [@media(max-height:820px)]:h-[48px] [@media(max-height:820px)]:w-[58px] [@media(max-height:820px)]:translate-x-[6px] [@media(max-height:820px)]:translate-y-[3px]" />
                 </Link>
             </div>
 
-            <nav className="scrollbar-none flex flex-1 flex-col gap-2 overflow-y-auto px-3 pb-5 pt-[31px]">
+            <nav className="thin-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-5 pt-[31px] [@media(max-height:820px)]:gap-1.5 [@media(max-height:820px)]:px-2.5 [@media(max-height:820px)]:pb-4 [@media(max-height:820px)]:pt-5">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href
                     return (
@@ -83,39 +77,38 @@ export function Sidebar({ className }: SidebarProps) {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                'group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 transition-all duration-200',
+                                'group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 transition-all duration-200 [@media(max-height:820px)]:gap-1.5 [@media(max-height:820px)]:rounded-[1.1rem] [@media(max-height:820px)]:py-2.5',
                                 isActive
                                     ? 'border-primary/20 bg-primary/8 text-foreground shadow-[0_18px_40px_-30px_hsl(var(--primary)/0.6)]'
                                     : 'border-transparent text-muted-foreground hover:border-border/60 hover:bg-white/80 hover:text-foreground'
                             )}
                         >
-                            <item.icon className={cn('h-7 w-7 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary')} />
-                            <span className="text-center text-[12px] font-semibold leading-tight">{item.label}</span>
+                            <item.icon className={cn('h-7 w-7 shrink-0 [@media(max-height:820px)]:h-6 [@media(max-height:820px)]:w-6', isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary')} />
+                            <span className="text-center text-[12px] font-semibold leading-tight [@media(max-height:820px)]:text-[11px] [@media(max-height:820px)]:leading-[1.05]">{item.label}</span>
                         </Link>
                     )
                 })}
             </nav>
 
             <div
-                className="flex flex-col items-center gap-3 border-t border-border/60 px-3 pb-6 pt-5"
-                style={{ marginTop: '-92px', transform: 'translateY(-19px)' }}
+                className="shrink-0 flex flex-col items-center gap-3 border-t border-border/60 px-3 pb-5 pt-4 [@media(max-height:820px)]:gap-2.5 [@media(max-height:820px)]:px-2.5 [@media(max-height:820px)]:pb-4 [@media(max-height:820px)]:pt-3"
             >
                 <Link
                     href="/settings"
                     className={cn(
-                        'group flex w-full flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 transition-all duration-200',
+                        'group flex w-full flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 transition-all duration-200 [@media(max-height:820px)]:gap-1.5 [@media(max-height:820px)]:rounded-[1.1rem] [@media(max-height:820px)]:py-2.5',
                         pathname === '/settings'
                             ? 'border-primary/20 bg-primary/8 text-foreground shadow-[0_18px_40px_-30px_hsl(var(--primary)/0.6)]'
                             : 'border-transparent text-muted-foreground hover:border-border/60 hover:bg-white/80 hover:text-foreground'
                     )}
                 >
-                    <IconSettings className={cn('h-7 w-7 shrink-0', pathname === '/settings' ? 'text-primary' : 'text-muted-foreground group-hover:text-primary')} />
-                    <span className="text-[12px] font-semibold">{t('nav.settings')}</span>
+                    <IconSettings className={cn('h-7 w-7 shrink-0 [@media(max-height:820px)]:h-6 [@media(max-height:820px)]:w-6', pathname === '/settings' ? 'text-primary' : 'text-muted-foreground group-hover:text-primary')} />
+                    <span className="text-[12px] font-semibold [@media(max-height:820px)]:text-[11px]">{t('nav.settings')}</span>
                 </Link>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button className="h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-full border border-primary/20 bg-white shadow-[0_18px_40px_-28px_rgba(15,23,42,0.35)] transition-colors transition-shadow duration-200 hover:ring-2 hover:ring-primary/25 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                        <button className="h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-full border border-primary/20 bg-white shadow-[0_18px_40px_-28px_rgba(15,23,42,0.35)] transition-colors transition-shadow duration-200 hover:ring-2 hover:ring-primary/25 focus:outline-none focus:ring-2 focus:ring-primary/30 [@media(max-height:820px)]:h-14 [@media(max-height:820px)]:w-14">
                             {user?.imageUrl ? (
                                 <img
                                     src={user.imageUrl}

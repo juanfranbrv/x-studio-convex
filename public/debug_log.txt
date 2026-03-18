@@ -7285,3 +7285,163 @@
     "brand_context": "Rosella de Rubielos es un alojamiento de alquiler íntegro situado a 962 metros de altitud en Fuentes de Rubielos, Teruel. La propiedad destaca por su arquitectura de piedra local y una decoración cuidada que equilibra lo rústico con el confort contemporáneo. Con capacidad para grupos grandes, la casa cuenta con calefacción central, chimenea, barbacoa, salón de juegos con billar y tres baños completos. Su ubicación es estratégica para el turismo de nieve en Javalambre y Valdelinares, así como para el senderismo, BTT y visitas culturales a Rubielos de Mora, Mora de Rubielos y Albarracín."
   }
 }
+[2026-03-17T19:04:50.325Z] 📄 HTML cargado. Longitud: 868842 caracteres.
+[2026-03-17T19:04:50.326Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-17T19:04:50.336Z] 🔤 Fuentes iniciales extraídas: 8 ["wix-vod-fontello","wix-vod-ruble","Proxima-N-W01-Reg","didot-w01-italic","din-next-w01-light","wf_e6e33fdcbba64710b13dc8042","avenir-lt-w01_35-light1475496","wf_50629521b9c44ba2bbdb3b589"]
+[2026-03-17T19:04:50.343Z] 🔍 Favicon encontrado: https://static.parastorage.com/client/pfavico.ico (4 candidatos)
+[2026-03-17T19:04:50.409Z] 📱 Social links found: 4, Emails: 7, Phones: 3
+[2026-03-17T19:04:50.450Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-17T19:04:50.450Z]    - SVGs en header encontrados: 2
+[2026-03-17T19:04:50.451Z]    - IMGs en header encontrados: 1
+[2026-03-17T19:04:50.451Z]    - firstHeaderSvg.length: 1
+[2026-03-17T19:04:50.452Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 930 caracteres
+[2026-03-17T19:04:50.452Z] 🎯 BOOST: SVG existente en header potenciado (+300) - Score final: 420
+[2026-03-17T19:04:50.454Z] 🖼️ Logo candidates encontrados: 15 (Top score: 420)
+[2026-03-17T19:04:50.454Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-17T19:04:50.455Z]    1. SVG inline - Score: 420 - Length: 930 chars
+[2026-03-17T19:04:50.455Z]    2. URL: https://static.wixstatic.com/media/6cff20_e1b9ee361c1b4d5f8a01822260559b2f~mv2.png/v1/fill/w_182,h_37,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/6cff20_e1b9ee361c1b4d5f8a01822260559b2f~mv2.png - Score: 210
+[2026-03-17T19:04:50.455Z]    3. URL: https://static.wixstatic.com/media/5a4547_782fc008a66b42c0acceed9bad9584dc~mv2.jpeg/v1/fill/w_1280,h_720,enc_auto/file.jpeg - Score: 180
+[2026-03-17T19:04:50.456Z]    4. URL: https://static.wixstatic.com/media/5a4547_0c7f9bfec7664f3b9d10b77ccad8e84e~mv2.jpg/v1/fill/w_147,h_98,al_c,q_80,usm_0.66_1.00_0.01,blur_2,enc_avif,quality_auto/5a4547_0c7f9bfec7664f3b9d10b77ccad8e84e~mv2.jpg - Score: 150
+[2026-03-17T19:04:50.456Z]    5. URL: https://static.wixstatic.com/media/6cff20_afd54fc5e214435d85af32625266d663~mv2.png/v1/fill/w_35,h_98,al_c,lg_1,q_85,enc_avif,quality_auto/6cff20_afd54fc5e214435d85af32625266d663~mv2.png - Score: 150
+[2026-03-17T19:04:50.907Z] 🔍 Extracción inicial: 4 RRSS, 7 emails, 3 teléfonos, 0 direcciones
+[2026-03-17T19:05:04.792Z] Jina error: {}
+[2026-03-17T19:05:22.336Z] ✅ Gemini Response: {
+  "brand_name": "IAMEVE",
+  "tagline": "The Extraordinary Girl",
+  "business_overview": "IAMEVE is a conceptual music and visual arts project by producer Tiff Randol that blends cinematic electronic pop with surreal storytelling. Each release explores deep psychological themes and Jungian archetypes through immersive soundscapes and ethereal visuals.",
+  "brand_values": [
+    "Surrealism",
+    "Self-Discovery",
+    "Artistic Innovation",
+    "Cinematic Depth",
+    "Archetypal Exploration"
+  ],
+  "tone_of_voice": [
+    "Ethereal",
+    "Enigmatic",
+    "Introspective"
+  ],
+  "visual_aesthetic": [
+    "Surrealism",
+    "Retro-Futurism",
+    "Dreamcore"
+  ],
+  "target_audience": [
+    "Alternative pop enthusiasts",
+    "Cinematography and film music fans",
+    "Psychology and spirituality explorers"
+  ],
+  "colors": [
+    "#000000",
+    "#646464",
+    "#FFFFFF",
+    "#0F2CCF",
+    "#2F5DFF"
+  ],
+  "fonts": [
+    "Playfair Display",
+    "Montserrat"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "If Alice took Ziggy Stardust’s hand down the rabbit hole.",
+      "Cinematic electronic pop for the end of the world.",
+      "Epic songs that ooze with spacey surrealism.",
+      "Explore the archetypes of your collective unconscious.",
+      "Unravel the genius inside you through cinematic sound."
+    ],
+    "visual_keywords": [
+      "Surrealism",
+      "Retro-Futurism",
+      "Psychedelic Art",
+      "Cinematic Poster Design",
+      "Space Age Aesthetic"
+    ],
+    "ctas": [
+      "Pre-Save Now",
+      "Explore the Visuals",
+      "Join the Substack"
+    ],
+    "brand_context": "IAMEVE, the artistic persona of composer Tiff Randol, creates a multi-sensory experience merging cinematic electronic pop with deep psychological narratives. Grounded in Jungian theory, her work utilizes surrealist imagery and ethereal vocal arrangements to explore human archetypes, as seen in projects like 'Archetype' and 'Stardust Apocalypse.' With a portfolio spanning film placements in Percy Jackson and Ray Donovan, and accolades from the Japan Media Arts Festival, the brand operates at the intersection of music production, visual storytelling, and introspective community building through platforms like Substack and Patreon."
+  }
+}
+[2026-03-17T19:20:42.201Z] 📄 HTML cargado. Longitud: 136439 caracteres.
+[2026-03-17T19:20:42.203Z] 💾 HTML guardado en public/debug_html.html para inspección
+[2026-03-17T19:20:42.205Z] 🔤 Fuentes iniciales extraídas: 3 ["Cormorant Garamond","Poppins","Nanum Gothic"]
+[2026-03-17T19:20:42.212Z] 🔍 Favicon encontrado: https://elserralet.com/wp-content/uploads/2021/01/cropped-android-chrome-512x512-1-192x192.png (4 candidatos)
+[2026-03-17T19:20:42.221Z] 📱 Social links found: 2, Emails: 1, Phones: 3
+[2026-03-17T19:20:42.224Z] 🎯 JSON-LD: Logo encontrado: https://elserralet.com/wp-content/uploads/2021/06/logocircular.png
+[2026-03-17T19:20:42.249Z] 🔍 Buscando primer SVG/IMG en header con selectores ampliados...
+[2026-03-17T19:20:42.251Z]    - SVGs en header encontrados: 2
+[2026-03-17T19:20:42.252Z]    - IMGs en header encontrados: 27
+[2026-03-17T19:20:42.253Z]    - firstHeaderSvg.length: 1
+[2026-03-17T19:20:42.253Z] 🎯 CONSTANTE: Primer SVG en header detectado - Longitud: 1218 caracteres
+[2026-03-17T19:20:42.254Z] 🎯 BOOST: SVG existente en header potenciado (+300) - Score final: 420
+[2026-03-17T19:20:42.255Z] 🖼️ Logo candidates encontrados: 26 (Top score: 560)
+[2026-03-17T19:20:42.255Z] 📋 CANDIDATOS A LOGO (scored):
+[2026-03-17T19:20:42.256Z]    1. URL: https://elserralet.com/wp-content/uploads/2021/04/logowebm.png - Score: 560
+[2026-03-17T19:20:42.256Z]    2. URL: https://elserralet.com/wp-content/uploads/2021/01/logoweb.png - Score: 560
+[2026-03-17T19:20:42.257Z]    3. SVG inline - Score: 420 - Length: 1218 chars
+[2026-03-17T19:20:42.257Z]    4. URL: https://elserralet.com/wp-content/uploads/2024/11/logo_en_colaboracion_con_turime-668x800.png - Score: 380
+[2026-03-17T19:20:42.257Z]    5. URL: https://elserralet.com/wp-content/uploads/2021/06/logocircular.png - Score: 250
+[2026-03-17T19:20:42.663Z] 🔍 Extracción inicial: 3 RRSS, 1 emails, 3 teléfonos, 0 direcciones
+[2026-03-17T19:21:09.190Z] ✅ Gemini Response: {
+  "brand_name": "El Serralet de Segària",
+  "tagline": "Miel natural elaborada como siempre, pero mejor que nunca",
+  "business_overview": "Una empresa apícola familiar de tercera generación con más de 80 años de historia dedicada a la producción de miel artesanal pura. Combinan la tradición de la trashumancia por diversas sierras españolas con experiencias de apiturismo educativo en la Sierra de Segaria.",
+  "brand_values": [
+    "Tradición",
+    "Sostenibilidad",
+    "Calidad",
+    "Artesanía",
+    "Pasión"
+  ],
+  "tone_of_voice": [
+    "Cercano",
+    "Apasionado",
+    "Educativo"
+  ],
+  "visual_aesthetic": [
+    "Rustic Modernism",
+    "Organic Minimalism",
+    "New Traditionalism"
+  ],
+  "target_audience": [
+    "Familias interesadas en actividades al aire libre",
+    "Consumidores de productos gourmet y naturales",
+    "Turistas responsables que buscan experiencias sostenibles"
+  ],
+  "colors": [
+    "#FAD771",
+    "#025D44",
+    "#333305",
+    "#415D66",
+    "#FFFFFF"
+  ],
+  "fonts": [
+    "Cormorant Garamond",
+    "Poppins"
+  ],
+  "text_assets": {
+    "marketing_hooks": [
+      "Saborea 80 años de tradición apícola en cada gota.",
+      "Conviértete en apicultor por un día y vive una experiencia inolvidable.",
+      "Del colmenar a tu paladar: miel pura de cosecha propia.",
+      "Descubre el secreto de las abejas en el corazón de la Sierra de Segaria.",
+      "Regala naturaleza con nuestros bonos de apiturismo con todo incluido."
+    ],
+    "visual_keywords": [
+      "Vintage Botanical Illustration",
+      "Arts and Crafts Movement",
+      "Rustic Minimalist Poster",
+      "Modern Heritage Aesthetic",
+      "Eco-conscious Design"
+    ],
+    "ctas": [
+      "Reserva tu experiencia",
+      "Compra miel artesanal",
+      "Regala un bono regalo"
+    ],
+    "brand_context": "El Serralet de Segària es una empresa apícola familiar de tercera generación fundada en 1941 en la Marina Alta, Alicante. Su operativa técnica se basa en la trashumancia estacional, trasladando colmenas entre la Sierra de Segaria y regiones como Teruel, Cuenca o Sevilla para obtener mieles monoflorales de azahar, tomillo y bosque. El negocio diversifica su actividad mediante la venta directa de miel cruda artesanal, panales y detalles personalizados para eventos, junto con una sólida oferta de agroturismo que incluye talleres educativos, visitas guiadas al colmenar y catas sensoriales, enfocándose en la sostenibilidad y la preservación del ecosistema apícola local."
+  }
+}

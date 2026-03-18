@@ -63,6 +63,8 @@ const INTENT_ALIASES: Record<string, string> = {
 const DEFAULT_FALLBACK_INTENT: IntentCategory = 'servicio'
 const EMOJI_REGEX = /[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/gu
 const EMOJI_TEST_REGEX = /[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/u
+const CONVERSATIONAL_BRIEF_REGEX =
+    /\b(quiero|quieres|necesito|necesitamos|haz(?:me)?|crear|crea(?:rme)?|hacer|genera(?:rme)?|dame|me gustaria|me gustaría|aqui tienes|aquí tienes|calcula|incluye|pon|usa|sobre)\b/i
 
 function normalizeText(text: string): string {
     return text
@@ -297,6 +299,63 @@ function extractLineCandidates(text: string): string[] {
     return Array.from(new Set(filtered))
 }
 
+function looksLikeConversationalBrief(text: string): boolean {
+    const clean = sanitizeUrlsInText(text).trim()
+    if (!clean) return false
+
+    const startsLikeRequest = /^(quiero|necesito|haz(?:me)?|crea(?:rme)?|genera(?:rme)?|dame|me gustaria|me gustaría|aqui tienes|aquí tienes|calcula)\b/i.test(clean)
+    if (startsLikeRequest) return true
+
+    const lower = canonicalText(clean)
+    return lower.includes('quiero hacer una publicacion') ||
+        lower.includes('quiero hacer un post') ||
+        lower.includes('aqui tienes algunos detalles') ||
+        lower.includes('calcula los anos y meses') ||
+        lower.includes('calcula los años y meses')
+}
+
+function isLikelyLiteralCarryover(candidate: string, userText: string): boolean {
+    const cleanCandidate = sanitizeUrlsInText(candidate).trim()
+    if (!cleanCandidate) return false
+    if (looksLikeConversationalBrief(cleanCandidate)) return true
+
+    const candidateCanon = canonicalText(cleanCandidate)
+    const userCanon = canonicalText(userText)
+    if (!candidateCanon || !userCanon) return false
+
+    if (candidateCanon.length >= 40 && userCanon.includes(candidateCanon)) {
+        return true
+    }
+
+    const candidateWords = candidateCanon.split(' ').filter(Boolean)
+    if (candidateWords.length < 8) return false
+
+    const overlapCount = candidateWords.filter((word) => userCanon.includes(word)).length
+    return overlapCount / candidateWords.length >= 0.85 && CONVERSATIONAL_BRIEF_REGEX.test(cleanCandidate)
+}
+
+function buildSupportFragmentsFromCaption(
+    caption: string | undefined,
+    blockedCanon: string[],
+    userText: string
+): string[] {
+    const cleanCaption = sanitizeUrlsInText(caption)
+        .replace(EMOJI_REGEX, ' ')
+        .replace(/#\S+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+    if (!cleanCaption) return []
+
+    return cleanCaption
+        .split(/(?<=[.!?])\s+/g)
+        .map((sentence) => sentence.trim().replace(/[.!?]+$/g, ''))
+        .filter(Boolean)
+        .filter((sentence) => sentence.length >= 18)
+        .filter((sentence) => !isLikelyLiteralCarryover(sentence, userText))
+        .filter((sentence) => !blockedCanon.includes(canonicalText(sentence)))
+}
+
 function organizeParsedOutput(
     parsed: ParsedIntentResult,
     userText: string,
@@ -342,6 +401,7 @@ function organizeParsedOutput(
         const clean = sanitizeUrlsInText(raw).trim()
         if (!clean) return
         if (/^https?:\/\//i.test(clean)) return
+        if (isLikelyLiteralCarryover(clean, userText)) return
         const normalizedClean = (!userProvidedUrl && safeBrandWebsite)
             ? replaceUrlsWithBrand(clean, safeBrandWebsite)
             : clean
@@ -377,7 +437,12 @@ function organizeParsedOutput(
         })
     }
 
-    // 3) Fallback: if model returned little, use user-authored lines.
+    // 3) If the model did not provide usable supporting copy, derive it from the caption.
+    if (fragments.length === 0) {
+        buildSupportFragmentsFromCaption(parsed.caption, blocked, userText).forEach(pushFragment)
+    }
+
+    // 4) Last fallback: use user-authored concrete lines only if they do not read like chat instructions.
     if (fragments.length === 0) {
         userLines.forEach((line) => {
             pushFragment(line)
@@ -754,11 +819,11 @@ function buildSafeFallbackParsedOutput(
         detectedIntent: inferredIntent,
         detectedLanguage: normalizeLang(detectedLanguage) || 'es',
         confidence: 0.25,
-        headline: '',
+        headline: extractCoreSubject(userText),
         cta: '',
         ctaUrl: brandWebsite?.trim() || '',
-        caption: sanitizeUrlsInText(userText),
-        imageTexts: [{ label: getLocalizedTextLabel(0, detectedLanguage), value: sanitizeUrlsInText(userText), type: 'custom' }],
+        caption: '',
+        imageTexts: [],
     }
 
     return organizeParsedOutput(base, userText, brandWebsite)
