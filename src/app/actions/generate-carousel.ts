@@ -280,6 +280,8 @@ export interface SlideContent {
     index: number
     /** Short, punchy text rendered inside the image (max ~10 words). Falls back to title when absent. */
     headline?: string
+    /** Synthetic subtitle rendered below the headline in the image (max ~20 words). Concise value prop, not the full description. */
+    subtitle?: string
     title: string
     description: string
     visualPrompt: string
@@ -298,6 +300,7 @@ export interface CarouselSlide {
     imageOriginalUrl?: string
     image_original_storage_id?: string
     headline?: string
+    subtitle?: string
     title: string
     description: string
     mustKeepFacts?: string[]
@@ -1449,6 +1452,15 @@ async function decomposeIntoSlides(
         return text.replace(/\[.*?\]\((https?:\/\/.*?)\)/g, '$1')
     }
 
+    /** Extract a short subtitle (first sentence, max ~20 words) from a long description. */
+    function deriveSubtitleFromDescription(description: string): string | undefined {
+        if (!description) return undefined
+        const firstSentence = description.split(/[.!?]\s/)[0]?.trim()
+        if (!firstSentence) return undefined
+        const words = firstSentence.split(/\s+/)
+        return words.length > 20 ? words.slice(0, 20).join(' ') + '...' : firstSentence
+    }
+
     function replaceUrlsWithBrand(text: string, brandUrl?: string): string {
         if (!brandUrl) return text
         const trimmed = brandUrl.trim()
@@ -1859,6 +1871,7 @@ const normalizeParsed = (parsed: any) => {
             // Discard headlines that are just role labels instead of real copy
             const roleLabels = /^(gancho\s*emocional|hook|contenido|content|cta|cierre|portada|inicio|desarrollo|conclusi[oó]n|accion|acci[oó]n|llamada\s*a\s*la\s*acci[oó]n)$/i
             const safeHeadline = roleLabels.test(rawHeadline.trim()) ? '' : rawHeadline
+            const rawSubtitle = sanitizeTextFromMarkdownLinks(typeof raw?.subtitle === 'string' ? raw.subtitle.trim() : '')
             const safeTitle = sanitizeTextFromMarkdownLinks(typeof raw?.title === 'string' ? raw.title.trim() : '')
             const safeDescription = sanitizeTextFromMarkdownLinks(typeof raw?.description === 'string' ? raw.description.trim() : '')
             const safeVisualPrompt = typeof raw?.visualPrompt === 'string' ? raw.visualPrompt.trim() : ''
@@ -1875,6 +1888,7 @@ const normalizeParsed = (parsed: any) => {
             return {
                 index: i,
                 headline: safeHeadline || undefined,
+                subtitle: rawSubtitle || deriveSubtitleFromDescription(resolvedDescription),
                 title: resolvedTitle,
                 description: resolvedDescription,
                 visualPrompt: enforceVisualPromptLanguage(
@@ -2405,6 +2419,7 @@ export async function generateCarouselAction(
         const slides: CarouselSlide[] = slideContents.slice(0, effectiveSlideCount).map(sc => ({
             index: sc.index,
             headline: sc.headline,
+            subtitle: sc.subtitle,
             title: sc.title,
             description: sc.description,
             status: 'pending' as const

@@ -41,7 +41,7 @@ interface CarouselCanvasPanelProps {
     currentIndex: number
     onSelectSlide: (index: number) => void
     onRegenerateSlide: (index: number, correctionPrompt?: string) => void
-    onUpdateSlideScript?: (index: number, updates: { headline?: string; title?: string; description?: string; visualPrompt?: string; mustKeepFacts?: string[] }) => void
+    onUpdateSlideScript?: (index: number, updates: { headline?: string; subtitle?: string; title?: string; description?: string; visualPrompt?: string; mustKeepFacts?: string[] }) => void
     isGenerating?: boolean
     isRegenerating: boolean
     regeneratingIndex: number | null
@@ -228,6 +228,7 @@ export function CarouselCanvasPanel({
     const [showScriptOverlay, setShowScriptOverlay] = useState(false)
     const [draftTitle, setDraftTitle] = useState('')
     const [draftHeadline, setDraftHeadline] = useState('')
+    const [draftSubtitle, setDraftSubtitle] = useState('')
     const [draftDescription, setDraftDescription] = useState('')
     const [draftVisualPrompt, setDraftVisualPrompt] = useState('')
     const loaderVisibleRef = useRef(false)
@@ -392,6 +393,7 @@ export function CarouselCanvasPanel({
         if (!currentSlide) return
         setDraftTitle(currentSlide.title || '')
         setDraftHeadline(currentSlide.headline || '')
+        setDraftSubtitle(currentSlide.subtitle || '')
         setDraftDescription(currentSlide.description || '')
         setDraftVisualPrompt(currentVisualContentEditable)
         setIsEditingScript(false)
@@ -419,15 +421,18 @@ export function CarouselCanvasPanel({
     const handleSaveScript = () => {
         if (!currentSlide) return
         const nextHeadline = draftHeadline.trim() || currentSlide.headline
+        const nextSubtitle = draftSubtitle.trim() || currentSlide.subtitle
         const nextDescription = draftDescription.trim() || currentSlide.description
         const headlineChanged = nextHeadline !== (currentSlide.headline || '')
+        const subtitleChanged = nextSubtitle !== (currentSlide.subtitle || '')
         onUpdateSlideScript?.(currentSlide.index, {
             title: currentSlide.title,
             headline: nextHeadline,
+            subtitle: nextSubtitle,
             description: nextDescription
         })
         setIsEditingScript(false)
-        if (headlineChanged && currentSlide.imageUrl) {
+        if ((headlineChanged || subtitleChanged) && currentSlide.imageUrl) {
             setShowScriptOverlay(false)
             onRegenerateSlide(currentSlide.index)
         }
@@ -1240,7 +1245,7 @@ export function CarouselCanvasPanel({
                                                 {currentSlide.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
                                             </p>
                                             {isEditingScript ? (
-                                                <div className="w-full max-w-sm space-y-3">
+                                                <div className="w-full max-w-lg space-y-3">
                                                     <Input
                                                         value={draftHeadline}
                                                         onChange={(e) => setDraftHeadline(e.target.value)}
@@ -1249,6 +1254,13 @@ export function CarouselCanvasPanel({
                                                         disabled={isGeneratingAny}
                                                         autoFocus
                                                     />
+                                                    <Input
+                                                        value={draftSubtitle}
+                                                        onChange={(e) => setDraftSubtitle(e.target.value)}
+                                                        placeholder={tt('common:preview.slideSubtitlePlaceholder', 'Subtítulo visible en la imagen')}
+                                                        className="text-sm text-center"
+                                                        disabled={isGeneratingAny}
+                                                    />
                                                     <div className="flex gap-2 justify-center">
                                                         <Button size="sm" onClick={handleSaveScript} disabled={isGeneratingAny}>
                                                             {tt('common:preview.saveAndRegenerate', 'Save & regenerate')}
@@ -1256,6 +1268,8 @@ export function CarouselCanvasPanel({
                                                         <Button size="sm" variant="outline" onClick={() => {
                                                             setIsEditingScript(false)
                                                             setDraftHeadline(currentSlide.headline || '')
+                                                            setDraftSubtitle(currentSlide.subtitle || '')
+                                                            setDraftDescription(currentSlide.description || '')
                                                         }}>
                                                             {tt('common:actions.cancel', 'Cancel')}
                                                         </Button>
@@ -1267,21 +1281,30 @@ export function CarouselCanvasPanel({
                                                         className="font-semibold text-foreground text-center text-lg cursor-text px-4"
                                                         onClick={() => {
                                                             setDraftHeadline(currentSlide.headline || '')
+                                                            setDraftSubtitle(currentSlide.subtitle || '')
+                                                            setDraftDescription(currentSlide.description || '')
                                                             setIsEditingScript(true)
                                                         }}
                                                         title={tt('common:preview.clickToEdit', 'Click to edit')}
                                                     >
                                                         {currentSlide.headline || currentSlide.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
                                                     </h3>
+                                                    {currentSlide.subtitle && (
+                                                        <p className="text-sm text-muted-foreground text-center px-4">
+                                                            {currentSlide.subtitle}
+                                                        </p>
+                                                    )}
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
                                                         onClick={() => {
                                                             setDraftHeadline(currentSlide.headline || '')
+                                                            setDraftSubtitle(currentSlide.subtitle || '')
+                                                            setDraftDescription(currentSlide.description || '')
                                                             setIsEditingScript(true)
                                                         }}
                                                     >
-                                                        {tt('common:preview.editHeadline', 'Edit headline')}
+                                                        {tt('common:preview.editScript', 'Edit script')}
                                                     </Button>
                                                 </>
                                             )}
@@ -1305,7 +1328,7 @@ export function CarouselCanvasPanel({
                             </div>
                         ) : hasScript ? (
                             <div className="w-full h-full flex items-center justify-center p-10">
-                                <div className="w-full max-w-md space-y-3">
+                                <div className="w-full max-w-lg space-y-3">
                                     <div className="carousel-script-preview rounded-2xl border border-border/60 bg-white backdrop-blur-sm p-6 text-center shadow-lg space-y-3">
                                     <p className="uppercase tracking-widest text-muted-foreground" style={{ fontSize: 'var(--cs-label)' }}>
                                         {tt('common:preview.scriptPreview', 'Script preview')}
@@ -1327,6 +1350,13 @@ export function CarouselCanvasPanel({
                                                     setDraftHeadline(prev => appendBrandText(prev, value))
                                                 )}
                                             </div>
+                                            <Input
+                                                value={draftSubtitle}
+                                                onChange={(e) => setDraftSubtitle(e.target.value)}
+                                                placeholder={tt('common:preview.slideSubtitlePlaceholder', 'Subtítulo visible en la imagen')}
+                                                className="text-sm"
+                                                disabled={isGeneratingAny}
+                                            />
                                             <div className="flex gap-2 justify-center">
                                                 <Button size="sm" onClick={handleSaveScript} disabled={isGeneratingAny}>
                                                     {tt('common:actions.save', 'Save')}
@@ -1362,6 +1392,11 @@ export function CarouselCanvasPanel({
                                                 <h3 className="font-semibold text-foreground" style={{ fontSize: 'var(--cs-title)', lineHeight: 1.2 }}>
                                                     {currentSlide?.headline || currentSlide?.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
                                                 </h3>
+                                                {currentSlide?.subtitle && (
+                                                    <p className="text-muted-foreground/70 font-medium" style={{ fontSize: 'var(--cs-body)', lineHeight: 1.4 }}>
+                                                        {currentSlide.subtitle}
+                                                    </p>
+                                                )}
                                             </div>
                                             <Button
                                                 size="sm"

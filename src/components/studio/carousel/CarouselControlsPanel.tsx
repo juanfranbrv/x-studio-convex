@@ -3140,13 +3140,13 @@ export function CarouselControlsPanel({
                                                                                     'line-clamp-2 text-[clamp(0.92rem,0.88rem+0.08vw,0.98rem)] font-semibold leading-tight transition-colors',
                                                                                     isSelected ? 'text-primary/90' : 'text-foreground/86 group-hover:text-foreground/92'
                                                                                 )}>
-                                                                                    {candidate.title || t('ui.untitled', { defaultValue: 'Untitled' })}
+                                                                                    {candidate.headline || candidate.title || t('ui.untitled', { defaultValue: 'Untitled' })}
                                                                                 </p>
                                                                                 <p className={cn(
-                                                                                    'line-clamp-5 text-[0.8rem] leading-relaxed opacity-90',
+                                                                                    'line-clamp-3 text-[0.8rem] leading-relaxed opacity-90',
                                                                                     isSelected ? 'text-primary/72' : 'text-muted-foreground/82'
                                                                                 )}>
-                                                                                    {candidate.description || t('ui.noDescription', { defaultValue: 'No description' })}
+                                                                                    {candidate.subtitle || candidate.description || t('ui.noDescription', { defaultValue: 'No description' })}
                                                                                 </p>
                                                                             </div>
                                                                         </button>

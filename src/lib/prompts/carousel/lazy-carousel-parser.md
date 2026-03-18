@@ -289,6 +289,7 @@ Devuelve un unico JSON valido, sin markdown:
           "index": 0,
           "role": "hook | content | cta",
           "headline": "COPY REAL para la imagen (max 8-10 palabras, NUNCA una descripcion del rol del slide)",
+          "subtitle": "Linea secundaria sintetica para la imagen (max 15-20 palabras). Propuesta de valor concisa.",
           "title": "Titulo editorial del slide para el guion",
           "description": "Copy narrativo completo para el caption (NO aparece en la imagen)",
           "composition": "Blueprint arquitectonico del slide: reticula, areas, jerarquia, anclajes y margenes.",
@@ -302,7 +303,8 @@ Devuelve un unico JSON valido, sin markdown:
     {
       "index": 0,
       "role": "hook | content | cta",
-      "headline": "Frase corta y potente (max 8-10 palabras). UNICO texto visible en la imagen.",
+      "headline": "Frase corta y potente (max 8-10 palabras). Texto principal visible en la imagen.",
+      "subtitle": "Linea secundaria sintetica (max 15-20 palabras). Propuesta de valor concisa visible en la imagen.",
       "title": "Titulo editorial del slide",
       "description": "Copy narrativo completo. NO aparece en la imagen. Va al caption y al guion.",
       "composition": "Blueprint arquitectonico del slide: reticula, areas, jerarquia, anclajes y margenes.",
@@ -316,11 +318,12 @@ Devuelve un unico JSON valido, sin markdown:
 - Los indices deben ir de 0 a optimalSlideCount - 1.
 - El numero de slides debe coincidir exactamente con REQUESTED_SLIDE_COUNT.
 - Genera exactamente 3 suggestions.
-- headline es OBLIGATORIO en cada slide. Maximo 8-10 palabras. Es el unico texto que se renderizara dentro de la imagen. NUNCA uses el nombre del rol como headline (prohibido: "Gancho emocional", "Contenido", "CTA", "Cierre", "Hook", etc.). El headline debe ser COPY REAL dirigido al lector, no una etiqueta meta.
+- headline es OBLIGATORIO en cada slide. Maximo 8-10 palabras. Texto principal visible en la imagen. NUNCA uses el nombre del rol como headline (prohibido: "Gancho emocional", "Contenido", "CTA", "Cierre", "Hook", etc.). El headline debe ser COPY REAL dirigido al lector, no una etiqueta meta.
+- subtitle es OBLIGATORIO en cada slide. Maximo 15-20 palabras. Linea secundaria sintetica que complementa el headline con una propuesta de valor o dato clave. Se renderiza debajo del headline en la imagen. Debe ir al grano — NO es el description completo.
 - description contiene el copy completo/narrativo. Nunca se renderiza en la imagen. Puede ser largo.
 - Cada suggestion debe ser claramente diferente en gancho y narrativa.
 - role debe ser: slide 0 = hook, ultima slide = cta, resto = content.
-- El caption es el texto que acompana al carrusel en Instagram. Debe integrar y desarrollar el contenido narrativo de las descriptions de los slides, NO ser un resumen generico. Incluye los argumentos clave, los datos concretos y los beneficios mencionados en las descriptions. Estructura: parrafo narrativo que fluya naturalmente (4-8 frases), luego emojis y hashtags relevantes. Termina con la URL de marca si existe. El caption NO debe ser una mera frase comercial; debe aportar el valor informativo que complementa las imagenes.
+- El caption es el texto que acompana al carrusel en Instagram. Debe integrar y desarrollar el contenido narrativo de las descriptions de los slides, NO ser un resumen generico. Incluye los argumentos clave, los datos concretos y los beneficios mencionados en las descriptions. Estructura: 2-3 parrafos cortos separados por lineas en blanco (\n\n), cada uno con 2-3 frases. Luego una linea en blanco, emojis y hashtags relevantes. Termina con la URL de marca si existe. El caption NO debe ser una mera frase comercial; debe aportar el valor informativo que complementa las imagenes. IMPORTANTE: usa \n\n (doble salto de linea literal) para separar parrafos dentro del string JSON.
 - No inventes IDs de intentos ni estructuras.
 - No repitas el mismo headline o CTA exactos en multiples slides.
 - En composition esta prohibido mencionar colores, tipografias, materiales o atmosferas.

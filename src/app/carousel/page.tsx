@@ -454,7 +454,7 @@ export default function CarouselPage() {
             .toLowerCase()
     }, [])
 
-    const handleUpdateSlideScript = useCallback((index: number, updates: { headline?: string; title?: string; description?: string; visualPrompt?: string; mustKeepFacts?: string[] }) => {
+    const handleUpdateSlideScript = useCallback((index: number, updates: { headline?: string; subtitle?: string; title?: string; description?: string; visualPrompt?: string; mustKeepFacts?: string[] }) => {
         setSlides(prev => prev.map(s => s.index === index ? { ...s, ...updates } : s))
         setScriptSlides(prev => prev ? prev.map(s => s.index === index ? { ...s, ...updates } : s) : prev)
     }, [])
@@ -524,6 +524,7 @@ export default function CarouselPage() {
             const mappedSlides = result.slides.map(s => ({
                 index: s.index,
                 headline: s.headline,
+                subtitle: s.subtitle,
                 title: s.title,
                 description: s.description,
                 status: 'pending' as const
@@ -834,6 +835,7 @@ export default function CarouselPage() {
         const mappedSlides = suggestion.slides.map(s => ({
             index: s.index,
             headline: s.headline,
+            subtitle: s.subtitle,
             title: s.title,
             description: s.description,
             status: 'pending' as const
@@ -901,6 +903,7 @@ export default function CarouselPage() {
         setSlides(remixedSlides.map((slide) => ({
             index: slide.index,
             headline: slide.headline,
+            subtitle: slide.subtitle,
             title: slide.title,
             description: slide.description,
             status: 'pending' as const
@@ -1044,6 +1047,7 @@ export default function CarouselPage() {
             const initialSlides: CarouselSlide[] = normalizedSlides.map((s) => ({
                 index: s.index,
                 headline: s.headline,
+                subtitle: s.subtitle,
                 title: s.title,
                 description: s.description,
                 status: 'pending' as const
@@ -1667,6 +1671,8 @@ export default function CarouselPage() {
         if (scriptSource) {
             const pendingSlides: CarouselSlide[] = scriptSource.map((slide, idx) => ({
                 index: Number.isFinite(slide.index) ? slide.index : idx,
+                headline: slide.headline,
+                subtitle: slide.subtitle,
                 title: slide.title || '',
                 description: slide.description || '',
                 status: 'pending' as const
@@ -1675,6 +1681,8 @@ export default function CarouselPage() {
         } else if (Array.isArray(slides) && slides.length > 0) {
             const pendingSlides: CarouselSlide[] = slides.map((slide, idx) => ({
                 index: Number.isFinite(slide.index) ? slide.index : idx,
+                headline: slide.headline,
+                subtitle: slide.subtitle,
                 title: slide.title || '',
                 description: slide.description || '',
                 status: 'pending' as const

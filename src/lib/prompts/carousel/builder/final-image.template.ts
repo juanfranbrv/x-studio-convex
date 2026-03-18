@@ -29,10 +29,11 @@ Typography compliance is mandatory and has precedence over aesthetic freedom.
 Typography lock already defined above. Do not override.
 
 TEXT DENSITY RULE (CRITICAL):
-- The TEXT field contains ONLY the headline — a short, punchy phrase designed for visual impact.
-- The image must contain AT MOST 1-2 visible text blocks (headline + optional brand name or CTA).
+- The TEXT field contains the headline and an optional subtitle separated by " / ".
+- Render the headline as the primary large text and the subtitle as a smaller secondary line below it.
+- The image must contain AT MOST 2-3 visible text blocks (headline + subtitle + optional brand name or CTA).
+- The subtitle must be visually subordinate to the headline (smaller font size, lighter weight or muted color).
 - NEVER render paragraphs, bullet lists, long descriptions, or explanatory copy inside the image.
-- If the TEXT field somehow exceeds ~12 words, render ONLY the first sentence.
 - Detailed copy belongs in the caption, NOT in the image. The image is a visual hook, not a flyer.
 {{TYPOGRAPHY_RENDER_GUARD}}
 
