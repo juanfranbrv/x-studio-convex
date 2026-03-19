@@ -34,6 +34,7 @@ import {
     STUDIO_DECISION_DIALOG_HEADER_CLASS,
     STUDIO_DECISION_DIALOG_TITLE_CLASS,
 } from '@/components/studio/shared/dialogStyles'
+import type { PreviewLayoutMode } from '@/components/studio/previewLayoutMode'
 
 interface CarouselCanvasPanelProps {
     slides: CarouselSlide[]
@@ -64,6 +65,7 @@ interface CarouselCanvasPanelProps {
     showPrimaryLogoOnCurrentSlide?: boolean
     compositionGhostIcon?: string
     isAdmin?: boolean
+    previewLayoutMode?: PreviewLayoutMode
 }
 
 const VISUAL_INTENT_MARKERS = [
@@ -211,7 +213,8 @@ export function CarouselCanvasPanel({
     selectedLogoUrl,
     showPrimaryLogoOnCurrentSlide = true,
     compositionGhostIcon,
-    isAdmin = false
+    isAdmin = false,
+    previewLayoutMode = 'default'
 }: CarouselCanvasPanelProps) {
     const { t } = useTranslation()
     const tt = (key: string, defaultValue: string, options?: Record<string, unknown>) =>
@@ -279,6 +282,9 @@ export function CarouselCanvasPanel({
     const getFooterOffset = () => {
         const slide = slides[currentIndex]
         if (isMobile) return slide?.imageUrl ? 180 : 120
+        if (previewLayoutMode === 'compact-scroll') {
+            return slide?.imageUrl ? 240 : 180
+        }
         const base = slide?.imageUrl ? 700 : 400
         const maxOffset = Math.max(220, Math.round(viewportHeight * 0.45))
         return Math.min(base, maxOffset)
@@ -383,6 +389,7 @@ export function CarouselCanvasPanel({
         setHasManualZoom(false)
         setZoom(100)
     }, [isMobile, currentSlide?.imageUrl, canvasAspectRatio])
+
     const hasScript = Boolean(currentSlide && !currentSlide.imageUrl && (currentSlide.title || currentSlide.description))
     const completedSlides = slides.filter(s => s.status === 'done').length
     const isGeneratingAny = isGenerating || slides.some(s => s.status === 'generating') || isRegenerating
@@ -942,7 +949,10 @@ export function CarouselCanvasPanel({
 
             {/* Main Content Area */}
             <div className={cn(
-                "flex-1 relative flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden thin-scrollbar",
+                "flex-1 relative flex flex-col items-center justify-start thin-scrollbar",
+                previewLayoutMode === 'compact-scroll'
+                    ? 'overflow-visible'
+                    : 'overflow-x-hidden overflow-y-auto',
                 isMobile ? "pt-5 px-4 pb-4" : "pt-[1.1rem] px-5 pb-5"
             )}>
                 {/* Canvas Scaling logic matching Image Canvas */}

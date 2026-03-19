@@ -48,6 +48,7 @@ import { IconArrowUp, IconLayers, IconPower, IconRotate, IconSparkles, IconWand 
 import { useTranslation } from 'react-i18next'
 import { MobileWorkPanelDrawer } from '@/components/studio/shared/MobileWorkPanelDrawer'
 import { StudioEditPromptBar, StudioGenerateBar } from '@/components/studio/shared/StudioActionBar'
+import { resolvePreviewLayoutMode } from '@/components/studio/previewLayoutMode'
 import {
     STUDIO_DECISION_BUTTON_CLASS,
     STUDIO_DECISION_DIALOG_CLASS,
@@ -105,6 +106,7 @@ export default function CarouselPage() {
     const [isGenerating, setIsGenerating] = useState(false)
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
+    const [viewportHeight, setViewportHeight] = useState(1080)
     useDisablePullToRefresh(isMobile)
     const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
@@ -126,11 +128,19 @@ export default function CarouselPage() {
     }, [t])
 
     useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768)
+            setViewportHeight(window.innerHeight)
+        }
         checkMobile()
         window.addEventListener('resize', checkMobile)
         return () => window.removeEventListener('resize', checkMobile)
     }, [])
+
+    const previewLayoutMode = resolvePreviewLayoutMode({
+        isMobile,
+        viewportHeight,
+    })
 
     useEffect(() => {
         if (!Array.isArray(carouselStructures)) return
@@ -1898,9 +1908,8 @@ export default function CarouselPage() {
                             panelPosition === 'right' ? 'lg:flex-row' : 'lg:flex-row-reverse'
                         )
                 )}>
-                {/* LEFT COLUMN (Main Canvas) */}
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar">
+                    {/* LEFT COLUMN (Main Canvas) */}
+                    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto no-scrollbar">
                     {!isMobile && isAdmin && activeComposition && activeCompositionRecommendation && (
                         <div className="shrink-0 px-4 pt-4 md:px-6">
                             <div className="rounded-2xl border border-border/70 bg-white shadow-sm">
@@ -2078,89 +2087,96 @@ export default function CarouselPage() {
                             </div>
                         </div>
                     )}
-                    <div className="relative">
-                        <CarouselCanvasPanel
-                            slides={slides}
-                            scriptSlides={scriptSlides}
-                            currentIndex={currentSlideIndex}
-                            onSelectSlide={setCurrentSlideIndex}
-                            onRegenerateSlide={handleRegenerateSlide}
-                            onUpdateSlideScript={handleUpdateSlideScript}
-                            isGenerating={isGenerating}
-                            isRegenerating={isRegenerating}
-                            regeneratingIndex={regeneratingIndex}
-                            aspectRatio={aspectRatio}
-                            caption={caption}
-                            onCaptionChange={setCaption}
-                            onRegenerateCaption={handleRegenerateCaption}
-                            onCancelCaptionGeneration={handleCancelCaption}
-                            isCaptionGenerating={isCaptionGenerating}
-                            isCancelingCaption={isCancelingCaption}
-                            isCaptionLocked={isCaptionLocked}
-                            onToggleCaptionLock={() => setIsCaptionLocked(!isCaptionLocked)}
-                            referenceImages={previewReferenceImages}
-                            referenceImageRoles={previewReferenceImageRoles}
-                            referenceImageMode={referencePreviewState.imageSourceMode}
-                            brandKitTexts={brandKitTexts}
-                            brandName={activeBrandKit?.brand_name}
-                            hook={analysisHook}
-                            selectedLogoUrl={selectedLogoUrl}
-                            showPrimaryLogoOnCurrentSlide={shouldApplyPrimaryLogoToSlide(
-                                selectedLogoUrl,
-                                carouselSettings?.includeLogoOnSlides,
-                                currentSlideIndex,
-                                Math.max(slides.length, 1)
+                        <div
+                            className={cn(
+                                'relative flex flex-col',
+                                previewLayoutMode === 'compact-scroll'
+                                    ? 'min-h-0 flex-none'
+                                    : 'min-h-[340px] flex-1 md:min-h-[500px]'
                             )}
-                            compositionGhostIcon={compositionGhostIcon || undefined}
-                            isAdmin={Boolean(isAdmin)}
-                        />
-                        {!isMobile && (
-                            <FeedbackButton
-                                show={slides.some(slide => Boolean(slide.imageUrl))}
-                                brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
-                                intent={analysisIntent || undefined}
-                                layout={carouselSettings?.compositionId}
-                                variant="tab"
-                                tabSide={panelPosition === 'right' ? 'right' : 'left'}
+                        >
+                            <CarouselCanvasPanel
+                                slides={slides}
+                                scriptSlides={scriptSlides}
+                                currentIndex={currentSlideIndex}
+                                onSelectSlide={setCurrentSlideIndex}
+                                onRegenerateSlide={handleRegenerateSlide}
+                                onUpdateSlideScript={handleUpdateSlideScript}
+                                isGenerating={isGenerating}
+                                isRegenerating={isRegenerating}
+                                regeneratingIndex={regeneratingIndex}
+                                aspectRatio={aspectRatio}
+                                caption={caption}
+                                onCaptionChange={setCaption}
+                                onRegenerateCaption={handleRegenerateCaption}
+                                onCancelCaptionGeneration={handleCancelCaption}
+                                isCaptionGenerating={isCaptionGenerating}
+                                isCancelingCaption={isCancelingCaption}
+                                isCaptionLocked={isCaptionLocked}
+                                onToggleCaptionLock={() => setIsCaptionLocked(!isCaptionLocked)}
+                                referenceImages={previewReferenceImages}
+                                referenceImageRoles={previewReferenceImageRoles}
+                                referenceImageMode={referencePreviewState.imageSourceMode}
+                                brandKitTexts={brandKitTexts}
+                                brandName={activeBrandKit?.brand_name}
+                                hook={analysisHook}
+                                selectedLogoUrl={selectedLogoUrl}
+                                showPrimaryLogoOnCurrentSlide={shouldApplyPrimaryLogoToSlide(
+                                    selectedLogoUrl,
+                                    carouselSettings?.includeLogoOnSlides,
+                                    currentSlideIndex,
+                                    Math.max(slides.length, 1)
+                                )}
+                                compositionGhostIcon={compositionGhostIcon || undefined}
+                                isAdmin={Boolean(isAdmin)}
+                                previewLayoutMode={previewLayoutMode}
                             />
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-3">
-
-                    {mappedSessionGenerations.length > 0 && (
-                        <div className="min-w-0 flex-shrink-0 px-3 pb-1 md:px-4 md:pb-2">
-                            <ThumbnailHistory
-                                generations={mappedSessionGenerations}
-                                currentImageUrl={currentSlide?.imageUrl || null}
-                                onSelectGeneration={(gen) => handleSelectSessionHistory(gen.id)}
-                            />
+                            {!isMobile && (
+                                <FeedbackButton
+                                    show={slides.some(slide => Boolean(slide.imageUrl))}
+                                    brandId={activeBrandKit?.id as Id<"brand_dna"> | undefined}
+                                    intent={analysisIntent || undefined}
+                                    layout={carouselSettings?.compositionId}
+                                    variant="tab"
+                                    tabSide={panelPosition === 'right' ? 'right' : 'left'}
+                                />
+                            )}
                         </div>
-                    )}
-                    <div className="relative px-3 pb-3 pt-1 md:px-4 md:pb-3">
-                        {editPromptBar}
-                    </div>
-                    {isMobile && slides.some(slide => Boolean(slide.imageUrl)) ? (
-                        <div className="mt-3 shrink-0 rounded-2xl border border-border/50">
-                            {actionBar}
-                        </div>
-                    ) : null}
-                </div>
-                </div>
 
-                {/* RIGHT COLUMN - Controls Panel */}
-                {!isMobile ? (
-                    <div className="flex w-full min-h-0 flex-col lg:w-[27%] lg:pb-3">
-                        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-border/60 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.34)]">
-                            {controlsPanel}
-                            <div className="shrink-0 px-4 py-4">
-                                {generateBar}
+                        <div className="flex flex-col gap-3">
+
+                            {mappedSessionGenerations.length > 0 && (
+                                <div className="min-w-0 flex-shrink-0 px-3 pb-1 md:px-4 md:pb-2">
+                                    <ThumbnailHistory
+                                        generations={mappedSessionGenerations}
+                                        currentImageUrl={currentSlide?.imageUrl || null}
+                                        onSelectGeneration={(gen) => handleSelectSessionHistory(gen.id)}
+                                    />
+                                </div>
+                            )}
+                            <div className="relative px-3 pb-3 pt-1 md:px-4 md:pb-3">
+                                {editPromptBar}
+                            </div>
+                            {isMobile && slides.some(slide => Boolean(slide.imageUrl)) ? (
+                                <div className="mt-3 shrink-0 rounded-2xl border border-border/50">
+                                    {actionBar}
+                                </div>
+                            ) : null}
+                        </div>
+                    </div>
+
+                    {/* RIGHT COLUMN - Controls Panel */}
+                    {!isMobile ? (
+                        <div className="flex w-full min-h-0 flex-col lg:w-[27%] lg:pb-3">
+                            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-border/60 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.34)]">
+                                {controlsPanel}
+                                <div className="shrink-0 px-4 py-4">
+                                    {generateBar}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ) : null}
-                {mobileControlsDrawer}
+                    ) : null}
+                    {mobileControlsDrawer}
                 </div>
             </div>
 
