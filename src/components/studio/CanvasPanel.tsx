@@ -747,35 +747,8 @@ export function CanvasPanel({
             <div className="absolute left-3 right-3 top-3 z-40 flex h-16 items-start justify-between px-3 pt-1 pointer-events-none md:left-4 md:right-4">
 
                 {/* Left: Canvas info */}
-                {isAdmin ? (
-                    <div className="hidden md:flex pointer-events-auto items-center gap-2 pt-1">
-                        <div className="flex flex-col items-start gap-0.5 leading-tight text-foreground/90 drop-shadow-sm">
-                            <span className="text-[12px] font-medium">
-                                {aspectRatio}
-                                <span className="opacity-60"> &middot; </span>
-                                {(() => {
-                                    if (currentImageNaturalSize?.w && currentImageNaturalSize?.h) {
-                                        return `${currentImageNaturalSize.w}x${currentImageNaturalSize.h}`;
-                                    }
-                                    const baseH = 600;
-                                    const calcW = baseH * fallbackCanvasAspectRatio;
-                                    return `${Math.round(calcW)}x${baseH}`;
-                                })()}
-                            </span>
-                            <span className="text-[11px] font-medium">
-                                {(() => {
-                                    return `W:${getWidthBucket(viewportWidth)}`;
-                                })()}
-                            </span>
-                            <span className="text-[11px] font-medium">
-                                {(() => {
-                                    const footerOffset = getFooterOffset();
-                                    const availableHeight = Math.max(200, viewportHeight - footerOffset);
-                                    return `H:${getHeightBucket(viewportHeight)} (${Math.round(availableHeight)}px)`;
-                                })()}
-                            </span>
-                        </div>
-                    </div>
+                {false ? (
+                    <div />
                 ) : (
                     <div />
                 )}
@@ -813,11 +786,11 @@ export function CanvasPanel({
             <div className={cn(
                 "canvas-scroll-region",
                 "flex-1 relative flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden thin-scrollbar pr-0 -mr-[2px]",
-                isMobile ? "pl-3 pb-3 pt-16" : "pl-3 pb-3 pt-[2.1rem]"
+                isMobile ? "pl-3 pb-4 pt-16" : "pl-4 pb-5 pt-[1.1rem]"
             )}>
                 {/* Canvas Wrapper - reserves correct space and prevents overflow */}
                 <div
-                    className="shrink-0 flex items-start justify-center w-full"
+                    className="shrink-0 flex w-full items-start justify-center px-2 py-3 md:px-3 md:py-4"
                     style={(() => {
                         const { canvasHeight } = getCanvasFitMetrics()
                         // Strictly follow scaled height to maintain fixed gap below
@@ -831,7 +804,7 @@ export function CanvasPanel({
                     <div
                         ref={containerRef}
                         className={cn(
-                            "canvas-panel relative flex shrink-0 items-center justify-center overflow-visible rounded-[1.45rem] border border-border/45 bg-[linear-gradient(180deg,white,hsl(var(--surface-alt))/0.96)] bg-dot shadow-[0_24px_70px_-44px_rgba(15,23,42,0.38)] transition-transform duration-300 ease-out",
+                            "canvas-panel relative flex shrink-0 items-center justify-center overflow-visible rounded-[1.65rem] border border-border/35 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] bg-dot shadow-[0_28px_64px_-42px_rgba(15,23,42,0.26)] transition-transform duration-300 ease-out",
                             "overflow-visible",
                             wasJustGenerated && "canvas-success-flash"
                         )}
@@ -888,7 +861,7 @@ export function CanvasPanel({
 
                         {/* Main Content Area */}
                         {currentImage ? (
-                            <div className="relative z-20 h-full w-full overflow-hidden rounded-[1.3rem] bg-background/60">
+                            <div className="relative z-20 h-full w-full overflow-hidden rounded-[1.45rem] bg-background/72">
                                 {showPromptDebugTrigger && onOpenPromptDebug && (
                                     <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
                                         <Button
@@ -965,7 +938,7 @@ export function CanvasPanel({
                                 />
                             </div>
                         ) : (
-                            <div className="flex h-full w-full flex-col items-center justify-center rounded-[1.25rem] border border-dashed border-border/45 bg-[linear-gradient(180deg,hsl(var(--surface-alt))/0.96,white)] px-6 text-center text-muted-foreground transition-colors">
+                            <div className="flex h-full w-full flex-col items-center justify-center rounded-[1.45rem] border border-dashed border-border/40 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] px-6 text-center text-muted-foreground transition-colors">
                                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[1.35rem] border border-border/50 bg-background/92 shadow-[0_18px_36px_-28px_rgba(15,23,42,0.42)]">
                                     <IconImageAdd className="h-7 w-7 text-primary/80" />
                                 </div>

@@ -2336,7 +2336,7 @@ export default function ImagePage() {
                         />
                     )}
                 </div>
-                <div className="flex flex-col gap-2.5">
+                <div className="flex flex-col gap-3">
                     <div className="min-w-0 flex-shrink-0 px-3 pb-1 md:px-4 md:pb-2">
                         <ThumbnailHistory
                             generations={displayGenerations}
@@ -2363,7 +2363,7 @@ export default function ImagePage() {
                         />
                     </div>
 
-                    <div className="relative -top-2 px-3 pb-3 md:px-4 md:pb-3">
+                    <div className="relative px-3 pb-3 pt-1 md:px-4 md:pb-3">
                         {editPromptBar}
                     </div>
                 </div>
@@ -2499,7 +2499,7 @@ export default function ImagePage() {
                             </>
                         ) : (
                             <>
-                                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-border/60 bg-white/85 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.38)]">
+                                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                                     {previewPane}
                                 </div>
                                 <div className="flex w-full min-h-0 flex-col lg:w-[27%]">
