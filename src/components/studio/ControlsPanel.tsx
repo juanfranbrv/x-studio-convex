@@ -36,8 +36,6 @@ import { cn } from '@/lib/utils'
 import { SectionHeader } from '@/components/studio/shared/SectionHeader'
 import {
     STUDIO_CONTROLS_SHELL_CLASS,
-    STUDIO_PANEL_CARD_PADDED_CLASS,
-    STUDIO_PANEL_CARD_PADDED_LG_CLASS,
 } from '@/components/studio/shared/panelStyles'
 import {
     STUDIO_SELECT_CONTENT_CLASS,
@@ -60,7 +58,7 @@ import { getDetectedIntentLabel } from '@/lib/intent-label'
 
 const RESET_USES4_FLAG = 'admin_layout_ratings_reset_uses4_done_v1'
 const PANEL_SECTION_HEADER_ICON_CLASS = "h-9 w-9 rounded-none border-0 bg-transparent text-foreground/72 shadow-none"
-const PANEL_SECTION_HEADER_TITLE_CLASS = "text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88"
+const PANEL_SECTION_HEADER_TITLE_CLASS = "text-[0.94rem] font-bold uppercase tracking-[0.14em] text-foreground/92"
 const PANEL_SECTION_SELECT_TRIGGER_CLASS = STUDIO_SELECT_TRIGGER_CLASS
 const PANEL_SECTION_SELECT_CONTENT_CLASS = STUDIO_SELECT_CONTENT_CLASS
 const PANEL_SECTION_SELECT_ITEM_CLASS = STUDIO_SELECT_ITEM_CLASS
@@ -77,6 +75,10 @@ const PANEL_RICH_SELECT_CONTENT_STYLE = {
 const BRAND_KIT_GROUP_CLASS = "space-y-3"
 const BRAND_KIT_CONTACT_ROW_CLASS = "space-y-2 border-b border-border/40 py-2.5 last:border-b-0"
 const BRAND_KIT_SUBTLE_BUTTON_CLASS = "h-9 rounded-xl border border-border/65 bg-background/82 px-3 text-[0.9rem] font-medium text-foreground/88 transition-all duration-200 hover:border-border/90 hover:bg-background hover:shadow-[0_12px_28px_-24px_rgba(15,23,42,0.18)]"
+const PANEL_SECTION_DIVIDER_WRAP_CLASS = "relative py-5 first:pt-0 last:pb-0 before:absolute before:left-[-1rem] before:right-[-1rem] before:top-0 before:h-[2px] before:bg-border/35 first:before:hidden md:before:left-[-1.25rem] md:before:right-[-1.25rem]"
+const PANEL_SECTION_STACK_CLASS = `${PANEL_SECTION_DIVIDER_WRAP_CLASS} space-y-[0.85rem]`
+const PANEL_SECTION_SURFACE_CLASS = "rounded-2xl border border-border/65 bg-background/72 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+const PANEL_SECTION_BODY_CLASS = "rounded-[1.5rem] border border-border/50 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0.74))] px-4 py-4 shadow-[0_16px_38px_-36px_rgba(15,23,42,0.18),inset_0_1px_0_rgba(255,255,255,0.74)] backdrop-blur-[8px]"
 
 type BrandColorRole = 'Texto' | 'Fondo' | 'Acento'
 type DraggedBrandColor = { role: BrandColorRole; color: string } | null
@@ -747,15 +749,15 @@ export function ControlsPanel({
     return (
         <div className={cn(STUDIO_CONTROLS_SHELL_CLASS, className)}>
             <div className="thin-scrollbar flex-1 overflow-y-auto pl-4 pr-0 -mr-[2px] pt-4 md:pl-5 md:pr-0 md:pt-5">
-                <div className="space-y-4 pr-4 pb-10 md:pr-5 md:pb-12">
+                <div className="space-y-3 pr-4 pb-10 md:pr-5 md:pb-12">
                 {/* SECTION: Sessions */}
-                <div className="rounded-[1.8rem] border border-border/70 bg-white/92 p-4 shadow-[0_20px_55px_-36px_rgba(15,23,42,0.28)] backdrop-blur-xl">
+                <div className={PANEL_SECTION_DIVIDER_WRAP_CLASS}>
                     <div className="flex items-start justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center text-foreground/72">
                                 <IconHistory className="h-[18px] w-[18px]" />
                             </div>
-                            <p className="text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88">
+                            <p className={PANEL_SECTION_HEADER_TITLE_CLASS}>
                                 {t('ui.history')}
                             </p>
                         </div>
@@ -794,7 +796,7 @@ export function ControlsPanel({
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-9 w-9 rounded-xl border border-border/70 bg-background/80"
+                                className="h-9 w-9 rounded-xl border border-border/55 bg-background/72"
                                 onClick={onSaveSessionNow}
                                 disabled={isSavingSession || !hasUnsavedChanges}
                                 title={t('ui.saveHistoryNow')}
@@ -917,7 +919,7 @@ export function ControlsPanel({
                 </div>
 
                 {/* STEP 1: Intent Input */}
-                <div ref={step1Ref} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3 relative group`}>
+                <div ref={step1Ref} className={cn(PANEL_SECTION_STACK_CLASS, 'group')}>
                     {(isMagicParsing || isGenerating) && (
                         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 animate-shimmer" />
                     )}
@@ -1018,8 +1020,6 @@ export function ControlsPanel({
                             </Button>
                         </div>
                     </div>
-
-                    {/* Suggestions List */}
                     <SuggestionsList
                         suggestions={state.suggestions}
                         hasOriginalState={!!state.originalState}
@@ -1051,7 +1051,7 @@ export function ControlsPanel({
                     <>
                         {/* STEP 2: LAYOUT */}
                         {availableLayouts.length > 0 && (
-                            <div ref={step2Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
+                            <div ref={step2Ref} className={PANEL_SECTION_STACK_CLASS}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 2 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[2]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step2Ref} />
                                 <SectionHeader
                                     icon={IconLayout}
@@ -1059,7 +1059,7 @@ export function ControlsPanel({
                                     iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
                                     titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
                                     extra={
-                                        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/72 px-2.5 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+                                        <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/62 px-2 py-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
                                             <span className={cn('text-[clamp(0.88rem,0.84rem+0.1vw,0.94rem)] font-medium', showLabCatalog ? 'text-primary/90' : 'text-muted-foreground')}>
                                                 {t('ui.designAdvancedAria')}
                                             </span>
@@ -1071,67 +1071,65 @@ export function ControlsPanel({
                                         </div>
                                     }
                                 />
-                                <div className="space-y-3">
-                                    {showLabCatalog ? (
-                                        <>
-                                            <div className="space-y-1.5">
-                                                <Select
-                                                    value={layoutIntentOverride}
-                                                    onValueChange={(value) => setLayoutIntentOverride(value as 'auto' | IntentCategory)}
-                                                >
-                                                    <SelectTrigger className={PANEL_RICH_SELECT_TRIGGER_CLASS}>
-                                                        <SelectValue
-                                                            placeholder={t('ui.selectIntent')}
-                                                            className="sr-only"
-                                                        />
-                                                        <span className="flex min-w-0 items-center gap-2">
-                                                            <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">
-                                                                {layoutIntentOverride === 'auto'
-                                                                    ? t('ui.autoDetectedIntent', {
-                                                                        defaultValue: 'Auto (detected: {{intent}})',
-                                                                        intent: detectedIntentLabel,
-                                                                    })
-                                                                    : (selectedLayoutIntentMeta?.name || t('ui.selectIntent'))}
-                                                            </span>
+                                {showLabCatalog ? (
+                                    <>
+                                        <div className="space-y-1.5">
+                                            <Select
+                                                value={layoutIntentOverride}
+                                                onValueChange={(value) => setLayoutIntentOverride(value as 'auto' | IntentCategory)}
+                                            >
+                                                <SelectTrigger className={PANEL_RICH_SELECT_TRIGGER_CLASS}>
+                                                    <SelectValue
+                                                        placeholder={t('ui.selectIntent')}
+                                                        className="sr-only"
+                                                    />
+                                                    <span className="flex min-w-0 items-center gap-2">
+                                                        <span className="block truncate text-left text-[clamp(1rem,0.96rem+0.2vw,1.08rem)] font-medium leading-tight">
+                                                            {layoutIntentOverride === 'auto'
+                                                                ? t('ui.autoDetectedIntent', {
+                                                                    defaultValue: 'Auto (detected: {{intent}})',
+                                                                    intent: detectedIntentLabel,
+                                                                })
+                                                                : (selectedLayoutIntentMeta?.name || t('ui.selectIntent'))}
                                                         </span>
-                                                    </SelectTrigger>
-                                                    <SelectContent className={PANEL_SECTION_SELECT_CONTENT_CLASS} position="popper" align="start" style={PANEL_RICH_SELECT_CONTENT_STYLE}>
-                                                        <SelectItem value="auto" className={PANEL_SECTION_SELECT_ITEM_CLASS}>
-                                                            {t('ui.autoDetectedIntent', {
-                                                                defaultValue: 'Auto (detected: {{intent}})',
-                                                                intent: detectedIntentLabel,
-                                                            })}
+                                                    </span>
+                                                </SelectTrigger>
+                                                <SelectContent className={PANEL_SECTION_SELECT_CONTENT_CLASS} position="popper" align="start" style={PANEL_RICH_SELECT_CONTENT_STYLE}>
+                                                    <SelectItem value="auto" className={PANEL_SECTION_SELECT_ITEM_CLASS}>
+                                                        {t('ui.autoDetectedIntent', {
+                                                            defaultValue: 'Auto (detected: {{intent}})',
+                                                            intent: detectedIntentLabel,
+                                                        })}
+                                                    </SelectItem>
+                                                    {INTENT_CATALOG.map((intent) => (
+                                                        <SelectItem key={intent.id} value={intent.id} className={PANEL_SECTION_SELECT_ITEM_CLASS}>
+                                                            {intent.name}
                                                         </SelectItem>
-                                                        {INTENT_CATALOG.map((intent) => (
-                                                            <SelectItem key={intent.id} value={intent.id} className={PANEL_SECTION_SELECT_ITEM_CLASS}>
-                                                                {intent.name}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="w-full">
-                                                <LayoutSelector
-                                                    availableLayouts={compositionCatalogLayouts}
-                                                    selectedLayout={state.selectedLayout}
-                                                    onSelectLayout={selectLayout}
-                                                    intent={effectiveLayoutIntent}
-                                                />
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="rounded-2xl border border-border/65 bg-background/72 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
-                                            <p className="text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] leading-relaxed text-muted-foreground">
-                                                {t('ui.basicModeDescription')}
-                                            </p>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                    )}
-                                </div>
+                                        <div className="w-full">
+                                            <LayoutSelector
+                                                availableLayouts={compositionCatalogLayouts}
+                                                selectedLayout={state.selectedLayout}
+                                                onSelectLayout={selectLayout}
+                                                intent={effectiveLayoutIntent}
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className={PANEL_SECTION_SURFACE_CLASS}>
+                                        <p className="text-[clamp(0.9rem,0.86rem+0.1vw,0.96rem)] leading-relaxed text-muted-foreground">
+                                            {t('ui.basicModeDescription')}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         {/* STEP 3: FORMAT */}
-                        <div ref={step3Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
+                        <div ref={step3Ref} className={PANEL_SECTION_STACK_CLASS}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 3 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[3]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step3Ref} />
                                 <SectionHeader
                                     icon={IconDashboardSquare}
@@ -1148,7 +1146,7 @@ export function ControlsPanel({
                         </div>
 
                         {/* STEP 4A: CONTENT */}
-                        <div ref={step4Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
+                        <div ref={step4Ref} className={PANEL_SECTION_STACK_CLASS}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep === 4 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[4]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step4Ref} />
                                 <SectionHeader
                                     icon={IconImageAdd}
@@ -1185,7 +1183,7 @@ export function ControlsPanel({
                         </div>
 
                         {/* STEP 4B: STYLE */}
-                        <div className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
+                        <div className={PANEL_SECTION_STACK_CLASS}>
                                 <SectionHeader
                                     icon={IconPaintbrush02}
                                     title={t('ui.styleTitle', { defaultValue: 'Estilo' })}
@@ -1218,7 +1216,7 @@ export function ControlsPanel({
                                     isAnalyzing={state.isAnalyzing || false}
                                     error={state.error}
                                 />
-                                <div className="mt-4 rounded-xl border border-border/70 bg-muted/50 px-3 py-3">
+                                <div className="rounded-xl border border-border/60 bg-muted/35 px-3 py-3">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="space-y-1">
                                             <p className="text-[0.88rem] font-medium leading-none">{t('ui.styleTypographyTitle')}</p>
@@ -1236,7 +1234,7 @@ export function ControlsPanel({
                         </div>
 
                         {/* STEP 4C: AUXILIARY LOGOS */}
-                        <div className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS}`}>
+                        <div className={PANEL_SECTION_STACK_CLASS}>
                                 <AuxiliaryLogosCard
                                     uploadedImages={state.uploadedImages}
                                     onUpload={uploadImage}
@@ -1252,7 +1250,7 @@ export function ControlsPanel({
                         </div>
 
                         {/* STEP 6: KIT DE MARCA */}
-                        <div ref={step6Ref} className={`relative ${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-6`}>
+                        <div ref={step6Ref} className={cn(PANEL_SECTION_DIVIDER_WRAP_CLASS, 'space-y-6')}>
                                 <FloatingAssistance isVisible={assistanceEnabled && state.currentStep >= 5 && !state.hasGeneratedImage && !isGenerating} {...STEP_ASSISTANCE[6]} side={panelPosition === 'right' ? 'left' : 'right'} anchorRef={step6Ref} />
                                 <SectionHeader
                                     icon={IconFingerprint}

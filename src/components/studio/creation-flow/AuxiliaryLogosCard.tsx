@@ -164,7 +164,7 @@ export function AuxiliaryLogosCard({
           <div className="flex h-9 w-9 items-center justify-center text-foreground/72">
             <IconFingerprint className="h-[18px] w-[18px]" />
           </div>
-          <h3 className="text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88">{tt('auxLogos.title', 'Auxiliary logos')}</h3>
+          <h3 className="text-[0.94rem] font-bold uppercase tracking-[0.14em] text-foreground/92">{tt('auxLogos.title', 'Auxiliary logos')}</h3>
         </div>
         <Button
           type="button"

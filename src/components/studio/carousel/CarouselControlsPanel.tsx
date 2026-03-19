@@ -44,8 +44,6 @@ import { log } from '@/lib/logger'
 import { SectionHeader } from '@/components/studio/shared/SectionHeader'
 import {
     STUDIO_CONTROLS_SHELL_CLASS,
-    STUDIO_PANEL_CARD_PADDED_CLASS,
-    STUDIO_PANEL_CARD_PADDED_LG_CLASS,
 } from '@/components/studio/shared/panelStyles'
 import {
     STUDIO_RICH_SELECT_TRIGGER_CLASS,
@@ -277,7 +275,7 @@ type SessionDecisionButton = {
 }
 
 const PANEL_SECTION_HEADER_ICON_CLASS = 'h-9 w-9 rounded-none border-0 bg-transparent text-foreground/72 shadow-none'
-const PANEL_SECTION_HEADER_TITLE_CLASS = 'text-[0.94rem] font-semibold uppercase tracking-[0.14em] text-foreground/88'
+const PANEL_SECTION_HEADER_TITLE_CLASS = 'text-[0.94rem] font-bold uppercase tracking-[0.14em] text-foreground/92'
 const PANEL_TEXT_BUTTON_REVEAL_CLASS = 'rounded-xl px-3 py-2 text-[clamp(0.9rem,0.86rem+0.12vw,0.98rem)] text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground hover:shadow-[0_10px_24px_-18px_rgba(15,23,42,0.28)] disabled:opacity-50'
 const PANEL_SECONDARY_BUTTON_CLASS = 'min-h-[42px] h-auto justify-center rounded-[1rem] px-4 py-2 text-center text-[clamp(0.93rem,0.89rem+0.12vw,1rem)] font-medium leading-tight whitespace-normal'
 const PANEL_RICH_SELECT_CONTENT_STYLE = {
@@ -285,6 +283,9 @@ const PANEL_RICH_SELECT_CONTENT_STYLE = {
     minWidth: 'var(--radix-select-trigger-width)',
     maxWidth: 'var(--radix-select-trigger-width)',
 } as const
+const PANEL_SECTION_DIVIDER_WRAP_CLASS = 'relative py-5 first:pt-0 last:pb-0 before:absolute before:left-[-1rem] before:right-[-1rem] before:top-0 before:h-[2px] before:bg-border/35 first:before:hidden'
+const PANEL_SECTION_STACK_CLASS = `${PANEL_SECTION_DIVIDER_WRAP_CLASS} space-y-[0.85rem]`
+const PANEL_SECTION_SURFACE_CLASS = 'rounded-2xl border border-border/65 bg-background/72 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]'
 const ADVANCED_COMPOSITION_MODAL_CLASS = 'h-[min(90vh,920px)] w-[min(94vw,1200px)] !max-w-[min(94vw,1200px)] overflow-hidden rounded-[1.9rem] border border-border/70 bg-background/98 p-0 shadow-[0_38px_100px_-56px_rgba(15,23,42,0.42)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.985] data-[state=closed]:zoom-out-[0.985] data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:slide-out-to-bottom-2 duration-200 flex flex-col'
 
 type SessionDecisionModalState = {
@@ -295,6 +296,7 @@ type SessionDecisionModalState = {
 }
 
 interface CarouselControlsPanelProps {
+    className?: string
     onAnalyze: (settings: CarouselSettings) => Promise<void>
     onGenerate: (settings: CarouselSettings) => void
     onPreviewCompositionChange?: (state: { structureId: string; compositionId: string }) => void
@@ -474,6 +476,7 @@ function pickCompositionId(
 }
 
 export function CarouselControlsPanel({
+    className,
     onAnalyze,
     onGenerate,
     onPreviewCompositionChange,
@@ -2744,10 +2747,11 @@ export function CarouselControlsPanel({
     }, [primaryActionRequiresReanalysis, onReanalysisStateChange])
 
     return (
-        <div className={STUDIO_CONTROLS_SHELL_CLASS}>
-            <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-5">
+        <div className={cn(STUDIO_CONTROLS_SHELL_CLASS, className)}>
+            <div className="thin-scrollbar flex-1 overflow-y-auto pl-4 pr-0 -mr-[2px] pt-4 md:pl-5 md:pr-0 md:pt-5">
+                <div className="space-y-3 pr-4 pb-10 md:pr-5 md:pb-12">
                 {/* SECTION: Sessions */}
-                <div className={`${STUDIO_PANEL_CARD_PADDED_LG_CLASS} space-y-4`}>
+                <div className={PANEL_SECTION_STACK_CLASS}>
                     <SectionHeader
                         icon={IconHistory}
                         title={t('ui.history')}
@@ -2902,7 +2906,7 @@ export function CarouselControlsPanel({
 
                 {/* Slide Count */}
                 {isStepVisible(1) && (
-                <div ref={(el) => { stepRefs.current[1] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                <div ref={(el) => { stepRefs.current[1] = el }} className={PANEL_SECTION_STACK_CLASS}>
                     <SectionHeader
                         icon={IconCarousel}
                         title={t('ui.slideCount')}
@@ -2927,7 +2931,7 @@ export function CarouselControlsPanel({
 
                 {/* Prompt */}
                 {isStepVisible(2) && (
-                <div ref={(el) => { stepRefs.current[2] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                <div ref={(el) => { stepRefs.current[2] = el }} className={PANEL_SECTION_STACK_CLASS}>
                     <SectionHeader
                         icon={IconIdea}
                         title={t('ui.whatToCreate')}
@@ -3211,7 +3215,7 @@ export function CarouselControlsPanel({
 
                 {/* Composition */}
                 {isStepVisible(3) && (
-                <div ref={(el) => { stepRefs.current[3] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                <div ref={(el) => { stepRefs.current[3] = el }} className={PANEL_SECTION_STACK_CLASS}>
                     <SectionHeader
                         icon={IconLayout}
                         title={t('ui.designTitle')}
@@ -3296,7 +3300,7 @@ export function CarouselControlsPanel({
 
                 {/* Format */}
                 {isStepVisible(4) && (
-                <div ref={(el) => { stepRefs.current[4] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                <div ref={(el) => { stepRefs.current[4] = el }} className={PANEL_SECTION_STACK_CLASS}>
                     <SectionHeader
                         icon={IconLayers}
                         title={t('ui.formatTitle')}
@@ -3371,7 +3375,7 @@ export function CarouselControlsPanel({
                 {/* Image */}
                 {isStepVisible(5) && (
                     <>
-                        <div ref={(el) => { stepRefs.current[5] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                        <div ref={(el) => { stepRefs.current[5] = el }} className={PANEL_SECTION_STACK_CLASS}>
                             <SectionHeader
                                 icon={IconImageAdd}
                                 title={imageSourceMode === 'generate' ? t('ui.generatedContentTitle') : t('ui.userContentTitle')}
@@ -3406,7 +3410,7 @@ export function CarouselControlsPanel({
                             />
                         </div>
 
-                        <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                        <div className={PANEL_SECTION_STACK_CLASS}>
                             <SectionHeader
                                 icon={IconPaintbrush02}
                                 title={t('ui.styleTitle')}
@@ -3443,7 +3447,7 @@ export function CarouselControlsPanel({
                             </div>
                         </div>
 
-                        <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
+                        <div className={PANEL_SECTION_STACK_CLASS}>
                             <AuxiliaryLogosCard
                                 uploadedImages={uploadedImages}
                                 onUpload={handleAuxLogoUpload}
@@ -3457,7 +3461,7 @@ export function CarouselControlsPanel({
                             />
                         </div>
 
-                        <div className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-6`}>
+                        <div className={PANEL_SECTION_STACK_CLASS}>
                             <SectionHeader
                                 icon={IconFingerprint}
                                 title={t('ui.brandKitTitle')}
@@ -3754,6 +3758,7 @@ export function CarouselControlsPanel({
                         </div>
                     </div>
                 ) : null}
+                </div>
             </div>
             <Dialog
                 open={unsavedNavModalOpen}

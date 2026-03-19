@@ -1713,6 +1713,7 @@ export default function CarouselPage() {
 
     const controlsPanel = (
         <CarouselControlsPanel
+            className="min-h-0 flex-1 !border-0 !bg-transparent"
             onAnalyze={handleAnalyze}
             onGenerate={handleGenerate}
             onPreviewCompositionChange={setPreviewCompositionState}
@@ -1892,11 +1893,12 @@ export default function CarouselPage() {
                     isMobile
                         ? 'flex flex-col gap-3 px-2 py-3'
                         : cn(
-                            'flex flex-col overflow-hidden lg:flex-row',
+                            'flex flex-col gap-4 overflow-hidden px-3 pb-3 pt-4 lg:flex-row',
                             panelPosition === 'right' ? 'lg:flex-row' : 'lg:flex-row-reverse'
                         )
                 )}>
                 {/* LEFT COLUMN (Main Canvas) */}
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-border/60 bg-white/85 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.38)]">
                 <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar">
                     {!isMobile && isAdmin && activeComposition && activeCompositionRecommendation && (
                         <div className="shrink-0 px-4 pt-4 md:px-6">
@@ -2138,11 +2140,14 @@ export default function CarouselPage() {
                         </div>
                     ) : null}
                 </div>
+                </div>
 
                 {/* RIGHT COLUMN - Controls Panel */}
                 {!isMobile ? (
-                    <div className="flex min-h-0 w-full lg:w-[27%]">
-                        {controlsPanel}
+                    <div className="flex w-full min-h-0 flex-col lg:w-[27%]">
+                        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-border/60 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.34)]">
+                            {controlsPanel}
+                        </div>
                     </div>
                 ) : null}
                 {mobileControlsDrawer}
