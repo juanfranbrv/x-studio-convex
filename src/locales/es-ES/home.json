@@ -2,35 +2,35 @@
   "pending": {
     "titlePending": "Solicitud pendiente",
     "titleRejected": "Acceso denegado",
-    "bodyPending": "Tu solicitud para {{email}} esta siendo revisada por nuestro equipo.",
-    "bodyRejected": "Tu solicitud no fue aprobada en esta ocasion.",
-    "backHome": "Volver a la pagina principal"
+    "bodyPending": "Tu solicitud para {{email}} está siendo revisada por nuestro equipo.",
+    "bodyRejected": "Tu solicitud no fue aprobada en esta ocasión.",
+    "backHome": "Volver a la página principal"
   },
   "landing": {
     "privateBeta": "Beta privada",
     "login": "Entrar",
     "heroTitle": "Tu marca. En cada pixel. En segundos.",
-    "heroBody": "Post laboratory analiza tu identidad de marca y genera contenido visual profesional alineado con tu ADN visual, de forma automatica. Sin disenadores. Sin horas de edicion. Sin perder coherencia jamas.",
+    "heroBody": "Post laboratory analiza tu identidad de marca y genera contenido visual profesional alineado con tu ADN visual, de forma automática. Sin diseñadores. Sin horas de edición. Sin perder coherencia jamás.",
     "heroCTA": "Empieza gratis ahora",
     "heroSecondaryCTA": "Ver una demo en vivo",
     "accessConfirmed": "Acceso confirmado",
-    "accessReady": "Tu cuenta esta lista para empezar a crear assets de impacto.",
+    "accessReady": "Tu cuenta está lista para empezar a crear assets de impacto.",
     "enterStudio": "Entrar al estudio",
     "joinBeta": "Acceso anticipado",
     "joinBetaBody": "Acceso exclusivo y limitado para creadores y marcas.",
-    "onList": "Ya estas en la lista",
-    "onListBody": "Te avisaremos en cuanto tu acceso este habilitado.",
+    "onList": "Ya estás en la lista",
+    "onListBody": "Te avisaremos en cuanto tu acceso esté habilitado.",
     "requestInvite": "Solicitar acceso",
-    "alreadyHaveAccount": "Ya tengo cuenta, llevame al estudio.",
+    "alreadyHaveAccount": "Ya tengo cuenta, llévame al estudio.",
     "requestError": "Error al enviar solicitud",
     "registrationCompleted": "Registro completado",
-    "trustedBy": "Marcas y equipos creativos que ya confian en Post laboratory",
-    "learnMore": "Saber mas"
+    "trustedBy": "Marcas y equipos creativos que ya confían en Post laboratory",
+    "learnMore": "Saber más"
   },
   "heroPills": {
     "productLaunch": "Lanza un producto",
     "dailyPosts": "Publica a diario",
-    "campaignDesign": "Disena una campana",
+    "campaignDesign": "Diseña una campaña",
     "teamContent": "Presenta tu equipo",
     "promoOffer": "Anuncia una oferta"
   },
@@ -39,79 +39,91 @@
     "brandKit": {
       "tab": "ADN de Marca",
       "title": "Pega tu URL. En 30 segundos ya te conocemos mejor que tu agencia.",
-      "description": "Nuestro motor de analisis recorre tu web con un navegador invisible, extrae tus logos, paletas de color, tipografias, estilo fotografico y tono de voz, y los convierte en un kit de marca listo para generar. No hay formularios interminables ni guias de estilo que subir manualmente. Solo pega tu URL y listo.",
-      "link": "Descubre como funciona el analisis de marca"
+      "description": "Nuestro motor de análisis recorre tu web con un navegador invisible, extrae tus logos, paletas de color, tipografías, estilo fotográfico y tono de voz, y los convierte en un kit de marca listo para generar. No hay formularios interminables ni guías de estilo que subir manualmente. Solo pega tu URL y listo.",
+      "link": "Descubre cómo funciona el análisis de marca"
     },
     "generateImages": {
-      "tab": "Generacion de Imagenes",
+      "tab": "Generación de Imágenes",
       "title": "Escribe lo que imaginas. Recibe lo que tu marca necesita.",
-      "description": "Describe tu pieza en lenguaje natural y Post laboratory genera imagenes de marketing profesionales con mas de 729 composiciones de layout y mas de 20 plantillas de contenido. Desde lanzamientos de producto hasta contenido de equipo y tutoriales. Cada imagen respeta tu paleta, tu tipografia y tu estilo fotografico.",
+      "description": "Describe tu pieza en lenguaje natural y Post laboratory genera imágenes de marketing profesionales con más de 729 composiciones de layout y más de 20 plantillas de contenido. Desde lanzamientos de producto hasta contenido de equipo y tutoriales. Cada imagen respeta tu paleta, tu tipografía y tu estilo fotográfico.",
       "link": "Ver plantillas de contenido disponibles"
     },
     "carousels": {
-      "tab": "Carruseles Instantaneos",
+      "tab": "Carruseles Instantáneos",
       "title": "Un clic. Cinco slides. Una historia de marca lista para publicar.",
-      "description": "Post laboratory genera carruseles para redes sociales con composicion recomendada por IA, coherencia visual entre slides y captions generados automaticamente. Puedes refinar cada slide de forma independiente sin romper el conjunto. Lo que antes te llevaba dos horas de Canva ahora es cuestion de segundos.",
+      "description": "Post laboratory genera carruseles para redes sociales con composición recomendada por IA, coherencia visual entre slides y captions generados automáticamente. Puedes refinar cada slide de forma independiente sin romper el conjunto. Lo que antes te llevaba dos horas de Canva ahora es cuestión de segundos.",
       "link": "Crear tu primer carrusel"
     },
     "editSemantic": {
-      "tab": "Edicion Semantica",
-      "title": "\"Mueve el logo a la derecha.\" Ya esta. Sin Photoshop. Sin frustracion.",
-      "description": "Edita tus imagenes en lenguaje natural como si le hablaras a un disenador. \"Fondo mas calido\", \"hazlo mas minimalista\", \"sube el contraste\". Post laboratory interpreta tus instrucciones y aplica los cambios preservando la coherencia de marca. Sin necesidad de saber lo que es una capa de ajuste.",
-      "link": "Ver ejemplos de edicion semantica"
+      "tab": "Edición Semántica",
+      "title": "\"Mueve el logo a la derecha.\" Ya está. Sin Photoshop. Sin frustración.",
+      "description": "Edita tus imágenes en lenguaje natural como si le hablaras a un diseñador. \"Fondo más cálido\", \"hazlo más minimalista\", \"sube el contraste\". Post laboratory interpreta tus instrucciones y aplica los cambios preservando la coherencia de marca. Sin necesidad de saber lo que es una capa de ajuste.",
+      "link": "Ver ejemplos de edición semántica"
     },
     "multiFormat": {
       "tab": "Multi-Formato",
-      "title": "Un diseno, todos los formatos. De Instagram a LinkedIn sin rehacer nada.",
-      "description": "Genera una pieza y Post laboratory la adapta automaticamente a formato cuadrado, vertical, horizontal y Story. Todos los formatos optimizados para Instagram, TikTok, LinkedIn, YouTube, Facebook y X con un solo clic. Tu equipo publica en todos los canales sin duplicar el trabajo.",
+      "title": "Un diseño, todos los formatos. De Instagram a LinkedIn sin rehacer nada.",
+      "description": "Genera una pieza y Post laboratory la adapta automáticamente a formato cuadrado, vertical, horizontal y Story. Todos los formatos optimizados para Instagram, TikTok, LinkedIn, YouTube, Facebook y X con un solo clic. Tu equipo publica en todos los canales sin duplicar el trabajo.",
       "link": "Ver formatos disponibles por plataforma"
     }
   },
   "showcase": {
-    "sectionTitle": "Disenado para marcas que no pueden permitirse parecer genericas",
-    "sectionSubtitle": "Cada funcion de Post laboratory existe para resolver un problema real de equipos de marketing que necesitan velocidad sin perder identidad.",
+    "sectionTitle": "Diseñado para marcas que no pueden permitirse parecer genéricas",
+    "sectionSubtitle": "Cada función de Post laboratory existe para resolver un problema real de equipos de marketing que necesitan velocidad sin perder identidad.",
     "brandDNA": {
       "title": "Tu Brand Kit se construye solo. En lugar de quedarse olvidado en un PDF.",
-      "description": "La mayoria de las empresas tienen guias de marca que nadie consulta antes de publicar. Post laboratory elimina ese problema en su raiz. Nuestro motor de analisis con navegador headless, vision artificial y analisis DOM extrae tu identidad directamente de tu web: logos en todos sus formatos, paletas de color exactas, jerarquia tipografica y estilo visual. El resultado es un Brand Kit vivo que se aplica automaticamente en cada pieza que generes.",
+      "description": "La mayoría de las empresas tienen guías de marca que nadie consulta antes de publicar. Post laboratory elimina ese problema en su raíz. Nuestro motor de análisis con navegador headless, visión artificial y análisis DOM extrae tu identidad directamente de tu web: logos en todos sus formatos, paletas de color exactas, jerarquía tipográfica y estilo visual. El resultado es un Brand Kit vivo que se aplica automáticamente en cada pieza que generes.",
       "link": "Analizar mi marca ahora"
     },
     "multiAsset": {
-      "title": "Agencias: cambia de cliente en un clic, no en media hora de configuracion.",
-      "description": "Gestionar la identidad visual de varios clientes en la misma herramienta siempre ha sido un caos. Post laboratory permite crear kits de marca ilimitados y cambiar entre ellos de forma instantanea, sin contaminar unos con otros. Cada cliente tiene sus colores, sus logos, su tipografia y su estilo fotografico perfectamente compartimentados. Para freelancers y agencias, es la diferencia entre facturar mas clientes o quemarse intentandolo con Canva.",
-      "link": "Ver como funciona la gestion multimarca"
+      "title": "Agencias: cambia de cliente en un clic, no en media hora de configuración.",
+      "description": "Gestionar la identidad visual de varios clientes en la misma herramienta siempre ha sido un caos. Post laboratory permite crear kits de marca ilimitados y cambiar entre ellos de forma instantánea, sin contaminar unos con otros. Cada cliente tiene sus colores, sus logos, su tipografía y su estilo fotográfico perfectamente compartimentados. Para freelancers y agencias, es la diferencia entre facturar más clientes o quemarse intentándolo con Canva.",
+      "link": "Ver cómo funciona la gestión multimarca"
     },
     "smartEditing": {
       "title": "Temas estacionales que mantienen tu marca reconocible en Black Friday, Navidad y verano.",
-      "description": "El contenido estacional suele ser el momento en que las marcas pierden coherencia. Post laboratory incluye temas estacionales predefinidos, estilos artisticos y entradas de estilo personalizado que permiten adaptar el tono visual de tus piezas a cada momento del ano sin abandonar tu identidad. Activas el tema de Black Friday y tus imagenes adoptan la urgencia y la estetica del evento sin que tu logotipo o tus colores corporativos desaparezcan entre el ruido.",
+      "description": "El contenido estacional suele ser el momento en que las marcas pierden coherencia. Post laboratory incluye temas estacionales predefinidos, estilos artísticos y entradas de estilo personalizado que permiten adaptar el tono visual de tus piezas a cada momento del año sin abandonar tu identidad. Activas el tema de Black Friday y tus imágenes adoptan la urgencia y la estética del evento sin que tu logotipo o tus colores corporativos desaparezcan entre el ruido.",
       "link": "Ver estilos y temas disponibles"
     },
     "teamScale": {
       "title": "El contexto que arrastras cambia lo que generas. Y eso lo cambia todo.",
-      "description": "Post laboratory incluye un sistema de contexto que te permite influir en la generacion arrastrando elementos directamente al lienzo: tus colores de marca, logos en diferentes versiones, fuentes, imagenes de referencia y bloques de texto. Cuanto mas contexto aportas, mas precisa y alineada con tu vision es la imagen resultante. No es prompts cruzando los dedos. Es un flujo de trabajo disenado para que los profesionales de marketing tengan control real sobre el output.",
+      "description": "Post laboratory incluye un sistema de contexto que te permite influir en la generación arrastrando elementos directamente al lienzo: tus colores de marca, logos en diferentes versiones, fuentes, imágenes de referencia y bloques de texto. Cuanto más contexto aportas, más precisa y alineada con tu visión es la imagen resultante. No es prompts cruzando los dedos. Es un flujo de trabajo diseñado para que los profesionales de marketing tengan control real sobre el output.",
       "link": "Explorar el sistema de contexto"
     }
   },
   "stats": {
-    "stat1": { "value": "729+", "label": "composiciones de layout unicas para cada tipo de contenido" },
-    "stat2": { "value": "30s", "label": "es lo que tarda el analisis de marca en conocer tu identidad" },
-    "stat3": { "value": "20+", "label": "plantillas de contenido desde lanzamientos hasta equipo" },
-    "stat4": { "value": "6", "label": "plataformas cubiertas con adaptacion automatica de formato" }
+    "stat1": {
+      "value": "729+",
+      "label": "composiciones de layout únicas para cada tipo de contenido"
+    },
+    "stat2": {
+      "value": "30s",
+      "label": "es lo que tarda el análisis de marca en conocer tu identidad"
+    },
+    "stat3": {
+      "value": "20+",
+      "label": "plantillas de contenido desde lanzamientos hasta equipo"
+    },
+    "stat4": {
+      "value": "6",
+      "label": "plataformas cubiertas con adaptación automática de formato"
+    }
   },
   "proof": {
-    "title": "Numeros que explican por que los equipos de marketing eligen Post laboratory",
+    "title": "Números que explican por qué los equipos de marketing eligen Post laboratory",
     "subtitle": "Velocidad, escala y coherencia de marca. Los tres problemas que resolvemos, medidos."
   },
   "cta": {
-    "title": "Tu proximo post podria estar listo antes de que termines de leer esto.",
-    "subtitle": "Pega tu URL, genera tu primer contenido y entiende en menos de cinco minutos por que los equipos de marketing que conocen Post laboratory no vuelven a Canva.",
+    "title": "Tu próximo post podría estar listo antes de que termines de leer esto.",
+    "subtitle": "Pega tu URL, genera tu primer contenido y entiende en menos de cinco minutos por qué los equipos de marketing que conocen Post laboratory no vuelven a Canva.",
     "primaryButton": "Empieza gratis ahora",
     "secondaryButton": "Ver una demo en vivo"
   },
   "footer": {
     "copyright": "© 2025 Post laboratory. Todos los derechos reservados.",
-    "tagline": "Tu marca. Cada dia. En todos los formatos.",
+    "tagline": "Tu marca. Cada día. En todos los formatos.",
     "privacy": "Privacidad",
-    "terms": "Terminos",
+    "terms": "Términos",
     "cookies": "Cookies",
     "contact": "Contacto",
     "pricing": "Planes y precios",
@@ -124,7 +136,7 @@
     "blog": "Blog",
     "careers": "Empleo",
     "resources": "Recursos",
-    "docs": "Documentacion",
+    "docs": "Documentación",
     "help": "Centro de ayuda",
     "community": "Comunidad",
     "legal": "Legal"

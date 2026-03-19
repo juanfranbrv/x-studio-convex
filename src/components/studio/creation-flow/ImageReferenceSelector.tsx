@@ -307,7 +307,14 @@ export function ImageReferenceSelector({
                     <div className="grid grid-cols-3 gap-2">
                         {uploadedImages.map((img, idx) => (
                             <div key={idx} className="relative rounded-xl overflow-hidden border border-border/60 bg-background aspect-square group">
-                                <img src={img} alt={`Uploaded ${idx + 1}`} className="w-full h-full object-cover" />
+                                <img
+                                    src={img}
+                                    alt={t('imageReference.uploadedImageAlt', {
+                                        defaultValue: 'Uploaded image {{index}}',
+                                        index: idx + 1,
+                                    })}
+                                    className="w-full h-full object-cover"
+                                />
                                 {onRemoveUploadedImage && (
                                     <button
                                         onClick={() => onRemoveUploadedImage(img)}
@@ -423,7 +430,11 @@ export function ImageReferenceSelector({
                                                 : 'border-border opacity-50 cursor-not-allowed'
                                     )}
                                 >
-                                    <img src={img.url} alt={img.name || 'Brand image'} className="w-full h-full object-cover" />
+                                    <img
+                                        src={img.url}
+                                        alt={img.name || t('imageReference.brandKitImageAlt', { defaultValue: 'Brand Kit image' })}
+                                        className="w-full h-full object-cover"
+                                    />
                                     {isSelected && onReferenceRoleChange && (
                                         <div
                                             role="button"

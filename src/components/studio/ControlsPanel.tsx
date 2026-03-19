@@ -56,6 +56,7 @@ import {
     type LayoutRatingStoreEntry,
 } from '@/lib/layout-ratings'
 import type { CompositionSummary } from '@/lib/admin-compositions-actions'
+import { getDetectedIntentLabel } from '@/lib/intent-label'
 
 const RESET_USES4_FLAG = 'admin_layout_ratings_reset_uses4_done_v1'
 const PANEL_SECTION_HEADER_ICON_CLASS = "h-9 w-9 rounded-none border-0 bg-transparent text-foreground/72 shadow-none"
@@ -658,6 +659,7 @@ export function ControlsPanel({
         : (sessions.find((session) => session.active)?.id || '')
     const selectedSession = sessions.find((session) => session.id === effectiveSessionId)
     const selectedIntentMeta = INTENT_CATALOG.find((intent) => intent.id === state.selectedIntent)
+    const detectedIntentLabel = getDetectedIntentLabel(state.selectedIntent, t('ui.selectIntent'))
     const effectiveLayoutIntent: IntentCategory = (
         layoutIntentOverride === 'auto'
             ? (state.selectedIntent as IntentCategory)
@@ -1087,7 +1089,7 @@ export function ControlsPanel({
                                                                 {layoutIntentOverride === 'auto'
                                                                     ? t('ui.autoDetectedIntent', {
                                                                         defaultValue: 'Auto (detected: {{intent}})',
-                                                                        intent: selectedIntentMeta?.name || state.selectedIntent,
+                                                                        intent: detectedIntentLabel,
                                                                     })
                                                                     : (selectedLayoutIntentMeta?.name || t('ui.selectIntent'))}
                                                             </span>
@@ -1097,7 +1099,7 @@ export function ControlsPanel({
                                                         <SelectItem value="auto" className={PANEL_SECTION_SELECT_ITEM_CLASS}>
                                                             {t('ui.autoDetectedIntent', {
                                                                 defaultValue: 'Auto (detected: {{intent}})',
-                                                                intent: selectedIntentMeta?.name || state.selectedIntent,
+                                                                intent: detectedIntentLabel,
                                                             })}
                                                         </SelectItem>
                                                         {INTENT_CATALOG.map((intent) => (

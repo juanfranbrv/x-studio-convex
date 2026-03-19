@@ -128,6 +128,14 @@
     "visualContentHint": "The narrative intent and advanced visual rules are kept internally, so you do not need to edit them here.",
     "editVisualContent": "Edit visual content",
     "pending": "Pending",
+    "mobileAppAlt": "App preview",
+    "mobileScreenPlaceholder": "APP SCREEN",
+    "productHeroPlaceholder": "PRODUCT HERO",
+    "heroImagePlaceholder": "HERO IMAGE",
+    "productAlt": "Product",
+    "heroProductNameDefault": "PRODUCT NAME",
+    "heroProductTagDefault": "PREMIUM",
+    "offerDiscountDefault": "50% OFF",
     "promptDebug": "Prompt debug",
     "sentImages": "Images sent in the request",
     "noSentImages": "No images were sent in this request.",
@@ -286,7 +294,8 @@
     "selectFromBrandKitDescription": "Brand Kit images are shown here so you can choose auxiliary logos or secondary visual assets.",
     "brandKitImageAlt": "Brand Kit image",
     "noBrandKitImages": "This Brand Kit does not have any images yet.",
-    "auxResource": "Auxiliary asset"
+    "auxResource": "Auxiliary asset",
+    "emptyTitle": "Add auxiliary logos"
   },
   "brand": {
     "deleteTitle": "Delete \"{{name}}\"?",
@@ -433,6 +442,7 @@
     "aiDescriptionHint": "AI will generate an image with this description",
     "aiModeHint": "AI mode is active: references can only be tagged as `Style` or `Aux logo` to keep the generation visually consistent.",
     "uploadReferences": "Upload references",
+    "uploadedImageAlt": "Uploaded image {{index}}",
     "changeRole": "Change role",
     "dropImages": "Drop the images",
     "addMoreImages": "Add more images",

@@ -1,12 +1,14 @@
 import { LayoutProps } from './types'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 export function HeroProducto({ image, texts, brandColors, aspectRatio, isGhost }: LayoutProps) {
+    const { t } = useTranslation('common')
     const mainColor = isGhost ? '#f4f4f5' : (brandColors[0] || '#000000')
     const accentColor = isGhost ? '#d4d4d8' : (brandColors[1] || '#FFD700')
 
-    const headline = texts['headline'] || 'PRODUCT NAME'
-    const tag = texts['tag'] || 'PREMIUM'
+    const headline = texts['headline'] || t('preview.heroProductNameDefault', { defaultValue: 'NOMBRE DEL PRODUCTO' })
+    const tag = texts['tag'] || t('preview.heroProductTagDefault', { defaultValue: 'PREMIUM' })
     const price = texts['price'] || '$99.99'
 
     return (
@@ -33,13 +35,21 @@ export function HeroProducto({ image, texts, brandColors, aspectRatio, isGhost }
             {/* Product Center */}
             <div className="relative z-10 w-[80%] h-[60%] flex items-center justify-center">
                 {image ? (
-                    <img src={image} className="w-full h-full object-contain drop-shadow-2xl" alt="Product" />
+                    <img
+                        src={image}
+                        className="w-full h-full object-contain drop-shadow-2xl"
+                        alt={t('preview.productAlt', { defaultValue: 'Producto' })}
+                    />
                 ) : (
                     <div className={cn(
                         "w-full h-full rounded-2xl flex items-center justify-center border-2 border-dashed",
                         isGhost ? "bg-zinc-50 border-zinc-200" : "bg-black/5 border-black/10"
                     )}>
-                        {!isGhost && <span className="text-xs font-mono text-black/20">HERO IMAGE</span>}
+                        {!isGhost && (
+                            <span className="text-xs font-mono text-black/20">
+                                {t('preview.heroImagePlaceholder', { defaultValue: 'HERO IMAGE' })}
+                            </span>
+                        )}
                     </div>
                 )}
             </div>

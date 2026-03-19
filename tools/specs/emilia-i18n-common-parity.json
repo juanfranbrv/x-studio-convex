@@ -1,0 +1,9 @@
+{
+  "id": "emilia-i18n-common-parity",
+  "task": "Objetivo exacto: completar la paridad de claves entre `src/locales/en-US/common.json` y `src/locales/es-ES/common.json`. Archivos permitidos: SOLO esos dos JSON. Transformacion concreta: 1) anadir en `es-ES/common.json` todas las claves que existen en `en-US/common.json` y faltan en espanol, con traduccion natural al castellano coherente con el tono actual del proyecto; 2) anadir en `en-US/common.json` la clave faltante `auxLogos.emptyTitle` con valor natural en ingles para mantener paridad estructural; 3) no elimines claves existentes; 4) no reordenes de forma innecesaria todo el archivo, haz cambios minimos por bloque; 5) conserva JSON valido. Limites: no tocar ningun componente TS/TSX, no tocar otros namespaces, no cambiar textos ya existentes salvo que sea necesario para insertar las claves nuevas en el bloque correcto. Formato de salida esperado: Output ONLY edit blocks, nothing else. Criterio rapido de revision: al final ambos `common.json` deben tener las mismas claves para los bloques tocados y no debe quedar ingles visible por faltas de clave en cards o modales que usan `common`.",
+  "files": [
+    "src/locales/es-ES/common.json",
+    "src/locales/en-US/common.json"
+  ],
+  "output_format": "edit blocks"
+}

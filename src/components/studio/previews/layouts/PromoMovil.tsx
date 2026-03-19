@@ -1,8 +1,10 @@
 import { LayoutProps } from './types'
 import { cn } from '@/lib/utils'
 import { IconPhone } from '@/components/ui/icons'
+import { useTranslation } from 'react-i18next'
 
 export function PromoMovil({ image, texts, brandColors, aspectRatio, isGhost }: LayoutProps) {
+    const { t } = useTranslation('common')
     const mainColor = isGhost ? '#f4f4f5' : (brandColors[0] || '#2563eb')
     const accentColor = isGhost ? '#d4d4d8' : (brandColors[1] || '#fbbf24')
 
@@ -33,7 +35,11 @@ export function PromoMovil({ image, texts, brandColors, aspectRatio, isGhost }: 
                     {/* Inner Screen */}
                     <div className="absolute inset-0 flex items-center justify-center p-2">
                         {image ? (
-                            <img src={image} className="w-full h-full object-cover rounded-2xl" alt="App Preview" />
+                            <img
+                                src={image}
+                                className="w-full h-full object-cover rounded-2xl"
+                                alt={t('preview.mobileAppAlt', { defaultValue: 'App preview' })}
+                            />
                         ) : (
                             <div className={cn(
                                 "w-full h-full rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2",
@@ -42,7 +48,9 @@ export function PromoMovil({ image, texts, brandColors, aspectRatio, isGhost }: 
                                 {!isGhost && (
                                     <>
                                         <IconPhone className="w-6 h-6 text-zinc-300" />
-                                        <span className="text-[10px] font-mono text-zinc-400">APP SCREEN</span>
+                                        <span className="text-[10px] font-mono text-zinc-400">
+                                            {t('preview.mobileScreenPlaceholder', { defaultValue: 'APP SCREEN' })}
+                                        </span>
                                     </>
                                 )}
                             </div>

@@ -7,6 +7,8 @@ import type { LucideProps } from 'lucide-react'
 const ICON_NAME_ALIASES: Record<string, keyof typeof LucideIcons> = {
     Grid2X2: 'Grid2x2',
     Grid3X3: 'Grid3x3',
+    Layout: 'LayoutTemplate',
+    Frame: 'SquareDashed',
     help_center: 'CircleHelp',
     garage_home: 'House',
     rotate_right: 'RotateCw',

@@ -1,10 +1,10 @@
 {
   "pricing": {
-    "eyebrow": "Credito directo, sin permanencias",
+    "eyebrow": "Cr?dito directo, sin permanencias",
     "title": "Recarga Post laboratory sin pelearte con planes infinitos",
-    "body": "Compra creditos cuando de verdad los necesites. Todo queda reflejado en tu cuenta, con historial, facturas y consumo claro.",
+    "body": "Compra cr?ditos cuando de verdad los necesites. Todo queda reflejado en tu cuenta, con historial, facturas y consumo claro.",
     "ctaPrimary": "Comprar ahora",
-    "ctaSecondary": "Ver mis creditos",
+    "ctaSecondary": "Ver mis cr?ditos",
     "contact": "Hablar con nosotros",
     "backHome": "Volver al inicio",
     "trust": {
@@ -17,10 +17,10 @@
     },
     "faqTitle": "Lo importante, sin letra pequena",
     "faq": {
-      "q1": "¿Los creditos caducan?",
-      "a1": "No. Los creditos se acumulan y no caducan.",
-      "q2": "¿Hay suscripcion?",
-      "a2": "No. Son packs de pago unico.",
+      "q1": "¿Los créditos caducan?",
+      "a1": "No. Los cr?ditos se acumulan y no caducan.",
+      "q2": "¿Hay suscripción?",
+      "a2": "No. Son packs de pago ?nico.",
       "q3": "¿Puedo descargar facturas o recibos?",
       "a3": "Si. Desde tu cuenta y, cuando proceda, desde el portal de Stripe."
     }
@@ -30,27 +30,27 @@
       "name": "Trail",
       "badge": "Probar",
       "description": "La entrada ligera para validar el flujo real con dinero de verdad pero sin drama.",
-      "tagline": "10 creditos para sentir el producto",
+      "tagline": "10 cr?ditos para sentir el producto",
       "cta": "Empezar por Trail"
     },
     "studio-30": {
       "name": "Studio",
       "badge": "Equilibrado",
       "description": "El pack natural para trabajo recurrente sin quedarte corto en la segunda tarde.",
-      "tagline": "30 creditos para iterar con soltura",
+      "tagline": "30 cr?ditos para iterar con soltura",
       "cta": "Ir a Studio"
     },
     "orbit-100": {
       "name": "Orbit",
       "badge": "Reserva seria",
       "description": "La reserva amplia para sesiones largas, equipos exigentes o varias marcas dando guerra.",
-      "tagline": "100 creditos para trabajar sin mirar el contador",
+      "tagline": "100 cr?ditos para trabajar sin mirar el contador",
       "cta": "Ir a Orbit"
     }
   },
   "account": {
-    "title": "Facturacion y creditos",
-    "description": "Tu saldo, tus compras y todo el rastro economico en un solo sitio.",
+    "title": "Facturacion y cr?ditos",
+    "description": "Tu saldo, tus compras y todo el rastro econ?mico en un solo sitio.",
     "summary": {
       "credits": "Saldo disponible",
       "latestPack": "Ultimo pack",
@@ -59,7 +59,7 @@
       "noPack": "Aun no has comprado ningun pack"
     },
     "actions": {
-      "buyCredits": "Comprar creditos",
+      "buyCredits": "Comprar cr?ditos",
       "openPortal": "Gestionar pagos",
       "openPortalHelp": "Abre Stripe para ver recibos y metodos guardados.",
       "openingPortal": "Abriendo portal...",
@@ -67,7 +67,7 @@
     },
     "history": {
       "purchasesTitle": "Compras",
-      "ledgerTitle": "Movimiento de creditos",
+      "ledgerTitle": "Movimiento de cr?ditos",
       "headers": {
         "pack": "Pack",
         "status": "Estado",
@@ -79,7 +79,7 @@
         "date": "Fecha"
       },
       "emptyPurchases": "Todavia no hay compras registradas.",
-      "emptyLedger": "Todavia no hay movimientos de creditos.",
+      "emptyLedger": "Todavia no hay movimientos de cr?ditos.",
       "receipt": "Recibo",
       "invoice": "Factura",
       "status": {
@@ -92,10 +92,10 @@
     },
     "success": {
       "title": "Pago confirmado",
-      "description": "Los creditos ya estan en tu cuenta. Puedes volver al trabajo o seguir recargando.",
+      "description": "Los cr?ditos ya estan en tu cuenta. Puedes volver al trabajo o seguir recargando.",
       "loading": "Confirmando pago con Stripe...",
-      "error": "No hemos podido confirmar el pago todavia.",
-      "goBilling": "Ir a creditos",
+      "error": "No hemos podido confirmar el pago todav?a.",
+      "goBilling": "Ir a cr?ditos",
       "goImage": "Volver a imagen"
     }
   },
@@ -103,12 +103,12 @@
     "redirecting": "Redirigiendo a Stripe...",
     "errorTitle": "No se pudo iniciar el checkout",
     "portalErrorTitle": "No se pudo abrir el portal de pagos",
-    "packMissing": "El pack solicitado no existe o ya no esta activo."
+    "packMissing": "El pack solicitado no existe o ya no est? activo."
   },
   "referrals": {
     "title": "Referidos",
-    "description": "Comparte tu enlace, activa nuevos usuarios y cobra creditos dentro del mismo ledger del producto.",
-    "rewardRule": "Ganas {{signup}} creditos cuando se registra con tu enlace y el {{percentage}}% de los creditos que compre despues.",
+    "description": "Comparte tu enlace, activa nuevos usuarios y cobra cr?ditos dentro del mismo ledger del producto.",
+    "rewardRule": "Ganas {{signup}} cr?ditos cuando se registra con tu enlace y el {{percentage}}% de los cr?ditos que compre despu?s.",
     "linkLabel": "Tu enlace personal",
     "linkPending": "Generando enlace...",
     "copy": "Copiar enlace",
@@ -118,9 +118,9 @@
     "copyErrorTitle": "No se pudo copiar",
     "copyErrorBody": "Intentalo otra vez en unos segundos.",
     "activityTitle": "Actividad reciente",
-    "activityDescription": "Altas atribuidas y creditos acumulados por cada invitacion.",
+    "activityDescription": "Altas atribuidas y cr?ditos acumulados por cada invitaci?n.",
     "emptyTitle": "Todavia no hay actividad de referidos",
-    "emptyBody": "Cuando alguien use tu enlace y se registre, lo veras aqui con sus recompensas.",
+    "emptyBody": "Cuando alguien use tu enlace y se registre, lo veras aqu? con sus recompensas.",
     "stats": {
       "totalReferrals": "Referidos",
       "signupCredits": "Creditos por alta",
@@ -134,7 +134,7 @@
   "admin": {
     "tab": "Billing",
     "title": "Packs y cobros",
-    "description": "Control de packs, sincronizacion con Stripe y seguimiento de compras reales.",
+    "description": "Control de packs, sincronizaci?n con Stripe y seguimiento de compras reales.",
     "stats": {
       "revenue": "Ingresos",
       "purchases": "Compras",
@@ -166,7 +166,7 @@
       "saving": "Guardando...",
       "savedTitle": "Programa de referidos actualizado",
       "savedBody": "Los nuevos valores ya quedan activos para altas y compras futuras.",
-      "savedError": "No se pudo guardar la configuracion del programa.",
+      "savedError": "No se pudo guardar la configuraci?n del programa.",
       "recentRewardsTitle": "Recompensas recientes",
       "recentRewardsDescription": "Ultimas bonificaciones concedidas por el sistema de referidos.",
       "empty": "Todavia no hay recompensas de referidos.",
@@ -188,7 +188,7 @@
     }
   },
   "labels": {
-    "creditsIncluded": "{{count}} creditos incluidos",
+    "creditsIncluded": "{{count}} cr?ditos incluidos",
     "portalPacks": "Recarga disponible"
   },
   "nav": {

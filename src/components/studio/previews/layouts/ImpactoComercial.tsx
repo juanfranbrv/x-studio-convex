@@ -1,7 +1,9 @@
 import { LayoutProps } from './types'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 export function ImpactoComercial({ image, texts, brandColors, aspectRatio, isGhost }: LayoutProps) {
+    const { t } = useTranslation('common')
     // Default colors if none selected
     const mainColor = isGhost ? '#f4f4f5' : (brandColors[0] || '#000000') // zinc-100
     const accentColor = isGhost ? '#d4d4d8' : (brandColors[1] || '#FF0000') // zinc-300
@@ -9,7 +11,7 @@ export function ImpactoComercial({ image, texts, brandColors, aspectRatio, isGho
 
     // Texts
     const headline = texts['headline'] || 'GRAN OFERTA'
-    const discount = texts['discount'] || '50% OFF'
+    const discount = texts['discount'] || t('preview.offerDiscountDefault', { defaultValue: '50 % DTO.' })
     const eyebrow = texts['eyebrow'] || 'SOLO HOY'
     const footer = texts['footer'] || 'www.tienda.com'
 
@@ -29,14 +31,18 @@ export function ImpactoComercial({ image, texts, brandColors, aspectRatio, isGho
                     <img
                         src={image}
                         className="w-full h-full object-contain drop-shadow-2xl"
-                        alt="Product"
+                        alt={t('preview.productAlt', { defaultValue: 'Producto' })}
                     />
                 ) : (
                     <div className={cn(
                         "w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center",
                         isGhost ? "bg-zinc-50 border-zinc-200" : "bg-black/5 border-black/10"
                     )}>
-                        {!isGhost && <span className="text-xs font-mono text-black/30">PRODUCT HERO</span>}
+                        {!isGhost && (
+                            <span className="text-xs font-mono text-black/30">
+                                {t('preview.productHeroPlaceholder', { defaultValue: 'PRODUCT HERO' })}
+                            </span>
+                        )}
                     </div>
                 )}
             </div>

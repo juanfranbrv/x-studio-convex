@@ -207,33 +207,33 @@ function LandingNav({ hasAccess }: { hasAccess: boolean }) {
       className={cn(
         'left-0 right-0 top-0 z-50 transition-all duration-300',
         scrolled
-          ? 'fixed px-4 py-3 sm:px-6'
-          : 'absolute px-6 py-6 sm:px-10'
+          ? 'fixed px-4 py-4 sm:px-6'
+          : 'absolute px-6 py-6 sm:px-12'
       )}
     >
       <div
         className={cn(
           'mx-auto flex items-center justify-between transition-all duration-300',
           scrolled
-            ? 'max-w-[90rem] rounded-2xl border border-border/40 bg-white px-6 py-3 shadow-md'
+            ? 'max-w-[90rem] rounded-2xl border border-border/40 bg-white px-7 py-4 shadow-md'
             : 'max-w-[90rem] px-0 py-0'
         )}
       >
         {/* Logo */}
         <Link href="/" className="group flex items-center gap-3">
-          <AppLogo className="h-9 w-11 transition-all duration-300 group-hover:scale-110" />
-          <span className="text-xl font-bold tracking-tight transition-all duration-300 sm:text-2xl">
+          <AppLogo className="h-10 w-12 transition-all duration-300 group-hover:scale-110" />
+          <span className="text-[1.05rem] font-bold tracking-tight transition-all duration-300 sm:text-[1.35rem]">
             {brand.name}
           </span>
         </Link>
 
         {/* Desktop links */}
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-10 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-[15px] font-medium text-foreground/70 transition-colors hover:text-foreground"
+              className="text-[16px] font-medium text-foreground/70 transition-colors hover:text-foreground"
             >
               {link.label}
             </Link>
@@ -245,19 +245,19 @@ function LandingNav({ hasAccess }: { hasAccess: boolean }) {
           {!hasAccess ? (
             <>
               <Link href="/sign-in">
-                <Button variant="ghost" className="font-medium">
+                <Button variant="ghost" className="h-11 rounded-2xl px-4 text-[15px] font-medium">
                   {t('landing.login')}
                 </Button>
               </Link>
               <Link href="/sign-up">
-                <Button className="bg-primary font-semibold text-primary-foreground shadow-md transition-all hover:scale-105">
+                <Button className="h-11 rounded-2xl px-5 text-[15px] font-semibold text-primary-foreground shadow-md transition-all hover:scale-[1.03]">
                   {t('landing.heroCTA')}
                 </Button>
               </Link>
             </>
           ) : (
             <Link href="/image">
-              <Button className="bg-primary font-semibold text-primary-foreground shadow-md">
+              <Button className="h-11 rounded-2xl px-5 text-[15px] font-semibold text-primary-foreground shadow-md transition-all hover:scale-[1.03]">
                 {t('landing.enterStudio')} <IconArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>

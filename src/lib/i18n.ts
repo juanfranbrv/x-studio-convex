@@ -68,6 +68,14 @@ function resolveResourceFallback(locale: string, namespace: string, key: string)
     return readNestedValue(namespaceResource, key)
 }
 
+function syncResourceBundles() {
+    for (const [locale, namespaces] of Object.entries(resources)) {
+        for (const [namespace, bundle] of Object.entries(namespaces)) {
+            i18n.addResourceBundle(locale, namespace, bundle, true, true)
+        }
+    }
+}
+
 export function getInitialLocale(): AppLocale {
     if (typeof window === 'undefined') return DEFAULT_LOCALE
 
@@ -120,6 +128,8 @@ if (!i18n.isInitialized) {
             return key.split('.').pop() || key
         },
     })
+} else {
+    syncResourceBundles()
 }
 
 export default i18n

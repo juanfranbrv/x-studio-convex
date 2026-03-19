@@ -2903,7 +2903,12 @@ export function CarouselControlsPanel({
                 {/* Slide Count */}
                 {isStepVisible(1) && (
                 <div ref={(el) => { stepRefs.current[1] = el }} className={`${STUDIO_PANEL_CARD_PADDED_CLASS} space-y-3`}>
-                    <SectionHeader icon={IconCarousel} title={t('ui.slideCount')} />
+                    <SectionHeader
+                        icon={IconCarousel}
+                        title={t('ui.slideCount')}
+                        iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
+                        titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
+                    />
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="icon" onClick={() => handleSlideCountChange(-1)} disabled={slideCount <= 0}>
                             <IconMinus className="w-4 h-4" />
