@@ -57,7 +57,7 @@ export function Sidebar({ className, showLogo = true, offsetTopClassName }: Side
     return (
         <aside
             className={cn(
-                'flex h-dvh w-[104px] shrink-0 flex-col overflow-hidden border-r border-border/60 bg-[linear-gradient(180deg,hsl(var(--surface-alt))/0.96,hsl(var(--surface))/0.98)] backdrop-blur-xl transition-colors duration-300 ease-in-out [@media(max-height:820px)]:w-[96px]',
+                'flex h-dvh w-[104px] shrink-0 flex-col overflow-hidden border-r border-border/60 bg-white/74 backdrop-blur-xl transition-colors duration-300 ease-in-out [@media(max-height:820px)]:w-[96px]',
                 offsetTopClassName,
                 className
             )}

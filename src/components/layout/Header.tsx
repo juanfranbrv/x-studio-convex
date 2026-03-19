@@ -119,7 +119,7 @@ export function Header({
                     </div>
 
                     {brands.length > 0 ? (
-                        <div className={cn(variant === 'bar' && "ml-[14px]")}>
+                        <div className={cn(variant === 'bar' && "ml-[40px]")}>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm" className={`${STUDIO_RICH_SELECT_TRIGGER_CLASS} w-[clamp(9.5rem,42vw,12.75rem)] min-w-0 md:w-72`}>
@@ -179,7 +179,7 @@ export function Header({
                     {onNewBrandKit ? (
                         <Button variant="outline" size="sm" onClick={onNewBrandKit} className={cn(
                             "hidden h-11 gap-2 rounded-2xl border-border/70 bg-[hsl(var(--surface-alt))]/90 px-4 text-[1rem] font-medium transition-all hover:border-primary/20 hover:bg-white md:flex md:h-[3.15rem]",
-                            variant === 'bar' && "ml-[10px]"
+                            variant === 'bar' && "ml-[15px]"
                         )}>
                             <IconPlus className="h-4 w-4" />
                             {t('actions.newBrandKit')}
