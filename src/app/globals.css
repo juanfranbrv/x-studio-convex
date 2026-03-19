@@ -324,43 +324,13 @@
   }
 }
 
-/* Text layer sizes by typical desktop resolutions */
-.text-layer-editor {
-  --tl-head: 28px;
-  --tl-body: 18px;
-  --tl-cta: 16px;
-  --tl-url: 14px;
-  --tl-pad-top: 8px;
-  --tl-pad-bottom: 8px;
-  --tl-pad-x: 22px;
-  --tl-gap: 8px;
-  --tl-gap-tight: 6px;
-  --tl-section-gap: 8px;
-  --tl-title-top: 20px;
-  --tl-middle-top: 10px;
-  --tl-cta-bottom: 16px;
-  --tl-brand-top: 6px;
-  --tl-line-head: 1.12;
-  --tl-line-body: 1.1;
-  --tl-brand-h: 32px;
-  --tl-brand-px: 16px;
-  --tl-brand-fs: 10px;
-  --tl-brand-icon: 14px;
-  --tl-cta-px: 20px;
-  --tl-cta-py: 8px;
-  --tl-cta-icon: 18px;
-  --tl-url-px: 24px;
-  --tl-url-py: 10px;
-  --tl-url-icon: 20px;
-}
-
 :root {
   --style-thumb-w: clamp(28px, 4.5cqw, 40px);
   --style-thumb-h: clamp(38px, 5.5cqw, 52px);
 }
 
 /* 1) <= 1366px (HD) */
-@media (max-width: 1366px) {
+@media screen and (max-width: 1366px) {
   .text-layer-editor {
     --tl-head: 11px;
     --tl-body: 8px;
@@ -369,11 +339,11 @@
     --tl-pad-top: 4px;
     --tl-pad-bottom: 4px;
     --tl-pad-x: 10px;
-    --tl-gap: -3px;
+    --tl-gap: 0px;
     --tl-gap-tight: -4px;
     --tl-section-gap: 6px;
     --tl-title-top: 26px;
-    --tl-middle-top: -34px;
+    --tl-middle-top: 0px;
     --tl-cta-bottom: 8px;
     --tl-brand-top: 32px;
     --tl-line-head: 1.02;
@@ -388,9 +358,6 @@
     --tl-url-px: 10px;
     --tl-url-py: 4px;
     --tl-url-icon: 11px;
-  }
-  .text-layer-editor .tl-middle textarea {
-    margin-bottom: -25px;
   }
 }
 
@@ -476,6 +443,81 @@
     --tl-gap: 4px;
     --tl-gap-tight: 3px;
     --tl-section-gap: 8px;
+  }
+}
+
+/* Preview text layout driven by canvas width instead of viewport breakpoints */
+.text-layer-editor {
+  --tl-head-size: clamp(1.55rem, 4.8cqi, 3rem);
+  --tl-support-size: clamp(0.95rem, 2.25cqi, 1.45rem);
+  --tl-meta-size: clamp(0.88rem, 1.7cqi, 1.2rem);
+  --tl-cta-size: clamp(0.95rem, 1.9cqi, 1.22rem);
+  --tl-url-size: clamp(0.85rem, 1.7cqi, 1.08rem);
+  --tl-pad-top: clamp(0.45rem, 1.1cqi, 0.85rem);
+  --tl-pad-bottom: clamp(0.45rem, 1.1cqi, 0.85rem);
+  --tl-pad-x: clamp(0.8rem, 2.3cqi, 1.5rem);
+  --tl-section-gap: clamp(0.4rem, 1.1cqi, 0.8rem);
+  --tl-stack-gap: clamp(0.82rem, 2.1cqi, 1.45rem);
+  --tl-support-gap: clamp(0.14rem, 0.62cqi, 0.34rem);
+  --tl-meta-gap: clamp(0.08rem, 0.34cqi, 0.2rem);
+  --tl-title-top: clamp(1rem, 4.8cqi, 3rem);
+  --tl-middle-top: clamp(0.15rem, 0.9cqi, 0.55rem);
+  --tl-cta-bottom: clamp(0.55rem, 1.5cqi, 1rem);
+  --tl-brand-top: clamp(0.55rem, 1.5cqi, 1.2rem);
+  --tl-head-line: 1.04;
+  --tl-support-line: 1.18;
+  --tl-meta-line: 1.1;
+  --tl-brand-h: clamp(1.65rem, 3.4cqi, 2.1rem);
+  --tl-brand-px: clamp(0.6rem, 1.7cqi, 1rem);
+  --tl-brand-fs: clamp(0.48rem, 1.05cqi, 0.68rem);
+  --tl-brand-icon: clamp(0.62rem, 1.35cqi, 0.9rem);
+  --tl-cta-gap: clamp(0.35rem, 1cqi, 0.7rem);
+  --tl-cta-px: clamp(0.9rem, 2cqi, 1.35rem);
+  --tl-cta-py: clamp(0.35rem, 0.8cqi, 0.6rem);
+  --tl-cta-icon: clamp(0.85rem, 1.8cqi, 1.1rem);
+  --tl-url-px: clamp(1rem, 2.35cqi, 1.55rem);
+  --tl-url-py: clamp(0.42rem, 0.95cqi, 0.7rem);
+  --tl-url-icon: clamp(0.9rem, 1.95cqi, 1.2rem);
+  --tl-zone-headline-max: min(94cqi, 36ch);
+  --tl-zone-support-max: min(82cqi, 54ch);
+  --tl-zone-meta-max: min(68cqi, 34ch);
+}
+
+.text-layer-editor .tl-zone {
+  width: 100%;
+}
+
+.text-layer-editor textarea,
+.text-layer-editor input {
+  field-sizing: content;
+}
+
+.text-layer-editor [data-zone="headline"] {
+  max-width: var(--tl-zone-headline-max);
+}
+
+.text-layer-editor [data-zone="support"] {
+  max-width: var(--tl-zone-support-max);
+}
+
+.text-layer-editor [data-zone="meta"] {
+  max-width: var(--tl-zone-meta-max);
+}
+
+@media (max-width: 767px) {
+  .text-layer-editor {
+    --tl-head-size: clamp(1rem, 5.8cqi, 1.45rem);
+    --tl-support-size: clamp(0.72rem, 3.2cqi, 0.95rem);
+    --tl-meta-size: clamp(0.68rem, 2.5cqi, 0.82rem);
+    --tl-cta-size: clamp(0.72rem, 2.8cqi, 0.92rem);
+    --tl-url-size: clamp(0.68rem, 2.5cqi, 0.82rem);
+    --tl-title-top: clamp(0.8rem, 3.6cqi, 1.3rem);
+    --tl-stack-gap: clamp(0.42rem, 1.8cqi, 0.72rem);
+    --tl-support-gap: clamp(0.26rem, 1.15cqi, 0.42rem);
+    --tl-meta-gap: clamp(0.18rem, 0.8cqi, 0.3rem);
+    --tl-zone-headline-max: min(84cqi, 20ch);
+    --tl-zone-support-max: min(82cqi, 30ch);
+    --tl-zone-meta-max: min(70cqi, 24ch);
   }
 }
 

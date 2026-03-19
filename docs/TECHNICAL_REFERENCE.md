@@ -110,6 +110,22 @@ Nota operativa:
   - boton de cierre visible dentro de la cabecera
   - transicion rapida y organica, respetando `prefers-reduced-motion`
 
+### Preview desktop de texto en canvas
+
+- La preview editable de `image` en desktop ya no debe gobernarse por breakpoints de viewport ni por offsets negativos para encajar texto.
+- La escala tipografica debe depender del ancho real del canvas mediante tokens fluidos con unidades de contenedor (`cqi`) y limites `clamp()`.
+- Los textos visibles del canvas deben clasificarse por zonas semanticas:
+  - `headline`
+  - `support`
+  - `meta`
+  - `cta`
+- Archivo de clasificacion: `src/components/studio/previewTextLayout.ts`
+- Archivo de render: `src/components/studio/TextLayersEditor.tsx`
+- Regla operativa:
+  - no reutilizar una sola anchura para todos los bloques de texto
+  - no volver a introducir `--tl-middle-top` negativos ni gaps negativos para corregir composiciones
+  - si una nueva necesidad rompe el sistema, ajustar tokens y anchos maximos por zona antes de parchear por resolucion
+
 ### Desarrollo LAN en la misma red
 
 - Para probar desde movil u otros dispositivos en la misma red hay que usar `npm run dev:lan` o `npm run dev:lan:quiet`.
@@ -569,3 +585,56 @@ Si Clerk exige verificacion completa del dominio para correo o cuenta hospedada,
   - un `Brand Kit` nuevo creado desde el asistente debe arrancar en `0%`
   - placeholders como `My Brand`, `Mi marca` o equivalentes no cuentan como progreso real
   - la completitud solo debe subir cuando el usuario rellena contenido real o cuando el analisis autocompleta datos validos
+
+## Preview editable de textos
+
+- La preview de `image` clasifica los textos en zonas semanticas (`headline`, `support`, `meta`, `cta`, `url`) desde `src/components/studio/previewTextLayout.ts`.
+- La tipografia y las zonas de la preview deben gobernarse por el tamano real del canvas, no por breakpoints rigidos de ventana.
+- Para bloques de texto editables que deban abrazar visualmente su contenido, la base recomendada es medicion por espejo:
+  - un nodo invisible replica el texto renderizado real
+  - el `textarea` editable se superpone encima
+  - el marco visual se dimensiona por el espejo, no por `scrollHeight` ni por heuristicas en `ch`
+- El patron reusable vive en `src/components/studio/PreviewEditableTextBlock.tsx`.
+- Regla de mantenimiento:
+  1. la `x` de borrar no debe invadir el texto medido
+  2. el marco debe crecer con el contenido real
+  3. desktop pequeno y mobile deben compartir la misma logica de medicion, cambiando solo tokens y limites de zona
+
+## Motor adaptativo de composicion de preview
+
+- La preview de `image` usa ahora un motor adaptativo para distribuir textos segun:
+  - ancho real del canvas
+  - alto real del canvas
+  - ratio real del canvas
+  - cantidad de bloques visibles
+  - carga total de texto
+  - presencia de CTA y URL
+- La base pura vive en:
+  - `src/components/studio/previewCompositionMetrics.ts`
+  - `src/components/studio/previewCompositionPlan.ts`
+  - `src/components/studio/usePreviewComposition.ts`
+- El sistema resuelve un `layout mode` semantico:
+  - `compact`
+  - `balanced`
+  - `airy`
+- Las metricas puras incluyen tambien:
+  - `viewportBucket`
+  - `aspectBucket`
+  - `textPressure`
+  - longitudes maximas de `support` y `meta`
+- El plan adaptativo no reparte solo anchura:
+  - calcula anchos maximos por zona
+  - calcula escalas por zona
+  - calcula ritmo vertical (`stackGap`, `supportGap`, `metaGap`)
+  - ajusta offsets de `headline`, bloque medio, chip de marca y CTA segun holgura vertical estimada
+- Regla operativa:
+  1. `globals.css` solo define tokens base fluidos
+  2. la composicion final la decide el plan adaptativo en JS
+  3. `TextLayersEditor.tsx` debe consumir ese plan y no reintroducir maximos hardcodeados por zona
+  4. mobile y desktop comparten el mismo motor; solo cambian presupuestos y prioridades
+  5. las reglas viejas de viewport no deben volver a meter compensaciones manuales sobre `textarea` o margenes negativos
+- Orden de compactacion cuando falta espacio:
+  1. reducir gaps
+  2. ajustar anchuras de zona
+  3. reducir ligeramente `support/meta`
+  4. proteger el `headline` y la CTA el mayor tiempo posible

@@ -1,6 +1,5 @@
-import React, { useEffect, useLayoutEffect, useRef, useCallback } from 'react'
+import React, { useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { IconClose, IconMouseClick, IconFingerprint, IconLink, IconPlus } from '@/components/ui/icons'
 import {
     DropdownMenu,
@@ -13,6 +12,9 @@ import {
 import { cn } from '@/lib/utils'
 import { TextAsset } from '@/lib/creation-flow-types'
 import { useTranslation } from 'react-i18next'
+import { buildPreviewTextLayout, PreviewTextLayer } from './previewTextLayout'
+import { PreviewEditableTextBlock } from './PreviewEditableTextBlock'
+import { usePreviewComposition } from './usePreviewComposition'
 
 export interface BrandKitTextOption {
     id: string
@@ -38,6 +40,18 @@ interface TextLayersEditorProps {
     onUpdateTextAsset?: (id: string, value: string) => void
 }
 
+function getInlineFieldWidth(value: string, minCh: number, maxCh: number) {
+    const textLength = Math.max(minCh, Math.min(maxCh, String(value || '').trim().length || minCh))
+    return `min(${textLength}ch, 100%)`
+}
+
+const PREVIEW_TEXT_REMOVE_BUTTON_CLASS = 'absolute right-2 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-black/70'
+const PREVIEW_TEXT_FRAME_CLASS = 'relative mx-auto w-fit max-w-full rounded-[1.15rem] border border-transparent bg-transparent px-4 py-2 transition-all duration-200 group-hover:border-border/70 group-hover:bg-background/72 group-focus-within:border-primary/35 group-focus-within:bg-background/90 group-focus-within:shadow-[0_18px_38px_-30px_rgba(15,23,42,0.18)]'
+const PREVIEW_TEXT_INLINE_ACTION_CLASS = 'group mx-auto inline-flex max-w-full items-start justify-center gap-1.5 align-top pointer-events-auto'
+const PREVIEW_TEXT_INLINE_FRAME_CLASS = 'relative inline-flex max-w-full items-start justify-center rounded-[1rem] border border-transparent bg-transparent px-3 pt-[0.16rem] pb-[0.01rem] transition-all duration-200 group-hover:border-border/70 group-hover:bg-background/72 group-focus-within:border-primary/35 group-focus-within:bg-background/90 group-focus-within:shadow-[0_18px_38px_-30px_rgba(15,23,42,0.16)]'
+const PREVIEW_TEXT_CHIP_REMOVE_SPACER_CLASS = 'pr-8'
+const PREVIEW_TEXT_INLINE_REMOVE_BUTTON_CLASS = 'mt-[0.08rem] inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-black/70'
+
 export function TextLayersEditor({
     headline,
     cta,
@@ -55,166 +69,154 @@ export function TextLayersEditor({
     onUpdateTextAsset
 }: TextLayersEditorProps) {
     const { t } = useTranslation('common')
-    const visibleTextAssets = textAssets.filter(asset => asset.type !== 'cta' && asset.type !== 'url')
-    const headlineRef = useRef<HTMLTextAreaElement | null>(null)
+    const containerRef = useRef<HTMLDivElement | null>(null)
     const touchVisibleActionClass = 'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100'
+    const layout = buildPreviewTextLayout({
+        headline,
+        customTexts,
+        textAssets,
+        cta,
+        ctaUrl,
+        ctaUrlEnabled,
+    })
+    const compositionPlan = usePreviewComposition(containerRef, {
+        headline: layout.headline.value,
+        support: layout.support.map((item) => item.value),
+        meta: layout.meta.map((item) => item.value),
+        hasCta: Boolean(layout.cta?.value),
+        hasUrl: Boolean(layout.url?.value),
+    })
 
-    const resizeHeadline = useCallback(() => {
-        const el = headlineRef.current
-        if (!el) return
-        el.style.height = 'auto'
-        el.style.height = `${el.scrollHeight + 2}px`
-    }, [])
+    const handleMiddleLayerChange = (layer: PreviewTextLayer, value: string) => {
+        if (layer.source === 'asset') {
+            onUpdateTextAsset?.(layer.id, value)
+            return
+        }
+        onCustomTextChange(layer.id, value)
+    }
 
-    useLayoutEffect(() => {
-        resizeHeadline()
-    }, [headline, resizeHeadline])
-
-    useEffect(() => {
-        const el = headlineRef.current
-        if (!el || typeof ResizeObserver === 'undefined') return
-        const observer = new ResizeObserver(() => resizeHeadline())
-        observer.observe(el)
-        return () => observer.disconnect()
-    }, [resizeHeadline])
+    const handleMiddleLayerDelete = (layer: PreviewTextLayer) => {
+        onDeleteLayer(layer.id, layer.source === 'asset' ? 'asset' : 'custom')
+    }
 
     return (
         <div
+            ref={containerRef}
             className="text-layer-editor w-full h-full grid animate-in fade-in zoom-in-95 duration-500 overflow-hidden"
             style={{
-                paddingTop: 'var(--tl-pad-top)',
+                paddingTop: 'calc(var(--tl-pad-top) + var(--tl-plan-flow-top, 0rem))',
                 paddingBottom: 'var(--tl-pad-bottom)',
                 paddingLeft: 'var(--tl-pad-x)',
                 paddingRight: 'var(--tl-pad-x)',
                 gridTemplateRows: 'auto 1fr auto',
                 rowGap: 'var(--tl-section-gap)',
+                ['--tl-plan-flow-top' as string]: `${compositionPlan.flowTopInset}rem`,
+                ['--tl-plan-stack-gap' as string]: `${compositionPlan.stackGap}rem`,
+                ['--tl-plan-support-gap' as string]: `${compositionPlan.supportGap}rem`,
+                ['--tl-plan-meta-gap' as string]: `${compositionPlan.metaGap}rem`,
+                ['--tl-plan-title-top' as string]: `${compositionPlan.titleTop}rem`,
+                ['--tl-plan-middle-top' as string]: `${compositionPlan.middleTop}rem`,
+                ['--tl-plan-brand-top' as string]: `${compositionPlan.brandTop}rem`,
+                ['--tl-plan-cta-bottom' as string]: `${compositionPlan.ctaBottom}rem`,
+                ['--tl-plan-head-scale' as string]: compositionPlan.headlineScale,
+                ['--tl-plan-support-scale' as string]: compositionPlan.supportScale,
+                ['--tl-plan-meta-scale' as string]: compositionPlan.metaScale,
+                ['--tl-zone-headline-max' as string]: `min(98cqi, ${compositionPlan.zoneHeadlineMaxCh}ch)`,
+                ['--tl-zone-support-max' as string]: `min(94cqi, ${compositionPlan.zoneSupportMaxCh}ch)`,
+                ['--tl-zone-meta-max' as string]: `min(86cqi, ${compositionPlan.zoneMetaMaxCh}ch)`,
             }}
+            data-layout-mode={compositionPlan.mode}
         >
+            <div
+                data-zone="headline"
+                className="tl-zone tl-zone-headline mx-auto w-full"
+                style={{ marginTop: 'var(--tl-plan-title-top, var(--tl-title-top))' }}
+            >
+                <PreviewEditableTextBlock
+                    value={headline || ''}
+                    onChange={onHeadlineChange}
+                    onDelete={() => onDeleteLayer('headline', 'headline')}
+                    placeholder={t('textLayerEditor.headlinePlaceholder', { defaultValue: 'WRITE YOUR HEADLINE' })}
+                    fontSize="calc(var(--tl-head-size) * var(--tl-plan-head-scale, 1))"
+                    lineHeight="var(--tl-head-line)"
+                    minWidthCh={compositionPlan.minHeadlineWidthCh}
+                    maxWidthCh={compositionPlan.zoneHeadlineMaxCh}
+                    frameClassName={PREVIEW_TEXT_FRAME_CLASS}
+                    actionClassName={PREVIEW_TEXT_INLINE_ACTION_CLASS}
+                    removeButtonClassName={PREVIEW_TEXT_INLINE_REMOVE_BUTTON_CLASS}
+                    touchVisibleActionClass={touchVisibleActionClass}
+                    textClassName="font-black text-foreground placeholder:text-muted-foreground/20 leading-tight drop-shadow-sm [text-wrap:balance]"
+                    textWrap="balance"
+                />
+            </div>
 
-            {/* TITLE */}
-            <div className="tl-title group relative w-full max-w-2xl px-[8cqw] pointer-events-auto" style={{ marginTop: 'var(--tl-title-top)' }}>
-                    <textarea
-                        value={headline || ''}
-                        onChange={(e) => onHeadlineChange(e.target.value)}
-                        className="w-full bg-transparent border-none text-center font-black text-foreground placeholder:text-muted-foreground/20 focus:ring-0 resize-none overflow-visible min-h-[1.2em] leading-tight drop-shadow-sm pb-1"
-                        style={{ fontSize: 'var(--tl-head)', lineHeight: 'var(--tl-line-head)' }}
-                        placeholder={t('textLayerEditor.headlinePlaceholder', { defaultValue: 'WRITE YOUR HEADLINE' })}
-                        rows={1}
-                        onInput={(e) => {
-                            const target = e.target as HTMLTextAreaElement;
-                            target.style.height = 'auto';
-                            target.style.height = (target.scrollHeight + 2) + 'px';
-                        }}
-                        ref={headlineRef}
-                    />
-                    {headline && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onDeleteLayer('headline', 'headline')}
-                            className={cn(
-                                'absolute right-4 top-0 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground',
-                                touchVisibleActionClass
-                            )}
-                            style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
-                        >
-                            <IconClose style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
-                        </Button>
-                    )}
-                </div>
-
-            {/* MIDDLE: TEXT BLOCKS */}
             <div
                 className="tl-middle w-full flex flex-col items-center justify-start"
-                style={{ rowGap: 'var(--tl-gap)', minHeight: 0 }}
+                style={{ rowGap: 'var(--tl-plan-stack-gap, var(--tl-stack-gap))', minHeight: 0 }}
             >
-                <div className="w-full flex flex-col items-center" style={{ rowGap: 'var(--tl-gap-tight)', marginTop: 'var(--tl-middle-top)' }}>
-                    {Object.entries(customTexts).map(([key, value]) => (
-                        <div key={key} className="group relative mx-auto w-[min(64%,38ch)] pointer-events-auto">
-                            <textarea
-                                value={value || ''}
-                                onChange={(e) => onCustomTextChange(key, e.target.value)}
-                                className="w-full bg-transparent border-none text-center font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.1em] leading-tight transition-all drop-shadow-sm py-0"
-                                style={{ fontSize: 'var(--tl-body)', lineHeight: 'var(--tl-line-body)' }}
-                                placeholder={t('textLayerEditor.customPlaceholder', {
-                                    defaultValue: 'PROMPT FOR {{label}}...',
-                                    label: key.replace(/_/g, ' ').toUpperCase()
-                                })}
-                                rows={1}
-                                onInput={(e) => {
-                                    const target = e.target as HTMLTextAreaElement;
-                                    target.style.height = 'auto';
-                                    target.style.height = (target.scrollHeight + 2) + 'px';
-                                }}
-                                ref={(el) => {
-                                    if (el) {
-                                        el.style.height = 'auto';
-                                        el.style.height = (el.scrollHeight + 2) + 'px';
-                                    }
-                                }}
-                            />
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => onDeleteLayer(key, 'custom')}
-                                className={cn(
-                                    'absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground',
-                                    touchVisibleActionClass
-                                )}
-                                style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
-                            >
-                                <IconClose style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
-                            </Button>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Brand-based Text Assets (PROMPT TEXTS moved from Panel) */}
-                {visibleTextAssets.length > 0 && (
-                    <div className="w-full flex flex-col items-center pt-1" style={{ rowGap: 'var(--tl-gap-tight)' }}>
-                        {visibleTextAssets.map((asset) => (
-                            <div key={asset.id} className="group relative mx-auto w-[min(64%,38ch)] pointer-events-auto">
-                                <textarea
-                                    value={asset.value || ''}
-                                    onChange={(e) => onUpdateTextAsset?.(asset.id, e.target.value)}
-                                    className="w-full bg-transparent border-none text-center font-medium text-foreground/90 placeholder:text-muted-foreground/15 focus:ring-0 resize-none overflow-hidden min-h-[1.1em] leading-tight transition-all drop-shadow-sm py-0"
-                                    style={{ fontSize: 'var(--tl-body)', lineHeight: 'var(--tl-line-body)' }}
-                                    placeholder={t('textLayerEditor.assetPlaceholder', {
-                                        defaultValue: 'Value for {{label}}...',
-                                        label: asset.label
+                {layout.support.length > 0 && (
+                    <div
+                        data-zone="support"
+                        className="w-full flex flex-col items-center"
+                        style={{ rowGap: 'var(--tl-plan-support-gap, var(--tl-support-gap))', marginTop: 'var(--tl-plan-middle-top, var(--tl-middle-top))' }}
+                    >
+                        {layout.support.map((layer) => (
+                            <div key={layer.id} className="tl-zone tl-zone-support w-full">
+                                <PreviewEditableTextBlock
+                                    value={layer.value || ''}
+                                    onChange={(value) => handleMiddleLayerChange(layer, value)}
+                                    onDelete={() => handleMiddleLayerDelete(layer)}
+                                    placeholder={t('textLayerEditor.customPlaceholder', {
+                                        defaultValue: 'PROMPT FOR {{label}}...',
+                                        label: layer.label.replace(/_/g, ' ').toUpperCase()
                                     })}
-                                    rows={1}
-                                    onInput={(e) => {
-                                        const target = e.target as HTMLTextAreaElement;
-                                        target.style.height = 'auto';
-                                        target.style.height = (target.scrollHeight + 2) + 'px';
-                                    }}
-                                    ref={(el) => {
-                                        if (el) {
-                                            el.style.height = 'auto';
-                                            el.style.height = (el.scrollHeight + 2) + 'px';
-                                        }
-                                    }}
+                                    fontSize="calc(var(--tl-support-size) * var(--tl-plan-support-scale, 1))"
+                                    lineHeight="var(--tl-support-line)"
+                                    minWidthCh={compositionPlan.minSupportWidthCh}
+                                    maxWidthCh={compositionPlan.zoneSupportMaxCh}
+                                    frameClassName={PREVIEW_TEXT_INLINE_FRAME_CLASS}
+                                    actionClassName={PREVIEW_TEXT_INLINE_ACTION_CLASS}
+                                    removeButtonClassName={PREVIEW_TEXT_INLINE_REMOVE_BUTTON_CLASS}
+                                    touchVisibleActionClass={touchVisibleActionClass}
+                                    textClassName="font-medium text-foreground/90 placeholder:text-muted-foreground/15 leading-tight transition-all drop-shadow-sm py-0 [text-wrap:pretty]"
                                 />
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => onDeleteLayer(asset.id, 'asset')}
-                                    className={cn(
-                                        'absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-destructive/70 text-destructive-foreground shadow-lg transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground',
-                                        touchVisibleActionClass
-                                    )}
-                                    style={{ width: 'clamp(14px, 2.6cqw, 20px)', height: 'clamp(14px, 2.6cqw, 20px)' }}
-                                >
-                                    <IconClose style={{ width: 'clamp(8px, 1.6cqw, 12px)', height: 'clamp(8px, 1.6cqw, 12px)' }} />
-                                </Button>
                             </div>
                         ))}
                     </div>
                 )}
 
-                    {/* Add New Text Button (Brand Kit Assets Only) */}
-                    <div className="pointer-events-auto flex justify-center" style={{ marginTop: 'var(--tl-brand-top)' }}>
+                {layout.meta.length > 0 && (
+                    <div
+                        data-zone="meta"
+                        className="w-full flex flex-col items-center pt-1"
+                        style={{ rowGap: 'var(--tl-plan-meta-gap, var(--tl-meta-gap))' }}
+                    >
+                        {layout.meta.map((layer) => (
+                            <div key={layer.id} className="tl-zone tl-zone-meta w-full">
+                                <PreviewEditableTextBlock
+                                    value={layer.value || ''}
+                                    onChange={(value) => handleMiddleLayerChange(layer, value)}
+                                    onDelete={() => handleMiddleLayerDelete(layer)}
+                                    placeholder={t('textLayerEditor.assetPlaceholder', {
+                                        defaultValue: 'Value for {{label}}...',
+                                        label: layer.label
+                                    })}
+                                    fontSize="calc(var(--tl-meta-size) * var(--tl-plan-meta-scale, 1))"
+                                    lineHeight="var(--tl-meta-line)"
+                                    minWidthCh={compositionPlan.minMetaWidthCh}
+                                    maxWidthCh={compositionPlan.zoneMetaMaxCh}
+                                    frameClassName={PREVIEW_TEXT_INLINE_FRAME_CLASS}
+                                    actionClassName={PREVIEW_TEXT_INLINE_ACTION_CLASS}
+                                    removeButtonClassName={PREVIEW_TEXT_INLINE_REMOVE_BUTTON_CLASS}
+                                    touchVisibleActionClass={touchVisibleActionClass}
+                                    textClassName="font-semibold text-foreground/88 placeholder:text-muted-foreground/15 leading-tight transition-all drop-shadow-sm py-0 [text-wrap:pretty]"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div className="pointer-events-auto flex justify-center" style={{ marginTop: 'var(--tl-plan-brand-top, var(--tl-brand-top))' }}>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -240,7 +242,6 @@ export function TextLayersEditor({
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
 
-                            {/* Empty option to add custom text */}
                             <DropdownMenuItem
                                 onClick={() => onAddTextAsset?.({
                                     id: `text-${Date.now()}`,
@@ -256,7 +257,6 @@ export function TextLayersEditor({
 
                             <DropdownMenuSeparator />
 
-                            {/* Brand Kit Texts */}
                             {brandKitTexts && brandKitTexts.length > 0 ? (
                                 brandKitTexts.map((option) => (
                                     <DropdownMenuItem
@@ -283,15 +283,17 @@ export function TextLayersEditor({
                 </div>
             </div>
 
-            {/* BOTTOM: CTA + URL (URL takes priority like final render) */}
             <div
+                data-zone="cta"
                 className="tl-cta flex-none flex flex-col items-center justify-center pb-4 pointer-events-auto"
-                style={{ marginTop: 'auto', marginBottom: 'var(--tl-cta-bottom)' }}
+                style={{ marginTop: 'auto', marginBottom: 'var(--tl-plan-cta-bottom, var(--tl-cta-bottom))' }}
             >
-                <div className="group relative flex flex-col items-center" style={{ rowGap: 'var(--tl-gap)' }}>
-                    {/* CTA Text (small, above URL) */}
+                <div className="flex flex-col items-center" style={{ rowGap: 'var(--tl-cta-gap)' }}>
                     <div
-                        className="group relative flex items-center gap-2 rounded-full bg-muted/60 text-muted-foreground border border-border shadow-sm"
+                        className={cn(
+                            'group relative mx-auto flex w-fit max-w-full items-center gap-2 rounded-full border border-border bg-muted/60 text-muted-foreground shadow-sm',
+                            (cta || ctaUrl) && PREVIEW_TEXT_CHIP_REMOVE_SPACER_CLASS
+                        )}
                         style={{
                             paddingLeft: 'var(--tl-cta-px)',
                             paddingRight: 'var(--tl-cta-px)',
@@ -304,30 +306,31 @@ export function TextLayersEditor({
                         <IconMouseClick style={{ width: 'var(--tl-cta-icon)', height: 'var(--tl-cta-icon)' }} className="text-muted-foreground flex-shrink-0" />
                         <input
                             value={cta || ''}
-                            onChange={(e) => onCtaChange(e.target.value)}
-                            className="bg-transparent text-muted-foreground font-semibold border-none placeholder:text-muted-foreground/60 focus:ring-0 focus:outline-none text-center"
-                            style={{ fontSize: 'var(--tl-cta)', width: `${Math.max(8, (cta?.length || 10))}ch` }}
+                            onChange={(event) => onCtaChange(event.target.value)}
+                            className="max-w-full bg-transparent text-muted-foreground font-semibold border-none placeholder:text-muted-foreground/60 focus:ring-0 focus:outline-none text-center"
+                            style={{
+                                fontSize: 'var(--tl-cta-size)',
+                                width: getInlineFieldWidth(cta, 14, 26),
+                            }}
                         />
                         {(cta || ctaUrl) && (
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => onDeleteLayer('cta', 'cta')}
-                                className={cn(
-                                    'ml-1 rounded-full bg-destructive/70 text-destructive-foreground shadow-md transition-opacity hover:bg-destructive hover:text-destructive-foreground',
-                                    touchVisibleActionClass
-                                )}
-                                style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
+                                className={cn(PREVIEW_TEXT_REMOVE_BUTTON_CLASS, touchVisibleActionClass)}
                             >
-                                <IconClose style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
+                                <IconClose className="h-3.5 w-3.5" />
                             </Button>
                         )}
                     </div>
 
-                    {/* URL Chip (dominant, framed) */}
                     {ctaUrlEnabled && (
                         <div
-                            className="group relative flex items-center justify-center gap-2 rounded-2xl bg-muted/70 border border-primary/30 shadow-md"
+                            className={cn(
+                                'group relative mx-auto flex w-fit max-w-full items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-muted/70 shadow-md',
+                                ctaUrl && PREVIEW_TEXT_CHIP_REMOVE_SPACER_CLASS
+                            )}
                             style={{
                                 paddingLeft: 'var(--tl-url-px)',
                                 paddingRight: 'var(--tl-url-px)',
@@ -341,23 +344,25 @@ export function TextLayersEditor({
                             <input
                                 type="text"
                                 value={ctaUrl || ''}
-                                onChange={(e) => onCtaUrlChange?.(e.target.value)}
-                                className="bg-transparent text-[14px] text-primary font-semibold border-none focus:ring-0 focus:outline-none text-center font-mono placeholder:text-muted-foreground/60"
+                                onChange={(event) => onCtaUrlChange?.(event.target.value)}
+                                className="max-w-full bg-transparent text-primary font-semibold border-none focus:ring-0 focus:outline-none text-center font-mono placeholder:text-muted-foreground/60"
                                 placeholder={t('textLayerEditor.urlPlaceholder', { defaultValue: 'yourbrand.com/...' })}
-                                style={{ width: `${Math.max(10, (ctaUrl?.length || 12))}ch`, fontSize: 'var(--tl-url)' }}
+                                style={{
+                                    width: getInlineFieldWidth(ctaUrl, 12, 28),
+                                    fontSize: 'var(--tl-url-size)'
+                                }}
                             />
                             {ctaUrl && (
-                                <button
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
                                     aria-label={t('textLayerEditor.clearUrl', { defaultValue: 'Clear URL' })}
                                     onClick={() => onCtaUrlChange?.('')}
-                                    className={cn(
-                                        'rounded-full bg-destructive/70 text-destructive-foreground shadow-md flex items-center justify-center transition-opacity hover:bg-destructive hover:text-destructive-foreground',
-                                        touchVisibleActionClass
-                                    )}
-                                    style={{ width: 'clamp(16px, 2.8cqw, 22px)', height: 'clamp(16px, 2.8cqw, 22px)' }}
+                                    className={cn(PREVIEW_TEXT_REMOVE_BUTTON_CLASS, touchVisibleActionClass)}
                                 >
-                                    <IconClose style={{ width: 'clamp(9px, 1.8cqw, 13px)', height: 'clamp(9px, 1.8cqw, 13px)' }} />
-                                </button>
+                                    <IconClose className="h-3.5 w-3.5" />
+                                </Button>
                             )}
                         </div>
                     )}

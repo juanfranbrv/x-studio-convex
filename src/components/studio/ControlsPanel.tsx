@@ -1436,7 +1436,6 @@ export function ControlsPanel({
                                             checked={state.ctaUrlEnabled}
                                             onCheckedChange={(checked) => {
                                                 setCtaUrlEnabled(checked, { useKitIfEmpty: true })
-                                                updateActiveBrandKit?.({ cta_url_enabled: checked })
                                             }}
                                         />
                                     </div>

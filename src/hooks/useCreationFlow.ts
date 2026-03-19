@@ -274,11 +274,12 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
                 hasChanges = true
             }
 
-            // In the image module, new sessions should start with link disabled by default.
-            // Saved sessions can still rehydrate their own CTA URL state later.
-            nextState.ctaUrlEnabled = false
+            // Keep image in sync with the brand-kit preference on first init / brand switch.
+            // Persisted sessions can still rehydrate their own CTA URL state later.
+            const kitUrl = activeBrandKit.url?.trim() || ''
+            nextState.ctaUrlEnabled = Boolean(activeBrandKit.cta_url_enabled && kitUrl)
             nextState.ctaUrlManual = false
-            nextState.ctaUrl = ''
+            nextState.ctaUrl = kitUrl
             hasChanges = true
         }
 

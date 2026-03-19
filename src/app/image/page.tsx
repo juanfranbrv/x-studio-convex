@@ -47,9 +47,11 @@ import type { BrandDNA } from '@/lib/brand-types'
 import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/admin-compositions-actions'
 import { useTranslation } from 'react-i18next'
 import { buildAutomaticSessionTitle, getSessionDisplayTitle, normalizeCustomSessionTitle } from '@/lib/session-titles'
+import { getLastVisitedModuleAction } from '@/app/actions/get-last-visited-module'
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
+const LAST_IMAGE_SCOPE_TIMEOUT_MS = 1800
 
 interface Generation {
     id: string
@@ -238,6 +240,8 @@ export default function ImagePage() {
     })
     const [sessionTitleDialogOpen, setSessionTitleDialogOpen] = useState(false)
     const [sessionTitleDraft, setSessionTitleDraft] = useState('')
+    const [lastVisitedImageScopeReady, setLastVisitedImageScopeReady] = useState(false)
+    const initialImageScopeResolvedRef = useRef(false)
     const openSessionDecisionModal = useCallback((config: Omit<SessionDecisionModalState, 'open'>) => {
         return new Promise<string | null>((resolve) => {
             sessionDecisionResolverRef.current = resolve
@@ -283,7 +287,54 @@ export default function ImagePage() {
     const deleteWorkSession = useMutation(api.work_sessions.deleteSession)
     const clearWorkSessions = useMutation(api.work_sessions.clearSessions)
 
-    const scopedBrandId = activeBrandKit?.id as Id<'brand_dna'> | undefined
+    useEffect(() => {
+        initialImageScopeResolvedRef.current = false
+        setLastVisitedImageScopeReady(false)
+
+        if (!user?.id) {
+            setLastVisitedImageScopeReady(true)
+            return
+        }
+
+        let cancelled = false
+
+        void (async () => {
+            const result = await Promise.race([
+                getLastVisitedModuleAction(user.id),
+                new Promise<{ success: false; error: string }>((resolve) => {
+                    setTimeout(() => resolve({ success: false, error: 'timeout' }), LAST_IMAGE_SCOPE_TIMEOUT_MS)
+                }),
+            ])
+
+            if (cancelled || initialImageScopeResolvedRef.current) return
+            initialImageScopeResolvedRef.current = true
+
+            const lastVisitedModule = result.success ? (result.data ?? null) : null
+            const targetBrandId =
+                lastVisitedModule?.module === 'image' && typeof lastVisitedModule.brand_id === 'string'
+                    ? lastVisitedModule.brand_id
+                    : null
+
+            if (targetBrandId && activeBrandKit?.id !== targetBrandId) {
+                await Promise.race([
+                    setActiveBrandKit(targetBrandId, true, true),
+                    new Promise<boolean>((resolve) => {
+                        setTimeout(() => resolve(false), 1200)
+                    }),
+                ])
+            }
+
+            if (!cancelled) {
+                setLastVisitedImageScopeReady(true)
+            }
+        })()
+
+        return () => {
+            cancelled = true
+        }
+    }, [user?.id, setActiveBrandKit])
+
+    const scopedBrandId = (lastVisitedImageScopeReady ? activeBrandKit?.id : undefined) as Id<'brand_dna'> | undefined
     const activeWorkSession = useQuery(
         api.work_sessions.getActiveSession,
         user?.id && scopedBrandId
