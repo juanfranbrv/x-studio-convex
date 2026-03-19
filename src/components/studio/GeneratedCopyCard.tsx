@@ -48,6 +48,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
     const [editedCopy, setEditedCopy] = React.useState(copy || '')
     const [isCopied, setIsCopied] = React.useState(false)
     const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+    const textareaRef = React.useRef<HTMLTextAreaElement | null>(null)
 
     React.useEffect(() => {
         setEditedCopy(copy || '')
@@ -60,6 +61,15 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
             }
         }
     }, [])
+
+    React.useEffect(() => {
+        const textarea = textareaRef.current
+        if (!textarea) return
+        textarea.style.height = '0px'
+        textarea.style.height = `${textarea.scrollHeight}px`
+    }, [editedCopy, isLoading])
+
+    const hasHashtags = hashtags.length > 0
 
     const handleCopy = () => {
         const fullText = `${editedCopy}\n\n${hashtags.join(' ')}`
@@ -75,7 +85,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
     }
 
     return (
-        <Card className={cn('w-full rounded-[1.6rem] border-muted bg-card/50 backdrop-blur-sm', className)}>
+        <Card className={cn('w-full rounded-[1.45rem] border border-border/50 bg-background/78 shadow-[0_16px_34px_-30px_rgba(15,23,42,0.12)]', className)}>
             <CardHeader className="flex flex-row items-center gap-3 space-y-0 p-4 pb-2">
                 <Avatar className="h-8 w-8 border">
                     <AvatarImage
@@ -90,7 +100,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                 </div>
             </CardHeader>
 
-            <CardContent className="space-y-3 p-4 pt-2">
+            <CardContent className={cn('p-4 pt-2', isLoading || hasHashtags ? 'space-y-3' : 'space-y-0')}>
                 {isLoading ? (
                     <div className="space-y-2 animate-pulse">
                         <div className="h-4 w-3/4 rounded bg-muted" />
@@ -99,17 +109,20 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                     </div>
                 ) : (
                     <Textarea
+                        ref={textareaRef}
                         value={editedCopy}
                         onChange={(e) => {
                             setEditedCopy(e.target.value)
                             onCopyChange?.(e.target.value)
                         }}
-                        className="min-h-[80px] resize-none border-none bg-transparent p-0 text-sm leading-relaxed focus-visible:ring-0"
+                        rows={1}
+                        className="h-auto !min-h-0 resize-none overflow-hidden border-none bg-transparent p-0 !text-[1.12rem] md:!text-[1.12rem] leading-[1.7] focus-visible:ring-0"
                         placeholder={t('copyCard.placeholder')}
                     />
                 )}
 
-                <div className="flex flex-wrap gap-1.5">
+                {isLoading || hasHashtags ? (
+                    <div className="flex flex-wrap gap-1.5">
                     {isLoading ? (
                         <>
                             <div className="h-5 w-16 animate-pulse rounded bg-muted" />
@@ -123,10 +136,11 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                             </Badge>
                         ))
                     )}
-                </div>
+                    </div>
+                ) : null}
             </CardContent>
 
-            <CardFooter className="border-t bg-muted/20 p-2">
+            <CardFooter className="border-t border-border/45 bg-muted/10 p-2.5">
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                         <Button
@@ -134,10 +148,10 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                             size="sm"
                             onClick={onRegenerate}
                             disabled={isLoading}
-                            className="h-7 text-xs text-muted-foreground hover:text-primary"
+                            className="h-8 rounded-[0.85rem] px-2.5 text-[0.82rem] text-muted-foreground hover:text-primary"
                             title={t('copyCard.regenerateHelp', { defaultValue: 'Genera una nueva versión del copy' })}
                         >
-                            {isLoading ? <Loader2 className="mr-1.5 h-3 w-3" /> : <IconRefresh className="mr-1.5 h-3 w-3" />}
+                            {isLoading ? <Loader2 className="mr-1.5 h-3.5 w-3.5" /> : <IconRefresh className="mr-1.5 h-3.5 w-3.5" />}
                             {isLoading ? t('copyCard.regenerating') : t('copyCard.tryAnotherVersion')}
                         </Button>
                         {hasPreviousVersion && onRestorePrevious ? (
@@ -146,9 +160,9 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                                 size="sm"
                                 onClick={onRestorePrevious}
                                 disabled={isLoading}
-                                className="h-7 text-xs text-muted-foreground hover:text-primary"
+                                className="h-8 rounded-[0.85rem] px-2.5 text-[0.82rem] text-muted-foreground hover:text-primary"
                             >
-                                <IconUndo className="mr-1.5 h-3 w-3" />
+                                <IconUndo className="mr-1.5 h-3.5 w-3.5" />
                                 {t('copyCard.restorePrevious', { defaultValue: 'Volver al anterior' })}
                             </Button>
                         ) : null}
@@ -157,7 +171,7 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                                 variant="link"
                                 size="sm"
                                 onClick={onCancel}
-                                className="h-7 px-0 text-[11px] text-muted-foreground hover:text-foreground"
+                                className="h-8 px-0 text-[0.82rem] text-muted-foreground hover:text-foreground"
                             >
                                 {isCanceling ? t('actions.canceling', { defaultValue: 'Canceling...' }) : t('actions.stop', { defaultValue: 'Stop' })}
                             </Button>
@@ -169,10 +183,10 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                             variant="ghost"
                             size="sm"
                             onClick={onToggleLock}
-                            className={cn('h-7 text-xs', isLocked ? 'bg-primary/10 text-primary' : 'text-muted-foreground')}
+                            className={cn('h-8 rounded-[0.85rem] px-2.5 text-[0.82rem]', isLocked ? 'bg-primary/10 text-primary' : 'text-muted-foreground')}
                             title={isLocked ? t('copyCard.unlockTitle') : t('copyCard.lockHelp')}
                         >
-                            {isLocked ? <IconLock className="mr-1.5 h-3 w-3" /> : <IconUnlock className="mr-1.5 h-3 w-3" />}
+                            {isLocked ? <IconLock className="mr-1.5 h-3.5 w-3.5" /> : <IconUnlock className="mr-1.5 h-3.5 w-3.5" />}
                             {isLocked ? t('copyCard.locked') : t('copyCard.keepThisText')}
                         </Button>
 
@@ -180,10 +194,10 @@ export const GeneratedCopyCard: React.FC<GeneratedCopyCardProps> = ({
                             variant="ghost"
                             size="sm"
                             onClick={handleCopy}
-                            className={cn('h-7 text-xs transition-all', isCopied && 'bg-primary/10 text-primary')}
+                            className={cn('h-8 rounded-[0.85rem] px-2.5 text-[0.82rem] transition-all', isCopied && 'bg-primary/10 text-primary')}
                             title={isCopied ? t('copyCard.copied') : t('copyCard.copy')}
                         >
-                            {isCopied ? <IconCheck className="mr-1.5 h-3 w-3" /> : <IconCopy className="mr-1.5 h-3 w-3" />}
+                            {isCopied ? <IconCheck className="mr-1.5 h-3.5 w-3.5" /> : <IconCopy className="mr-1.5 h-3.5 w-3.5" />}
                             {isCopied ? t('copyCard.copied') : t('copyCard.copy')}
                         </Button>
                     </div>

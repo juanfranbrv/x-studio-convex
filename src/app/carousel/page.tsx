@@ -1898,7 +1898,7 @@ export default function CarouselPage() {
                         )
                 )}>
                 {/* LEFT COLUMN (Main Canvas) */}
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-border/60 bg-white/85 shadow-[0_24px_70px_-46px_rgba(15,23,42,0.38)]">
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar">
                     {!isMobile && isAdmin && activeComposition && activeCompositionRecommendation && (
                         <div className="shrink-0 px-4 pt-4 md:px-6">
@@ -2124,9 +2124,12 @@ export default function CarouselPage() {
                             />
                         )}
                     </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
 
                     {mappedSessionGenerations.length > 0 && (
-                        <div className="flex-shrink-0 p-3 md:p-4 pt-0">
+                        <div className="min-w-0 flex-shrink-0 px-3 pb-1 md:px-4 md:pb-2">
                             <ThumbnailHistory
                                 generations={mappedSessionGenerations}
                                 currentImageUrl={currentSlide?.imageUrl || null}
@@ -2134,6 +2137,9 @@ export default function CarouselPage() {
                             />
                         </div>
                     )}
+                    <div className="relative px-3 pb-3 pt-1 md:px-4 md:pb-3">
+                        {editPromptBar}
+                    </div>
                     {isMobile && slides.some(slide => Boolean(slide.imageUrl)) ? (
                         <div className="mt-3 shrink-0 rounded-2xl border border-border/50">
                             {actionBar}
@@ -2147,13 +2153,14 @@ export default function CarouselPage() {
                     <div className="flex w-full min-h-0 flex-col lg:w-[27%]">
                         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-border/60 bg-white shadow-[0_24px_70px_-46px_rgba(15,23,42,0.34)]">
                             {controlsPanel}
+                            <div className="shrink-0 px-4 py-4">
+                                {generateBar}
+                            </div>
                         </div>
                     </div>
                 ) : null}
                 {mobileControlsDrawer}
                 </div>
-
-                {!isMobile ? actionBar : null}
             </div>
 
             <PromptDebugModal

@@ -874,43 +874,9 @@ export function CarouselCanvasPanel({
     return (
         <div className="flex-1 flex flex-col h-full relative isolate overflow-x-hidden p-0">
             {/* Header Overlay - Balanced with Image Canvas */}
-            <div className="absolute top-0 left-0 right-0 h-16 flex items-start justify-between p-4 z-40 pointer-events-none">
+            <div className="absolute left-3 right-3 top-3 z-40 flex h-16 items-start justify-between px-3 pt-1 pointer-events-none md:left-4 md:right-4">
                 {/* Left: Metadata */}
-                {isAdmin ? (
-                    <div className="pointer-events-auto hidden md:flex items-center gap-2 pt-1">
-                        <div className="flex flex-col items-start gap-0.5 leading-tight text-foreground/90 drop-shadow-sm">
-                            <span className="text-[12px] font-medium">
-                                {slides.length > 0 ? `${currentIndex + 1} / ${slides.length}` : '---'}
-                            </span>
-                            <span className="text-[12px] font-medium">
-                                {aspectRatio}
-                                <span className="opacity-60"> &middot; </span>
-                                {(() => {
-                                    if (currentSlideNaturalSize?.w && currentSlideNaturalSize?.h) {
-                                        return `${currentSlideNaturalSize.w}x${currentSlideNaturalSize.h}`
-                                    }
-                                    const baseH = 600
-                                    const calcW = baseH * fallbackCanvasAspectRatio
-                                    return `${Math.round(calcW)}x${baseH}`
-                                })()}
-                            </span>
-                            <span className="text-[11px] font-medium">
-                                {(() => {
-                                    return `W:${getWidthBucket(viewportWidth)}`
-                                })()}
-                            </span>
-                            <span className="text-[11px] font-medium">
-                                {(() => {
-                                    const footerOffset = getFooterOffset()
-                                    const availableHeight = Math.max(200, viewportHeight - footerOffset)
-                                    return `H:${getHeightBucket(viewportHeight)} (${Math.round(availableHeight)}px)`
-                                })()}
-                            </span>
-                        </div>
-                    </div>
-                ) : (
-                    <div />
-                )}
+                <div />
 
                 {/* Right: Actions */}
                 <div className={CANVAS_FLOATING_TOOLBAR_CLASS}>
@@ -977,7 +943,7 @@ export function CarouselCanvasPanel({
             {/* Main Content Area */}
             <div className={cn(
                 "flex-1 relative flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden thin-scrollbar",
-                isMobile ? "pt-5 px-4" : "pt-5 px-6"
+                isMobile ? "pt-5 px-4 pb-4" : "pt-[1.1rem] px-5 pb-5"
             )}>
                 {/* Canvas Scaling logic matching Image Canvas */}
                 <div
@@ -990,7 +956,7 @@ export function CarouselCanvasPanel({
                     <div
                         ref={containerRef}
                         className={cn(
-                            "canvas-panel relative shadow-aero-lg ring-1 ring-black/10 transition-transform duration-300 ease-out flex items-center justify-center bg-transparent bg-dot group shrink-0 rounded-aero overflow-visible",
+                            "canvas-panel relative flex shrink-0 items-center justify-center overflow-visible rounded-[1.65rem] border border-border/35 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] bg-dot shadow-[0_28px_64px_-42px_rgba(15,23,42,0.26)] transition-transform duration-300 ease-out",
                             wasJustGenerated && "canvas-success-flash"
                         )}
                         style={(() => {
@@ -1216,7 +1182,7 @@ export function CarouselCanvasPanel({
                                 </Button>
                             </div>
                         ) : currentSlide.imageUrl ? (
-                            <div className="w-full h-full flex items-center justify-center">
+                            <div className="flex h-full w-full items-center justify-center">
                                 <motion.div
                                     key={currentSlide.imageUrl}
                                     initial={wasJustGenerated ? { opacity: 0, scale: 1.02 } : { opacity: 1, scale: 1 }}
@@ -1227,103 +1193,105 @@ export function CarouselCanvasPanel({
                                     } : {
                                         duration: 0.12
                                     }}
-                                    className="w-full h-full flex items-center justify-center"
+                                    className="flex h-full w-full items-center justify-center"
                                 >
-                                    {isCurrentSlideRegenerating && (
-                                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-white/42 backdrop-blur-sm">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border/60 bg-white shadow-lg">
-                                                <Loader2 className="h-6 w-6 text-primary" />
-                                            </div>
-                                            <div className="rounded-full border border-border/60 bg-white px-4 py-2 text-sm font-medium shadow-sm">
-                                                {tt('common:preview.regeneratingCurrentSlide', 'Regenerating this slide...')}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {showScriptOverlay && !isCurrentSlideRegenerating && (
-                                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-white/90 backdrop-blur-sm p-8">
-                                            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/50">
-                                                {currentSlide.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
-                                            </p>
-                                            {isEditingScript ? (
-                                                <div className="w-full max-w-lg space-y-3">
-                                                    <Input
-                                                        value={draftHeadline}
-                                                        onChange={(e) => setDraftHeadline(e.target.value)}
-                                                        placeholder={tt('common:preview.slideHeadlinePlaceholder', 'Headline visible en la imagen')}
-                                                        className="text-sm font-semibold text-center"
-                                                        disabled={isGeneratingAny}
-                                                        autoFocus
-                                                    />
-                                                    <Input
-                                                        value={draftSubtitle}
-                                                        onChange={(e) => setDraftSubtitle(e.target.value)}
-                                                        placeholder={tt('common:preview.slideSubtitlePlaceholder', 'Subtítulo visible en la imagen')}
-                                                        className="text-sm text-center"
-                                                        disabled={isGeneratingAny}
-                                                    />
-                                                    <div className="flex gap-2 justify-center">
-                                                        <Button size="sm" onClick={handleSaveScript} disabled={isGeneratingAny}>
-                                                            {tt('common:preview.saveAndRegenerate', 'Save & regenerate')}
-                                                        </Button>
-                                                        <Button size="sm" variant="outline" onClick={() => {
-                                                            setIsEditingScript(false)
-                                                            setDraftHeadline(currentSlide.headline || '')
-                                                            setDraftSubtitle(currentSlide.subtitle || '')
-                                                            setDraftDescription(currentSlide.description || '')
-                                                        }}>
-                                                            {tt('common:actions.cancel', 'Cancel')}
-                                                        </Button>
-                                                    </div>
+                                    <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-[1.45rem] border border-border/45 bg-background/72 shadow-[0_18px_36px_-32px_rgba(15,23,42,0.14)] backdrop-blur-0">
+                                        {isCurrentSlideRegenerating && (
+                                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-white/42 backdrop-blur-sm">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border/60 bg-white shadow-lg">
+                                                    <Loader2 className="h-6 w-6 text-primary" />
                                                 </div>
-                                            ) : (
-                                                <>
-                                                    <h3
-                                                        className="font-semibold text-foreground text-center text-lg cursor-text px-4"
-                                                        onClick={() => {
-                                                            setDraftHeadline(currentSlide.headline || '')
-                                                            setDraftSubtitle(currentSlide.subtitle || '')
-                                                            setDraftDescription(currentSlide.description || '')
-                                                            setIsEditingScript(true)
-                                                        }}
-                                                        title={tt('common:preview.clickToEdit', 'Click to edit')}
-                                                    >
-                                                        {currentSlide.headline || currentSlide.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
-                                                    </h3>
-                                                    {currentSlide.subtitle && (
-                                                        <p className="text-sm text-muted-foreground text-center px-4">
-                                                            {currentSlide.subtitle}
-                                                        </p>
-                                                    )}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() => {
-                                                            setDraftHeadline(currentSlide.headline || '')
-                                                            setDraftSubtitle(currentSlide.subtitle || '')
-                                                            setDraftDescription(currentSlide.description || '')
-                                                            setIsEditingScript(true)
-                                                        }}
-                                                    >
-                                                        {tt('common:preview.editScript', 'Edit script')}
-                                                    </Button>
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
-                                    <img
-                                        src={currentSlide.imageUrl}
-                                        alt={tt('common:preview.slideThumbnailAlt', 'Slide {{index}} thumbnail', { index: currentIndex + 1 })}
-                                        className="w-full h-full object-contain"
-                                        onLoad={(e) => {
-                                            const target = e.currentTarget
-                                            if (target.naturalWidth && target.naturalHeight) {
-                                                setCurrentSlideNaturalSize({
-                                                    w: target.naturalWidth,
-                                                    h: target.naturalHeight,
-                                                })
-                                            }
-                                        }}
-                                    />
+                                                <div className="rounded-full border border-border/60 bg-white px-4 py-2 text-sm font-medium shadow-sm">
+                                                    {tt('common:preview.regeneratingCurrentSlide', 'Regenerating this slide...')}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {showScriptOverlay && !isCurrentSlideRegenerating && (
+                                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-white/90 backdrop-blur-sm p-8">
+                                                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/50">
+                                                    {currentSlide.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
+                                                </p>
+                                                {isEditingScript ? (
+                                                    <div className="w-full max-w-lg space-y-3">
+                                                        <Input
+                                                            value={draftHeadline}
+                                                            onChange={(e) => setDraftHeadline(e.target.value)}
+                                                            placeholder={tt('common:preview.slideHeadlinePlaceholder', 'Headline visible en la imagen')}
+                                                            className="text-sm font-semibold text-center"
+                                                            disabled={isGeneratingAny}
+                                                            autoFocus
+                                                        />
+                                                        <Input
+                                                            value={draftSubtitle}
+                                                            onChange={(e) => setDraftSubtitle(e.target.value)}
+                                                            placeholder={tt('common:preview.slideSubtitlePlaceholder', 'Subtítulo visible en la imagen')}
+                                                            className="text-sm text-center"
+                                                            disabled={isGeneratingAny}
+                                                        />
+                                                        <div className="flex gap-2 justify-center">
+                                                            <Button size="sm" onClick={handleSaveScript} disabled={isGeneratingAny}>
+                                                                {tt('common:preview.saveAndRegenerate', 'Save & regenerate')}
+                                                            </Button>
+                                                            <Button size="sm" variant="outline" onClick={() => {
+                                                                setIsEditingScript(false)
+                                                                setDraftHeadline(currentSlide.headline || '')
+                                                                setDraftSubtitle(currentSlide.subtitle || '')
+                                                                setDraftDescription(currentSlide.description || '')
+                                                            }}>
+                                                                {tt('common:actions.cancel', 'Cancel')}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <h3
+                                                            className="cursor-text px-4 text-center text-lg font-semibold text-foreground"
+                                                            onClick={() => {
+                                                                setDraftHeadline(currentSlide.headline || '')
+                                                                setDraftSubtitle(currentSlide.subtitle || '')
+                                                                setDraftDescription(currentSlide.description || '')
+                                                                setIsEditingScript(true)
+                                                            }}
+                                                            title={tt('common:preview.clickToEdit', 'Click to edit')}
+                                                        >
+                                                            {currentSlide.headline || currentSlide.title || `${tt('common:preview.slide', 'Slide')} ${currentIndex + 1}`}
+                                                        </h3>
+                                                        {currentSlide.subtitle && (
+                                                            <p className="px-4 text-center text-sm text-muted-foreground">
+                                                                {currentSlide.subtitle}
+                                                            </p>
+                                                        )}
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => {
+                                                                setDraftHeadline(currentSlide.headline || '')
+                                                                setDraftSubtitle(currentSlide.subtitle || '')
+                                                                setDraftDescription(currentSlide.description || '')
+                                                                setIsEditingScript(true)
+                                                            }}
+                                                        >
+                                                            {tt('common:preview.editScript', 'Edit script')}
+                                                        </Button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                        <img
+                                            src={currentSlide.imageUrl}
+                                            alt={tt('common:preview.slideThumbnailAlt', 'Slide {{index}} thumbnail', { index: currentIndex + 1 })}
+                                            className="h-full w-full object-contain"
+                                            onLoad={(e) => {
+                                                const target = e.currentTarget
+                                                if (target.naturalWidth && target.naturalHeight) {
+                                                    setCurrentSlideNaturalSize({
+                                                        w: target.naturalWidth,
+                                                        h: target.naturalHeight,
+                                                    })
+                                                }
+                                            }}
+                                        />
+                                    </div>
                                 </motion.div>
                             </div>
                         ) : hasScript ? (
@@ -1488,10 +1456,10 @@ export function CarouselCanvasPanel({
                 </div>
 
                 {/* Lower Navigation & Thumbnails */}
-                <div className="mt-6 w-full flex flex-col items-center gap-4 pb-6">
+                <div className="mt-4 w-full flex flex-col items-center gap-3 pb-4">
                     {/* Thumbnail Strip */}
                     {slides.length > 0 && (
-                        <div className="flex gap-2 overflow-x-auto max-w-full pb-3 pt-1 px-2 no-scrollbar">
+                        <div className="flex max-w-full gap-2 overflow-x-auto px-2 pb-2 pt-1 no-scrollbar">
                             {slides.map((slide, index) => (
                                 <button
                                     key={index}
@@ -1542,7 +1510,7 @@ export function CarouselCanvasPanel({
 
                 {/* Caption Card - Integrated with preview scroll */}
                 {caption && (
-                    <div className="w-full max-w-[800px] shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-8">
+                    <div className="mt-10 w-full max-w-[780px] shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-16">
                         <GeneratedCopyCard
                             copy={caption}
                             hashtags={[]}
@@ -1553,6 +1521,7 @@ export function CarouselCanvasPanel({
                             isLocked={isCaptionLocked}
                             onToggleLock={onToggleCaptionLock}
                             onCopyChange={(val) => onCaptionChange?.(val)}
+                            className="rounded-[1.45rem] border-border/45 bg-background/72 shadow-[0_18px_36px_-32px_rgba(15,23,42,0.14)] backdrop-blur-0"
                         />
                     </div>
                 )}

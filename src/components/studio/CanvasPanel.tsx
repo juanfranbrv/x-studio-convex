@@ -785,7 +785,7 @@ export function CanvasPanel({
 
             <div className={cn(
                 "canvas-scroll-region",
-                "flex-1 relative flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden thin-scrollbar pr-0 -mr-[2px]",
+                "flex-1 relative flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden no-scrollbar pr-0 -mr-[2px]",
                 isMobile ? "pl-3 pb-4 pt-16" : "pl-4 pb-5 pt-[1.1rem]"
             )}>
                 {/* Canvas Wrapper - reserves correct space and prevents overflow */}
@@ -1191,7 +1191,7 @@ export function CanvasPanel({
 
                 {/* CAPTION CARD - Shows below texts */}
                 {(creationState.caption || isGeneratingCopy || creationState.selectedIntent) && (
-                    <div className="mt-2 w-full max-w-[800px] shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-16">
+                    <div className="mt-10 w-full max-w-[780px] shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 z-10 pb-16">
                         <GeneratedCopyCard
                             copy={creationState.caption || generatedCopy}
                             hashtags={generatedHashtags}
@@ -1204,6 +1204,7 @@ export function CanvasPanel({
                             isLocked={isCopyLocked}
                             onToggleLock={() => setIsCopyLocked(!isCopyLocked)}
                             onCopyChange={(val) => onCaptionChange?.(val)}
+                            className="rounded-[1.45rem] border-border/45 bg-background/72 shadow-[0_18px_36px_-32px_rgba(15,23,42,0.14)] backdrop-blur-0"
                         />
                     </div>
                 )}

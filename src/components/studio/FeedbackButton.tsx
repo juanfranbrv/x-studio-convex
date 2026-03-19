@@ -38,7 +38,7 @@ function useCanvasEdgePosition(tabSide: 'right' | 'left') {
             if (!canvas) return
             const scrollRegion = document.querySelector('.canvas-scroll-region')
             const rect = canvas.getBoundingClientRect()
-            const tabHeight = 108
+            const tabHeight = 84
             const viewportPadding = 12
             const scrollRect = scrollRegion instanceof HTMLElement
                 ? scrollRegion.getBoundingClientRect()
@@ -48,11 +48,13 @@ function useCanvasEdgePosition(tabSide: 'right' | 'left') {
             const visibleTop = Math.max(rect.top, minVisibleTop)
             const visibleBottom = Math.min(rect.bottom, maxVisibleBottom)
             const maxTop = Math.max(minVisibleTop, visibleBottom - tabHeight)
-            const top = Math.max(minVisibleTop, Math.min(visibleTop + 16, maxTop))
+            const visibleHeight = Math.max(0, visibleBottom - visibleTop)
+            const centeredTop = visibleTop + Math.max(18, Math.round(visibleHeight * 0.2))
+            const top = Math.max(minVisibleTop, Math.min(centeredTop, maxTop))
             if (tabSide === 'right') {
-                setStyle({ position: 'fixed', top, left: rect.right })
+                setStyle({ position: 'fixed', top, left: rect.right - 1 })
             } else {
-                setStyle({ position: 'fixed', top, right: window.innerWidth - rect.left })
+                setStyle({ position: 'fixed', top, right: window.innerWidth - rect.left - 1 })
             }
         }
 
@@ -183,19 +185,19 @@ export function FeedbackButton({
                     onClick={handleTabOpen}
                     style={tabStyle}
                     className={cn(
-                        'z-50 flex flex-col items-center gap-1.5 px-2.5 py-3',
-                        'border border-border/50 bg-card/90 backdrop-blur-xl',
+                        'z-50 flex min-h-[74px] w-[30px] flex-col items-center justify-center gap-1 px-1.5 py-2.5',
+                        'border border-border/45 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.92))] backdrop-blur-lg',
                         tabSide === 'right'
-                            ? 'border-l-0 rounded-r-xl rounded-l-none shadow-[3px_3px_12px_rgba(0,0,0,0.18),0_1px_4px_rgba(0,0,0,0.1)]'
-                            : 'border-r-0 rounded-l-xl rounded-r-none shadow-[-3px_3px_12px_rgba(0,0,0,0.18),0_1px_4px_rgba(0,0,0,0.1)]',
-                        'opacity-80 hover:opacity-100 hover:bg-card',
-                        'transition-all duration-300 ease-out active:scale-95',
+                            ? 'border-l-0 rounded-r-[0.95rem] rounded-l-none shadow-[8px_10px_24px_-20px_rgba(15,23,42,0.4)]'
+                            : 'border-r-0 rounded-l-[0.95rem] rounded-r-none shadow-[-8px_10px_24px_-20px_rgba(15,23,42,0.4)]',
+                        'opacity-92 hover:opacity-100 hover:border-border/65',
+                        'transition-all duration-300 ease-out hover:translate-x-[1px] active:scale-[0.97]',
                         'group animate-in fade-in duration-700',
                     )}
                     title={t('feedback.openTitle', { defaultValue: 'Send feedback' })}
                 >
-                    <IconMessage className="h-3.5 w-3.5 text-primary transition-transform group-hover:scale-110" />
-                    <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-medium text-foreground/60 group-hover:text-foreground/90 tracking-wide">
+                    <IconMessage className="h-3.5 w-3.5 text-primary/80 transition-transform group-hover:scale-110 group-hover:text-primary" />
+                    <span className="[writing-mode:vertical-rl] rotate-180 text-[9px] font-medium uppercase tracking-[0.18em] text-foreground/48 group-hover:text-foreground/72">
                         {t('feedback.compactLabel', { defaultValue: 'Feedback' })}
                     </span>
                 </button>
