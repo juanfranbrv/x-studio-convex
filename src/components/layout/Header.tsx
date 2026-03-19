@@ -8,6 +8,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { CreditsBadge } from './CreditsBadge'
 import { MobileMenu } from './MobileMenu'
+import { cn } from '@/lib/utils'
+import { AppLogo } from '@/components/ui/AppLogo'
 import {
     HEADER_DROPDOWN_CONTENT_CLASS,
     HEADER_DROPDOWN_ITEM_CLASS,
@@ -39,9 +41,18 @@ interface HeaderProps {
     onBrandDelete?: (brandId: string) => void
     onNewBrandKit?: () => void
     afterBrandActions?: ReactNode
+    variant?: 'card' | 'bar'
 }
 
-export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete, onNewBrandKit, afterBrandActions }: HeaderProps) {
+export function Header({
+    brands = [],
+    currentBrand,
+    onBrandChange,
+    onBrandDelete,
+    onNewBrandKit,
+    afterBrandActions,
+    variant = 'card',
+}: HeaderProps) {
     const { t } = useTranslation('common')
     const { user } = useUser()
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -80,17 +91,35 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
 
     return (
         <>
-            <header className="mx-3 mt-3 flex h-[72px] shrink-0 items-center justify-between rounded-[1.5rem] border border-border/60 bg-white/82 px-4 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.38)] backdrop-blur-xl md:px-6">
+            <header className={cn(
+                "flex shrink-0 items-center justify-between px-4 backdrop-blur-xl md:px-6",
+                variant === 'bar'
+                    ? "h-[74px] border-b border-border/55 bg-white/74 shadow-[0_1px_0_rgba(15,23,42,0.04)]"
+                    : "mx-3 mt-3 h-[72px] rounded-[1.5rem] border border-border/60 bg-white/82 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.38)]"
+            )}>
                 <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
                     <MobileMenu />
 
-                    <div className="flex shrink-0 items-center gap-3">
-                        <h1 className="font-heading text-[clamp(1.26rem,1.08rem+0.62vw,1.72rem)] font-semibold leading-none text-foreground">
+                    <div className="flex shrink-0 items-center gap-2">
+                        {variant === 'bar' ? (
+                            <Link
+                                href="/"
+                                aria-label="Post laboratory"
+                                className="hidden md:flex h-14 w-14 items-center justify-center overflow-visible rounded-xl border border-transparent bg-transparent shadow-none transition-transform duration-200 hover:scale-[1.03]"
+                            >
+                                <AppLogo className="h-[74px] w-[84px] translate-x-[21px] -translate-y-[4px]" />
+                            </Link>
+                        ) : null}
+                        <h1 className={cn(
+                            "font-heading text-[clamp(1.26rem,1.08rem+0.62vw,1.72rem)] font-semibold leading-none text-primary",
+                            variant === 'bar' && "ml-[25px]"
+                        )}>
                             {t('app.name')}
                         </h1>
                     </div>
 
                     {brands.length > 0 ? (
+                        <div className={cn(variant === 'bar' && "ml-[14px]")}>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm" className={`${STUDIO_RICH_SELECT_TRIGGER_CLASS} w-[clamp(9.5rem,42vw,12.75rem)] min-w-0 md:w-72`}>
@@ -144,10 +173,14 @@ export function Header({ brands = [], currentBrand, onBrandChange, onBrandDelete
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+                        </div>
                     ) : null}
 
                     {onNewBrandKit ? (
-                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className="hidden h-11 gap-2 rounded-2xl border-border/70 bg-[hsl(var(--surface-alt))]/90 px-4 text-[1rem] font-medium transition-all hover:border-primary/20 hover:bg-white md:flex md:h-[3.15rem]">
+                        <Button variant="outline" size="sm" onClick={onNewBrandKit} className={cn(
+                            "hidden h-11 gap-2 rounded-2xl border-border/70 bg-[hsl(var(--surface-alt))]/90 px-4 text-[1rem] font-medium transition-all hover:border-primary/20 hover:bg-white md:flex md:h-[3.15rem]",
+                            variant === 'bar' && "ml-[10px]"
+                        )}>
                             <IconPlus className="h-4 w-4" />
                             {t('actions.newBrandKit')}
                         </Button>

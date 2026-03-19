@@ -27,9 +27,11 @@ import {
 
 interface SidebarProps {
     className?: string
+    showLogo?: boolean
+    offsetTopClassName?: string
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, showLogo = true, offsetTopClassName }: SidebarProps) {
     const { t } = useTranslation('common')
     const pathname = usePathname()
     const { user } = useUser()
@@ -56,20 +58,26 @@ export function Sidebar({ className }: SidebarProps) {
         <aside
             className={cn(
                 'flex h-dvh w-[104px] shrink-0 flex-col overflow-hidden border-r border-border/60 bg-[linear-gradient(180deg,hsl(var(--surface-alt))/0.96,hsl(var(--surface))/0.98)] backdrop-blur-xl transition-colors duration-300 ease-in-out [@media(max-height:820px)]:w-[96px]',
+                offsetTopClassName,
                 className
             )}
         >
-            <div className="flex flex-col items-center gap-3 border-b border-border/60 px-3 pb-[31px] pt-4 [@media(max-height:820px)]:gap-2 [@media(max-height:820px)]:px-2.5 [@media(max-height:820px)]:pb-5 [@media(max-height:820px)]:pt-3.5">
-                <Link
-                    href="/"
-                    aria-label="Post laboratory"
-                    className="flex h-14 w-14 items-center justify-center rounded-2xl border border-transparent bg-transparent shadow-none transition-transform duration-200 hover:scale-[1.03] [@media(max-height:820px)]:h-12 [@media(max-height:820px)]:w-12"
-                >
-                    <AppLogo className="h-[56px] w-[66px] translate-x-[7px] translate-y-[4px] [@media(max-height:820px)]:h-[48px] [@media(max-height:820px)]:w-[58px] [@media(max-height:820px)]:translate-x-[6px] [@media(max-height:820px)]:translate-y-[3px]" />
-                </Link>
-            </div>
+            {showLogo ? (
+                <div className="flex flex-col items-center gap-3 border-b border-border/60 px-3 pb-[31px] pt-4 [@media(max-height:820px)]:gap-2 [@media(max-height:820px)]:px-2.5 [@media(max-height:820px)]:pb-5 [@media(max-height:820px)]:pt-3.5">
+                    <Link
+                        href="/"
+                        aria-label="Post laboratory"
+                        className="flex h-14 w-14 items-center justify-center rounded-2xl border border-transparent bg-transparent shadow-none transition-transform duration-200 hover:scale-[1.03] [@media(max-height:820px)]:h-12 [@media(max-height:820px)]:w-12"
+                    >
+                        <AppLogo className="h-[56px] w-[66px] translate-x-[7px] translate-y-[4px] [@media(max-height:820px)]:h-[48px] [@media(max-height:820px)]:w-[58px] [@media(max-height:820px)]:translate-x-[6px] [@media(max-height:820px)]:translate-y-[3px]" />
+                    </Link>
+                </div>
+            ) : null}
 
-            <nav className="thin-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-5 pt-[31px] [@media(max-height:820px)]:gap-1.5 [@media(max-height:820px)]:px-2.5 [@media(max-height:820px)]:pb-4 [@media(max-height:820px)]:pt-5">
+            <nav className={cn(
+                'thin-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-5 [@media(max-height:820px)]:gap-1.5 [@media(max-height:820px)]:px-2.5 [@media(max-height:820px)]:pb-4',
+                showLogo ? 'pt-[31px] [@media(max-height:820px)]:pt-5' : 'pt-5 [@media(max-height:820px)]:pt-4'
+            )}>
                 {navItems.map((item) => {
                     const isActive = pathname === item.href
                     return (

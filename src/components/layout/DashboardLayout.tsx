@@ -29,6 +29,7 @@ interface DashboardLayoutProps {
     isFixed?: boolean
     headerAfterBrandActions?: ReactNode
     contentContainerVariant?: 'card' | 'plain'
+    headerVariant?: 'card' | 'bar'
 }
 
 export function DashboardLayout({
@@ -40,7 +41,8 @@ export function DashboardLayout({
     onNewBrandKit,
     isFixed = false,
     headerAfterBrandActions,
-    contentContainerVariant = 'card'
+    contentContainerVariant = 'card',
+    headerVariant = 'bar',
 }: DashboardLayoutProps) {
     const router = useRouter()
     const pathname = usePathname()
@@ -117,43 +119,91 @@ export function DashboardLayout({
     return (
         <ProtectedRoute>
             <div className="fixed inset-0 flex overflow-hidden bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_24%),radial-gradient(circle_at_top_right,hsl(var(--accent)/0.07),transparent_18%),linear-gradient(180deg,hsl(var(--surface-alt)),hsl(var(--surface)))] text-foreground md:relative md:inset-auto md:h-dvh">
-                {/* Lateral Navigation (Desktop Only) */}
-                <Sidebar className="hidden md:flex" />
+                {headerVariant === 'bar' ? (
+                    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                        <Header
+                            brands={brands}
+                            currentBrand={currentBrand}
+                            onBrandChange={onBrandChange}
+                            onBrandDelete={onBrandDelete}
+                            onNewBrandKit={onNewBrandKit}
+                            afterBrandActions={headerAfterBrandActions}
+                            variant={headerVariant}
+                        />
 
-                {/* Main Content Area */}
-                <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-                    {/* Top Bar (Fixed) */}
-                    <Header
-                        brands={brands}
-                        currentBrand={currentBrand}
-                        onBrandChange={onBrandChange}
-                        onBrandDelete={onBrandDelete}
-                        onNewBrandKit={onNewBrandKit}
-                        afterBrandActions={headerAfterBrandActions}
-                    />
+                        <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+                            <Sidebar
+                                className="hidden md:flex"
+                                showLogo={false}
+                                offsetTopClassName="md:h-[calc(100dvh-74px)]"
+                            />
 
-                    {/* Scrollable Content Container */}
-                    <div
-                        className={cn(
-                            "scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden md:px-3 md:pb-3 md:pt-3",
-                            isFixed ? "overflow-hidden" : "overflow-y-auto",
-                            contentContainerVariant === 'plain' && "md:px-0 md:pb-0 md:pt-0"
-                        )}
-                    >
-                        {contentContainerVariant === 'card' ? (
+                            <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+                                <div
+                                    className={cn(
+                                        "scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden md:px-3 md:pb-3 md:pt-3",
+                                        isFixed ? "overflow-hidden" : "overflow-y-auto",
+                                        contentContainerVariant === 'plain' && "md:px-0 md:pb-0 md:pt-0"
+                                    )}
+                                >
+                                    {contentContainerVariant === 'card' ? (
+                                        <div
+                                            className={cn(
+                                                "rounded-[1.75rem] md:border md:border-border/60 md:bg-white/80 md:shadow-[0_24px_80px_-48px_rgba(15,23,42,0.35)] md:backdrop-blur-xl",
+                                                isFixed ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "min-h-full"
+                                            )}
+                                        >
+                                            {children}
+                                        </div>
+                                    ) : (
+                                        children
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* Lateral Navigation (Desktop Only) */}
+                        <Sidebar className="hidden md:flex" />
+
+                        {/* Main Content Area */}
+                        <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+                            {/* Top Bar (Fixed) */}
+                            <Header
+                                brands={brands}
+                                currentBrand={currentBrand}
+                                onBrandChange={onBrandChange}
+                                onBrandDelete={onBrandDelete}
+                                onNewBrandKit={onNewBrandKit}
+                                afterBrandActions={headerAfterBrandActions}
+                                variant={headerVariant}
+                            />
+
+                            {/* Scrollable Content Container */}
                             <div
                                 className={cn(
-                                    "rounded-[1.75rem] md:border md:border-border/60 md:bg-white/80 md:shadow-[0_24px_80px_-48px_rgba(15,23,42,0.35)] md:backdrop-blur-xl",
-                                    isFixed ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "min-h-full"
+                                    "scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden md:px-3 md:pb-3 md:pt-3",
+                                    isFixed ? "overflow-hidden" : "overflow-y-auto",
+                                    contentContainerVariant === 'plain' && "md:px-0 md:pb-0 md:pt-0"
                                 )}
                             >
-                                {children}
+                                {contentContainerVariant === 'card' ? (
+                                    <div
+                                        className={cn(
+                                            "rounded-[1.75rem] md:border md:border-border/60 md:bg-white/80 md:shadow-[0_24px_80px_-48px_rgba(15,23,42,0.35)] md:backdrop-blur-xl",
+                                            isFixed ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "min-h-full"
+                                        )}
+                                    >
+                                        {children}
+                                    </div>
+                                ) : (
+                                    children
+                                )}
                             </div>
-                        ) : (
-                            children
-                        )}
-                    </div>
-                </div>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Onboarding Modal */}

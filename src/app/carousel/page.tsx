@@ -1883,6 +1883,7 @@ export default function CarouselPage() {
             onNewBrandKit={handleNewBrandKit}
             isFixed={!isMobile}
             contentContainerVariant="plain"
+            headerVariant="bar"
         >
             <div className={cn(
                 'flex-1 relative min-h-0',

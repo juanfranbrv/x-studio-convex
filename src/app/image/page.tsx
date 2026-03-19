@@ -2470,6 +2470,7 @@ export default function ImagePage() {
             onNewBrandKit={handleNewBrandKit}
             isFixed={!isMobile}
             contentContainerVariant="plain"
+            headerVariant="bar"
         >
             {activeBrandKit ? (
                 <div className={cn(
