@@ -33,6 +33,7 @@ import {
     STUDIO_CANVAS_TOOL_BUTTON_CLASS,
     STUDIO_CANVAS_TOOL_VALUE_CLASS,
 } from '@/components/studio/shared/canvasStyles'
+import type { PreviewLayoutMode } from './previewLayoutMode'
 
 export interface Generation {
     id: string
@@ -206,6 +207,7 @@ export interface CanvasPanelProps {
     layoutIconOverrides?: Record<string, string>
     isAdmin?: boolean
     sessionName?: string | null
+    previewLayoutMode?: PreviewLayoutMode
 }
 
 export function CanvasPanel({
@@ -242,6 +244,7 @@ export function CanvasPanel({
     layoutIconOverrides = {},
     isAdmin = false,
     sessionName = null,
+    previewLayoutMode = 'default',
 }: CanvasPanelProps) {
     const { t } = useTranslation()
     const tt = (key: string, defaultValue: string, options?: Record<string, unknown>) =>
@@ -358,6 +361,9 @@ export function CanvasPanel({
 
     const getFooterOffset = () => {
         if (isMobile) return currentImage ? 180 : 120
+        if (previewLayoutMode === 'compact-scroll') {
+            return currentImage ? 240 : 180
+        }
         const base = currentImage ? 700 : 400
         const maxOffset = Math.max(220, Math.round(viewportHeight * 0.45))
         return Math.min(base, maxOffset)

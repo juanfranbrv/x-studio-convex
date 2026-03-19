@@ -34,6 +34,7 @@ import { MobileWorkPanelDrawer } from '@/components/studio/shared/MobileWorkPane
 import { SessionTitleDialog } from '@/components/studio/shared/SessionTitleDialog'
 import { StudioEditPromptBar, StudioGenerateBar } from '@/components/studio/shared/StudioActionBar'
 import { IndeterminateProgressBar } from '@/components/studio/shared/IndeterminateProgressBar'
+import { resolvePreviewLayoutMode } from '@/components/studio/previewLayoutMode'
 import {
     STUDIO_DECISION_BUTTON_CLASS,
     STUDIO_DECISION_DIALOG_CLASS,
@@ -136,6 +137,7 @@ export default function ImagePage() {
     const [promptValue, setPromptValue] = useState('')
     const [editPrompt, setEditPrompt] = useState('')
     const [isMobile, setIsMobile] = useState(false)
+    const [viewportHeight, setViewportHeight] = useState(1080)
     useDisablePullToRefresh(isMobile)
     const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
     const [isMagicParsing, setIsMagicParsing] = useState(false)
@@ -176,11 +178,19 @@ export default function ImagePage() {
 
     // Detect mobile viewport
     useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768)
+            setViewportHeight(window.innerHeight)
+        }
         checkMobile()
         window.addEventListener('resize', checkMobile)
         return () => window.removeEventListener('resize', checkMobile)
     }, [])
+
+    const previewLayoutMode = resolvePreviewLayoutMode({
+        isMobile,
+        viewportHeight,
+    })
 
     // Debug Modal States
     const [showDebugModal, setShowDebugModal] = useState(false)
@@ -2332,7 +2342,14 @@ export default function ImagePage() {
     const previewPane = (
         <>
             <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto no-scrollbar">
-                <div className="relative flex flex-1 min-h-[340px] flex-col md:min-h-[500px]">
+                <div
+                    className={cn(
+                        "relative flex flex-col",
+                        previewLayoutMode === 'compact-scroll'
+                            ? "min-h-0 flex-none"
+                            : "min-h-[340px] flex-1 md:min-h-[500px]"
+                    )}
+                >
                     <CanvasPanel
                         currentImage={creationFlow.state.generatedImage}
                         generations={[]}
@@ -2375,6 +2392,7 @@ export default function ImagePage() {
                             activeSessionMeta?.title || selectedSessionToLoad || t('sessions.newSessionTitle', { defaultValue: 'New session' }),
                             Boolean(activeSessionMeta?.title_customized)
                         )}
+                        previewLayoutMode={previewLayoutMode}
                     />
                     {!isMobile && (
                         <FeedbackButton
