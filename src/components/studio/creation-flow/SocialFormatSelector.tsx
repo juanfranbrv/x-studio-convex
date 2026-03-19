@@ -45,7 +45,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
 
  return (
  <div className="space-y-4">
- <div className="flex flex-wrap items-center justify-center gap-2">
+ <div className="grid grid-cols-6 gap-2.5">
  {(Object.entries(PLATFORM_CONFIG) as [SocialPlatform, any][]).map(([id, config]) => {
  const Icon = config.icon
  const isSelected = effectivePlatform === id
@@ -60,7 +60,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
  title={config.label}
  aria-disabled={isLocked}
  className={cn(
-"relative flex h-11 w-11 items-center justify-center rounded-[1rem] border transition-all duration-300",
+ "relative flex h-12 w-full items-center justify-center rounded-[1rem] border transition-all duration-300",
  isSelected
  ?"border-primary/30 bg-primary/[0.07] text-primary shadow-[0_18px_34px_-28px_rgba(120,142,84,0.42)]"
  :"border-border/55 bg-background/55 text-muted-foreground hover:border-border/80 hover:bg-background/88 hover:text-foreground/80",
@@ -68,7 +68,7 @@ export const SocialFormatSelector: React.FC<SocialFormatSelectorProps> = ({
  )}
  >
  <Icon className={cn(
-"h-[18px] w-[18px] transition-colors",
+ "h-[22px] w-[22px] transition-colors",
  isSelected
  ?"text-primary transition-all duration-300"
  :"currentColor"
