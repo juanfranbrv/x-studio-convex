@@ -338,7 +338,7 @@ export default function ImagePage() {
                     ? lastVisitedModule.brand_id
                     : null
 
-            if (shouldApplyLastVisitedImageBrand({
+            if (targetBrandId && shouldApplyLastVisitedImageBrand({
                 targetBrandId,
                 requestedActiveBrandId,
                 currentActiveBrandId: activeBrandKitIdRef.current,

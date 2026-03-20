@@ -56,7 +56,7 @@ const resolveBrandKitLogoUrl = (logo?: { url?: string; selected?: boolean } | st
     return typeof logo === 'string' ? logo : logo.url
 }
 
-const getPrimaryBrandKitLogoId = (brandKit?: { logo_url?: string; logos?: Array<{ url?: string; selected?: boolean } | string> | null }) => {
+const getPrimaryBrandKitLogoId = (brandKit?: { logo_url?: string; logos?: Array<{ url?: string; selected?: boolean } | string> | null } | null) => {
     const logos = Array.isArray(brandKit?.logos) ? brandKit.logos : []
     if (logos.length === 0) return null
 
