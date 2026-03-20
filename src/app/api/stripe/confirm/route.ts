@@ -4,6 +4,9 @@ import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { serverConvex } from "@/lib/billing-server";
 import { api } from "@/../convex/_generated/api";
+import { buildCreditsPurchaseEmailJob, resolvePackDisplayName } from "@/lib/email/purchase-confirmation";
+import { sendTransactionalEmail } from "@/lib/email/smtp2go";
+import { log } from "@/lib/logger";
 
 const stripeAccessKey = process.env.STRIPE_INTERNAL_SECRET?.trim() || "";
 
@@ -72,6 +75,25 @@ export async function POST(request: NextRequest) {
         checkout_status: session.status,
       },
     });
+    const baseUrl = request.nextUrl.origin || "http://127.0.0.1:3000";
+    const emailJob = buildCreditsPurchaseEmailJob({
+      alreadyCompleted: finalized.alreadyCompleted,
+      userEmail: finalized.userEmail,
+      credits: finalized.credits,
+      packName: resolvePackDisplayName(finalized.packSlug),
+      actionUrl: `${baseUrl}/settings#credits`,
+    });
+
+    if (emailJob) {
+      try {
+        await sendTransactionalEmail(emailJob);
+      } catch (error) {
+        log.warn("API", "[STRIPE_CONFIRM] Compra finalizada pero correo no enviado", {
+          error: error instanceof Error ? error.message : String(error),
+          sessionId,
+        });
+      }
+    }
 
     return NextResponse.json({ success: true, finalized });
   } catch (error) {

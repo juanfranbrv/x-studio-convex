@@ -198,6 +198,15 @@ Nota operativa:
   4. repetir el ciclo una segunda vez
 - No dar por cerrada una incidencia de navegador con una unica prueba positiva.
 
+## Mapeo de ratios en Gemini Image
+
+- El mapper central de ratios para Gemini vive en `src/lib/gemini.ts`.
+- Regla vigente:
+  - `gemini-3-pro-image-preview` y `gemini-2.5-flash-image` aceptan la base oficial: `1:1`, `3:2`, `2:3`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`.
+  - `gemini-3.1-flash-image-preview` añade soporte directo para `1:4`, `1:8`, `4:1` y `8:1`.
+- Todas las peticiones de imagen a Gemini deben enviarse con `imageSize: "1K"`.
+- Si la UI pide un ratio no soportado por el modelo activo, no se fuerza `1:1`: se aproxima automaticamente al ratio oficial mas cercano del modelo para preservar composicion.
+
 ## Arquitectura de internacionalizacion
 
 ### Stack actual
@@ -247,6 +256,52 @@ La arquitectura queda preparada para sumar mas idiomas anadiendo nuevos director
 - Antes de cerrar fases grandes de texto UI conviene ejecutar una busqueda de `?`, `?` y `?` sobre `src`.
 ## Loading, cancelacion y paginas legales
 
+## Correo transaccional
+
+### Proveedor actual
+
+- El proyecto usa `SMTP2GO` para correo transaccional.
+- La capa de envio local vive en `src/lib/email/smtp2go.ts`.
+- La ruta de prueba local vive en `src/app/api/dev/transactional-email/route.ts`.
+
+### Regla operativa
+
+- En local, la API key se puede resolver desde `SMTP2GO_API_KEY`.
+- Como fallback tecnico, la capa tambien puede leer `provider_smtp2go_api_key` desde `app_settings` usando Convex.
+- El remitente por defecto es `Post Laboratory <mail@postlaboratory.com>`.
+- El `reply-to` por defecto es `mail@postlaboratory.com`.
+
+### Plantillas preparadas
+
+- `welcome`
+- `betaApproved`
+- `creditsPurchased`
+
+Estas plantillas quedan preparadas para conectarse despues a eventos reales de alta, aprobacion beta o compra de creditos, pero en esta fase no se enganchan automaticamente a Clerk o Stripe para evitar envios accidentales durante desarrollo.
+
+### Ruta local de smoke test
+
+- `POST /api/dev/transactional-email`
+
+Payload ejemplo:
+
+```json
+{
+  "template": "welcome",
+  "to": "postlaboratorycorreo@gmail.com",
+  "locale": "es",
+  "name": "Juanfran",
+  "actionUrl": "http://127.0.0.1:3000/image"
+}
+```
+
+### Variables de entorno recomendadas
+
+- `SMTP2GO_API_KEY`
+- `SMTP2GO_FROM`
+- `SMTP2GO_REPLY_TO`
+- `SMTP2GO_TEST_RECIPIENT`
+
 ## Benchmark operativo de local-worker
 
 ### Objetivo
@@ -295,6 +350,7 @@ La arquitectura queda preparada para sumar mas idiomas anadiendo nuevos director
   - `/cookies`
   - `/contact`
 - La home enlaza estas rutas desde el footer para que siempre exista salida publica a informacion legal y a la pagina de contacto/about.
+- En `/contact`, el correo oficial `mail@postlaboratory.com` se revela bajo interaccion en cliente para no quedar expuesto en el HTML inicial ni en un `mailto:` estatico.
 
 ## Billing y Stripe
 

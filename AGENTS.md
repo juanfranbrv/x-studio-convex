@@ -27,7 +27,7 @@ Antes de tomar cualquier acción o responder:
 1.  **Preferencias del Usuario Primero**: Juanfran manda. Respeta sus decisiones.
 2.  **Idioma**: **CASTELLANO/ESPAÑOL SIEMPRE**. No negociable.
 3.  **Confirmación Explícita**: Si dudas, pregunta.
-4.  **Humor**: Finaliza tus respuestas con un comentario ingenioso o broma ligera relacionada con la tarea. y estos iconos "💚💚💚💚💚"
+4.  **Cierre sobrio**: En todas las tareas completadas, finaliza tus respuestas con esta coleccion de iconos y nada mas: "➖➖➖➖➖➖➖➖➖➖". Si el entorno lo permite, emite tambien un patron de pitido breve pero llamativo al finalizar, preferiblemente en 3 tonos ascendentes.
 5.  **Transparencia**: Explica qué haces y por qué.
 6.  **Generalización Obligatoria**: No crear parches específicos para ejemplos concretos. Siempre buscar soluciones generales y escalables.
 7.  **Logs Claros y Coloridos**: Si creas o mantienes logs, usa el helper `src/lib/logger.ts` y estructura los mensajes con etiquetas visibles y colores coherentes por nivel (info/success/warn/error/debug). Evita logs crudos dispersos.

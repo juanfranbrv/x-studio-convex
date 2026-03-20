@@ -100,20 +100,6 @@ export default function OnboardingPage() {
       if (!lastVisitedModule?.module) return false
 
       const targetPath = lastVisitedModule.module === 'carousel' ? '/carousel' : '/image'
-      const targetBrandId = typeof lastVisitedModule.brand_id === 'string' ? lastVisitedModule.brand_id : null
-
-      if (targetBrandId && activeBrandKit?.id !== targetBrandId) {
-        const selectionResult = await Promise.race([
-          setActiveBrandKit(targetBrandId, true, true),
-          new Promise<boolean>((resolve) => {
-            setTimeout(() => resolve(false), 1500)
-          }),
-        ])
-
-        if (!selectionResult) {
-          void setActiveBrandKit(targetBrandId, true, true)
-        }
-      }
 
       completeRedirect(targetPath)
       return true
@@ -157,7 +143,6 @@ export default function OnboardingPage() {
     lastVisitedModule,
     reloadBrandKits,
     router,
-    setActiveBrandKit,
   ])
 
   return (

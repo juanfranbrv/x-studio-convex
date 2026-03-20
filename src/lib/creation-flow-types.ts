@@ -1328,6 +1328,23 @@ export const SOCIAL_FORMATS: SocialFormat[] = [
     }
 ]
 
+export const DEFAULT_SOCIAL_PLATFORM: SocialPlatform = 'instagram'
+export const DEFAULT_SOCIAL_FORMAT_ID = 'ig-portrait-feed'
+
+export function getDefaultSocialFormatId(platform?: SocialPlatform | null): string | null {
+    const targetPlatform = platform ?? DEFAULT_SOCIAL_PLATFORM
+
+    if (targetPlatform === DEFAULT_SOCIAL_PLATFORM) {
+        return DEFAULT_SOCIAL_FORMAT_ID
+    }
+
+    return (
+        SOCIAL_FORMATS.find((format) => format.platform === targetPlatform)?.id ??
+        SOCIAL_FORMATS.find((format) => format.platform === DEFAULT_SOCIAL_PLATFORM)?.id ??
+        null
+    )
+}
+
 // -----------------------------------------------------------------------------
 // GENERATION STATE (Global Store)
 // -----------------------------------------------------------------------------
@@ -1411,8 +1428,8 @@ export interface GenerationState {
 }
 
 export const INITIAL_GENERATION_STATE: GenerationState = {
-    selectedPlatform: 'instagram',
-    selectedFormat: null,
+    selectedPlatform: DEFAULT_SOCIAL_PLATFORM,
+    selectedFormat: DEFAULT_SOCIAL_FORMAT_ID,
     currentStep: 1,
     selectedGroup: null,
     selectedIntent: null,

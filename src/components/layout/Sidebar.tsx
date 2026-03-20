@@ -24,6 +24,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+    HEADER_DROPDOWN_CONTENT_CLASS,
+    HEADER_DROPDOWN_ITEM_CLASS,
+} from './headerDropdownStyles'
 
 interface SidebarProps {
     className?: string
@@ -53,6 +57,12 @@ export function Sidebar({ className, showLogo = true, offsetTopClassName }: Side
             setIsLoggingOut(false)
         }
     }
+
+    const dropdownAccountRowClass =
+        'grid min-h-12 grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-3 rounded-xl px-3.5 py-2.5'
+    const dropdownAccountIconWrapClass =
+        'inline-flex h-9 w-9 items-center justify-center justify-self-center'
+    const dropdownAccountIconClass = 'shrink-0 text-muted-foreground'
 
     return (
         <aside
@@ -130,17 +140,27 @@ export function Sidebar({ className, showLogo = true, offsetTopClassName }: Side
                             )}
                         </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent side="right" align="end" className="w-56">
-                        <DropdownMenuLabel className="font-normal">
-                            <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">{user?.fullName || user?.firstName || t('labels.user')}</p>
-                                <p className="text-xs leading-none text-muted-foreground">{user?.primaryEmailAddress?.emailAddress || ''}</p>
+                    <DropdownMenuContent
+                        side="right"
+                        align="end"
+                        className={`w-[280px] ${HEADER_DROPDOWN_CONTENT_CLASS}`}
+                    >
+                        <DropdownMenuLabel className="px-3.5 py-3 font-normal">
+                            <div className="flex flex-col gap-1">
+                                <p className="text-[1rem] font-medium leading-tight text-foreground">
+                                    {user?.fullName || user?.firstName || t('labels.user')}
+                                </p>
+                                <p className="text-[0.84rem] leading-tight text-muted-foreground">
+                                    {user?.primaryEmailAddress?.emailAddress || ''}
+                                </p>
                             </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                            <Link href="/settings" className="cursor-pointer">
-                                <IconUser className="mr-2 h-4 w-4" />
+                            <Link href="/settings" className={dropdownAccountRowClass}>
+                                <span className={dropdownAccountIconWrapClass} aria-hidden="true">
+                                    <IconUser size={20} className={dropdownAccountIconClass} />
+                                </span>
                                 <span>{t('labels.myAccount')}</span>
                             </Link>
                         </DropdownMenuItem>
@@ -148,16 +168,19 @@ export function Sidebar({ className, showLogo = true, offsetTopClassName }: Side
                         <DropdownMenuItem
                             onClick={handleLogout}
                             disabled={isLoggingOut}
-                            className="cursor-pointer text-destructive focus:text-destructive"
+                            variant="destructive"
+                            className={`${dropdownAccountRowClass} cursor-pointer`}
                         >
                             {isLoggingOut ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4" />
+                                    <Loader2 className="h-5 w-5 shrink-0" />
                                     <span>{t('actions.loggingOut')}</span>
                                 </>
                             ) : (
                                 <>
-                                    <IconLogout className="mr-2 h-4 w-4" />
+                                    <span className={dropdownAccountIconWrapClass} aria-hidden="true">
+                                        <IconLogout size={20} className="shrink-0 opacity-80" />
+                                    </span>
                                     <span>{t('actions.logout')}</span>
                                 </>
                             )}

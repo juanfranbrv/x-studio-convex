@@ -1,5 +1,5 @@
-import { GoogleAuthPage } from '@/components/auth/GoogleAuthCard'
+import { ClerkSignInPage } from '@/components/auth/ClerkAuthCard'
 
 export default function SignInPage() {
-  return <GoogleAuthPage />
+  return <ClerkSignInPage />
 }

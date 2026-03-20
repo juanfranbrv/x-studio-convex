@@ -10,6 +10,7 @@ import {
     type LayoutTextField,
     type TypographyProfile,
     INITIAL_GENERATION_STATE,
+    DEFAULT_SOCIAL_PLATFORM,
     INTENT_CATALOG,
     STYLE_CHIPS_BY_SUBJECT,
     ARTISTIC_STYLE_CATALOG,
@@ -20,6 +21,7 @@ import {
     ALL_IMAGE_LAYOUTS,
     THEME_CATALOG,
     SOCIAL_FORMATS,
+    getDefaultSocialFormatId,
     SocialPlatform,
     ColorRole,
     ReferenceImageRole,
@@ -367,7 +369,7 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
     const selectFormat = useCallback((formatId: string) => {
         setState(prev => ({
             ...prev,
-            selectedPlatform: prev.selectedPlatform ?? 'instagram',
+            selectedPlatform: prev.selectedPlatform ?? DEFAULT_SOCIAL_PLATFORM,
             selectedFormat: formatId,
             ...invalidateFromStep(prev, 3),
             currentStep: prev.hasGeneratedImage ? 3 : Math.max(prev.currentStep, 4)
@@ -380,10 +382,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         setState(prev => {
             if (prev.selectedFormat) return prev
 
-            const targetPlatform = preferredPlatform ?? prev.selectedPlatform ?? 'instagram'
-            const fallbackFormat =
-                SOCIAL_FORMATS.find((format) => format.platform === targetPlatform)?.id ??
-                SOCIAL_FORMATS.find((format) => format.platform === 'instagram')?.id
+            const targetPlatform = preferredPlatform ?? prev.selectedPlatform ?? DEFAULT_SOCIAL_PLATFORM
+            const fallbackFormat = getDefaultSocialFormatId(targetPlatform)
 
             if (!fallbackFormat) return prev
 
@@ -452,8 +452,8 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
             hasGeneratedImage: false,
 
             // CRITICAL: Clear all downstream step data to enforce sequential flow
-            selectedFormat: null,
-            selectedPlatform: 'instagram',
+            selectedFormat: getDefaultSocialFormatId(DEFAULT_SOCIAL_PLATFORM),
+            selectedPlatform: DEFAULT_SOCIAL_PLATFORM,
 
                 currentStep: 2, // Show composition catalog first.
             }
@@ -1527,6 +1527,35 @@ export function useCreationFlow(options?: UseCreationFlowOptions) {
         }))
     }, [buildBrandColorsFromKit, invalidateFromStep])
 
+    const syncBrandingFromActiveKit = useCallback(() => {
+        const nextColors = buildBrandColorsFromKit()
+        const nextLogoId = getPrimaryBrandKitLogoId(activeBrandKit) ?? null
+        const hasBrandKitLogos = Array.isArray(activeBrandKit?.logos) && activeBrandKit.logos.length > 0
+
+        setState(prev => {
+            const resolvedColors = nextColors.length > 0 ? nextColors : prev.selectedBrandColors
+            const resolvedLogoId = hasBrandKitLogos ? nextLogoId : prev.selectedLogoId
+
+            const colorsUnchanged =
+                resolvedColors.length === prev.selectedBrandColors.length &&
+                resolvedColors.every((item, index) =>
+                    item.color === prev.selectedBrandColors[index]?.color &&
+                    item.role === prev.selectedBrandColors[index]?.role
+                )
+
+            if (colorsUnchanged && resolvedLogoId === prev.selectedLogoId) {
+                return prev
+            }
+
+            return {
+                ...prev,
+                selectedBrandColors: resolvedColors,
+                selectedLogoId: resolvedLogoId,
+                ...invalidateFromStep(prev, 5),
+            }
+        })
+    }, [activeBrandKit, buildBrandColorsFromKit, invalidateFromStep])
+
     const addCustomColor = useCallback((color: string) => {
         const normalizedColor = color.startsWith('#') ? color.toLowerCase() : `#${color.toLowerCase()}`
         // Basic hex validation
@@ -2299,6 +2328,8 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         const defaultFormat = presetState.selectedFormat
             || SOCIAL_FORMATS.find((format) => format.platform === defaultPlatform)?.id
             || null
+        const brandKitColors = buildBrandColorsFromKit()
+        const primaryBrandKitLogoId = getPrimaryBrandKitLogoId(activeBrandKit)
         const computedStep = presetState.currentStep ?? computeStepFromPreset({
             ...presetState,
             selectedIntent: resolvedIntent,
@@ -2315,6 +2346,10 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             selectedIntent: resolvedIntent,
             selectedPlatform: presetState.selectedPlatform || defaultPlatform,
             selectedFormat: presetState.selectedFormat || defaultFormat,
+            selectedLogoId: primaryBrandKitLogoId ?? presetState.selectedLogoId ?? null,
+            selectedBrandColors: brandKitColors.length > 0
+                ? brandKitColors
+                : (presetState.selectedBrandColors || []),
             referenceImageRoles: presetState.referenceImageRoles || {},
             hasGeneratedImage: Boolean(presetState.generatedImage),
             currentStep: expandedStep,
@@ -2328,7 +2363,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
             firstReferenceId: null,
             firstReferenceSource: null,
         }))
-    }, [])
+    }, [activeBrandKit, buildBrandColorsFromKit])
 
     // -------------------------------------------------------------------------
     // RETURN
@@ -2570,6 +2605,7 @@ RESPONDE ÚNICAMENTE con el texto generado, sin comillas ni explicaciones adicio
         toggleBrandColor,
         removeBrandColor,
         refreshBrandColorsFromKit,
+        syncBrandingFromActiveKit,
         addCustomColor,
         setSelectedTextAssets,
         addTextAsset,

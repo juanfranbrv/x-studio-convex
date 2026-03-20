@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation'
-import { authConfig } from '@/lib/auth-config'
+import { ClerkSignUpPage } from '@/components/auth/ClerkAuthCard'
 
 export default function SignUpPage() {
-  redirect(authConfig.signInPath)
+  return <ClerkSignUpPage />
 }

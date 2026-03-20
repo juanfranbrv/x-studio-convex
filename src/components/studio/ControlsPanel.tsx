@@ -336,7 +336,7 @@ export function ControlsPanel({
         toggleBrandColor,
         removeBrandColor,
         addCustomColor,
-        refreshBrandColorsFromKit,
+        syncBrandingFromActiveKit,
         selectPlatform,
         selectFormat,
         selectedLayoutMeta,
@@ -443,14 +443,14 @@ export function ControlsPanel({
         await reloadBrandKits(true)
     }
 
-    const handleReloadBrandColors = async () => {
+    const handleReloadBrandKit = async () => {
         if (isRefreshingBrandColors) return
         setIsRefreshingBrandColors(true)
         await refreshActiveBrandKitContent()
-        refreshBrandColorsFromKit()
+        syncBrandingFromActiveKit()
         toast({
-            title: t('ui.colorsReloadedTitle'),
-            description: t('ui.colorsReloadedDescription'),
+            title: t('ui.brandKitReloadedTitle', { defaultValue: 'Kit de marca actualizado' }),
+            description: t('ui.brandKitReloadedDescription', { defaultValue: 'Se han recargado logos y colores desde el kit actual.' }),
         })
         setIsRefreshingBrandColors(false)
     }
@@ -1255,6 +1255,20 @@ export function ControlsPanel({
                                 <SectionHeader
                                     icon={IconFingerprint}
                                     title={t('ui.brandKitSection')}
+                                    extra={(
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleReloadBrandKit}
+                                            disabled={isRefreshingBrandColors}
+                                            className={cn(BRAND_KIT_SUBTLE_BUTTON_CLASS, "gap-1.5")}
+                                        >
+                                            <IconRotate className={cn("h-3.5 w-3.5", isRefreshingBrandColors && "animate-spin")} />
+                                            {isRefreshingBrandColors
+                                                ? t('ui.reloading', { defaultValue: 'Recargando...' })
+                                                : t('ui.reloadBrandKit', { defaultValue: 'Recargar kit' })}
+                                        </Button>
+                                    )}
                                     iconContainerClassName={PANEL_SECTION_HEADER_ICON_CLASS}
                                     titleClassName={PANEL_SECTION_HEADER_TITLE_CLASS}
                                 />
@@ -1274,19 +1288,7 @@ export function ControlsPanel({
                                 </div>
 
                                 <div className={cn(BRAND_KIT_GROUP_CLASS, "pt-1")}>
-                                    <div className="flex items-center justify-between gap-2">
-                                        <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.colors')}</p>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleReloadBrandColors}
-                                            disabled={isRefreshingBrandColors}
-                                            className={cn(BRAND_KIT_SUBTLE_BUTTON_CLASS, "gap-1.5")}
-                                        >
-                                            <IconRotate className={cn("h-3.5 w-3.5", isRefreshingBrandColors && "animate-spin")} />
-                                            {isRefreshingBrandColors ? t('ui.reloading', { defaultValue: 'Recargando...' }) : t('ui.reload')}
-                                        </Button>
-                                    </div>
+                                    <p className={PANEL_SECTION_LABEL_CLASS}>{t('ui.colors')}</p>
 
                                     <div className="flex items-end gap-4 flex-wrap pb-1">
                                         <div

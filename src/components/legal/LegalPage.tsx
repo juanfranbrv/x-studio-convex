@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { IconArrowLeft, IconArrowUpRight, IconMail, IconShieldCheck } from '@/components/ui/icons'
 import { useTranslation } from 'react-i18next'
+import { ProtectedContactEmail } from './ProtectedContactEmail'
 
 type LegalPageProps = {
     page: 'privacy' | 'terms' | 'cookies' | 'contact'
@@ -103,6 +104,13 @@ export function LegalPage({ page, sectionIds }: LegalPageProps) {
                                         <p className="mt-3 text-sm leading-6 text-muted-foreground">
                                             {t('common.contactDescription')}
                                         </p>
+                                        {page === 'contact' ? (
+                                            <ProtectedContactEmail
+                                                revealLabel={t('common.revealEmail')}
+                                                copiedLabel={t('common.emailCopied')}
+                                                helperText={t('common.protectedEmailHint')}
+                                            />
+                                        ) : null}
                                     </div>
                                 </div>
                             </aside>

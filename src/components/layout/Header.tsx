@@ -140,7 +140,7 @@ export function Header({
                                 {brands.map((brand) => (
                                     <DropdownMenuItem
                                         key={brand.id}
-                                        onClick={() => onBrandChange?.(brand.id)}
+                                        onSelect={() => onBrandChange?.(brand.id)}
                                         className={`group ${HEADER_DROPDOWN_ITEM_CLASS} ${brand.id === currentBrand?.id ? 'bg-accent' : ''}`}
                                     >
                                         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/60">

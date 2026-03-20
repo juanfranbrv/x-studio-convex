@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { BrandDNA } from './brand-types'
 import { buildImagePrompt, ImageGenerationOptions } from './prompt-builder'
+import { mapGeminiAspectRatio } from './gemini-aspect-ratio'
 import { log } from './logger'
 import { ConvexHttpClient } from 'convex/browser'
 import { api } from '@/../convex/_generated/api'
@@ -1250,30 +1251,9 @@ async function generateWisdomImage(parts: any[], model: string, aspectRatio?: st
 
         // UNIFIED LOGIC: ALWAYS Use Wisdom/Google Native Endpoint for ALL models
         // This ensures context images (logos, references) are passed correctly.
-
-        // Map Aspect Ratio to Google format if needed (though app uses 16:9, 1:1 which match)
-        // Map Aspect Ratio to Google format if needed
-        // Valid ratios per documentation: 1:1, 3:2, 2:3, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9
-        const validRatios = ['1:1', '3:2', '2:3', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9']
-        let targetRatio = '1:1'
-
-        if (aspectRatio) {
-            if (validRatios.includes(aspectRatio)) {
-                targetRatio = aspectRatio
-            } else {
-                // Map custom social ratios to closest supported
-                switch (aspectRatio) {
-                    case '1.91:1': // Facebook/Twitter Horizontal (1.91)
-                        targetRatio = '16:9' // Closest (1.77) - 21:9 (2.33) is too wide
-                        break
-                    case '1.2:1':  // LinkedIn (1.2)
-                        targetRatio = '5:4'  // Closest (1.25) - matches better than 1:1
-                        break
-                    default:
-                        targetRatio = '1:1'
-                }
-                log.warn('IMAGE', `Mapping custom ratio ${aspectRatio} to supported ${targetRatio}`)
-            }
+        const targetRatio = mapGeminiAspectRatio(model, aspectRatio)
+        if (aspectRatio && aspectRatio !== targetRatio) {
+            log.warn('IMAGE', `Mapping aspect ratio ${aspectRatio} to ${targetRatio} for model ${model}`)
         }
 
         // Retry logic with exponential backoff for "System busy" errors
@@ -1425,28 +1405,12 @@ async function generateNagaText(
 
 async function generateGoogleImage(parts: any[], model: string, aspectRatio?: string): Promise<string> {
     try {
-        const validRatios = ['1:1', '3:2', '2:3', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9']
-        let targetRatio = '1:1'
-
-        if (aspectRatio) {
-            if (validRatios.includes(aspectRatio)) {
-                targetRatio = aspectRatio
-            } else {
-                switch (aspectRatio) {
-                    case '1.91:1':
-                        targetRatio = '16:9'
-                        break
-                    case '1.2:1':
-                        targetRatio = '5:4'
-                        break
-                    default:
-                        targetRatio = '1:1'
-                }
-            }
-        }
-
         // Keep backward compatibility for legacy admin values.
         const normalizedModel = model === 'gemini-3-pro' ? 'gemini-3-pro-image-preview' : model
+        const targetRatio = mapGeminiAspectRatio(normalizedModel, aspectRatio)
+        if (aspectRatio && aspectRatio !== targetRatio) {
+            log.warn('IMAGE', `Mapping aspect ratio ${aspectRatio} to ${targetRatio} for model ${normalizedModel}`)
+        }
         const imageModel = await getGoogleImageGenerativeModel(normalizedModel)
 
         const response = await imageModel.generateContent({

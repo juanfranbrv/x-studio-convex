@@ -49,6 +49,7 @@ import { getCompositionsSummaryAction, type CompositionSummary } from '@/lib/adm
 import { useTranslation } from 'react-i18next'
 import { buildAutomaticSessionTitle, getSessionDisplayTitle, normalizeCustomSessionTitle } from '@/lib/session-titles'
 import { getLastVisitedModuleAction } from '@/app/actions/get-last-visited-module'
+import { shouldApplyLastVisitedImageBrand } from './lastVisitedScope'
 
 // Admin email for debug modal access
 const ADMIN_EMAIL = 'juanfranbrv@gmail.com'
@@ -127,6 +128,7 @@ export default function ImagePage() {
     const router = useRouter()
     const { user } = useUser()
     const { activeBrandKit, brandKits, loading, setActiveBrandKit, updateActiveBrandKit, deleteBrandKitById } = useBrandKit()
+    const userRecord = useQuery(api.users.getUser, user?.id ? { clerk_id: user.id } : 'skip')
     const { panelPosition } = useUI()
     const [isGenerating, setIsGenerating] = useState(false)
     const { toast } = useToast()
@@ -252,6 +254,8 @@ export default function ImagePage() {
     const [sessionTitleDraft, setSessionTitleDraft] = useState('')
     const [lastVisitedImageScopeReady, setLastVisitedImageScopeReady] = useState(false)
     const initialImageScopeResolvedRef = useRef(false)
+    const activeBrandKitIdRef = useRef<string | null>(null)
+    const setActiveBrandKitRef = useRef(setActiveBrandKit)
     const openSessionDecisionModal = useCallback((config: Omit<SessionDecisionModalState, 'open'>) => {
         return new Promise<string | null>((resolve) => {
             sessionDecisionResolverRef.current = resolve
@@ -298,6 +302,14 @@ export default function ImagePage() {
     const clearWorkSessions = useMutation(api.work_sessions.clearSessions)
 
     useEffect(() => {
+        activeBrandKitIdRef.current = activeBrandKit?.id ?? null
+    }, [activeBrandKit?.id])
+
+    useEffect(() => {
+        setActiveBrandKitRef.current = setActiveBrandKit
+    }, [setActiveBrandKit])
+
+    useEffect(() => {
         initialImageScopeResolvedRef.current = false
         setLastVisitedImageScopeReady(false)
 
@@ -307,6 +319,7 @@ export default function ImagePage() {
         }
 
         let cancelled = false
+        const requestedActiveBrandId = activeBrandKitIdRef.current
 
         void (async () => {
             const result = await Promise.race([
@@ -325,9 +338,14 @@ export default function ImagePage() {
                     ? lastVisitedModule.brand_id
                     : null
 
-            if (targetBrandId && activeBrandKit?.id !== targetBrandId) {
+            if (shouldApplyLastVisitedImageBrand({
+                targetBrandId,
+                requestedActiveBrandId,
+                currentActiveBrandId: activeBrandKitIdRef.current,
+                persistedActiveBrandId: userRecord?.current_brand_id ? String(userRecord.current_brand_id) : null,
+            })) {
                 await Promise.race([
-                    setActiveBrandKit(targetBrandId, true, true),
+                    setActiveBrandKitRef.current(targetBrandId, true, true),
                     new Promise<boolean>((resolve) => {
                         setTimeout(() => resolve(false), 1200)
                     }),
@@ -342,7 +360,7 @@ export default function ImagePage() {
         return () => {
             cancelled = true
         }
-    }, [user?.id, setActiveBrandKit])
+    }, [user?.id, userRecord?.current_brand_id])
 
     const scopedBrandId = (lastVisitedImageScopeReady ? activeBrandKit?.id : undefined) as Id<'brand_dna'> | undefined
     const activeWorkSession = useQuery(

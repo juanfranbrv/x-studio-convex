@@ -6,7 +6,10 @@
     "relatedTitle": "Más información",
     "onThisPage": "En esta página",
     "contactTitle": "Contacto",
-    "contactDescription": "Si necesitas soporte, una solicitud legal o una conversación sobre producto, usa el canal de soporte asociado a tu cuenta o responde al correo de acceso a beta."
+    "contactDescription": "Si necesitas soporte, una solicitud legal o una conversación sobre producto, usa el canal de soporte asociado a tu cuenta o responde al correo de acceso a beta.",
+    "revealEmail": "Mostrar email",
+    "emailCopied": "Email copiado",
+    "protectedEmailHint": "Correo oficial protegido frente a scrapers automáticos"
   },
   "privacy": {
     "eyebrow": "Privacidad",

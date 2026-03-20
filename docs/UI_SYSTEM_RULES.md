@@ -83,6 +83,19 @@ Regla:
 - el trigger no debe parecer mas importante que sus opciones
 - las opciones no deben verse como texto tecnico diminuto
 
+## Iconografia
+
+### Libreria obligatoria
+
+- siempre que se introduzcan iconos nuevos en UI de producto, se debe usar `hugeicons`
+- no mezclar librerias de iconos dentro del mismo patron visual salvo dependencia heredada dificil de retirar
+
+### Tamano de referencia
+
+- los iconos interactivos de controles, dropdowns y acciones deben tomar como referencia el tamano visual ya establecido en el panel derecho del estudio creativo
+- si un icono nuevo duda entre varios tamanos, se prioriza igualar la presencia visual de ese panel antes que inventar una escala local
+- no reducir ni inflar iconos de forma aislada para "hacer que quepan"; si no encajan, se revisa el layout o el componente
+
 ## Botones
 
 ### Familias de accion

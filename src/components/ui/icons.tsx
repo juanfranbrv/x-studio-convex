@@ -29,7 +29,9 @@ import {
     ArrowUp05Icon,
     SquareArrowUp02Icon,
     Logout02Icon,
+    LogoutSquare01Icon,
     User02Icon,
+    AccountSetting01Icon,
     ShieldEnergyIcon,
     Wallet02Icon,
     CreditCardAcceptIcon,
@@ -218,6 +220,8 @@ export const IconPower = createIcon(PowerIcon)
 // ─── User ───
 export const IconUser = createIcon(User02Icon)
 export const IconLogout = createIcon(Logout02Icon)
+export const IconUserAccount = createIcon(AccountSetting01Icon)
+export const IconLogoutSquare = createIcon(LogoutSquare01Icon)
 export const IconShield = createIcon(ShieldEnergyIcon)
 export const IconFingerprint = createIcon(FingerPrintIcon)
 

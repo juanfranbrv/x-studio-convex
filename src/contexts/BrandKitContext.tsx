@@ -40,6 +40,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
     const initializedUserIdRef = useRef<string | null>(null)
     const loadRequestIdRef = useRef(0)
     const loadInFlightRef = useRef(false)
+    const pendingPersistedBrandIdRef = useRef<string | null>(null)
     const backgroundRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const emptyRecoveryAttemptRef = useRef(0)
     const loadBrandKitsRef = useRef<(isSilent?: boolean) => Promise<void>>(async () => { })
@@ -86,6 +87,37 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         }
     }, [upsertUser, user?.emailAddresses, user?.id, userRecord])
 
+    const persistCurrentBrandSelection = useCallback(async (brandId: string) => {
+        if (!user?.id) return false
+        pendingPersistedBrandIdRef.current = brandId
+
+        const canPersist = userRecord ? true : await ensureConvexUser()
+        if (!canPersist) {
+            if (pendingPersistedBrandIdRef.current === brandId) {
+                pendingPersistedBrandIdRef.current = null
+            }
+            return false
+        }
+
+        try {
+            const result = await updateLastBrand({ clerk_id: user.id, brandId })
+            if (!result?.success) {
+                if (pendingPersistedBrandIdRef.current === brandId) {
+                    pendingPersistedBrandIdRef.current = null
+                }
+                console.warn('[CONTEXT] Failed to persist current brand selection:', result)
+                return false
+            }
+            return true
+        } catch (error) {
+            if (pendingPersistedBrandIdRef.current === brandId) {
+                pendingPersistedBrandIdRef.current = null
+            }
+            console.error('[CONTEXT] Failed to persist last brand:', error)
+            return false
+        }
+    }, [ensureConvexUser, updateLastBrand, user?.id, userRecord])
+
     const loadBrandKits = useCallback(async (isSilent = false) => {
         if (!user?.id) {
             if (!isSilent) setLoading(false)
@@ -129,7 +161,11 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                 }
 
                 if (result.data.length > 0 && !activeBrandKit) {
-                    const lastBrandId = userRecord?.current_brand_id
+                    if (typeof userRecord === 'undefined') {
+                        return
+                    }
+
+                    const lastBrandId = pendingPersistedBrandIdRef.current ?? userRecord?.current_brand_id
                     const hasPersistedBrand = Boolean(lastBrandId && result.data.find((b) => b.id === lastBrandId))
                     const brandToSelect = hasPersistedBrand
                         ? (lastBrandId as string)
@@ -164,11 +200,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                 setActiveBrandKitState(result.data)
 
                 if (shouldPersist && user?.id) {
-                    const canPersist = userRecord ? true : await ensureConvexUser()
-                    if (canPersist) {
-                        updateLastBrand({ clerk_id: user.id, brandId: id })
-                            .catch((err) => console.error('[CONTEXT] Failed to persist last brand:', err))
-                    }
+                    await persistCurrentBrandSelection(id)
                 }
 
                 return true
@@ -183,11 +215,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
                     if (fallback.success && fallback.data) {
                         setActiveBrandKitState(fallback.data)
                         if (user?.id) {
-                            const canPersist = userRecord ? true : await ensureConvexUser()
-                            if (canPersist) {
-                                updateLastBrand({ clerk_id: user.id, brandId: fallbackId })
-                                    .catch((err) => console.error('[CONTEXT] Failed to persist fallback brand:', err))
-                            }
+                            await persistCurrentBrandSelection(fallbackId)
                         }
                     }
                 }
@@ -198,7 +226,7 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
             console.error('Error loading brand kit:', error)
             return false
         }
-    }, [brandKits, ensureConvexUser, updateLastBrand, user?.id, userRecord])
+    }, [brandKits, persistCurrentBrandSelection, user?.id])
 
     useEffect(() => {
         loadBrandKitsRef.current = loadBrandKits
@@ -283,14 +311,17 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
         if (!Array.isArray(brandKits) || brandKits.length === 0) return
         if (activeSelectionHealing.current) return
 
-        const activeId = activeBrandKit?.id
-        const hasValidActive = Boolean(activeId && brandKits.some((kit) => kit.id === activeId))
-        if (hasValidActive) return
-
         const lastBrandId = userRecord?.current_brand_id
-        const preferredId = (lastBrandId && brandKits.some((kit) => kit.id === lastBrandId))
-            ? (lastBrandId as string)
-            : brandKits[0].id
+        const activeId = activeBrandKit?.id
+        const resolvedPersistedBrandId = pendingPersistedBrandIdRef.current ?? lastBrandId
+        const persistedPreferredId = (resolvedPersistedBrandId && brandKits.some((kit) => kit.id === resolvedPersistedBrandId))
+            ? (resolvedPersistedBrandId as string)
+            : null
+        const hasValidActive = Boolean(activeId && brandKits.some((kit) => kit.id === activeId))
+        const hasPersistedMismatch = Boolean(persistedPreferredId && activeId && activeId !== persistedPreferredId)
+        if (hasValidActive && !hasPersistedMismatch) return
+
+        const preferredId = persistedPreferredId || brandKits[0].id
 
         if (!preferredId) return
 
@@ -322,6 +353,13 @@ export function BrandKitProvider({ children }: { children: ReactNode }) {
             window.removeEventListener('focus', handleFocus)
         }
     }, [brandKits.length, loadBrandKits, loading, user?.id])
+
+    useEffect(() => {
+        if (!pendingPersistedBrandIdRef.current) return
+        if (userRecord?.current_brand_id === pendingPersistedBrandIdRef.current) {
+            pendingPersistedBrandIdRef.current = null
+        }
+    }, [userRecord?.current_brand_id])
 
     useEffect(() => {
         return () => {

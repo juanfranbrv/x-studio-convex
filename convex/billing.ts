@@ -393,12 +393,18 @@ export const finalizeCheckoutSecure = mutation({
       throw new Error("Purchase not found for checkout session");
     }
 
-    if (purchase.status === "completed") {
-      return { purchaseId: purchase._id, alreadyCompleted: true };
-    }
-
     const user = await ctx.db.get(purchase.user_id);
     if (!user) throw new Error("User not found");
+
+    if (purchase.status === "completed") {
+      return {
+        purchaseId: purchase._id,
+        alreadyCompleted: true,
+        userEmail: user.email,
+        credits: purchase.credits,
+        packSlug: purchase.pack_slug,
+      };
+    }
 
     const nextBalance = user.credits + purchase.credits;
     const txs = await ctx.db
@@ -504,7 +510,13 @@ export const finalizeCheckoutSecure = mutation({
       updated_at: new Date().toISOString(),
     });
 
-    return { purchaseId: purchase._id, alreadyCompleted: false };
+    return {
+      purchaseId: purchase._id,
+      alreadyCompleted: false,
+      userEmail: user.email,
+      credits: purchase.credits,
+      packSlug: purchase.pack_slug,
+    };
   },
 });
 

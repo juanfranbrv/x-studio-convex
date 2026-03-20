@@ -4,6 +4,10 @@ import type Stripe from "stripe";
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe";
 import { serverConvex } from "@/lib/billing-server";
 import { api } from "@/../convex/_generated/api";
+import { buildCreditsPurchaseEmailJob, resolvePackDisplayName } from "@/lib/email/purchase-confirmation";
+import { sendTransactionalEmail } from "@/lib/email/smtp2go";
+import { brand } from "@/lib/brand";
+import { log } from "@/lib/logger";
 
 const stripeAccessKey = process.env.STRIPE_INTERNAL_SECRET?.trim() || "";
 
@@ -56,6 +60,25 @@ export async function POST(request: Request) {
     if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
       const session = event.data.object as Stripe.Checkout.Session;
       const result = await finalizeFromSession(session);
+      const emailJob = buildCreditsPurchaseEmailJob({
+        alreadyCompleted: result.alreadyCompleted,
+        userEmail: result.userEmail,
+        credits: result.credits,
+        packName: resolvePackDisplayName(result.packSlug),
+        actionUrl: `${brand.appUrl}/settings#credits`,
+      });
+
+      if (emailJob) {
+        try {
+          await sendTransactionalEmail(emailJob);
+        } catch (error) {
+          log.warn("API", "[STRIPE_WEBHOOK] Compra procesada pero correo no enviado", {
+            error: error instanceof Error ? error.message : String(error),
+            sessionId: session.id,
+          });
+        }
+      }
+
       await serverConvex.mutation(api.billing.recordStripeEventSecure, {
         access_key: stripeAccessKey,
         stripe_event_id: event.id,

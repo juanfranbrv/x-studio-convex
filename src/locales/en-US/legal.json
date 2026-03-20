@@ -6,7 +6,10 @@
     "relatedTitle": "More information",
     "onThisPage": "On this page",
     "contactTitle": "Contact",
-    "contactDescription": "If you need support, a legal request, or a product conversation, use the support channel linked to your account or reply to the beta-access email."
+    "contactDescription": "If you need support, a legal request, or a product conversation, use the support channel linked to your account or reply to the beta-access email.",
+    "revealEmail": "Reveal email",
+    "emailCopied": "Email copied",
+    "protectedEmailHint": "Official address protected against basic scraping bots"
   },
   "privacy": {
     "eyebrow": "Privacy",

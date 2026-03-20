@@ -15,6 +15,7 @@ const isPublicRoute = createRouteMatcher([
   `${authConfig.clerkWebhookPath}(.*)`,
   '/api/webhooks(.*)',
   '/api/stripe/webhook(.*)',
+  '/api/dev/transactional-email(.*)',
 ])
 
 export default clerkMiddleware(async (auth, request) => {
